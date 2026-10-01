@@ -165,7 +165,19 @@ const NAV_ITEMS: { to: string; labelKey: string; testId: string; icon: string }[
     >
       <div class="flex items-start justify-between gap-2 px-1 pt-1">
         <div class="flex flex-col gap-0.5">
-          <span class="text-text text-sm font-semibold tracking-wide">{{ t("shell.brand") }}</span>
+          <span class="text-text flex items-center gap-2 text-sm font-semibold tracking-wide">
+            <svg viewBox="0 0 100 100" class="size-6 shrink-0" aria-hidden="true">
+              <rect width="100" height="100" rx="22" fill="#4F46E5" />
+              <g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="50" cy="50" r="33" stroke-width="7" />
+                <path d="M38 31 C38 48 50 48 50 56" stroke-width="7.5" />
+                <path d="M62 31 C62 48 50 48 50 56" stroke-width="7.5" />
+                <path d="M50 56 V66" stroke-width="7.5" />
+                <path d="M42 61 L50 70 L58 61" stroke-width="7.5" />
+              </g>
+            </svg>
+            {{ t("shell.brand") }}
+          </span>
           <span
             v-if="projectName"
             class="text-text-faint truncate text-xs"

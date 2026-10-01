@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/brand/rimmerge-icon.svg" width="96" alt="Rimmerge logo"></p>
+
 # Rimmerge
 
 [![CI](https://github.com/Rimmerge-Project/rimmerge/actions/workflows/ci.yml/badge.svg)](https://github.com/Rimmerge-Project/rimmerge/actions/workflows/ci.yml)

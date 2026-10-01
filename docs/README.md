@@ -48,6 +48,8 @@ Reference:
 - **[dependency-versions.md](dependency-versions.md)** — pinned
   toolchain and library versions.
 - **[troubleshooting.md](troubleshooting.md)** — common problems.
+- **[brand/](brand/README.md)** — the logo sources and how to
+  regenerate the app icons from them.
 - **[CHANGELOG.md](CHANGELOG.md)**
 
 ## A note on history
