@@ -32,6 +32,14 @@ fn stdout_of(output: &std::process::Output) -> String {
     String::from_utf8_lossy(&output.stdout).into_owned()
 }
 
+/// What `config set` stores for `path`: the product's own pin
+/// normalization. On a runner whose `%TEMP%` is an 8.3 short path
+/// (`RUNNER~1`) it expands an existing directory to its long form, so a
+/// test must compare against this, never the raw `tempfile` path.
+fn pinned(path: &Path) -> String {
+    rim_io::pinned_path(path).display().to_string()
+}
+
 /// A scratch directory shaped like a RimWorld install, so
 /// `is_game_dir`-dependent output can be asserted without the real game.
 ///
@@ -95,17 +103,11 @@ fn set_then_show_round_trips_every_path() {
 
     assert!(show.status.success(), "{stdout}");
     assert!(
-        stdout.contains(&game_dir.display().to_string()),
+        stdout.contains(&pinned(&game_dir)),
         "the pinned install must be listed: {stdout}"
     );
-    assert!(
-        stdout.contains(&workshop_dir.display().to_string()),
-        "{stdout}"
-    );
-    assert!(
-        stdout.contains(&mods_config.display().to_string()),
-        "{stdout}"
-    );
+    assert!(stdout.contains(&pinned(&workshop_dir)), "{stdout}");
+    assert!(stdout.contains(&pinned(&mods_config)), "{stdout}");
     assert!(
         stdout.contains("resolved:"),
         "a fully pinned config must resolve: {stdout}"
@@ -129,7 +131,7 @@ fn set_writes_the_documented_json_shape() {
     let text = fs::read_to_string(dir.path().join("config.json")).expect("config.json must exist");
     let value: serde_json::Value = serde_json::from_str(&text).expect("valid JSON");
     assert_eq!(value["schema"], 1);
-    assert_eq!(value["game_dir"], game_dir.display().to_string());
+    assert_eq!(value["game_dir"], pinned(&game_dir));
     assert!(value["workshop_dir"].is_null());
 }
 
@@ -160,10 +162,10 @@ fn set_only_changes_the_flags_it_is_given() {
     let value: serde_json::Value = serde_json::from_str(&text).expect("valid JSON");
     assert_eq!(
         value["game_dir"],
-        game_dir.display().to_string(),
+        pinned(&game_dir),
         "the first set's game-dir must survive the second set"
     );
-    assert_eq!(value["mods_config"], mods_config.display().to_string());
+    assert_eq!(value["mods_config"], pinned(&mods_config));
 }
 
 #[test]
@@ -247,14 +249,14 @@ fn clear_unpins_everything() {
 #[test]
 fn the_environment_variable_outranks_the_pinned_config() {
     let dir = tempdir().expect("tempdir");
-    let pinned = scratch_install(dir.path());
+    let pinned_dir = scratch_install(dir.path());
     let from_env = dir.path().join("from-env");
     config_cmd()
         .arg("set")
         .arg("--base")
         .arg(dir.path())
         .arg("--game-dir")
-        .arg(&pinned)
+        .arg(&pinned_dir)
         .arg("--mods-config")
         .arg(dir.path().join("ModsConfig.xml"))
         .output()
@@ -274,7 +276,7 @@ fn the_environment_variable_outranks_the_pinned_config() {
         "RIMMERGE_GAME_DIR must outrank config.json in the resolved block: {stdout}"
     );
     assert!(
-        stdout.contains(&format!("game-dir: {}", pinned.display())),
+        stdout.contains(&format!("game-dir: {}", pinned(&pinned_dir))),
         "...while the pinned block still reports what is actually in the file: {stdout}"
     );
 }
