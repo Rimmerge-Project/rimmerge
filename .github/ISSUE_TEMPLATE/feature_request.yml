@@ -1,0 +1,52 @@
+name: Feature request
+description: Propose a new capability or a change to existing behavior.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: What are you trying to do that Rimmerge doesn't support today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: What you do today instead
+      description: A manual step, a different tool, or "nothing — it's just not possible" are all fine answers.
+    validations:
+      required: false
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: What should Rimmerge do instead? A CLI flag, a new command, a UI change — be as concrete as you can.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: sort-impact
+    attributes:
+      label: Does this change sort output?
+      description: >-
+        Anything that changes the suggested load order, a finding's
+        confidence, or what counts as evidence needs to go through
+        `docs/concepts/sorting.md`'s own precedence model, not just this
+        one feature.
+      options:
+        - "No — this doesn't touch ordering"
+        - "Yes — it changes what order mods end up in, or what a finding says"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        If this is knowledge about a *specific* mod (a load-order pair, a
+        precedence rule, a patch-operation quirk) rather than a change to
+        Rimmerge itself, it usually belongs in a rules database instead of
+        here — see `CONTRIBUTING.md`'s "Proposing a load-order rule"
+        section before opening this.

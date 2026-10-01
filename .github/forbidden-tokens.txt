@@ -1,0 +1,37 @@
+# Public, shape-only lock for scripts/check-forbidden.ps1 and the CI
+# step that runs it. Every pattern below matches a generic shape (a
+# Windows user-profile path, a Steam library layout, a workshop content
+# folder, an absolute non-fixture drive path, a plan
+# citation) and identifies no specific mod or person.
+#
+# Maintainers may keep additional project-specific patterns in a local,
+# gitignored `.journal/forbidden-tokens.local.txt`; the script merges
+# the two when that file is present. CI has no local file, so it runs
+# this list alone. Lines starting with `#` are ignored by the script.
+SteamLibrary
+C:\\Users\\[a-z]{2,}
+steamapps\\workshop\\content\\294100\\[0-9]
+\bF:\\
+\bD:\\
+# Plan citations: public code states a rule, it never points at a design
+# document that is not published. Each pattern matches the shape of a
+# citation, not a topic, in any file and any context (code, string
+# literal, `#` comment, markdown prose, config): a numbered-decision label
+# (E14, E3), the plan's own label (R1/Q4), "the plan's ...",
+# "item 2's"/"(item 6)", a section sign with a number, a
+# provisional-decision id (PD-5-1), or a path into the journal's design
+# docs. The uppercase shapes are case-sensitive on purpose, so a test's
+# `r1` mod, a hex `e12` or the word `e2e` stays legal.
+(?-i)\bE[0-9]{1,2}\b
+# A label standing alone: not `"R1"` as a whole quoted value (test row
+# ids), but `R1`, `R1's` and `"R1 is ..."` all count.
+(?-i)\b[QR][1-9](\b[^"']|'s|$)
+the plan's
+\bitem [0-9]+(\)|'s)
+# A section sign directly after a number is a standards citation
+# ("RFC 9110 §15.4", "ISO 8601 §4", "ECMA-262 §7.1") and passes; any other
+# section sign with a number is a pointer into an unpublished document.
+(^|[^0-9,\s])\s*§[0-9]
+(?-i)\bPD-[0-9]
+\.journal/docs/[a-z0-9-]+\.md
+-plan\.md

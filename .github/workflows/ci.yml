@@ -1,0 +1,157 @@
+name: CI
+
+# Windows runners throughout: RimWorld and RimSort are Windows-first, and
+# `apps/desktop` links against `sysinfo`'s Windows process APIs and (for
+# a real Tauri build) WebView2 — the same platform every contributor
+# actually develops and runs the app on. The CDP smoke tier
+# (`bun run e2e:smoke`, apps/desktop/e2e/smoke/) is intentionally NOT run
+# here: it launches a real `tauri dev` build and drives it over the Chrome
+# DevTools Protocol, which needs a real desktop session and takes minutes
+# — see apps/desktop/README.md's "Testing" section for how to run it
+# locally before a release.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Least privilege: neither job writes anything back to the repo (no
+# release, no comment, no status check beyond the run's own pass/fail).
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  rust:
+    name: Rust (fmt, clippy, nextest, deny)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: taiki-e/install-action@ripgrep
+
+      - name: check-forbidden (no local paths, author names, or specific-mod references)
+        shell: pwsh
+        run: ./scripts/check-forbidden.ps1
+
+      - name: check-line-endings (LF everywhere a contributor hand-edits)
+        shell: pwsh
+        run: ./scripts/check-line-endings.ps1
+
+      - name: check-doc-links (every relative Markdown link/image resolves)
+        shell: pwsh
+        run: ./scripts/check-doc-links.ps1
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: cargo fmt --check
+        run: cargo fmt --all -- --check
+
+      - name: cargo clippy -D warnings
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+      - uses: taiki-e/install-action@nextest
+
+      - name: cargo nextest run
+        run: cargo nextest run --workspace --all-features
+
+      # `EmbarkStudios/cargo-deny-action` is a Docker container action —
+      # container actions only run on Linux runners, and this job is
+      # `windows-latest` (see the header comment for why the whole
+      # workflow is). `taiki-e/install-action` installs a prebuilt
+      # `cargo-deny` binary instead, so the check runs as a plain `cargo`
+      # subcommand here. `deny.toml` is committed at the workspace root
+      # (scopes the check itself), so there's no "does it exist" guard —
+      # a workspace with no `deny.toml` would need this step removed
+      # outright, not skipped silently.
+      - uses: taiki-e/install-action@cargo-deny
+
+      - name: cargo deny check (licenses, bans, advisories, sources)
+        run: cargo deny check
+
+      # `cargo doc` isn't run with `-D warnings`: the tree carries a
+      # known baseline of pre-existing rustdoc warnings (missing_docs is
+      # `warn`, not `deny`, workspace-wide — see Cargo.toml), so a hard
+      # deny would fail every PR today. Instead `count-doc-warnings.ps1`
+      # counts individual `warning:` lines (excluding each crate's own
+      # trailing "generated N warnings" summary line, which also starts
+      # with `warning:` but isn't a distinct diagnostic) and fails only
+      # once that count exceeds a fixed budget — high enough not to
+      # block unrelated work, low enough that a PR adding a broken
+      # intra-doc link or a new bare warning still fails CI. Raise the
+      # budget only in a change that also explains why the baseline
+      # grew. The counting logic lives in that script, not inline here,
+      # so it's testable locally against captured output without a real
+      # `cargo doc` run — see the script's own header for why it forces
+      # `CARGO_TERM_COLOR=never` for just this one invocation despite
+      # this job's `always` (a real bug this budget check used to have:
+      # inherited `always` colors `warning:` with ANSI codes a plain
+      # regex never matches, so the check silently passed at any count).
+      - name: cargo doc --workspace --no-deps (warning budget)
+        shell: pwsh
+        run: ./scripts/count-doc-warnings.ps1 -Budget 270
+
+  bun:
+    name: bun (types, typecheck, lint, vitest, playwright mock tier)
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: apps/desktop
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      # `bun run types:check` shells out to `cargo test -p rimmerge-desktop
+      # --lib` to regenerate the ts-rs bindings and diff them against what's
+      # committed — this job needs a real Rust toolchain for that alone.
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ". -> target"
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          # Pinned to the version every contributor actually develops
+          # against (`bun --version` on the reference dev machine) —
+          # `latest` drifting out from under CI is how a bug in a brand
+          # new bun release becomes a mystery-failing pipeline nobody
+          # can reproduce locally.
+          bun-version: 1.4.0
+
+      - name: bun install
+        run: bun install --frozen-lockfile
+
+      - name: ts-rs drift check (regenerates DTOs via cargo test, diffs)
+        run: bun run types:check
+
+      - name: vue-tsc (type gate)
+        run: bun run typecheck
+
+      - name: biome + eslint
+        run: bun run lint
+
+      - name: vitest
+        run: bun run test
+
+      - name: install Playwright's chromium
+        # `--with-deps` shells out to `apt-get` to install OS-level
+        # browser dependencies — Linux-only, and a no-op-or-error on this
+        # job's `windows-latest` runner.
+        run: bunx playwright install chromium
+
+      - name: Playwright, mock-IPC tier
+        run: bun run e2e

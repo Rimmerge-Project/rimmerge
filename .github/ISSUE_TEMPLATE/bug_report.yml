@@ -1,0 +1,109 @@
+name: Bug report
+description: Something in Rimmerge behaved unexpectedly.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a report. A few things worth
+        knowing before you paste anything in:
+
+        - **Reports may contain mod names.** Load orders, findings, and
+          verify output all reference the packageIds and display names of
+          the mods you have installed — that's expected and fine to share.
+        - **Never attach a `ModsConfig.xml` from a private install** unless
+          you're comfortable with everyone who can see this repository
+          seeing your full mod list. A `verify --json`/`ledger --json`
+          excerpt scoped to the mods actually involved is almost always
+          enough.
+
+  - type: input
+    id: version
+    attributes:
+      label: Rimmerge version
+      description: Output of `rimmerge --version` (CLI) or the version shown on the desktop app's Settings page.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS and version
+      placeholder: "Windows 11 24H2"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: interface
+    attributes:
+      label: CLI or desktop
+      options:
+        - CLI (rimmerge.exe)
+        - Desktop app
+        - Both
+    validations:
+      required: true
+
+  - type: input
+    id: rimworld-version
+    attributes:
+      label: RimWorld version and DLCs
+      description: The version from RimWorld's main menu, and which DLCs are installed.
+      placeholder: "1.5.4409, Royalty + Ideology + Biotech + Anomaly + Odyssey"
+    validations:
+      required: true
+
+  - type: input
+    id: mod-count
+    attributes:
+      label: Approximate active mod count
+      placeholder: "~250"
+    validations:
+      required: false
+
+  - type: textarea
+    id: what-ran
+    attributes:
+      label: What you ran
+      description: The exact command (CLI) or the page/button (desktop) that triggered this.
+      placeholder: "rimmerge verify --source suggested --json"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: "Optional: verify/ledger output"
+      description: >-
+        A `rimmerge verify --json` or `rimmerge ledger --json` excerpt, or
+        the equivalent from the desktop app's inbox/verify view. Trim it to
+        the finding(s) that matter rather than pasting the whole report
+        where you can.
+      render: json
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: privacy-checklist
+    attributes:
+      label: Before submitting
+      options:
+        - label: >-
+            I have removed personal paths (e.g. `C:\Users\<me>\...`) from
+            anything I pasted above.
+          required: true

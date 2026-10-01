@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Troubleshooting guide
+    url: https://github.com/Rimmerge-Project/rimmerge/blob/main/docs/troubleshooting.md
+    about: Check here first — common problems and their fixes before filing a report.
