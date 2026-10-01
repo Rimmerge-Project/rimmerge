@@ -36,7 +36,17 @@ jobs:
         with:
           submodules: true
 
-      - uses: taiki-e/install-action@ripgrep
+      # check-forbidden.ps1 needs ripgrep. install-action has no `@ripgrep`
+      # shorthand ref, so take it from Chocolatey, which the Windows runner
+      # image ships with (skipped if the image already has rg).
+      - name: Install ripgrep
+        shell: pwsh
+        run: |
+          if (-not (Get-Command rg -ErrorAction SilentlyContinue)) {
+            choco install ripgrep --no-progress -y
+            if ($LASTEXITCODE -ne 0) { throw "choco install ripgrep failed ($LASTEXITCODE)" }
+          }
+          rg --version
 
       - name: check-forbidden (no local paths, author names, or specific-mod references)
         shell: pwsh
