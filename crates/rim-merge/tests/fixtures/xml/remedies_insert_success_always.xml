@@ -1,0 +1,20 @@
+<!--
+  Source: Example Remedies compatibility patch,
+  Patches/ExampleRemedies.xml — trimmed to the first operation;
+  structure verbatim, mod/def/class names invented.
+
+  A multi-def head (`defName="A" or defName="B"`) plus
+  `<success>Always</success>`: the op is replayed for whichever of the two
+  defs is being merged, and a miss still counts as success.
+-->
+<Operation Class="PatchOperationInsert">
+  <success>Always</success>
+  <xpath>/Defs/ThingDef[defName="ExCharcoalCrematorium" or defName="ExApparelWashingTub"]/comps/li</xpath>
+  <value>
+    <li Class="CompProperties_AffectedByFacilities">
+      <linkableFacilities>
+        <li>ToolCabinet</li>
+      </linkableFacilities>
+    </li>
+  </value>
+</Operation>

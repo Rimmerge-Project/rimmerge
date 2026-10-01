@@ -1,0 +1,2055 @@
+{
+  "common": {
+    "verbatim": "{text}",
+    "cancel": "取消",
+    "loading": "載入中…",
+    "technicalDetail": "技術細節：{detail}"
+  },
+  "defGraphics": {
+    "viewer": {
+      "regionLabel": "紋理預覽",
+      "facingGroupLabel": "朝向",
+      "previousVariant": "上一個變體",
+      "nextVariant": "下一個變體",
+      "variantPosition": "{label}（第 {index} 個，共 {count} 個）",
+      "variantSelectLabel": "變體",
+      "slotSelectLabel": "紋理來源",
+      "fromMod": "來自 {mod}",
+      "overridesOwner": "覆寫了此 Def 的所有者 {owner} 的紋理",
+      "mirrored": "鏡像繪製",
+      "layoutInferred": "依檔案名稱推斷的配置",
+      "truncatedVariants": "另有 {count} 個變體未顯示",
+      "truncatedSlots": "另有 {count} 個來源未顯示"
+    },
+    "facing": {
+      "north": "北",
+      "east": "東",
+      "south": "南",
+      "west": "西"
+    },
+    "facingShort": {
+      "north": "北",
+      "east": "東",
+      "south": "南",
+      "west": "西"
+    },
+    "slot": {
+      "graphic": "圖像",
+      "worn": "穿戴",
+      "lifeStage": "生命階段",
+      "raceKind": "角色類型：{name}",
+      "styleTexture": "風格紋理",
+      "headType": "頭型",
+      "bodyType": "體型",
+      "terrain": "地形",
+      "icon": "圖示",
+      "probe": "依路徑找到：{field}"
+    },
+    "variant": {
+      "only": "唯一圖像",
+      "bodyType": "體型：{name}",
+      "lifeStage": "生命階段 {number}",
+      "female": "女性，生命階段 {number}",
+      "alternate": "替代 {number}",
+      "member": "{name}",
+      "stack": "堆疊階段 {number}",
+      "stackSingle": "單件物品",
+      "appearance": "外觀：{name}",
+      "wornPath": "穿戴路徑 {number}",
+      "wornPathOnBodyType": "穿戴路徑 {number}，{name}",
+      "field": "{name}"
+    },
+    "state": {
+      "loading": "正在載入紋理",
+      "noGraphic": "此 Def 沒有自己的紋理。",
+      "composedAtRuntime": "遊戲會在執行時以身體、頭部和頭髮部件組合出這個角色，因此沒有單一紋理可以顯示。",
+      "notViewable": "內建於遊戲或資源包中，無法在此顯示。",
+      "notViewableUncertain": "找不到紋理檔案。它可能內建於遊戲中，無法在此顯示。",
+      "notFound": "找不到紋理檔案。遊戲會顯示其錯誤紋理。",
+      "ddsNotPreviewable": "DDS 紋理。無法預覽。",
+      "undecodableInGame": "遊戲無法解碼此 DDS 檔案，會顯示一個預留圖像。",
+      "pngSiblingNote": "此處顯示 PNG 副本；遊戲載入的是 DDS。",
+      "tooLarge": "圖片檔案太大，無法預覽。",
+      "unsupportedFormat": "無法預覽此圖片格式。",
+      "unreadable": "無法讀取圖片檔案。"
+    },
+    "alt": "{def}，朝向：{facing}",
+    "altNoFacing": "{def}"
+  },
+  "primevue": {
+    "emptyMessage": "沒有可用的選項",
+    "emptyFilterMessage": "找不到結果",
+    "emptySelectionMessage": "未選取任何項目",
+    "searchMessage": "共有 {count} 筆結果",
+    "selectionMessage": "已選取 {count} 個項目",
+    "aria": {
+      "trueLabel": "是",
+      "falseLabel": "否",
+      "nullLabel": "未選取",
+      "close": "關閉",
+      "previous": "上一個",
+      "next": "下一個",
+      "navigation": "導覽"
+    }
+  },
+  "shell": {
+    "brand": "Rimmerge",
+    "mainNavigation": "主要導覽",
+    "nav": {
+      "dashboard": "總覽",
+      "inbox": "檢查結果",
+      "mergeMod": "合併輸出",
+      "patches": "相容補丁",
+      "assignments": "補丁製作器",
+      "startup": "啟動耗時",
+      "order": "載入順序",
+      "rules": "規則",
+      "mods": "模組",
+      "settings": "設定"
+    },
+    "orderSource": {
+      "label": "順序來源",
+      "current": "目前",
+      "suggested": "建議",
+      "inSentenceCurrent": "目前",
+      "inSentenceSuggested": "建議"
+    },
+    "modLabelMode": {
+      "label": "模組標籤模式",
+      "names": "名稱",
+      "ids": "ID"
+    },
+    "apply": "套用…",
+    "scanningMods": "正在掃描模組",
+    "supportLink": "支持 Rimmerge",
+    "liveRegion": {
+      "newNotification": "{count} 則新通知，最新一則：{title}"
+    }
+  },
+  "settings": {
+    "heading": "設定",
+    "interfaceHeading": "介面",
+    "language": {
+      "label": "語言",
+      "system": "系統（{detected}）",
+      "preview": "預覽版",
+      "optionPreview": "{name}（{preview}）",
+      "previewNote": "如果你發現翻譯錯誤，請{url}，我們會修正。",
+      "previewNoteLinkText": "回報問題"
+    },
+    "thresholdLabel": "信賴度門檻（自動與待處理的分界）",
+    "tieBreak": {
+      "label": "並列處理",
+      "description": "設定不受其他任何模組約束的模組從哪裡開始排。「重建」依名稱排列這些模組，並忽略你目前的順序，因此第一次重建由 RimSort 產生的清單時，預期大多數模組都會移動。「保留目前」讓每個模組從它在 ModsConfig.xml 中的位置開始，盡可能少移動模組。",
+      "rebuild": "重建",
+      "preserveCurrent": "保留目前"
+    },
+    "useImportedPairs": {
+      "label": "使用匯入的成對規則",
+      "description": "讓 RimSort/SteamDB 的「在前／後載入」規則影響排序。預設開啟：大多數匯入的成對規則重述的是排序器本身已強制執行的證據。你自己設定的規則永遠不受此開關影響。"
+    },
+    "useImportedPlacements": {
+      "label": "使用匯入的位置規則",
+      "description": "讓 RimSort/SteamDB 的「最先／最後載入」位置規則固定模組的層級。預設開啟：模組自身的檔案無法表達「最後載入我」。"
+    },
+    "enforceSoft": {
+      "label": "強制執行軟性排序約束",
+      "description": "這些排序約束來自對 {assemblyRef} 的延遲解析參照。預設關閉：與僅作為建議參考相比，強制執行它們可能會讓明顯更多的模組偏離目前的順序。"
+    },
+    "enforceAwareness": {
+      "label": "強制執行感知排序約束",
+      "description": "這些排序約束來自 {edgeKinds} 提示：表示模組之間有互動的證據，而非排序事實。預設關閉：它們遠比軟性排序約束常見，因此強制執行會對順序造成大得多的變動。"
+    },
+    "enforceInferred": {
+      "label": "強制執行推斷排序約束",
+      "description": "這些排序約束是 {edgeKinds}：分析器依啟發式自行得出的「兩個模組有互動」結論，而不只是像感知那樣的存在訊號。預設開啟：不同於軟性與感知排序約束，分析器已判定這些是排序事實，若僅作為建議參考就等於捨棄這項證據。"
+    },
+    "network": {
+      "heading": "網際網路存取",
+      "recoveredWarning": "無法讀取你的應用程式設定檔，因此在你再次儲存設定之前，網際網路存取為關閉狀態。",
+      "allowNetwork": {
+        "label": "允許網際網路存取",
+        "description": "Rimmerge 透過網際網路傳送的一切（無論自動或手動）的總開關。它只會連線到兩個 GitHub 主機：api.github.com 用於檢查更新，raw.githubusercontent.com 用於重新整理規則資料庫，絕不會連線到你的區域網路。關閉時，所有請求都會在組成任何位址或開啟任何連線之前被略過。此設定適用於這台電腦上的整個應用程式，不論你開啟哪個 RimWorld 安裝。"
+      },
+      "autoRefreshRuleDatabases": {
+        "label": "自動重新整理規則資料庫",
+        "description": "每天一次，在啟動時下載「規則資料庫」卡片中列出的已啟用規則資料庫。Steam 創意工坊資料庫除外，它只會在你按下「重新整理」時更新。"
+      },
+      "checkForUpdates": {
+        "label": "檢查更新",
+        "description": "每天一次，在啟動時檢查是否已發布較新版本的 Rimmerge。"
+      },
+      "checkNow": {
+        "button": "立即檢查",
+        "disabledTitle": "已由「允許網際網路存取」關閉",
+        "awaitingFirstRun": "尚未檢查：請先回應歡迎通知。",
+        "alreadyRanThisLaunch": "本次啟動已檢查過。",
+        "networkDisabled": "網際網路存取已關閉。",
+        "checkDisabled": "已照常檢查（自動檢查為關閉狀態）。",
+        "notDue": "最近已檢查過，請稍後再試。",
+        "rateLimited": "已達 GitHub 的速率限制；請在 {until} 之後再試。",
+        "updated": "有較新的版本可用：{version}。",
+        "unchanged": "已是最新版本。",
+        "failed": "上次檢查失敗：{reason}"
+      },
+      "mutedKinds": {
+        "heading": "已靜音的通知",
+        "empty": "沒有已靜音的項目。",
+        "unmuteButton": "取消靜音"
+      },
+      "resetIncludesSteam": "還原每個開關，包括 Steam 創意工坊資料庫（約 49 MB，僅在你重新整理時下載）。",
+      "restoreDefaultsButton": "還原網際網路存取預設值",
+      "restoreDefaultsToast": "網際網路存取、更新檢查和自動重新整理已重新開啟"
+    },
+    "suggestMergeWhenClean": {
+      "label": "建議合併無衝突的覆寫",
+      "description": "當兩個模組修改同一個 Def 的不同欄位時，建議將它們合併，而不是保留載入順序中的勝出者。合併後的 Def 會在套用時寫入合併模組。"
+    },
+    "showDanglingDefReferences": {
+      "label": "顯示懸空 Def 參照的檢查結果",
+      "description": "標記寫在可識別參照位置（例如研究前置條件、屬性偏移鍵）上，但沒有任何類型的已啟用 Def 實際擁有的名稱。預設關閉：在大型安裝中，這可能產生相當數量的誤報（例如把自我識別的欄位誤認為交叉參照）。絕不會變更載入順序。"
+    },
+    "saveButton": "儲存",
+    "resetButton": "重設為預設值",
+    "dirtyIndicator": "有未儲存的變更",
+    "resetConfirm": {
+      "header": "要重設為預設值嗎？",
+      "body": "以 Rimmerge 自己的內建預設值重新填入上方的每個欄位。在你按下「儲存」之前，不會儲存任何內容。",
+      "cancelButton": "取消",
+      "confirmButton": "重設"
+    },
+    "about": {
+      "heading": "關於",
+      "versionLabel": "版本 {version}",
+      "repoLink": "GitHub 儲存庫",
+      "issuesLink": "回報問題",
+      "supportLink": "支持 Rimmerge",
+      "supportBlurb": "Rimmerge 是免費的開放原始碼軟體。如果它為你節省了時間，你可以支持它的開發。"
+    }
+  },
+  "fetchFailure": {
+    "transportHeadline": "無法連線到 GitHub",
+    "httpStatus": "GitHub 回傳了非預期的 HTTP 狀態（{status}）",
+    "rateLimited": "已達 GitHub 的速率限制；請在 {until} 之後再試",
+    "notPublished": "Rimmerge 尚未發布任何版本",
+    "tooLarge": "回應超過允許的大小",
+    "invalidContent": "回應不是預期的格式",
+    "notAStableVersion": "最新發布的標籤不是穩定版本",
+    "notModifiedWithoutCache": "GitHub 回報沒有變更，但目前尚無任何快取",
+    "readFailedHeadline": "下載中斷",
+    "cacheWriteFailedHeadline": "下載的內容無法儲存到本機",
+    "unclassifiedHeadline": "嘗試失敗"
+  },
+  "ruleWarning": {
+    "droppedClusterRules": "載入時捨棄了 {count} 條遷移前的群組規則：{ids}",
+    "unknownModKnowledgeValue": "已忽略 {section} 規則中未知的{what}「{value}」",
+    "modKnowledgeCacheUnreadableHeadline": "無法讀取快取的 Rimmerge 規則；改用內建的快照",
+    "rowsOverRoleLimit": "已忽略 {section} 規則中 {role} 群組裡超過單一角色上限的 {count} 列",
+    "precedenceRuleMissingFramework": "已忽略 {defType} 的優先規則：它沒有指定框架",
+    "what": {
+      "precedenceRule": "優先規則",
+      "behaviour": "行為",
+      "matchMode": "比對模式",
+      "gateMatchMode": "條件比對模式",
+      "gateBehaviour": "條件行為",
+      "conditionalType": "條件類型",
+      "topLevelSection": "頂層區段",
+      "logShapeRole": "日誌形態角色",
+      "placeholderType": "範本預留位置類型"
+    },
+    "refusedRow": {
+      "templateInvalid": "已忽略 {section} 的列「{value}」：其範本為空、過長或格式錯誤",
+      "captureMissing": "已忽略 {section} 的列「{value}」：其範本缺少其角色所需的擷取群組",
+      "markerLength": "已忽略 {section} 的列「{value}」：某個標記字串超出其長度範圍",
+      "idTooLong": "已忽略一列 {section}：其 ID 過長",
+      "templateUncompilable": "已忽略 {section} 的列「{value}」：其範本無法在大小限制內編譯"
+    }
+  },
+  "setup": {
+    "title": "設定 Rimmerge",
+    "fields": {
+      "gameDir": "RimWorld 安裝目錄",
+      "workshopDir": "Steam 創意工坊目錄",
+      "modsConfig": "ModsConfig.xml 路徑",
+      "profileDir": "設定檔目錄"
+    },
+    "browse": "瀏覽…",
+    "loadProject": "載入專案",
+    "saveAsDefaults": "儲存為預設值",
+    "loadingProject": "正在載入專案",
+    "startingCaption": "正在啟動…",
+    "stage": {
+      "discovering": "正在尋找模組",
+      "scanning": "正在掃描模組",
+      "analyzing": "正在分析",
+      "collectingTagEvidence": "正在收集標籤證據",
+      "done": "完成"
+    },
+    "scanFinishedToast": "掃描完成，有 {count} 則備註",
+    "projectLoadedWithWarningsToast": "專案已載入，但有警告",
+    "savedAsDefaultsToast": "已儲存為預設值",
+    "savedAsDefaultsDetail": "下次啟動 Rimmerge 時，會預先填入這些路徑。"
+  },
+  "dashboard": {
+    "title": "總覽",
+    "counts": {
+      "mods": "模組",
+      "needsInputCurrent": "待處理（目前）",
+      "needsInputSuggested": "待處理（建議）",
+      "movedMods": "會移動的模組",
+      "selectedOrder": "選取的順序"
+    },
+    "ledgerStatsHeading": "衝突帳本（兩種順序）",
+    "table": {
+      "auto": "自動",
+      "needsInput": "待處理",
+      "overridden": "手動決定",
+      "resolvedBySuggested": "由建議順序解決",
+      "current": "目前",
+      "suggested": "建議"
+    },
+    "topKindsHeading": "最常見的待處理類型",
+    "topKindsEmpty": "目前沒有需要處理的項目。",
+    "scanNotesDisclosure": "掃描備註（{count}）",
+    "importLog": {
+      "button": "匯入遊戲日誌",
+      "importedToast": "已匯入遊戲日誌",
+      "logFilter": "RimWorld 日誌",
+      "allFilesFilter": "所有檔案"
+    },
+    "guide": {
+      "heading": "開始使用",
+      "intro": "三個步驟即可將建議的載入順序套用到遊戲中。需要更多控制時，可以使用「檢查結果」和「規則」頁面。",
+      "listLabel": "入門步驟",
+      "status": {
+        "done": "完成",
+        "current": "目前步驟",
+        "upcoming": "尚未開始"
+      },
+      "chooseSuggested": {
+        "title": "使用建議的順序",
+        "pending": "你正在檢視目前的順序。建議的順序會移動 {count} 個模組。",
+        "doneText": "已選取建議的順序。",
+        "doneMatchesFileText": "ModsConfig.xml 已與建議的順序一致。",
+        "button": "使用建議的順序",
+        "reviewLink": "檢閱建議的順序"
+      },
+      "apply": {
+        "title": "套用",
+        "pending": "查看將寫入 ModsConfig.xml 的內容。寫入前會先建立備份。",
+        "button": "套用…",
+        "staleBlocked": "自上次掃描以來，你的已啟用模組有變動。套用前請重新掃描。",
+        "rescanButton": "重新掃描"
+      },
+      "confirm": {
+        "title": "確認",
+        "pending": "檢查摘要後再確認。如果有東西會出問題（例如缺少必需的模組），會先詢問你。"
+      },
+      "done": "ModsConfig.xml 已與建議的順序一致。啟動 RimWorld 即可開始遊玩。",
+      "asOfLastScan": "截至上次掃描或套用時。",
+      "needsInputHint": "{count} 項檢查結果需要你處理（選擇性）",
+      "openInbox": "開啟「檢查結果」",
+      "appliedAnnouncement": "已套用。ModsConfig.xml 現在與建議的順序一致。"
+    }
+  },
+  "notifications": {
+    "heading": "通知",
+    "empty": "沒有新通知。",
+    "dismiss": "關閉",
+    "mute": "不再提醒",
+    "severityWarn": "需要注意",
+    "severityInfo": "資訊",
+    "bell": {
+      "withCount": "通知，{count} 則",
+      "none": "通知，無"
+    },
+    "welcome": {
+      "title": "歡迎使用 Rimmerge",
+      "body": "Rimmerge 可以在啟動時每天連線到 GitHub 一次：\n- 檢查是否已發布較新版本的 Rimmerge（api.github.com）；\n- 下載更新後的規則資料庫：社群載入順序規則和 Rimmerge 自己的規則檔（raw.githubusercontent.com）。更新會儲存在本機；只有在你選擇匯入時，才會變更你的載入順序。\n\n它不會傳送任何關於你、你的模組或你的安裝的資訊，只會送出一個一般請求，GitHub 會因此看到你的 IP 位址。大型的 Steam 創意工坊資料庫絕不會自動下載，只有在你按下「重新整理」時才會下載。",
+      "settingsAlreadyRecommended": "你的設定已與建議的預設值一致。",
+      "steamWorkshopLabel": "Steam 創意工坊資料庫（約 49 MB，僅在你按下「重新整理」時下載）"
+    },
+    "gameVersionChanged": {
+      "title": "遊戲版本已變更",
+      "body": "RimWorld 現在是 {current}（原為 {acknowledged}）。為 {acknowledged} 匯出的相容補丁和補丁製作器模組，在你重新匯出之前仍會宣告該版本。",
+      "kindLabel": "遊戲版本已變更"
+    },
+    "updateAvailable": {
+      "title": "Rimmerge {version} 已推出",
+      "body": "你正在使用較舊的版本。Rimmerge {version} 已發布。",
+      "kindLabel": "有可用的更新"
+    },
+    "ruleDatabasesStale": {
+      "title": "{count} 個規則資料庫需要注意",
+      "body": "以下規則資料庫最近沒有重新整理：",
+      "kindLabel": "規則資料庫已過時",
+      "neverFetched": "從未下載",
+      "lastSuccess": "上次重新整理於 {date}",
+      "lastFailure": "上次嘗試失敗：{reason}"
+    },
+    "importedRulesOutdated": {
+      "title": "{count} 個規則資料庫有新內容可匯入",
+      "body": "已快取新內容的資料庫：",
+      "kindLabel": "有新的規則內容可匯入"
+    },
+    "recommendedSources": {
+      "kindLabel": "建議的規則資料庫",
+      "title": "{count} 個建議的規則資料庫尚未設定",
+      "body": "使用全部三個規則資料庫時，Rimmerge 的排序效果最好。開啟它們會立即下載；之後小型資料庫會自動重新整理，而 Steam 創意工坊資料庫只有在你按下「重新整理」時才會更新。",
+      "bodyWithSteam": "使用全部三個規則資料庫時，Rimmerge 的排序效果最好。開啟它們會立即下載。Steam 創意工坊資料庫約 49 MB，之後只有在你按下「重新整理」時才會更新；小型資料庫則會自動重新整理。",
+      "sourceOff": "{source}：關閉",
+      "sourceNotDownloaded": "{source}：開啟，尚未下載"
+    },
+    "actions": {
+      "keepNetworkSettings": "保留這些設定",
+      "turnOffNetwork": "關閉網際網路存取",
+      "applyRecommendedSettings": "使用建議的設定",
+      "refreshRuleDatabases": "立即重新整理",
+      "openRuleDatabases": "開啟規則資料庫",
+      "openSettings": "開啟設定",
+      "showReleasePage": "複製發布頁面連結",
+      "openPatches": "開啟補丁",
+      "enableRecommendedSources": "開啟並下載",
+      "enableRecommendedSourcesToast": "已開啟建議的規則資料庫",
+      "enableRecommendedSourcesPartialToast": "已開啟建議的規則資料庫，但有些下載未完成。它們仍會列在通知中。",
+      "turnOffNetworkToast": "已關閉網際網路存取",
+      "recommendedSettingsAppliedToast": "已套用建議的設定",
+      "linkCopiedToast": "已複製連結"
+    }
+  },
+  "error": {
+    "generic": {
+      "title": "操作失敗",
+      "detail": "發生錯誤。"
+    },
+    "code": {
+      "no_project_loaded": {
+        "title": "未載入專案",
+        "detail": "請先載入專案再執行此操作。"
+      },
+      "session_lost": {
+        "title": "工作階段遺失",
+        "detail": "內部錯誤中斷了你的工作階段。它會自動重新載入。"
+      },
+      "internal": {
+        "title": "內部錯誤",
+        "detail": "Rimmerge 本身發生錯誤。"
+      },
+      "invalid_input": {
+        "title": "無效的輸入",
+        "detail": "你輸入的值無效。"
+      },
+      "scan_failed": {
+        "title": "掃描失敗",
+        "detail": "未能完成安裝的掃描或分析。"
+      },
+      "mods_config_io_failed": {
+        "title": "無法讀取或寫入 ModsConfig.xml",
+        "detail": "請確認檔案存在，且不是唯讀或正在使用中。"
+      },
+      "profile_io_failed": {
+        "title": "無法讀取或寫入你的設定檔",
+        "detail": "請確認 Rimmerge 的設定檔資料夾可以寫入。"
+      },
+      "rimsort_import_failed": {
+        "title": "匯入失敗",
+        "detail": "無法匯入 RimSort 資料庫檔案。"
+      },
+      "rimworld_running": {
+        "title": "RimWorld 正在執行",
+        "detail": "請先關閉 RimWorld，或選擇仍要繼續。"
+      },
+      "mod_not_found": {
+        "title": "找不到模組",
+        "detail": "該模組不在已啟用的模組清單中。"
+      },
+      "finding_not_found": {
+        "title": "找不到檢查結果",
+        "detail": "該檢查結果已不再有效，可能已經解決。"
+      },
+      "merge_source_failed": {
+        "title": "無法讀取合併來源",
+        "detail": "自上次掃描以來，某個 Def、範本、補丁或紋理檔案已變更或消失。請重新載入專案。"
+      },
+      "merge_mod_io_failed": {
+        "title": "無法寫入合併模組",
+        "detail": "寫入或移除產生的合併模組資料夾失敗。"
+      },
+      "patch_not_found": {
+        "title": "找不到補丁",
+        "detail": "該相容補丁專案已不再載入。"
+      },
+      "patch_identity_invalid": {
+        "title": "無效的補丁識別資訊",
+        "detail": "Package ID 或顯示名稱無效，或與其他模組或補丁衝突。"
+      },
+      "def_not_found": {
+        "title": "找不到 Def",
+        "detail": "該 Def 或範本不在此次掃描中。"
+      },
+      "assignment_not_found": {
+        "title": "找不到分配專案",
+        "detail": "該補丁製作器專案已不再載入。"
+      },
+      "assignment_section_in_use": {
+        "title": "分區仍在使用中",
+        "detail": "另一個分區仍參照此分區中的列。"
+      },
+      "stale_active_set": {
+        "title": "已啟用模組清單已過時",
+        "detail": "寫入 ModsConfig.xml 前請重新掃描。"
+      },
+      "texture_unsupported_format": {
+        "title": "無法顯示此紋理格式",
+        "detail": "此檔案不是 PNG 或 JPEG 圖片，因此無法在此預覽。不支援 DDS 紋理。"
+      }
+    }
+  },
+  "defaultPathsWarning": {
+    "notAnInstall": "{gameDir} 看起來不是 RimWorld 安裝（缺少 Version.txt 或 Data/Core/）。"
+  },
+  "defaultPathsError": {
+    "noProfileBase": "RIMMERGE_PROFILE_DIR 和 LOCALAPPDATA 都未設定，因此 Rimmerge 沒有地方存放自己的檔案。",
+    "gameDirNotFound": "找不到 RimWorld 安裝目錄。下方的技術細節列出了每個已檢查的位置。",
+    "modsConfigNotFound": "Rimmerge 無法判斷 ModsConfig.xml 的位置。請參閱下方的技術細節。"
+  },
+  "finding": {
+    "kind": {
+      "edgeDropped": "已捨棄排序約束",
+      "anyOfChoice": "任選其一",
+      "defOverride": "Def 覆寫",
+      "patchCollision": "補丁衝突",
+      "textureOverride": "紋理覆寫",
+      "duplicateAssembly": "重複的組件",
+      "likelyDuplicateMod": "可能重複的模組",
+      "missingMod": "缺少模組",
+      "missingDependency": "缺少依賴",
+      "incompatiblePair": "不相容的組合",
+      "unsupportedVersion": "不支援的版本",
+      "undeclaredHardDependency": "未宣告的硬性依賴",
+      "lazyReferenceViolated": "違反延遲參照",
+      "declarationQuestioned": "宣告受到質疑",
+      "declarationOverridden": "宣告被覆寫",
+      "duplicateTemplateName": "重複的範本名稱",
+      "keyedTranslationCollision": "翻譯鍵衝突",
+      "soundOverride": "音效覆寫",
+      "undeclaredTypeDependency": "未宣告的類型依賴",
+      "runtimePatchCollision": "執行階段補丁衝突",
+      "transpilerCollision": "轉譯器衝突",
+      "tagInferred": "推斷的標籤",
+      "ruleOverruled": "規則被否決",
+      "placementOverruled": "位置被否決",
+      "placementQuestioned": "位置受到質疑",
+      "placementOrderingOverridden": "位置順序被覆寫",
+      "placementPromotesDependents": "位置連帶提升依賴模組",
+      "missingTexturePath": "缺少紋理路徑",
+      "patchWillFail": "補丁將會失敗",
+      "contributesNothing": "沒有任何作用",
+      "undecodableTexture": "無法載入的紋理",
+      "brokenInheritance": "繼承中斷",
+      "nearMissModReference": "模組參照可能有拼寫錯誤",
+      "discardedAddition": "刻意捨棄的新增內容",
+      "danglingDefReference": "懸空的 Def 參照"
+    },
+    "title": {
+      "edgeDroppedNoWinner": "為打破循環而捨棄「{before} 在 {after} 之前」",
+      "edgeDroppedWithWinner": "已捨棄「{before} 在 {after} 之前」，被 {winner} 否決",
+      "declarationQuestioned": "「{after} 在 {before} 之後」受到「{relation}」關係質疑",
+      "declarationOverridden": "「{after} 在 {before} 之後」被 {winner} 覆寫",
+      "anyOfChoice": "{after} 需要提供 {assembly} 的 {count} 個模組之一",
+      "textureOverride": "紋理 {texturePath}",
+      "duplicateAssembly": "{assembly} 由 {count} 個模組打包",
+      "duplicateTemplateName": "範本 {name} 由 {count} 個模組註冊",
+      "keyedTranslationCollision": "{a} 和 {b} 共用 {count} 個翻譯鍵",
+      "soundOverride": "音效 {path} 由 {count} 個模組打包",
+      "undeclaredTypeDependency": "{user} 使用了 {provider} 的 {typeName}，但沒有宣告關係",
+      "runtimePatchCollision": "{target} 被 {count} 個模組修補",
+      "transpilerCollision": "{target} 被 {count} 個模組轉譯",
+      "likelyDuplicateMod": "{a} 和 {b} 看起來重複（共用 {count} 個 Def）",
+      "missingMod": "缺少 {modId}",
+      "missingDependency": "{modId} 缺少其依賴 {dependency}",
+      "incompatiblePair": "{a} 和 {b} 被標記為不相容",
+      "unsupportedVersion": "{modId} 不支援此 RimWorld 版本",
+      "undeclaredHardDependency": "{after} 在載入時需要 {before}，但沒有宣告",
+      "lazyReferenceViolated": "{after} 在 {before} 載入之前就參照了它",
+      "tagInferred": "{modId} 被標記為 {tag}",
+      "ruleOverruledNoWinner": "規則「{before} 在 {after} 之前」被否決",
+      "ruleOverruledWithWinner": "規則「{before} 在 {after} 之前」被 {winner} 否決",
+      "placementOverruled": "{modId} 的{placement}位置被否決",
+      "placementQuestioned": "{modId} 的{placement}位置受到 {other} 質疑",
+      "placementOrderingOverridden": "{modId} 覆寫了 {pinned} 自身的位置順序",
+      "placementPromotesDependents": "{modId} 的位置連帶提升了 {count} 個其他模組",
+      "missingTexturePath": "{defKey} 的欄位 {field} 指定了一個沒有已啟用模組提供的紋理",
+      "patchWillFail": "預計 {modId} 對 {defKey} 的操作會失敗",
+      "contributesNothing": "{modId} 沒有任何作用",
+      "undecodableTexture": "{modId} 的 {path} 無法解碼",
+      "brokenInheritance": "{modId} 對「{parentName}」的繼承已中斷",
+      "nearMissModReference": "{referrer} 對「{written}」的參照可能是拼寫錯誤",
+      "discardedAddition": "{replacer} 刻意捨棄了 {adder} 自身新增的內容",
+      "danglingDefReference": "「{name}」對應不到任何已啟用的 Def"
+    }
+  },
+  "edgeKind": {
+    "assemblyRef": "組件參照",
+    "forceLoadAfter": "強制在後載入",
+    "forceLoadBefore": "強制在前載入",
+    "loadAfter": "在後載入",
+    "loadBefore": "在前載入",
+    "modDependency": "模組依賴",
+    "findMod": "尋找模組",
+    "ifModActive": "若模組已啟用",
+    "patchTargetsDef": "補丁指向 Def",
+    "mayRequire": "可能需要",
+    "patchInjectedNode": "補丁注入的節點",
+    "assemblyVersionPrecedence": "組件版本優先",
+    "usesType": "使用類型",
+    "parentTemplate": "父範本",
+    "patchRemovedNode": "補丁移除的節點",
+    "retextureAfterOwner": "在所有者之後替換紋理",
+    "defOverrideAfterOrigin": "在原始定義之後覆寫 Def",
+    "patchSelectsInjectedNode": "補丁選取注入的節點",
+    "patchInvalidatesPredicate": "補丁使條件失效",
+    "patchRemovedNodeCosmetic": "已移除的節點（無實質影響）",
+    "replaceDiscardsAddition": "取代時捨棄新增內容"
+  },
+  "tagSignal": {
+    "urlContains": "網址包含「{needle}」",
+    "assemblyRefTo": "參照 {mod} 的組件",
+    "dependsOn": "對 {mod} 的依賴"
+  },
+  "caveat": {
+    "duplicateTemplate": "範本「{name}」由多個模組註冊（{owners}）；每個子項都會各自繼承在它之前（或同位置）最近載入的那個註冊，因此不同的子項可能對應到不同的模組",
+    "modSettingDefault": "{modId} 的 {class} 是以其預設設定重播的，不一定是你遊戲中的設定",
+    "failedOp": "{modId} 對 {xpath} 的補丁操作沒有比對到任何內容",
+    "unscopedOps": "{modId} 有 {count} 個補丁操作無法對應到特定 Def",
+    "malformedOperation": "{modId} 的補丁操作不是格式正確的 XML",
+    "defRemoved": "此 Def 被 {modId} 移除",
+    "positionalItem": "{path} 只能以其位置識別；之後的重新排序可能讓這個選擇指向其他項目",
+    "unsafeXpathValue": "{path} 的值無法安全地寫成 xpath，因此未解析",
+    "unknownOwnerChoice": "{path}：選擇的所有者 {modId} 不是此欄位的候選者",
+    "invalidValueFragment": "{path}：無法解析輸入的值",
+    "unsupportedDrop": "{path}：補丁衝突不支援丟棄",
+    "unreconstructableChain": "{path}：無法重建其所在的結構",
+    "unsettableLeaf": "{path}：繼承而來的末端值無法取消設定成空值",
+    "outOfScopeOwners": "在 {mods} 中任一個於此補丁範圍之後載入的安裝中，此補丁可能改為指向或覆蓋該模組的 Def",
+    "clobberedMapEntry": "{path} 由 {by} 新增，但後來的補丁取代了整個對應表而將其丟棄；已還原"
+  },
+  "inbox": {
+    "evidence": {
+      "inspectLink": "檢視",
+      "ariaLabel": "檢查結果的證據",
+      "edgeDropped": {
+        "sentence": "已捨棄一條{strength}「{edgeKind}」排序約束：{after} → {before}。"
+      },
+      "anyOfChoice": {
+        "intro": "{modId} 需要 {assembly} 的候選者之一："
+      },
+      "danglingDefReference": {
+        "causeRemovedBy": "它被 {modId} 自己的補丁移除了",
+        "causeOnlyInUnloadedFolder": "它只定義在 {modId} 自己的「{folder}」資料夾中，而此安裝不會載入該資料夾",
+        "causeOnlyInInactiveMod": "它只定義在 {modId} 中，而該模組未啟用",
+        "causeDefinedNowhere": "沒有任何已安裝的模組（無論是否啟用）定義它",
+        "causeUnexplained": "無法判斷它缺少的原因",
+        "referrerFromDef": "{modId} 的 {defType}/{defName}（{fieldPath}）",
+        "referrerFromTemplate": "{modId} 的 {defType}/{'@'}{name}（{fieldPath}）",
+        "referrerFromPatch": "{modId} 對 {defType}/{defName} 的補丁（{fieldPath}）",
+        "sentence": "{name} 對應不到任何類型的已啟用 Def：{cause}。",
+        "likelySound": "這看起來像音效參照：缺少的 {soundDef} 會記錄一則警告，並默默改用未定義的音效，而不是載入失敗。",
+        "referencedFrom": "參照來源：",
+        "truncatedReferrers": "另有 {count} 個參照來源未顯示（顯示上限）。"
+      },
+      "textureOverride": {
+        "sentence": "紋理 {path}"
+      },
+      "duplicateAssembly": {
+        "sentence": "組件 {name}，打包於："
+      },
+      "likelyDuplicateMod": {
+        "body": "{a} 和 {b} 共用 {count} 個相同的 Def 鍵"
+      },
+      "missingMod": {
+        "body": "{modId} 在清單中，但在磁碟上找不到。"
+      },
+      "missingDependency": {
+        "body": "{modId} 需要 {dependencyLabel}（{dependency}），但它未啟用。"
+      },
+      "incompatiblePair": {
+        "body": "{a} 和 {b} 被標記為不相容。"
+      },
+      "unsupportedVersion": {
+        "body": "{modId} 沒有宣告支援此遊戲版本。"
+      },
+      "undeclaredHardDependency": {
+        "body": "{after} 需要 {before}，但從未宣告。"
+      },
+      "lazyReferenceViolated": {
+        "body": "從 {after} 到 {before} 的延遲參照遭到違反。"
+      },
+      "declarationQuestioned": {
+        "body": "{declaredAfter} 宣告要在 {declaredBefore} 之後載入，但反向關係也成立："
+      },
+      "declarationOverridden": {
+        "body": "{declaredAfter} 宣告要在 {declaredBefore} 之後載入，但一項宣告排序約束的覆寫另有規定："
+      },
+      "keyedTranslationCollision": {
+        "body": "{a} 和 {b} 都定義了 {count} 個翻譯鍵："
+      },
+      "soundOverride": {
+        "sentence": "音效 {path}，打包於："
+      },
+      "undeclaredTypeDependency": {
+        "sentence": "{user} 使用了 {provider} 組件中的類型 {typeName}，但兩者之間沒有宣告關係。"
+      },
+      "runtimePatchCollision": {
+        "sentence": "{target}，依載入順序被以下模組修補：",
+        "runsLast": "最後執行",
+        "runLastButton": "最後執行",
+        "runLastAriaLabel": "讓 {modId} 最後執行"
+      },
+      "transpilerCollision": {
+        "sentence": "{target} 被以下每個模組中的執行階段補丁轉譯器改寫，依載入順序："
+      },
+      "tagInferred": {
+        "sentence": "{modId} 被標記為 {tag}，依據："
+      },
+      "ruleOverruled": {
+        "withWinner": "「{after} 在 {before} 之後載入」（{origin}）被否決：",
+        "byLongerCycle": "「{after} 在 {before} 之後載入」（{origin}）被一個較長的循環否決。",
+        "cycle": "循環：{chain}"
+      },
+      "placementOverruled": {
+        "intro": "{modId} 被固定在{placement}（{origin}），被以下項目否決：",
+        "landedAt": "最後落在第 {position} 位。"
+      },
+      "placementQuestioned": {
+        "body": "{modId} 被固定在{placement}，但與 {other} 的「{relationKind}」關係在此固定下無法成立。"
+      },
+      "placementOrderingOverridden": {
+        "body": "一條已接受的排序約束迫使 {modId} 越過 {pinned} 自身的{placement}固定："
+      },
+      "placementPromotesDependents": {
+        "body": "{modId} 被固定在{placement}，連帶將 {count} 個其他模組提升越過同一個層級邊界："
+      },
+      "showMore": "顯示更多（{shown} / {total}）",
+      "missingTexturePath": {
+        "sentence": "{modId} 的 {def} 欄位 {field} 指定了紋理 {path}，但沒有已啟用的模組提供它。"
+      },
+      "undecodableTexture": {
+        "sentence": "{modId} 的 {path} 無法解碼（{width}x{height}，{fourcc}）：基礎遊戲會在該處顯示錯誤紋理的預留圖像。",
+        "pngSibling": "此模組也在相同路徑提供了非 DDS 檔案，但基礎遊戲絕不會改用它。"
+      },
+      "brokenInheritance": {
+        "missingParent": "{modId} 的 {child} 繼承自 {parentName}，但沒有已啟用的模組定義它，因此載入時不會帶有該父項自身的任何欄位。",
+        "wrongType": "{modId} 的 {child} 繼承自 {parentName}，但在此模組自身的載入位置，它對應到的是 {parentType}，而不是 {childDefType}。",
+        "affectedCount": "{count} 個受影響的 Def：",
+        "andMore": "…以及另外 {count} 個",
+        "truncated": "另有 {count} 個受影響的 Def 未顯示（顯示上限）。"
+      },
+      "nearMissModReference": {
+        "findModName": "{modId} 的 FindMod 名稱 {written} 對應不到任何已啟用或已安裝的模組，但與 {candidateName} 非常相似，可能是拼寫錯誤。",
+        "mayRequireId": "{modId} 的 MayRequire ID {written} 對應不到任何已啟用或已安裝的模組，但與 {candidateName} 非常相似，可能是拼寫錯誤。",
+        "writtenIn": "寫在 {file} 中"
+      },
+      "patchWillFail": {
+        "causeRemovedBy": "預計在此順序下，{modId} 對 {defKey} 的 {operation} 會失敗：{causeModId} 先載入，並以自己的操作移除了目標節點。",
+        "causeNotYetInjected": "預計在此順序下，{modId} 對 {defKey} 的 {operation} 會失敗：它指向 {causeModId} 注入的節點，但該模組在它之後才載入。",
+        "causeDeadTarget": "預計在此順序下，{modId} 對 {defKey} 的 {operation} 會失敗：無論載入順序為何，勝出所有者自身解析後的結構中都不存在該節點。",
+        "causeUnclassified": "預計在此順序下，{modId} 對 {defKey} 的 {operation} 會失敗：無法分類原因。",
+        "specificField": "具體欄位：{leafXpath}"
+      },
+      "contributesNothing": {
+        "body": "在此順序下，{modId} 沒有任何可觀察到的作用：沒有組件，它擁有的每個 Def 都被覆寫，它提供的每個紋理和翻譯都被覆寫，而它的每個補丁操作不是套用失敗，就是從未執行。"
+      },
+      "discardedAddition": {
+        "sentence": "{replacer} 宣告在 {adder} 之後載入並取代了 {path}：{adder} 自身在 {adderPath} 新增的內容是被刻意捨棄的。"
+      }
+    },
+    "suggestion": {
+      "acceptButton": "接受（Enter）",
+      "ignoreButton": "忽略（i）",
+      "revertButton": "還原（u）",
+      "alternativesHeading": "其他選項",
+      "addNoteButton": "新增備註（n）"
+    },
+    "page": {
+      "loadFailed": "無法載入檢查結果。",
+      "noSelection": "選取一項檢查結果以查看其建議。",
+      "shortcutsHeader": "鍵盤快捷鍵",
+      "shortcutMoveCursor": "移動游標",
+      "shortcutAccept": "接受建議",
+      "shortcutPickAlternative": "選擇其他選項",
+      "shortcutIgnore": "忽略",
+      "shortcutRevert": "還原決定",
+      "shortcutMerge": "合併 Def 覆寫或補丁衝突",
+      "shortcutAddNote": "新增備註",
+      "shortcutOpenOrder": "在載入順序檢視中開啟",
+      "shortcutOpenModDetail": "開啟模組詳細資訊",
+      "shortcutFocusSearch": "聚焦搜尋框",
+      "shortcutCycleStatus": "切換狀態篩選",
+      "shortcutToggleModLabel": "切換模組名稱／ID",
+      "shortcutToggleHelp": "切換此說明"
+    },
+    "alternatives": {
+      "ariaLabel": "其他選項"
+    },
+    "decisionNote": {
+      "label": "備註",
+      "save": "儲存備註"
+    },
+    "textureTile": {
+      "winnerBadge": "勝出者",
+      "sizeLine": "{format} · {count} 位元組",
+      "useThisOne": "使用這個",
+      "shipThisFile": "提供此檔案"
+    },
+    "defConflictView": {
+      "sourceFailed": "檔案在掃描後已變更，請重新載入專案。",
+      "loadFailed": "無法載入衝突檢視。",
+      "completenessPartial": "部分",
+      "completenessCompleteWithProblems": "完整，但有問題",
+      "completenessComplete": "完整",
+      "patchCollisionWithSubPath": "補丁衝突：{subPath}",
+      "injectedNodeRelation": "{selector} 的補丁選取了由 {injector} 注入的節點",
+      "showLabel": "顯示",
+      "filterAllChanged": "所有變更",
+      "filterConflict": "衝突",
+      "filterCleanMerge": "無衝突合併",
+      "filterListEntries": "清單項目",
+      "filterMapEntries": "對應表項目",
+      "filterUnchanged": "未變更",
+      "showMore": "顯示更多（{shown} / {total}）",
+      "problemsHeading": "問題",
+      "problemUnsupportedOp": "{modId} 的第 {opIndex} 個操作",
+      "problemReplayStopped": "重播在此停止；上方的列來自它之前的操作。",
+      "problemMissingTemplate": "缺少範本 {name}（{defType}）。",
+      "problemCycle": "循環：{chain}",
+      "problemPlanFailed": "合併規劃失敗：{reason}"
+    },
+    "fieldRowsTable": {
+      "empty": "沒有符合此篩選的欄位。",
+      "headerPath": "路徑",
+      "headerKind": "類型",
+      "headerValues": "值",
+      "headerInGame": "遊戲中",
+      "headerAfterMerge": "合併後",
+      "headerPreference": "偏好",
+      "kindConflict": "衝突",
+      "kindCleanMerge": "無衝突合併",
+      "kindListEntry": "清單項目",
+      "kindMapEntry": "對應表項目",
+      "kindUnchanged": "未變更",
+      "groupHeader": "{path}（{count} 個項目）",
+      "alsoAddedBy": "也由 {mods} 新增",
+      "mergeChoiceFrom": "{modId} 的值",
+      "mergeChoiceValue": "儲存的值「{text}」",
+      "mergeChoiceDropped": "已丟棄",
+      "preferenceLoadOrder": "{winner} 勝出（載入順序）",
+      "preferenceDecision": "{winner} 勝出（決定）",
+      "preferenceMergeChoice": "{choice}（合併選擇）"
+    },
+    "findingList": {
+      "searchPlaceholder": "搜尋檢查結果…",
+      "filterByStatus": "依狀態篩選",
+      "filterByKind": "依類型篩選",
+      "empty": "沒有符合此篩選的檢查結果。",
+      "findingsAriaLabel": "檢查結果",
+      "statusAll": "全部",
+      "statusNeedsInput": "待處理",
+      "statusAuto": "自動",
+      "statusOverridden": "手動決定",
+      "filteredByMod": "僅顯示 {mod}",
+      "clearModFilter": "清除模組篩選"
+    },
+    "findingCard": {
+      "undecided": "未決定",
+      "decidedChip": "已決定",
+      "resolvedBySuggestedChip": "由建議順序解決"
+    },
+    "touchersList": {
+      "mod": "模組",
+      "role": "角色",
+      "ops": "操作",
+      "replay": "重播",
+      "generatedSuffix": "（自動產生）",
+      "roleOwner": "所有者",
+      "rolePatcher": "修補者",
+      "reached": "已執行到",
+      "notReached": "未執行到"
+    }
+  },
+  "merge": {
+    "state": {
+      "merged": "已合併",
+      "needsInput": "{count} 個欄位待處理",
+      "structuralGuard": "未自動合併：請確認勝出者",
+      "cannotMerge": "無法合併"
+    },
+    "skipped": {
+      "stillNeedsInput": "仍待處理"
+    },
+    "summary": {
+      "patchCollision": "{count} 個補丁衝突合併（未決定者採自動建議）",
+      "defOverride": "{count} 個 Def 覆寫合併（已明確決定）",
+      "asset": "{count} 個提供的資源",
+      "willWrite": "將寫入 {parts}。"
+    },
+    "header": {
+      "inspectLink": "檢視",
+      "outOfScope": "超出範圍，未合併：{mods}",
+      "structuralGuardLine": "{field} 不同（{by} 與基礎副本相比）：對此 Def 進行欄位層級的合併並不安全。請在「檢查結果」頁面接受此項檢查結果，以確認載入順序的勝出者；它無法以合併的方式完成。",
+      "baseTag": "（基礎）",
+      "winnerTag": "（勝出者）",
+      "totalsFields": "{count} 個欄位",
+      "totalsConflicts": "{count} 個衝突",
+      "totalsAuto": "{count} 個自動處理",
+      "totalsUnresolved": "{count} 個未解決",
+      "totalsUnchanged": "{count} 個未變更"
+    },
+    "entryKind": {
+      "defOverride": "Def 覆寫",
+      "patchCollision": "補丁衝突",
+      "asset": "資源"
+    },
+    "mod": {
+      "assetsGroup": "資源",
+      "opsCount": "{count} 個操作",
+      "dependsOn": "依賴",
+      "openInEditor": "在編輯器中開啟",
+      "heading": "合併輸出",
+      "mergedDefs": "{count} 個已合併的 Def",
+      "nothingYet": "無",
+      "summary": "Rimmerge 用來寫入你的合併與資源決定的相容性模組。目前內容：{contents}。每次套用時都會重新產生；在建議的順序中永遠最後載入。",
+      "summaryWithSources": "Rimmerge 用來寫入你的合併與資源決定的相容性模組。目前內容：{contents}，來源為 {count} 個模組。每次套用時都會重新產生；在建議的順序中永遠最後載入。",
+      "loadFailed": "無法載入合併輸出。",
+      "packageIdLabel": "Package ID",
+      "folderLabel": "資料夾",
+      "pathLabel": "路徑",
+      "onDiskLabel": "在磁碟上",
+      "existsYes": "是：每次套用時都會重新產生",
+      "existsNo": "尚未：勾選「寫入合併模組」後套用即可產生",
+      "placementLabel": "載入順序位置",
+      "placementValue": "最後（排序器永遠將產生的模組放在建議順序的最底部）",
+      "sourceModsLabel": "來源模組",
+      "entriesHeading": "項目",
+      "noEntriesYet": "尚無「合併」或「提供資源」決定。使用合併編輯器決定一項 Def 覆寫或補丁衝突的檢查結果，即可新增一個。",
+      "filesHeading": "檔案",
+      "nothingRendersYet": "至少有一個「合併」或「提供資源」決定後，檔案就會顯示在這裡。",
+      "fileLoadFailed": "無法產生此檔案。"
+    },
+    "filePreviewLabel": "檔案預覽",
+    "editor": {
+      "sourceFailedSuffix": "{message}：專案的檔案在上次掃描後已變更。",
+      "reloadProject": "重新載入專案",
+      "loadFailed": "無法載入合併預覽。",
+      "showMore": "顯示更多（{loaded} / {total}）",
+      "shortcutsHeader": "合併編輯器快捷鍵",
+      "shortcutMoveRowCursor": "移動列游標",
+      "shortcutNextPrevConflict": "下一個／上一個衝突",
+      "shortcutMoveColumnCursor": "移動欄游標",
+      "shortcutChooseColumn": "選擇游標所在的欄",
+      "shortcutChooseOwnerColumn": "選擇第 n 個所有者欄（1 = 基礎）",
+      "shortcutChooseWinner": "選擇所選順序中的勝出者",
+      "shortcutEditValue": "編輯自訂值",
+      "shortcutToggleDrop": "切換丟棄",
+      "shortcutRevertToAuto": "還原為自動",
+      "shortcutToggleAutoSection": "切換自動區段",
+      "shortcutToggleUnchanged": "切換未變更的列",
+      "shortcutBackToFindings": "返回檢查結果"
+    },
+    "table": {
+      "pathHeader": "路徑",
+      "classHeader": "分類",
+      "resultHeader": "結果",
+      "actionsHeader": "操作",
+      "sectionConflicts": "衝突（{count}）",
+      "sectionAuto": "自動解決（{count}）",
+      "sectionUnchanged": "未變更（{count}）",
+      "containerEntries": "{count} 個項目",
+      "containerSummary": "{container}：{entries}",
+      "containerConflicts": "{count} 個衝突",
+      "containerSummaryWithConflicts": "{base}，{conflicts}",
+      "acceptSuggested": "接受建議（{count}）"
+    },
+    "field": {
+      "classUnchanged": "未變更",
+      "classOneSided": "由單一模組變更",
+      "classAgreeing": "一致",
+      "classConflict": "衝突",
+      "chooseValueFor": "為 {path} 選擇一個值",
+      "suggestedHint": "建議",
+      "takeValue": "採用 {owner} 的值",
+      "dropped": "已丟棄",
+      "needsInput": "待處理",
+      "saving": "儲存中…",
+      "drop": "丟棄",
+      "dropUnavailableTitle": "補丁衝突不支援丟棄：RimWorld 自己的補丁重播後一定會得出一個值。",
+      "clearChoice": "清除選擇",
+      "autoRevert": "自動"
+    },
+    "value": {
+      "absent": "不存在",
+      "showLess": "顯示較少",
+      "showMore": "顯示更多"
+    }
+  },
+  "action": {
+    "accept": "接受",
+    "ignore": "忽略",
+    "reorder": "讓 {after} 在 {before} 之後載入",
+    "preferWinner": "偏好 {winner} 的 {defKey}",
+    "chooseCandidate": "為 {after} 選擇 {chosen}",
+    "dropEdge": "捨棄「{edgeKind}」排序約束 {after} → {before}",
+    "keepEdge": "保留「{edgeKind}」排序約束 {after} → {before}",
+    "addTag": "將 {modId} 標記為 {tag}",
+    "removeTag": "移除 {modId} 的標籤 {tag}",
+    "excludeFromCluster": "將 {modId} 從群組 {rule} 中排除",
+    "removeMod": "從已啟用清單中移除 {modId}",
+    "merge": "合併 {defKey}",
+    "shipAsset": "提供 {from} 的 {texturePath}",
+    "promoteRulePair": "將「{after} 在 {before} 之後」提升為使用者決定",
+    "promoteRulePlacement": "將 {modId} 的位置提升為使用者決定",
+    "dropRule": "捨棄規則「{after} 在 {before} 之後」"
+  },
+  "patches": {
+    "scopeBadge": {
+      "title": "超出此補丁的範圍：{mods}",
+      "label": "部分：+{mods}"
+    },
+    "table": {
+      "emptyState": "尚無相容補丁。按 n 建立一個。",
+      "nameHeader": "名稱",
+      "packageIdHeader": "Package ID",
+      "scopeHeader": "範圍",
+      "needsInputHeader": "待處理",
+      "completeHeader": "完成",
+      "lastExportHeader": "上次匯出",
+      "notExported": "未匯出"
+    },
+    "identityForm": {
+      "nameLabel": "名稱",
+      "packageIdLabel": "Package ID",
+      "packageIdPlaceholder": "author.mymod",
+      "displayNameLabel": "顯示名稱",
+      "authorLabel": "作者",
+      "descriptionLabel": "描述",
+      "save": "儲存"
+    },
+    "list": {
+      "newPatchButton": "新增補丁（n）",
+      "newPatchHeading": "新增相容性補丁",
+      "scopeHeading": "範圍",
+      "loadFailed": "無法載入補丁。"
+    },
+    "detail": {
+      "loadFailed": "無法載入此補丁。",
+      "orphanedCount": "{count} 個孤立決定",
+      "importFromProfileButton": "從設定檔匯入決定",
+      "pruneOrphanedButton": "清理孤立決定",
+      "deleteButton": "刪除",
+      "identityHeading": "識別資訊",
+      "exportHeading": "匯出",
+      "findingsHeading": "檢查結果",
+      "importedToastSummary": "已從設定檔匯入",
+      "importedNoSkips": "已匯入 {count} 個決定。",
+      "rejection": {
+        "outOfScope": "它不是此補丁範圍成員之間的檢查結果",
+        "notPatchable": "補丁只能包含「合併」、「提供資源」和「忽略」決定，不能包含「{action}」",
+        "choiceOutsideScope": "{path}：其選擇指定了 {mod}，但它不在此補丁的範圍內",
+        "assetOutsideScope": "其提供的資源來自 {mod}，但它不在此補丁的範圍內",
+        "actionName": {
+          "accept": "接受",
+          "reorder": "重新排序",
+          "preferWinner": "偏好勝出者",
+          "chooseCandidate": "選擇候選者",
+          "dropEdge": "捨棄排序約束",
+          "keepEdge": "保留排序約束",
+          "addTag": "新增標籤",
+          "removeTag": "移除標籤",
+          "excludeFromCluster": "從群組中排除",
+          "removeMod": "從已啟用清單中移除",
+          "promoteRule": "提升規則",
+          "dropRule": "捨棄規則"
+        }
+      },
+      "importedWithSkips": {
+        "imported": "已匯入 {count} 個決定",
+        "skipped": "略過 {count} 個決定：{reasons}",
+        "reasonSeparator": "；",
+        "combined": "{imported}。{skipped}"
+      },
+      "prunedToastSummary": "已清理孤立決定",
+      "prunedToastDetail": "已移除 {count} 個目前範圍不再接受的決定。",
+      "deleteDialogHeader": "要刪除此補丁嗎？",
+      "deleteDialogBody": "這會移除補丁專案。已匯出到磁碟的資料夾不會被更動。"
+    },
+    "inbox": {
+      "loadFailed": "無法載入此補丁的檢查結果。",
+      "shortcutFocusScopeSearch": "聚焦範圍搜尋框",
+      "shortcutFocusExportDir": "聚焦匯出目錄欄位",
+      "shortcutBackToPatch": "返回補丁本身的詳細資訊"
+    },
+    "scopeEditor": {
+      "minimumSizeTitle": "補丁範圍至少需要兩個成員。",
+      "membersListLabel": "範圍成員",
+      "removeMember": "從範圍中移除 {name}",
+      "noMembersYet": "尚無範圍成員。",
+      "searchPlaceholder": "搜尋要新增的模組…",
+      "searchLabel": "搜尋要新增到範圍的模組",
+      "searchResultsLabel": "符合搜尋的模組",
+      "noMatches": "沒有符合的項目。",
+      "scopeShrunk": "範圍已縮小：現在有 {count} 個孤立決定。",
+      "remainingChoicesNamingRemoved": "剩餘的選擇中，有 {count} 個仍指定已移除的模組。"
+    },
+    "exportPanel": {
+      "exportDirLabel": "匯出目錄",
+      "exportDirPlaceholder": "選擇資料夾…",
+      "chooseButton": "選擇…",
+      "installCheckboxLabel": "安裝到 Mods 資料夾並啟用",
+      "staleActiveSetNote": "尚未掃描的啟用變更不會包含在內：如果要將它們納入此次安裝，請先重新掃描。",
+      "forceWarning": "RimWorldWin64.exe 似乎正在執行。現在安裝會寫入 ModsConfig.xml，而遊戲結束時會覆蓋該檔案，因此這項變更可能會遺失。仍要匯出嗎？",
+      "exportAnyway": "仍要匯出",
+      "export": "匯出",
+      "exportedTo": "已匯出到：{path}",
+      "installedAt": "已安裝於：{path}",
+      "hash": "雜湊值：{hash}",
+      "unchangedSinceLastExport": "自上次匯出後沒有變更。",
+      "renderLoadFailed": "無法產生此補丁。",
+      "dependenciesHeading": "依賴",
+      "entriesHeading": "項目",
+      "noEntriesYet": "尚無「合併」或「提供資源」決定。在此補丁的檢查結果中決定一項 Def 覆寫或補丁衝突，即可新增一個。",
+      "skippedHeading": "已略過",
+      "filesHeading": "檔案",
+      "nothingRendersYet": "此補丁至少有一個「合併」或「提供資源」決定後，檔案就會顯示在這裡。",
+      "fileLoadFailed": "無法產生此檔案。"
+    }
+  },
+  "edgeStrength": {
+    "hard": "硬性",
+    "declared": "宣告",
+    "soft": "軟性",
+    "awareness": "感知",
+    "inferred": "推斷"
+  },
+  "edgeStatus": {
+    "satisfied": "已滿足",
+    "violated": "已違反",
+    "unevaluated": "未評估"
+  },
+  "mods": {
+    "changes": {
+      "searchPlaceholder": "搜尋…",
+      "loadFailed": "無法載入此模組的變更。",
+      "noMatches": "沒有符合此篩選的變更。",
+      "kindHeader": "類型",
+      "targetHeader": "目標",
+      "opsHeader": "操作",
+      "otherTouchersHeader": "其他修改者",
+      "findingsHeader": "檢查結果",
+      "showMore": "顯示更多（{loaded} / {total}）"
+    },
+    "edges": {
+      "none": "無。"
+    },
+    "picker": {
+      "removeMember": "移除 {name}",
+      "noneSelectedYet": "尚未選取任何項目。",
+      "searchPlaceholder": "搜尋模組…",
+      "searchLabel": "為 {target} 搜尋模組",
+      "noMatches": "沒有符合的項目。"
+    },
+    "table": {
+      "regionLabel": "模組",
+      "missing": "缺少",
+      "rovingHint": "使用方向鍵移動，Enter 開啟，空白鍵切換"
+    },
+    "pendingChanges": {
+      "unscanned": "{count} 項尚未掃描的變更：重新掃描以更新分析",
+      "unapplied": "{count} 項變更尚未套用到 ModsConfig.xml",
+      "rescanButton": "重新掃描",
+      "rescanFinishedToast": "重新掃描完成，有 {count} 則備註",
+      "rescannedWithWarningsToast": "已重新掃描，但有警告"
+    },
+    "closeGuard": {
+      "header": "已啟用模組的變更尚未儲存",
+      "body": "已啟用模組的工作清單中有尚未經重新掃描採納的變更，或已掃描的順序尚未套用到 {modsConfig}。現在離開會失去記憶體中的這些工作；無論如何，遊戲本身的檔案都不會被更動。",
+      "stay": "留下",
+      "leaveAnyway": "仍要離開"
+    },
+    "scanNotes": {
+      "empty": "沒有掃描備註。"
+    },
+    "detail": {
+      "loadFailed": "無法載入此模組。",
+      "idAndSource": "{modId}：{source}",
+      "byAuthors": "作者：{authors}",
+      "tagsHeading": "標籤",
+      "declaredOrderHeading": "宣告的順序",
+      "loadAfterLabel": "在後載入",
+      "loadBeforeLabel": "在前載入",
+      "forceLoadAfterLabel": "強制在後載入",
+      "forceLoadBeforeLabel": "強制在前載入",
+      "dependenciesLabel": "依賴",
+      "incompatibleWithLabel": "不相容於",
+      "edgesInHeading": "傳入的排序約束",
+      "edgesOutHeading": "傳出的排序約束",
+      "changesHeading": "變更",
+      "scanNotesHeading": "掃描備註",
+      "findingsHeading": "檢查結果",
+      "noLiveFindings": "沒有有效的檢查結果。"
+    },
+    "page": {
+      "heading": "模組",
+      "activeTab": "已啟用",
+      "inactiveTab": "未啟用",
+      "searchPlaceholder": "搜尋模組…",
+      "tagFilterPlaceholder": "依標籤篩選…",
+      "sourcePlaceholder": "來源",
+      "sourceAny": "任何",
+      "deactivateSelectedButton": "停用所選",
+      "alsoActivateDependenciesLabel": "同時啟用依賴",
+      "activateSelectedButton": "啟用所選",
+      "loadFailed": "無法載入模組。",
+      "totalMods": "{count} 個模組",
+      "pageCapHint": "（僅顯示前 {count} 個，請用搜尋縮小範圍）",
+      "activateDialogHeader": "啟用模組",
+      "willActivateHeading": "將會啟用：",
+      "alreadyActiveHeading": "已啟用，略過：",
+      "unresolvableDependency": "{mod} 宣告依賴 {deps}，但在磁碟上找不到。",
+      "activatedToast": "已啟用",
+      "activateButton": "啟用",
+      "deactivateDialogHeader": "停用模組",
+      "willDeactivateHeading": "將會停用：",
+      "refusedHeading": "已拒絕（仍被需要）：",
+      "dependentsStillActive": "{count} 個已啟用的模組仍依賴 {mod}：{deps}。",
+      "deactivatedToast": "已停用",
+      "deactivateButton": "停用"
+    },
+    "defSearch": {
+      "ariaLabel": "跳至 Def",
+      "placeholder": "跳至 Def…"
+    }
+  },
+  "rules": {
+    "orphaned": {
+      "empty": "沒有孤立決定。",
+      "pruneButton": "清理"
+    },
+    "pairTable": {
+      "regionLabel": "成對規則",
+      "afterHeader": "在後",
+      "beforeHeader": "在前",
+      "originHeader": "來源",
+      "commentHeader": "註解",
+      "notAppliedTitle": "未生效：匯入的成對規則已關閉",
+      "promotedFrom": "（提升自「{origin}」）",
+      "overridesDeclaredTag": "（覆寫宣告）",
+      "overridesDeclaredTitle": "此規則被標記為覆寫同一對模組之間的宣告排序約束（loadAfter/modDependencies），若存在的話。它針對這一對模組優先於作者自己的宣告，但絕不會勝過硬性依賴。",
+      "promotedButton": "已提升",
+      "promoteButton": "提升",
+      "deleteButton": "刪除"
+    },
+    "addPairDialog": {
+      "header": "新增成對規則",
+      "loadsAfterLabel": "在後載入（依賴方模組）",
+      "loadsBeforeLabel": "在前載入（被依賴的模組）",
+      "commentLabel": "註解（選填）",
+      "overrideDeclaredLabel": "覆寫這兩個模組之間的宣告排序約束（若存在）",
+      "overrideDeclaredWarning": "這只會針對這一對模組勝過作者自己的 loadAfter/modDependencies，絕不會勝過硬性依賴。僅在宣告本身已過時或錯誤時使用。",
+      "sameModError": "成對規則需要兩個不同的模組。",
+      "replaceWarning": "這會取代此組合現有的「{origin}」規則。",
+      "addButton": "新增"
+    },
+    "addPlacementDialog": {
+      "header": "新增規則",
+      "modToPinLabel": "要固定的模組",
+      "placementLabel": "位置",
+      "placementPlaceholder": "選擇位置",
+      "commentLabel": "註解（選填）",
+      "replaceWarning": "這會取代 {mod} 現有的{placement}固定（來源：{origin}）。"
+    },
+    "page": {
+      "heading": "規則",
+      "importToggleState": "匯入的成對規則：{pairs} · 匯入的位置規則：{placements}",
+      "addRuleButton": "新增規則",
+      "addPairRuleButton": "新增成對規則",
+      "reimportHint": "自此設定檔上次匯入以來，快取的資料庫已有變更；請重新匯入以使用這些變更。",
+      "importFromRimSortButton": "從 RimSort 匯入",
+      "importFinished": "匯入完成。",
+      "userRulesCount": "使用者規則：{count}",
+      "communityRulesCount": "社群規則：{count}",
+      "steamDependenciesCount": "Steam 依賴：{count}",
+      "notImported": "未匯入",
+      "loadFailed": "無法載入規則。",
+      "tabAll": "全部",
+      "tabUserDecision": "你的決定",
+      "tabRimSortUser": "RimSort（使用者）",
+      "tabRimSortCommunity": "RimSort（社群）",
+      "tabSteamDb": "SteamDB",
+      "tagsHeading": "標籤",
+      "orphanedHeading": "孤立決定"
+    },
+    "databases": {
+      "heading": "規則資料庫",
+      "communityLabel": "社群規則",
+      "steamLabel": "Steam 創意工坊",
+      "rimmergeLabel": "Rimmerge 規則",
+      "refreshButton": "重新整理",
+      "refreshDisabledTitle": "已由「允許網際網路存取」關閉（設定頁面）",
+      "networkDisabledNotice": "網際網路存取已關閉，因此無法重新整理。仍會使用快取的資料庫。",
+      "failureBanner": "至少一個來源的上次重新整理失敗：仍在使用快取的副本。",
+      "loadFailed": "無法載入規則資料庫。",
+      "needsReimport": "（可重新匯入）",
+      "neverFetched": "從未下載",
+      "stale": "已過時（{count} 天）",
+      "updated": "更新：{relative}",
+      "recencyLine": "{recency} · {bytes} · {sha}",
+      "today": "今天",
+      "daysAgo": "{count} 天前",
+      "lastFailureSuffix": " · 上次重新整理失敗：{reason}",
+      "bundledSuffix": " · 內建 {sha}",
+      "outcomeUpdated": "已更新（{bytes}，sha {sha}）",
+      "outcomeUnchanged": "未變更（sha {sha}）",
+      "outcomeFailed": "失敗：{reason}",
+      "outcomeSkippedSourceDisabled": "已略過（來源已停用）",
+      "outcomeSkippedNetworkDisabled": "已略過（網際網路存取已關閉）",
+      "outcomeSkippedAutoRefreshDisabled": "已略過（自動重新整理已停用）",
+      "outcomeSkippedNotDue": "已略過（尚未到期）",
+      "refreshModeAutomatic": "自動重新整理",
+      "refreshModeManual": "僅手動重新整理"
+    },
+    "importDialog": {
+      "header": "從 RimSort 匯入",
+      "userRulesLabel": "userRules.json",
+      "communityRulesLabel": "communityRules.json",
+      "steamDbLabel": "steamDB.json",
+      "importButton": "匯入"
+    },
+    "tagEditor": {
+      "modHeader": "模組",
+      "tagHeader": "標籤",
+      "sourceHeader": "來源",
+      "confidenceHeader": "信賴度",
+      "signalsHeader": "訊號",
+      "modIdLabel": "模組 ID",
+      "tagLabel": "標籤",
+      "modeLabel": "模式",
+      "modeAdd": "新增",
+      "modeRemove": "移除",
+      "saveButton": "儲存"
+    },
+    "table": {
+      "pairRulesHeading": "成對規則",
+      "placementRulesHeading": "位置規則",
+      "modHeader": "模組",
+      "placementHeader": "位置",
+      "originHeader": "來源",
+      "commentHeader": "註解",
+      "promotesHeader": "連帶提升",
+      "notAppliedPlacementsTitle": "未生效：匯入的位置規則已關閉",
+      "otherMods": "{count} 個其他模組",
+      "incompatibilitiesHeading": "不相容",
+      "aHeader": "A",
+      "bHeader": "B",
+      "empty": "尚無規則。"
+    }
+  },
+  "placement": {
+    "top": "頂部",
+    "bottom": "底部"
+  },
+  "tagProvenance": {
+    "inferred": "推斷",
+    "manual": "手動"
+  },
+  "source": {
+    "core": "Core",
+    "dlc": "擴充",
+    "local": "本機",
+    "workshop": "創意工坊"
+  },
+  "cardinality": {
+    "scalar": "單值",
+    "list": "清單"
+  },
+  "fieldRole": {
+    "targetKey": "目標鍵",
+    "itemSlot": "物品欄位",
+    "chances": "機率",
+    "scalar": "單值",
+    "opaque": "不透明"
+  },
+  "changeKind": {
+    "ownsDef": "擁有",
+    "ownsTemplate": "擁有範本",
+    "patchesDef": "修補",
+    "overridesTexture": "覆寫紋理",
+    "overridesSound": "覆寫音效",
+    "overridesKeyedTranslation": "覆寫翻譯"
+  },
+  "defPage": {
+    "loadFailed": "無法載入此 Def。",
+    "sourceTitle": "以{source}順序檢視，按一下以切換",
+    "partialBanner": "不完整：停在 {reason}。此處之後的欄位不會顯示。",
+    "replayStopper": "{mod} 的操作 {opIndex}：{error}",
+    "ambiguousTemplateIntro": "有歧義的範本：此 Name 有 {count} 個註冊。RimWorld 會讓每個子項各自對應到在它之前（或同位置）最近載入的那個註冊，從來沒有單一的勝出者。上方的「勝出者」／「最後載入的代表」只是本應用程式在未查詢特定子項時，自行揭示的替代顯示，並不是答案。",
+    "knownChildrenResolve": "{count} 個已知子項對應到此處",
+    "ownersHeading": "所有者",
+    "winnerTag": "（勝出者）",
+    "representativeTag": "（最後載入的代表）",
+    "representativeTitle": "僅為代表：不存在單一答案，請參閱上方的範本歧義說明",
+    "generatedTag": "（自動產生）",
+    "patchersHeading": "修補者",
+    "patcherStatusNotReached": "未執行到",
+    "patcherStatusReplayFailed": "重播失敗",
+    "patcherStatusReplaysCleanly": "重播正常",
+    "wrappedTag": "（已包裝）",
+    "wrappedTitle": "從其第一個產生變更的子節點開始顯示，而不是包裝節點本身",
+    "gatesPrefix": "條件：{gates}",
+    "gate": {
+      "anyActive": "{mods} 中任一個已啟用",
+      "noneActive": "{mods} 皆未啟用"
+    },
+    "parentsHeading": "父項",
+    "childrenHeading": "子項",
+    "effectiveDefHeading": "實際生效的 Def",
+    "onlyPatchedLabel": "僅顯示修補／繼承",
+    "provenanceLegendOwner": "所有者",
+    "provenanceLegendPatched": "已修補",
+    "provenanceLegendInherited": "繼承",
+    "provenanceOwner": "所有者：{mod}",
+    "provenancePatch": "由 {mod} 修補",
+    "provenanceInherited": "繼承自 {defType}/{defName}（{owner}）",
+    "provenanceUnattributedTemplate": "繼承自 {defType}/{defName}（所有者不明）",
+    "fields": {
+      "pathHeader": "路徑",
+      "valueHeader": "值",
+      "provenanceHeader": "出處",
+      "showMore": "顯示更多（{loaded} / {total}）"
+    },
+    "resolvedXmlSummary": "解析後的 XML"
+  },
+  "layer": {
+    "hard": "硬性",
+    "anyOf": "任選其一",
+    "declaredOverride": "宣告覆寫",
+    "declared": "宣告",
+    "userDecision": "使用者決定",
+    "rimSortUser": "RimSort 使用者",
+    "rimSortCommunity": "RimSort 社群",
+    "steamDb": "SteamDB",
+    "inferred": "推斷",
+    "soft": "軟性",
+    "awareness": "感知"
+  },
+  "order": {
+    "heading": "載入順序：{source}",
+    "loadFailed": "無法載入順序。",
+    "sortProvenance": {
+      "summary": "並列處理：{tieBreak} · 匯入的成對規則：{pairs} · 匯入的位置規則：{placements}",
+      "rebuild": "重建",
+      "preserveCurrent": "保留目前",
+      "on": "開啟",
+      "off": "關閉"
+    },
+    "table": {
+      "regionLabel": "載入順序",
+      "nameHeader": "名稱",
+      "tierHeader": "層級",
+      "depsHeader": "依賴",
+      "movedFrom": "原第 {position} 位"
+    },
+    "whyPanel": {
+      "headerWithMod": "{mod}：為何在此？",
+      "headerFallback": "為何在此？",
+      "loadFailed": "無法載入說明。",
+      "positionHeading": "位置",
+      "becameReadyAfterHeading": "在以下模組之後就緒",
+      "lowerBoundsHeading": "下界（必須在其後載入）",
+      "noLowerBounds": "沒有下界。",
+      "upperBoundsHeading": "上界（等待此模組的模組）",
+      "noUpperBounds": "沒有模組在等待此模組。",
+      "advisoryHeading": "建議性排序約束",
+      "softHeading": "軟性（延遲參照）",
+      "awarenessHeading": "感知",
+      "none": "無。",
+      "satisfied": "已滿足",
+      "violated": "已違反",
+      "droppedHeading": "已捨棄的排序約束",
+      "cycle": "循環：{cycle}",
+      "overruledBy": "被以下項目否決：",
+      "sortSettingsHeading": "排序設定",
+      "tieBreakHeading": "並列處理",
+      "currentPositionKnown": "目前位置：第 {position} 位",
+      "currentPositionUnknown": "目前位置：不在目前的順序中",
+      "effectiveKey": "實際排序鍵：{key}",
+      "modsPreferredAhead": "優先排在前面的模組：{count}",
+      "pulledForwardBy": "被以下項目往前拉：",
+      "openInModsLink": "在「模組」中開啟"
+    },
+    "edgeChip": {
+      "directionAfter": "在後",
+      "directionBefore": "在前",
+      "findingLink": "檢查結果"
+    },
+    "tier": {
+      "core": "Core",
+      "dlc": "DLC",
+      "top": "頂部",
+      "body": "主體",
+      "bottom": "底部"
+    },
+    "provenance": {
+      "anyOf": "{assembly} 的任選其一候選者",
+      "rule": "規則（{origin}）",
+      "ruleWithComment": "規則（{origin}）：{comment}",
+      "tier": "層級邊界（{tier}）"
+    },
+    "tierReason": {
+      "source": "來源：{source}",
+      "placement": "位置規則（{origin}）",
+      "promotedBy": "由 {before} → {after} 提升",
+      "body": "沒有來源或位置訊號"
+    }
+  },
+  "apply": {
+    "dialog": {
+      "header": "套用",
+      "defCacheNote": "一個已啟用的 Def 快取模組以載入順序作為快取的鍵；此次套用後第一次啟動遊戲時會重建快取{parenthetical}。",
+      "defCacheParenthetical": "（依你上次的日誌，約 {seconds} 秒）",
+      "writeModsConfigLabel": "寫入 ModsConfig.xml（RimWorld 讀取的載入順序）",
+      "staleActiveSetMessage": "已啟用模組的工作集合有尚未掃描的變更：請重新掃描後再寫入 ModsConfig.xml。",
+      "rescanButton": "重新掃描",
+      "writeMergeModLabel": "寫入合併模組（將產生的模組輸出到 Mods/，若已不剩任何合併／資源決定，則將其移除）",
+      "closeButton": "關閉",
+      "cancelButton": "取消",
+      "writeAnywayButton": "仍要寫入",
+      "applyButton": "套用",
+      "writeMergeModButton": "寫入合併模組",
+      "saveDecisionsButton": "儲存決定與規則"
+    },
+    "preflight": {
+      "unappliedHeading": "已掃描但尚未套用到 ModsConfig.xml：",
+      "addedLabel": "新增：",
+      "removedLabel": "移除：",
+      "orderLabel": "順序",
+      "modsConfigLabel": "ModsConfig.xml",
+      "decisionsLabel": "決定",
+      "rulesLabel": "規則",
+      "movedModsLabel": "會移動的模組",
+      "needsInputLabel": "待處理",
+      "unansweredReordersWarning": "此次驗證中有 {count} 個建議的重新排序尚無成對規則",
+      "problemsRow": "{count} 個問題需要確認",
+      "problemsAllDecided": "{count} 個問題，皆已決定",
+      "noProblems": "未發現問題",
+      "openInbox": "開啟「檢查結果」"
+    },
+    "progress": {
+      "heading": "驗證順序",
+      "description": "重播每個外部補丁操作，以預測在此順序下哪些會失敗，就如同 RimWorld 自己的日誌所呈現的那樣。僅在需要時執行：大型安裝約需一分鐘。",
+      "verifyingLabel": "正在驗證順序",
+      "checksCaption": "已檢查 {checked} / {total} 項",
+      "startingCaption": "正在啟動…"
+    },
+    "diff": {
+      "summary": "已依{source}順序檢查 {count} 個 Def：{list}。",
+      "summaryOperations": "預計會失敗的操作 {count} 個",
+      "summaryTargets": "受影響的 Def 目標 {count} 個",
+      "removedByCount": "被較早載入的模組移除：{count}",
+      "notYetInjectedCount": "尚未注入：{count}",
+      "deadTargetCount": "無效目標：{count}",
+      "unknownCount": "未知：{count}",
+      "orderFixableHeading": "可透過順序修正（重新排列指定的模組可能解決這些問題）：",
+      "cosmeticText": "無實質影響：無論哪種順序，最終的 Def 都相同，因此不提供重新排序。",
+      "mergeInsteadLink": "改為合併",
+      "mergeInstead": "{link}可保留落敗模組自身的意圖。",
+      "noMergeAvailable": "此目標沒有可用的合併。",
+      "removedByCause": "{mod} 先載入，並移除了目標節點。",
+      "notYetInjectedCause": "目標節點由 {mod} 注入，而該模組較晚載入。",
+      "modPossessive": "{mod} 的 {operation}",
+      "notFullyFixableHeading": "無法完全透過順序修正（過時的補丁、無法分類的原因，或混合情況），依模組分組：",
+      "groupedByModLine": "{mod}：{list}",
+      "groupedOperations": "{count} 個操作",
+      "groupedTargets": "{count} 個 Def 目標",
+      "partlyFixableHeading": "其中有些可部分透過順序修正（重新排序可解決它們的部分 Def 目標）：",
+      "skippedCandidates": "有 {count} 個候選項無法檢查。",
+      "pvoMismatchWarning": "匯入的日誌是由與剛驗證的順序不同的模組順序產生的：下方的數量是在比較兩次不相關的執行。",
+      "pvoHeading": "預測與實際觀察（上次匯入的日誌）",
+      "pvoSnapshotNote": "匯入的日誌是主控台快照，而非整次遊戲執行的日誌：遊戲在主控台最舊一則訊息之前記錄的失敗不在其中，因此「已預測，但未觀察到」並不能證明失敗沒有發生。",
+      "pvoCutOffNote": "匯入的日誌沒有正常退出，且在記錄任何補丁結果之前就結束了，因此遊戲可能從未進入補丁階段：「已預測，但未觀察到」並不能證明失敗沒有發生。",
+      "pvoGapsNote": "寫入匯入的日誌期間，遊戲曾停止寫入訊息，因此其中可能缺少某些失敗：「已預測，但未觀察到」並不能證明失敗沒有發生。",
+      "pvoMatchedSummary": "日誌已確認：{count}",
+      "pvoPredictedOnlySummary": "已預測，但未在日誌中觀察到：{count}",
+      "pvoObservedOnlySummary": "日誌中觀察到，但未預測：{count}（原樣列出，絕不捨棄）：",
+      "unattributedRaw": "（無法歸屬：{raw}）",
+      "counterfactualJobsLine": "針對其他載入順序重新檢查的操作 {count} 個",
+      "counterfactualResolvedLine": "已解釋的失敗 {count} 個",
+      "counterfactualDemotedLine": "其實可透過調整順序修正的「無效目標」列 {count} 列",
+      "counterfactualSkippedLine": "略過的操作 {count} 個",
+      "counterfactualRejectedLine": "因破壞其他操作而遭拒絕的重新排序 {count} 個",
+      "counterfactualSummary": "反事實檢驗：{list}。"
+    },
+    "reorderActions": {
+      "createPairRule": "建立成對規則",
+      "createPairRuleAnyway": "仍要建立成對規則",
+      "conflictText": "與「{kind}」衝突：{detail}（{status}）",
+      "ruleCreated": "已建立規則。重新執行「驗證順序」來檢查它：規則仍可能被作者的宣告或其他規則否決，兩條方向相反的規則也會互相抵銷；「規則」頁面會顯示實際生效的內容。",
+      "ruleExists": "規則已存在。"
+    },
+    "result": {
+      "forceWarning": "RimWorldWin64.exe 似乎正在執行。遊戲結束時會覆蓋 ModsConfig.xml，因此你現在寫入的內容可能會遺失。仍要寫入嗎？",
+      "mergeModPath": "合併模組：{path}",
+      "mergeModRemoved": "合併模組：已移除（已不剩任何合併或資源決定）",
+      "mergeModBackupPath": "合併模組備份：{path}",
+      "skippedHeading": "已略過，合併模組在寫入時未包含它們：",
+      "toastAppliedSummary": "已套用",
+      "toastSavedSummary": "已儲存",
+      "toastModsConfigPath": "ModsConfig：{path}",
+      "toastBackupPath": "備份：{path}",
+      "toastDecisionsPath": "決定：{path}",
+      "toastRulesPath": "規則：{path}",
+      "toastSkippedStillNeedsInput": "已略過（仍待處理）：{list}"
+    },
+    "confirm": {
+      "heading": "仍要套用嗎？",
+      "intro": "{order}順序在寫入前有 {count} 個問題需要確認：",
+      "acknowledgedHeading": "已在「檢查結果」中決定",
+      "reviewInInbox": "在「檢查結果」中檢閱",
+      "goBackButton": "返回",
+      "applyAnywayButton": "仍要套用"
+    },
+    "problem": {
+      "missingDependencyInactive": "{mod} 需要 {dependency}，它已安裝但未啟用。",
+      "missingDependencyNotInstalled": "{mod} 需要 {dependency}，但它未安裝。",
+      "incompatiblePair": "{a} 和 {b} 被宣告為不相容。",
+      "missingModRemoved": "{mod} 未安裝，將從已啟用清單中移除。",
+      "missingModKept": "{mod} 未安裝，但會保留在已啟用清單中；遊戲會略過它。",
+      "loadRequirementViolated": "{after} 需要 {before} 先載入；此順序卻讓它較晚載入。",
+      "anyOfUnsatisfied": "{mod} 需要 {candidates} 其中之一先載入；但它們都沒有先載入。"
+    }
+  },
+  "gameLog": {
+    "heading": "匯入的日誌：",
+    "kind": {
+      "playerLog": "Player.log",
+      "consoleSnapshot": "主控台快照"
+    },
+    "coverage": {
+      "playerLog": {
+        "cleanExit": "{count} 輪啟動；日誌以正常退出結束",
+        "crashed": "{count} 輪啟動；日誌以遊戲當機結束（當機報告：{path}）",
+        "crashedNoPath": "{count} 輪啟動；日誌以遊戲當機結束（未指出當機報告）",
+        "truncated": "{count} 輪啟動；日誌在執行中途結束，沒有退出結尾（遊戲凍結、被強制關閉，或在遊戲執行時複製的副本）"
+      },
+      "snapshot": {
+        "belowCap": "主控台只保留了 {count} 則訊息，因此這份副本無法說明所保留訊息未顯示的任何階段",
+        "atCap": "僅有主控台保留的 {count} 則訊息，已達主控台的上限：較舊的訊息已被遊戲捨棄",
+        "overCap": "{count} 則訊息，超過單一主控台能保留的數量，因此這不是單一的主控台副本：可能是多份副本貼在一起，或是解析問題；無法判斷遊戲捨棄了多少",
+        "headTruncated": "副本從某則訊息的中間開始：第一則訊息不完整。"
+      }
+    },
+    "gaps": {
+      "warning": "遊戲停止寫入訊息 {count} 次。它從未寫入的內容無法復原。",
+      "neverResumed": "有 {count} 次日誌記錄停止後沒有恢復訊息，因此從最早一次這類停止起，日誌中之後的所有內容都不可靠。",
+      "lowerBound": "至少有 {count} 類訊息（占日誌訊息的 {percent}%）橫跨中斷，因此其數量可能偏少；任何數量都可能偏少。",
+      "resumed": "第 {stop} 行至第 {resume} 行",
+      "open": "第 {stop} 行至日誌結尾",
+      "more": "以及另外 {count} 個"
+    },
+    "losses": {
+      "heading": "讀取器必須限制此日誌的部分內容，因此摘要缺少其中一部分：",
+      "linesTruncated": "{count} 行超過讀取器的長度限制；只讀取了開頭",
+      "linesWithInvalidUtf8": "{count} 行含有無效的 UTF-8，已以替代字元讀取",
+      "stackBlockLinesDropped": "{count} 行超過單一區塊限制的堆疊追蹤未經檢查",
+      "stackJoinsAbandoned": "{count} 個多行堆疊合併超過限制而被放棄",
+      "passesFolded": "{count} 則來自超出追蹤範圍之啟動輪次的訊息，已併入最後一個追蹤的輪次",
+      "stackRefsDropped": "{count} 個堆疊反向參照未建立索引",
+      "loggingGapsDropped": "{count} 個超出清單上限的日誌中斷只計數、未列出",
+      "crashReportPathsTruncated": "{count} 個當機報告位置被截斷至長度上限"
+    }
+  },
+  "startup": {
+    "heading": "啟動耗時",
+    "description": "每個已啟用的模組一列：產生變更的補丁操作、慢速形態的 xpath、紋理、DLL 和 Def，沒有計時資料（Rimmerge 從不執行遊戲）。匯入 {playerLog} 或主控台快照，即可填入尺寸不當的 DDS 和觀察到的計時欄位（主控台快照無法填入計時）。",
+    "orderMismatchWarning": "匯入的日誌是由與目前所選順序不同的模組順序產生的：下方尺寸不當的 DDS 和觀察到的計時欄位反映的是那次執行，而非這次。",
+    "noOrderBlockWarning": "匯入的日誌完全沒有已啟用模組清單，因此無法與所選順序比對：下方尺寸不當的 DDS 和觀察到的計時欄位可能反映的是另一次執行。",
+    "loadFailed": "無法載入啟動耗時表。",
+    "modHeader": "模組",
+    "patchOpsHeader": "補丁操作",
+    "slowXpathsHeader": "慢速 xpath",
+    "texFilesHeader": "紋理檔",
+    "texBytesHeader": "紋理位元組",
+    "ddsFilesHeader": "DDS 檔",
+    "badDimDdsHeader": "尺寸不當 DDS",
+    "dllsHeader": "DLL",
+    "dllBytesHeader": "DLL 位元組",
+    "defsHeader": "Def",
+    "overriddenTexHeader": "被覆寫紋理",
+    "observedTimersHeader": "觀察到的計時",
+    "contentOnlyHeader": "純內容",
+    "totalRow": "總計（{count} 個模組）",
+    "notImported": "未匯入",
+    "notAvailableFromSnapshot": "無法從主控台快照取得",
+    "atLeast": "至少 {count}",
+    "snapshotNote": "匯入的日誌是主控台快照，而非整次遊戲執行的日誌：無法從中取得觀察到的計時，且尺寸不當的 DDS 數量為下限。",
+    "cutOffNote": "匯入的日誌在記錄任何補丁結果之前就結束了，且沒有正常退出，因此下方的數量可能偏少：尺寸不當的 DDS 數量和觀察到的計時都是下限。",
+    "gapsNote": "寫入匯入的日誌期間，遊戲曾停止寫入訊息，因此下方的數量可能偏少：尺寸不當的 DDS 數量和觀察到的計時都是下限。",
+    "observedTimersValue": "{count}（{ms} 毫秒）",
+    "observedTimersAtLeast": "至少 {count}（{ms} 毫秒）",
+    "contentOnly": "純內容"
+  },
+  "assignments": {
+    "editRefsTargets": {
+      "header": "編輯參照與目標",
+      "referencesHeading": "參照（R）",
+      "targetsHeading": "目標（T）",
+      "whatChangedHeading": "變更內容",
+      "schemaChangeCounts": {
+        "added": "新增的欄位 {count} 個",
+        "removed": "移除的欄位 {count} 個",
+        "reclassified": "重新分類的欄位 {count} 個"
+      },
+      "reclassifiedNames": "（{names}）",
+      "strandedValuesLine": "已丟棄 {count} 個儲存的值（重新分類欄位的新角色不再接受原本儲存的內容）：",
+      "droppedRowsLine": "已丟棄 {count} 列（其目標已離開目標集合）：",
+      "clean": "此變更沒有丟棄或遺留任何內容。",
+      "closeButton": "關閉",
+      "saveButton": "儲存"
+    },
+    "rowEditor": {
+      "copyFrom": "複製自：",
+      "winnerBadge": "（勝出者）",
+      "prefillFrom": "（來自 {mod}）",
+      "clampedTo": "（已縮減為「{name}」：此欄位只保留一個名稱，但此值指定了 {count} 個：{joined}）",
+      "droppedFromCopy": "（因對應的 Def 未啟用，略過了 {count} 個借用的值：{names}）",
+      "pairedTo": "配對至 {slot}",
+      "overrideBadge": "覆寫：{count} 個現有的相符項目",
+      "inspectDefLink": "檢視 Def",
+      "defNameLabel": "defName",
+      "saveRowButton": "儲存列",
+      "clearRowButton": "清除列",
+      "newRowTitle": "新增列"
+    },
+    "coverageList": {
+      "searchPlaceholder": "搜尋目標…",
+      "ownerFilterPlaceholder": "依所有者篩選",
+      "thisProject": "此專案",
+      "coveredByMod": "已由 {mod} 涵蓋",
+      "coveredByAnotherMod": "已由其他模組涵蓋",
+      "uncovered": "未涵蓋",
+      "wouldWinNoOwner": "（將勝出）",
+      "wouldWinWithOwner": "（{mod} 將勝出）",
+      "noMatches": "沒有符合的目標。"
+    },
+    "schemaTable": {
+      "fieldHeader": "欄位",
+      "roleHeader": "角色",
+      "typeHeader": "類型",
+      "cardinalityHeader": "基數",
+      "observedHeader": "觀察到的",
+      "defTypePlaceholder": "Def 類型",
+      "hideButton": "隱藏",
+      "unreadableTargets": "學習結構時，有 {count} 個參照的目標無法讀取：",
+      "unreadableTargetLine": "{field}：{defType}/{defName}：{reason}",
+      "newFieldPathLabel": "新欄位路徑",
+      "roleLabel": "角色",
+      "defTypeLabel": "Def 類型",
+      "addFieldButton": "新增欄位",
+      "pathRequired": "必須填寫欄位路徑。",
+      "pathAlreadyExists": "{path} 已是此結構的欄位。"
+    },
+    "exportPanel": {
+      "exportDirLabel": "匯出目錄",
+      "exportDirPlaceholder": "選擇資料夾…",
+      "chooseButton": "選擇…",
+      "installCheckboxLabel": "安裝到 Mods 資料夾並啟用",
+      "staleActiveSetNote": "尚未掃描的啟用變更不會包含在內：如果要將它們納入此次安裝，請先重新掃描。",
+      "forceWarning": "RimWorldWin64.exe 似乎正在執行。現在安裝會寫入 ModsConfig.xml，而遊戲結束時會覆蓋該檔案，因此這項變更可能會遺失。仍要匯出嗎？",
+      "exportAnyway": "仍要匯出",
+      "export": "匯出",
+      "exportedTo": "已匯出到：{path}",
+      "installedAt": "已安裝於：{path}",
+      "skippedHeading": "已略過",
+      "skippedPath": "：{path}"
+    },
+    "editor": {
+      "loadFailed": "無法載入此專案。",
+      "editRefsTargetsButton": "編輯參照與目標",
+      "deleteButton": "刪除",
+      "noSections": "尚無分區。",
+      "addSectionButton": "新增分區",
+      "removeSectionButton": "移除分區",
+      "noTargetSelected": "未選取目標。",
+      "ownRowsHeading": "自有列",
+      "newRowButton": "新增列",
+      "standaloneHint": "這是獨立分區：它自己的列沒有可比對的目標，因此這裡沒有涵蓋佇列。",
+      "noRowsYet": "尚無列。",
+      "selectOrNewRow": "選取一列，或按「新增列」建立一列。",
+      "exportHeading": "匯出",
+      "deleteDialogHeader": "要刪除此專案嗎？",
+      "deleteDialogBody": "這會移除補丁製作器專案。已匯出到磁碟的資料夾不會被更動。",
+      "addSectionDialogHeader": "新增分區",
+      "listingCandidates": "正在列出候選項…",
+      "candidateGroupLabel": "候選分區類型",
+      "noAddableCandidates": "沒有可新增的候選項：此專案的參照模組所擁有的每個 Def 類型都已是分區。",
+      "addButton": "新增",
+      "removeSectionDialogHeader": "要移除此分區嗎？",
+      "removeSectionBody": "這會移除 {defType} 分區及其所有列。此操作無法在此復原。",
+      "sectionInUse": "仍有另一個分區中的 {count} 列參照它。仍要移除的話，這些參照會變成懸空參照：之後匯出時，每一個都會回報為略過。",
+      "referenceLine": "{defType} {row}：{path}",
+      "removeAnywayButton": "仍要移除",
+      "removeButton": "移除"
+    },
+    "wizard": {
+      "heading": "新增補丁製作器專案",
+      "identityHeading": "識別資訊",
+      "nameLabel": "名稱",
+      "packageIdLabel": "Package ID",
+      "packageIdPlaceholder": "author.mymod",
+      "displayNameLabel": "顯示名稱",
+      "referencesHeading": "參照模組（R）",
+      "targetsHeading": "目標（T）",
+      "targetsHint": "留空即可製作全新的 Def 類型（「新 Def」專案），而不是修補現有的 Def。",
+      "listCandidatesButton": "列出候選項",
+      "effectiveRefsHeading": "實際生效的參照集合",
+      "excludedTitle": "已排除，按一下以納入",
+      "includeTitle": "按一下以排除",
+      "excludedTag": "已排除",
+      "includedTag": "×",
+      "candidatesHeading": "候選分配類型",
+      "candidateGroupLabel": "候選分配類型",
+      "instanceCount": "{defType}（{count} 個實例）",
+      "inferringSchema": "正在推斷結構…",
+      "standaloneNote": "此候選項沒有目標鍵欄位：它會成為「新 Def」專案，使用獨立的列，而不是與目標比對的列。",
+      "excludedTargetsNote": "T/Core 之外有 {count} 個參照的目標從未被讀取（遵循 T 可保持速度）。",
+      "createButton": "建立"
+    },
+    "list": {
+      "newProjectButton": "新增專案",
+      "loadFailed": "無法載入分配專案。",
+      "empty": "尚無補丁製作器專案。",
+      "nameHeader": "名稱",
+      "packageIdHeader": "Package ID",
+      "sectionsHeader": "分區",
+      "refsHeader": "R",
+      "targetsHeader": "T",
+      "rowsHeader": "列",
+      "uncoveredHeader": "未涵蓋",
+      "exportedHeader": "已匯出",
+      "notApplicable": "不適用",
+      "exportedYes": "是",
+      "exportedNo": "否"
+    },
+    "itemPicker": {
+      "searchPlaceholder": "搜尋項目…",
+      "thisProjectHeading": "此專案",
+      "noMatches": "沒有符合的項目。",
+      "count": "{loaded} / {total}",
+      "clearSelection": "清除選取",
+      "loadMore": "載入更多"
+    }
+  },
+  "rationale": {
+    "layerPhrase": {
+      "hard": "硬性（載入時）需求",
+      "anyOf": "已解析的任選其一需求",
+      "declaredOverride": "你自己對作者宣告的明確覆寫",
+      "declared": "作者的宣告",
+      "userDecision": "你自己的決定",
+      "rimSortUser": "RimSort 使用者規則",
+      "rimSortCommunity": "RimSort 社群規則",
+      "steamDb": "Steam 創意工坊依賴",
+      "other": "另一條排序約束"
+    },
+    "placementPhrase": {
+      "top": "於頂部",
+      "bottom": "於底部"
+    },
+    "relationExplanation": {
+      "presenceOnly": "這只檢查模組是否存在，而不檢查其載入位置",
+      "patchTargetsDef": "補丁會在所有模組的 Def 都載入後，套用到合併後的 Def 文件上，與載入順序無關",
+      "parentTemplate": "不可能發生：ParentName 排序約束是載入時的排序事實（硬性），絕不是建議性的",
+      "usesType": "類型會在所有已載入的組件中解析，與載入順序無關",
+      "patchSelectsInjectedNode": "所選取的節點可能已透過其他方式存在（直接寫入、由多個已啟用模組注入，或由進行選取的模組自己的補丁注入），或位於分析器建立索引的深度之外而無法檢查，因此這不是已證實的載入順序需求",
+      "patchRemovedNode": "分析器從補丁內容推斷出這點：一個模組移除了另一個模組也會修補的節點，移除方必須最後載入，否則另一個補丁會找不到可修改的內容。這不是作者自己宣告的載入順序，因此在宣告或位置規則不一致時會讓步",
+      "retextureAfterOwner": "分析器從共用的紋理路徑推斷出這點：純紋理的換膚包必須在它所換膚的內容模組之後載入，否則它的替換紋理會被它本來要換膚的內容覆蓋。這不是作者自己宣告的載入順序，因此在宣告或位置規則不一致時會讓步",
+      "defOverrideAfterOrigin": "分析器從範本／Def 數量證據推斷出這點：一個模組若也提供屬於另一個模組命名空間的 Def，就必須在該命名空間的所有者之後載入，否則它的覆寫會落在原始定義之下，而不是蓋在其上。這不是作者自己宣告的載入順序，因此在宣告或位置規則不一致時會讓步",
+      "patchInvalidatesPredicate": "分析器從補丁內容推斷出這點：一個 Replace/Remove 改寫或刪除了另一個模組的 xpath 條件所讀取的節點，讀取條件的操作必須先載入，否則它的條件將不再相符。這不是作者自己宣告的載入順序，因此在宣告或位置規則不一致時會讓步",
+      "patchRemovedNodeCosmetic": "分析器從補丁內容推斷出這點，但在此處無論哪種順序，最終的 Def 都相同，只有由哪個模組的操作記錄失敗會改變。因此它是比作者自己宣告的載入順序更弱的證據，在宣告或位置規則不一致時會讓步",
+      "replaceDiscardsAddition": "分析器從補丁內容推斷出這點：Replace 會換入一個全新的節點，默默捨棄較早的新增操作寫入其中的任何內容，因此新增操作必須在 Replace 之後載入，否則它自己的內容會遺失，且完全沒有日誌記錄。這不是作者自己宣告的載入順序，因此在宣告或位置規則不一致時會讓步",
+      "interactionEvidence": "這是模組之間有互動的證據，而不是載入器本身需要的排序事實"
+    },
+    "rulePhrase": {
+      "userDecisionOverride": "你自己的宣告排序約束覆寫",
+      "userDecision": "你自己的決定",
+      "layered": "{layerPhrase}所定的「{after} 在 {before} 之後載入」"
+    },
+    "edgeDroppedInferred": {
+      "patchRemovedNode": "{after} 移除了 {before} 也會修補的節點；{after} 必須在 {before} 之後載入，否則 {before} 自己的補丁會找不到可修改的內容。分析器是從補丁內容推斷出這點的，而不是根據任一模組自己宣告的載入順序。",
+      "retextureAfterOwner": "{after} 是純紋理的換膚包，與 {before} 自己的內容共用紋理路徑；{after} 必須在 {before} 之後載入，否則它的替換紋理會被它本來要換膚的內容覆蓋。分析器是從共用的紋理路徑推斷出這點的，而不是根據任一模組自己宣告的載入順序。",
+      "defOverrideAfterOrigin": "{before} 擁有此覆寫所屬的範本或 Def 家族；{after} 也提供了它的副本，必須在 {before} 之後載入，覆寫才會蓋在原始定義之上。分析器是從範本／Def 數量證據推斷出這點的，而不是根據任一模組自己宣告的載入順序。",
+      "patchInvalidatesPredicate": "{after} 取代或移除了 {before} 自己的補丁透過條件選取的節點；{after} 必須在 {before} 之後載入，否則 {before} 自己的條件將不再相符。分析器是從補丁內容推斷出這點的，而不是根據任一模組自己宣告的載入順序。",
+      "replaceDiscardsAddition": "{before} 取代了 {after} 也會新增內容的節點；{after} 必須在 {before} 之後載入，否則當 {before} 的 Replace 換入全新的節點時，它自己新增的內容會被默默捨棄，且完全沒有日誌記錄。分析器是從補丁內容推斷出這點的，而不是根據任一模組自己宣告的載入順序。"
+    },
+    "edgeDroppedCosmetic": "無實質影響：無論哪種順序，最終的 Def 都相同；只有出現哪一行日誌會改變",
+    "keepEdgeInCycle": "保留此排序約束；排序器會改為捨棄循環中次弱的排序約束。",
+    "reorderOverridingEdgeWinner": "改為強制採用此模組自己的順序，覆寫勝出者。",
+    "edgeDroppedWithWinner": "{after} 反而必須在 {before} 之前載入：{layerPhrase}如此要求（{detail}）。",
+    "edgeDroppedSoftOrAwareness": "為打破循環而捨棄軟性或僅感知的排序約束，很少會改變行為。",
+    "edgeDroppedDeclared": "為了打破循環，必須捨棄一條作者宣告的排序約束。",
+    "edgeDroppedHard": "為了打破循環，必須捨棄一條硬性（載入時）排序約束：這些模組確實互相衝突。",
+    "removeDependentModBrokenOrder": "將依賴方模組從已啟用清單中移除，而不是接受有問題的載入順序。",
+    "declarationQuestioned": "依據{layerPhrase}（{declaredDetail}），{declaredAfter} 在 {declaredBefore} 之後載入；{relationExplanation}（{relationDetail}）。",
+    "reorderOppositeOfRelation": "以使用者決定強制採用此關係所暗示的相反順序。",
+    "declarationOverridden": "{declaredAfter} 宣告要在 {declaredBefore} 之後載入（{detail}），但{layerPhrase}另有規定：改為 {byAfter} 在 {byBefore} 之後載入（{byDetail}）。",
+    "anyOfNoCandidate": "沒有任何候選項能在不形成循環的情況下滿足此約束。",
+    "forceAnyOfCandidateAcceptingCycle": "強制採用此候選項，接受因此在其他地方產生的任何循環。",
+    "anyOfChosenAlreadyBefore": "所選的候選項目前已在依賴方模組之前載入。",
+    "anyOfAlternativeCandidate": "另一個候選項也能滿足此約束。",
+    "anyOfUniqueMaxDependents": "所選的候選項是候選項中唯一被依賴最多的模組。",
+    "anyOfSmallestId": "在其他條件相同的候選項中，依最小的 ID 選出。",
+    "ruleOverruledLongerCycle": "為了打破多個模組之間較長的循環，必須捨棄{rulePhrase}。",
+    "ruleOverruledByWinner": "{rulePhrase}被否決：{layerPhrase}要求改為 {before} 在 {after} 之後載入（{detail}）。",
+    "reorderOverridingRuleWinner": "改為強制採用此規則自己的順序，覆寫勝出者。",
+    "promoteRuleDespiteOverruled": "將此規則保留為你自己的決定，讓它即使仍被否決也能保留下來。",
+    "placementOverruled": "{modId} 被固定{placementPhrase}，但{layerPhrase}否決了它：{detail}。",
+    "promotePlacementDespiteOverruled": "將「固定{placementPhrase}」保留為你自己的決定，讓它即使被否決也能保留下來。",
+    "dropRuleOverrulingPlacement": "捨棄否決此位置的規則，讓 {modId} 保持{placementPhrase}。",
+    "placementQuestioned": "{modId} 被固定{placementPhrase}；{relationExplanation}（{relationDetail}）。",
+    "enforceRelationAsUserDecision": "以使用者決定明確強制執行此關係。",
+    "placementOrderingOverridden": {
+      "loadsAfter": "{pinned} 被固定{placementPhrase}，但 {modId} 仍必須在它之後載入：{layerPhrase}（{detail}）。",
+      "loadsBefore": "{pinned} 被固定{placementPhrase}，但 {modId} 仍必須在它之前載入：{layerPhrase}（{detail}）。"
+    },
+    "placementPromotesDependents": "{modId} 被固定{placementPhrase}；另有 {count} 個模組被歸因於它，同樣被提升越過自身的層級邊界{sample}",
+    "promotedSample": {
+      "truncated": "（例如 {sample}）",
+      "exact": "（{sample}）"
+    },
+    "tagInferredSignalCount": "{count} 個相符的訊號",
+    "rejectInferredTag": "拒絕推斷的標籤。",
+    "forceDefOverrideWinner": "不論載入順序，強制讓特定所有者的 Def 勝出。",
+    "defOverrideWinnerDeclaresRelation": "勝出的模組明確宣告了與其他每個所有者的載入順序關係。",
+    "defOverrideSameAuthor": "這些所有者都出自同一位作者。",
+    "defOverrideLoneNonVanillaOwner": "恰好只有一個已啟用的模組覆寫了這個原版 Def；沒有其他模組與它競爭。",
+    "defOverrideShadowsFramework": "一個末端模組正悄悄遮蔽某個共用框架的 Def。",
+    "keepCurrentWinner": "改為保留目前的勝出者。",
+    "defOverrideUnexplained": "多個模組定義了此 Def，但沒有強力的訊號能解釋此覆寫。",
+    "mergeUnexplainedDefOverride": "逐欄位合併，而不是直接採用某一個所有者的 Def。",
+    "mergeShadowsFrameworkFieldByField": "逐欄位合併；在末端模組未變更的地方保留框架的值。",
+    "forcePatchCollisionWinner": "強制只套用某一個模組的補丁。",
+    "patchCollisionAdditive": "每個相關的補丁都只是對目標進行新增；順序不會改變結果。",
+    "patchCollisionContested": "至少有一個相關的補丁會修改目標；載入順序決定結果。",
+    "patchCollisionWinnerDeclaresRelation": "{winner} 宣告在 {others} 之後載入，因此它對「{field}」的變更會按原樣保留。",
+    "mergeContestedPatchCollision": "逐欄位合併，而不是讓載入順序決定整個 Def。",
+    "patchWillFailRemovedBy": "在用來檢查的順序中，{remover} 自己的操作會移除 {modId} 在「{xpath}」的操作所指向的節點，且在它之前載入。",
+    "reorderBeforeRemover": "讓 {modId} 在 {remover} 之前載入，使其操作在節點仍存在時執行。",
+    "patchWillFailNotYetInjected": "{modId} 在「{xpath}」的操作指向 {injector} 注入的節點，但在用來檢查的順序中，{injector} 在它之後才載入。",
+    "reorderAfterInjector": "讓 {modId} 在 {injector} 之後載入，使其操作能在節點注入後找到它。",
+    "patchWillFailDeadTarget": "{modId} 在「{xpath}」的操作指向的節點，無論載入順序為何，在勝出所有者自身解析後的結構中都不存在：重新排序無法修正此問題。",
+    "patchWillFailUnknownCause": "預計 {modId} 在「{xpath}」的操作會失敗；無法分類原因。",
+    "brokenInheritance": "此 `ParentName` 參照的解析結果不符合子項自身元素類型的預期：此 Def 載入時會缺少內容或內容錯誤。請向參照它的模組作者回報此問題。",
+    "danglingDefReference": "此名稱對應不到任何類型的已啟用 Def：{cause}。{soundCaveat}交叉參照會在所有模組的 Def 和補丁都載入後才解析，因此這永遠與載入順序無關。",
+    "danglingDefReferenceSoundCaveat": "這看起來像音效參照：缺少的 `SoundDef` 會記錄一則警告，並默默改用未定義的音效，而不是載入失敗。",
+    "discardedAdditionDeliberate": "{replacer} 宣告在 {adder} 之後載入並取代了「{path}」：{adder} 自身在「{adderPath}」新增的內容是被刻意捨棄的。",
+    "forceTextureWinner": "強制讓某一個模組的紋理勝出。",
+    "copyTextureIntoMergeMod": "將此模組的紋理檔案複製到合併模組中，與載入順序無關。",
+    "textureOverrideCosmetic": "紋理覆寫只影響外觀，可在遊戲中檢視；它永遠不會造成阻擋。",
+    "forceTemplateRegistrationWinner": "不論載入順序，強制讓此模組的註冊套用到該範本的每一個子項。",
+    "duplicateTemplateNameExplanation": "有 {ownerCount} 個模組註冊了此範本名稱；每個子項都會各自繼承在它之前（或同位置）最近載入的那個註冊。若沒有，則退而使用原版的註冊；若仍沒有，則使用載入順序中最先載入的模組的註冊，因此不同的子項可能對應到不同的模組。",
+    "keyedTranslationCollision": "這兩個模組有 {keyCount} 個相同的翻譯鍵；每個鍵都由最後載入的那個模組勝出。",
+    "soundOverrideCosmetic": "音效覆寫只影響聲音表現，可在遊戲中聽到；它永遠不會造成阻擋。",
+    "forceSoundWinner": "強制讓某一個模組的音效勝出。",
+    "missingTexturePath": "沒有任何已啟用的模組提供此紋理路徑：遊戲會在該處顯示洋紅色的預留圖像。",
+    "undecodableTexture": "此 .dds 檔案無法解碼：基礎遊戲會在該處顯示錯誤紋理的預留圖像。",
+    "contributesNothing": "在此順序下，{modId} 沒有任何可觀察到的作用：它沒有提供組件，它擁有的每個 Def 都被較晚的副本覆寫，它提供的每個紋理和翻譯都被覆寫，而它的每個補丁操作不是套用失敗，就是從未執行。停用它不會改變遊戲中的任何內容，還能省下它的載入成本。",
+    "undeclaredTypeDependency": "{user} 使用了 {provider} 組件中的類型，但沒有宣告依賴它。",
+    "pinRelationExplicitly": "將此關係明確固定為載入順序規則。",
+    "runtimePatchCollisionNoLastPatcher": "多個模組修補了 {targetType}.{targetMethod}。",
+    "runtimePatchCollisionLastPatcher": "有 {ownerCount} 個模組修補了 {targetType}.{targetMethod}；目前 {last} 最後載入，因此它的補丁最後執行。",
+    "forceRuntimePatchLastWinner": "不論載入順序，強制讓此模組的補丁最後執行。",
+    "transpilerCollision": "有 {ownerCount} 個模組各自以執行階段補丁轉譯器改寫 {targetType}.{targetMethod} 的 IL；它們的執行順序可能決定較晚執行的那個的比對模式是否仍然相符。大多數此類衝突都無害；如果其中某個模組記錄了修補錯誤，請用 `rimmerge rule set-pair` 指定可正常運作的順序。",
+    "duplicateAssemblyFirstLoadedWins": "有不只一個已啟用的模組提供了同名的組件；執行時以最先載入的副本為準。",
+    "removeDuplicateAssemblyCopy": "將其中一個重複的副本從已啟用清單中移除。",
+    "likelyDuplicateMod": "這兩個模組共用大量相同的 Def，但彼此之間沒有宣告任何關係。",
+    "removeLikelyDuplicateModA": "將其中一個可能重複的模組從已啟用清單中移除。",
+    "removeLikelyDuplicateModB": "將另一個可能重複的模組從已啟用清單中移除。",
+    "missingModNotInstalled": "此模組在 ModsConfig.xml 中為已啟用，但並未安裝；RimWorld 無論如何都會捨棄未知的 ID。",
+    "keepMissingModId": "在 ModsConfig.xml 中保留此 ID，以防該模組重新出現。",
+    "missingDependencyNotEnforced": "有一項宣告的依賴未啟用；RimWorld 只會對此發出警告，不會強制執行。",
+    "incompatiblePair": "這些模組宣告彼此不相容。",
+    "removeIncompatibleModA": "將其中一個不相容的模組從已啟用清單中移除。",
+    "removeIncompatibleModB": "將另一個不相容的模組從已啟用清單中移除。",
+    "unsupportedVersionOftenWorks": "此模組沒有將目前的遊戲版本列為支援版本；但它通常仍可正常運作。",
+    "undeclaredHardDependencyHonored": "即使作者從未宣告，排序器也已遵守這條硬性（載入時）排序約束。",
+    "pinRelationExplicitlyAnyway": "仍將此關係明確固定為載入順序規則。",
+    "lazyReferenceViolatedJitResolved": "目前的順序沒有遵守這個延遲解析的組件參照，但它會在所有組件都載入後於 JIT 時解析，因此載入順序實際上不影響它。",
+    "nearMissModReference": {
+      "findModName": "此 FindMod 名稱「{written}」對應不到任何已啟用或已安裝的模組，但與已啟用的模組「{candidateName}」非常相似，可能是拼寫錯誤。請向參照它的模組作者回報此問題。",
+      "mayRequireId": "此 MayRequire ID「{written}」對應不到任何已啟用或已安裝的模組，但與已啟用的模組「{candidateName}」非常相似，可能是拼寫錯誤。請向參照它的模組作者回報此問題。"
+    },
+    "mergeCompleteNothingToMerge": "遊戲會依序將這些內容套用到同一個值上；沒有需要合併的內容",
+    "mergeLeadDefOverrideCombine": "這些模組修改的是不同的欄位；合併可將兩者結合。",
+    "mergePromotedPatchCollisionKeepsBoth": "這些模組修改的是不同的欄位；合併可同時保留兩者。",
+    "keepLoadOrderWinner": "保留載入順序的勝出者。",
+    "mergeStructuralGuard": "{field} 在各所有者之間不同：欄位層級的合併並不安全；請確認載入順序的勝出者",
+    "mergeFieldsNeedChoice": "合併，有 {unresolved} 個欄位需要選擇。",
+    "identicalCopiesOrderIrrelevant": "內容相同的副本；順序無法改變結果",
+    "notAddressedByPatch": "此補丁未處理；與目前一樣由載入順序決定。"
+  },
+  "modInfo": {
+    "panel": {
+      "regionLabel": "模組資訊",
+      "close": "關閉",
+      "notFoundTitle": "此模組不在目前的掃描中",
+      "allDetailsLink": "所有詳細資訊",
+      "previewAlt": "{mod} 預覽圖",
+      "noPreview": "沒有預覽圖",
+      "previewTooLarge": "預覽圖超過 8 MB",
+      "previewUnsupportedFormat": "預覽圖不是 PNG 或 JPEG",
+      "previewUnreadable": "無法讀取預覽圖",
+      "missingHeading": "缺少",
+      "missingBody": "列在 ModsConfig.xml 中，但在磁碟上找不到",
+      "requiredByHeading": "被以下模組需要",
+      "pendingActivation": "待啟用：套用或重新掃描後生效",
+      "pendingDeactivation": "待停用：套用或重新掃描後生效",
+      "packageIdLine": "Package ID：{id}",
+      "workshopCopyNote": "創意工坊副本",
+      "versionLine": "模組版本：{version}",
+      "aboutNotOnDisk": "找不到此模組的 About.xml：它的檔案可能在上次掃描後已移動或刪除。",
+      "supportedVersionsLabel": "支援的版本",
+      "supportsGameVersion": "支援此遊戲版本",
+      "doesNotSupportGameVersion": "未宣告支援此遊戲版本",
+      "openWorkshopButton": "開啟創意工坊頁面（外部瀏覽器）",
+      "openHomepageButton": "開啟首頁（外部瀏覽器）",
+      "rootFolderLabel": "模組資料夾",
+      "loadedFoldersLabel": "載入的資料夾",
+      "costLabel": "成本",
+      "costLine": "{defsLabel}：{defCount}，{patchOpsLabel}：{patchOps}，{dllsLabel}：{assemblyCount}",
+      "seeStartupLink": "查看啟動耗時",
+      "tagsLabel": "標籤",
+      "hardDependents": "{count} 個硬性依賴方",
+      "softDependents": "{count} 個軟性依賴方",
+      "awarenessDependents": "{count} 個感知依賴方",
+      "frameworkCandidate": "看起來是共用框架",
+      "generatedLine": "由 Rimmerge 產生（{kind}）",
+      "generatedMerge": "設定檔合併模組",
+      "generatedPatch": "相容性補丁",
+      "generatedAssignment": "分配專案",
+      "positionLabel": "位置",
+      "previousPositionLine": "先前位置：第 {position} 位",
+      "whyHereLink": "為何在此？",
+      "findingsCount": "{count} 項檢查結果",
+      "needsInputCount": "{count} 項待處理",
+      "declaredHeading": "宣告的載入順序",
+      "descriptionHeading": "描述",
+      "noDescription": "未提供描述。",
+      "showMore": "顯示更多",
+      "showLess": "顯示較少",
+      "aboutChanged": "About.xml 在上次掃描後已變更：請重新掃描",
+      "aboutUnreadable": "無法讀取 About.xml：{reason}",
+      "aboutUnreadableIoHeadline": "無法讀取檔案",
+      "aboutUnreadableXmlHeadline": "檔案不是有效的 XML",
+      "descriptionTruncated": "此描述過長，已被縮短。"
+    }
+  }
+}

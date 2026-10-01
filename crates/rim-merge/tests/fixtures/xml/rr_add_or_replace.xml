@@ -1,0 +1,29 @@
+<!--
+  Source: Example Biotech Add-on,
+  ExampleBiotech/Patches/ResearchProjectDefs.xml. Trimmed to two
+  operations, verbatim (mod name and path invented; only the class name
+  below, RR.PatchOperationAddOrReplace, is real — see this crate's own
+  CLAUDE.md convention).
+
+  The xpath names the def node and `<value>` carries the field to set:
+  `prerequisites` already exists on the target and is replaced, while
+  `techLevel` does not and is added.
+-->
+<Operation Class="PatchOperationSequence">
+  <operations>
+    <li Class="RR.PatchOperationAddOrReplace">
+      <xpath>Defs/ResearchProjectDef[defName="FertilityProcedures"]</xpath>
+      <value>
+        <prerequisites>
+          <li>SterileMaterials</li>
+        </prerequisites>
+      </value>
+    </li>
+    <li Class="RR.PatchOperationAddOrReplace">
+      <xpath>Defs/ResearchProjectDef[defName="FertilityProcedures"]</xpath>
+      <value>
+        <techLevel>Spacer</techLevel>
+      </value>
+    </li>
+  </operations>
+</Operation>

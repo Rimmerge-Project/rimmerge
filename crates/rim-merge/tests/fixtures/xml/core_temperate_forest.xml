@@ -1,0 +1,10 @@
+<!--
+  Source: Core (ludeon.rimworld), Data/Core/Defs/BiomeDefs/Biomes_Temperate.xml
+  Trimmed to the TemperateForest BiomeDef's plantDensity field, used by
+  the worked patch-collision example.
+-->
+<BiomeDef Name="TemperateForest">
+  <defName>TemperateForest</defName>
+  <label>temperate forest</label>
+  <plantDensity>0.65</plantDensity>
+</BiomeDef>

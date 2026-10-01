@@ -1,0 +1,175 @@
+@import "tailwindcss";
+
+/*
+ * Semantic color tokens — the single source of truth for every color in
+ * the app (see docs/ui-design-pass.md's token table). Light values live
+ * here on `:root`; dark values override them under
+ * `prefers-color-scheme: dark` only (no in-app theme toggle — the app
+ * follows the system preference, see `theme.ts`'s `darkModeSelector:
+ * "system"`). `@theme` below maps each one to a Tailwind color of the
+ * same name, so `bg-surface-1`, `text-text-muted`, `border-border-subtle`,
+ * etc. are the only way color reaches a component — the raw Tailwind
+ * palette (`bg-gray-50`, `text-blue-600`, ...) is banned in `src/` and
+ * enforced by `style.guard.test.ts`.
+ */
+@theme {
+  --font-sans: system-ui, "Segoe UI", Roboto, sans-serif;
+
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-status-input: var(--status-input);
+  --color-status-input-soft: var(--status-input-soft);
+  --color-status-auto: var(--status-auto);
+  --color-status-auto-soft: var(--status-auto-soft);
+  --color-status-override: var(--status-override);
+  --color-status-override-soft: var(--status-override-soft);
+  --color-status-danger: var(--status-danger);
+  --color-status-danger-soft: var(--status-danger-soft);
+}
+
+:root {
+  color-scheme: light dark;
+
+  /* Neutral hue: zinc. Accent hue: indigo (matches `theme.ts`'s PrimeVue
+     preset exactly, so PrimeVue and Tailwind-styled elements never
+     visually compete). */
+  --surface-0: #ffffff;
+  --surface-1: #f4f4f5;
+  --surface-2: #e4e4e7;
+  --border-subtle: #e4e4e7;
+  --border-strong: #a1a1aa;
+  --text: #18181b;
+  --text-muted: #52525b;
+  --text-faint: #65656e;
+  --accent: #4f46e5;
+  --accent-soft: #e0e7ff;
+  --on-accent: #ffffff;
+  --status-input: #92400e;
+  --status-input-soft: #fef3c7;
+  --status-auto: #15803d;
+  --status-auto-soft: #dcfce7;
+  --status-override: #6d28d9;
+  --status-override-soft: #ede9fe;
+  --status-danger: #b91c1c;
+  --status-danger-soft: #fee2e2;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Near-black zinc, not pure black — `surface-0` through
+       `border-subtle` span `#141416`..`#26262b`; `border-strong` steps up
+       to zinc-700 for edges that need to actually stand out (focus,
+       emphasis). */
+    --surface-0: #141416;
+    --surface-1: #1c1c1f;
+    --surface-2: #232328;
+    --border-subtle: #26262b;
+    --border-strong: #3f3f46;
+    --text: #f4f4f5;
+    --text-muted: #a1a1aa;
+    --text-faint: #8e8e97;
+    --accent: #818cf8;
+    --accent-soft: #1e1b4b;
+    --on-accent: #141416;
+    --status-input: #fbbf24;
+    --status-input-soft: #451a03;
+    --status-auto: #4ade80;
+    --status-auto-soft: #052e16;
+    --status-override: #c4b5fd;
+    --status-override-soft: #2e1065;
+    --status-danger: #f87171;
+    --status-danger-soft: #450a0a;
+  }
+}
+
+/*
+ * Chromium picks the fallback font for Han characters by the element's
+ * `lang` — under the default `--font-sans` (no CJK face listed),
+ * `<html lang="zh-CN">` (kept in sync by `i18n.ts`'s `setAppLocale`)
+ * would still fall back to whichever CJK font the system happens to
+ * pick, which on Windows can be a *Japanese* face (Yu Gothic/MS
+ * Gothic) drawing Han-unified glyphs with the wrong shapes. Microsoft
+ * YaHei ships in the base font set of Windows 10 and 11 (this app is
+ * Windows/MSVC only), so no web font needs bundling. Not a color, so
+ * `style.guard.test.ts` (which only guards color tokens) needs no
+ * change for this.
+ */
+:lang(zh-CN) {
+  --font-sans: "Microsoft YaHei UI", "Microsoft YaHei", system-ui, "Segoe UI", sans-serif;
+}
+
+/*
+ * The other CJK locales, same reason, each with the face Windows ships
+ * for it (all in the base font set except Meiryo, kept as a fallback
+ * for machines that have it): Japanese reads Yu Gothic UI (Windows 8.1
+ * and later), Korean Malgun Gothic, Traditional Chinese Microsoft
+ * JhengHei UI. Without these, Traditional-Chinese glyphs could be drawn
+ * with the Simplified or Japanese face's shapes.
+ */
+:lang(ja) {
+  --font-sans: "Yu Gothic UI", "Meiryo UI", "Meiryo", system-ui, "Segoe UI", sans-serif;
+}
+
+:lang(ko) {
+  --font-sans: "Malgun Gothic", system-ui, "Segoe UI", sans-serif;
+}
+
+:lang(zh-TW) {
+  --font-sans: "Microsoft JhengHei UI", "Microsoft JhengHei", system-ui, "Segoe UI", sans-serif;
+}
+
+/*
+ * WCAG 2.1 contrast ratios (relative-luminance formula, computed with a
+ * script — not eyeballed) for the pairs above that carry 11-14px text.
+ * Every one must clear 4.5:1; `text-faint`'s old values (2.56/2.08 light,
+ * 3.81/2.36 dark) and the old dark `accent-soft` (3.83 against `accent`,
+ * 4.46 against `text-muted`) did not, hence the values chosen above.
+ *
+ *   LIGHT                                    DARK
+ *   text-faint on surface-0     5.77:1       text-faint on surface-0     5.67:1
+ *   text-faint on surface-1     5.25:1       text-faint on surface-1     5.23:1
+ *   text-faint on accent-soft   4.68:1       text-faint on accent-soft   4.92:1
+ *   accent     on accent-soft   5.10:1       accent     on accent-soft   5.36:1
+ *   text-muted on accent-soft   6.27:1       text-muted on accent-soft   6.24:1
+ */
+
+/*
+ * Shared shapes repeated across pages/components (docs/ui-design-pass.md
+ * decision 4's card/table styling) — Tailwind 4 `@utility`s so every
+ * site stays a single edit instead of a copy-pasted class string.
+ * Neither name is a color and neither matches `style.guard.test.ts`'s
+ * palette pattern, so no guard allowlist entry is needed for them.
+ */
+@utility surface-card {
+  @apply border-border-subtle bg-surface-1 rounded-lg border shadow-sm dark:shadow-none;
+}
+
+@utility table-head {
+  @apply border-border-subtle text-text-muted border-b text-[11px] tracking-wide uppercase;
+}
+
+body {
+  margin: 0;
+  background-color: var(--surface-0);
+  color: var(--text);
+}
+
+#app {
+  min-height: 100vh;
+}
+
+/* `ApplyDialog`'s success toast joins several "Label: path" lines with
+   "\n" — plain HTML collapses that to spaces by default, so this is what
+   actually keeps each line on its own row. */
+.p-toast-detail {
+  white-space: pre-line;
+}

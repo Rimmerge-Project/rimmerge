@@ -1,0 +1,37 @@
+[package]
+name = "rim-session"
+version = "1.0.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Application layer: the session aggregate, use cases, and ports for Rimmerge"
+
+[lib]
+name = "rim_session"
+path = "src/lib.rs"
+
+[lints]
+workspace = true
+
+[features]
+# Exposes `test_support` (in-memory fakes for every port) so both this
+# crate's own unit tests and downstream crates' integration tests can
+# share one implementation. Never enabled in a non-dev build. Pulls in
+# rim-resolve's own `test-support` (its `ReportBuilder`) since
+# `test_support::report_fixture` is built on top of it.
+test-support = ["rim-resolve/test-support"]
+
+[dependencies]
+rim-analyzer = { workspace = true }
+rim-resolve = { workspace = true }
+rim-merge = { workspace = true }
+thiserror = { workspace = true }
+jiff = { workspace = true }
+semver = { workspace = true }
+
+[dev-dependencies]
+rim-session = { path = ".", features = ["test-support"] }
+rim-resolve = { workspace = true, features = ["test-support"] }
+pretty_assertions = { workspace = true }
+tempfile = { workspace = true }

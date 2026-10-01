@@ -1,0 +1,20 @@
+<!--
+  Source: Example Biomes (examplebiomes.biomes),
+  1.6/Mods/ExampleVeFramework/Patches/Toggleable-PlantDensity.xml
+  Trimmed to the single TemperateForest plantDensity replace, still
+  wrapped in the real ExampleVEF.PatchOperationToggableSequence (treated as
+  a PatchOperationSequence gated by <enabled>, default True here as in
+  the real file) — the plantDensity worked example.
+-->
+<Operation Class="ExampleVEF.PatchOperationToggableSequence">
+  <enabled>True</enabled>
+  <label>Enable high plant density</label>
+  <operations>
+    <li Class="PatchOperationReplace">
+      <xpath>Defs/BiomeDef[defName="TemperateForest"]/plantDensity</xpath>
+      <value>
+        <plantDensity>0.9</plantDensity>
+      </value>
+    </li>
+  </operations>
+</Operation>

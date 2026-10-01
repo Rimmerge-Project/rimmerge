@@ -1,0 +1,24 @@
+<!--
+  Source: Example Cooking Add-on compatibility patch,
+  1.5/Patches/ExampleBiomesPatch.xml — trimmed
+  to the first `<li>` of the `<match>` sequence.
+
+  The conditional's own xpath is a bare existence test on a *different*
+  def (`BiomeDef/ExampleBlightForest`) than the one being replayed
+  (`ExampleFishing.BiomeTempDef/EXF_BiomeWarm`): answerable only through
+  `ReplayContext::def_exists`.
+-->
+<Operation Class="PatchOperationConditional">
+  <xpath>/Defs/BiomeDef[defName="ExampleBlightForest"]</xpath>
+  <success>Always</success>
+  <match Class="PatchOperationSequence">
+    <operations>
+      <li Class="PatchOperationAdd">
+        <xpath>/Defs/ExampleFishing.BiomeTempDef[defName="EXF_BiomeWarm"]/biomes</xpath>
+        <value>
+          <li>ExampleBlightForest</li>
+        </value>
+      </li>
+    </operations>
+  </match>
+</Operation>

@@ -1,0 +1,2055 @@
+{
+  "common": {
+    "verbatim": "{text}",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "technicalDetail": "Technical details: {detail}"
+  },
+  "defGraphics": {
+    "viewer": {
+      "regionLabel": "Texture preview",
+      "facingGroupLabel": "Facing",
+      "previousVariant": "Previous variant",
+      "nextVariant": "Next variant",
+      "variantPosition": "{label} ({index} of {count})",
+      "variantSelectLabel": "Variant",
+      "slotSelectLabel": "Texture source",
+      "fromMod": "From {mod}",
+      "overridesOwner": "Overrides the texture of {owner}, the def's owner",
+      "mirrored": "Drawn mirrored",
+      "layoutInferred": "Layout inferred from file names",
+      "truncatedVariants": "{count} more variant not shown | {count} more variants not shown",
+      "truncatedSlots": "{count} more source not shown | {count} more sources not shown"
+    },
+    "facing": {
+      "north": "North",
+      "east": "East",
+      "south": "South",
+      "west": "West"
+    },
+    "facingShort": {
+      "north": "N",
+      "east": "E",
+      "south": "S",
+      "west": "W"
+    },
+    "slot": {
+      "graphic": "Graphic",
+      "worn": "Worn",
+      "lifeStage": "Life stages",
+      "raceKind": "Pawn kind: {name}",
+      "styleTexture": "Style texture",
+      "headType": "Head type",
+      "bodyType": "Body type",
+      "terrain": "Terrain",
+      "icon": "Icon",
+      "probe": "Found by path: {field}"
+    },
+    "variant": {
+      "only": "Only graphic",
+      "bodyType": "Body type: {name}",
+      "lifeStage": "Life stage {number}",
+      "female": "Female, life stage {number}",
+      "alternate": "Alternate {number}",
+      "member": "{name}",
+      "stack": "Stack step {number}",
+      "stackSingle": "Single item",
+      "appearance": "Appearance: {name}",
+      "wornPath": "Worn path {number}",
+      "wornPathOnBodyType": "Worn path {number}, {name}",
+      "field": "{name}"
+    },
+    "state": {
+      "loading": "Loading texture",
+      "noGraphic": "This def shows no texture of its own.",
+      "composedAtRuntime": "The game assembles this pawn from body, head and hair parts at run time, so there is no single texture to show.",
+      "notViewable": "Built into the game or an asset bundle, which can't be shown here.",
+      "notViewableUncertain": "No texture file was found. It may be built into the game, which can't be shown here.",
+      "notFound": "No texture file found. The game shows its error texture.",
+      "ddsNotPreviewable": "DDS texture. No preview is available.",
+      "undecodableInGame": "The game can't decode this DDS file and shows a placeholder.",
+      "pngSiblingNote": "Shown from the PNG copy; the game loads the DDS.",
+      "tooLarge": "The image file is too large to preview.",
+      "unsupportedFormat": "The image format can't be previewed.",
+      "unreadable": "The image file couldn't be read."
+    },
+    "alt": "{def}, {facing} view",
+    "altNoFacing": "{def}"
+  },
+  "primevue": {
+    "emptyMessage": "No available options",
+    "emptyFilterMessage": "No results found",
+    "emptySelectionMessage": "No selected item",
+    "searchMessage": "{count} results are available",
+    "selectionMessage": "{count} items selected",
+    "aria": {
+      "trueLabel": "True",
+      "falseLabel": "False",
+      "nullLabel": "Not Selected",
+      "close": "Close",
+      "previous": "Previous",
+      "next": "Next",
+      "navigation": "Navigation"
+    }
+  },
+  "shell": {
+    "brand": "Rimmerge",
+    "mainNavigation": "Main navigation",
+    "nav": {
+      "dashboard": "Dashboard",
+      "inbox": "Findings",
+      "mergeMod": "Merge output",
+      "patches": "Compat patches",
+      "assignments": "Patch maker",
+      "startup": "Startup cost",
+      "order": "Load order",
+      "rules": "Rules",
+      "mods": "Mods",
+      "settings": "Settings"
+    },
+    "orderSource": {
+      "label": "Order source",
+      "current": "Current",
+      "suggested": "Suggested",
+      "inSentenceCurrent": "current",
+      "inSentenceSuggested": "suggested"
+    },
+    "modLabelMode": {
+      "label": "Mod label mode",
+      "names": "Names",
+      "ids": "Ids"
+    },
+    "apply": "Apply…",
+    "scanningMods": "Scanning mods",
+    "supportLink": "Support Rimmerge",
+    "liveRegion": {
+      "newNotification": "{count} new notification: {title} | {count} new notifications, most recent: {title}"
+    }
+  },
+  "settings": {
+    "heading": "Settings",
+    "interfaceHeading": "Interface",
+    "language": {
+      "label": "Language",
+      "system": "System ({detected})",
+      "preview": "preview",
+      "optionPreview": "{name} ({preview})",
+      "previewNote": "If you spot a wrong translation, please {url} and we will fix it.",
+      "previewNoteLinkText": "open an issue"
+    },
+    "thresholdLabel": "Confidence threshold (auto vs. needs input)",
+    "tieBreak": {
+      "label": "Tie-break",
+      "description": "Sets where a mod that no other mod pins starts from. Rebuild ranks those mods by name and ignores your current order, so expect most mods to move the first time you rebuild a list RimSort produced. Preserve current starts each mod from its position in ModsConfig.xml, moving as few mods as possible.",
+      "rebuild": "Rebuild",
+      "preserveCurrent": "Preserve current"
+    },
+    "useImportedPairs": {
+      "label": "Use imported pair rules",
+      "description": "Let RimSort/SteamDB \"load before/after\" rules affect ordering. On by default — most imported pairs restate evidence the sorter already enforces on its own. A rule you set yourself is never affected by this toggle."
+    },
+    "useImportedPlacements": {
+      "label": "Use imported placement rules",
+      "description": "Let RimSort/SteamDB \"load first/last\" placements pin a mod's tier. On by default — nothing in a mod's own files can say \"load me last\"."
+    },
+    "enforceSoft": {
+      "label": "Enforce Soft-strength edges",
+      "description": "These edges come from lazily-resolved references to {assemblyRef}. Off by default: enforcing them can move noticeably more mods from their current order than leaving them advisory."
+    },
+    "enforceAwareness": {
+      "label": "Enforce Awareness-strength edges",
+      "description": "These edges come from {edgeKinds} hints — evidence that the mods interact, not an ordering fact. Off by default: they are far more common than Soft edges, so enforcing them is far more disruptive to the order."
+    },
+    "enforceInferred": {
+      "label": "Enforce Inferred-strength edges",
+      "description": "These edges are {edgeKinds}: the analyzer's own heuristic conclusions that two mods interact, not just a presence signal like Awareness. On by default: unlike Soft and Awareness edges, the analyzer has already concluded these are ordering facts, so leaving them advisory-only would discard that evidence."
+    },
+    "network": {
+      "heading": "Internet access",
+      "recoveredWarning": "Your app settings file couldn't be read, so internet access is off until you save settings again.",
+      "allowNetwork": {
+        "label": "Allow internet access",
+        "description": "The master switch for everything Rimmerge sends over the internet, automatic or manual. It only ever contacts two GitHub hosts — api.github.com for update checks and raw.githubusercontent.com for rule-database refreshes — and never your local network. Off skips every request before any address is built or connection opened. Applies to this whole app, on this computer, whichever RimWorld install you open."
+      },
+      "autoRefreshRuleDatabases": {
+        "label": "Refresh rule databases automatically",
+        "description": "Once a day, at launch, fetch the enabled rule databases the Rule databases card lists — never the Steam Workshop database, which only ever refreshes when you click Refresh."
+      },
+      "checkForUpdates": {
+        "label": "Check for updates",
+        "description": "Once a day, at launch, check whether a newer Rimmerge has been released."
+      },
+      "checkNow": {
+        "button": "Check now",
+        "disabledTitle": "Turned off by Allow internet access",
+        "awaitingFirstRun": "Not checked yet — answer the Welcome notice first.",
+        "alreadyRanThisLaunch": "Already checked this launch.",
+        "networkDisabled": "Internet access is off.",
+        "checkDisabled": "Checked anyway — automatic checks are off.",
+        "notDue": "Checked recently — try again later.",
+        "rateLimited": "GitHub's rate limit was reached; try again after {until}.",
+        "updated": "A newer version is available: {version}.",
+        "unchanged": "Up to date.",
+        "failed": "Last check failed: {reason}"
+      },
+      "mutedKinds": {
+        "heading": "Muted notices",
+        "empty": "Nothing is muted.",
+        "unmuteButton": "Unmute"
+      },
+      "resetIncludesSteam": "Restores every switch, including the Steam Workshop database (about 49 MB, downloaded only when you refresh).",
+      "restoreDefaultsButton": "Restore internet access defaults",
+      "restoreDefaultsToast": "Internet access, update checks and automatic refresh turned back on"
+    },
+    "suggestMergeWhenClean": {
+      "label": "Suggest merging clean overrides",
+      "description": "When two mods change different fields of the same def, suggest merging them instead of keeping the load-order winner. Merged defs are written to the merge mod on apply."
+    },
+    "showDanglingDefReferences": {
+      "label": "Show dangling def reference findings",
+      "description": "Flag a name written at a recognized reference site (e.g. a research prerequisite, a stat offset key) that no active def of any type actually has. Off by default — this can produce a meaningful number of false positives on a large install (for example a self-identifying field mistaken for a cross-reference). Never changes the load order."
+    },
+    "saveButton": "Save",
+    "resetButton": "Reset to defaults",
+    "dirtyIndicator": "Unsaved changes",
+    "resetConfirm": {
+      "header": "Reset to defaults?",
+      "body": "Refills every field above with Rimmerge's own built-in defaults. Nothing is saved until you press Save.",
+      "cancelButton": "Cancel",
+      "confirmButton": "Reset"
+    },
+    "about": {
+      "heading": "About",
+      "versionLabel": "Version {version}",
+      "repoLink": "GitHub repository",
+      "issuesLink": "Report an issue",
+      "supportLink": "Support Rimmerge",
+      "supportBlurb": "Rimmerge is free and open source. If it saves you time, you can support its development."
+    }
+  },
+  "fetchFailure": {
+    "transportHeadline": "Couldn't reach GitHub",
+    "httpStatus": "GitHub answered with an unexpected HTTP status ({status})",
+    "rateLimited": "GitHub's rate limit was reached; try again after {until}",
+    "notPublished": "No Rimmerge release has been published yet",
+    "tooLarge": "The response was larger than the allowed size",
+    "invalidContent": "The response wasn't in the expected format",
+    "notAStableVersion": "The latest published tag isn't a stable version",
+    "notModifiedWithoutCache": "GitHub reported no change, but nothing is cached yet",
+    "readFailedHeadline": "The download was interrupted",
+    "cacheWriteFailedHeadline": "The download couldn't be saved locally",
+    "unclassifiedHeadline": "The attempt failed"
+  },
+  "ruleWarning": {
+    "droppedClusterRules": "Dropped {count} pre-migration cluster rule on load: {ids} | Dropped {count} pre-migration cluster rules on load: {ids}",
+    "unknownModKnowledgeValue": "Ignored an unknown {what} \"{value}\" in the {section} rules",
+    "modKnowledgeCacheUnreadableHeadline": "Couldn't read the cached Rimmerge rules; using the bundled snapshot",
+    "rowsOverRoleLimit": "Ignored {count} row over the per-role limit in the {role} group of the {section} rules | Ignored {count} rows over the per-role limit in the {role} group of the {section} rules",
+    "precedenceRuleMissingFramework": "Ignored the precedence rule for {defType}: it names no framework",
+    "what": {
+      "precedenceRule": "precedence rule",
+      "behaviour": "behaviour",
+      "matchMode": "match mode",
+      "gateMatchMode": "gate match mode",
+      "gateBehaviour": "gate behaviour",
+      "conditionalType": "conditional type",
+      "topLevelSection": "top-level section",
+      "logShapeRole": "log-shape role",
+      "placeholderType": "template placeholder type"
+    },
+    "refusedRow": {
+      "templateInvalid": "Ignored the {section} row \"{value}\": its template is empty, too long, or malformed",
+      "captureMissing": "Ignored the {section} row \"{value}\": its template lacks a capture its role needs",
+      "markerLength": "Ignored the {section} row \"{value}\": a marker string is outside its length bounds",
+      "idTooLong": "Ignored a {section} row: its id is too long",
+      "templateUncompilable": "Ignored the {section} row \"{value}\": its template does not compile within the size limits"
+    }
+  },
+  "setup": {
+    "title": "Set up Rimmerge",
+    "fields": {
+      "gameDir": "RimWorld install directory",
+      "workshopDir": "Steam workshop directory",
+      "modsConfig": "ModsConfig.xml path",
+      "profileDir": "Profile directory"
+    },
+    "browse": "Browse…",
+    "loadProject": "Load project",
+    "saveAsDefaults": "Save as defaults",
+    "loadingProject": "Loading project",
+    "startingCaption": "Starting…",
+    "stage": {
+      "discovering": "Discovering mods",
+      "scanning": "Scanning mods",
+      "analyzing": "Analyzing",
+      "collectingTagEvidence": "Collecting tag evidence",
+      "done": "Done"
+    },
+    "scanFinishedToast": "Scan finished with {count} note | Scan finished with {count} notes",
+    "projectLoadedWithWarningsToast": "Project loaded with warnings",
+    "savedAsDefaultsToast": "Saved as defaults",
+    "savedAsDefaultsDetail": "These paths will be prefilled the next time Rimmerge starts."
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "counts": {
+      "mods": "Mods",
+      "needsInputCurrent": "Needs input (current)",
+      "needsInputSuggested": "Needs input (suggested)",
+      "movedMods": "Mods that move",
+      "selectedOrder": "Selected order"
+    },
+    "ledgerStatsHeading": "Ledger, both orders",
+    "table": {
+      "auto": "Auto",
+      "needsInput": "Needs input",
+      "overridden": "Overridden",
+      "resolvedBySuggested": "Resolved by suggested",
+      "current": "Current",
+      "suggested": "Suggested"
+    },
+    "topKindsHeading": "Top needs-input kinds",
+    "topKindsEmpty": "Nothing needs input right now.",
+    "scanNotesDisclosure": "Scan notes ({count})",
+    "importLog": {
+      "button": "Import game log",
+      "importedToast": "Game log imported",
+      "logFilter": "RimWorld log",
+      "allFilesFilter": "All files"
+    },
+    "guide": {
+      "heading": "Get started",
+      "intro": "Three steps put the suggested load order into the game. The Findings and Rules pages are there when you want more control.",
+      "listLabel": "Getting started steps",
+      "status": {
+        "done": "Done",
+        "current": "Current step",
+        "upcoming": "Not yet"
+      },
+      "chooseSuggested": {
+        "title": "Use the suggested order",
+        "pending": "You're viewing your current order. The suggested order moves {count} mod. | You're viewing your current order. The suggested order moves {count} mods.",
+        "doneText": "The suggested order is selected.",
+        "doneMatchesFileText": "ModsConfig.xml already matches the suggested order.",
+        "button": "Use suggested order",
+        "reviewLink": "Review the suggested order"
+      },
+      "apply": {
+        "title": "Apply",
+        "pending": "See what will be written to ModsConfig.xml. A backup is made first.",
+        "button": "Apply…",
+        "staleBlocked": "Your active mods changed since the last scan. Rescan before applying.",
+        "rescanButton": "Rescan"
+      },
+      "confirm": {
+        "title": "Confirm",
+        "pending": "Check the summary, then confirm. If something will break, such as a missing required mod, you're asked first."
+      },
+      "done": "ModsConfig.xml matches the suggested order. Launch RimWorld to play.",
+      "asOfLastScan": "As of the last scan or apply.",
+      "needsInputHint": "{count} finding needs your input (optional) | {count} findings need your input (optional)",
+      "openInbox": "Open Findings",
+      "appliedAnnouncement": "Applied. ModsConfig.xml now matches the suggested order."
+    }
+  },
+  "notifications": {
+    "heading": "Notifications",
+    "empty": "You're all caught up.",
+    "dismiss": "Dismiss",
+    "mute": "Don't remind me again",
+    "severityWarn": "Needs attention",
+    "severityInfo": "Informational",
+    "bell": {
+      "withCount": "Notifications, {count}",
+      "none": "Notifications, none"
+    },
+    "welcome": {
+      "title": "Welcome to Rimmerge",
+      "body": "Rimmerge can contact GitHub once a day, when it starts:\n- to check whether a newer Rimmerge has been released (api.github.com);\n- to download updated rule databases — the community load-order rules and Rimmerge's own rules file (raw.githubusercontent.com). Updates are stored locally; they change your load order only when you choose to import them.\n\nIt sends nothing about you, your mods, or your install — only a plain request that GitHub sees your IP address for. The large Steam Workshop database is never downloaded automatically, only when you click Refresh.",
+      "settingsAlreadyRecommended": "Your settings already match the recommended defaults.",
+      "steamWorkshopLabel": "Steam Workshop database (about 49 MB, downloaded only when you click Refresh)"
+    },
+    "gameVersionChanged": {
+      "title": "Game version changed",
+      "body": "RimWorld is now {current} (was {acknowledged}). Compat patches and patch-maker mods exported for {acknowledged} still declare that version until you re-export them.",
+      "kindLabel": "Game version changed"
+    },
+    "updateAvailable": {
+      "title": "Rimmerge {version} is available",
+      "body": "You're running an older version. Rimmerge {version} has been released.",
+      "kindLabel": "Update available"
+    },
+    "ruleDatabasesStale": {
+      "title": "{count} rule database needs attention | {count} rule databases need attention",
+      "body": "The following rule databases haven't refreshed recently:",
+      "kindLabel": "Rule databases stale",
+      "neverFetched": "Never fetched",
+      "lastSuccess": "Last refreshed {date}",
+      "lastFailure": "Last attempt failed: {reason}"
+    },
+    "importedRulesOutdated": {
+      "title": "{count} rule database has new content to import | {count} rule databases have new content to import",
+      "body": "New content is cached for:",
+      "kindLabel": "New rule content to import"
+    },
+    "recommendedSources": {
+      "kindLabel": "Recommended rule databases",
+      "title": "{count} recommended rule database isn't set up | {count} recommended rule databases aren't set up",
+      "body": "Rimmerge sorts best with all three rule databases. Turning them on downloads them now; afterwards the small ones refresh automatically, and the Steam Workshop database only when you click Refresh.",
+      "bodyWithSteam": "Rimmerge sorts best with all three rule databases. Turning them on downloads them now. The Steam Workshop database is about 49 MB, and afterwards it refreshes only when you click Refresh; the small ones refresh automatically.",
+      "sourceOff": "{source}: off",
+      "sourceNotDownloaded": "{source}: on, not downloaded yet"
+    },
+    "actions": {
+      "keepNetworkSettings": "Keep these settings",
+      "turnOffNetwork": "Turn off internet access",
+      "applyRecommendedSettings": "Use recommended settings",
+      "refreshRuleDatabases": "Refresh now",
+      "openRuleDatabases": "Open rule databases",
+      "openSettings": "Open settings",
+      "showReleasePage": "Copy release link",
+      "openPatches": "Open patches",
+      "enableRecommendedSources": "Turn on and download",
+      "enableRecommendedSourcesToast": "Recommended rule databases turned on",
+      "enableRecommendedSourcesPartialToast": "Recommended rule databases turned on, but some downloads didn't finish. They stay listed in the notice.",
+      "turnOffNetworkToast": "Internet access turned off",
+      "recommendedSettingsAppliedToast": "Recommended settings applied",
+      "linkCopiedToast": "Link copied"
+    }
+  },
+  "error": {
+    "generic": {
+      "title": "Action failed",
+      "detail": "Something went wrong."
+    },
+    "code": {
+      "no_project_loaded": {
+        "title": "No project loaded",
+        "detail": "Load a project before doing this."
+      },
+      "session_lost": {
+        "title": "Session lost",
+        "detail": "An internal error interrupted your session. It will reload automatically."
+      },
+      "internal": {
+        "title": "Internal error",
+        "detail": "Something went wrong on Rimmerge's own side."
+      },
+      "invalid_input": {
+        "title": "Invalid input",
+        "detail": "The value you entered isn't valid."
+      },
+      "scan_failed": {
+        "title": "Scan failed",
+        "detail": "Scanning or analyzing the install didn't complete."
+      },
+      "mods_config_io_failed": {
+        "title": "Couldn't read or write ModsConfig.xml",
+        "detail": "Check that the file exists and isn't read-only or in use."
+      },
+      "profile_io_failed": {
+        "title": "Couldn't read or write your profile",
+        "detail": "Check that Rimmerge's profile folder is writable."
+      },
+      "rimsort_import_failed": {
+        "title": "Import failed",
+        "detail": "The RimSort database file couldn't be imported."
+      },
+      "rimworld_running": {
+        "title": "RimWorld is running",
+        "detail": "Close RimWorld first, or continue anyway."
+      },
+      "mod_not_found": {
+        "title": "Mod not found",
+        "detail": "That mod isn't in the active mod list."
+      },
+      "finding_not_found": {
+        "title": "Finding not found",
+        "detail": "That finding is no longer live — it may already be resolved."
+      },
+      "merge_source_failed": {
+        "title": "Couldn't read a merge source",
+        "detail": "A def, template, patch, or texture file changed or vanished since the last scan. Reload the project."
+      },
+      "merge_mod_io_failed": {
+        "title": "Couldn't write the merge mod",
+        "detail": "Writing or removing the generated merge mod folder failed."
+      },
+      "patch_not_found": {
+        "title": "Patch not found",
+        "detail": "That compat patch project is no longer loaded."
+      },
+      "patch_identity_invalid": {
+        "title": "Invalid patch identity",
+        "detail": "The package id or display name isn't valid, or it collides with another mod or patch."
+      },
+      "def_not_found": {
+        "title": "Def not found",
+        "detail": "That def or template isn't in this scan."
+      },
+      "assignment_not_found": {
+        "title": "Assignment not found",
+        "detail": "That patch maker project is no longer loaded."
+      },
+      "assignment_section_in_use": {
+        "title": "Section still in use",
+        "detail": "Another section still references rows in this one."
+      },
+      "stale_active_set": {
+        "title": "Active-mod list is out of date",
+        "detail": "Rescan before writing ModsConfig.xml."
+      },
+      "texture_unsupported_format": {
+        "title": "Texture format can't be shown",
+        "detail": "The file is not a PNG or JPEG image, so it can't be previewed here. DDS textures are not supported."
+      }
+    }
+  },
+  "defaultPathsWarning": {
+    "notAnInstall": "{gameDir} does not look like a RimWorld install (Version.txt or Data/Core/ is missing)."
+  },
+  "defaultPathsError": {
+    "noProfileBase": "Neither RIMMERGE_PROFILE_DIR nor LOCALAPPDATA is set, so Rimmerge has nowhere to keep its own files.",
+    "gameDirNotFound": "No RimWorld install directory could be found. See the technical details below for every location that was checked.",
+    "modsConfigNotFound": "Rimmerge couldn't work out where ModsConfig.xml is. See the technical details below."
+  },
+  "finding": {
+    "kind": {
+      "edgeDropped": "Edge dropped",
+      "anyOfChoice": "Any-of choice",
+      "defOverride": "Def override",
+      "patchCollision": "Patch collision",
+      "textureOverride": "Texture override",
+      "duplicateAssembly": "Duplicate assembly",
+      "likelyDuplicateMod": "Likely duplicate mod",
+      "missingMod": "Missing mod",
+      "missingDependency": "Missing dependency",
+      "incompatiblePair": "Incompatible pair",
+      "unsupportedVersion": "Unsupported version",
+      "undeclaredHardDependency": "Undeclared hard dependency",
+      "lazyReferenceViolated": "Lazy reference violated",
+      "declarationQuestioned": "Declaration questioned",
+      "declarationOverridden": "Declaration overridden",
+      "duplicateTemplateName": "Duplicate template name",
+      "keyedTranslationCollision": "Keyed translation collision",
+      "soundOverride": "Sound override",
+      "undeclaredTypeDependency": "Undeclared type dependency",
+      "runtimePatchCollision": "Runtime patch collision",
+      "transpilerCollision": "Transpiler collision",
+      "tagInferred": "Tag inferred",
+      "ruleOverruled": "Rule overruled",
+      "placementOverruled": "Placement overruled",
+      "placementQuestioned": "Placement questioned",
+      "placementOrderingOverridden": "Placement ordering overridden",
+      "placementPromotesDependents": "Placement promotes dependents",
+      "missingTexturePath": "Missing texture path",
+      "patchWillFail": "Patch will fail",
+      "contributesNothing": "Contributes nothing",
+      "undecodableTexture": "Texture that won't load",
+      "brokenInheritance": "Broken inheritance",
+      "nearMissModReference": "Possible typo in a mod reference",
+      "discardedAddition": "Deliberately discarded addition",
+      "danglingDefReference": "Dangling def reference"
+    },
+    "title": {
+      "edgeDroppedNoWinner": "{before} before {after} dropped to break a cycle",
+      "edgeDroppedWithWinner": "{before} before {after} dropped, overruled by {winner}",
+      "declarationQuestioned": "{after} after {before} questioned by a {relation} relation",
+      "declarationOverridden": "{after} after {before} overridden by {winner}",
+      "anyOfChoice": "{after} needs one of {count} mod providing {assembly} | {after} needs one of {count} mods providing {assembly}",
+      "textureOverride": "texture {texturePath}",
+      "duplicateAssembly": "{assembly} shipped by {count} mod | {assembly} shipped by {count} mods",
+      "duplicateTemplateName": "Template {name} registered by {count} mod | Template {name} registered by {count} mods",
+      "keyedTranslationCollision": "{a} and {b} share {count} translation key | {a} and {b} share {count} translation keys",
+      "soundOverride": "Sound {path} shipped by {count} mod | Sound {path} shipped by {count} mods",
+      "undeclaredTypeDependency": "{user} uses {provider}'s {typeName} with no declared relation",
+      "runtimePatchCollision": "{target} patched by {count} mod | {target} patched by {count} mods",
+      "transpilerCollision": "{target} transpiled by {count} mod | {target} transpiled by {count} mods",
+      "likelyDuplicateMod": "{a} and {b} look like duplicates ({count} shared def) | {a} and {b} look like duplicates ({count} shared defs)",
+      "missingMod": "{modId} is missing",
+      "missingDependency": "{modId} is missing its dependency {dependency}",
+      "incompatiblePair": "{a} and {b} are marked incompatible",
+      "unsupportedVersion": "{modId} doesn't support this RimWorld version",
+      "undeclaredHardDependency": "{after} needs {before} at load time with no declaration",
+      "lazyReferenceViolated": "{after} references {before} before it loads",
+      "tagInferred": "{modId} tagged {tag}",
+      "ruleOverruledNoWinner": "Rule {before} before {after} overruled",
+      "ruleOverruledWithWinner": "Rule {before} before {after} overruled by {winner}",
+      "placementOverruled": "{placement} placement of {modId} overruled",
+      "placementQuestioned": "{placement} placement of {modId} questioned by {other}",
+      "placementOrderingOverridden": "{modId} overrides {pinned}'s own placement ordering",
+      "placementPromotesDependents": "{modId}'s placement promotes {count} other mod | {modId}'s placement promotes {count} other mods",
+      "missingTexturePath": "{defKey} field {field} names a texture no active mod ships",
+      "patchWillFail": "{modId}'s operation on {defKey} is predicted to fail",
+      "contributesNothing": "{modId} contributes nothing",
+      "undecodableTexture": "{modId}'s {path} won't decode",
+      "brokenInheritance": "{modId}'s inheritance from '{parentName}' is broken",
+      "nearMissModReference": "{referrer}'s reference to '{written}' may be a typo",
+      "discardedAddition": "{replacer} deliberately discards {adder}'s own addition",
+      "danglingDefReference": "'{name}' resolves to no active def"
+    }
+  },
+  "edgeKind": {
+    "assemblyRef": "Assembly reference",
+    "forceLoadAfter": "Force load after",
+    "forceLoadBefore": "Force load before",
+    "loadAfter": "Load after",
+    "loadBefore": "Load before",
+    "modDependency": "Mod dependency",
+    "findMod": "Find mod",
+    "ifModActive": "If mod active",
+    "patchTargetsDef": "Patch targets def",
+    "mayRequire": "May require",
+    "patchInjectedNode": "Patch injected node",
+    "assemblyVersionPrecedence": "Assembly version precedence",
+    "usesType": "Uses type",
+    "parentTemplate": "Parent template",
+    "patchRemovedNode": "Patch removed node",
+    "retextureAfterOwner": "Retexture after owner",
+    "defOverrideAfterOrigin": "Def override after origin",
+    "patchSelectsInjectedNode": "Patch selects injected node",
+    "patchInvalidatesPredicate": "Patch invalidates predicate",
+    "patchRemovedNodeCosmetic": "Removed node (cosmetic)",
+    "replaceDiscardsAddition": "Replace discards addition"
+  },
+  "tagSignal": {
+    "urlContains": "url contains \"{needle}\"",
+    "assemblyRefTo": "assembly ref to {mod}",
+    "dependsOn": "depends on {mod}"
+  },
+  "caveat": {
+    "duplicateTemplate": "template \"{name}\" is registered by multiple mods ({owners}); each child independently inherits from whichever registration loads nearest at or before it, so different children can resolve to different mods",
+    "modSettingDefault": "{modId}'s {class} was replayed at its default setting, not necessarily your game's",
+    "failedOp": "{modId}'s patch operation on {xpath} matched nothing",
+    "unscopedOps": "{modId} has {count} patch operation that couldn't be scoped to a def | {modId} has {count} patch operations that couldn't be scoped to a def",
+    "malformedOperation": "{modId}'s patch operation wasn't well-formed XML",
+    "defRemoved": "this def is removed by {modId}",
+    "positionalItem": "{path} is identified only by its position; a later reorder could repoint this choice",
+    "unsafeXpathValue": "{path}'s value can't be safely written as an xpath and was left unresolved",
+    "unknownOwnerChoice": "{path}: the chosen owner {modId} isn't a candidate for this field",
+    "invalidValueFragment": "{path}: the entered value couldn't be parsed",
+    "unsupportedDrop": "{path}: dropping isn't supported for a patch collision",
+    "unreconstructableChain": "{path}: the containing structure couldn't be reconstructed",
+    "unsettableLeaf": "{path}: an inherited leaf can't be unset back to nothing",
+    "outOfScopeOwners": "in an install where any of {mods} loads after this patch's scope, this patch may target or overwrite that mod's def instead",
+    "clobberedMapEntry": "{path} was added by {by} but a later patch replaced the whole map, dropping it; restored"
+  },
+  "inbox": {
+    "evidence": {
+      "inspectLink": "Inspect",
+      "ariaLabel": "Finding evidence",
+      "edgeDropped": {
+        "sentence": "Dropped a {strength} {edgeKind} edge: {after} → {before}."
+      },
+      "anyOfChoice": {
+        "intro": "{modId} needs one of {assembly}'s candidates:"
+      },
+      "danglingDefReference": {
+        "causeRemovedBy": "it was removed by {modId}'s own patch",
+        "causeOnlyInUnloadedFolder": "it's defined only in {modId}'s own '{folder}' folder, which this install doesn't load",
+        "causeOnlyInInactiveMod": "it's defined only in {modId}, which isn't active",
+        "causeDefinedNowhere": "no installed mod, active or not, defines it",
+        "causeUnexplained": "why it's missing couldn't be determined",
+        "referrerFromDef": "{modId}'s {defType}/{defName} ({fieldPath})",
+        "referrerFromTemplate": "{modId}'s {defType}/{'@'}{name} ({fieldPath})",
+        "referrerFromPatch": "{modId}'s patch on {defType}/{defName} ({fieldPath})",
+        "sentence": "{name} resolves to no active def of any type — {cause}.",
+        "likelySound": "This looks like a sound reference — a missing {soundDef} logs a warning and silently falls back to an undefined sound rather than failing to load.",
+        "referencedFrom": "Referenced from:",
+        "truncatedReferrers": "{count} further referrer not shown (display limit). | {count} further referrers not shown (display limit)."
+      },
+      "textureOverride": {
+        "sentence": "Texture {path}"
+      },
+      "duplicateAssembly": {
+        "sentence": "Assembly {name}, shipped by:"
+      },
+      "likelyDuplicateMod": {
+        "body": "{a} and {b} share {count} identical def key | {a} and {b} share {count} identical def keys"
+      },
+      "missingMod": {
+        "body": "{modId} is listed but wasn't found on disk."
+      },
+      "missingDependency": {
+        "body": "{modId} needs {dependencyLabel} ({dependency}), which isn't active."
+      },
+      "incompatiblePair": {
+        "body": "{a} and {b} are marked incompatible."
+      },
+      "unsupportedVersion": {
+        "body": "{modId} doesn't declare support for this game version."
+      },
+      "undeclaredHardDependency": {
+        "body": "{after} needs {before}, but never declares it."
+      },
+      "lazyReferenceViolated": {
+        "body": "A lazy reference from {after} to {before} is violated."
+      },
+      "declarationQuestioned": {
+        "body": "{declaredAfter} is declared to load after {declaredBefore}, but the reverse relation also holds:"
+      },
+      "declarationOverridden": {
+        "body": "{declaredAfter} is declared to load after {declaredBefore}, but a declared-edge override says otherwise:"
+      },
+      "keyedTranslationCollision": {
+        "body": "{a} and {b} both define {count} translation key: | {a} and {b} both define {count} translation keys:"
+      },
+      "soundOverride": {
+        "sentence": "Sound {path}, shipped by:"
+      },
+      "undeclaredTypeDependency": {
+        "sentence": "{user} names type {typeName} from {provider}'s assembly, with no declared relation between them."
+      },
+      "runtimePatchCollision": {
+        "sentence": "{target}, patched by, in load order:",
+        "runsLast": "runs last",
+        "runLastButton": "Run last",
+        "runLastAriaLabel": "Run {modId} last"
+      },
+      "transpilerCollision": {
+        "sentence": "{target} is rewritten by a runtime-patch transpiler in each of these mods, in load order:"
+      },
+      "tagInferred": {
+        "sentence": "{modId} was tagged {tag} from:"
+      },
+      "ruleOverruled": {
+        "withWinner": "{after} loading after {before} ({origin}) was overruled:",
+        "byLongerCycle": "{after} loading after {before} ({origin}) was overruled by a longer cycle.",
+        "cycle": "cycle: {chain}"
+      },
+      "placementOverruled": {
+        "intro": "{modId} is pinned {placement} ({origin}), overruled by:",
+        "landedAt": "Landed at #{position}."
+      },
+      "placementQuestioned": {
+        "body": "{modId} is pinned {placement}, but {relationKind} with {other} can't hold under it."
+      },
+      "placementOrderingOverridden": {
+        "body": "{modId} was forced across {pinned}'s own {placement} pin by an accepted edge:"
+      },
+      "placementPromotesDependents": {
+        "body": "{modId} is pinned {placement}, promoting {count} other mod past the same tier boundary: | {modId} is pinned {placement}, promoting {count} other mods past the same tier boundary:"
+      },
+      "showMore": "Show more ({shown} of {total})",
+      "missingTexturePath": {
+        "sentence": "{modId}'s {def} field {field} names texture {path}, which no active mod ships."
+      },
+      "undecodableTexture": {
+        "sentence": "{modId}'s {path} won't decode ({width}x{height}, {fourcc}) — the base game shows the bad-texture placeholder in its place.",
+        "pngSibling": "This mod also ships a non-DDS file at the same path, but the base game never falls back to it."
+      },
+      "brokenInheritance": {
+        "missingParent": "{modId}'s {child} inherits from {parentName} — no active mod defines it, so it loads without any of that parent's own fields.",
+        "wrongType": "{modId}'s {child} inherits from {parentName} — it resolves to a {parentType}, not a {childDefType}, at this mod's own load position.",
+        "affectedCount": "{count} affected def: | {count} affected defs:",
+        "andMore": "… and {count} more",
+        "truncated": "{count} further affected def not shown (display limit). | {count} further affected defs not shown (display limit)."
+      },
+      "nearMissModReference": {
+        "findModName": "{modId}'s FindMod name {written} resolves to no active or installed mod, but closely resembles {candidateName} — possibly a typo.",
+        "mayRequireId": "{modId}'s MayRequire id {written} resolves to no active or installed mod, but closely resembles {candidateName} — possibly a typo.",
+        "writtenIn": "Written in {file}"
+      },
+      "patchWillFail": {
+        "causeRemovedBy": "{modId}'s {operation}, on {defKey}, is predicted to fail under this order — {causeModId}, which loads first, removes the target node with its own operation.",
+        "causeNotYetInjected": "{modId}'s {operation}, on {defKey}, is predicted to fail under this order — it targets a node {causeModId} injects, but that mod loads after it.",
+        "causeDeadTarget": "{modId}'s {operation}, on {defKey}, is predicted to fail under this order — the winning owner's own resolved structure never has that node, regardless of load order.",
+        "causeUnclassified": "{modId}'s {operation}, on {defKey}, is predicted to fail under this order — the cause couldn't be classified.",
+        "specificField": "Specific field: {leafXpath}"
+      },
+      "contributesNothing": {
+        "body": "{modId} contributes nothing observable under this order: no assembly, every def it owns is overridden, every texture and translation it ships is overridden, and every patch operation it has either fails to apply or never runs."
+      },
+      "discardedAddition": {
+        "sentence": "{replacer} declares it loads after {adder} and replaces {path}: {adder}'s own addition at {adderPath} is discarded on purpose."
+      }
+    },
+    "suggestion": {
+      "acceptButton": "Accept (Enter)",
+      "ignoreButton": "Ignore (i)",
+      "revertButton": "Revert (u)",
+      "alternativesHeading": "Alternatives",
+      "addNoteButton": "Add a note (n)"
+    },
+    "page": {
+      "loadFailed": "Failed to load findings.",
+      "noSelection": "Select a finding to see its suggestion.",
+      "shortcutsHeader": "Keyboard shortcuts",
+      "shortcutMoveCursor": "move the cursor",
+      "shortcutAccept": "accept the suggestion",
+      "shortcutPickAlternative": "pick an alternative",
+      "shortcutIgnore": "ignore",
+      "shortcutRevert": "revert the decision",
+      "shortcutMerge": "merge a def override or patch collision",
+      "shortcutAddNote": "add a note",
+      "shortcutOpenOrder": "open in the load-order view",
+      "shortcutOpenModDetail": "open mod detail",
+      "shortcutFocusSearch": "focus search",
+      "shortcutCycleStatus": "cycle the status filter",
+      "shortcutToggleModLabel": "toggle mod names/ids",
+      "shortcutToggleHelp": "toggle this help"
+    },
+    "alternatives": {
+      "ariaLabel": "Alternatives"
+    },
+    "decisionNote": {
+      "label": "Note",
+      "save": "Save note"
+    },
+    "textureTile": {
+      "winnerBadge": "winner",
+      "sizeLine": "{format} · {count} byte | {format} · {count} bytes",
+      "useThisOne": "Use this one",
+      "shipThisFile": "Ship this file"
+    },
+    "defConflictView": {
+      "sourceFailed": "Files changed since the scan, reload the project.",
+      "loadFailed": "Failed to load the conflict view.",
+      "completenessPartial": "Partial",
+      "completenessCompleteWithProblems": "Complete, with problems",
+      "completenessComplete": "Complete",
+      "patchCollisionWithSubPath": "Patch collision — {subPath}",
+      "injectedNodeRelation": "{selector}'s patch selects a node injected by {injector}",
+      "showLabel": "Show",
+      "filterAllChanged": "All changed",
+      "filterConflict": "Conflict",
+      "filterCleanMerge": "Clean merge",
+      "filterListEntries": "List entries",
+      "filterMapEntries": "Map entries",
+      "filterUnchanged": "Unchanged",
+      "showMore": "Show more ({shown} of {total})",
+      "problemsHeading": "Problems",
+      "problemUnsupportedOp": "{modId}'s operation #{opIndex}",
+      "problemReplayStopped": "Replay stopped here; rows above are from the ops before it.",
+      "problemMissingTemplate": "Missing template {name} ({defType}).",
+      "problemCycle": "Cycle: {chain}",
+      "problemPlanFailed": "Merge planning failed: {reason}"
+    },
+    "fieldRowsTable": {
+      "empty": "No fields match this filter.",
+      "headerPath": "Path",
+      "headerKind": "Kind",
+      "headerValues": "Values",
+      "headerInGame": "In game",
+      "headerAfterMerge": "After merge",
+      "headerPreference": "Preference",
+      "kindConflict": "Conflict",
+      "kindCleanMerge": "Clean merge",
+      "kindListEntry": "List entry",
+      "kindMapEntry": "Map entry",
+      "kindUnchanged": "Unchanged",
+      "groupHeader": "{path} ({count} entry) | {path} ({count} entries)",
+      "alsoAddedBy": "Also added by {mods}",
+      "mergeChoiceFrom": "{modId}'s value",
+      "mergeChoiceValue": "the stored value \"{text}\"",
+      "mergeChoiceDropped": "dropped",
+      "preferenceLoadOrder": "{winner} wins (load order)",
+      "preferenceDecision": "{winner} wins (decision)",
+      "preferenceMergeChoice": "{choice} (merge choice)"
+    },
+    "findingList": {
+      "searchPlaceholder": "Search findings…",
+      "filterByStatus": "Filter by status",
+      "filterByKind": "Filter by kind",
+      "empty": "No findings match this filter.",
+      "findingsAriaLabel": "Findings",
+      "statusAll": "All",
+      "statusNeedsInput": "Needs input",
+      "statusAuto": "Auto",
+      "statusOverridden": "Overridden",
+      "filteredByMod": "Filtered to {mod}",
+      "clearModFilter": "Clear mod filter"
+    },
+    "findingCard": {
+      "undecided": "Undecided",
+      "decidedChip": "decided",
+      "resolvedBySuggestedChip": "resolved by suggested"
+    },
+    "touchersList": {
+      "mod": "Mod",
+      "role": "Role",
+      "ops": "Ops",
+      "replay": "Replay",
+      "generatedSuffix": "(generated)",
+      "roleOwner": "owner",
+      "rolePatcher": "patcher",
+      "reached": "reached",
+      "notReached": "not reached"
+    }
+  },
+  "merge": {
+    "state": {
+      "merged": "merged",
+      "needsInput": "{count} field needs input | {count} fields need input",
+      "structuralGuard": "not auto-merged — confirm the winner",
+      "cannotMerge": "cannot merge"
+    },
+    "skipped": {
+      "stillNeedsInput": "still needs input"
+    },
+    "summary": {
+      "patchCollision": "{count} patch-collision merge (auto-suggested where undecided) | {count} patch-collision merges (auto-suggested where undecided)",
+      "defOverride": "{count} def-override merge (explicitly decided) | {count} def-override merges (explicitly decided)",
+      "asset": "{count} shipped asset | {count} shipped assets",
+      "willWrite": "Will write {parts}."
+    },
+    "header": {
+      "inspectLink": "Inspect",
+      "outOfScope": "Out of scope, not merged: {mods}",
+      "structuralGuardLine": "{field} differs ({by} vs. the base copy) — field-level merging is unsafe for this def. Confirm the load-order winner by accepting this finding on the Findings page; it can't be completed as a merge.",
+      "baseTag": "(base)",
+      "winnerTag": "(winner)",
+      "totalsFields": "{count} field | {count} fields",
+      "totalsConflicts": "{count} conflict | {count} conflicts",
+      "totalsAuto": "{count} auto | {count} auto",
+      "totalsUnresolved": "{count} unresolved | {count} unresolved",
+      "totalsUnchanged": "{count} unchanged | {count} unchanged"
+    },
+    "entryKind": {
+      "defOverride": "def-override",
+      "patchCollision": "patch-collision",
+      "asset": "asset"
+    },
+    "mod": {
+      "assetsGroup": "Assets",
+      "opsCount": "{count} op | {count} ops",
+      "dependsOn": "depends on",
+      "openInEditor": "Open in editor",
+      "heading": "Merge output",
+      "mergedDefs": "{count} merged def | {count} merged defs",
+      "nothingYet": "empty",
+      "summary": "The compatibility mod Rimmerge writes your merge and asset decisions into — currently {contents}. Regenerated every time you Apply; always loads last in the suggested order.",
+      "summaryWithSources": "The compatibility mod Rimmerge writes your merge and asset decisions into — currently {contents}, sourced from {count} mod. Regenerated every time you Apply; always loads last in the suggested order. | The compatibility mod Rimmerge writes your merge and asset decisions into — currently {contents}, sourced from {count} mods. Regenerated every time you Apply; always loads last in the suggested order.",
+      "loadFailed": "Failed to load the merge output.",
+      "packageIdLabel": "Package id",
+      "folderLabel": "Folder",
+      "pathLabel": "Path",
+      "onDiskLabel": "On disk",
+      "existsYes": "Yes — regenerated on every apply",
+      "existsNo": "Not yet — apply with \"Write merge mod\" to generate it",
+      "placementLabel": "Load order placement",
+      "placementValue": "Last (the sorter always places the generated mod at the bottom of the suggested order)",
+      "sourceModsLabel": "Source mods",
+      "entriesHeading": "Entries",
+      "noEntriesYet": "No merge or shipped-asset decisions yet — decide a def-override or patch-collision finding with the merge editor to add one.",
+      "filesHeading": "Files",
+      "nothingRendersYet": "Files appear here once at least one merge or shipped-asset decision exists.",
+      "fileLoadFailed": "Failed to render this file."
+    },
+    "filePreviewLabel": "File preview",
+    "editor": {
+      "sourceFailedSuffix": "{message} — the project's files changed since the last scan.",
+      "reloadProject": "Reload the project",
+      "loadFailed": "Failed to load the merge preview.",
+      "showMore": "Show more ({loaded} of {total})",
+      "shortcutsHeader": "Merge editor shortcuts",
+      "shortcutMoveRowCursor": "move the row cursor",
+      "shortcutNextPrevConflict": "next/previous conflict",
+      "shortcutMoveColumnCursor": "move the column cursor",
+      "shortcutChooseColumn": "choose the column at the cursor",
+      "shortcutChooseOwnerColumn": "choose owner column n (1 = base)",
+      "shortcutChooseWinner": "choose the selected-order winner",
+      "shortcutEditValue": "edit a free value",
+      "shortcutToggleDrop": "toggle drop",
+      "shortcutRevertToAuto": "revert to auto",
+      "shortcutToggleAutoSection": "toggle the auto section",
+      "shortcutToggleUnchanged": "toggle unchanged rows",
+      "shortcutBackToFindings": "back to findings"
+    },
+    "table": {
+      "pathHeader": "Path",
+      "classHeader": "Class",
+      "resultHeader": "Result",
+      "actionsHeader": "Actions",
+      "sectionConflicts": "Conflicts ({count})",
+      "sectionAuto": "Auto-resolved ({count})",
+      "sectionUnchanged": "Unchanged ({count})",
+      "containerEntries": "{count} entry | {count} entries",
+      "containerSummary": "{container} — {entries}",
+      "containerConflicts": "{count} conflict | {count} conflicts",
+      "containerSummaryWithConflicts": "{base}, {conflicts}",
+      "acceptSuggested": "Accept suggested ({count})"
+    },
+    "field": {
+      "classUnchanged": "unchanged",
+      "classOneSided": "changed by one mod",
+      "classAgreeing": "agreeing",
+      "classConflict": "conflict",
+      "chooseValueFor": "Choose a value for {path}",
+      "suggestedHint": "suggested",
+      "takeValue": "Take {owner}'s value",
+      "dropped": "dropped",
+      "needsInput": "needs input",
+      "saving": "saving…",
+      "drop": "Drop",
+      "dropUnavailableTitle": "Dropping isn't supported for a patch collision — RimWorld's own patches always replay to a value.",
+      "clearChoice": "Clear choice",
+      "autoRevert": "Auto"
+    },
+    "value": {
+      "absent": "absent",
+      "showLess": "Show less",
+      "showMore": "Show more"
+    }
+  },
+  "action": {
+    "accept": "Accept",
+    "ignore": "Ignore",
+    "reorder": "Load {after} after {before}",
+    "preferWinner": "Prefer {winner}'s {defKey}",
+    "chooseCandidate": "Choose {chosen} for {after}",
+    "dropEdge": "Drop the {edgeKind} edge {after} → {before}",
+    "keepEdge": "Keep the {edgeKind} edge {after} → {before}",
+    "addTag": "Tag {modId} as {tag}",
+    "removeTag": "Remove tag {tag} from {modId}",
+    "excludeFromCluster": "Exclude {modId} from cluster {rule}",
+    "removeMod": "Remove {modId} from the active list",
+    "merge": "Merge {defKey}",
+    "shipAsset": "Ship {from}'s {texturePath}",
+    "promoteRulePair": "Promote {after} after {before} to a user decision",
+    "promoteRulePlacement": "Promote {modId}'s placement to a user decision",
+    "dropRule": "Drop the rule {after} after {before}"
+  },
+  "patches": {
+    "scopeBadge": {
+      "title": "Outside this patch's scope: {mods}",
+      "label": "partial: +{mods}"
+    },
+    "table": {
+      "emptyState": "No compat patches yet — press n to create one.",
+      "nameHeader": "Name",
+      "packageIdHeader": "Package id",
+      "scopeHeader": "Scope",
+      "needsInputHeader": "Needs input",
+      "completeHeader": "Complete",
+      "lastExportHeader": "Last export",
+      "notExported": "Not exported"
+    },
+    "identityForm": {
+      "nameLabel": "Name",
+      "packageIdLabel": "Package id",
+      "packageIdPlaceholder": "author.mymod",
+      "displayNameLabel": "Display name",
+      "authorLabel": "Author",
+      "descriptionLabel": "Description",
+      "save": "Save"
+    },
+    "list": {
+      "newPatchButton": "New patch (n)",
+      "newPatchHeading": "New compatibility patch",
+      "scopeHeading": "Scope",
+      "loadFailed": "Failed to load patches."
+    },
+    "detail": {
+      "loadFailed": "Failed to load this patch.",
+      "orphanedCount": "{count} orphaned decision | {count} orphaned decisions",
+      "importFromProfileButton": "Import decisions from profile",
+      "pruneOrphanedButton": "Prune orphaned",
+      "deleteButton": "Delete",
+      "identityHeading": "Identity",
+      "exportHeading": "Export",
+      "findingsHeading": "Findings",
+      "importedToastSummary": "Imported from profile",
+      "importedNoSkips": "Imported {count} decision. | Imported {count} decisions.",
+      "rejection": {
+        "outOfScope": "it is not a finding between this patch's scope members",
+        "notPatchable": "a patch can only hold merge, shipped-asset and ignore decisions — not {action}",
+        "choiceOutsideScope": "{path}: its choice names {mod}, which is not in this patch's scope",
+        "assetOutsideScope": "its shipped asset comes from {mod}, which is not in this patch's scope",
+        "actionName": {
+          "accept": "Accept",
+          "reorder": "Reorder",
+          "preferWinner": "Prefer winner",
+          "chooseCandidate": "Choose candidate",
+          "dropEdge": "Drop edge",
+          "keepEdge": "Keep edge",
+          "addTag": "Add tag",
+          "removeTag": "Remove tag",
+          "excludeFromCluster": "Exclude from cluster",
+          "removeMod": "Remove from active list",
+          "promoteRule": "Promote rule",
+          "dropRule": "Drop rule"
+        }
+      },
+      "importedWithSkips": {
+        "imported": "Imported {count} decision | Imported {count} decisions",
+        "skipped": "{count} decision skipped: {reasons} | {count} decisions skipped: {reasons}",
+        "reasonSeparator": "; ",
+        "combined": "{imported}. {skipped}"
+      },
+      "prunedToastSummary": "Pruned orphaned decisions",
+      "prunedToastDetail": "Removed {count} decision the current scope no longer admits. | Removed {count} decisions the current scope no longer admits.",
+      "deleteDialogHeader": "Delete this patch?",
+      "deleteDialogBody": "This removes the patch project. A folder it already exported to disk is left untouched."
+    },
+    "inbox": {
+      "loadFailed": "Failed to load this patch's findings.",
+      "shortcutFocusScopeSearch": "focus the scope search",
+      "shortcutFocusExportDir": "focus the export directory field",
+      "shortcutBackToPatch": "back to the patch's own details"
+    },
+    "scopeEditor": {
+      "minimumSizeTitle": "A patch scope needs at least two members.",
+      "membersListLabel": "Scope members",
+      "removeMember": "Remove {name} from scope",
+      "noMembersYet": "No scope members yet.",
+      "searchPlaceholder": "Search mods to add…",
+      "searchLabel": "Search mods to add to scope",
+      "searchResultsLabel": "Mods matching the search",
+      "noMatches": "No matches.",
+      "scopeShrunk": "Scope shrunk — {count} decision now orphaned. | Scope shrunk — {count} decisions now orphaned.",
+      "remainingChoicesNamingRemoved": "{count} remaining choice still names a removed mod. | {count} remaining choices still name a removed mod."
+    },
+    "exportPanel": {
+      "exportDirLabel": "Export directory",
+      "exportDirPlaceholder": "Choose a folder…",
+      "chooseButton": "Choose…",
+      "installCheckboxLabel": "Install into Mods and activate",
+      "staleActiveSetNote": "Pending activation changes are not included — rescan first if you want them in this install.",
+      "forceWarning": "RimWorldWin64.exe looks like it's running. Installing now writes ModsConfig.xml, which the game overwrites when it exits, so the change may be lost. Export anyway?",
+      "exportAnyway": "Export anyway",
+      "export": "Export",
+      "exportedTo": "Exported to: {path}",
+      "installedAt": "Installed at: {path}",
+      "hash": "Hash: {hash}",
+      "unchangedSinceLastExport": "Unchanged since last export.",
+      "renderLoadFailed": "Failed to render this patch.",
+      "dependenciesHeading": "Dependencies",
+      "entriesHeading": "Entries",
+      "noEntriesYet": "No merge or shipped-asset decisions yet — decide a def-override or patch-collision finding in this patch's findings to add one.",
+      "skippedHeading": "Skipped",
+      "filesHeading": "Files",
+      "nothingRendersYet": "Files appear here once this patch has at least one merge or shipped-asset decision.",
+      "fileLoadFailed": "Failed to render this file."
+    }
+  },
+  "edgeStrength": {
+    "hard": "Hard",
+    "declared": "Declared",
+    "soft": "Soft",
+    "awareness": "Awareness",
+    "inferred": "Inferred"
+  },
+  "edgeStatus": {
+    "satisfied": "satisfied",
+    "violated": "violated",
+    "unevaluated": "unevaluated"
+  },
+  "mods": {
+    "changes": {
+      "searchPlaceholder": "Search…",
+      "loadFailed": "Failed to load this mod's changes.",
+      "noMatches": "No changes match this filter.",
+      "kindHeader": "Kind",
+      "targetHeader": "Target",
+      "opsHeader": "Ops",
+      "otherTouchersHeader": "Other touchers",
+      "findingsHeader": "Findings",
+      "showMore": "Show more ({loaded} of {total})"
+    },
+    "edges": {
+      "none": "None."
+    },
+    "picker": {
+      "removeMember": "Remove {name}",
+      "noneSelectedYet": "None selected yet.",
+      "searchPlaceholder": "Search mods…",
+      "searchLabel": "Search mods for {target}",
+      "noMatches": "No matches."
+    },
+    "table": {
+      "regionLabel": "Mods",
+      "missing": "missing",
+      "rovingHint": "Use the arrow keys to move, Enter to open, Space to toggle"
+    },
+    "pendingChanges": {
+      "unscanned": "{count} pending change — Rescan to update analysis | {count} pending changes — Rescan to update analysis",
+      "unapplied": "{count} change not yet applied to ModsConfig.xml | {count} changes not yet applied to ModsConfig.xml",
+      "rescanButton": "Rescan",
+      "rescanFinishedToast": "Rescan finished with {count} note | Rescan finished with {count} notes",
+      "rescannedWithWarningsToast": "Rescanned with warnings"
+    },
+    "closeGuard": {
+      "header": "Unsaved active-mod changes",
+      "body": "The working active-mod list has changes no rescan has picked up yet, or a scanned order hasn't been applied to {modsConfig}. Leaving now loses that work in memory — the game's own file is untouched either way.",
+      "stay": "Stay",
+      "leaveAnyway": "Leave anyway"
+    },
+    "scanNotes": {
+      "empty": "No scan notes."
+    },
+    "detail": {
+      "loadFailed": "Failed to load this mod.",
+      "idAndSource": "{modId} — {source}",
+      "byAuthors": "By {authors}",
+      "tagsHeading": "Tags",
+      "declaredOrderHeading": "Declared order",
+      "loadAfterLabel": "Load after",
+      "loadBeforeLabel": "Load before",
+      "forceLoadAfterLabel": "Force load after",
+      "forceLoadBeforeLabel": "Force load before",
+      "dependenciesLabel": "Dependencies",
+      "incompatibleWithLabel": "Incompatible with",
+      "edgesInHeading": "Edges in",
+      "edgesOutHeading": "Edges out",
+      "changesHeading": "Changes",
+      "scanNotesHeading": "Scan notes",
+      "findingsHeading": "Findings",
+      "noLiveFindings": "No live findings."
+    },
+    "page": {
+      "heading": "Mods",
+      "activeTab": "Active",
+      "inactiveTab": "Inactive",
+      "searchPlaceholder": "Search mods…",
+      "tagFilterPlaceholder": "Filter by tag…",
+      "sourcePlaceholder": "Source",
+      "sourceAny": "Any",
+      "deactivateSelectedButton": "Deactivate selected",
+      "alsoActivateDependenciesLabel": "Also activate dependencies",
+      "activateSelectedButton": "Activate selected",
+      "loadFailed": "Failed to load mods.",
+      "totalMods": "{count} mod | {count} mods",
+      "pageCapHint": "(showing first {count} — narrow with search)",
+      "activateDialogHeader": "Activate mods",
+      "willActivateHeading": "Will activate:",
+      "alreadyActiveHeading": "Already active, skipped:",
+      "unresolvableDependency": "{mod} declares a dependency on {deps}, which is not on disk. | {mod} declares dependencies on {deps}, which are not on disk.",
+      "activatedToast": "Activated",
+      "activateButton": "Activate",
+      "deactivateDialogHeader": "Deactivate mods",
+      "willDeactivateHeading": "Will deactivate:",
+      "refusedHeading": "Refused (required):",
+      "dependentsStillActive": "{count} active mod still depends on {mod}: {deps}. | {count} active mods still depend on {mod}: {deps}.",
+      "deactivatedToast": "Deactivated",
+      "deactivateButton": "Deactivate"
+    },
+    "defSearch": {
+      "ariaLabel": "Jump to a def",
+      "placeholder": "Jump to a def…"
+    }
+  },
+  "rules": {
+    "orphaned": {
+      "empty": "No orphaned decisions.",
+      "pruneButton": "Prune"
+    },
+    "pairTable": {
+      "regionLabel": "Pair rules",
+      "afterHeader": "After",
+      "beforeHeader": "Before",
+      "originHeader": "Origin",
+      "commentHeader": "Comment",
+      "notAppliedTitle": "Not in effect: imported pairs are off",
+      "promotedFrom": "(promoted from {origin})",
+      "overridesDeclaredTag": "(overrides declared)",
+      "overridesDeclaredTitle": "This rule is flagged to override a declared edge (loadAfter/modDependencies) between the same two mods, should one exist — it beats an author's own declaration for this pair specifically, but never a Hard dependency.",
+      "promotedButton": "Promoted",
+      "promoteButton": "Promote",
+      "deleteButton": "Delete"
+    },
+    "addPairDialog": {
+      "header": "Add pair rule",
+      "loadsAfterLabel": "Loads after (the dependent mod)",
+      "loadsBeforeLabel": "Loads before (the dependency)",
+      "commentLabel": "Comment (optional)",
+      "overrideDeclaredLabel": "Override a declared edge between these mods, if one exists",
+      "overrideDeclaredWarning": "This beats the author's own loadAfter/modDependencies for this pair specifically — never a Hard dependency. Use only when the declaration itself is stale or wrong.",
+      "sameModError": "A pair rule needs two different mods.",
+      "replaceWarning": "This replaces the existing {origin} rule for this pair.",
+      "addButton": "Add"
+    },
+    "addPlacementDialog": {
+      "header": "Add rule",
+      "modToPinLabel": "Mod to pin",
+      "placementLabel": "Placement",
+      "placementPlaceholder": "Select a placement",
+      "commentLabel": "Comment (optional)",
+      "replaceWarning": "This replaces {mod}'s existing {placement} pin (source: {origin})."
+    },
+    "page": {
+      "heading": "Rules",
+      "importToggleState": "Imported pairs: {pairs} · Imported placements: {placements}",
+      "addRuleButton": "Add rule",
+      "addPairRuleButton": "Add pair rule",
+      "reimportHint": "Cached databases have changed since this profile last imported them; import again to use the changes.",
+      "importFromRimSortButton": "Import from RimSort",
+      "importFinished": "Import finished.",
+      "userRulesCount": "User rules: {count}",
+      "communityRulesCount": "Community rules: {count}",
+      "steamDependenciesCount": "Steam dependencies: {count}",
+      "notImported": "not imported",
+      "loadFailed": "Failed to load rules.",
+      "tabAll": "All",
+      "tabUserDecision": "Your decisions",
+      "tabRimSortUser": "RimSort (user)",
+      "tabRimSortCommunity": "RimSort (community)",
+      "tabSteamDb": "SteamDB",
+      "tagsHeading": "Tags",
+      "orphanedHeading": "Orphaned decisions"
+    },
+    "databases": {
+      "heading": "Rule databases",
+      "communityLabel": "Community rules",
+      "steamLabel": "Steam Workshop",
+      "rimmergeLabel": "Rimmerge rules",
+      "refreshButton": "Refresh",
+      "refreshDisabledTitle": "Turned off by Allow internet access (Settings page)",
+      "networkDisabledNotice": "Internet access is off, so refresh is disabled. Cached databases are still in use.",
+      "failureBanner": "The last refresh failed for at least one source — the cached copy is still in use.",
+      "loadFailed": "Failed to load rule databases.",
+      "needsReimport": "(re-import available)",
+      "neverFetched": "Never fetched",
+      "stale": "Stale ({count} day) | Stale ({count} days)",
+      "updated": "Updated {relative}",
+      "recencyLine": "{recency} · {bytes} · {sha}",
+      "today": "today",
+      "daysAgo": "{count} day ago | {count} days ago",
+      "lastFailureSuffix": " · Last refresh failed: {reason}",
+      "bundledSuffix": " · Bundled {sha}",
+      "outcomeUpdated": "updated ({bytes}, sha {sha})",
+      "outcomeUnchanged": "unchanged (sha {sha})",
+      "outcomeFailed": "failed: {reason}",
+      "outcomeSkippedSourceDisabled": "skipped (source disabled)",
+      "outcomeSkippedNetworkDisabled": "skipped (internet access is off)",
+      "outcomeSkippedAutoRefreshDisabled": "skipped (automatic refresh disabled)",
+      "outcomeSkippedNotDue": "skipped (not due yet)",
+      "refreshModeAutomatic": "Refreshes automatically",
+      "refreshModeManual": "Manual refresh only"
+    },
+    "importDialog": {
+      "header": "Import from RimSort",
+      "userRulesLabel": "userRules.json",
+      "communityRulesLabel": "communityRules.json",
+      "steamDbLabel": "steamDB.json",
+      "importButton": "Import"
+    },
+    "tagEditor": {
+      "modHeader": "Mod",
+      "tagHeader": "Tag",
+      "sourceHeader": "Source",
+      "confidenceHeader": "Confidence",
+      "signalsHeader": "Signals",
+      "modIdLabel": "Mod id",
+      "tagLabel": "Tag",
+      "modeLabel": "Mode",
+      "modeAdd": "Add",
+      "modeRemove": "Remove",
+      "saveButton": "Save"
+    },
+    "table": {
+      "pairRulesHeading": "Pair rules",
+      "placementRulesHeading": "Placement rules",
+      "modHeader": "Mod",
+      "placementHeader": "Placement",
+      "originHeader": "Origin",
+      "commentHeader": "Comment",
+      "promotesHeader": "Promotes",
+      "notAppliedPlacementsTitle": "Not in effect: imported placements are off",
+      "otherMods": "{count} other mod | {count} other mods",
+      "incompatibilitiesHeading": "Incompatibilities",
+      "aHeader": "A",
+      "bHeader": "B",
+      "empty": "No rules yet."
+    }
+  },
+  "placement": {
+    "top": "Top",
+    "bottom": "Bottom"
+  },
+  "tagProvenance": {
+    "inferred": "inferred",
+    "manual": "manual"
+  },
+  "source": {
+    "core": "Core",
+    "dlc": "DLC",
+    "local": "Local",
+    "workshop": "Workshop"
+  },
+  "cardinality": {
+    "scalar": "scalar",
+    "list": "list"
+  },
+  "fieldRole": {
+    "targetKey": "Target key",
+    "itemSlot": "Item slot",
+    "chances": "Chances",
+    "scalar": "Scalar",
+    "opaque": "Opaque"
+  },
+  "changeKind": {
+    "ownsDef": "Owns",
+    "ownsTemplate": "Owns template",
+    "patchesDef": "Patches",
+    "overridesTexture": "Overrides texture",
+    "overridesSound": "Overrides sound",
+    "overridesKeyedTranslation": "Overrides translation"
+  },
+  "defPage": {
+    "loadFailed": "Failed to load this def.",
+    "sourceTitle": "Viewed under the {source} order — click to switch",
+    "partialBanner": "Incomplete: stopped at {reason}. Fields after this point are not shown.",
+    "replayStopper": "{mod}'s operation {opIndex}: {error}",
+    "ambiguousTemplateIntro": "Ambiguous template: this Name has {count} registration. RimWorld resolves each child independently to whichever registration loads nearest at or before it — never a single winner. \"Winner\"/\"last-loaded representative\" above is only this app's own disclosed stand-in for when no specific child is being asked, not an answer. | Ambiguous template: this Name has {count} registrations. RimWorld resolves each child independently to whichever registration loads nearest at or before it — never a single winner. \"Winner\"/\"last-loaded representative\" above is only this app's own disclosed stand-in for when no specific child is being asked, not an answer.",
+    "knownChildrenResolve": "{count} known child resolves here | {count} known children resolve here",
+    "ownersHeading": "Owners",
+    "winnerTag": "(winner)",
+    "representativeTag": "(last-loaded representative)",
+    "representativeTitle": "Representative only — no single answer exists, see the ambiguous-template notice above",
+    "generatedTag": "(generated)",
+    "patchersHeading": "Patchers",
+    "patcherStatusNotReached": "not reached",
+    "patcherStatusReplayFailed": "replay failed",
+    "patcherStatusReplaysCleanly": "replays cleanly",
+    "wrappedTag": "(wrapped)",
+    "wrappedTitle": "Shown from its first mutating descendant, not the wrapper node itself",
+    "gatesPrefix": "gates: {gates}",
+    "gate": {
+      "anyActive": "any of {mods} active",
+      "noneActive": "none of {mods} active"
+    },
+    "parentsHeading": "Parents",
+    "childrenHeading": "Children",
+    "effectiveDefHeading": "Effective def",
+    "onlyPatchedLabel": "Only patched/inherited",
+    "provenanceLegendOwner": "Owner",
+    "provenanceLegendPatched": "Patched",
+    "provenanceLegendInherited": "Inherited",
+    "provenanceOwner": "owner: {mod}",
+    "provenancePatch": "patched by {mod}",
+    "provenanceInherited": "inherited from {defType}/{defName} ({owner})",
+    "provenanceUnattributedTemplate": "inherited from {defType}/{defName} (unknown owner)",
+    "fields": {
+      "pathHeader": "Path",
+      "valueHeader": "Value",
+      "provenanceHeader": "Provenance",
+      "showMore": "Show more ({loaded} of {total})"
+    },
+    "resolvedXmlSummary": "Resolved XML"
+  },
+  "layer": {
+    "hard": "Hard",
+    "anyOf": "Any-of",
+    "declaredOverride": "Declared override",
+    "declared": "Declared",
+    "userDecision": "User decision",
+    "rimSortUser": "RimSort user",
+    "rimSortCommunity": "RimSort community",
+    "steamDb": "SteamDB",
+    "inferred": "Inferred",
+    "soft": "Soft",
+    "awareness": "Awareness"
+  },
+  "order": {
+    "heading": "Load order — {source}",
+    "loadFailed": "Failed to load the order.",
+    "sortProvenance": {
+      "summary": "tie-break: {tieBreak} · imported pairs: {pairs} · imported placements: {placements}",
+      "rebuild": "rebuild",
+      "preserveCurrent": "preserve current",
+      "on": "on",
+      "off": "off"
+    },
+    "table": {
+      "regionLabel": "Load order",
+      "nameHeader": "Name",
+      "tierHeader": "Tier",
+      "depsHeader": "Deps",
+      "movedFrom": "from #{position}"
+    },
+    "whyPanel": {
+      "headerWithMod": "{mod} — why here?",
+      "headerFallback": "Why here?",
+      "loadFailed": "Failed to load the explanation.",
+      "positionHeading": "Position",
+      "becameReadyAfterHeading": "Became ready after",
+      "lowerBoundsHeading": "Lower bounds (must load after)",
+      "noLowerBounds": "No lower bounds.",
+      "upperBoundsHeading": "Upper bounds (mods waiting on this)",
+      "noUpperBounds": "Nothing is waiting on this mod.",
+      "advisoryHeading": "Advisory edges",
+      "softHeading": "Soft (lazy references)",
+      "awarenessHeading": "Awareness",
+      "none": "None.",
+      "satisfied": "satisfied",
+      "violated": "violated",
+      "droppedHeading": "Dropped edges",
+      "cycle": "cycle: {cycle}",
+      "overruledBy": "Overruled by:",
+      "sortSettingsHeading": "Sort settings",
+      "tieBreakHeading": "Tie-break",
+      "currentPositionKnown": "Current position: #{position}",
+      "currentPositionUnknown": "Current position: not in the current order",
+      "effectiveKey": "Effective key: {key}",
+      "modsPreferredAhead": "Mods preferred ahead: {count}",
+      "pulledForwardBy": "Pulled forward by:",
+      "openInModsLink": "Open in Mods"
+    },
+    "edgeChip": {
+      "directionAfter": "after",
+      "directionBefore": "before",
+      "findingLink": "finding"
+    },
+    "tier": {
+      "core": "Core",
+      "dlc": "DLC",
+      "top": "Top",
+      "body": "Body",
+      "bottom": "Bottom"
+    },
+    "provenance": {
+      "anyOf": "any-of candidate for {assembly}",
+      "rule": "rule ({origin})",
+      "ruleWithComment": "rule ({origin}): {comment}",
+      "tier": "tier boundary ({tier})"
+    },
+    "tierReason": {
+      "source": "source: {source}",
+      "placement": "placement rule ({origin})",
+      "promotedBy": "promoted by {before} → {after}",
+      "body": "no source or placement signal"
+    }
+  },
+  "apply": {
+    "dialog": {
+      "header": "Apply",
+      "defCacheNote": "An active def-cache mod keys its cache on the load order; the first launch after this apply will rebuild it{parenthetical}.",
+      "defCacheParenthetical": " (about {seconds} seconds on your last log)",
+      "writeModsConfigLabel": "Write ModsConfig.xml (the load order RimWorld reads)",
+      "staleActiveSetMessage": "The working active-mod set has pending changes — Rescan to write ModsConfig.xml.",
+      "rescanButton": "Rescan",
+      "writeMergeModLabel": "Write merge mod (render the generated mod into Mods/, or remove it if no merge/asset decision remains)",
+      "closeButton": "Close",
+      "cancelButton": "Cancel",
+      "writeAnywayButton": "Write anyway",
+      "applyButton": "Apply",
+      "writeMergeModButton": "Write merge mod",
+      "saveDecisionsButton": "Save decisions and rules"
+    },
+    "preflight": {
+      "unappliedHeading": "Scanned but not yet applied to ModsConfig.xml:",
+      "addedLabel": "Added:",
+      "removedLabel": "Removed:",
+      "orderLabel": "Order",
+      "modsConfigLabel": "ModsConfig.xml",
+      "decisionsLabel": "Decisions",
+      "rulesLabel": "Rules",
+      "movedModsLabel": "Mods that move",
+      "needsInputLabel": "Needs input",
+      "unansweredReordersWarning": "{count} suggested reorder from this verify run has no pair rule yet | {count} suggested reorders from this verify run have no pair rule yet",
+      "problemsRow": "{count} problem to confirm | {count} problems to confirm",
+      "problemsAllDecided": "{count} problem, already decided | {count} problems, already decided",
+      "noProblems": "No problems found",
+      "openInbox": "Open Findings"
+    },
+    "progress": {
+      "heading": "Verify order",
+      "description": "Replays every foreign patch operation to predict which would fail under this order, the way RimWorld's own log would show it. On demand only — a large install takes about a minute.",
+      "verifyingLabel": "Verifying order",
+      "checksCaption": "{checked} of {total} checks",
+      "startingCaption": "Starting…"
+    },
+    "diff": {
+      "summary": "Checked {count} def against the {source} order — {list}. | Checked {count} defs against the {source} order — {list}.",
+      "summaryOperations": "{count} operation predicted to fail | {count} operations predicted to fail",
+      "summaryTargets": "{count} def target affected | {count} def targets affected",
+      "removedByCount": "Removed by an earlier mod: {count}",
+      "notYetInjectedCount": "Not yet injected: {count}",
+      "deadTargetCount": "Dead target: {count}",
+      "unknownCount": "Unknown: {count}",
+      "orderFixableHeading": "Order-fixable — reordering the named mod may resolve these:",
+      "cosmeticText": "cosmetic: the same final def either order — no reorder offered.",
+      "mergeInsteadLink": "Merge instead",
+      "mergeInstead": "{link} keeps the losing mod's own intent.",
+      "noMergeAvailable": "No merge is available for this target.",
+      "removedByCause": "{mod}, which loads first, removes the target node.",
+      "notYetInjectedCause": "the target node is injected by {mod}, which loads later.",
+      "modPossessive": "{mod}'s {operation}",
+      "notFullyFixableHeading": "Not fully order-fixable — stale patches, an unclassified cause, or a mix; grouped by mod:",
+      "groupedByModLine": "{mod} — {list}",
+      "groupedOperations": "{count} operation | {count} operations",
+      "groupedTargets": "{count} def target | {count} def targets",
+      "partlyFixableHeading": "Some of these are partly order-fixable — a reorder resolves some of their def targets:",
+      "skippedCandidates": "{count} candidate couldn't be checked. | {count} candidates couldn't be checked.",
+      "pvoMismatchWarning": "The imported log was produced by a different mod order than the one just verified — the counts below are comparing two unrelated runs.",
+      "pvoHeading": "Predicted vs. observed (last imported log)",
+      "pvoSnapshotNote": "The imported log is a console snapshot, not the log of a whole game run: a failure the game logged before the console's oldest entry is not in it, so \"predicted, not observed\" is not evidence that a failure did not happen.",
+      "pvoCutOffNote": "The imported log ended without a clean exit and before any patch result was logged, so the game may never have reached the patch phase: \"predicted, not observed\" is not evidence that a failure did not happen.",
+      "pvoGapsNote": "The game stopped writing messages while the imported log was being written, so a failure may be missing from it: \"predicted, not observed\" is not evidence that a failure did not happen.",
+      "pvoMatchedSummary": "Confirmed by the log: {count}",
+      "pvoPredictedOnlySummary": "Predicted, not observed in the log: {count}",
+      "pvoObservedOnlySummary": "Observed in the log, not predicted: {count} — listed as-is, never dropped:",
+      "unattributedRaw": "(unattributed: {raw})",
+      "counterfactualJobsLine": "{count} operation re-checked against other load orders | {count} operations re-checked against other load orders",
+      "counterfactualResolvedLine": "{count} failure explained | {count} failures explained",
+      "counterfactualDemotedLine": "{count} \"dead target\" row turned out to be order-fixable | {count} \"dead target\" rows turned out to be order-fixable",
+      "counterfactualSkippedLine": "{count} operation skipped | {count} operations skipped",
+      "counterfactualRejectedLine": "{count} reorder rejected for breaking another operation | {count} reorders rejected for breaking another operation",
+      "counterfactualSummary": "Counterfactual: {list}."
+    },
+    "reorderActions": {
+      "createPairRule": "Create pair rule",
+      "createPairRuleAnyway": "Create pair rule anyway",
+      "conflictText": "conflicts with {kind}: {detail} ({status})",
+      "ruleCreated": "Rule created. Re-run Verify order to check it — a rule can still be overruled by an author declaration or by another rule, and two opposite-direction rules cancel out; the Rules page shows what actually took effect.",
+      "ruleExists": "Rule already exists."
+    },
+    "result": {
+      "forceWarning": "RimWorldWin64.exe looks like it's running. The game overwrites ModsConfig.xml when it exits, so what you write now may be lost. Write anyway?",
+      "mergeModPath": "Merge mod: {path}",
+      "mergeModRemoved": "Merge mod: removed (no merge or asset decision remains)",
+      "mergeModBackupPath": "Merge mod backup: {path}",
+      "skippedHeading": "Skipped — the merge mod was written without them:",
+      "toastAppliedSummary": "Applied",
+      "toastSavedSummary": "Saved",
+      "toastModsConfigPath": "ModsConfig: {path}",
+      "toastBackupPath": "Backup: {path}",
+      "toastDecisionsPath": "Decisions: {path}",
+      "toastRulesPath": "Rules: {path}",
+      "toastSkippedStillNeedsInput": "Skipped (still needs input): {list}"
+    },
+    "confirm": {
+      "heading": "Apply anyway?",
+      "intro": "The {order} order has {count} problem to confirm before writing: | The {order} order has {count} problems to confirm before writing:",
+      "acknowledgedHeading": "Already decided in Findings",
+      "reviewInInbox": "Review in Findings",
+      "goBackButton": "Go back",
+      "applyAnywayButton": "Apply anyway"
+    },
+    "problem": {
+      "missingDependencyInactive": "{mod} requires {dependency}, which is installed but not active.",
+      "missingDependencyNotInstalled": "{mod} requires {dependency}, which is not installed.",
+      "incompatiblePair": "{a} and {b} are declared incompatible.",
+      "missingModRemoved": "{mod} is not installed and will be removed from the active list.",
+      "missingModKept": "{mod} is not installed and stays in the active list; the game skips it.",
+      "loadRequirementViolated": "{after} needs {before} to load first; this order loads it later.",
+      "anyOfUnsatisfied": "{mod} needs one of {candidates} to load first; none of them does."
+    }
+  },
+  "gameLog": {
+    "heading": "Imported log:",
+    "kind": {
+      "playerLog": "Player.log",
+      "consoleSnapshot": "Console snapshot"
+    },
+    "coverage": {
+      "playerLog": {
+        "cleanExit": "{count} startup pass; the log ends with a clean exit | {count} startup passes; the log ends with a clean exit",
+        "crashed": "{count} startup pass; the log ends with a game crash (crash report: {path}) | {count} startup passes; the log ends with a game crash (crash report: {path})",
+        "crashedNoPath": "{count} startup pass; the log ends with a game crash (it names no crash report) | {count} startup passes; the log ends with a game crash (it names no crash report)",
+        "truncated": "{count} startup pass; the log ends mid-run with no exit footer (a freeze, a force-close, or a copy taken while the game ran) | {count} startup passes; the log ends mid-run with no exit footer (a freeze, a force-close, or a copy taken while the game ran)"
+      },
+      "snapshot": {
+        "belowCap": "The console held only {count} entry, so this copy says nothing about any stage that entry does not show | The console held only {count} entries, so this copy says nothing about any stage those entries do not show",
+        "atCap": "Only the {count} entry the console held, at the console's cap: older entries were dropped by the game | Only the {count} entries the console held, at the console's cap: older entries were dropped by the game",
+        "overCap": "{count} entry, more than one console holds, so this is not a single console copy: several copies pasted together, or a parsing problem; how much the game dropped cannot be said | {count} entries, more than one console holds, so this is not a single console copy: several copies pasted together, or a parsing problem; how much the game dropped cannot be said",
+        "headTruncated": "The copy starts mid-entry: its first entry is incomplete."
+      }
+    },
+    "gaps": {
+      "warning": "The game stopped writing messages {count} time. What it never wrote cannot be recovered. | The game stopped writing messages {count} times. What it never wrote cannot be recovered.",
+      "neverResumed": "{count} logging stop has no resume message after it, so everything in the log after that point is unreliable. | {count} logging stops have no resume message after them, so everything in the log after the first of them is unreliable.",
+      "lowerBound": "At least {count} family of entries ({percent}% of the log's entries) spans a gap, so its count may be short; any count may be short. | At least {count} families of entries ({percent}% of the log's entries) span a gap, so their counts may be short; any count may be short.",
+      "resumed": "Line {stop} to line {resume}",
+      "open": "Line {stop} to the end of the log",
+      "more": "And {count} more"
+    },
+    "losses": {
+      "heading": "The reader had to bound some of this log, so the summary is missing part of it:",
+      "linesTruncated": "{count} line was longer than the reader's limit; only its start was read | {count} lines were longer than the reader's limit; only their starts were read",
+      "linesWithInvalidUtf8": "{count} line held invalid UTF-8 and was read with replacement characters | {count} lines held invalid UTF-8 and were read with replacement characters",
+      "stackBlockLinesDropped": "{count} stack-trace line past the per-block limit was not examined | {count} stack-trace lines past the per-block limit were not examined",
+      "stackJoinsAbandoned": "{count} multi-line stack join grew past its limit and was abandoned | {count} multi-line stack joins grew past their limit and were abandoned",
+      "passesFolded": "{count} entry from a startup pass beyond the tracked ones was folded into the last tracked pass | {count} entries from startup passes beyond the tracked ones were folded into the last tracked pass",
+      "stackRefsDropped": "{count} stack back-reference was not indexed | {count} stack back-references were not indexed",
+      "loggingGapsDropped": "{count} logging gap past the list limit was counted, not listed | {count} logging gaps past the list limit were counted, not listed",
+      "crashReportPathsTruncated": "{count} crash-report location was cut to its length limit | {count} crash-report locations were cut to their length limit"
+    }
+  },
+  "startup": {
+    "heading": "Startup cost",
+    "description": "One row per active mod — mutating patch ops, slow-shape xpaths, textures, DLLs, and defs, no timings (Rimmerge never runs the game). Import a {playerLog} or a console snapshot to fill in the bad-dimension DDS and observed-timer columns (a console snapshot cannot fill the timers).",
+    "orderMismatchWarning": "The imported log was produced by a different mod order than the one currently selected — the bad-dimension DDS and observed-timer columns below reflect that other run, not this one.",
+    "noOrderBlockWarning": "The imported log carries no active-mod list at all, so it can't be checked against the selected order — the bad-dimension DDS and observed-timer columns below may reflect a different run than this one.",
+    "loadFailed": "Failed to load the startup-cost table.",
+    "modHeader": "Mod",
+    "patchOpsHeader": "Patch ops",
+    "slowXpathsHeader": "Slow xpaths",
+    "texFilesHeader": "Tex. files",
+    "texBytesHeader": "Tex. bytes",
+    "ddsFilesHeader": "DDS files",
+    "badDimDdsHeader": "Bad-dim. DDS",
+    "dllsHeader": "DLLs",
+    "dllBytesHeader": "DLL bytes",
+    "defsHeader": "Defs",
+    "overriddenTexHeader": "Overridden tex.",
+    "observedTimersHeader": "Observed timers",
+    "contentOnlyHeader": "Content-only",
+    "totalRow": "Total ({count} mod) | Total ({count} mods)",
+    "notImported": "not imported",
+    "notAvailableFromSnapshot": "not available from a console snapshot",
+    "atLeast": "at least {count}",
+    "snapshotNote": "The imported log is a console snapshot, not the log of a whole game run: observed timers are not available from one, and the bad-dimension DDS counts are lower bounds.",
+    "cutOffNote": "The imported log ends before any patch result was logged, and without a clean exit, so the counts below may be short: the bad-dimension DDS counts and the observed timers are lower bounds.",
+    "gapsNote": "The game stopped writing messages while the imported log was being written, so the counts below may be short: the bad-dimension DDS counts and the observed timers are lower bounds.",
+    "observedTimersValue": "{count} ({ms} ms)",
+    "observedTimersAtLeast": "at least {count} ({ms} ms)",
+    "contentOnly": "content-only"
+  },
+  "assignments": {
+    "editRefsTargets": {
+      "header": "Edit references & targets",
+      "referencesHeading": "References (R)",
+      "targetsHeading": "Targets (T)",
+      "whatChangedHeading": "What changed",
+      "schemaChangeCounts": {
+        "added": "{count} field added | {count} fields added",
+        "removed": "{count} field removed | {count} fields removed",
+        "reclassified": "{count} field reclassified | {count} fields reclassified"
+      },
+      "reclassifiedNames": " ({names})",
+      "strandedValuesLine": "{count} stored value was dropped — a reclassified field's new role no longer accepts what was stored there: | {count} stored values were dropped — a reclassified field's new role no longer accepts what was stored there:",
+      "droppedRowsLine": "{count} row was dropped — its target left the target set: | {count} rows were dropped — their target left the target set:",
+      "clean": "Nothing was dropped or stranded by this change.",
+      "closeButton": "Close",
+      "saveButton": "Save"
+    },
+    "rowEditor": {
+      "copyFrom": "Copy from:",
+      "winnerBadge": "— winner",
+      "prefillFrom": "— from {mod}",
+      "clampedTo": "— reduced to \"{name}\": this slot only keeps one name, but this value named {count} ({joined})",
+      "droppedFromCopy": "— {count} borrowed value skipped because that def is not active: {names} | — {count} borrowed values skipped because those defs are not active: {names}",
+      "pairedTo": "paired to {slot}",
+      "overrideBadge": "Override — {count} existing match | Override — {count} existing matches",
+      "inspectDefLink": "Inspect def",
+      "defNameLabel": "defName",
+      "saveRowButton": "Save row",
+      "clearRowButton": "Clear row",
+      "newRowTitle": "New row"
+    },
+    "coverageList": {
+      "searchPlaceholder": "Search targets…",
+      "ownerFilterPlaceholder": "Filter by owner",
+      "thisProject": "this project",
+      "coveredByMod": "covered by {mod}",
+      "coveredByAnotherMod": "covered by another mod",
+      "uncovered": "uncovered",
+      "wouldWinNoOwner": "— would win",
+      "wouldWinWithOwner": "— {mod} would win",
+      "noMatches": "No matching targets."
+    },
+    "schemaTable": {
+      "fieldHeader": "Field",
+      "roleHeader": "Role",
+      "typeHeader": "Type",
+      "cardinalityHeader": "Cardinality",
+      "observedHeader": "Observed",
+      "defTypePlaceholder": "def type",
+      "hideButton": "Hide",
+      "unreadableTargets": "{count} referenced target couldn't be read while learning a shape: | {count} referenced targets couldn't be read while learning a shape:",
+      "unreadableTargetLine": "{field}: {defType}/{defName} — {reason}",
+      "newFieldPathLabel": "New field path",
+      "roleLabel": "Role",
+      "defTypeLabel": "Def type",
+      "addFieldButton": "Add field",
+      "pathRequired": "A field path is required.",
+      "pathAlreadyExists": "{path} is already a field of this schema."
+    },
+    "exportPanel": {
+      "exportDirLabel": "Export directory",
+      "exportDirPlaceholder": "Choose a folder…",
+      "chooseButton": "Choose…",
+      "installCheckboxLabel": "Install into Mods and activate",
+      "staleActiveSetNote": "Pending activation changes are not included — rescan first if you want them in this install.",
+      "forceWarning": "RimWorldWin64.exe looks like it's running. Installing now writes ModsConfig.xml, which the game overwrites when it exits, so the change may be lost. Export anyway?",
+      "exportAnyway": "Export anyway",
+      "export": "Export",
+      "exportedTo": "Exported to: {path}",
+      "installedAt": "Installed at: {path}",
+      "skippedHeading": "Skipped",
+      "skippedPath": ": {path}"
+    },
+    "editor": {
+      "loadFailed": "Failed to load this project.",
+      "editRefsTargetsButton": "Edit references & targets",
+      "deleteButton": "Delete",
+      "noSections": "No sections yet.",
+      "addSectionButton": "Add section",
+      "removeSectionButton": "Remove section",
+      "noTargetSelected": "No target selected.",
+      "ownRowsHeading": "Own rows",
+      "newRowButton": "New row",
+      "standaloneHint": "This is a free-standing section — its own rows have no target to match through, so there's no coverage queue here.",
+      "noRowsYet": "No rows yet.",
+      "selectOrNewRow": "Select a row, or click \"New row\" to create one.",
+      "exportHeading": "Export",
+      "deleteDialogHeader": "Delete this project?",
+      "deleteDialogBody": "This removes the patch maker project. A folder it already exported to disk is left untouched.",
+      "addSectionDialogHeader": "Add a section",
+      "listingCandidates": "Listing candidates…",
+      "candidateGroupLabel": "Candidate section type",
+      "noAddableCandidates": "No candidates to add — every def type this project's own reference mods own is already a section.",
+      "addButton": "Add",
+      "removeSectionDialogHeader": "Remove this section?",
+      "removeSectionBody": "This removes the {defType} section and every row it has. This can't be undone from here.",
+      "sectionInUse": "Still referenced by {count} row in another section. Removing anyway leaves those references dangling — a later export reports each one as a skip. | Still referenced by {count} rows in another section. Removing anyway leaves those references dangling — a later export reports each one as a skip.",
+      "referenceLine": "{defType} {row}: {path}",
+      "removeAnywayButton": "Remove anyway",
+      "removeButton": "Remove"
+    },
+    "wizard": {
+      "heading": "New patch maker project",
+      "identityHeading": "Identity",
+      "nameLabel": "Name",
+      "packageIdLabel": "Package id",
+      "packageIdPlaceholder": "author.mymod",
+      "displayNameLabel": "Display name",
+      "referencesHeading": "Reference mods (R)",
+      "targetsHeading": "Targets (T)",
+      "targetsHint": "Leave empty to author a brand-new def type (a \"new def\" project) instead of patching an existing one.",
+      "listCandidatesButton": "List candidates",
+      "effectiveRefsHeading": "Effective reference set",
+      "excludedTitle": "Excluded — click to include",
+      "includeTitle": "Click to exclude",
+      "excludedTag": "excluded",
+      "includedTag": "×",
+      "candidatesHeading": "Candidate assignment types",
+      "candidateGroupLabel": "Candidate assignment type",
+      "instanceCount": "{defType} ({count} instance) | {defType} ({count} instances)",
+      "inferringSchema": "Inferring schema…",
+      "standaloneNote": "This candidate has no target-key field — it will be a \"new def\" project, with free-standing rows instead of target-matched ones.",
+      "excludedTargetsNote": "{count} referenced target outside T/Core was never read (honouring T keeps this fast). | {count} referenced targets outside T/Core were never read (honouring T keeps this fast).",
+      "createButton": "Create"
+    },
+    "list": {
+      "newProjectButton": "New project",
+      "loadFailed": "Failed to load assignments.",
+      "empty": "No patch maker projects yet.",
+      "nameHeader": "Name",
+      "packageIdHeader": "Package id",
+      "sectionsHeader": "Sections",
+      "refsHeader": "R",
+      "targetsHeader": "T",
+      "rowsHeader": "Rows",
+      "uncoveredHeader": "Uncovered",
+      "exportedHeader": "Exported",
+      "notApplicable": "n/a",
+      "exportedYes": "yes",
+      "exportedNo": "no"
+    },
+    "itemPicker": {
+      "searchPlaceholder": "Search items…",
+      "thisProjectHeading": "This project",
+      "noMatches": "No matches.",
+      "count": "{loaded} / {total}",
+      "clearSelection": "Clear selection",
+      "loadMore": "Load more"
+    }
+  },
+  "rationale": {
+    "layerPhrase": {
+      "hard": "a hard (load-time) requirement",
+      "anyOf": "a resolved any-of requirement",
+      "declaredOverride": "your own explicit override of the author's declaration",
+      "declared": "an author declaration",
+      "userDecision": "your own decision",
+      "rimSortUser": "a RimSort user rule",
+      "rimSortCommunity": "a RimSort community rule",
+      "steamDb": "a Steam Workshop dependency",
+      "other": "another edge"
+    },
+    "placementPhrase": {
+      "top": "at the top",
+      "bottom": "at the bottom"
+    },
+    "relationExplanation": {
+      "presenceOnly": "this only tests whether a mod is present, not its load position",
+      "patchTargetsDef": "patches apply to the merged def document after every mod's defs are loaded, regardless of load order",
+      "parentTemplate": "unreachable: a ParentName edge is a load-time ordering fact (Hard), never advisory",
+      "usesType": "the type is resolved across every loaded assembly regardless of load order",
+      "patchSelectsInjectedNode": "the selected node may already exist another way (written inline, injected by more than one active mod, or injected by the selecting mod's own patch), or lies deeper than the analyzer indexes to check — so this isn't a proven load-order requirement",
+      "patchRemovedNode": "the analyzer infers this from patch content: one mod removes a node another mod also patches, and the remover must load last or the other patch finds nothing left to touch — not an author's own declared load order, so it yields when a declaration or placement disagrees",
+      "retextureAfterOwner": "the analyzer infers this from a shared texture path: a texture-only retexture pack must load after the content mod it reskins, or its replacement is overwritten by the content it's meant to retexture — not an author's own declared load order, so it yields when a declaration or placement disagrees",
+      "defOverrideAfterOrigin": "the analyzer infers this from template/def-count evidence: a mod that also ships a def belonging to another mod's own namespace must load after that namespace's owner, or its override lands under the origin's own definition instead of on top of it — not an author's own declared load order, so it yields when a declaration or placement disagrees",
+      "patchInvalidatesPredicate": "the analyzer infers this from patch content: a Replace/Remove rewrites or deletes a node another mod's own xpath predicate reads, and the predicate-reading op must load first or its own predicate no longer matches — not an author's own declared load order, so it yields when a declaration or placement disagrees",
+      "patchRemovedNodeCosmetic": "the analyzer infers this from patch content, but the final defs are identical either order here — only which mod's own op logs the failure changes — so it's weaker evidence than an author's own declared load order and yields when a declaration or placement disagrees",
+      "replaceDiscardsAddition": "the analyzer infers this from patch content: a Replace swaps in a whole new node, silently discarding whatever an earlier addition wrote into it, so the addition must load after the replace or its own content is lost with no log line at all — not an author's own declared load order, so it yields when a declaration or placement disagrees",
+      "interactionEvidence": "this is evidence the mods interact, not an ordering fact the loader itself needs"
+    },
+    "rulePhrase": {
+      "userDecisionOverride": "Your own declared-edge override",
+      "userDecision": "Your own decision",
+      "layered": "{after} loading after {before} per {layerPhrase}"
+    },
+    "edgeDroppedInferred": {
+      "patchRemovedNode": "{after} removes a node that {before} also patches; {after} must load after {before} or {before}'s own patch would find nothing left to touch. The analyzer inferred this from patch content, not from either mod's own declared load order.",
+      "retextureAfterOwner": "{after} is a texture-only retexture pack sharing a texture path with {before}'s own content; {after} must load after {before} or its replacement texture is overwritten by the content it's meant to reskin. The analyzer inferred this from the shared texture path, not from either mod's own declared load order.",
+      "defOverrideAfterOrigin": "{before} owns the template or def family this override belongs to; {after} also ships a copy of it and must load after {before} so the override lands on top of the origin's own definition. The analyzer inferred this from template/def-count evidence, not from either mod's own declared load order.",
+      "patchInvalidatesPredicate": "{after} replaces or removes a node that {before}'s own patch selects through a predicate; {after} must load after {before} or {before}'s own predicate would no longer match. The analyzer inferred this from patch content, not from either mod's own declared load order.",
+      "replaceDiscardsAddition": "{before} replaces a node that {after} also adds content into; {after} must load after {before} or its own addition is silently discarded when {before}'s Replace swaps in a whole new node, with no log line at all. The analyzer inferred this from patch content, not from either mod's own declared load order."
+    },
+    "edgeDroppedCosmetic": "cosmetic: the final defs are identical in either order; only which log line appears changes",
+    "keepEdgeInCycle": "Keep this edge; the sorter will drop the next-weakest edge in the cycle instead.",
+    "reorderOverridingEdgeWinner": "Force this mod's own order instead, overriding the winner.",
+    "edgeDroppedWithWinner": "{after} must load before {before} instead: {layerPhrase} says so ({detail}).",
+    "edgeDroppedSoftOrAwareness": "Dropping a soft or awareness-only edge to break a cycle rarely changes behavior.",
+    "edgeDroppedDeclared": "An author-declared edge had to be dropped to break a cycle.",
+    "edgeDroppedHard": "A hard (load-time) edge had to be dropped to break a cycle: the mods are genuinely in conflict.",
+    "removeDependentModBrokenOrder": "Remove the dependent mod from the active list instead of accepting a broken load order.",
+    "declarationQuestioned": "{declaredAfter} loads after {declaredBefore} per {layerPhrase} ({declaredDetail}); {relationExplanation} ({relationDetail}).",
+    "reorderOppositeOfRelation": "Force the opposite order the relation implies, as a user decision.",
+    "declarationOverridden": "{declaredAfter} is declared to load after {declaredBefore} ({detail}), but {layerPhrase} says otherwise: {byAfter} loads after {byBefore} instead ({byDetail}).",
+    "anyOfNoCandidate": "No candidate could satisfy this constraint without closing a cycle.",
+    "forceAnyOfCandidateAcceptingCycle": "Force this candidate, accepting whatever cycle results elsewhere.",
+    "anyOfChosenAlreadyBefore": "The chosen candidate already loads before the dependent mod today.",
+    "anyOfAlternativeCandidate": "An alternative candidate could also satisfy this constraint.",
+    "anyOfUniqueMaxDependents": "The chosen candidate is the uniquely most-depended-on mod among the candidates.",
+    "anyOfSmallestId": "Chosen by the smallest id among otherwise-tied candidates.",
+    "ruleOverruledLongerCycle": "{rulePhrase} had to be dropped to break a longer cycle among several mods.",
+    "ruleOverruledByWinner": "{rulePhrase} was overruled: {layerPhrase} says {before} loads after {after} instead ({detail}).",
+    "reorderOverridingRuleWinner": "Force this rule's own order instead, overriding the winner.",
+    "promoteRuleDespiteOverruled": "Keep this rule as your own decision, so it survives even though it stays overruled.",
+    "placementOverruled": "{modId} is pinned {placementPhrase}, but {layerPhrase} overrules it: {detail}.",
+    "promotePlacementDespiteOverruled": "Keep {placementPhrase} placement as your own decision, so it survives even though it's overruled.",
+    "dropRuleOverrulingPlacement": "Drop the rule that overruled this placement, keeping {modId} {placementPhrase}.",
+    "placementQuestioned": "{modId} is pinned {placementPhrase}; {relationExplanation} ({relationDetail}).",
+    "enforceRelationAsUserDecision": "Enforce this relation explicitly as a user decision.",
+    "placementOrderingOverridden": {
+      "loadsAfter": "{pinned} is pinned {placementPhrase}, but {modId} must load after it anyway: {layerPhrase} ({detail}).",
+      "loadsBefore": "{pinned} is pinned {placementPhrase}, but {modId} must load before it anyway: {layerPhrase} ({detail})."
+    },
+    "placementPromotesDependents": "{modId} is pinned {placementPhrase}; {count} other mod is attributed to it as promoted past its own tier boundary too{sample} | {modId} is pinned {placementPhrase}; {count} other mods are attributed to it as promoted past its own tier boundary too{sample}",
+    "promotedSample": {
+      "truncated": " (e.g. {sample})",
+      "exact": " ({sample})"
+    },
+    "tagInferredSignalCount": "{count} matching signal | {count} matching signals",
+    "rejectInferredTag": "Reject the inferred tag.",
+    "forceDefOverrideWinner": "Force a specific owner's def to win regardless of load order.",
+    "defOverrideWinnerDeclaresRelation": "The winning mod explicitly declares a load-order relation to every other owner.",
+    "defOverrideSameAuthor": "Every owner shares an author.",
+    "defOverrideLoneNonVanillaOwner": "Exactly one active mod overrides this vanilla def; nothing else contests it.",
+    "defOverrideShadowsFramework": "A leaf mod is quietly shadowing a shared framework's def.",
+    "keepCurrentWinner": "Keep the current winner instead.",
+    "defOverrideUnexplained": "Multiple mods define this def with no strong signal explaining the override.",
+    "mergeUnexplainedDefOverride": "Merge field by field instead of accepting one owner's def outright.",
+    "mergeShadowsFrameworkFieldByField": "Merge field by field; keep the framework's values where the leaf mod didn't change them.",
+    "forcePatchCollisionWinner": "Force one mod's patch to apply exclusively.",
+    "patchCollisionAdditive": "Every contributing patch only adds to the target; order doesn't change the outcome.",
+    "patchCollisionContested": "At least one contributing patch mutates the target; load order decides the outcome.",
+    "patchCollisionWinnerDeclaresRelation": "{winner} declares it loads after {others}, so its change to '{field}' is kept as written.",
+    "mergeContestedPatchCollision": "Merge field by field instead of letting load order decide the whole def.",
+    "patchWillFailRemovedBy": "{remover}'s own operation removes the node {modId}'s operation at '{xpath}' targets, loading before it in the order this was checked against.",
+    "reorderBeforeRemover": "Load {modId} before {remover}, so its operation runs while the node still exists.",
+    "patchWillFailNotYetInjected": "{modId}'s operation at '{xpath}' targets a node {injector} injects, but {injector} loads after it in the order this was checked against.",
+    "reorderAfterInjector": "Load {modId} after {injector}, so its operation finds the node once injected.",
+    "patchWillFailDeadTarget": "{modId}'s operation at '{xpath}' targets a node the winning owner's own resolved structure never has, regardless of load order — no reorder fixes this.",
+    "patchWillFailUnknownCause": "{modId}'s operation at '{xpath}' is predicted to fail; the cause couldn't be classified.",
+    "brokenInheritance": "This `ParentName` reference doesn't resolve the way the child's own element type expects — the def loads with content missing or wrong. Report this to the referencing mod's author.",
+    "danglingDefReference": "This name resolves to no active def of any type — {cause}.{soundCaveat} Cross-references resolve after every mod's defs and patches have loaded, so this never depends on load order.",
+    "danglingDefReferenceSoundCaveat": " This looks like a sound reference — a missing `SoundDef` logs a warning and silently falls back to an undefined sound rather than failing to load.",
+    "discardedAdditionDeliberate": "{replacer} declares it loads after {adder} and replaces '{path}': {adder}'s own addition at '{adderPath}' is discarded on purpose.",
+    "forceTextureWinner": "Force one mod's texture to win.",
+    "copyTextureIntoMergeMod": "Copy this mod's texture file into the merge mod, independent of load order.",
+    "textureOverrideCosmetic": "A texture override is cosmetic and browsable in-game; it never blocks.",
+    "forceTemplateRegistrationWinner": "Force this mod's registration to apply to every one of the template's own children, regardless of load order.",
+    "duplicateTemplateNameExplanation": "{ownerCount} mod registers this template name; each child independently inherits from whichever registration loads nearest at or before it. If none does, it falls back to a vanilla registration, or failing that to the registration from the mod that loads first in the load order, so different children can resolve to different mods. | {ownerCount} mods register this template name; each child independently inherits from whichever registration loads nearest at or before it. If none does, it falls back to a vanilla registration, or failing that to the registration from the mod that loads first in the load order, so different children can resolve to different mods.",
+    "keyedTranslationCollision": "These two mods share {keyCount} translation key; the last-loaded one wins. | These two mods share {keyCount} translation keys; the last-loaded one wins each one.",
+    "soundOverrideCosmetic": "A sound override is cosmetic and audible in-game; it never blocks.",
+    "forceSoundWinner": "Force one mod's sound to win.",
+    "missingTexturePath": "This texture path is shipped by no active mod — the game will show a magenta placeholder in its place.",
+    "undecodableTexture": "This .dds file won't decode — the base game shows the bad-texture placeholder in its place.",
+    "contributesNothing": "{modId} contributes nothing observable under this order: it ships no assembly, every def it owns is overridden by a later copy, every texture and translation it ships is overridden, and every patch operation it has either fails to apply or never runs — disabling it changes nothing in-game and saves its load cost.",
+    "undeclaredTypeDependency": "{user} uses a type from {provider}'s assembly but declares no dependency on it.",
+    "pinRelationExplicitly": "Pin the relation explicitly as a load-order rule.",
+    "runtimePatchCollisionNoLastPatcher": "Multiple mods patch {targetType}.{targetMethod}.",
+    "runtimePatchCollisionLastPatcher": "{ownerCount} mod patches {targetType}.{targetMethod}; {last} loads last today, so its patch runs last. | {ownerCount} mods patch {targetType}.{targetMethod}; {last} loads last today, so its patch runs last.",
+    "forceRuntimePatchLastWinner": "Force this mod's patch to run last, regardless of load order.",
+    "transpilerCollision": "{ownerCount} mod rewrites {targetType}.{targetMethod}'s IL with a runtime-patch transpiler; the order they run in can decide whether a later one's own pattern still matches. Most such collisions are harmless — if one of these mods logs a patching error, state the working order with `rimmerge rule set-pair`. | {ownerCount} mods each rewrite {targetType}.{targetMethod}'s IL with a runtime-patch transpiler; the order they run in can decide whether a later one's own pattern still matches. Most such collisions are harmless — if one of these mods logs a patching error, state the working order with `rimmerge rule set-pair`.",
+    "duplicateAssemblyFirstLoadedWins": "More than one active mod ships an assembly of this name; the first-loaded copy wins at runtime.",
+    "removeDuplicateAssemblyCopy": "Remove one of the duplicate copies from the active list.",
+    "likelyDuplicateMod": "These two mods share a large number of identical defs with no declared relation between them.",
+    "removeLikelyDuplicateModA": "Remove one of the likely-duplicate mods from the active list.",
+    "removeLikelyDuplicateModB": "Remove the other likely-duplicate mod from the active list.",
+    "missingModNotInstalled": "This mod is active in ModsConfig.xml but isn't installed; RimWorld drops unknown ids anyway.",
+    "keepMissingModId": "Keep the id in ModsConfig.xml in case the mod reappears.",
+    "missingDependencyNotEnforced": "A declared dependency isn't active; RimWorld only warns about this, it doesn't enforce it.",
+    "incompatiblePair": "These mods declare each other incompatible.",
+    "removeIncompatibleModA": "Remove one of the incompatible mods from the active list.",
+    "removeIncompatibleModB": "Remove the other incompatible mod from the active list.",
+    "unsupportedVersionOftenWorks": "This mod doesn't list the active game version as supported; it often still works anyway.",
+    "undeclaredHardDependencyHonored": "The sorter already honors this hard (load-time) edge even though the author never declared it.",
+    "pinRelationExplicitlyAnyway": "Pin the relation explicitly as a load-order rule anyway.",
+    "lazyReferenceViolatedJitResolved": "This lazily-resolved assembly reference isn't honored by the current order, but it resolves at JIT time after every assembly is loaded, so load order doesn't actually affect it.",
+    "nearMissModReference": {
+      "findModName": "This FindMod name '{written}' resolves to no active or installed mod, but closely resembles the active mod '{candidateName}' — possibly a typo. Report this to the referencing mod's author.",
+      "mayRequireId": "This MayRequire id '{written}' resolves to no active or installed mod, but closely resembles the active mod '{candidateName}' — possibly a typo. Report this to the referencing mod's author."
+    },
+    "mergeCompleteNothingToMerge": "the game applies these contributions in sequence to a single value; nothing to merge",
+    "mergeLeadDefOverrideCombine": "The mods change different fields; merging would combine both.",
+    "mergePromotedPatchCollisionKeepsBoth": "The mods change different fields; merging keeps both.",
+    "keepLoadOrderWinner": "Keep the load-order winner.",
+    "mergeStructuralGuard": "{field} differs between owners — field-level merging is unsafe; confirm the load-order winner",
+    "mergeFieldsNeedChoice": "Merge, {unresolved} field needs a choice. | Merge, {unresolved} fields need a choice.",
+    "identicalCopiesOrderIrrelevant": "identical copies; order cannot change the outcome",
+    "notAddressedByPatch": "Not addressed by this patch; load order decides as today."
+  },
+  "modInfo": {
+    "panel": {
+      "regionLabel": "Mod information",
+      "close": "Close",
+      "notFoundTitle": "This mod isn't in the current scan",
+      "allDetailsLink": "All details",
+      "previewAlt": "{mod} preview image",
+      "noPreview": "No preview image",
+      "previewTooLarge": "Preview is larger than 8 MB",
+      "previewUnsupportedFormat": "Preview isn't a PNG or JPEG",
+      "previewUnreadable": "Preview couldn't be read",
+      "missingHeading": "Missing",
+      "missingBody": "Listed in ModsConfig.xml but not found on disk",
+      "requiredByHeading": "Required by",
+      "pendingActivation": "Pending activation — apply or rescan to take effect",
+      "pendingDeactivation": "Pending deactivation — apply or rescan to take effect",
+      "packageIdLine": "Package id: {id}",
+      "workshopCopyNote": "Workshop copy",
+      "versionLine": "Mod version: {version}",
+      "aboutNotOnDisk": "This mod's About.xml couldn't be found — its files may have moved or been deleted since the last scan.",
+      "supportedVersionsLabel": "Supported versions",
+      "supportsGameVersion": "Supports this game version",
+      "doesNotSupportGameVersion": "Does not declare support for this game version",
+      "openWorkshopButton": "Open Workshop page (external browser)",
+      "openHomepageButton": "Open homepage (external browser)",
+      "rootFolderLabel": "Mod folder",
+      "loadedFoldersLabel": "Loaded folders",
+      "costLabel": "Cost",
+      "costLine": "{defsLabel}: {defCount}, {patchOpsLabel}: {patchOps}, {dllsLabel}: {assemblyCount}",
+      "seeStartupLink": "See Startup",
+      "tagsLabel": "Tags",
+      "hardDependents": "{count} hard dependent | {count} hard dependents",
+      "softDependents": "{count} soft dependent | {count} soft dependents",
+      "awarenessDependents": "{count} awareness dependent | {count} awareness dependents",
+      "frameworkCandidate": "Looks like a shared framework",
+      "generatedLine": "Generated by Rimmerge ({kind})",
+      "generatedMerge": "profile merge mod",
+      "generatedPatch": "compatibility patch",
+      "generatedAssignment": "assignment project",
+      "positionLabel": "Position",
+      "previousPositionLine": "Previous position: #{position}",
+      "whyHereLink": "Why here?",
+      "findingsCount": "{count} finding | {count} findings",
+      "needsInputCount": "{count} needs input | {count} need input",
+      "declaredHeading": "Declared load order",
+      "descriptionHeading": "Description",
+      "noDescription": "No description provided.",
+      "showMore": "Show more",
+      "showLess": "Show less",
+      "aboutChanged": "About.xml changed since the last scan — rescan",
+      "aboutUnreadable": "Couldn't read About.xml: {reason}",
+      "aboutUnreadableIoHeadline": "the file could not be read",
+      "aboutUnreadableXmlHeadline": "the file is not valid XML",
+      "descriptionTruncated": "This description was too long and has been shortened."
+    }
+  }
+}

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <packageId>dep.mod</packageId>
+  <name>Dep Mod</name>
+  <author>Dave</author>
+  <modDependencies>
+    <li>
+      <packageId>foo.bar</packageId>
+      <displayName>Foo Bar</displayName>
+    </li>
+  </modDependencies>
+</ModMetaData>

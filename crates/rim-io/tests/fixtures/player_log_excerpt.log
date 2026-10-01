@@ -1,0 +1,114 @@
+# Anonymized excerpt modelled on a full-size Player.log, for the log
+# parser's unit tests. Every mod-derived name, def and path below is
+# invented (the Ludeon ids are the real vanilla ones); the line shapes are
+# the real ones. The '#' lines are this file's own annotations and match
+# no log shape.
+#
+# Deliberate properties this fixture tests:
+#  - 7 terse '... failed' lines but only 4 stack-trace blocks. The real log
+#    pairs them 1:1; an excerpt does not, so the parser must tolerate a
+#    terse failure with no block, and a block with no terse line, rather
+#    than assuming the pairing holds.
+#  - Line endings: the real log is CRLF and contains 3 lone \r characters.
+#    Rust's str::lines() splits on \n and strips one trailing \r, which
+#    matches grep and sed. Python's splitlines() does not - it splits the
+#    lone \r as well, shifting every line number after it by one. Split
+#    on \n, never on "any line break".
+#
+# header: engine banner, then the RimWorld version this log came from
+Mono path[0] = 'C:/Game/RimWorld/RimWorldWin64_Data/Managed'
+Mono config path = 'C:/Game/RimWorld/MonoBleedingEdge/etc'
+RimWorld 1.6.4871 rev591
+
+# an untagged timer, the parenthesised vanilla-load rendering in seconds
+EarlyLoader: Starting... (vanilla load took 9.327178s)
+EarlyLoader: Game processing took 2252.5076ms
+
+# dependency-without-download-url lines (32 in the real log)
+Mod Fixture Addon dependency (example.framework) needs to have <downloadUrl> and/or <steamWorkshopUrl> specified.
+Mod Example Retexture Two dependency (example.framework) needs to have <downloadUrl> and/or <steamWorkshopUrl> specified.
+
+# def-cache-plugin cache purge, wrapped in a Unity <color> tag. The
+# EXAMPLECACHE: prefix is invented, not the real carrier's own
+# log_line_prefix -- see game_log/game_log_tests.rs's own test_carriers() doc comment.
+EXAMPLECACHE: <color=green>Cache not found or got purged!</color>
+
+# stack-trace blocks appear BEFORE the terse failure lines, not after. The first block line is the innermost leaf (class, xpath, reason); the rest are the enclosing ops, innermost-first, each with its <match>/<nomatch> branch.
+Example Splice: Thornweave 2.0-Mantis-rev5
+[Example Sundered Races] Using gender-restricting genes from <color=#87F6F6FF>Example Genes</color>
+[Example Biomes - Start of stack trace]
+Verse.PatchOperationAdd(xpath="Defs/ThingDef[defName="EX_MarshFern"]/plant/sowTags"): Failed to find a node with the given xpath
+[End of stack trace]
+Source file: C:\Game\Workshop\294100\3000000001\1.6\Mods\ExampleBiomesPlants\Patches\Biomes_ExamplePlants.xml
+[Example Climate Tuning - Start of stack trace]
+Verse.PatchOperationRemove(xpath="Defs/ResearchProjectDef[defName="ExampleSplitCooler"]"): Failed to find a node with the given xpath
+Verse.PatchOperationSequence: Error in the operation at position=1
+Verse.PatchOperationFindMod(Example Temperature Expanded): Error in <match>
+[End of stack trace]
+Source file: C:\Game\Workshop\294100\3000000002\Extra Mods\Example Hygiene\Patches\example hygiene patch.xml
+[Example Climate Tuning - Start of stack trace]
+Verse.PatchOperationAdd(xpath="/Defs/ThingDef[defName="ExampleFanS"]"): Failed to find a node with the given xpath
+Verse.PatchOperationConditional(xpath=/Defs/ThingDef[defName="ExampleFanS"]/researchPrerequisites): Error in <nomatch>
+[End of stack trace]
+Source file: C:\Game\Workshop\294100\3000000002\Extra Mods\Example Hygiene\Patches\example hygiene patch.xml
+[Example Climate Tuning - Start of stack trace]
+Verse.PatchOperationAdd(xpath="/Defs/ThingDef[defName="ExampleFan"]"): Failed to find a node with the given xpath
+Verse.PatchOperationConditional(xpath=/Defs/ThingDef[defName="ExampleFan"]/researchPrerequisites): Error in <nomatch>
+[End of stack trace]
+Source file: C:\Game\Workshop\294100\3000000002\Extra Mods\Example Hygiene\Patches\example hygiene patch.xml
+
+# the cache-rebuild timer, whole seconds inside a Unity colour tag
+EXAMPLECACHE: <color=white>Cache created!</color> creating cache took <color=green>8 seconds</color>
+
+# terse failure lines, each followed by exactly one `file:` line
+[Example Biomes] Patch operation Verse.PatchOperationAdd(Defs/ThingDef[defName="EX_MarshFern"]/plant/sowTags) failed
+file: C:\Game\Workshop\294100\3000000001\1.6\Mods\ExampleBiomesPlants\Patches\Biomes_ExamplePlants.xml
+[Example Climate Tuning] Patch operation Verse.PatchOperationFindMod(Example Temperature Expanded) failed
+file: C:\Game\Workshop\294100\3000000002\Extra Mods\Example Hygiene\Patches\example hygiene patch.xml
+[Example Climate Tuning] Patch operation Verse.PatchOperationConditional(/Defs/ThingDef[defName="ExampleFanS"]/researchPrerequisites) failed
+file: C:\Game\Workshop\294100\3000000002\Extra Mods\Example Hygiene\Patches\example hygiene patch.xml
+[Example Climate Tuning] Patch operation Verse.PatchOperationConditional(/Defs/ThingDef[defName="ExampleFan"]/researchPrerequisites) failed
+file: C:\Game\Workshop\294100\3000000002\Extra Mods\Example Hygiene\Patches\example hygiene patch.xml
+[Example Progression: Warfare] Patch operation Verse.PatchOperationReplace(Defs/ResearchProjectDef[defName="EX_Longbow"]/description) failed
+file: C:\Game\Workshop\294100\3000000003\Extra Mods\Example Weapons\Patches\example weapons research patches.xml
+
+# a display name containing brackets - the tag match must be greedy
+[Example Badge Fork [Adopted]] Patch operation Verse.PatchOperationAdd(Defs/ExampleRace.ThingDef_ExampleRace[race/intelligence="Humanlike"]/comps) failed
+file: C:\Game\Workshop\294100\3000000004\1.6\ExampleRace\Patches\CompBadges_Patches_ExampleRace.xml
+[Example Badge Fork [Adopted]] Patch operation Verse.PatchOperationAdd(Defs/ExampleRace.ThingDef_ExampleRace[race/intelligence="Humanlike"]/inspectorTabs) failed
+file: C:\Game\Workshop\294100\3000000004\1.6\ExampleRace\Patches\CompBadges_Patches_ExampleRace.xml
+
+# cross-reference shape B (`: No <Type> named <Name> found to give to ...`)
+Could not resolve cross-reference: No Verse.SoundDef named MeleeHit_ExamplePunch found to give to Verse.Tool fist (using undefined sound instead)
+Could not resolve cross-reference: No Verse.SoundDef named MeleeMiss_ExamplePunch found to give to Verse.Tool fist (using undefined sound instead)
+
+# cross-reference shape A (`to <Type> named <Name> (wanter=<field>)`)
+Could not resolve cross-reference to Verse.ThingDef named EX_ResearchSpot (wanter=requiredBuildings)
+Could not resolve cross-reference to Verse.ResearchProjectDef named EX_Res_Sprinkler (wanter=researchPrerequisites)
+
+# DDS dimension fallbacks - the startup page's only source for this column
+DDS loading failed for 'C:\Game\Workshop\294100\3000000005\Textures\ExampleDog.dds': Cannot load compressed texture with non multiple of 4 dimensions of 1470x1961 and format DXT1
+DDS loading failed for 'C:\Game\Workshop\294100\3000000006\Textures\Humanlike\Bodies\ExampleBody_east.dds': Cannot load compressed texture with non multiple of 4 dimensions of 257x257 and format BC7
+
+# tagged timers - the parenthesised form with a def count, and the
+[ExampleXenoPatch] Prep work / pre-caching (took 51.7340s; 3968 defs)
+Merged duplicate example recipes, hyperlinking, and sorting (took 53.9310s)
+[Example Extensions] 29005 total patch operations run in 472940ms, 23 failed
+
+# tagged timers - spaced and unspaced millisecond renderings
+[ExampleLoaderFramework v1.1.17] Processed 22 runtime patches in 23950 ms.
+<color=#66ffb5>[ExampleMeleeAnim]</color> PreCached all retexture info in 5889.9ms
+
+# the active list in load order -> `load_events`. Note the ` (incompatible version)` suffix on the first entry.
+Initializing new game with mods:
+  - Example.Mod (incompatible version)
+  - example.earlyloader
+  - example.patchlib
+  - example.logexceptions
+  - Ludeon.RimWorld
+  - Ludeon.RimWorld.Royalty
+  - Ludeon.RimWorld.Ideology
+  - Ludeon.RimWorld.Biotech
+  - Ludeon.RimWorld.Anomaly
+  - Ludeon.RimWorld.Odyssey
+  - example.xmlframework

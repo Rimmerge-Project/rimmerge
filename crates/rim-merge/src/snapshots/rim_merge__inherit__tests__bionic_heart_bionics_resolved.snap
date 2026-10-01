@@ -1,0 +1,99 @@
+---
+source: crates/rim-merge/src/inherit.rs
+assertion_line: 563
+expression: "&resolved"
+---
+FieldTree {
+    root: FieldNode {
+        tag: "HediffDef",
+        attrs: {},
+        content: Children(
+            [
+                FieldNode {
+                    tag: "hediffClass",
+                    attrs: {},
+                    content: Text(
+                        "Hediff_AddedPart",
+                    ),
+                },
+                FieldNode {
+                    tag: "defaultLabelColor",
+                    attrs: {},
+                    content: Text(
+                        "(188,39,242)",
+                    ),
+                },
+                FieldNode {
+                    tag: "isBad",
+                    attrs: {},
+                    content: Text(
+                        "false",
+                    ),
+                },
+                FieldNode {
+                    tag: "priceImpact",
+                    attrs: {},
+                    content: Text(
+                        "true",
+                    ),
+                },
+                FieldNode {
+                    tag: "countsAsAddedPartOrImplant",
+                    attrs: {},
+                    content: Text(
+                        "true",
+                    ),
+                },
+                FieldNode {
+                    tag: "allowMothballIfLowPriorityWorldPawn",
+                    attrs: {},
+                    content: Text(
+                        "true",
+                    ),
+                },
+                FieldNode {
+                    tag: "comps",
+                    attrs: {},
+                    content: Children(
+                        [
+                            FieldNode {
+                                tag: "li",
+                                attrs: {
+                                    "Class": "ExampleBody.Hediffs.HediffCompProperties_MaxHPAdjust",
+                                    "MayRequire": "example.bodyframework",
+                                },
+                                content: Children(
+                                    [
+                                        FieldNode {
+                                            tag: "scaleAdjustment",
+                                            attrs: {},
+                                            content: Text(
+                                                "0.20",
+                                            ),
+                                        },
+                                    ],
+                                ),
+                            },
+                        ],
+                    ),
+                },
+                FieldNode {
+                    tag: "defName",
+                    attrs: {},
+                    content: Text(
+                        "BionicHeart",
+                    ),
+                },
+                FieldNode {
+                    tag: "label",
+                    attrs: {},
+                    content: Text(
+                        "synthetic heart",
+                    ),
+                },
+            ],
+        ),
+    },
+    parent_name: None,
+    name: None,
+}

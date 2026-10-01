@@ -1,0 +1,8 @@
+<Patch>
+  <Operation Class="PatchOperationAdd">
+    <xpath>Defs/ThingDef[defName="RootDef"]/tradeTags</xpath>
+    <value>
+      <li>Fixture</li>
+    </value>
+  </Operation>
+</Patch>

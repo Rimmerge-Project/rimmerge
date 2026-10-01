@@ -1,0 +1,8 @@
+<Patch>
+  <Operation Class="PatchOperationAdd">
+    <xpath>Defs/ThingDef[defName="VersionDef"]/statBases</xpath>
+    <value>
+      <li>1</li>
+    </value>
+  </Operation>
+</Patch>

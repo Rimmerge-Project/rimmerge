@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <example.PartAssignmentDef>
+    <defName>Group_R0</defName>
+    <speciesNames>
+      <li>Race0</li>
+    </speciesNames>
+    <parts>
+      <li>Part0</li>
+    </parts>
+    <chanceParts>
+      <li>1.0</li>
+    </chanceParts>
+    <enabled>true</enabled>
+  </example.PartAssignmentDef>
+
+  <example.PartAssignmentDef>
+    <defName>Group_R1</defName>
+    <speciesNames>
+      <li>Race1</li>
+    </speciesNames>
+    <parts>
+      <li>Part1</li>
+    </parts>
+    <chanceParts>
+      <li>0.5</li>
+    </chanceParts>
+    <enabled>false</enabled>
+  </example.PartAssignmentDef>
+
+  <example.PartAssignmentDef>
+    <defName>Group_R2</defName>
+    <speciesNames>
+      <li>Race2</li>
+    </speciesNames>
+    <parts>
+      <li>Part2</li>
+    </parts>
+    <chanceParts>
+      <li>1.0</li>
+    </chanceParts>
+    <enabled>true</enabled>
+  </example.PartAssignmentDef>
+
+  <example.PartAssignmentDef>
+    <defName>Group_R3</defName>
+    <speciesNames>
+      <li>Race3</li>
+    </speciesNames>
+    <parts>
+      <li>Part3</li>
+    </parts>
+    <chanceParts>
+      <li>0.25</li>
+    </chanceParts>
+    <enabled>false</enabled>
+  </example.PartAssignmentDef>
+
+  <example.PartAssignmentDef>
+    <defName>Group_R4</defName>
+    <speciesNames>
+      <li>Race4</li>
+    </speciesNames>
+    <parts>
+      <li>Part4</li>
+    </parts>
+    <chanceParts>
+      <li>1.0</li>
+    </chanceParts>
+    <enabled>true</enabled>
+  </example.PartAssignmentDef>
+</Defs>

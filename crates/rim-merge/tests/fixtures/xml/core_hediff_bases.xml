@@ -1,0 +1,20 @@
+<!--
+  Source: Core (ludeon.rimworld), Data/Core/Defs/HediffDefs/BodyParts/Hediffs_BodyParts_Base.xml
+  Trimmed to the two templates the BionicHeart ParentName chain climbs
+  through: AddedBodyPartBase -> ImplantHediffBase.
+-->
+<Defs>
+  <HediffDef Name="ImplantHediffBase" Abstract="True">
+    <hediffClass>Hediff_Implant</hediffClass>
+    <defaultLabelColor>(0.6, 0.6, 1.0)</defaultLabelColor>
+    <isBad>false</isBad>
+    <priceImpact>true</priceImpact>
+    <countsAsAddedPartOrImplant>true</countsAsAddedPartOrImplant>
+    <allowMothballIfLowPriorityWorldPawn>true</allowMothballIfLowPriorityWorldPawn>
+  </HediffDef>
+
+  <HediffDef Name="AddedBodyPartBase" ParentName="ImplantHediffBase" Abstract="True">
+    <hediffClass>Hediff_AddedPart</hediffClass>
+    <priceImpact>true</priceImpact>
+  </HediffDef>
+</Defs>

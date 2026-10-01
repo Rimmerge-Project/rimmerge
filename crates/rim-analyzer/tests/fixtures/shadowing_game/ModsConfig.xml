@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModsConfigData>
+  <version>1.6.0</version>
+  <activeMods>
+    <li>shadow.versionroot</li>
+    <li>shadow.commonroot</li>
+    <li>shadow.loadfoldersorder</li>
+    <li>shadow.casesensitive</li>
+  </activeMods>
+</ModsConfigData>

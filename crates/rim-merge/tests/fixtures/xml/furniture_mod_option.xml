@@ -1,0 +1,19 @@
+<!--
+  Source: Example Furniture, Patches/Mod Settings.xml
+  Trimmed to a single operation; structure verbatim,
+  mod/def/class names invented.
+
+  A custom class with a `<nomatch>` branch, no `<xpath>` of its own, and
+  no declared toggle: the replay treats it as a PatchOperationConditional
+  whose condition is the class's default (true when absent), so the
+  `<match>` branch runs — and there isn't one, which is exactly what an
+  enabled "small table" option means.
+-->
+<Operation Class="ExampleFurniture.PatchOperationModOption_EnableSmallTable">
+  <nomatch Class="PatchOperationAdd">
+    <xpath>Defs/ThingDef[defName="ExampleTable1x1"]</xpath>
+    <value>
+      <designationCategory Inherit="False" />
+    </value>
+  </nomatch>
+</Operation>

@@ -1,0 +1,15 @@
+<!--
+  Source: Example Bionics Fork (example.bionicsfork),
+  1.6/Defs/HediffDefs/HediffDef_Base.xml
+  Trimmed to the addedPartExampleSynth template: itself ParentName'd to
+  Core's AddedBodyPartBase, adding defaultLabelColor and a comps/li
+  carrying MayRequire="example.bodyframework" (the BionicHeart worked example).
+-->
+<HediffDef Name="addedPartExampleSynth" ParentName="AddedBodyPartBase" Abstract="True">
+  <defaultLabelColor>(188,39,242)</defaultLabelColor>
+  <comps>
+    <li MayRequire="example.bodyframework" Class="ExampleBody.Hediffs.HediffCompProperties_MaxHPAdjust">
+      <scaleAdjustment>0.20</scaleAdjustment>
+    </li>
+  </comps>
+</HediffDef>

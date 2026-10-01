@@ -1,0 +1,57 @@
+[package]
+name = "rim-analyzer"
+version = "1.0.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Read-only analyzer for RimWorld mod load orders"
+
+[[bin]]
+name = "rim-analyzer"
+path = "src/main.rs"
+
+[lib]
+name = "rim_analyzer"
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = "1.0.104"
+clap = { version = "4.6.6", features = ["derive"] }
+jiff = "0.2.35"
+rayon = "1.12.0"
+# `{ workspace = true }`, unlike every other dependency in this list:
+# `regex` used to be pinned here independently of `rim-io`'s own
+# identical pin, and two independent
+# pins of the same crate is exactly where version drift starts. Not a
+# broader migration of this crate onto workspace dependencies — see this
+# file's own closing comment for why the rest stay hard-pinned.
+regex = { workspace = true }
+roxmltree = "0.21.1"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+# Damerau-Levenshtein distance for `analysis::name_similarity`'s
+# near-miss mod-reference rule (c) — already resolved transitively in
+# `Cargo.lock` (pulled in by `clap`'s own suggestion machinery), MIT
+# licensed (already in `deny.toml`'s allow list), small, pure, no
+# unsafe.
+strsim = "0.11.1"
+thiserror = "2.0.20"
+walkdir = "2.5.0"
+
+[dev-dependencies]
+pretty_assertions = "1.4.1"
+# `extract::rich_text`'s own round-trip/no-markup-survives properties —
+# same workspace pin `rim-resolve`/`rim-merge` already use.
+proptest = { workspace = true }
+
+# Deliberately NOT `[lints] workspace = true`: the workspace's
+# `missing_docs = "warn"` becomes `-D warnings`-fatal once enabled, and
+# this crate has ~158 pre-existing public items (mostly `<X>Error` enum
+# variants and DTO-ish struct fields across `extract/*.rs` and
+# `infra/mod.rs`, predating this change) with no doc comment — a genuine
+# conflict with this crate's own current state, not a false alarm. Fixing
+# that is a real, crate-wide documentation pass; out of scope for a
+# behavior-focused change. `#![forbid(unsafe_code)]` and
+# `#![deny(clippy::unwrap_used, clippy::expect_used)]` in `src/lib.rs`
+# still cover this crate's two lints that actually matter day to day.

@@ -1,0 +1,12 @@
+<!--
+  Source: Example Textures-style graphics patch,
+  1.6/Patches/Graphics.xml — the whole operation,
+  structure verbatim, mod and path names invented.
+
+  A trailing `text()` step: the target is `texPath`'s text content, and
+  `<value>` carries the replacement text rather than an element.
+-->
+<Operation Class="PatchOperationReplace">
+  <xpath>Defs/ThingDef[defName="Sandbags"]/graphicData/texPath/text()</xpath>
+  <value>ExampleThings/Security/Linked/SandbagsUpscaled_Atlas</value>
+</Operation>

@@ -1,0 +1,4 @@
+# `unwrap`/`expect` are denied crate-wide (see `#![deny(...)]` in lib.rs)
+# except in test code, where they're the normal way to fail a test fast.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true

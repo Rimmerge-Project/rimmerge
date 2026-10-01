@@ -1,0 +1,2055 @@
+{
+  "common": {
+    "verbatim": "{text}",
+    "cancel": "Anuluj",
+    "loading": "Wczytywanie…",
+    "technicalDetail": "Szczegóły techniczne: {detail}"
+  },
+  "defGraphics": {
+    "viewer": {
+      "regionLabel": "Podgląd tekstury",
+      "facingGroupLabel": "Kierunek",
+      "previousVariant": "Poprzedni wariant",
+      "nextVariant": "Następny wariant",
+      "variantPosition": "{label} ({index} z {count})",
+      "variantSelectLabel": "Wariant",
+      "slotSelectLabel": "Źródło tekstury",
+      "fromMod": "Z moda {mod}",
+      "overridesOwner": "Nadpisuje teksturę właściciela defu: {owner}",
+      "mirrored": "Rysowana w lustrzanym odbiciu",
+      "layoutInferred": "Układ ustalony na podstawie nazw plików",
+      "truncatedVariants": "Pominięto jeszcze {count} wariant | Pominięto jeszcze {count} warianty | Pominięto jeszcze {count} wariantów",
+      "truncatedSlots": "Pominięto jeszcze {count} źródło | Pominięto jeszcze {count} źródła | Pominięto jeszcze {count} źródeł"
+    },
+    "facing": {
+      "north": "Północ",
+      "east": "Wschód",
+      "south": "Południe",
+      "west": "Zachód"
+    },
+    "facingShort": {
+      "north": "Pn",
+      "east": "Wsch",
+      "south": "Pd",
+      "west": "Zach"
+    },
+    "slot": {
+      "graphic": "Grafika",
+      "worn": "Na postaci",
+      "lifeStage": "Etapy życia",
+      "raceKind": "Rodzaj postaci: {name}",
+      "styleTexture": "Tekstura stylu",
+      "headType": "Typ głowy",
+      "bodyType": "Typ ciała",
+      "terrain": "Teren",
+      "icon": "Ikona",
+      "probe": "Znaleziona po ścieżce: {field}"
+    },
+    "variant": {
+      "only": "Jedyna grafika",
+      "bodyType": "Typ ciała: {name}",
+      "lifeStage": "Etap życia {number}",
+      "female": "Samica, etap życia {number}",
+      "alternate": "Wariant alternatywny {number}",
+      "member": "{name}",
+      "stack": "Krok stosu {number}",
+      "stackSingle": "Pojedynczy przedmiot",
+      "appearance": "Wygląd: {name}",
+      "wornPath": "Ścieżka na postaci {number}",
+      "wornPathOnBodyType": "Ścieżka na postaci {number}, {name}",
+      "field": "{name}"
+    },
+    "state": {
+      "loading": "Wczytywanie tekstury",
+      "noGraphic": "Ten def nie ma własnej tekstury.",
+      "composedAtRuntime": "Gra składa tę postać z części ciała, głowy i włosów w trakcie działania, więc nie ma jednej tekstury do pokazania.",
+      "notViewable": "Wbudowana w grę lub w pakiet zasobów, więc nie da się jej tu pokazać.",
+      "notViewableUncertain": "Nie znaleziono pliku tekstury. Może być wbudowana w grę, a tego nie da się tu pokazać.",
+      "notFound": "Nie znaleziono pliku tekstury. Gra pokazuje swoją teksturę błędu.",
+      "ddsNotPreviewable": "Tekstura DDS. Podgląd jest niedostępny.",
+      "undecodableInGame": "Gra nie potrafi zdekodować tego pliku DDS i pokazuje grafikę zastępczą.",
+      "pngSiblingNote": "Pokazano kopię PNG; gra wczytuje plik DDS.",
+      "tooLarge": "Plik obrazu jest za duży na podgląd.",
+      "unsupportedFormat": "Tego formatu obrazu nie można wyświetlić w podglądzie.",
+      "unreadable": "Nie udało się odczytać pliku obrazu."
+    },
+    "alt": "{def}, widok: {facing}",
+    "altNoFacing": "{def}"
+  },
+  "primevue": {
+    "emptyMessage": "Brak dostępnych opcji",
+    "emptyFilterMessage": "Nie znaleziono wyników",
+    "emptySelectionMessage": "Nic nie wybrano",
+    "searchMessage": "Dostępne wyniki: {count}",
+    "selectionMessage": "Wybrane elementy: {count}",
+    "aria": {
+      "trueLabel": "Prawda",
+      "falseLabel": "Fałsz",
+      "nullLabel": "Nie wybrano",
+      "close": "Zamknij",
+      "previous": "Poprzedni",
+      "next": "Następny",
+      "navigation": "Nawigacja"
+    }
+  },
+  "shell": {
+    "brand": "Rimmerge",
+    "mainNavigation": "Nawigacja główna",
+    "nav": {
+      "dashboard": "Panel",
+      "inbox": "Ustalenia",
+      "mergeMod": "Wynik scalania",
+      "patches": "Łatki zgodności",
+      "assignments": "Kreator łatek",
+      "startup": "Koszt uruchomienia",
+      "order": "Kolejność ładowania",
+      "rules": "Reguły",
+      "mods": "Mody",
+      "settings": "Ustawienia"
+    },
+    "orderSource": {
+      "label": "Źródło kolejności",
+      "current": "Bieżąca",
+      "suggested": "Sugerowana",
+      "inSentenceCurrent": "bieżąca",
+      "inSentenceSuggested": "sugerowana"
+    },
+    "modLabelMode": {
+      "label": "Tryb etykiet modów",
+      "names": "Nazwy",
+      "ids": "ID"
+    },
+    "apply": "Zastosuj…",
+    "scanningMods": "Skanowanie modów",
+    "supportLink": "Wesprzyj Rimmerge",
+    "liveRegion": {
+      "newNotification": "{count} nowe powiadomienie: {title} | {count} nowe powiadomienia, najnowsze: {title} | {count} nowych powiadomień, najnowsze: {title}"
+    }
+  },
+  "settings": {
+    "heading": "Ustawienia",
+    "interfaceHeading": "Interfejs",
+    "language": {
+      "label": "Język",
+      "system": "Systemowy ({detected})",
+      "preview": "wersja wstępna",
+      "optionPreview": "{name} ({preview})",
+      "previewNote": "Jeśli zauważysz błąd w tłumaczeniu, {url}, a go poprawimy.",
+      "previewNoteLinkText": "zgłoś problem"
+    },
+    "thresholdLabel": "Próg pewności (automatycznie / wymaga decyzji)",
+    "tieBreak": {
+      "label": "Rozstrzyganie remisów",
+      "description": "Określa, od jakiej pozycji startuje mod, którego żaden inny mod nie przypina. „Odbuduj” szereguje takie mody według nazwy i pomija bieżącą kolejność, więc przy pierwszym odbudowaniu listy utworzonej przez RimSort spodziewaj się przesunięcia większości modów. „Zachowaj bieżącą” zaczyna każdy mod od jego pozycji w ModsConfig.xml i przesuwa jak najmniej modów.",
+      "rebuild": "Odbuduj",
+      "preserveCurrent": "Zachowaj bieżącą"
+    },
+    "useImportedPairs": {
+      "label": "Używaj zaimportowanych reguł par",
+      "description": "Pozwala, by reguły „ładuj przed/po” z RimSort/SteamDB wpływały na kolejność. Domyślnie włączone — większość zaimportowanych par powtarza dowody, które sortownik i tak sam egzekwuje. Ten przełącznik nigdy nie wpływa na reguły ustawione samodzielnie."
+    },
+    "useImportedPlacements": {
+      "label": "Używaj zaimportowanych reguł położenia",
+      "description": "Pozwala, by położenia „ładuj na początku/na końcu” z RimSort/SteamDB przypinały warstwę moda. Domyślnie włączone — nic w plikach samego moda nie może powiedzieć „ładuj mnie na końcu”."
+    },
+    "enforceSoft": {
+      "label": "Egzekwuj ograniczenia o sile „Miękka”",
+      "description": "Te ograniczenia pochodzą z leniwie rozwiązywanych odwołań do {assemblyRef}. Domyślnie wyłączone: ich egzekwowanie może przesunąć z bieżącej kolejności zauważalnie więcej modów niż pozostawienie ich jako wskazówek."
+    },
+    "enforceAwareness": {
+      "label": "Egzekwuj ograniczenia o sile „Świadomość”",
+      "description": "Te ograniczenia pochodzą ze wskazówek {edgeKinds} — dowodu, że mody na siebie oddziałują, a nie faktu dotyczącego kolejności. Domyślnie wyłączone: są znacznie częstsze niż ograniczenia o sile „Miękka”, więc ich egzekwowanie dużo mocniej zaburza kolejność."
+    },
+    "enforceInferred": {
+      "label": "Egzekwuj ograniczenia o sile „Wywnioskowana”",
+      "description": "Te ograniczenia to {edgeKinds}: własne heurystyczne wnioski analizatora, że dwa mody na siebie oddziałują, a nie tylko sygnał obecności jak przy sile „Świadomość”. Domyślnie włączone: w odróżnieniu od ograniczeń o sile „Miękka” i „Świadomość” analizator już uznał je za fakty dotyczące kolejności, więc pozostawienie ich wyłącznie jako wskazówek oznaczałoby odrzucenie tego dowodu."
+    },
+    "network": {
+      "heading": "Dostęp do internetu",
+      "recoveredWarning": "Nie udało się odczytać pliku ustawień aplikacji, więc dostęp do internetu jest wyłączony, dopóki ponownie nie zapiszesz ustawień.",
+      "allowNetwork": {
+        "label": "Zezwalaj na dostęp do internetu",
+        "description": "Główny przełącznik wszystkiego, co Rimmerge wysyła przez internet, automatycznie lub ręcznie. Aplikacja łączy się wyłącznie z dwoma hostami GitHub — api.github.com, aby sprawdzać aktualizacje, i raw.githubusercontent.com, aby odświeżać bazy reguł — i nigdy z twoją siecią lokalną. Wyłączenie pomija każde żądanie, zanim powstanie jakikolwiek adres lub zostanie otwarte połączenie. Dotyczy całej aplikacji na tym komputerze, niezależnie od tego, którą instalację RimWorld otworzysz."
+      },
+      "autoRefreshRuleDatabases": {
+        "label": "Automatycznie odświeżaj bazy reguł",
+        "description": "Raz dziennie, przy uruchomieniu, pobiera włączone bazy reguł wymienione na karcie „Bazy reguł” — nigdy bazę Warsztatu Steam, która odświeża się wyłącznie po kliknięciu „Odśwież”."
+      },
+      "checkForUpdates": {
+        "label": "Sprawdzaj aktualizacje",
+        "description": "Raz dziennie, przy uruchomieniu, sprawdza, czy wydano nowszą wersję Rimmerge."
+      },
+      "checkNow": {
+        "button": "Sprawdź teraz",
+        "disabledTitle": "Wyłączone przez „Zezwalaj na dostęp do internetu”",
+        "awaitingFirstRun": "Jeszcze nie sprawdzono — najpierw odpowiedz na powiadomienie powitalne.",
+        "alreadyRanThisLaunch": "Już sprawdzono podczas tego uruchomienia.",
+        "networkDisabled": "Dostęp do internetu jest wyłączony.",
+        "checkDisabled": "Sprawdzono mimo to — automatyczne sprawdzanie jest wyłączone.",
+        "notDue": "Sprawdzano niedawno — spróbuj ponownie później.",
+        "rateLimited": "Osiągnięto limit zapytań GitHub; spróbuj ponownie po {until}.",
+        "updated": "Dostępna jest nowsza wersja: {version}.",
+        "unchanged": "Wersja jest aktualna.",
+        "failed": "Ostatnie sprawdzenie nie powiodło się: {reason}"
+      },
+      "mutedKinds": {
+        "heading": "Wyciszone powiadomienia",
+        "empty": "Nic nie jest wyciszone.",
+        "unmuteButton": "Cofnij wyciszenie"
+      },
+      "resetIncludesSteam": "Przywraca każdy przełącznik, łącznie z bazą Warsztatu Steam (około 49 MB, pobieraną tylko przy odświeżeniu).",
+      "restoreDefaultsButton": "Przywróć domyślne ustawienia dostępu do internetu",
+      "restoreDefaultsToast": "Ponownie włączono dostęp do internetu, sprawdzanie aktualizacji i automatyczne odświeżanie"
+    },
+    "suggestMergeWhenClean": {
+      "label": "Sugeruj scalanie czystych nadpisań",
+      "description": "Gdy dwa mody zmieniają różne pola tego samego defu, sugeruje ich scalenie zamiast zachowania zwycięzcy wynikającego z kolejności ładowania. Scalone defy są zapisywane do moda scalającego podczas stosowania."
+    },
+    "showDanglingDefReferences": {
+      "label": "Pokazuj ustalenia o wiszących odwołaniach do defów",
+      "description": "Oznacza nazwę wpisaną w rozpoznanym miejscu odwołania (np. wymaganie badawcze, klucz modyfikatora statystyki), której nie ma żaden aktywny def żadnego typu. Domyślnie wyłączone — przy dużej instalacji może to dać sporo fałszywych alarmów (na przykład pole identyfikujące sam obiekt pomylone z odwołaniem do innego). Nigdy nie zmienia kolejności ładowania."
+    },
+    "saveButton": "Zapisz",
+    "resetButton": "Resetuj do domyślnych",
+    "dirtyIndicator": "Niezapisane zmiany",
+    "resetConfirm": {
+      "header": "Zresetować do domyślnych?",
+      "body": "Wypełnia każde pole powyżej wbudowanymi wartościami domyślnymi Rimmerge. Nic nie zostanie zapisane, dopóki nie naciśniesz „Zapisz”.",
+      "cancelButton": "Anuluj",
+      "confirmButton": "Resetuj"
+    },
+    "about": {
+      "heading": "O programie",
+      "versionLabel": "Wersja {version}",
+      "repoLink": "Repozytorium GitHub",
+      "issuesLink": "Zgłoś problem",
+      "supportLink": "Wesprzyj Rimmerge",
+      "supportBlurb": "Rimmerge jest darmowy i otwartoźródłowy. Jeśli oszczędza ci czas, możesz wesprzeć jego rozwój."
+    }
+  },
+  "fetchFailure": {
+    "transportHeadline": "Nie udało się połączyć z serwisem GitHub",
+    "httpStatus": "GitHub odpowiedział nieoczekiwanym kodem HTTP ({status})",
+    "rateLimited": "Osiągnięto limit zapytań GitHub; spróbuj ponownie po {until}",
+    "notPublished": "Nie opublikowano jeszcze żadnego wydania Rimmerge",
+    "tooLarge": "Odpowiedź przekroczyła dozwolony rozmiar",
+    "invalidContent": "Odpowiedź miała nieoczekiwany format",
+    "notAStableVersion": "Najnowszy opublikowany tag nie jest wersją stabilną",
+    "notModifiedWithoutCache": "GitHub nie zgłosił zmian, ale w pamięci podręcznej nic jeszcze nie ma",
+    "readFailedHeadline": "Pobieranie zostało przerwane",
+    "cacheWriteFailedHeadline": "Nie udało się zapisać pobranych danych lokalnie",
+    "unclassifiedHeadline": "Próba nie powiodła się"
+  },
+  "ruleWarning": {
+    "droppedClusterRules": "Podczas wczytywania odrzucono {count} regułę klastra sprzed migracji: {ids} | Podczas wczytywania odrzucono {count} reguły klastra sprzed migracji: {ids} | Podczas wczytywania odrzucono {count} reguł klastra sprzed migracji: {ids}",
+    "unknownModKnowledgeValue": "Zignorowano nieznaną wartość „{value}” ({what}) w regułach sekcji {section}",
+    "modKnowledgeCacheUnreadableHeadline": "Nie udało się odczytać reguł Rimmerge z pamięci podręcznej; używana jest dołączona migawka",
+    "rowsOverRoleLimit": "Zignorowano {count} wiersz ponad limit na rolę w grupie {role} reguł sekcji {section} | Zignorowano {count} wiersze ponad limit na rolę w grupie {role} reguł sekcji {section} | Zignorowano {count} wierszy ponad limit na rolę w grupie {role} reguł sekcji {section}",
+    "precedenceRuleMissingFramework": "Zignorowano regułę pierwszeństwa dla {defType}: nie wskazuje żadnego frameworka",
+    "what": {
+      "precedenceRule": "reguła pierwszeństwa",
+      "behaviour": "zachowanie",
+      "matchMode": "tryb dopasowania",
+      "gateMatchMode": "tryb dopasowania warunku",
+      "gateBehaviour": "zachowanie warunku",
+      "conditionalType": "typ warunkowy",
+      "topLevelSection": "sekcja najwyższego poziomu",
+      "logShapeRole": "rola kształtu logu",
+      "placeholderType": "typ symbolu zastępczego w szablonie"
+    },
+    "refusedRow": {
+      "templateInvalid": "Zignorowano wiersz sekcji {section} „{value}”: jego szablon jest pusty, za długi lub błędny",
+      "captureMissing": "Zignorowano wiersz sekcji {section} „{value}”: w jego szablonie brakuje grupy przechwytującej, której wymaga jego rola",
+      "markerLength": "Zignorowano wiersz sekcji {section} „{value}”: ciąg znacznika ma długość spoza dozwolonego zakresu",
+      "idTooLong": "Zignorowano wiersz sekcji {section}: jego ID jest za długie",
+      "templateUncompilable": "Zignorowano wiersz sekcji {section} „{value}”: jego szablonu nie da się skompilować w limitach rozmiaru"
+    }
+  },
+  "setup": {
+    "title": "Konfiguracja Rimmerge",
+    "fields": {
+      "gameDir": "Katalog instalacji RimWorld",
+      "workshopDir": "Katalog Warsztatu Steam",
+      "modsConfig": "Ścieżka do ModsConfig.xml",
+      "profileDir": "Katalog profilu"
+    },
+    "browse": "Przeglądaj…",
+    "loadProject": "Wczytaj projekt",
+    "saveAsDefaults": "Zapisz jako domyślne",
+    "loadingProject": "Wczytywanie projektu",
+    "startingCaption": "Uruchamianie…",
+    "stage": {
+      "discovering": "Wyszukiwanie modów",
+      "scanning": "Skanowanie modów",
+      "analyzing": "Analizowanie",
+      "collectingTagEvidence": "Zbieranie dowodów dla tagów",
+      "done": "Gotowe"
+    },
+    "scanFinishedToast": "Skanowanie zakończone z {count} uwagą | Skanowanie zakończone z {count} uwagami | Skanowanie zakończone z {count} uwagami",
+    "projectLoadedWithWarningsToast": "Projekt wczytany z ostrzeżeniami",
+    "savedAsDefaultsToast": "Zapisano jako domyślne",
+    "savedAsDefaultsDetail": "Te ścieżki zostaną wstępnie wypełnione przy następnym uruchomieniu Rimmerge."
+  },
+  "dashboard": {
+    "title": "Panel",
+    "counts": {
+      "mods": "Mody",
+      "needsInputCurrent": "Wymaga decyzji (bieżąca)",
+      "needsInputSuggested": "Wymaga decyzji (sugerowana)",
+      "movedMods": "Przesuwane mody",
+      "selectedOrder": "Wybrana kolejność"
+    },
+    "ledgerStatsHeading": "Rejestr konfliktów, obie kolejności",
+    "table": {
+      "auto": "Automatycznie",
+      "needsInput": "Wymaga decyzji",
+      "overridden": "Zmienione ręcznie",
+      "resolvedBySuggested": "Rozwiązane przez sugerowaną",
+      "current": "Bieżąca",
+      "suggested": "Sugerowana"
+    },
+    "topKindsHeading": "Najczęstsze rodzaje wymagające decyzji",
+    "topKindsEmpty": "Obecnie nic nie wymaga decyzji.",
+    "scanNotesDisclosure": "Uwagi ze skanowania ({count})",
+    "importLog": {
+      "button": "Importuj log gry",
+      "importedToast": "Zaimportowano log gry",
+      "logFilter": "Log RimWorld",
+      "allFilesFilter": "Wszystkie pliki"
+    },
+    "guide": {
+      "heading": "Pierwsze kroki",
+      "intro": "Trzy kroki przenoszą sugerowaną kolejność ładowania do gry. Strony „Ustalenia” i „Reguły” są do dyspozycji, gdy chcesz mieć większą kontrolę.",
+      "listLabel": "Kroki na start",
+      "status": {
+        "done": "Gotowe",
+        "current": "Bieżący krok",
+        "upcoming": "Jeszcze nie"
+      },
+      "chooseSuggested": {
+        "title": "Użyj sugerowanej kolejności",
+        "pending": "Oglądasz bieżącą kolejność. Sugerowana kolejność przesuwa {count} mod. | Oglądasz bieżącą kolejność. Sugerowana kolejność przesuwa {count} mody. | Oglądasz bieżącą kolejność. Sugerowana kolejność przesuwa {count} modów.",
+        "doneText": "Wybrano sugerowaną kolejność.",
+        "doneMatchesFileText": "ModsConfig.xml już odpowiada sugerowanej kolejności.",
+        "button": "Użyj sugerowanej kolejności",
+        "reviewLink": "Przejrzyj sugerowaną kolejność"
+      },
+      "apply": {
+        "title": "Zastosuj",
+        "pending": "Zobacz, co zostanie zapisane w ModsConfig.xml. Najpierw tworzona jest kopia zapasowa.",
+        "button": "Zastosuj…",
+        "staleBlocked": "Twoje aktywne mody zmieniły się od ostatniego skanowania. Przeskanuj ponownie przed zastosowaniem.",
+        "rescanButton": "Skanuj ponownie"
+      },
+      "confirm": {
+        "title": "Potwierdź",
+        "pending": "Sprawdź podsumowanie, a potem potwierdź. Jeśli coś się zepsuje, na przykład zabraknie wymaganego moda, aplikacja najpierw o to zapyta."
+      },
+      "done": "ModsConfig.xml odpowiada sugerowanej kolejności. Uruchom RimWorld, aby grać.",
+      "asOfLastScan": "Stan z ostatniego skanowania lub zastosowania.",
+      "needsInputHint": "{count} ustalenie wymaga twojej decyzji (opcjonalnie) | {count} ustalenia wymagają twojej decyzji (opcjonalnie) | {count} ustaleń wymaga twojej decyzji (opcjonalnie)",
+      "openInbox": "Otwórz Ustalenia",
+      "appliedAnnouncement": "Zastosowano. ModsConfig.xml odpowiada teraz sugerowanej kolejności."
+    }
+  },
+  "notifications": {
+    "heading": "Powiadomienia",
+    "empty": "Wszystko przeczytane.",
+    "dismiss": "Ukryj",
+    "mute": "Nie przypominaj ponownie",
+    "severityWarn": "Wymaga uwagi",
+    "severityInfo": "Informacja",
+    "bell": {
+      "withCount": "Powiadomienia: {count}",
+      "none": "Powiadomienia: brak"
+    },
+    "welcome": {
+      "title": "Witaj w Rimmerge",
+      "body": "Rimmerge może łączyć się z serwisem GitHub raz dziennie, przy uruchomieniu:\n- aby sprawdzić, czy wydano nowszą wersję Rimmerge (api.github.com);\n- aby pobrać zaktualizowane bazy reguł — reguły kolejności ładowania tworzone przez społeczność i własny plik reguł Rimmerge (raw.githubusercontent.com). Aktualizacje są przechowywane lokalnie; zmieniają kolejność ładowania tylko wtedy, gdy zdecydujesz się je zaimportować.\n\nNie wysyła niczego o tobie, twoich modach ani twojej instalacji — tylko zwykłe żądanie, przy którym GitHub widzi twój adres IP. Duża baza Warsztatu Steam nigdy nie jest pobierana automatycznie, tylko po kliknięciu „Odśwież”.",
+      "settingsAlreadyRecommended": "Twoje ustawienia już odpowiadają zalecanym wartościom domyślnym.",
+      "steamWorkshopLabel": "Baza Warsztatu Steam (około 49 MB, pobierana tylko po kliknięciu „Odśwież”)"
+    },
+    "gameVersionChanged": {
+      "title": "Zmieniła się wersja gry",
+      "body": "RimWorld ma teraz wersję {current} (wcześniej {acknowledged}). Łatki zgodności i mody z kreatora łatek wyeksportowane dla wersji {acknowledged} nadal deklarują tę wersję, dopóki nie wyeksportujesz ich ponownie.",
+      "kindLabel": "Zmiana wersji gry"
+    },
+    "updateAvailable": {
+      "title": "Dostępny jest Rimmerge {version}",
+      "body": "Używasz starszej wersji. Wydano Rimmerge {version}.",
+      "kindLabel": "Dostępna aktualizacja"
+    },
+    "ruleDatabasesStale": {
+      "title": "{count} baza reguł wymaga uwagi | {count} bazy reguł wymagają uwagi | {count} baz reguł wymaga uwagi",
+      "body": "Poniższe bazy reguł nie były ostatnio odświeżane:",
+      "kindLabel": "Nieaktualne bazy reguł",
+      "neverFetched": "Nigdy nie pobrano",
+      "lastSuccess": "Ostatnio odświeżono: {date}",
+      "lastFailure": "Ostatnia próba nie powiodła się: {reason}"
+    },
+    "importedRulesOutdated": {
+      "title": "{count} baza reguł ma nową zawartość do zaimportowania | {count} bazy reguł mają nową zawartość do zaimportowania | {count} baz reguł ma nową zawartość do zaimportowania",
+      "body": "Nowa zawartość czeka w pamięci podręcznej dla:",
+      "kindLabel": "Nowa zawartość reguł do zaimportowania"
+    },
+    "recommendedSources": {
+      "kindLabel": "Zalecane bazy reguł",
+      "title": "{count} zalecana baza reguł nie jest skonfigurowana | {count} zalecane bazy reguł nie są skonfigurowane | {count} zalecanych baz reguł nie jest skonfigurowanych",
+      "body": "Rimmerge sortuje najlepiej ze wszystkimi trzema bazami reguł. Włączenie ich od razu je pobiera; potem małe bazy odświeżają się automatycznie, a baza Warsztatu Steam tylko po kliknięciu „Odśwież”.",
+      "bodyWithSteam": "Rimmerge sortuje najlepiej ze wszystkimi trzema bazami reguł. Włączenie ich od razu je pobiera. Baza Warsztatu Steam ma około 49 MB i potem odświeża się tylko po kliknięciu „Odśwież”; małe bazy odświeżają się automatycznie.",
+      "sourceOff": "{source}: wyłączona",
+      "sourceNotDownloaded": "{source}: włączona, jeszcze nie pobrana"
+    },
+    "actions": {
+      "keepNetworkSettings": "Zachowaj te ustawienia",
+      "turnOffNetwork": "Wyłącz dostęp do internetu",
+      "applyRecommendedSettings": "Użyj zalecanych ustawień",
+      "refreshRuleDatabases": "Odśwież teraz",
+      "openRuleDatabases": "Otwórz bazy reguł",
+      "openSettings": "Otwórz ustawienia",
+      "showReleasePage": "Kopiuj link do wydania",
+      "openPatches": "Otwórz łatki",
+      "enableRecommendedSources": "Włącz i pobierz",
+      "enableRecommendedSourcesToast": "Włączono zalecane bazy reguł",
+      "enableRecommendedSourcesPartialToast": "Włączono zalecane bazy reguł, ale niektóre pobierania się nie zakończyły. Pozostają na liście w powiadomieniu.",
+      "turnOffNetworkToast": "Wyłączono dostęp do internetu",
+      "recommendedSettingsAppliedToast": "Zastosowano zalecane ustawienia",
+      "linkCopiedToast": "Skopiowano link"
+    }
+  },
+  "error": {
+    "generic": {
+      "title": "Działanie nie powiodło się",
+      "detail": "Coś poszło nie tak."
+    },
+    "code": {
+      "no_project_loaded": {
+        "title": "Nie wczytano projektu",
+        "detail": "Najpierw wczytaj projekt."
+      },
+      "session_lost": {
+        "title": "Utracono sesję",
+        "detail": "Błąd wewnętrzny przerwał sesję. Zostanie ona automatycznie wczytana ponownie."
+      },
+      "internal": {
+        "title": "Błąd wewnętrzny",
+        "detail": "Coś poszło nie tak po stronie samego Rimmerge."
+      },
+      "invalid_input": {
+        "title": "Nieprawidłowe dane",
+        "detail": "Wpisana wartość jest nieprawidłowa."
+      },
+      "scan_failed": {
+        "title": "Skanowanie nie powiodło się",
+        "detail": "Skanowanie lub analiza instalacji nie zakończyły się."
+      },
+      "mods_config_io_failed": {
+        "title": "Nie udało się odczytać ani zapisać ModsConfig.xml",
+        "detail": "Sprawdź, czy plik istnieje, nie jest tylko do odczytu i nie jest używany."
+      },
+      "profile_io_failed": {
+        "title": "Nie udało się odczytać ani zapisać profilu",
+        "detail": "Sprawdź, czy w folderze profilu Rimmerge można zapisywać."
+      },
+      "rimsort_import_failed": {
+        "title": "Import nie powiódł się",
+        "detail": "Nie udało się zaimportować pliku bazy danych RimSort."
+      },
+      "rimworld_running": {
+        "title": "RimWorld jest uruchomiony",
+        "detail": "Najpierw zamknij RimWorld albo mimo to kontynuuj."
+      },
+      "mod_not_found": {
+        "title": "Nie znaleziono moda",
+        "detail": "Tego moda nie ma na liście aktywnych modów."
+      },
+      "finding_not_found": {
+        "title": "Nie znaleziono ustalenia",
+        "detail": "To ustalenie nie jest już aktualne — być może zostało już rozwiązane."
+      },
+      "merge_source_failed": {
+        "title": "Nie udało się odczytać źródła scalania",
+        "detail": "Plik defu, szablonu, łatki lub tekstury zmienił się albo zniknął od ostatniego skanowania. Wczytaj projekt ponownie."
+      },
+      "merge_mod_io_failed": {
+        "title": "Nie udało się zapisać moda scalającego",
+        "detail": "Zapis lub usunięcie folderu wygenerowanego moda scalającego nie powiodło się."
+      },
+      "patch_not_found": {
+        "title": "Nie znaleziono łatki",
+        "detail": "Ten projekt łatki zgodności nie jest już wczytany."
+      },
+      "patch_identity_invalid": {
+        "title": "Nieprawidłowa tożsamość łatki",
+        "detail": "ID pakietu lub nazwa wyświetlana są nieprawidłowe albo kolidują z innym modem lub łatką."
+      },
+      "def_not_found": {
+        "title": "Nie znaleziono defu",
+        "detail": "Tego defu lub szablonu nie ma w tym skanowaniu."
+      },
+      "assignment_not_found": {
+        "title": "Nie znaleziono przypisania",
+        "detail": "Ten projekt kreatora łatek nie jest już wczytany."
+      },
+      "assignment_section_in_use": {
+        "title": "Sekcja jest nadal używana",
+        "detail": "Inna sekcja nadal odwołuje się do wierszy tej sekcji."
+      },
+      "stale_active_set": {
+        "title": "Lista aktywnych modów jest nieaktualna",
+        "detail": "Przeskanuj ponownie przed zapisaniem ModsConfig.xml."
+      },
+      "texture_unsupported_format": {
+        "title": "Nie można wyświetlić tego formatu tekstury",
+        "detail": "Plik nie jest obrazem PNG ani JPEG, więc nie można go tu wyświetlić. Tekstury DDS nie są obsługiwane."
+      }
+    }
+  },
+  "defaultPathsWarning": {
+    "notAnInstall": "{gameDir} nie wygląda na instalację RimWorld (brak Version.txt lub Data/Core/)."
+  },
+  "defaultPathsError": {
+    "noProfileBase": "Nie ustawiono ani RIMMERGE_PROFILE_DIR, ani LOCALAPPDATA, więc Rimmerge nie ma gdzie przechowywać własnych plików.",
+    "gameDirNotFound": "Nie znaleziono katalogu instalacji RimWorld. Każde sprawdzone miejsce wymieniają szczegóły techniczne poniżej.",
+    "modsConfigNotFound": "Rimmerge nie potrafi ustalić, gdzie jest ModsConfig.xml. Zobacz szczegóły techniczne poniżej."
+  },
+  "finding": {
+    "kind": {
+      "edgeDropped": "Porzucone ograniczenie",
+      "anyOfChoice": "Wybór jednego z wielu",
+      "defOverride": "Nadpisanie defu",
+      "patchCollision": "Kolizja łatek",
+      "textureOverride": "Nadpisanie tekstury",
+      "duplicateAssembly": "Zduplikowana biblioteka DLL",
+      "likelyDuplicateMod": "Prawdopodobny duplikat moda",
+      "missingMod": "Brakujący mod",
+      "missingDependency": "Brakująca zależność",
+      "incompatiblePair": "Niekompatybilna para",
+      "unsupportedVersion": "Nieobsługiwana wersja",
+      "undeclaredHardDependency": "Niezadeklarowana twarda zależność",
+      "lazyReferenceViolated": "Naruszone leniwe odwołanie",
+      "declarationQuestioned": "Podważona deklaracja",
+      "declarationOverridden": "Nadpisana deklaracja",
+      "duplicateTemplateName": "Zduplikowana nazwa szablonu",
+      "keyedTranslationCollision": "Kolizja kluczy tłumaczeń Keyed",
+      "soundOverride": "Nadpisanie dźwięku",
+      "undeclaredTypeDependency": "Niezadeklarowana zależność od typu",
+      "runtimePatchCollision": "Kolizja łatek w czasie działania",
+      "transpilerCollision": "Kolizja transpilerów",
+      "tagInferred": "Wywnioskowany tag",
+      "ruleOverruled": "Uchylona reguła",
+      "placementOverruled": "Uchylone położenie",
+      "placementQuestioned": "Podważone położenie",
+      "placementOrderingOverridden": "Nadpisana kolejność położenia",
+      "placementPromotesDependents": "Położenie podnosi zależne mody",
+      "missingTexturePath": "Brakująca ścieżka tekstury",
+      "patchWillFail": "Łatka się nie powiedzie",
+      "contributesNothing": "Nic nie wnosi",
+      "undecodableTexture": "Tekstura, która się nie wczyta",
+      "brokenInheritance": "Zerwane dziedziczenie",
+      "nearMissModReference": "Możliwa literówka w odwołaniu do moda",
+      "discardedAddition": "Celowo odrzucone dodanie",
+      "danglingDefReference": "Wiszące odwołanie do defu"
+    },
+    "title": {
+      "edgeDroppedNoWinner": "Porzucono „{before} przed {after}”, aby przerwać cykl",
+      "edgeDroppedWithWinner": "Ograniczenie „{before} przed {after}” porzucone, uchylone przez {winner}",
+      "declarationQuestioned": "„{after} po {before}” podważone przez relację „{relation}”",
+      "declarationOverridden": "„{after} po {before}” nadpisane przez {winner}",
+      "anyOfChoice": "{after} potrzebuje jednego z {count} moda dostarczającego {assembly} | {after} potrzebuje jednego z {count} modów dostarczających {assembly} | {after} potrzebuje jednego z {count} modów dostarczających {assembly}",
+      "textureOverride": "tekstura {texturePath}",
+      "duplicateAssembly": "Biblioteka {assembly} dostarczana przez {count} mod | Biblioteka {assembly} dostarczana przez {count} mody | Biblioteka {assembly} dostarczana przez {count} modów",
+      "duplicateTemplateName": "Szablon {name} zarejestrowany przez {count} mod | Szablon {name} zarejestrowany przez {count} mody | Szablon {name} zarejestrowany przez {count} modów",
+      "keyedTranslationCollision": "{a} i {b} mają {count} wspólny klucz tłumaczenia | {a} i {b} mają {count} wspólne klucze tłumaczeń | {a} i {b} mają {count} wspólnych kluczy tłumaczeń",
+      "soundOverride": "Dźwięk {path} dostarczany przez {count} mod | Dźwięk {path} dostarczany przez {count} mody | Dźwięk {path} dostarczany przez {count} modów",
+      "undeclaredTypeDependency": "{user} używa typu {typeName} z moda {provider} bez zadeklarowanej relacji",
+      "runtimePatchCollision": "Cel {target} łatany przez {count} mod | Cel {target} łatany przez {count} mody | Cel {target} łatany przez {count} modów",
+      "transpilerCollision": "Cel {target} transpilowany przez {count} mod | Cel {target} transpilowany przez {count} mody | Cel {target} transpilowany przez {count} modów",
+      "likelyDuplicateMod": "{a} i {b} wyglądają na duplikaty ({count} wspólny def) | {a} i {b} wyglądają na duplikaty ({count} wspólne defy) | {a} i {b} wyglądają na duplikaty ({count} wspólnych defów)",
+      "missingMod": "Brakuje moda {modId}",
+      "missingDependency": "Modowi {modId} brakuje zależności {dependency}",
+      "incompatiblePair": "{a} i {b} są oznaczone jako niekompatybilne",
+      "unsupportedVersion": "Mod {modId} nie obsługuje tej wersji RimWorld",
+      "undeclaredHardDependency": "{after} potrzebuje moda {before} podczas ładowania, bez deklaracji",
+      "lazyReferenceViolated": "{after} odwołuje się do moda {before}, zanim ten zostanie załadowany",
+      "tagInferred": "Mod {modId} oznaczony tagiem {tag}",
+      "ruleOverruledNoWinner": "Uchylono regułę „{before} przed {after}”",
+      "ruleOverruledWithWinner": "Reguła „{before} przed {after}” uchylona przez {winner}",
+      "placementOverruled": "Uchylono położenie „{placement}” moda {modId}",
+      "placementQuestioned": "Położenie „{placement}” moda {modId} podważone przez {other}",
+      "placementOrderingOverridden": "Mod {modId} nadpisuje własną kolejność położenia moda {pinned}",
+      "placementPromotesDependents": "Położenie moda {modId} podnosi {count} inny mod | Położenie moda {modId} podnosi {count} inne mody | Położenie moda {modId} podnosi {count} innych modów",
+      "missingTexturePath": "Pole {field} w {defKey} wskazuje teksturę, której nie dostarcza żaden aktywny mod",
+      "patchWillFail": "Przewidywane niepowodzenie operacji moda {modId} na {defKey}",
+      "contributesNothing": "Mod {modId} nic nie wnosi",
+      "undecodableTexture": "Pliku {path} z moda {modId} nie da się zdekodować",
+      "brokenInheritance": "Dziedziczenie moda {modId} po „{parentName}” jest zerwane",
+      "nearMissModReference": "Odwołanie moda {referrer} do „{written}” może być literówką",
+      "discardedAddition": "Mod {replacer} celowo odrzuca dodanie wprowadzone przez mod {adder}",
+      "danglingDefReference": "„{name}” nie wskazuje żadnego aktywnego defu"
+    }
+  },
+  "edgeKind": {
+    "assemblyRef": "Odwołanie do DLL",
+    "forceLoadAfter": "Wymuszone ładowanie po",
+    "forceLoadBefore": "Wymuszone ładowanie przed",
+    "loadAfter": "Ładowanie po",
+    "loadBefore": "Ładowanie przed",
+    "modDependency": "Zależność moda",
+    "findMod": "Wyszukanie moda",
+    "ifModActive": "Jeśli mod aktywny",
+    "patchTargetsDef": "Łatka celuje w def",
+    "mayRequire": "Może wymagać",
+    "patchInjectedNode": "Węzeł wstrzyknięty łatką",
+    "assemblyVersionPrecedence": "Pierwszeństwo wersji DLL",
+    "usesType": "Używa typu",
+    "parentTemplate": "Szablon nadrzędny",
+    "patchRemovedNode": "Łatka usunęła węzeł",
+    "retextureAfterOwner": "Zmiana tekstury po właścicielu",
+    "defOverrideAfterOrigin": "Nadpisanie defu po źródle",
+    "patchSelectsInjectedNode": "Łatka wybiera wstrzyknięty węzeł",
+    "patchInvalidatesPredicate": "Łatka unieważnia predykat",
+    "patchRemovedNodeCosmetic": "Usunięty węzeł (kosmetyczny)",
+    "replaceDiscardsAddition": "Zastąpienie odrzuca dodanie"
+  },
+  "tagSignal": {
+    "urlContains": "URL zawiera „{needle}”",
+    "assemblyRefTo": "odwołanie DLL do moda {mod}",
+    "dependsOn": "zależy od moda {mod}"
+  },
+  "caveat": {
+    "duplicateTemplate": "szablon „{name}” jest zarejestrowany przez kilka modów ({owners}); każdy potomek niezależnie dziedziczy po tej rejestracji, która ładuje się najbliżej przed nim lub w tym samym miejscu, więc różni potomkowie mogą wskazywać różne mody",
+    "modSettingDefault": "{class} moda {modId} odtworzono z ustawieniem domyślnym, niekoniecznie takim jak w twojej grze",
+    "failedOp": "operacja łatki moda {modId} na {xpath} niczego nie dopasowała",
+    "unscopedOps": "mod {modId} ma {count} operację łatki, której nie dało się przypisać do defu | mod {modId} ma {count} operacje łatek, których nie dało się przypisać do defu | mod {modId} ma {count} operacji łatek, których nie dało się przypisać do defu",
+    "malformedOperation": "operacja łatki moda {modId} nie była poprawnym XML",
+    "defRemoved": "ten def jest usuwany przez mod {modId}",
+    "positionalItem": "{path} jest identyfikowany tylko przez swoją pozycję; późniejsza zmiana kolejności może przekierować ten wybór",
+    "unsafeXpathValue": "wartości {path} nie da się bezpiecznie zapisać jako xpath, więc pozostała nierozwiązana",
+    "unknownOwnerChoice": "{path}: wybrany właściciel {modId} nie jest kandydatem dla tego pola",
+    "invalidValueFragment": "{path}: nie udało się przetworzyć wpisanej wartości",
+    "unsupportedDrop": "{path}: odrzucanie nie jest obsługiwane dla kolizji łatek",
+    "unreconstructableChain": "{path}: nie udało się odtworzyć struktury nadrzędnej",
+    "unsettableLeaf": "{path}: odziedziczonego liścia nie można cofnąć do braku wartości",
+    "outOfScopeOwners": "w instalacji, w której którykolwiek z modów {mods} ładuje się po zakresie tej łatki, łatka może zamiast tego trafić w def tego moda lub go nadpisać",
+    "clobberedMapEntry": "{path}: dodany przez mod {by}, ale późniejsza łatka zastąpiła cały słownik i go usunęła; przywrócono"
+  },
+  "inbox": {
+    "evidence": {
+      "inspectLink": "Zbadaj",
+      "ariaLabel": "Dowody ustalenia",
+      "edgeDropped": {
+        "sentence": "Porzucono ograniczenie „{edgeKind}” o sile {strength}: {after} → {before}."
+      },
+      "anyOfChoice": {
+        "intro": "{modId} potrzebuje jednego z kandydatów dla {assembly}:"
+      },
+      "danglingDefReference": {
+        "causeRemovedBy": "usunęła go własna łatka moda {modId}",
+        "causeOnlyInUnloadedFolder": "jest zdefiniowany tylko w folderze „{folder}” moda {modId}, a ta instalacja nie ładuje tego folderu",
+        "causeOnlyInInactiveMod": "jest zdefiniowany tylko w modzie {modId}, który nie jest aktywny",
+        "causeDefinedNowhere": "nie definiuje go żaden zainstalowany mod, aktywny ani nieaktywny",
+        "causeUnexplained": "nie udało się ustalić, dlaczego go brakuje",
+        "referrerFromDef": "{defType}/{defName} moda {modId} ({fieldPath})",
+        "referrerFromTemplate": "{defType}/{'@'}{name} moda {modId} ({fieldPath})",
+        "referrerFromPatch": "łatka moda {modId} na {defType}/{defName} ({fieldPath})",
+        "sentence": "{name} nie wskazuje żadnego aktywnego defu żadnego typu — {cause}.",
+        "likelySound": "To wygląda na odwołanie do dźwięku — brakujący {soundDef} zapisuje ostrzeżenie w logu i po cichu przechodzi na niezdefiniowany dźwięk, zamiast powodować błąd wczytywania.",
+        "referencedFrom": "Odwołania z:",
+        "truncatedReferrers": "Pominięto jeszcze {count} źródło odwołania (limit wyświetlania). | Pominięto jeszcze {count} źródła odwołań (limit wyświetlania). | Pominięto jeszcze {count} źródeł odwołań (limit wyświetlania)."
+      },
+      "textureOverride": {
+        "sentence": "Tekstura {path}"
+      },
+      "duplicateAssembly": {
+        "sentence": "Biblioteka DLL {name}, dostarczana przez:"
+      },
+      "likelyDuplicateMod": {
+        "body": "{a} i {b} mają {count} identyczny klucz defu | {a} i {b} mają {count} identyczne klucze defów | {a} i {b} mają {count} identycznych kluczy defów"
+      },
+      "missingMod": {
+        "body": "Mod {modId} jest na liście, ale nie znaleziono go na dysku."
+      },
+      "missingDependency": {
+        "body": "Mod {modId} potrzebuje moda {dependencyLabel} ({dependency}), który nie jest aktywny."
+      },
+      "incompatiblePair": {
+        "body": "{a} i {b} są oznaczone jako niekompatybilne."
+      },
+      "unsupportedVersion": {
+        "body": "Mod {modId} nie deklaruje obsługi tej wersji gry."
+      },
+      "undeclaredHardDependency": {
+        "body": "{after} potrzebuje moda {before}, ale nigdy tego nie deklaruje."
+      },
+      "lazyReferenceViolated": {
+        "body": "Leniwe odwołanie z moda {after} do moda {before} zostało naruszone."
+      },
+      "declarationQuestioned": {
+        "body": "Zadeklarowano, że {declaredAfter} ładuje się po {declaredBefore}, ale zachodzi też relacja odwrotna:"
+      },
+      "declarationOverridden": {
+        "body": "Zadeklarowano, że {declaredAfter} ładuje się po {declaredBefore}, ale nadpisanie zadeklarowanego ograniczenia mówi inaczej:"
+      },
+      "keyedTranslationCollision": {
+        "body": "Oba mody, {a} i {b}, definiują {count} klucz tłumaczenia: | Oba mody, {a} i {b}, definiują {count} klucze tłumaczeń: | Oba mody, {a} i {b}, definiują {count} kluczy tłumaczeń:"
+      },
+      "soundOverride": {
+        "sentence": "Dźwięk {path}, dostarczany przez:"
+      },
+      "undeclaredTypeDependency": {
+        "sentence": "{user} używa typu {typeName} z biblioteki DLL moda {provider}, a między nimi nie zadeklarowano relacji."
+      },
+      "runtimePatchCollision": {
+        "sentence": "{target} — łatane przez (w kolejności ładowania):",
+        "runsLast": "działa na końcu",
+        "runLastButton": "Uruchamiaj na końcu",
+        "runLastAriaLabel": "Uruchamiaj mod {modId} na końcu"
+      },
+      "transpilerCollision": {
+        "sentence": "{target} jest przepisywany przez transpiler (łatkę w czasie działania) w każdym z tych modów, w kolejności ładowania:"
+      },
+      "tagInferred": {
+        "sentence": "Mod {modId} oznaczono tagiem {tag} na podstawie:"
+      },
+      "ruleOverruled": {
+        "withWinner": "Reguła „{after} po {before}” ({origin}) została uchylona przez:",
+        "byLongerCycle": "Reguła „{after} po {before}” ({origin}) została uchylona przez dłuższy cykl.",
+        "cycle": "cykl: {chain}"
+      },
+      "placementOverruled": {
+        "intro": "Mod {modId} jest przypięty do położenia „{placement}” ({origin}); uchylają to:",
+        "landedAt": "Trafił na pozycję #{position}."
+      },
+      "placementQuestioned": {
+        "body": "Mod {modId} jest przypięty do położenia „{placement}”, ale relacja „{relationKind}” z {other} nie może przy tym zostać zachowana."
+      },
+      "placementOrderingOverridden": {
+        "body": "Zaakceptowane ograniczenie przesunęło mod {modId} poza własne przypięcie „{placement}” moda {pinned}:"
+      },
+      "placementPromotesDependents": {
+        "body": "Mod {modId} jest przypięty do położenia „{placement}”, przez co {count} inny mod przechodzi tę samą granicę warstwy: | Mod {modId} jest przypięty do położenia „{placement}”, przez co {count} inne mody przechodzą tę samą granicę warstwy: | Mod {modId} jest przypięty do położenia „{placement}”, przez co {count} innych modów przechodzi tę samą granicę warstwy:"
+      },
+      "showMore": "Pokaż więcej ({shown} z {total})",
+      "missingTexturePath": {
+        "sentence": "Pole {field} defu {def} moda {modId} wskazuje teksturę {path}, której nie dostarcza żaden aktywny mod."
+      },
+      "undecodableTexture": {
+        "sentence": "Pliku {path} z moda {modId} nie da się zdekodować ({width}x{height}, {fourcc}) — gra podstawowa pokazuje w jego miejscu zastępczą teksturę błędu.",
+        "pngSibling": "Ten mod dostarcza też plik w formacie innym niż DDS pod tą samą ścieżką, ale gra podstawowa nigdy nie używa go w zastępstwie."
+      },
+      "brokenInheritance": {
+        "missingParent": "{child} z moda {modId} dziedziczy po {parentName} — żaden aktywny mod go nie definiuje, więc wczytuje się bez żadnego z własnych pól tego rodzica.",
+        "wrongType": "{child} z moda {modId} dziedziczy po {parentName} — w miejscu ładowania tego moda wskazuje on typ {parentType}, a nie {childDefType}.",
+        "affectedCount": "{count} dotknięty def: | {count} dotknięte defy: | {count} dotkniętych defów:",
+        "andMore": "… i jeszcze {count}",
+        "truncated": "Pominięto jeszcze {count} dotknięty def (limit wyświetlania). | Pominięto jeszcze {count} dotknięte defy (limit wyświetlania). | Pominięto jeszcze {count} dotkniętych defów (limit wyświetlania)."
+      },
+      "nearMissModReference": {
+        "findModName": "Nazwa FindMod {written} w modzie {modId} nie wskazuje żadnego aktywnego ani zainstalowanego moda, ale bardzo przypomina {candidateName} — możliwa literówka.",
+        "mayRequireId": "ID MayRequire {written} w modzie {modId} nie wskazuje żadnego aktywnego ani zainstalowanego moda, ale bardzo przypomina {candidateName} — możliwa literówka.",
+        "writtenIn": "Zapisane w pliku {file}"
+      },
+      "patchWillFail": {
+        "causeRemovedBy": "Przewiduje się, że {operation} moda {modId} na {defKey} nie powiedzie się w tej kolejności — mod {causeModId}, ładowany wcześniej, usuwa docelowy węzeł własną operacją.",
+        "causeNotYetInjected": "Przewiduje się, że {operation} moda {modId} na {defKey} nie powiedzie się w tej kolejności — celuje w węzeł wstrzykiwany przez mod {causeModId}, ale ten mod ładuje się później.",
+        "causeDeadTarget": "Przewiduje się, że {operation} moda {modId} na {defKey} nie powiedzie się w tej kolejności — rozwiązana struktura zwycięskiego właściciela nigdy nie ma tego węzła, niezależnie od kolejności ładowania.",
+        "causeUnclassified": "Przewiduje się, że {operation} moda {modId} na {defKey} nie powiedzie się w tej kolejności — nie udało się sklasyfikować przyczyny.",
+        "specificField": "Konkretne pole: {leafXpath}"
+      },
+      "contributesNothing": {
+        "body": "Mod {modId} nie wnosi w tej kolejności niczego zauważalnego: nie ma biblioteki DLL, każdy jego def jest nadpisany, każda dostarczana przez niego tekstura i każde tłumaczenie są nadpisane, a każda jego operacja łatki albo się nie stosuje, albo nigdy nie zostaje uruchomiona."
+      },
+      "discardedAddition": {
+        "sentence": "{replacer} deklaruje ładowanie po {adder} i zastępuje {path}: własne dodanie moda {adder} w {adderPath} zostaje celowo odrzucone."
+      }
+    },
+    "suggestion": {
+      "acceptButton": "Akceptuj (Enter)",
+      "ignoreButton": "Ignoruj (i)",
+      "revertButton": "Cofnij (u)",
+      "alternativesHeading": "Alternatywy",
+      "addNoteButton": "Dodaj notatkę (n)"
+    },
+    "page": {
+      "loadFailed": "Nie udało się wczytać ustaleń.",
+      "noSelection": "Wybierz ustalenie, aby zobaczyć jego sugestię.",
+      "shortcutsHeader": "Skróty klawiszowe",
+      "shortcutMoveCursor": "przesuń kursor",
+      "shortcutAccept": "akceptuj sugestię",
+      "shortcutPickAlternative": "wybierz alternatywę",
+      "shortcutIgnore": "ignoruj",
+      "shortcutRevert": "cofnij decyzję",
+      "shortcutMerge": "scal nadpisanie defu lub kolizję łatek",
+      "shortcutAddNote": "dodaj notatkę",
+      "shortcutOpenOrder": "otwórz w widoku kolejności ładowania",
+      "shortcutOpenModDetail": "otwórz szczegóły moda",
+      "shortcutFocusSearch": "przejdź do wyszukiwania",
+      "shortcutCycleStatus": "przełącz filtr statusu",
+      "shortcutToggleModLabel": "przełącz nazwy/ID modów",
+      "shortcutToggleHelp": "pokaż/ukryj tę pomoc"
+    },
+    "alternatives": {
+      "ariaLabel": "Alternatywy"
+    },
+    "decisionNote": {
+      "label": "Notatka",
+      "save": "Zapisz notatkę"
+    },
+    "textureTile": {
+      "winnerBadge": "zwycięzca",
+      "sizeLine": "{format} · {count} bajt | {format} · {count} bajty | {format} · {count} bajtów",
+      "useThisOne": "Użyj tej tekstury",
+      "shipThisFile": "Dostarcz ten plik"
+    },
+    "defConflictView": {
+      "sourceFailed": "Pliki zmieniły się od skanowania — wczytaj projekt ponownie.",
+      "loadFailed": "Nie udało się wczytać widoku konfliktu.",
+      "completenessPartial": "Częściowy",
+      "completenessCompleteWithProblems": "Kompletny, z problemami",
+      "completenessComplete": "Kompletny",
+      "patchCollisionWithSubPath": "Kolizja łatek — {subPath}",
+      "injectedNodeRelation": "Łatka moda {selector} wybiera węzeł wstrzyknięty przez mod {injector}",
+      "showLabel": "Pokaż",
+      "filterAllChanged": "Wszystkie zmienione",
+      "filterConflict": "Konflikt",
+      "filterCleanMerge": "Czyste scalenie",
+      "filterListEntries": "Elementy list",
+      "filterMapEntries": "Wpisy słowników",
+      "filterUnchanged": "Bez zmian",
+      "showMore": "Pokaż więcej ({shown} z {total})",
+      "problemsHeading": "Problemy",
+      "problemUnsupportedOp": "Operacja #{opIndex} moda {modId}",
+      "problemReplayStopped": "Odtwarzanie zatrzymało się tutaj; wiersze powyżej pochodzą z wcześniejszych operacji.",
+      "problemMissingTemplate": "Brakujący szablon {name} ({defType}).",
+      "problemCycle": "Cykl: {chain}",
+      "problemPlanFailed": "Planowanie scalania nie powiodło się: {reason}"
+    },
+    "fieldRowsTable": {
+      "empty": "Żadne pole nie pasuje do tego filtra.",
+      "headerPath": "Ścieżka",
+      "headerKind": "Rodzaj",
+      "headerValues": "Wartości",
+      "headerInGame": "W grze",
+      "headerAfterMerge": "Po scaleniu",
+      "headerPreference": "Preferencja",
+      "kindConflict": "Konflikt",
+      "kindCleanMerge": "Czyste scalenie",
+      "kindListEntry": "Element listy",
+      "kindMapEntry": "Wpis słownika",
+      "kindUnchanged": "Bez zmian",
+      "groupHeader": "{path} ({count} wpis) | {path} ({count} wpisy) | {path} ({count} wpisów)",
+      "alsoAddedBy": "Dodane także przez: {mods}",
+      "mergeChoiceFrom": "wartość moda {modId}",
+      "mergeChoiceValue": "zapisana wartość „{text}”",
+      "mergeChoiceDropped": "odrzucone",
+      "preferenceLoadOrder": "{winner} wygrywa (kolejność ładowania)",
+      "preferenceDecision": "{winner} wygrywa (decyzja)",
+      "preferenceMergeChoice": "{choice} (wybór scalania)"
+    },
+    "findingList": {
+      "searchPlaceholder": "Szukaj ustaleń…",
+      "filterByStatus": "Filtruj według statusu",
+      "filterByKind": "Filtruj według rodzaju",
+      "empty": "Żadne ustalenie nie pasuje do tego filtra.",
+      "findingsAriaLabel": "Ustalenia",
+      "statusAll": "Wszystkie",
+      "statusNeedsInput": "Wymaga decyzji",
+      "statusAuto": "Automatycznie",
+      "statusOverridden": "Zmienione ręcznie",
+      "filteredByMod": "Zawężono do: {mod}",
+      "clearModFilter": "Wyczyść filtr moda"
+    },
+    "findingCard": {
+      "undecided": "Bez decyzji",
+      "decidedChip": "zdecydowano",
+      "resolvedBySuggestedChip": "rozwiązane przez sugerowaną"
+    },
+    "touchersList": {
+      "mod": "Mod",
+      "role": "Rola",
+      "ops": "Operacje",
+      "replay": "Odtwarzanie",
+      "generatedSuffix": "(wygenerowany)",
+      "roleOwner": "właściciel",
+      "rolePatcher": "łatający",
+      "reached": "osiągnięto",
+      "notReached": "nie osiągnięto"
+    }
+  },
+  "merge": {
+    "state": {
+      "merged": "scalone",
+      "needsInput": "{count} pole wymaga decyzji | {count} pola wymagają decyzji | {count} pól wymaga decyzji",
+      "structuralGuard": "nie scalono automatycznie — potwierdź zwycięzcę",
+      "cannotMerge": "nie można scalić"
+    },
+    "skipped": {
+      "stillNeedsInput": "nadal wymaga decyzji"
+    },
+    "summary": {
+      "patchCollision": "{count} scalenie kolizji łatek (sugerowane automatycznie, gdy brak decyzji) | {count} scalenia kolizji łatek (sugerowane automatycznie, gdy brak decyzji) | {count} scaleń kolizji łatek (sugerowanych automatycznie, gdy brak decyzji)",
+      "defOverride": "{count} scalenie nadpisania defu (zdecydowane jawnie) | {count} scalenia nadpisań defów (zdecydowane jawnie) | {count} scaleń nadpisań defów (zdecydowanych jawnie)",
+      "asset": "{count} dostarczany zasób | {count} dostarczane zasoby | {count} dostarczanych zasobów",
+      "willWrite": "Zostanie zapisane: {parts}."
+    },
+    "header": {
+      "inspectLink": "Zbadaj",
+      "outOfScope": "Poza zakresem, nie scalono: {mods}",
+      "structuralGuardLine": "{field} się różni ({by} względem kopii bazowej) — scalanie na poziomie pól jest dla tego defu niebezpieczne. Potwierdź zwycięzcę wynikającego z kolejności ładowania, akceptując to ustalenie na stronie „Ustalenia”; nie da się go dokończyć jako scalenia.",
+      "baseTag": "(baza)",
+      "winnerTag": "(zwycięzca)",
+      "totalsFields": "{count} pole | {count} pola | {count} pól",
+      "totalsConflicts": "{count} konflikt | {count} konflikty | {count} konfliktów",
+      "totalsAuto": "{count} automatyczne | {count} automatyczne | {count} automatycznych",
+      "totalsUnresolved": "{count} nierozwiązane | {count} nierozwiązane | {count} nierozwiązanych",
+      "totalsUnchanged": "{count} bez zmian | {count} bez zmian | {count} bez zmian"
+    },
+    "entryKind": {
+      "defOverride": "nadpisanie defu",
+      "patchCollision": "kolizja łatek",
+      "asset": "zasób"
+    },
+    "mod": {
+      "assetsGroup": "Zasoby",
+      "opsCount": "{count} operacja | {count} operacje | {count} operacji",
+      "dependsOn": "zależy od",
+      "openInEditor": "Otwórz w edytorze",
+      "heading": "Wynik scalania",
+      "mergedDefs": "{count} scalony def | {count} scalone defy | {count} scalonych defów",
+      "nothingYet": "pusty",
+      "summary": "Mod zgodności, do którego Rimmerge zapisuje twoje decyzje dotyczące scalania i zasobów — obecnie: {contents}. Generowany na nowo przy każdym zastosowaniu; w sugerowanej kolejności zawsze ładuje się na końcu.",
+      "summaryWithSources": "Mod zgodności, do którego Rimmerge zapisuje twoje decyzje dotyczące scalania i zasobów — obecnie: {contents} (z {count} moda). Generowany na nowo przy każdym zastosowaniu; w sugerowanej kolejności zawsze ładuje się na końcu. | Mod zgodności, do którego Rimmerge zapisuje twoje decyzje dotyczące scalania i zasobów — obecnie: {contents} (z {count} modów). Generowany na nowo przy każdym zastosowaniu; w sugerowanej kolejności zawsze ładuje się na końcu. | Mod zgodności, do którego Rimmerge zapisuje twoje decyzje dotyczące scalania i zasobów — obecnie: {contents} (z {count} modów). Generowany na nowo przy każdym zastosowaniu; w sugerowanej kolejności zawsze ładuje się na końcu.",
+      "loadFailed": "Nie udało się wczytać wyniku scalania.",
+      "packageIdLabel": "ID pakietu",
+      "folderLabel": "Folder",
+      "pathLabel": "Ścieżka",
+      "onDiskLabel": "Na dysku",
+      "existsYes": "Tak — generowany na nowo przy każdym zastosowaniu",
+      "existsNo": "Jeszcze nie — zastosuj z opcją „Zapisz mod scalający”, aby go wygenerować",
+      "placementLabel": "Położenie w kolejności ładowania",
+      "placementValue": "Na końcu (sortownik zawsze umieszcza wygenerowany mod na dole sugerowanej kolejności)",
+      "sourceModsLabel": "Mody źródłowe",
+      "entriesHeading": "Wpisy",
+      "noEntriesYet": "Brak jeszcze decyzji „Scal” ani „Dostarcz zasób” — aby jakąś dodać, zdecyduj w edytorze scalania o ustaleniu typu nadpisanie defu lub kolizja łatek.",
+      "filesHeading": "Pliki",
+      "nothingRendersYet": "Pliki pojawią się tutaj, gdy będzie istnieć co najmniej jedna decyzja „Scal” lub „Dostarcz zasób”.",
+      "fileLoadFailed": "Nie udało się wyrenderować tego pliku."
+    },
+    "filePreviewLabel": "Podgląd pliku",
+    "editor": {
+      "sourceFailedSuffix": "{message} — pliki projektu zmieniły się od ostatniego skanowania.",
+      "reloadProject": "Wczytaj projekt ponownie",
+      "loadFailed": "Nie udało się wczytać podglądu scalania.",
+      "showMore": "Pokaż więcej ({loaded} z {total})",
+      "shortcutsHeader": "Skróty edytora scalania",
+      "shortcutMoveRowCursor": "przesuń kursor wiersza",
+      "shortcutNextPrevConflict": "następny/poprzedni konflikt",
+      "shortcutMoveColumnCursor": "przesuń kursor kolumny",
+      "shortcutChooseColumn": "wybierz kolumnę pod kursorem",
+      "shortcutChooseOwnerColumn": "wybierz kolumnę właściciela n (1 = baza)",
+      "shortcutChooseWinner": "wybierz zwycięzcę według wybranej kolejności",
+      "shortcutEditValue": "edytuj dowolną wartość",
+      "shortcutToggleDrop": "przełącz odrzucenie",
+      "shortcutRevertToAuto": "przywróć wybór automatyczny",
+      "shortcutToggleAutoSection": "pokaż/ukryj sekcję automatyczną",
+      "shortcutToggleUnchanged": "pokaż/ukryj niezmienione wiersze",
+      "shortcutBackToFindings": "wróć do ustaleń"
+    },
+    "table": {
+      "pathHeader": "Ścieżka",
+      "classHeader": "Klasa",
+      "resultHeader": "Wynik",
+      "actionsHeader": "Działania",
+      "sectionConflicts": "Konflikty ({count})",
+      "sectionAuto": "Rozwiązane automatycznie ({count})",
+      "sectionUnchanged": "Bez zmian ({count})",
+      "containerEntries": "{count} wpis | {count} wpisy | {count} wpisów",
+      "containerSummary": "{container} — {entries}",
+      "containerConflicts": "{count} konflikt | {count} konflikty | {count} konfliktów",
+      "containerSummaryWithConflicts": "{base}, {conflicts}",
+      "acceptSuggested": "Akceptuj sugerowane ({count})"
+    },
+    "field": {
+      "classUnchanged": "bez zmian",
+      "classOneSided": "zmienione przez jeden mod",
+      "classAgreeing": "zgodne",
+      "classConflict": "konflikt",
+      "chooseValueFor": "Wybierz wartość dla {path}",
+      "suggestedHint": "sugerowane",
+      "takeValue": "Weź wartość moda {owner}",
+      "dropped": "odrzucone",
+      "needsInput": "wymaga decyzji",
+      "saving": "zapisywanie…",
+      "drop": "Odrzuć",
+      "dropUnavailableTitle": "Odrzucanie nie jest obsługiwane dla kolizji łatek — własne łatki RimWorld zawsze odtwarzają się do jakiejś wartości.",
+      "clearChoice": "Wyczyść wybór",
+      "autoRevert": "Auto"
+    },
+    "value": {
+      "absent": "brak",
+      "showLess": "Pokaż mniej",
+      "showMore": "Pokaż więcej"
+    }
+  },
+  "action": {
+    "accept": "Akceptuj",
+    "ignore": "Ignoruj",
+    "reorder": "Ładuj {after} po {before}",
+    "preferWinner": "Preferuj {defKey} z moda {winner}",
+    "chooseCandidate": "Wybierz {chosen} dla {after}",
+    "dropEdge": "Porzuć ograniczenie „{edgeKind}” {after} → {before}",
+    "keepEdge": "Zachowaj ograniczenie „{edgeKind}” {after} → {before}",
+    "addTag": "Oznacz mod {modId} tagiem {tag}",
+    "removeTag": "Usuń tag {tag} z moda {modId}",
+    "excludeFromCluster": "Wyklucz mod {modId} z klastra {rule}",
+    "removeMod": "Usuń mod {modId} z listy aktywnych",
+    "merge": "Scal {defKey}",
+    "shipAsset": "Dostarcz {texturePath} z moda {from}",
+    "promoteRulePair": "Przejmij „{after} po {before}” jako decyzję użytkownika",
+    "promoteRulePlacement": "Przejmij położenie moda {modId} jako decyzję użytkownika",
+    "dropRule": "Porzuć regułę „{after} po {before}”"
+  },
+  "patches": {
+    "scopeBadge": {
+      "title": "Poza zakresem tej łatki: {mods}",
+      "label": "częściowo: +{mods}"
+    },
+    "table": {
+      "emptyState": "Brak łatek zgodności — naciśnij n, aby utworzyć pierwszą.",
+      "nameHeader": "Nazwa",
+      "packageIdHeader": "ID pakietu",
+      "scopeHeader": "Zakres",
+      "needsInputHeader": "Wymaga decyzji",
+      "completeHeader": "Kompletne",
+      "lastExportHeader": "Ostatni eksport",
+      "notExported": "Nie wyeksportowano"
+    },
+    "identityForm": {
+      "nameLabel": "Nazwa",
+      "packageIdLabel": "ID pakietu",
+      "packageIdPlaceholder": "autor.mojmod",
+      "displayNameLabel": "Nazwa wyświetlana",
+      "authorLabel": "Autor",
+      "descriptionLabel": "Opis",
+      "save": "Zapisz"
+    },
+    "list": {
+      "newPatchButton": "Nowa łatka (n)",
+      "newPatchHeading": "Nowa łatka zgodności",
+      "scopeHeading": "Zakres",
+      "loadFailed": "Nie udało się wczytać łatek."
+    },
+    "detail": {
+      "loadFailed": "Nie udało się wczytać tej łatki.",
+      "orphanedCount": "{count} osierocona decyzja | {count} osierocone decyzje | {count} osieroconych decyzji",
+      "importFromProfileButton": "Importuj decyzje z profilu",
+      "pruneOrphanedButton": "Wyczyść osierocone",
+      "deleteButton": "Usuń",
+      "identityHeading": "Tożsamość",
+      "exportHeading": "Eksport",
+      "findingsHeading": "Ustalenia",
+      "importedToastSummary": "Zaimportowano z profilu",
+      "importedNoSkips": "Zaimportowano {count} decyzję. | Zaimportowano {count} decyzje. | Zaimportowano {count} decyzji.",
+      "rejection": {
+        "outOfScope": "nie jest to ustalenie między członkami zakresu tej łatki",
+        "notPatchable": "łatka może zawierać tylko decyzje „Scal”, „Dostarcz zasób” i „Ignoruj” — nie „{action}”",
+        "choiceOutsideScope": "{path}: wybór wskazuje mod {mod}, którego nie ma w zakresie tej łatki",
+        "assetOutsideScope": "jej dostarczany zasób pochodzi z moda {mod}, którego nie ma w zakresie tej łatki",
+        "actionName": {
+          "accept": "Akceptuj",
+          "reorder": "Zmień kolejność",
+          "preferWinner": "Preferuj zwycięzcę",
+          "chooseCandidate": "Wybierz kandydata",
+          "dropEdge": "Porzuć ograniczenie",
+          "keepEdge": "Zachowaj ograniczenie",
+          "addTag": "Dodaj tag",
+          "removeTag": "Usuń tag",
+          "excludeFromCluster": "Wyklucz z klastra",
+          "removeMod": "Usuń z listy aktywnych",
+          "promoteRule": "Przejmij regułę",
+          "dropRule": "Porzuć regułę"
+        }
+      },
+      "importedWithSkips": {
+        "imported": "Zaimportowano {count} decyzję | Zaimportowano {count} decyzje | Zaimportowano {count} decyzji",
+        "skipped": "Pominięto {count} decyzję: {reasons} | Pominięto {count} decyzje: {reasons} | Pominięto {count} decyzji: {reasons}",
+        "reasonSeparator": "; ",
+        "combined": "{imported}. {skipped}"
+      },
+      "prunedToastSummary": "Wyczyszczono osierocone decyzje",
+      "prunedToastDetail": "Usunięto {count} decyzję, której obecny zakres już nie dopuszcza. | Usunięto {count} decyzje, których obecny zakres już nie dopuszcza. | Usunięto {count} decyzji, których obecny zakres już nie dopuszcza.",
+      "deleteDialogHeader": "Usunąć tę łatkę?",
+      "deleteDialogBody": "Usuwa projekt łatki. Folder, który już wyeksportowano na dysk, pozostaje nietknięty."
+    },
+    "inbox": {
+      "loadFailed": "Nie udało się wczytać ustaleń tej łatki.",
+      "shortcutFocusScopeSearch": "przejdź do wyszukiwania zakresu",
+      "shortcutFocusExportDir": "przejdź do pola katalogu eksportu",
+      "shortcutBackToPatch": "wróć do szczegółów łatki"
+    },
+    "scopeEditor": {
+      "minimumSizeTitle": "Zakres łatki wymaga co najmniej dwóch członków.",
+      "membersListLabel": "Członkowie zakresu",
+      "removeMember": "Usuń {name} z zakresu",
+      "noMembersYet": "Brak członków zakresu.",
+      "searchPlaceholder": "Szukaj modów do dodania…",
+      "searchLabel": "Szukaj modów do dodania do zakresu",
+      "searchResultsLabel": "Mody pasujące do wyszukiwania",
+      "noMatches": "Brak wyników.",
+      "scopeShrunk": "Zakres zmniejszony — {count} decyzja jest teraz osierocona. | Zakres zmniejszony — {count} decyzje są teraz osierocone. | Zakres zmniejszony — {count} decyzji jest teraz osieroconych.",
+      "remainingChoicesNamingRemoved": "{count} pozostały wybór nadal wskazuje usunięty mod. | {count} pozostałe wybory nadal wskazują usunięty mod. | {count} pozostałych wyborów nadal wskazuje usunięty mod."
+    },
+    "exportPanel": {
+      "exportDirLabel": "Katalog eksportu",
+      "exportDirPlaceholder": "Wybierz folder…",
+      "chooseButton": "Wybierz…",
+      "installCheckboxLabel": "Zainstaluj w folderze Mods i włącz",
+      "staleActiveSetNote": "Oczekujące zmiany włączenia i wyłączenia modów nie są uwzględnione — jeśli mają trafić do tej instalacji, najpierw przeskanuj ponownie.",
+      "forceWarning": "Wygląda na to, że RimWorldWin64.exe jest uruchomiony. Instalacja w tej chwili zapisuje ModsConfig.xml, który gra nadpisuje przy zamykaniu, więc zmiana może zostać utracona. Wyeksportować mimo to?",
+      "exportAnyway": "Eksportuj mimo to",
+      "export": "Eksportuj",
+      "exportedTo": "Wyeksportowano do: {path}",
+      "installedAt": "Zainstalowano w: {path}",
+      "hash": "Skrót: {hash}",
+      "unchangedSinceLastExport": "Bez zmian od ostatniego eksportu.",
+      "renderLoadFailed": "Nie udało się wyrenderować tej łatki.",
+      "dependenciesHeading": "Zależności",
+      "entriesHeading": "Wpisy",
+      "noEntriesYet": "Brak jeszcze decyzji „Scal” ani „Dostarcz zasób” — aby jakąś dodać, zdecyduj w ustaleniach tej łatki o ustaleniu typu nadpisanie defu lub kolizja łatek.",
+      "skippedHeading": "Pominięte",
+      "filesHeading": "Pliki",
+      "nothingRendersYet": "Pliki pojawią się tutaj, gdy ta łatka będzie miała co najmniej jedną decyzję „Scal” lub „Dostarcz zasób”.",
+      "fileLoadFailed": "Nie udało się wyrenderować tego pliku."
+    }
+  },
+  "edgeStrength": {
+    "hard": "Twarda",
+    "declared": "Deklarowana",
+    "soft": "Miękka",
+    "awareness": "Świadomość",
+    "inferred": "Wywnioskowana"
+  },
+  "edgeStatus": {
+    "satisfied": "spełnione",
+    "violated": "naruszone",
+    "unevaluated": "niesprawdzone"
+  },
+  "mods": {
+    "changes": {
+      "searchPlaceholder": "Szukaj…",
+      "loadFailed": "Nie udało się wczytać zmian tego moda.",
+      "noMatches": "Żadna zmiana nie pasuje do tego filtra.",
+      "kindHeader": "Rodzaj",
+      "targetHeader": "Cel",
+      "opsHeader": "Operacje",
+      "otherTouchersHeader": "Inne zmieniające mody",
+      "findingsHeader": "Ustalenia",
+      "showMore": "Pokaż więcej ({loaded} z {total})"
+    },
+    "edges": {
+      "none": "Brak."
+    },
+    "picker": {
+      "removeMember": "Usuń {name}",
+      "noneSelectedYet": "Nic jeszcze nie wybrano.",
+      "searchPlaceholder": "Szukaj modów…",
+      "searchLabel": "Szukaj modów dla: {target}",
+      "noMatches": "Brak wyników."
+    },
+    "table": {
+      "regionLabel": "Mody",
+      "missing": "brakujący",
+      "rovingHint": "Strzałki: przechodzenie, Enter: otwieranie, Spacja: przełączanie"
+    },
+    "pendingChanges": {
+      "unscanned": "{count} oczekująca zmiana — przeskanuj ponownie, aby zaktualizować analizę | {count} oczekujące zmiany — przeskanuj ponownie, aby zaktualizować analizę | {count} oczekujących zmian — przeskanuj ponownie, aby zaktualizować analizę",
+      "unapplied": "{count} zmiana jeszcze niezastosowana w ModsConfig.xml | {count} zmiany jeszcze niezastosowane w ModsConfig.xml | {count} zmian jeszcze niezastosowanych w ModsConfig.xml",
+      "rescanButton": "Skanuj ponownie",
+      "rescanFinishedToast": "Ponowne skanowanie zakończone z {count} uwagą | Ponowne skanowanie zakończone z {count} uwagami | Ponowne skanowanie zakończone z {count} uwagami",
+      "rescannedWithWarningsToast": "Przeskanowano ponownie z ostrzeżeniami"
+    },
+    "closeGuard": {
+      "header": "Niezapisane zmiany aktywnych modów",
+      "body": "Robocza lista aktywnych modów ma zmiany, których nie uwzględniło jeszcze żadne ponowne skanowanie, albo przeskanowanej kolejności nie zastosowano jeszcze do {modsConfig}. Wyjście teraz oznacza utratę tych zmian, które są tylko w pamięci — plik gry w obu przypadkach pozostaje nietknięty.",
+      "stay": "Zostań",
+      "leaveAnyway": "Wyjdź mimo to"
+    },
+    "scanNotes": {
+      "empty": "Brak uwag ze skanowania."
+    },
+    "detail": {
+      "loadFailed": "Nie udało się wczytać tego moda.",
+      "idAndSource": "{modId} — {source}",
+      "byAuthors": "Autor: {authors}",
+      "tagsHeading": "Tagi",
+      "declaredOrderHeading": "Zadeklarowana kolejność",
+      "loadAfterLabel": "Ładuj po",
+      "loadBeforeLabel": "Ładuj przed",
+      "forceLoadAfterLabel": "Wymuś ładowanie po",
+      "forceLoadBeforeLabel": "Wymuś ładowanie przed",
+      "dependenciesLabel": "Zależności",
+      "incompatibleWithLabel": "Niekompatybilny z",
+      "edgesInHeading": "Ograniczenia przychodzące",
+      "edgesOutHeading": "Ograniczenia wychodzące",
+      "changesHeading": "Zmiany",
+      "scanNotesHeading": "Uwagi ze skanowania",
+      "findingsHeading": "Ustalenia",
+      "noLiveFindings": "Brak aktualnych ustaleń."
+    },
+    "page": {
+      "heading": "Mody",
+      "activeTab": "Aktywne",
+      "inactiveTab": "Nieaktywne",
+      "searchPlaceholder": "Szukaj modów…",
+      "tagFilterPlaceholder": "Filtruj według tagu…",
+      "sourcePlaceholder": "Źródło",
+      "sourceAny": "Dowolne",
+      "deactivateSelectedButton": "Wyłącz zaznaczone",
+      "alsoActivateDependenciesLabel": "Włącz też zależności",
+      "activateSelectedButton": "Włącz zaznaczone",
+      "loadFailed": "Nie udało się wczytać modów.",
+      "totalMods": "{count} mod | {count} mody | {count} modów",
+      "pageCapHint": "(pokazano pierwsze {count} — zawęź wyszukiwanie)",
+      "activateDialogHeader": "Włącz mody",
+      "willActivateHeading": "Zostaną włączone:",
+      "alreadyActiveHeading": "Już aktywne, pominięte:",
+      "unresolvableDependency": "{mod} deklaruje zależność od moda, którego nie ma na dysku: {deps}. | {mod} deklaruje zależności od modów, których nie ma na dysku: {deps}. | {mod} deklaruje zależności od modów, których nie ma na dysku: {deps}.",
+      "activatedToast": "Włączono",
+      "activateButton": "Włącz",
+      "deactivateDialogHeader": "Wyłącz mody",
+      "willDeactivateHeading": "Zostaną wyłączone:",
+      "refusedHeading": "Odmówiono (wymagane):",
+      "dependentsStillActive": "{count} aktywny mod nadal zależy od moda {mod}: {deps}. | {count} aktywne mody nadal zależą od moda {mod}: {deps}. | {count} aktywnych modów nadal zależy od moda {mod}: {deps}.",
+      "deactivatedToast": "Wyłączono",
+      "deactivateButton": "Wyłącz"
+    },
+    "defSearch": {
+      "ariaLabel": "Przejdź do defu",
+      "placeholder": "Przejdź do defu…"
+    }
+  },
+  "rules": {
+    "orphaned": {
+      "empty": "Brak osieroconych decyzji.",
+      "pruneButton": "Wyczyść"
+    },
+    "pairTable": {
+      "regionLabel": "Reguły par",
+      "afterHeader": "Po",
+      "beforeHeader": "Przed",
+      "originHeader": "Pochodzenie",
+      "commentHeader": "Komentarz",
+      "notAppliedTitle": "Nie obowiązuje: zaimportowane pary są wyłączone",
+      "promotedFrom": "(przejęta z: {origin})",
+      "overridesDeclaredTag": "(nadpisuje zadeklarowane)",
+      "overridesDeclaredTitle": "Ta reguła jest oznaczona jako nadpisująca zadeklarowane ograniczenie (loadAfter/modDependencies) między tymi samymi dwoma modami, jeśli takie istnieje — dla tej konkretnej pary wygrywa z deklaracją autora, ale nigdy z twardą zależnością.",
+      "promotedButton": "Przejęta",
+      "promoteButton": "Przejmij",
+      "deleteButton": "Usuń"
+    },
+    "addPairDialog": {
+      "header": "Dodaj regułę pary",
+      "loadsAfterLabel": "Ładowany po (mod zależny)",
+      "loadsBeforeLabel": "Ładowany przed (zależność)",
+      "commentLabel": "Komentarz (opcjonalnie)",
+      "overrideDeclaredLabel": "Nadpisz zadeklarowane ograniczenie między tymi modami, jeśli istnieje",
+      "overrideDeclaredWarning": "Dla tej konkretnej pary wygrywa to z własnymi loadAfter/modDependencies autora — nigdy z twardą zależnością. Używaj tylko wtedy, gdy sama deklaracja jest nieaktualna lub błędna.",
+      "sameModError": "Reguła pary wymaga dwóch różnych modów.",
+      "replaceWarning": "Zastępuje to istniejącą regułę ({origin}) dla tej pary.",
+      "addButton": "Dodaj"
+    },
+    "addPlacementDialog": {
+      "header": "Dodaj regułę",
+      "modToPinLabel": "Mod do przypięcia",
+      "placementLabel": "Położenie",
+      "placementPlaceholder": "Wybierz położenie",
+      "commentLabel": "Komentarz (opcjonalnie)",
+      "replaceWarning": "Zastępuje to istniejące przypięcie „{placement}” moda {mod} (źródło: {origin})."
+    },
+    "page": {
+      "heading": "Reguły",
+      "importToggleState": "Zaimportowane pary: {pairs} · Zaimportowane położenia: {placements}",
+      "addRuleButton": "Dodaj regułę",
+      "addPairRuleButton": "Dodaj regułę pary",
+      "reimportHint": "Bazy w pamięci podręcznej zmieniły się od ostatniego importu do tego profilu; zaimportuj je ponownie, aby użyć zmian.",
+      "importFromRimSortButton": "Importuj z RimSort",
+      "importFinished": "Import zakończony.",
+      "userRulesCount": "Reguły użytkownika: {count}",
+      "communityRulesCount": "Reguły społeczności: {count}",
+      "steamDependenciesCount": "Zależności Steam: {count}",
+      "notImported": "nie zaimportowano",
+      "loadFailed": "Nie udało się wczytać reguł.",
+      "tabAll": "Wszystkie",
+      "tabUserDecision": "Twoje decyzje",
+      "tabRimSortUser": "RimSort (użytkownik)",
+      "tabRimSortCommunity": "RimSort (społeczność)",
+      "tabSteamDb": "SteamDB",
+      "tagsHeading": "Tagi",
+      "orphanedHeading": "Osierocone decyzje"
+    },
+    "databases": {
+      "heading": "Bazy reguł",
+      "communityLabel": "Reguły społeczności",
+      "steamLabel": "Warsztat Steam",
+      "rimmergeLabel": "Reguły Rimmerge",
+      "refreshButton": "Odśwież",
+      "refreshDisabledTitle": "Wyłączone przez „Zezwalaj na dostęp do internetu” (strona Ustawienia)",
+      "networkDisabledNotice": "Dostęp do internetu jest wyłączony, więc odświeżanie jest niedostępne. Bazy z pamięci podręcznej są nadal używane.",
+      "failureBanner": "Ostatnie odświeżenie nie powiodło się dla co najmniej jednego źródła — kopia z pamięci podręcznej jest nadal używana.",
+      "loadFailed": "Nie udało się wczytać baz reguł.",
+      "needsReimport": "(dostępny ponowny import)",
+      "neverFetched": "Nigdy nie pobrano",
+      "stale": "Nieaktualna ({count} dzień) | Nieaktualna ({count} dni) | Nieaktualna ({count} dni)",
+      "updated": "Zaktualizowano {relative}",
+      "recencyLine": "{recency} · {bytes} · {sha}",
+      "today": "dzisiaj",
+      "daysAgo": "{count} dzień temu | {count} dni temu | {count} dni temu",
+      "lastFailureSuffix": " · Ostatnie odświeżenie nie powiodło się: {reason}",
+      "bundledSuffix": " · W pakiecie: {sha}",
+      "outcomeUpdated": "zaktualizowano ({bytes}, sha {sha})",
+      "outcomeUnchanged": "bez zmian (sha {sha})",
+      "outcomeFailed": "niepowodzenie: {reason}",
+      "outcomeSkippedSourceDisabled": "pominięto (źródło wyłączone)",
+      "outcomeSkippedNetworkDisabled": "pominięto (dostęp do internetu wyłączony)",
+      "outcomeSkippedAutoRefreshDisabled": "pominięto (automatyczne odświeżanie wyłączone)",
+      "outcomeSkippedNotDue": "pominięto (jeszcze nie pora)",
+      "refreshModeAutomatic": "Odświeża się automatycznie",
+      "refreshModeManual": "Tylko ręczne odświeżanie"
+    },
+    "importDialog": {
+      "header": "Importuj z RimSort",
+      "userRulesLabel": "userRules.json",
+      "communityRulesLabel": "communityRules.json",
+      "steamDbLabel": "steamDB.json",
+      "importButton": "Importuj"
+    },
+    "tagEditor": {
+      "modHeader": "Mod",
+      "tagHeader": "Tag",
+      "sourceHeader": "Źródło",
+      "confidenceHeader": "Pewność",
+      "signalsHeader": "Sygnały",
+      "modIdLabel": "ID moda",
+      "tagLabel": "Tag",
+      "modeLabel": "Tryb",
+      "modeAdd": "Dodaj",
+      "modeRemove": "Usuń",
+      "saveButton": "Zapisz"
+    },
+    "table": {
+      "pairRulesHeading": "Reguły par",
+      "placementRulesHeading": "Reguły położenia",
+      "modHeader": "Mod",
+      "placementHeader": "Położenie",
+      "originHeader": "Pochodzenie",
+      "commentHeader": "Komentarz",
+      "promotesHeader": "Podnosi",
+      "notAppliedPlacementsTitle": "Nie obowiązuje: zaimportowane położenia są wyłączone",
+      "otherMods": "{count} inny mod | {count} inne mody | {count} innych modów",
+      "incompatibilitiesHeading": "Niekompatybilności",
+      "aHeader": "A",
+      "bHeader": "B",
+      "empty": "Brak reguł."
+    }
+  },
+  "placement": {
+    "top": "Góra",
+    "bottom": "Dół"
+  },
+  "tagProvenance": {
+    "inferred": "wywnioskowany",
+    "manual": "ręczny"
+  },
+  "source": {
+    "core": "Core",
+    "dlc": "DLC",
+    "local": "Lokalny",
+    "workshop": "Warsztat"
+  },
+  "cardinality": {
+    "scalar": "skalar",
+    "list": "lista"
+  },
+  "fieldRole": {
+    "targetKey": "Klucz celu",
+    "itemSlot": "Miejsce na element",
+    "chances": "Szanse",
+    "scalar": "Skalar",
+    "opaque": "Nieprzejrzyste"
+  },
+  "changeKind": {
+    "ownsDef": "Posiada",
+    "ownsTemplate": "Posiada szablon",
+    "patchesDef": "Łata",
+    "overridesTexture": "Nadpisuje teksturę",
+    "overridesSound": "Nadpisuje dźwięk",
+    "overridesKeyedTranslation": "Nadpisuje tłumaczenie"
+  },
+  "defPage": {
+    "loadFailed": "Nie udało się wczytać tego defu.",
+    "sourceTitle": "Widok: kolejność {source} — kliknij, aby przełączyć",
+    "partialBanner": "Niekompletne — powód zatrzymania: {reason}. Pola po tym miejscu nie są pokazane.",
+    "replayStopper": "Operacja {opIndex} moda {mod}: {error}",
+    "ambiguousTemplateIntro": "Niejednoznaczny szablon: ta nazwa (Name) ma {count} rejestrację. RimWorld rozwiązuje każdego potomka niezależnie, do tej rejestracji, która ładuje się najbliżej przed nim lub w tym samym miejscu — nigdy do jednego zwycięzcy. „Zwycięzca” i „ostatnio załadowany reprezentant” powyżej to jedynie jawnie oznaczony zamiennik tej aplikacji na wypadek, gdy nie chodzi o konkretnego potomka, a nie odpowiedź. | Niejednoznaczny szablon: ta nazwa (Name) ma {count} rejestracje. RimWorld rozwiązuje każdego potomka niezależnie, do tej rejestracji, która ładuje się najbliżej przed nim lub w tym samym miejscu — nigdy do jednego zwycięzcy. „Zwycięzca” i „ostatnio załadowany reprezentant” powyżej to jedynie jawnie oznaczony zamiennik tej aplikacji na wypadek, gdy nie chodzi o konkretnego potomka, a nie odpowiedź. | Niejednoznaczny szablon: ta nazwa (Name) ma {count} rejestracji. RimWorld rozwiązuje każdego potomka niezależnie, do tej rejestracji, która ładuje się najbliżej przed nim lub w tym samym miejscu — nigdy do jednego zwycięzcy. „Zwycięzca” i „ostatnio załadowany reprezentant” powyżej to jedynie jawnie oznaczony zamiennik tej aplikacji na wypadek, gdy nie chodzi o konkretnego potomka, a nie odpowiedź.",
+    "knownChildrenResolve": "{count} znany potomek jest rozwiązywany tutaj | {count} znanych potomków jest rozwiązywanych tutaj | {count} znanych potomków jest rozwiązywanych tutaj",
+    "ownersHeading": "Właściciele",
+    "winnerTag": "(zwycięzca)",
+    "representativeTag": "(ostatnio załadowany reprezentant)",
+    "representativeTitle": "Tylko reprezentant — jedna odpowiedź nie istnieje, zobacz powyższą informację o niejednoznacznym szablonie",
+    "generatedTag": "(wygenerowany)",
+    "patchersHeading": "Łatający",
+    "patcherStatusNotReached": "nie osiągnięto",
+    "patcherStatusReplayFailed": "odtwarzanie nie powiodło się",
+    "patcherStatusReplaysCleanly": "odtwarza się bez błędów",
+    "wrappedTag": "(opakowane)",
+    "wrappedTitle": "Pokazane od pierwszego modyfikującego potomka, a nie od samego węzła opakowującego",
+    "gatesPrefix": "warunki: {gates}",
+    "gate": {
+      "anyActive": "jest aktywny którykolwiek z: {mods}",
+      "noneActive": "nie jest aktywny żaden z: {mods}"
+    },
+    "parentsHeading": "Rodzice",
+    "childrenHeading": "Potomkowie",
+    "effectiveDefHeading": "Efektywny def",
+    "onlyPatchedLabel": "Tylko łatane/dziedziczone",
+    "provenanceLegendOwner": "Właściciel",
+    "provenanceLegendPatched": "Łatane",
+    "provenanceLegendInherited": "Dziedziczone",
+    "provenanceOwner": "właściciel: {mod}",
+    "provenancePatch": "łatane przez: {mod}",
+    "provenanceInherited": "dziedziczone z {defType}/{defName} ({owner})",
+    "provenanceUnattributedTemplate": "dziedziczone z {defType}/{defName} (nieznany właściciel)",
+    "fields": {
+      "pathHeader": "Ścieżka",
+      "valueHeader": "Wartość",
+      "provenanceHeader": "Pochodzenie",
+      "showMore": "Pokaż więcej ({loaded} z {total})"
+    },
+    "resolvedXmlSummary": "Rozwiązany XML"
+  },
+  "layer": {
+    "hard": "Twarda",
+    "anyOf": "Jeden z wielu",
+    "declaredOverride": "Nadpisanie deklaracji",
+    "declared": "Deklaracja",
+    "userDecision": "Decyzja użytkownika",
+    "rimSortUser": "RimSort (użytkownik)",
+    "rimSortCommunity": "RimSort (społeczność)",
+    "steamDb": "SteamDB",
+    "inferred": "Wywnioskowana",
+    "soft": "Miękka",
+    "awareness": "Świadomość"
+  },
+  "order": {
+    "heading": "Kolejność ładowania — {source}",
+    "loadFailed": "Nie udało się wczytać kolejności.",
+    "sortProvenance": {
+      "summary": "rozstrzyganie remisów: {tieBreak} · zaimportowane pary: {pairs} · zaimportowane położenia: {placements}",
+      "rebuild": "odbuduj",
+      "preserveCurrent": "zachowaj bieżącą",
+      "on": "włączone",
+      "off": "wyłączone"
+    },
+    "table": {
+      "regionLabel": "Kolejność ładowania",
+      "nameHeader": "Nazwa",
+      "tierHeader": "Warstwa",
+      "depsHeader": "Zależności",
+      "movedFrom": "z #{position}"
+    },
+    "whyPanel": {
+      "headerWithMod": "{mod} — dlaczego tutaj?",
+      "headerFallback": "Dlaczego tutaj?",
+      "loadFailed": "Nie udało się wczytać wyjaśnienia.",
+      "positionHeading": "Pozycja",
+      "becameReadyAfterHeading": "Gotowy po",
+      "lowerBoundsHeading": "Dolne granice (musi ładować się po)",
+      "noLowerBounds": "Brak dolnych granic.",
+      "upperBoundsHeading": "Górne granice (mody czekające na ten)",
+      "noUpperBounds": "Nic nie czeka na ten mod.",
+      "advisoryHeading": "Ograniczenia doradcze",
+      "softHeading": "Miękkie (leniwe odwołania)",
+      "awarenessHeading": "Świadomość",
+      "none": "Brak.",
+      "satisfied": "spełnione",
+      "violated": "naruszone",
+      "droppedHeading": "Porzucone ograniczenia",
+      "cycle": "cykl: {cycle}",
+      "overruledBy": "Uchylone przez:",
+      "sortSettingsHeading": "Ustawienia sortowania",
+      "tieBreakHeading": "Rozstrzyganie remisów",
+      "currentPositionKnown": "Bieżąca pozycja: #{position}",
+      "currentPositionUnknown": "Bieżąca pozycja: brak w bieżącej kolejności",
+      "effectiveKey": "Efektywny klucz: {key}",
+      "modsPreferredAhead": "Mody preferowane wcześniej: {count}",
+      "pulledForwardBy": "Przyciągnięty do przodu przez:",
+      "openInModsLink": "Otwórz na stronie Mody"
+    },
+    "edgeChip": {
+      "directionAfter": "po",
+      "directionBefore": "przed",
+      "findingLink": "ustalenie"
+    },
+    "tier": {
+      "core": "Core",
+      "dlc": "DLC",
+      "top": "Góra",
+      "body": "Środek",
+      "bottom": "Dół"
+    },
+    "provenance": {
+      "anyOf": "kandydat „jeden z wielu” dla {assembly}",
+      "rule": "reguła ({origin})",
+      "ruleWithComment": "reguła ({origin}): {comment}",
+      "tier": "granica warstwy ({tier})"
+    },
+    "tierReason": {
+      "source": "źródło: {source}",
+      "placement": "reguła położenia ({origin})",
+      "promotedBy": "podniesiony przez {before} → {after}",
+      "body": "brak sygnału źródła ani położenia"
+    }
+  },
+  "apply": {
+    "dialog": {
+      "header": "Zastosuj",
+      "defCacheNote": "Aktywny mod pamięci podręcznej defów wiąże ją z kolejnością ładowania; pierwsze uruchomienie gry po tym zastosowaniu ją odbuduje{parenthetical}.",
+      "defCacheParenthetical": " (około {seconds} s według ostatniego logu)",
+      "writeModsConfigLabel": "Zapisz ModsConfig.xml (kolejność ładowania, którą odczytuje RimWorld)",
+      "staleActiveSetMessage": "Robocza lista aktywnych modów ma oczekujące zmiany — przeskanuj ponownie, aby zapisać ModsConfig.xml.",
+      "rescanButton": "Skanuj ponownie",
+      "writeMergeModLabel": "Zapisz mod scalający (wygeneruj mod w Mods/ albo usuń go, jeśli nie pozostała żadna decyzja scalania ani zasobu)",
+      "closeButton": "Zamknij",
+      "cancelButton": "Anuluj",
+      "writeAnywayButton": "Zapisz mimo to",
+      "applyButton": "Zastosuj",
+      "writeMergeModButton": "Zapisz mod scalający",
+      "saveDecisionsButton": "Zapisz decyzje i reguły"
+    },
+    "preflight": {
+      "unappliedHeading": "Przeskanowane, ale jeszcze niezastosowane w ModsConfig.xml:",
+      "addedLabel": "Dodane:",
+      "removedLabel": "Usunięte:",
+      "orderLabel": "Kolejność",
+      "modsConfigLabel": "ModsConfig.xml",
+      "decisionsLabel": "Decyzje",
+      "rulesLabel": "Reguły",
+      "movedModsLabel": "Przesuwane mody",
+      "needsInputLabel": "Wymaga decyzji",
+      "unansweredReordersWarning": "{count} sugerowana zmiana kolejności z tej weryfikacji nie ma jeszcze reguły pary | {count} sugerowane zmiany kolejności z tej weryfikacji nie mają jeszcze reguły pary | {count} sugerowanych zmian kolejności z tej weryfikacji nie ma jeszcze reguły pary",
+      "problemsRow": "{count} problem do potwierdzenia | {count} problemy do potwierdzenia | {count} problemów do potwierdzenia",
+      "problemsAllDecided": "{count} problem, już rozstrzygnięty | {count} problemy, już rozstrzygnięte | {count} problemów, już rozstrzygniętych",
+      "noProblems": "Nie znaleziono problemów",
+      "openInbox": "Otwórz Ustalenia"
+    },
+    "progress": {
+      "heading": "Weryfikuj kolejność",
+      "description": "Odtwarza każdą obcą operację łatki, aby przewidzieć, które nie powiodą się w tej kolejności — tak, jak pokazałby to log samego RimWorld. Tylko na żądanie — w dużej instalacji trwa to około minuty.",
+      "verifyingLabel": "Weryfikowanie kolejności",
+      "checksCaption": "Sprawdzenia: {checked} z {total}",
+      "startingCaption": "Uruchamianie…"
+    },
+    "diff": {
+      "summary": "Sprawdzono {count} def (kolejność {source}) — {list}. | Sprawdzono {count} defy (kolejność {source}) — {list}. | Sprawdzono {count} defów (kolejność {source}) — {list}.",
+      "summaryOperations": "{count} operacja z przewidywanym niepowodzeniem | {count} operacje z przewidywanym niepowodzeniem | {count} operacji z przewidywanym niepowodzeniem",
+      "summaryTargets": "{count} dotknięty docelowy def | {count} dotknięte docelowe defy | {count} dotkniętych docelowych defów",
+      "removedByCount": "Usunięte przez wcześniejszy mod: {count}",
+      "notYetInjectedCount": "Jeszcze niewstrzyknięte: {count}",
+      "deadTargetCount": "Martwy cel: {count}",
+      "unknownCount": "Nieznane: {count}",
+      "orderFixableHeading": "Do naprawienia zmianą kolejności — przesunięcie wskazanego moda może je rozwiązać:",
+      "cosmeticText": "kosmetyczne: ten sam końcowy def w obu kolejnościach — bez propozycji zmiany kolejności.",
+      "mergeInsteadLink": "Zamiast tego scal",
+      "mergeInstead": "{link}, aby zachować intencję przegrywającego moda.",
+      "noMergeAvailable": "Dla tego celu scalanie jest niedostępne.",
+      "removedByCause": "Mod {mod}, ładowany wcześniej, usuwa docelowy węzeł.",
+      "notYetInjectedCause": "docelowy węzeł wstrzykuje mod {mod}, który ładuje się później.",
+      "modPossessive": "{operation} moda {mod}",
+      "notFullyFixableHeading": "Nie w pełni do naprawienia zmianą kolejności — nieaktualne łatki, niesklasyfikowana przyczyna lub ich mieszanka; pogrupowane według modów:",
+      "groupedByModLine": "{mod} — {list}",
+      "groupedOperations": "{count} operacja | {count} operacje | {count} operacji",
+      "groupedTargets": "{count} docelowy def | {count} docelowe defy | {count} docelowych defów",
+      "partlyFixableHeading": "Niektóre z nich da się częściowo naprawić zmianą kolejności — zmiana kolejności rozwiązuje część ich docelowych defów:",
+      "skippedCandidates": "Nie udało się sprawdzić {count} kandydata. | Nie udało się sprawdzić {count} kandydatów. | Nie udało się sprawdzić {count} kandydatów.",
+      "pvoMismatchWarning": "Zaimportowany log powstał przy innej kolejności modów niż ta właśnie zweryfikowana — poniższe liczby porównują dwa niezwiązane uruchomienia.",
+      "pvoHeading": "Przewidywane a zaobserwowane (ostatnio zaimportowany log)",
+      "pvoSnapshotNote": "Zaimportowany log to zrzut konsoli, a nie zapis całego działania gry: niepowodzenia zapisanego przez grę przed najstarszym wpisem konsoli w nim nie ma, więc „przewidywane, niezaobserwowane” nie dowodzi, że niepowodzenie nie wystąpiło.",
+      "pvoCutOffNote": "Zaimportowany log kończy się bez czystego wyjścia i zanim zapisano jakikolwiek wynik łatki, więc gra mogła nigdy nie dojść do fazy łatek: „przewidywane, niezaobserwowane” nie dowodzi, że niepowodzenie nie wystąpiło.",
+      "pvoGapsNote": "W czasie, gdy powstawał zaimportowany log, gra przestała zapisywać komunikaty, więc może w nim brakować niepowodzenia: „przewidywane, niezaobserwowane” nie dowodzi, że niepowodzenie nie wystąpiło.",
+      "pvoMatchedSummary": "Potwierdzone przez log: {count}",
+      "pvoPredictedOnlySummary": "Przewidywane, niezaobserwowane w logu: {count}",
+      "pvoObservedOnlySummary": "Zaobserwowane w logu, nieprzewidywane: {count} — wymienione bez zmian, nigdy nie pomijane:",
+      "unattributedRaw": "(nieprzypisane: {raw})",
+      "counterfactualJobsLine": "{count} operacja ponownie sprawdzona względem innych kolejności ładowania | {count} operacje ponownie sprawdzone względem innych kolejności ładowania | {count} operacji ponownie sprawdzonych względem innych kolejności ładowania",
+      "counterfactualResolvedLine": "{count} niepowodzenie wyjaśnione | {count} niepowodzenia wyjaśnione | {count} niepowodzeń wyjaśnionych",
+      "counterfactualDemotedLine": "{count} wiersz „martwy cel” okazał się możliwy do naprawienia kolejnością | {count} wiersze „martwy cel” okazały się możliwe do naprawienia kolejnością | {count} wierszy „martwy cel” okazało się możliwych do naprawienia kolejnością",
+      "counterfactualSkippedLine": "{count} operacja pominięta | {count} operacje pominięte | {count} operacji pominiętych",
+      "counterfactualRejectedLine": "{count} zmiana kolejności odrzucona, bo psuje inną operację | {count} zmiany kolejności odrzucone, bo psują inną operację | {count} zmian kolejności odrzuconych, bo psują inną operację",
+      "counterfactualSummary": "Analiza kontrfaktyczna: {list}."
+    },
+    "reorderActions": {
+      "createPairRule": "Utwórz regułę pary",
+      "createPairRuleAnyway": "Utwórz regułę pary mimo to",
+      "conflictText": "jest w konflikcie z ograniczeniem „{kind}”: {detail} ({status})",
+      "ruleCreated": "Utworzono regułę. Uruchom ponownie „Weryfikuj kolejność”, aby ją sprawdzić — reguła wciąż może zostać uchylona przez deklarację autora lub inną regułę, a dwie reguły o przeciwnych kierunkach się znoszą; strona „Reguły” pokazuje, co faktycznie obowiązuje.",
+      "ruleExists": "Reguła już istnieje."
+    },
+    "result": {
+      "forceWarning": "Wygląda na to, że RimWorldWin64.exe jest uruchomiony. Gra nadpisuje ModsConfig.xml przy zamykaniu, więc to, co teraz zapiszesz, może zostać utracone. Zapisać mimo to?",
+      "mergeModPath": "Mod scalający: {path}",
+      "mergeModRemoved": "Mod scalający: usunięty (nie pozostała żadna decyzja scalania ani zasobu)",
+      "mergeModBackupPath": "Kopia zapasowa moda scalającego: {path}",
+      "skippedHeading": "Pominięte — mod scalający zapisano bez nich:",
+      "toastAppliedSummary": "Zastosowano",
+      "toastSavedSummary": "Zapisano",
+      "toastModsConfigPath": "ModsConfig: {path}",
+      "toastBackupPath": "Kopia zapasowa: {path}",
+      "toastDecisionsPath": "Decyzje: {path}",
+      "toastRulesPath": "Reguły: {path}",
+      "toastSkippedStillNeedsInput": "Pominięte (nadal wymaga decyzji): {list}"
+    },
+    "confirm": {
+      "heading": "Zastosować mimo to?",
+      "intro": "Kolejność {order} ma {count} problem do potwierdzenia przed zapisem: | Kolejność {order} ma {count} problemy do potwierdzenia przed zapisem: | Kolejność {order} ma {count} problemów do potwierdzenia przed zapisem:",
+      "acknowledgedHeading": "Już rozstrzygnięte na stronie Ustalenia",
+      "reviewInInbox": "Przejrzyj na stronie Ustalenia",
+      "goBackButton": "Wróć",
+      "applyAnywayButton": "Zastosuj mimo to"
+    },
+    "problem": {
+      "missingDependencyInactive": "Mod {mod} wymaga moda {dependency}, który jest zainstalowany, ale nieaktywny.",
+      "missingDependencyNotInstalled": "Mod {mod} wymaga moda {dependency}, który nie jest zainstalowany.",
+      "incompatiblePair": "{a} i {b} są zadeklarowane jako niekompatybilne.",
+      "missingModRemoved": "Mod {mod} nie jest zainstalowany i zostanie usunięty z listy aktywnych.",
+      "missingModKept": "Mod {mod} nie jest zainstalowany i pozostaje na liście aktywnych; gra go pominie.",
+      "loadRequirementViolated": "{after} wymaga, by {before} ładował się wcześniej; ta kolejność ładuje go później.",
+      "anyOfUnsatisfied": "{mod} wymaga, by wcześniej ładował się jeden z: {candidates}; żaden się tak nie ładuje."
+    }
+  },
+  "gameLog": {
+    "heading": "Zaimportowany log:",
+    "kind": {
+      "playerLog": "Player.log",
+      "consoleSnapshot": "Zrzut konsoli"
+    },
+    "coverage": {
+      "playerLog": {
+        "cleanExit": "{count} uruchomienie; log kończy się czystym wyjściem | {count} uruchomienia; log kończy się czystym wyjściem | {count} uruchomień; log kończy się czystym wyjściem",
+        "crashed": "{count} uruchomienie; log kończy się awarią gry (raport awarii: {path}) | {count} uruchomienia; log kończy się awarią gry (raport awarii: {path}) | {count} uruchomień; log kończy się awarią gry (raport awarii: {path})",
+        "crashedNoPath": "{count} uruchomienie; log kończy się awarią gry (nie wskazuje żadnego raportu awarii) | {count} uruchomienia; log kończy się awarią gry (nie wskazuje żadnego raportu awarii) | {count} uruchomień; log kończy się awarią gry (nie wskazuje żadnego raportu awarii)",
+        "truncated": "{count} uruchomienie; log urywa się w trakcie działania, bez stopki wyjścia (zawieszenie, wymuszone zamknięcie lub kopia wykonana podczas działania gry) | {count} uruchomienia; log urywa się w trakcie działania, bez stopki wyjścia (zawieszenie, wymuszone zamknięcie lub kopia wykonana podczas działania gry) | {count} uruchomień; log urywa się w trakcie działania, bez stopki wyjścia (zawieszenie, wymuszone zamknięcie lub kopia wykonana podczas działania gry)"
+      },
+      "snapshot": {
+        "belowCap": "Konsola zawierała tylko {count} wpis, więc ta kopia nic nie mówi o etapach, których ten wpis nie pokazuje | Konsola zawierała tylko {count} wpisy, więc ta kopia nic nie mówi o etapach, których te wpisy nie pokazują | Konsola zawierała tylko {count} wpisów, więc ta kopia nic nie mówi o etapach, których te wpisy nie pokazują",
+        "atCap": "Tylko {count} wpis, który mieściła konsola (osiągnięty limit konsoli): starsze wpisy gra odrzuciła | Tylko {count} wpisy, które mieściła konsola (osiągnięty limit konsoli): starsze wpisy gra odrzuciła | Tylko {count} wpisów, które mieściła konsola (osiągnięty limit konsoli): starsze wpisy gra odrzuciła",
+        "overCap": "{count} wpis, czyli więcej, niż mieści jedna konsola, więc to nie jest pojedyncza kopia konsoli: kilka kopii wklejonych razem albo problem z przetwarzaniem; nie da się określić, ile gra odrzuciła | {count} wpisy, czyli więcej, niż mieści jedna konsola, więc to nie jest pojedyncza kopia konsoli: kilka kopii wklejonych razem albo problem z przetwarzaniem; nie da się określić, ile gra odrzuciła | {count} wpisów, czyli więcej, niż mieści jedna konsola, więc to nie jest pojedyncza kopia konsoli: kilka kopii wklejonych razem albo problem z przetwarzaniem; nie da się określić, ile gra odrzuciła",
+        "headTruncated": "Kopia zaczyna się w środku wpisu: jej pierwszy wpis jest niekompletny."
+      }
+    },
+    "gaps": {
+      "warning": "Gra przestała zapisywać komunikaty {count} raz. Tego, czego nigdy nie zapisała, nie da się odzyskać. | Gra przestała zapisywać komunikaty {count} razy. Tego, czego nigdy nie zapisała, nie da się odzyskać. | Gra przestała zapisywać komunikaty {count} razy. Tego, czego nigdy nie zapisała, nie da się odzyskać.",
+      "neverResumed": "{count} zatrzymanie logowania nie ma po sobie komunikatu o wznowieniu, więc wszystko w logu po tym miejscu jest niewiarygodne. | {count} zatrzymania logowania nie mają po sobie komunikatu o wznowieniu, więc wszystko w logu po pierwszym z nich jest niewiarygodne. | {count} zatrzymań logowania nie ma po sobie komunikatu o wznowieniu, więc wszystko w logu po pierwszym z nich jest niewiarygodne.",
+      "lowerBound": "Co najmniej {count} rodzina wpisów ({percent}% wpisów logu) obejmuje lukę, więc jej liczba może być zaniżona; każda liczba może być zaniżona. | Co najmniej {count} rodziny wpisów ({percent}% wpisów logu) obejmują lukę, więc ich liczby mogą być zaniżone; każda liczba może być zaniżona. | Co najmniej {count} rodzin wpisów ({percent}% wpisów logu) obejmuje lukę, więc ich liczby mogą być zaniżone; każda liczba może być zaniżona.",
+      "resumed": "Od wiersza {stop} do wiersza {resume}",
+      "open": "Od wiersza {stop} do końca logu",
+      "more": "I jeszcze {count}"
+    },
+    "losses": {
+      "heading": "Czytnik musiał ograniczyć część tego logu, więc w podsumowaniu jej brakuje:",
+      "linesTruncated": "{count} wiersz przekraczał limit czytnika; odczytano tylko jego początek | {count} wiersze przekraczały limit czytnika; odczytano tylko ich początki | {count} wierszy przekraczało limit czytnika; odczytano tylko ich początki",
+      "linesWithInvalidUtf8": "{count} wiersz zawierał nieprawidłowe UTF-8 i odczytano go ze znakami zastępczymi | {count} wiersze zawierały nieprawidłowe UTF-8 i odczytano je ze znakami zastępczymi | {count} wierszy zawierało nieprawidłowe UTF-8 i odczytano je ze znakami zastępczymi",
+      "stackBlockLinesDropped": "{count} wiersz śladu stosu ponad limit na blok nie został sprawdzony | {count} wiersze śladu stosu ponad limit na blok nie zostały sprawdzone | {count} wierszy śladu stosu ponad limit na blok nie zostało sprawdzonych",
+      "stackJoinsAbandoned": "{count} wielowierszowe łączenie stosu przekroczyło limit i zostało porzucone | {count} wielowierszowe łączenia stosu przekroczyły limit i zostały porzucone | {count} wielowierszowych łączeń stosu przekroczyło limit i zostało porzuconych",
+      "passesFolded": "{count} wpis z uruchomienia poza śledzonymi dołączono do ostatniego śledzonego uruchomienia | {count} wpisy z uruchomień poza śledzonymi dołączono do ostatniego śledzonego uruchomienia | {count} wpisów z uruchomień poza śledzonymi dołączono do ostatniego śledzonego uruchomienia",
+      "stackRefsDropped": "{count} odwołanie wsteczne stosu nie zostało zindeksowane | {count} odwołania wsteczne stosu nie zostały zindeksowane | {count} odwołań wstecznych stosu nie zostało zindeksowanych",
+      "loggingGapsDropped": "{count} luka w logowaniu ponad limit listy została policzona, ale nie wymieniona | {count} luki w logowaniu ponad limit listy zostały policzone, ale nie wymienione | {count} luk w logowaniu ponad limit listy zostało policzonych, ale nie wymienionych",
+      "crashReportPathsTruncated": "{count} lokalizacja raportu awarii została przycięta do limitu długości | {count} lokalizacje raportów awarii zostały przycięte do limitu długości | {count} lokalizacji raportów awarii zostało przyciętych do limitu długości"
+    }
+  },
+  "startup": {
+    "heading": "Koszt uruchomienia",
+    "description": "Jeden wiersz na aktywny mod — modyfikujące operacje łatek, xpath o wolnym kształcie, tekstury, biblioteki DLL i defy, bez pomiarów czasu (Rimmerge nigdy nie uruchamia gry). Zaimportuj {playerLog} lub zrzut konsoli, aby wypełnić kolumny DDS o złych wymiarach i zaobserwowanych pomiarów czasu (zrzut konsoli nie wypełni pomiarów czasu).",
+    "orderMismatchWarning": "Zaimportowany log powstał przy innej kolejności modów niż obecnie wybrana — poniższe kolumny DDS o złych wymiarach i zaobserwowanych pomiarów czasu odzwierciedlają tamto uruchomienie, nie to.",
+    "noOrderBlockWarning": "Zaimportowany log w ogóle nie zawiera listy aktywnych modów, więc nie da się go porównać z wybraną kolejnością — poniższe kolumny DDS o złych wymiarach i zaobserwowanych pomiarów czasu mogą dotyczyć innego uruchomienia.",
+    "loadFailed": "Nie udało się wczytać tabeli kosztu uruchomienia.",
+    "modHeader": "Mod",
+    "patchOpsHeader": "Operacje łatek",
+    "slowXpathsHeader": "Wolne xpath",
+    "texFilesHeader": "Pliki tekstur",
+    "texBytesHeader": "Bajty tekstur",
+    "ddsFilesHeader": "Pliki DDS",
+    "badDimDdsHeader": "DDS o złych wym.",
+    "dllsHeader": "DLL",
+    "dllBytesHeader": "Bajty DLL",
+    "defsHeader": "Defy",
+    "overriddenTexHeader": "Nadpisane tekstury",
+    "observedTimersHeader": "Pomiary czasu",
+    "contentOnlyHeader": "Tylko zawartość",
+    "totalRow": "Razem ({count} mod) | Razem ({count} mody) | Razem ({count} modów)",
+    "notImported": "nie zaimportowano",
+    "notAvailableFromSnapshot": "niedostępne ze zrzutu konsoli",
+    "atLeast": "co najmniej {count}",
+    "snapshotNote": "Zaimportowany log to zrzut konsoli, a nie zapis całego działania gry: zaobserwowane pomiary czasu nie są z niego dostępne, a liczby DDS o złych wymiarach są wartościami minimalnymi.",
+    "cutOffNote": "Zaimportowany log kończy się, zanim zapisano jakikolwiek wynik łatki, i bez czystego wyjścia, więc poniższe liczby mogą być zaniżone: liczby DDS o złych wymiarach i zaobserwowane pomiary czasu są wartościami minimalnymi.",
+    "gapsNote": "W czasie, gdy powstawał zaimportowany log, gra przestała zapisywać komunikaty, więc poniższe liczby mogą być zaniżone: liczby DDS o złych wymiarach i zaobserwowane pomiary czasu są wartościami minimalnymi.",
+    "observedTimersValue": "{count} ({ms} ms)",
+    "observedTimersAtLeast": "co najmniej {count} ({ms} ms)",
+    "contentOnly": "tylko zawartość"
+  },
+  "assignments": {
+    "editRefsTargets": {
+      "header": "Edytuj referencje i cele",
+      "referencesHeading": "Referencje (R)",
+      "targetsHeading": "Cele (T)",
+      "whatChangedHeading": "Co się zmieniło",
+      "schemaChangeCounts": {
+        "added": "dodano {count} pole | dodano {count} pola | dodano {count} pól",
+        "removed": "usunięto {count} pole | usunięto {count} pola | usunięto {count} pól",
+        "reclassified": "przeklasyfikowano {count} pole | przeklasyfikowano {count} pola | przeklasyfikowano {count} pól"
+      },
+      "reclassifiedNames": " ({names})",
+      "strandedValuesLine": "Odrzucono {count} zapisaną wartość — nowa rola przeklasyfikowanego pola nie przyjmuje już tego, co tam zapisano: | Odrzucono {count} zapisane wartości — nowa rola przeklasyfikowanego pola nie przyjmuje już tego, co tam zapisano: | Odrzucono {count} zapisanych wartości — nowa rola przeklasyfikowanego pola nie przyjmuje już tego, co tam zapisano:",
+      "droppedRowsLine": "Odrzucono {count} wiersz — jego cel opuścił zbiór celów: | Odrzucono {count} wiersze — ich cele opuściły zbiór celów: | Odrzucono {count} wierszy — ich cele opuściły zbiór celów:",
+      "clean": "Ta zmiana nie odrzuciła żadnych wierszy ani wartości.",
+      "closeButton": "Zamknij",
+      "saveButton": "Zapisz"
+    },
+    "rowEditor": {
+      "copyFrom": "Kopiuj z:",
+      "winnerBadge": "— zwycięzca",
+      "prefillFrom": "— z moda {mod}",
+      "clampedTo": "— ograniczono do „{name}”: to miejsce przechowuje tylko jedną nazwę, a ta wartość wskazywała kilka ({count}: {joined})",
+      "droppedFromCopy": "— pominięto {count} zapożyczoną wartość, bo ten def nie jest aktywny: {names} | — pominięto {count} zapożyczone wartości, bo te defy nie są aktywne: {names} | — pominięto {count} zapożyczonych wartości, bo te defy nie są aktywne: {names}",
+      "pairedTo": "sparowane z {slot}",
+      "overrideBadge": "Nadpisanie — {count} istniejące dopasowanie | Nadpisanie — {count} istniejące dopasowania | Nadpisanie — {count} istniejących dopasowań",
+      "inspectDefLink": "Zbadaj def",
+      "defNameLabel": "defName",
+      "saveRowButton": "Zapisz wiersz",
+      "clearRowButton": "Wyczyść wiersz",
+      "newRowTitle": "Nowy wiersz"
+    },
+    "coverageList": {
+      "searchPlaceholder": "Szukaj celów…",
+      "ownerFilterPlaceholder": "Filtruj według właściciela",
+      "thisProject": "ten projekt",
+      "coveredByMod": "pokryte przez {mod}",
+      "coveredByAnotherMod": "pokryte przez inny mod",
+      "uncovered": "niepokryte",
+      "wouldWinNoOwner": "— wygrałby",
+      "wouldWinWithOwner": "— wygrałby {mod}",
+      "noMatches": "Brak pasujących celów."
+    },
+    "schemaTable": {
+      "fieldHeader": "Pole",
+      "roleHeader": "Rola",
+      "typeHeader": "Typ",
+      "cardinalityHeader": "Liczność",
+      "observedHeader": "Zaobserwowane",
+      "defTypePlaceholder": "typ defu",
+      "hideButton": "Ukryj",
+      "unreadableTargets": "Podczas ustalania struktury nie udało się odczytać {count} celu z odwołań: | Podczas ustalania struktury nie udało się odczytać {count} celów z odwołań: | Podczas ustalania struktury nie udało się odczytać {count} celów z odwołań:",
+      "unreadableTargetLine": "{field}: {defType}/{defName} — {reason}",
+      "newFieldPathLabel": "Ścieżka nowego pola",
+      "roleLabel": "Rola",
+      "defTypeLabel": "Typ defu",
+      "addFieldButton": "Dodaj pole",
+      "pathRequired": "Ścieżka pola jest wymagana.",
+      "pathAlreadyExists": "{path} jest już polem tej struktury."
+    },
+    "exportPanel": {
+      "exportDirLabel": "Katalog eksportu",
+      "exportDirPlaceholder": "Wybierz folder…",
+      "chooseButton": "Wybierz…",
+      "installCheckboxLabel": "Zainstaluj w folderze Mods i włącz",
+      "staleActiveSetNote": "Oczekujące zmiany włączenia i wyłączenia modów nie są uwzględnione — jeśli mają trafić do tej instalacji, najpierw przeskanuj ponownie.",
+      "forceWarning": "Wygląda na to, że RimWorldWin64.exe jest uruchomiony. Instalacja w tej chwili zapisuje ModsConfig.xml, który gra nadpisuje przy zamykaniu, więc zmiana może zostać utracona. Wyeksportować mimo to?",
+      "exportAnyway": "Eksportuj mimo to",
+      "export": "Eksportuj",
+      "exportedTo": "Wyeksportowano do: {path}",
+      "installedAt": "Zainstalowano w: {path}",
+      "skippedHeading": "Pominięte",
+      "skippedPath": ": {path}"
+    },
+    "editor": {
+      "loadFailed": "Nie udało się wczytać tego projektu.",
+      "editRefsTargetsButton": "Edytuj referencje i cele",
+      "deleteButton": "Usuń",
+      "noSections": "Brak sekcji.",
+      "addSectionButton": "Dodaj sekcję",
+      "removeSectionButton": "Usuń sekcję",
+      "noTargetSelected": "Nie wybrano celu.",
+      "ownRowsHeading": "Własne wiersze",
+      "newRowButton": "Nowy wiersz",
+      "standaloneHint": "To samodzielna sekcja — jej wiersze nie mają celu do dopasowania, więc nie ma tu kolejki pokrycia.",
+      "noRowsYet": "Brak wierszy.",
+      "selectOrNewRow": "Wybierz wiersz lub kliknij „Nowy wiersz”, aby go utworzyć.",
+      "exportHeading": "Eksport",
+      "deleteDialogHeader": "Usunąć ten projekt?",
+      "deleteDialogBody": "Usuwa projekt kreatora łatek. Folder, który już wyeksportowano na dysk, pozostaje nietknięty.",
+      "addSectionDialogHeader": "Dodaj sekcję",
+      "listingCandidates": "Wyszukiwanie kandydatów…",
+      "candidateGroupLabel": "Kandydujący typ sekcji",
+      "noAddableCandidates": "Brak kandydatów do dodania — każdy typ defu należący do modów referencyjnych tego projektu jest już sekcją.",
+      "addButton": "Dodaj",
+      "removeSectionDialogHeader": "Usunąć tę sekcję?",
+      "removeSectionBody": "Usuwa sekcję {defType} i wszystkie jej wiersze. Tego nie da się tutaj cofnąć.",
+      "sectionInUse": "Nadal odwołuje się do niej {count} wiersz w innej sekcji. Usunięcie mimo to pozostawi te odwołania wiszące — późniejszy eksport zgłosi każde z nich jako pominięcie. | Nadal odwołują się do niej {count} wiersze w innej sekcji. Usunięcie mimo to pozostawi te odwołania wiszące — późniejszy eksport zgłosi każde z nich jako pominięcie. | Nadal odwołuje się do niej {count} wierszy w innej sekcji. Usunięcie mimo to pozostawi te odwołania wiszące — późniejszy eksport zgłosi każde z nich jako pominięcie.",
+      "referenceLine": "{defType} {row}: {path}",
+      "removeAnywayButton": "Usuń mimo to",
+      "removeButton": "Usuń"
+    },
+    "wizard": {
+      "heading": "Nowy projekt kreatora łatek",
+      "identityHeading": "Tożsamość",
+      "nameLabel": "Nazwa",
+      "packageIdLabel": "ID pakietu",
+      "packageIdPlaceholder": "autor.mojmod",
+      "displayNameLabel": "Nazwa wyświetlana",
+      "referencesHeading": "Mody referencyjne (R)",
+      "targetsHeading": "Cele (T)",
+      "targetsHint": "Pozostaw puste, aby utworzyć zupełnie nowy typ defu (projekt „nowy def”) zamiast łatać istniejący.",
+      "listCandidatesButton": "Wyszukaj kandydatów",
+      "effectiveRefsHeading": "Efektywny zbiór referencji",
+      "excludedTitle": "Wykluczone — kliknij, aby uwzględnić",
+      "includeTitle": "Kliknij, aby wykluczyć",
+      "excludedTag": "wykluczone",
+      "includedTag": "×",
+      "candidatesHeading": "Kandydujące typy przypisań",
+      "candidateGroupLabel": "Kandydujący typ przypisania",
+      "instanceCount": "{defType} ({count} instancja) | {defType} ({count} instancje) | {defType} ({count} instancji)",
+      "inferringSchema": "Ustalanie struktury…",
+      "standaloneNote": "Ten kandydat nie ma pola klucza celu — będzie projektem „nowy def”, z samodzielnymi wierszami zamiast dopasowanych do celów.",
+      "excludedTargetsNote": "{count} cel z odwołań spoza T/Core nigdy nie został odczytany (przestrzeganie T przyspiesza działanie). | {count} cele z odwołań spoza T/Core nigdy nie zostały odczytane (przestrzeganie T przyspiesza działanie). | {count} celów z odwołań spoza T/Core nigdy nie zostało odczytanych (przestrzeganie T przyspiesza działanie).",
+      "createButton": "Utwórz"
+    },
+    "list": {
+      "newProjectButton": "Nowy projekt",
+      "loadFailed": "Nie udało się wczytać przypisań.",
+      "empty": "Brak projektów kreatora łatek.",
+      "nameHeader": "Nazwa",
+      "packageIdHeader": "ID pakietu",
+      "sectionsHeader": "Sekcje",
+      "refsHeader": "R",
+      "targetsHeader": "T",
+      "rowsHeader": "Wiersze",
+      "uncoveredHeader": "Niepokryte",
+      "exportedHeader": "Wyeksportowano",
+      "notApplicable": "nd.",
+      "exportedYes": "tak",
+      "exportedNo": "nie"
+    },
+    "itemPicker": {
+      "searchPlaceholder": "Szukaj elementów…",
+      "thisProjectHeading": "Ten projekt",
+      "noMatches": "Brak wyników.",
+      "count": "{loaded} / {total}",
+      "clearSelection": "Wyczyść wybór",
+      "loadMore": "Wczytaj więcej"
+    }
+  },
+  "rationale": {
+    "layerPhrase": {
+      "hard": "twarde wymaganie (w czasie ładowania)",
+      "anyOf": "rozstrzygnięte wymaganie „jeden z wielu”",
+      "declaredOverride": "twoje jawne nadpisanie deklaracji autora",
+      "declared": "deklaracja autora",
+      "userDecision": "twoja własna decyzja",
+      "rimSortUser": "reguła użytkownika RimSort",
+      "rimSortCommunity": "reguła społeczności RimSort",
+      "steamDb": "zależność z Warsztatu Steam",
+      "other": "inne ograniczenie"
+    },
+    "placementPhrase": {
+      "top": "na górze",
+      "bottom": "na dole"
+    },
+    "relationExplanation": {
+      "presenceOnly": "to sprawdza tylko, czy mod jest obecny, a nie jego pozycję w kolejności ładowania",
+      "patchTargetsDef": "łatki stosuje się do scalonego dokumentu defów po wczytaniu defów wszystkich modów, niezależnie od kolejności ładowania",
+      "parentTemplate": "nieosiągalne: ograniczenie ParentName to fakt dotyczący kolejności w czasie ładowania (siła „Twarda”), nigdy wskazówka",
+      "usesType": "typ jest rozwiązywany we wszystkich wczytanych bibliotekach DLL niezależnie od kolejności ładowania",
+      "patchSelectsInjectedNode": "wybrany węzeł może już istnieć w inny sposób (zapisany bezpośrednio, wstrzykiwany przez więcej niż jeden aktywny mod albo przez własną łatkę wybierającego moda) lub leży głębiej, niż sięga indeks analizatora — więc nie jest to udowodnione wymaganie kolejności ładowania",
+      "patchRemovedNode": "analizator wnioskuje to z zawartości łatek: jeden mod usuwa węzeł, który łata też inny mod, i usuwający musi ładować się ostatni, inaczej druga łatka nie znajdzie już nic do zmiany — to nie jest kolejność ładowania zadeklarowana przez autora, więc ustępuje, gdy deklaracja lub położenie mówią inaczej",
+      "retextureAfterOwner": "analizator wnioskuje to ze wspólnej ścieżki tekstury: pakiet zmieniający wyłącznie tekstury musi ładować się po modzie z zawartością, którego wygląd zmienia, inaczej jego zamiennik zostanie nadpisany przez zawartość, której wygląd miał zmienić — to nie jest kolejność ładowania zadeklarowana przez autora, więc ustępuje, gdy deklaracja lub położenie mówią inaczej",
+      "defOverrideAfterOrigin": "analizator wnioskuje to z dowodów dotyczących szablonów i liczby defów: mod, który dostarcza też def należący do przestrzeni nazw innego moda, musi ładować się po właścicielu tej przestrzeni, inaczej jego nadpisanie trafi pod pierwotną definicję zamiast na nią — to nie jest kolejność ładowania zadeklarowana przez autora, więc ustępuje, gdy deklaracja lub położenie mówią inaczej",
+      "patchInvalidatesPredicate": "analizator wnioskuje to z zawartości łatek: operacja Replace/Remove przepisuje lub usuwa węzeł odczytywany przez predykat xpath innego moda, a operacja odczytująca predykat musi ładować się pierwsza, inaczej jej predykat przestanie pasować — to nie jest kolejność ładowania zadeklarowana przez autora, więc ustępuje, gdy deklaracja lub położenie mówią inaczej",
+      "patchRemovedNodeCosmetic": "analizator wnioskuje to z zawartości łatek, ale końcowe defy są tu identyczne w obu kolejnościach — zmienia się tylko to, operacja którego moda zapisze błąd w logu — więc to słabszy dowód niż kolejność ładowania zadeklarowana przez autora i ustępuje, gdy deklaracja lub położenie mówią inaczej",
+      "replaceDiscardsAddition": "analizator wnioskuje to z zawartości łatek: Replace podmienia cały węzeł, po cichu odrzucając wszystko, co zapisało w nim wcześniejsze dodanie, więc dodanie musi ładować się po zastąpieniu, inaczej jego zawartość przepada bez żadnego wpisu w logu — to nie jest kolejność ładowania zadeklarowana przez autora, więc ustępuje, gdy deklaracja lub położenie mówią inaczej",
+      "interactionEvidence": "to dowód, że mody na siebie oddziałują, a nie fakt dotyczący kolejności, którego potrzebuje sam mechanizm ładowania"
+    },
+    "rulePhrase": {
+      "userDecisionOverride": "twoje własne nadpisanie zadeklarowanego ograniczenia",
+      "userDecision": "twoja własna decyzja",
+      "layered": "{after} ładowany po {before} (źródło: {layerPhrase})"
+    },
+    "edgeDroppedInferred": {
+      "patchRemovedNode": "{after} usuwa węzeł, który łata też {before}; {after} musi ładować się po {before}, inaczej własna łatka moda {before} nie znalazłaby już nic do zmiany. Analizator wywnioskował to z zawartości łatek, a nie z kolejności ładowania zadeklarowanej przez któryś z modów.",
+      "retextureAfterOwner": "{after} to pakiet zmieniający wyłącznie tekstury, który dzieli ścieżkę tekstury z zawartością moda {before}; {after} musi ładować się po {before}, inaczej jego tekstura zastępcza zostanie nadpisana przez zawartość, której wygląd ma zmienić. Analizator wywnioskował to ze wspólnej ścieżki tekstury, a nie z kolejności ładowania zadeklarowanej przez któryś z modów.",
+      "defOverrideAfterOrigin": "{before} jest właścicielem szablonu lub rodziny defów, do której należy to nadpisanie; {after} też dostarcza ich kopię i musi ładować się po {before}, aby nadpisanie trafiło na pierwotną definicję. Analizator wywnioskował to z dowodów dotyczących szablonów i liczby defów, a nie z kolejności ładowania zadeklarowanej przez któryś z modów.",
+      "patchInvalidatesPredicate": "{after} zastępuje lub usuwa węzeł, który własna łatka moda {before} wybiera przez predykat; {after} musi ładować się po {before}, inaczej predykat moda {before} przestałby pasować. Analizator wywnioskował to z zawartości łatek, a nie z kolejności ładowania zadeklarowanej przez któryś z modów.",
+      "replaceDiscardsAddition": "{before} zastępuje węzeł, do którego {after} też dodaje zawartość; {after} musi ładować się po {before}, inaczej jego dodanie zostanie po cichu odrzucone, gdy Replace moda {before} podmieni cały węzeł, bez żadnego wpisu w logu. Analizator wywnioskował to z zawartości łatek, a nie z kolejności ładowania zadeklarowanej przez któryś z modów."
+    },
+    "edgeDroppedCosmetic": "kosmetyczne: końcowe defy są identyczne w obu kolejnościach; zmienia się tylko to, który wpis pojawi się w logu",
+    "keepEdgeInCycle": "Zachowaj to ograniczenie; sortownik porzuci zamiast niego następne najsłabsze ograniczenie w cyklu.",
+    "reorderOverridingEdgeWinner": "Wymuś zamiast tego kolejność tego moda, nadpisując zwycięzcę.",
+    "edgeDroppedWithWinner": "Zamiast tego {after} musi ładować się przed {before}: tak mówi {layerPhrase} ({detail}).",
+    "edgeDroppedSoftOrAwareness": "Porzucenie ograniczenia o sile „Miękka” lub „Świadomość” w celu przerwania cyklu rzadko zmienia działanie.",
+    "edgeDroppedDeclared": "Aby przerwać cykl, trzeba było porzucić ograniczenie zadeklarowane przez autora.",
+    "edgeDroppedHard": "Aby przerwać cykl, trzeba było porzucić twarde ograniczenie (w czasie ładowania): te mody naprawdę są w konflikcie.",
+    "removeDependentModBrokenOrder": "Usuń zależny mod z listy aktywnych, zamiast akceptować zepsutą kolejność ładowania.",
+    "declarationQuestioned": "{declaredAfter} ładuje się po {declaredBefore} (źródło: {layerPhrase}; {declaredDetail}); {relationExplanation} ({relationDetail}).",
+    "reorderOppositeOfRelation": "Wymuś odwrotną kolejność, niż wynika z relacji, jako decyzję użytkownika.",
+    "declarationOverridden": "Zadeklarowano, że {declaredAfter} ładuje się po {declaredBefore} ({detail}), ale {layerPhrase} mówi inaczej: to {byAfter} ładuje się po {byBefore} ({byDetail}).",
+    "anyOfNoCandidate": "Żaden kandydat nie mógł spełnić tego ograniczenia bez zamknięcia cyklu.",
+    "forceAnyOfCandidateAcceptingCycle": "Wymuś tego kandydata, akceptując cykl, który w efekcie powstanie gdzie indziej.",
+    "anyOfChosenAlreadyBefore": "Wybrany kandydat już teraz ładuje się przed zależnym modem.",
+    "anyOfAlternativeCandidate": "To ograniczenie mógłby też spełnić inny kandydat.",
+    "anyOfUniqueMaxDependents": "Wybrany kandydat to jedyny mod spośród kandydatów, od którego zależy najwięcej modów.",
+    "anyOfSmallestId": "Wybrany według najmniejszego ID spośród kandydatów, którzy poza tym remisują.",
+    "ruleOverruledLongerCycle": "Aby przerwać dłuższy cykl obejmujący kilka modów, trzeba było porzucić: {rulePhrase}.",
+    "ruleOverruledByWinner": "Uchylono: {rulePhrase}. Przeważa {layerPhrase}: to {before} ładuje się po {after} ({detail}).",
+    "reorderOverridingRuleWinner": "Wymuś zamiast tego kolejność tej reguły, nadpisując zwycięzcę.",
+    "promoteRuleDespiteOverruled": "Zachowaj tę regułę jako własną decyzję, aby przetrwała, mimo że pozostaje uchylona.",
+    "placementOverruled": "{modId} jest przypięty {placementPhrase}, ale uchyla to {layerPhrase}: {detail}.",
+    "promotePlacementDespiteOverruled": "Zachowaj położenie {placementPhrase} jako własną decyzję, aby przetrwało, mimo że jest uchylone.",
+    "dropRuleOverrulingPlacement": "Porzuć regułę, która uchyliła to położenie, aby {modId} pozostał {placementPhrase}.",
+    "placementQuestioned": "{modId} jest przypięty {placementPhrase}; {relationExplanation} ({relationDetail}).",
+    "enforceRelationAsUserDecision": "Wymuś tę relację jawnie jako decyzję użytkownika.",
+    "placementOrderingOverridden": {
+      "loadsAfter": "{pinned} jest przypięty {placementPhrase}, ale {modId} i tak musi ładować się po nim — źródło: {layerPhrase} ({detail}).",
+      "loadsBefore": "{pinned} jest przypięty {placementPhrase}, ale {modId} i tak musi ładować się przed nim — źródło: {layerPhrase} ({detail})."
+    },
+    "placementPromotesDependents": "{modId} jest przypięty {placementPhrase}; przypisuje mu się też {count} inny mod podniesiony ponad granicę własnej warstwy{sample} | {modId} jest przypięty {placementPhrase}; przypisuje mu się też {count} inne mody podniesione ponad granicę własnej warstwy{sample} | {modId} jest przypięty {placementPhrase}; przypisuje mu się też {count} innych modów podniesionych ponad granicę własnej warstwy{sample}",
+    "promotedSample": {
+      "truncated": " (np. {sample})",
+      "exact": " ({sample})"
+    },
+    "tagInferredSignalCount": "{count} pasujący sygnał | {count} pasujące sygnały | {count} pasujących sygnałów",
+    "rejectInferredTag": "Odrzuć wywnioskowany tag.",
+    "forceDefOverrideWinner": "Wymuś zwycięstwo defu wybranego właściciela niezależnie od kolejności ładowania.",
+    "defOverrideWinnerDeclaresRelation": "Zwycięski mod jawnie deklaruje relację kolejności ładowania z każdym innym właścicielem.",
+    "defOverrideSameAuthor": "Wszyscy właściciele mają tego samego autora.",
+    "defOverrideLoneNonVanillaOwner": "Dokładnie jeden aktywny mod nadpisuje ten def gry podstawowej; nikt inny go nie kwestionuje.",
+    "defOverrideShadowsFramework": "Mod końcowy po cichu przesłania def wspólnego frameworka.",
+    "keepCurrentWinner": "Zamiast tego zachowaj obecnego zwycięzcę.",
+    "defOverrideUnexplained": "Kilka modów definiuje ten def, a żaden silny sygnał nie wyjaśnia nadpisania.",
+    "mergeUnexplainedDefOverride": "Scal pole po polu, zamiast w całości akceptować def jednego właściciela.",
+    "mergeShadowsFrameworkFieldByField": "Scal pole po polu; zachowaj wartości frameworka tam, gdzie mod końcowy ich nie zmienił.",
+    "forcePatchCollisionWinner": "Wymuś wyłączne zastosowanie łatki jednego moda.",
+    "patchCollisionAdditive": "Każda łatka w tej kolizji tylko dodaje do celu; kolejność nie zmienia wyniku.",
+    "patchCollisionContested": "Co najmniej jedna łatka w tej kolizji modyfikuje cel; o wyniku decyduje kolejność ładowania.",
+    "patchCollisionWinnerDeclaresRelation": "{winner} deklaruje ładowanie po {others}, więc jego zmiana pola „{field}” zostaje zachowana w zapisanej postaci.",
+    "mergeContestedPatchCollision": "Scal pole po polu, zamiast pozwolić kolejności ładowania decydować o całym defie.",
+    "patchWillFailRemovedBy": "Własna operacja moda {remover} usuwa węzeł, w który celuje operacja moda {modId} w „{xpath}”, i w sprawdzanej kolejności ładuje się przed nią.",
+    "reorderBeforeRemover": "Ładuj {modId} przed {remover}, aby jego operacja zadziałała, póki węzeł jeszcze istnieje.",
+    "patchWillFailNotYetInjected": "Operacja moda {modId} w „{xpath}” celuje w węzeł wstrzykiwany przez mod {injector}, ale w sprawdzanej kolejności {injector} ładuje się później.",
+    "reorderAfterInjector": "Ładuj {modId} po {injector}, aby jego operacja znalazła węzeł po wstrzyknięciu.",
+    "patchWillFailDeadTarget": "Operacja moda {modId} w „{xpath}” celuje w węzeł, którego rozwiązana struktura zwycięskiego właściciela nigdy nie ma, niezależnie od kolejności ładowania — żadna zmiana kolejności tego nie naprawi.",
+    "patchWillFailUnknownCause": "Przewiduje się, że operacja moda {modId} w „{xpath}” się nie powiedzie; nie udało się sklasyfikować przyczyny.",
+    "brokenInheritance": "To odwołanie `ParentName` nie rozwiązuje się tak, jak oczekuje typ elementu potomka — def wczytuje się z brakującą lub błędną zawartością. Zgłoś to autorowi moda, który zawiera odwołanie.",
+    "danglingDefReference": "Ta nazwa nie wskazuje żadnego aktywnego defu żadnego typu — {cause}.{soundCaveat} Odwołania do innych defów rozwiązują się po wczytaniu defów i łatek wszystkich modów, więc to nigdy nie zależy od kolejności ładowania.",
+    "danglingDefReferenceSoundCaveat": " To wygląda na odwołanie do dźwięku — brakujący `SoundDef` zapisuje ostrzeżenie w logu i po cichu przechodzi na niezdefiniowany dźwięk, zamiast powodować błąd wczytywania.",
+    "discardedAdditionDeliberate": "{replacer} deklaruje ładowanie po {adder} i zastępuje „{path}”: własne dodanie moda {adder} w „{adderPath}” zostaje celowo odrzucone.",
+    "forceTextureWinner": "Wymuś zwycięstwo tekstury jednego moda.",
+    "copyTextureIntoMergeMod": "Skopiuj plik tekstury tego moda do moda scalającego, niezależnie od kolejności ładowania.",
+    "textureOverrideCosmetic": "Nadpisanie tekstury jest kosmetyczne i widoczne w grze; nigdy niczego nie blokuje.",
+    "forceTemplateRegistrationWinner": "Wymuś, aby rejestracja tego moda obowiązywała dla każdego potomka szablonu, niezależnie od kolejności ładowania.",
+    "duplicateTemplateNameExplanation": "{ownerCount} mod rejestruje tę nazwę szablonu; każdy potomek niezależnie dziedziczy po tej rejestracji, która ładuje się najbliżej przed nim lub w tym samym miejscu. Jeśli takiej nie ma, wraca do rejestracji z gry podstawowej, a gdy i jej brak — do rejestracji z moda ładowanego jako pierwszy w kolejności ładowania, więc różni potomkowie mogą wskazywać różne mody. | {ownerCount} mody rejestrują tę nazwę szablonu; każdy potomek niezależnie dziedziczy po tej rejestracji, która ładuje się najbliżej przed nim lub w tym samym miejscu. Jeśli takiej nie ma, wraca do rejestracji z gry podstawowej, a gdy i jej brak — do rejestracji z moda ładowanego jako pierwszy w kolejności ładowania, więc różni potomkowie mogą wskazywać różne mody. | {ownerCount} modów rejestruje tę nazwę szablonu; każdy potomek niezależnie dziedziczy po tej rejestracji, która ładuje się najbliżej przed nim lub w tym samym miejscu. Jeśli takiej nie ma, wraca do rejestracji z gry podstawowej, a gdy i jej brak — do rejestracji z moda ładowanego jako pierwszy w kolejności ładowania, więc różni potomkowie mogą wskazywać różne mody.",
+    "keyedTranslationCollision": "Te dwa mody mają {keyCount} wspólny klucz tłumaczenia; wygrywa ten ładowany jako ostatni. | Te dwa mody mają {keyCount} wspólne klucze tłumaczeń; przy każdym z nich wygrywa ten ładowany jako ostatni. | Te dwa mody mają {keyCount} wspólnych kluczy tłumaczeń; przy każdym z nich wygrywa ten ładowany jako ostatni.",
+    "soundOverrideCosmetic": "Nadpisanie dźwięku jest kosmetyczne i słyszalne w grze; nigdy niczego nie blokuje.",
+    "forceSoundWinner": "Wymuś zwycięstwo dźwięku jednego moda.",
+    "missingTexturePath": "Tej ścieżki tekstury nie dostarcza żaden aktywny mod — gra pokaże w jej miejscu teksturę zastępczą w kolorze magenty.",
+    "undecodableTexture": "Tego pliku .dds nie da się zdekodować — gra podstawowa pokazuje w jego miejscu zastępczą teksturę błędu.",
+    "contributesNothing": "Mod {modId} nie wnosi w tej kolejności niczego zauważalnego: nie dostarcza biblioteki DLL, każdy jego def jest nadpisany przez późniejszą kopię, każda dostarczana przez niego tekstura i każde tłumaczenie są nadpisane, a każda jego operacja łatki albo się nie stosuje, albo nigdy nie zostaje uruchomiona — wyłączenie go nic nie zmienia w grze i oszczędza jego koszt ładowania.",
+    "undeclaredTypeDependency": "{user} używa typu z biblioteki DLL moda {provider}, ale nie deklaruje od niego zależności.",
+    "pinRelationExplicitly": "Utrwal relację jawnie jako regułę kolejności ładowania.",
+    "runtimePatchCollisionNoLastPatcher": "Kilka modów łata {targetType}.{targetMethod}.",
+    "runtimePatchCollisionLastPatcher": "{ownerCount} mod łata {targetType}.{targetMethod}; {last} ładuje się obecnie jako ostatni, więc jego łatka działa ostatnia. | {ownerCount} mody łatają {targetType}.{targetMethod}; {last} ładuje się obecnie jako ostatni, więc jego łatka działa ostatnia. | {ownerCount} modów łata {targetType}.{targetMethod}; {last} ładuje się obecnie jako ostatni, więc jego łatka działa ostatnia.",
+    "forceRuntimePatchLastWinner": "Wymuś, aby łatka tego moda działała ostatnia, niezależnie od kolejności ładowania.",
+    "transpilerCollision": "{ownerCount} mod przepisuje IL metody {targetType}.{targetMethod} transpilerem (łatką w czasie działania); kolejność ich działania może zdecydować, czy wzorzec późniejszego nadal pasuje. Większość takich kolizji jest nieszkodliwa — jeśli któryś z tych modów zapisze w logu błąd łatania, ustal działającą kolejność poleceniem `rimmerge rule set-pair`. | {ownerCount} mody przepisują IL metody {targetType}.{targetMethod} transpilerem (łatką w czasie działania); kolejność ich działania może zdecydować, czy wzorzec późniejszego nadal pasuje. Większość takich kolizji jest nieszkodliwa — jeśli któryś z tych modów zapisze w logu błąd łatania, ustal działającą kolejność poleceniem `rimmerge rule set-pair`. | {ownerCount} modów przepisuje IL metody {targetType}.{targetMethod} transpilerem (łatką w czasie działania); kolejność ich działania może zdecydować, czy wzorzec późniejszego nadal pasuje. Większość takich kolizji jest nieszkodliwa — jeśli któryś z tych modów zapisze w logu błąd łatania, ustal działającą kolejność poleceniem `rimmerge rule set-pair`.",
+    "duplicateAssemblyFirstLoadedWins": "Więcej niż jeden aktywny mod dostarcza bibliotekę DLL o tej nazwie; w czasie działania wygrywa kopia załadowana jako pierwsza.",
+    "removeDuplicateAssemblyCopy": "Usuń z listy aktywnych jedną ze zduplikowanych kopii.",
+    "likelyDuplicateMod": "Te dwa mody mają wiele identycznych defów, a między nimi nie zadeklarowano relacji.",
+    "removeLikelyDuplicateModA": "Usuń z listy aktywnych jeden z prawdopodobnie zduplikowanych modów.",
+    "removeLikelyDuplicateModB": "Usuń z listy aktywnych drugi prawdopodobnie zduplikowany mod.",
+    "missingModNotInstalled": "Ten mod jest aktywny w ModsConfig.xml, ale nie jest zainstalowany; RimWorld i tak odrzuca nieznane ID.",
+    "keepMissingModId": "Zachowaj ID w ModsConfig.xml na wypadek, gdyby mod znów się pojawił.",
+    "missingDependencyNotEnforced": "Zadeklarowana zależność nie jest aktywna; RimWorld tylko o tym ostrzega, ale tego nie wymusza.",
+    "incompatiblePair": "Te mody deklarują się nawzajem jako niekompatybilne.",
+    "removeIncompatibleModA": "Usuń z listy aktywnych jeden z niekompatybilnych modów.",
+    "removeIncompatibleModB": "Usuń z listy aktywnych drugi niekompatybilny mod.",
+    "unsupportedVersionOftenWorks": "Ten mod nie wymienia aktywnej wersji gry jako obsługiwanej; często mimo to działa.",
+    "undeclaredHardDependencyHonored": "Sortownik już respektuje to twarde ograniczenie (w czasie ładowania), mimo że autor nigdy go nie zadeklarował.",
+    "pinRelationExplicitlyAnyway": "Mimo to utrwal relację jawnie jako regułę kolejności ładowania.",
+    "lazyReferenceViolatedJitResolved": "To leniwie rozwiązywane odwołanie do biblioteki DLL nie jest respektowane przez obecną kolejność, ale rozwiązuje się w czasie kompilacji JIT, po wczytaniu wszystkich bibliotek, więc kolejność ładowania w rzeczywistości na nie nie wpływa.",
+    "nearMissModReference": {
+      "findModName": "Ta nazwa FindMod „{written}” nie wskazuje żadnego aktywnego ani zainstalowanego moda, ale bardzo przypomina aktywny mod „{candidateName}” — możliwa literówka. Zgłoś to autorowi moda, który zawiera to odwołanie.",
+      "mayRequireId": "To ID MayRequire „{written}” nie wskazuje żadnego aktywnego ani zainstalowanego moda, ale bardzo przypomina aktywny mod „{candidateName}” — możliwa literówka. Zgłoś to autorowi moda, który zawiera to odwołanie."
+    },
+    "mergeCompleteNothingToMerge": "gra stosuje te zmiany po kolei do jednej wartości; nie ma czego scalać",
+    "mergeLeadDefOverrideCombine": "Mody zmieniają różne pola; scalenie połączyłoby obie zmiany.",
+    "mergePromotedPatchCollisionKeepsBoth": "Mody zmieniają różne pola; scalenie zachowuje obie zmiany.",
+    "keepLoadOrderWinner": "Zachowaj zwycięzcę wynikającego z kolejności ładowania.",
+    "mergeStructuralGuard": "{field} różni się między właścicielami — scalanie na poziomie pól jest niebezpieczne; potwierdź zwycięzcę wynikającego z kolejności ładowania",
+    "mergeFieldsNeedChoice": "Scal, {unresolved} pole wymaga wyboru. | Scal, {unresolved} pola wymagają wyboru. | Scal, {unresolved} pól wymaga wyboru.",
+    "identicalCopiesOrderIrrelevant": "identyczne kopie; kolejność nie może zmienić wyniku",
+    "notAddressedByPatch": "Ta łatka tego nie obejmuje; kolejność ładowania decyduje tak jak obecnie."
+  },
+  "modInfo": {
+    "panel": {
+      "regionLabel": "Informacje o modzie",
+      "close": "Zamknij",
+      "notFoundTitle": "Tego moda nie ma w bieżącym skanowaniu",
+      "allDetailsLink": "Wszystkie szczegóły",
+      "previewAlt": "Obraz podglądu moda {mod}",
+      "noPreview": "Brak obrazu podglądu",
+      "previewTooLarge": "Podgląd jest większy niż 8 MB",
+      "previewUnsupportedFormat": "Podgląd nie jest plikiem PNG ani JPEG",
+      "previewUnreadable": "Nie udało się odczytać podglądu",
+      "missingHeading": "Brakujący",
+      "missingBody": "Na liście w ModsConfig.xml, ale nie znaleziono go na dysku",
+      "requiredByHeading": "Wymagany przez",
+      "pendingActivation": "Oczekuje na włączenie — zastosuj lub przeskanuj ponownie, aby zadziałało",
+      "pendingDeactivation": "Oczekuje na wyłączenie — zastosuj lub przeskanuj ponownie, aby zadziałało",
+      "packageIdLine": "ID pakietu: {id}",
+      "workshopCopyNote": "Kopia z Warsztatu",
+      "versionLine": "Wersja moda: {version}",
+      "aboutNotOnDisk": "Nie znaleziono pliku About.xml tego moda — jego pliki mogły zostać przeniesione lub usunięte od ostatniego skanowania.",
+      "supportedVersionsLabel": "Obsługiwane wersje",
+      "supportsGameVersion": "Obsługuje tę wersję gry",
+      "doesNotSupportGameVersion": "Nie deklaruje obsługi tej wersji gry",
+      "openWorkshopButton": "Otwórz stronę w Warsztacie (zewnętrzna przeglądarka)",
+      "openHomepageButton": "Otwórz stronę domową (zewnętrzna przeglądarka)",
+      "rootFolderLabel": "Folder moda",
+      "loadedFoldersLabel": "Ładowane foldery",
+      "costLabel": "Koszt",
+      "costLine": "{defsLabel}: {defCount}, {patchOpsLabel}: {patchOps}, {dllsLabel}: {assemblyCount}",
+      "seeStartupLink": "Zobacz koszt uruchomienia",
+      "tagsLabel": "Tagi",
+      "hardDependents": "{count} twardo zależny | {count} twardo zależne | {count} twardo zależnych",
+      "softDependents": "{count} miękko zależny | {count} miękko zależne | {count} miękko zależnych",
+      "awarenessDependents": "{count} zależny przez świadomość | {count} zależne przez świadomość | {count} zależnych przez świadomość",
+      "frameworkCandidate": "Wygląda na wspólny framework",
+      "generatedLine": "Wygenerowany przez Rimmerge ({kind})",
+      "generatedMerge": "mod scalający profilu",
+      "generatedPatch": "łatka zgodności",
+      "generatedAssignment": "projekt przypisania",
+      "positionLabel": "Pozycja",
+      "previousPositionLine": "Poprzednia pozycja: #{position}",
+      "whyHereLink": "Dlaczego tutaj?",
+      "findingsCount": "{count} ustalenie | {count} ustalenia | {count} ustaleń",
+      "needsInputCount": "{count} wymaga decyzji | {count} wymagają decyzji | {count} wymaga decyzji",
+      "declaredHeading": "Zadeklarowana kolejność ładowania",
+      "descriptionHeading": "Opis",
+      "noDescription": "Brak opisu.",
+      "showMore": "Pokaż więcej",
+      "showLess": "Pokaż mniej",
+      "aboutChanged": "About.xml zmienił się od ostatniego skanowania — przeskanuj ponownie",
+      "aboutUnreadable": "Nie udało się odczytać About.xml: {reason}",
+      "aboutUnreadableIoHeadline": "nie udało się odczytać pliku",
+      "aboutUnreadableXmlHeadline": "plik nie jest poprawnym XML",
+      "descriptionTruncated": "Ten opis był za długi i został skrócony."
+    }
+  }
+}

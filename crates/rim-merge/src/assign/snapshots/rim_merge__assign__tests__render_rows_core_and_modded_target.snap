@@ -1,0 +1,38 @@
+---
+source: crates/rim-merge/src/assign.rs
+assertion_line: 1440
+expression: text
+---
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <example.PartAssignmentDef MayRequire="target.elves">
+    <defName>MyMod_Elf</defName>
+    <chanceprimaryTool>
+      <li>0.7</li>
+      <li>0.3</li>
+    </chanceprimaryTool>
+    <primaryTool>
+      <li>Wrench_Elf</li>
+      <li>Wrench_Elf_Alt</li>
+    </primaryTool>
+    <speciesNames>
+      <li>Elf</li>
+    </speciesNames>
+  </example.PartAssignmentDef>
+  <example.PartAssignmentDef>
+    <defName>MyMod_Human</defName>
+    <chanceprimaryTool>
+      <li>1</li>
+    </chanceprimaryTool>
+    <hasSingleGender>false</hasSingleGender>
+    <primaryTool>
+      <li>Wrench</li>
+    </primaryTool>
+    <speciesNames>
+      <li>Human</li>
+    </speciesNames>
+    <statBases>
+      <MoveSpeed>13</MoveSpeed>
+    </statBases>
+  </example.PartAssignmentDef>
+</Defs>

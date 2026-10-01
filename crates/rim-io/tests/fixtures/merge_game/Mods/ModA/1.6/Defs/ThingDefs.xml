@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef Name="Fixture_WallBase" Abstract="True">
+    <category>Building</category>
+    <statBases>
+      <MaxHitPoints>100</MaxHitPoints>
+    </statBases>
+  </ThingDef>
+
+  <ThingDef Name="Fixture_WallBase2" ParentName="Fixture_WallBase" Abstract="True">
+    <passability>Impassable</passability>
+  </ThingDef>
+
+  <ThingDef ParentName="Fixture_WallBase2">
+    <defName>Fixture_Wall</defName>
+    <label>fixture wall</label>
+    <statBases>
+      <MaxHitPoints>150</MaxHitPoints>
+    </statBases>
+  </ThingDef>
+</Defs>

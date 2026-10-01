@@ -1,0 +1,52 @@
+[package]
+name = "rimmerge-desktop"
+version = "1.0.0"
+description = "Rimmerge desktop app"
+authors = ["rimmerge"]
+license = "MIT OR Apache-2.0"
+edition = "2024"
+rust-version = "1.98"
+publish = false
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "rimmerge_desktop_lib"
+# `rlib` only: the Tauri template also lists `staticlib` (iOS) and `cdylib`
+# (Android). This app targets the desktop only, and the `cdylib` build made
+# MSVC's link.exe print its "Creating library ... .dll.lib" notice on every
+# build, which rustc surfaces as a `linker_messages` warning.
+crate-type = ["rlib"]
+
+[build-dependencies]
+tauri-build = { workspace = true }
+
+[dependencies]
+rim-analyzer = { workspace = true }
+rim-resolve = { workspace = true }
+rim-merge = { workspace = true }
+rim-session = { workspace = true }
+rim-io = { workspace = true }
+# Encodes `read_texture`'s response as a `data:` URL for the frontend
+# `<img>` tag; not a workspace dependency since only this crate's IPC
+# boundary needs it.
+base64 = "0.23.1"
+tauri = { workspace = true }
+tauri-plugin-dialog = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+ts-rs = { workspace = true }
+jiff = { workspace = true }
+tokio = { workspace = true, features = ["sync"] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tauri-plugin-opener = "2.5.5"
+
+[dev-dependencies]
+rim-session = { workspace = true, features = ["test-support"] }
+tempfile = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt"] }
+
+[lints]
+workspace = true

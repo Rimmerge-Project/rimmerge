@@ -1,0 +1,18 @@
+<!--
+  Source: Core (ludeon.rimworld), Data/Core/Defs/HediffDefs/BodyParts/Hediffs_BodyParts_Bionic.xml
+  Trimmed to the BionicHeart HediffDef used by the worked def-override
+  example (two mods' own ParentName chains resolving differently).
+-->
+<HediffDef ParentName="AddedBodyPartBase">
+  <defName>BionicHeart</defName>
+  <label>bionic heart</label>
+  <labelNoun>a bionic heart</labelNoun>
+  <description>An installed bionic heart. It has synthetic muscle fibers for a realistic heartbeat, plus a high-flow pump for rapid circulation during high stress. It is better than a biological heart in almost every way.</description>
+  <descriptionHyperlinks><ThingDef>BionicHeart</ThingDef></descriptionHyperlinks>
+  <spawnThingOnRemoved>BionicHeart</spawnThingOnRemoved>
+  <addedPartProps>
+    <solid>true</solid>
+    <partEfficiency>1.25</partEfficiency>
+    <betterThanNatural>true</betterThanNatural>
+  </addedPartProps>
+</HediffDef>

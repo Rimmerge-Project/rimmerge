@@ -1,0 +1,6 @@
+<loadFolders>
+  <v1.6>
+    <li>1.6</li>
+    <li IfModActive="some.other.mod">1.6/Compat</li>
+  </v1.6>
+</loadFolders>

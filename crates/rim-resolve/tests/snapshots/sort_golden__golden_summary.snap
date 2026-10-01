@@ -1,0 +1,12 @@
+---
+source: crates/rim-resolve/tests/sort_golden.rs
+expression: "vec![format!(\"mods: {}\", report.mods.len()),\nformat!(\"dropped: {}\", outcome.dropped.len()),\nformat!(\"any_of_choices: {}\", outcome.any_of_choices.len()),\nformat!(\"warnings: {}\", outcome.warnings.len()),\nformat!(\"preserve_current_kendall_tau_inversions: {}\",\noutcome.stats.kendall_tau_inversions),\nformat!(\"preserve_current_positions_changed: {}\",\noutcome.stats.positions_changed),]"
+---
+[
+    "mods: 409",
+    "dropped: 5",
+    "any_of_choices: 6",
+    "warnings: 0",
+    "preserve_current_kendall_tau_inversions: 24",
+    "preserve_current_positions_changed: 43",
+]

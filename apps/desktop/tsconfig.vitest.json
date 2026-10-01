@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.vitest.tsbuildinfo",
+    // `vitest/globals` for editor/tsc awareness of the ambient matcher
+    // types `expect` extends — the suite itself imports `describe`/`it`/
+    // `expect` explicitly (`globals: false` in `vitest.config.ts`), so
+    // this is only needed for the global `vi` type augmentations, not for
+    // resolving the test functions themselves. `node` for `style.guard.test.ts`'s
+    // `node:fs` import and `import.meta.dirname` — an explicit `types`
+    // array (unlike leaving it unset) stops TS from auto-including any
+    // `@types/*` package on its own, `@types/node` included.
+    "types": ["vite/client", "vitest/globals", "node"]
+  },
+  // The app project (`tsconfig.app.json`) excludes `*.test.ts` so
+  // production and test code aren't bundled by the same `vue-tsc -b`
+  // project graph — this project picks exactly those files back up, the
+  // one place they're actually type-checked (`bun run typecheck` builds
+  // every referenced project in the root `tsconfig.json`, this one
+  // included). `exclude` must be re-cleared: it's otherwise inherited
+  // from `tsconfig.app.json`, whose own `["src/**/*.test.ts", ...]`
+  // would silently filter this project's `include` down to nothing.
+  "include": ["src/**/*.test.ts"],
+  "exclude": []
+}

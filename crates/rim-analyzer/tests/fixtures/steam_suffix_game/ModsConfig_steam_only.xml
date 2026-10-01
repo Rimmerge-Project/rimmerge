@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModsConfigData>
+  <version>1.6.0</version>
+  <activeMods>
+    <li>foo.bar_steam</li>
+    <li>dep.mod</li>
+  </activeMods>
+</ModsConfigData>

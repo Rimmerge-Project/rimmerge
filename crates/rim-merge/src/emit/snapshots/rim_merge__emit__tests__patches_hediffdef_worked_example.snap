@@ -1,0 +1,37 @@
+---
+source: crates/rim-merge/src/emit/emit_tests.rs
+assertion_line: 245
+expression: text
+---
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <!-- HediffDef/BionicHeart — owners: example.bionicsfork,ludeon.rimworld -->
+  <Operation Class="PatchOperationSequence">
+    <operations>
+      <li Class="PatchOperationReplace" MayRequire="example.bionicsfork">
+        <xpath>Defs/HediffDef[defName="BionicHeart"]/label</xpath>
+        <value>
+          <label>bionic heart</label>
+        </value>
+      </li>
+      <li Class="PatchOperationReplace" MayRequire="example.bionicsfork">
+        <xpath>Defs/HediffDef[defName="BionicHeart"]/labelNoun</xpath>
+        <value>
+          <labelNoun>a bionic heart</labelNoun>
+        </value>
+      </li>
+      <li Class="PatchOperationReplace" MayRequire="example.bionicsfork">
+        <xpath>Defs/HediffDef[defName="BionicHeart"]/description</xpath>
+        <value>
+          <description>An installed bionic heart. It has synthetic muscle fibers.</description>
+        </value>
+      </li>
+      <li Class="PatchOperationAdd" MayRequire="example.bionicsfork">
+        <xpath>Defs/HediffDef[defName="BionicHeart"]</xpath>
+        <value>
+          <defaultLabelColor>(0.6, 0.6, 1.0)</defaultLabelColor>
+        </value>
+      </li>
+    </operations>
+  </Operation>
+</Patch>

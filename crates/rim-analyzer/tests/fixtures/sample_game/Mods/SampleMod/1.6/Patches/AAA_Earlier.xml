@@ -1,0 +1,14 @@
+<Patch>
+  <Operation Class="PatchOperationAdd">
+    <xpath>Defs/ThingDef[defName="SampleWall"]/statBases</xpath>
+    <value>
+      <li>1</li>
+    </value>
+  </Operation>
+  <Operation Class="PatchOperationAdd">
+    <xpath>Defs/ThingDef[defName="SampleWall"]/tradeTags</xpath>
+    <value>
+      <li>Fixture</li>
+    </value>
+  </Operation>
+</Patch>

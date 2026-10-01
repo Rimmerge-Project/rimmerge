@@ -1,0 +1,33 @@
+<!--
+  Hand-built keyed-map worked example (a real shape: three mods each
+  add their own disjoint animal to AridShrubland's wildAnimals — "the three adds
+  already union", nothing actually conflicts in-game). Bundled as
+  sibling <Operation>s (each a separate mod's own top-level patch
+  operation) under one wrapping root. Mod A also patches a second biome
+  (TemperateForest) so this stays a two-biome file per this crate's own
+  scoping rule (never trim a multi-def patch fixture down to one def
+  when testing scoping) — replaying this must touch AridShrubland's
+  wildAnimals only, never TemperateForest's plantDensity.
+-->
+<Patches>
+  <Operation Class="PatchOperationSequence">
+    <operations>
+      <li Class="PatchOperationAdd">
+        <xpath>Defs/BiomeDef[defName="AridShrubland"]/wildAnimals</xpath>
+        <value><XBM_Theropod>0.6</XBM_Theropod></value>
+      </li>
+      <li Class="PatchOperationReplace">
+        <xpath>Defs/BiomeDef[defName="TemperateForest"]/plantDensity</xpath>
+        <value><plantDensity>0.5</plantDensity></value>
+      </li>
+    </operations>
+  </Operation>
+  <Operation Class="PatchOperationAdd">
+    <xpath>Defs/BiomeDef[defName="AridShrubland"]/wildAnimals</xpath>
+    <value><Mammoth>0.1</Mammoth></value>
+  </Operation>
+  <Operation Class="PatchOperationAdd">
+    <xpath>Defs/BiomeDef[defName="AridShrubland"]/wildAnimals</xpath>
+    <value><Hyena>0.2</Hyena></value>
+  </Operation>
+</Patches>

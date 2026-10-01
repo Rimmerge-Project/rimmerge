@@ -1,0 +1,2055 @@
+{
+  "common": {
+    "verbatim": "{text}",
+    "cancel": "取消",
+    "loading": "载入中…",
+    "technicalDetail": "技术细节：{detail}"
+  },
+  "defGraphics": {
+    "viewer": {
+      "regionLabel": "纹理预览",
+      "facingGroupLabel": "朝向",
+      "previousVariant": "上一个变体",
+      "nextVariant": "下一个变体",
+      "variantPosition": "{label}（第 {index} 个，共 {count} 个）",
+      "variantSelectLabel": "变体",
+      "slotSelectLabel": "纹理来源",
+      "fromMod": "来自 {mod}",
+      "overridesOwner": "覆盖了该 Def 所有者 {owner} 的纹理",
+      "mirrored": "镜像绘制",
+      "layoutInferred": "布局根据文件名推断",
+      "truncatedVariants": "另有 {count} 个变体未显示",
+      "truncatedSlots": "另有 {count} 个来源未显示"
+    },
+    "facing": {
+      "north": "朝北",
+      "east": "朝东",
+      "south": "朝南",
+      "west": "朝西"
+    },
+    "facingShort": {
+      "north": "北",
+      "east": "东",
+      "south": "南",
+      "west": "西"
+    },
+    "slot": {
+      "graphic": "图像",
+      "worn": "穿戴",
+      "lifeStage": "生命阶段",
+      "raceKind": "角色种类：{name}",
+      "styleTexture": "风格纹理",
+      "headType": "头部类型",
+      "bodyType": "体型",
+      "terrain": "地形",
+      "icon": "图标",
+      "probe": "按路径找到：{field}"
+    },
+    "variant": {
+      "only": "唯一图像",
+      "bodyType": "体型：{name}",
+      "lifeStage": "生命阶段 {number}",
+      "female": "雌性，生命阶段 {number}",
+      "alternate": "备选 {number}",
+      "member": "{name}",
+      "stack": "堆叠档位 {number}",
+      "stackSingle": "单个物品",
+      "appearance": "外观：{name}",
+      "wornPath": "穿戴路径 {number}",
+      "wornPathOnBodyType": "穿戴路径 {number}，{name}",
+      "field": "{name}"
+    },
+    "state": {
+      "loading": "正在载入纹理",
+      "noGraphic": "此 Def 自身不显示任何纹理。",
+      "composedAtRuntime": "游戏在运行时用身体、头部和头发部件拼合出这个角色，因此没有单一纹理可以显示。",
+      "notViewable": "内置于游戏或资源包中，无法在此显示。",
+      "notViewableUncertain": "未找到纹理文件。它可能内置于游戏中，无法在此显示。",
+      "notFound": "未找到纹理文件。游戏会显示其错误纹理。",
+      "ddsNotPreviewable": "DDS 纹理，无法预览。",
+      "undecodableInGame": "游戏无法解码此 DDS 文件，会显示占位图。",
+      "pngSiblingNote": "此处显示的是 PNG 副本；游戏加载的是 DDS。",
+      "tooLarge": "图像文件太大，无法预览。",
+      "unsupportedFormat": "无法预览此图像格式。",
+      "unreadable": "无法读取图像文件。"
+    },
+    "alt": "{def}（{facing}）",
+    "altNoFacing": "{def}"
+  },
+  "primevue": {
+    "emptyMessage": "没有可用选项",
+    "emptyFilterMessage": "未找到结果",
+    "emptySelectionMessage": "未选择任何项",
+    "searchMessage": "有 {count} 个结果",
+    "selectionMessage": "已选择 {count} 项",
+    "aria": {
+      "trueLabel": "是",
+      "falseLabel": "否",
+      "nullLabel": "未选择",
+      "close": "关闭",
+      "previous": "上一个",
+      "next": "下一个",
+      "navigation": "导航"
+    }
+  },
+  "shell": {
+    "brand": "Rimmerge",
+    "mainNavigation": "主导航",
+    "nav": {
+      "dashboard": "概览",
+      "inbox": "检查结果",
+      "mergeMod": "合并输出",
+      "patches": "兼容补丁",
+      "assignments": "补丁制作器",
+      "startup": "启动开销",
+      "order": "加载顺序",
+      "rules": "规则",
+      "mods": "Mod",
+      "settings": "设置"
+    },
+    "orderSource": {
+      "label": "顺序来源",
+      "current": "当前",
+      "suggested": "建议",
+      "inSentenceCurrent": "当前",
+      "inSentenceSuggested": "建议"
+    },
+    "modLabelMode": {
+      "label": "Mod 显示方式",
+      "names": "名称",
+      "ids": "ID"
+    },
+    "apply": "应用…",
+    "scanningMods": "正在扫描 Mod",
+    "supportLink": "支持 Rimmerge",
+    "liveRegion": {
+      "newNotification": "{count} 条新通知，最新一条：{title}"
+    }
+  },
+  "settings": {
+    "heading": "设置",
+    "interfaceHeading": "界面",
+    "language": {
+      "label": "语言",
+      "system": "跟随系统（{detected}）",
+      "preview": "预览",
+      "optionPreview": "{name}（{preview}）",
+      "previewNote": "如果你发现翻译有误，请{url}，我们会进行修正。",
+      "previewNoteLinkText": "提交问题反馈"
+    },
+    "thresholdLabel": "置信度阈值（自动 / 待处理）",
+    "tieBreak": {
+      "label": "并列处理",
+      "description": "决定没有被其他 Mod 固定位置的 Mod 从哪里开始排序。“重建”按名称为这些 Mod 排序，并忽略你的当前顺序，因此第一次重建由 RimSort 生成的列表时，预计大多数 Mod 都会移动。“保留当前顺序”让每个 Mod 从它在 ModsConfig.xml 中的位置开始，尽量少移动 Mod。",
+      "rebuild": "重建",
+      "preserveCurrent": "保留当前顺序"
+    },
+    "useImportedPairs": {
+      "label": "使用导入的成对规则",
+      "description": "让 RimSort/SteamDB 的“在…之前/之后加载”规则影响排序。默认开启——大多数导入的成对规则只是重述了排序器本身已经强制执行的证据。你自己设置的规则永远不受此开关影响。"
+    },
+    "useImportedPlacements": {
+      "label": "使用导入的位置规则",
+      "description": "让 RimSort/SteamDB 的“最先/最后加载”位置规则固定 Mod 的层级。默认开启——Mod 自身的文件中没有任何内容能表达“最后加载我”。"
+    },
+    "enforceSoft": {
+      "label": "强制执行“软性”排序约束",
+      "description": "这些排序约束来自对 {assemblyRef} 的延迟解析引用。默认关闭：与仅作参考相比，强制执行可能让明显更多的 Mod 偏离当前顺序。"
+    },
+    "enforceAwareness": {
+      "label": "强制执行“感知”排序约束",
+      "description": "这些排序约束来自 {edgeKinds} 提示——表明 Mod 之间存在交互的证据，而不是排序事实。默认关闭：它们远比“软性”排序约束常见，因此强制执行对顺序的扰动也大得多。"
+    },
+    "enforceInferred": {
+      "label": "强制执行“推断”排序约束",
+      "description": "这些排序约束是 {edgeKinds}：分析器自身的启发式结论，认为两个 Mod 存在交互，而不只是像“感知”那样的存在性信号。默认开启：与“软性”和“感知”排序约束不同，分析器已经判定这些是排序事实，若仅作参考就等于丢弃这些证据。"
+    },
+    "network": {
+      "heading": "互联网访问",
+      "recoveredWarning": "无法读取你的应用设置文件，因此在你再次保存设置之前，互联网访问保持关闭。",
+      "allowNetwork": {
+        "label": "允许访问互联网",
+        "description": "Rimmerge 通过互联网发送的所有内容（无论自动还是手动）的总开关。它只会联系两个 GitHub 主机——api.github.com 用于检查更新，raw.githubusercontent.com 用于刷新规则数据库——从不访问你的本地网络。关闭后，每个请求都会在构建任何地址或打开任何连接之前被跳过。此设置作用于这台计算机上的整个应用，无论你打开的是哪个 RimWorld 安装。"
+      },
+      "autoRefreshRuleDatabases": {
+        "label": "自动刷新规则数据库",
+        "description": "每天一次，在启动时获取“规则数据库”卡片中列出的已启用规则数据库——但从不包括 Steam 创意工坊数据库，它只会在你点击“刷新”时刷新。"
+      },
+      "checkForUpdates": {
+        "label": "检查更新",
+        "description": "每天一次，在启动时检查是否发布了更新版本的 Rimmerge。"
+      },
+      "checkNow": {
+        "button": "立即检查",
+        "disabledTitle": "因“允许访问互联网”已关闭而不可用",
+        "awaitingFirstRun": "尚未检查——请先回应欢迎通知。",
+        "alreadyRanThisLaunch": "本次启动已检查过。",
+        "networkDisabled": "互联网访问已关闭。",
+        "checkDisabled": "已检查（自动检查处于关闭状态）。",
+        "notDue": "最近已检查过——请稍后再试。",
+        "rateLimited": "已达到 GitHub 的速率限制；请在 {until} 之后重试。",
+        "updated": "有新版本可用：{version}。",
+        "unchanged": "已是最新版本。",
+        "failed": "上次检查失败：{reason}"
+      },
+      "mutedKinds": {
+        "heading": "已静音的通知",
+        "empty": "没有静音的通知。",
+        "unmuteButton": "取消静音"
+      },
+      "resetIncludesSteam": "恢复所有开关，包括 Steam 创意工坊数据库（约 49 MB，只在你刷新时下载）。",
+      "restoreDefaultsButton": "恢复互联网访问默认设置",
+      "restoreDefaultsToast": "互联网访问、更新检查和自动刷新已重新开启"
+    },
+    "suggestMergeWhenClean": {
+      "label": "建议合并无冲突的覆盖",
+      "description": "当两个 Mod 修改同一个 Def 的不同字段时，建议将它们合并，而不是保留加载顺序中的胜出者。合并后的 Def 会在应用时写入合并 Mod。"
+    },
+    "showDanglingDefReferences": {
+      "label": "显示悬空 Def 引用检查结果",
+      "description": "标记写在可识别引用位置（例如研究前置条件、属性偏移键）上、却没有任何类型的已启用 Def 实际拥有的名称。默认关闭——在大型安装中，这可能产生相当数量的误报（例如把自我标识的字段误认为交叉引用）。从不改变加载顺序。"
+    },
+    "saveButton": "保存",
+    "resetButton": "重置为默认值",
+    "dirtyIndicator": "有未保存的更改",
+    "resetConfirm": {
+      "header": "重置为默认值？",
+      "body": "将上方每个字段重新填入 Rimmerge 自带的内置默认值。在你点击“保存”之前，不会保存任何内容。",
+      "cancelButton": "取消",
+      "confirmButton": "重置"
+    },
+    "about": {
+      "heading": "关于",
+      "versionLabel": "版本 {version}",
+      "repoLink": "GitHub 仓库",
+      "issuesLink": "报告问题",
+      "supportLink": "支持 Rimmerge",
+      "supportBlurb": "Rimmerge 是免费的开源软件。如果它为你节省了时间，你可以支持它的开发。"
+    }
+  },
+  "fetchFailure": {
+    "transportHeadline": "无法连接到 GitHub",
+    "httpStatus": "GitHub 返回了意外的 HTTP 状态（{status}）",
+    "rateLimited": "已达到 GitHub 的速率限制；请在 {until} 之后重试",
+    "notPublished": "尚未发布任何 Rimmerge 版本",
+    "tooLarge": "响应超过了允许的大小",
+    "invalidContent": "响应格式不符合预期",
+    "notAStableVersion": "最新发布的标签不是稳定版本",
+    "notModifiedWithoutCache": "GitHub 报告没有变化，但本地还没有任何缓存",
+    "readFailedHeadline": "下载被中断",
+    "cacheWriteFailedHeadline": "无法将下载内容保存到本地",
+    "unclassifiedHeadline": "尝试失败"
+  },
+  "ruleWarning": {
+    "droppedClusterRules": "载入时丢弃了 {count} 条迁移前的集群规则：{ids}",
+    "unknownModKnowledgeValue": "已忽略 {section} 规则中的未知值“{value}”（{what}）",
+    "modKnowledgeCacheUnreadableHeadline": "无法读取缓存的 Rimmerge 规则；改用内置快照",
+    "rowsOverRoleLimit": "已忽略 {section} 规则的 {role} 组中超出单角色上限的 {count} 行",
+    "precedenceRuleMissingFramework": "已忽略 {defType} 的优先规则：它没有指明任何框架",
+    "what": {
+      "precedenceRule": "优先规则",
+      "behaviour": "行为",
+      "matchMode": "匹配模式",
+      "gateMatchMode": "条件匹配模式",
+      "gateBehaviour": "条件行为",
+      "conditionalType": "条件类型",
+      "topLevelSection": "顶层分区",
+      "logShapeRole": "日志形态角色",
+      "placeholderType": "模板占位符类型"
+    },
+    "refusedRow": {
+      "templateInvalid": "已忽略 {section} 中的行“{value}”：其模板为空、过长或格式错误",
+      "captureMissing": "已忽略 {section} 中的行“{value}”：其模板缺少其角色所需的捕获组",
+      "markerLength": "已忽略 {section} 中的行“{value}”：某个标记字符串的长度超出范围",
+      "idTooLong": "已忽略 {section} 中的一行：其 ID 过长",
+      "templateUncompilable": "已忽略 {section} 中的行“{value}”：其模板无法在大小限制内编译"
+    }
+  },
+  "setup": {
+    "title": "设置 Rimmerge",
+    "fields": {
+      "gameDir": "RimWorld 安装目录",
+      "workshopDir": "Steam 创意工坊目录",
+      "modsConfig": "ModsConfig.xml 路径",
+      "profileDir": "配置档案目录"
+    },
+    "browse": "浏览…",
+    "loadProject": "载入项目",
+    "saveAsDefaults": "保存为默认值",
+    "loadingProject": "正在载入项目",
+    "startingCaption": "正在启动…",
+    "stage": {
+      "discovering": "正在查找 Mod",
+      "scanning": "正在扫描 Mod",
+      "analyzing": "正在分析",
+      "collectingTagEvidence": "正在收集标签证据",
+      "done": "完成"
+    },
+    "scanFinishedToast": "扫描完成，有 {count} 条备注",
+    "projectLoadedWithWarningsToast": "项目已载入，但有警告",
+    "savedAsDefaultsToast": "已保存为默认值",
+    "savedAsDefaultsDetail": "下次启动 Rimmerge 时会预先填入这些路径。"
+  },
+  "dashboard": {
+    "title": "概览",
+    "counts": {
+      "mods": "Mod",
+      "needsInputCurrent": "待处理（当前）",
+      "needsInputSuggested": "待处理（建议）",
+      "movedMods": "会移动的 Mod",
+      "selectedOrder": "所选顺序"
+    },
+    "ledgerStatsHeading": "冲突账本（两种顺序）",
+    "table": {
+      "auto": "自动",
+      "needsInput": "待处理",
+      "overridden": "手动决定",
+      "resolvedBySuggested": "由建议顺序解决",
+      "current": "当前",
+      "suggested": "建议"
+    },
+    "topKindsHeading": "待处理最多的类型",
+    "topKindsEmpty": "目前没有待处理的内容。",
+    "scanNotesDisclosure": "扫描备注（{count}）",
+    "importLog": {
+      "button": "导入游戏日志",
+      "importedToast": "已导入游戏日志",
+      "logFilter": "RimWorld 日志",
+      "allFilesFilter": "所有文件"
+    },
+    "guide": {
+      "heading": "开始使用",
+      "intro": "三个步骤即可将建议的加载顺序写入游戏。需要更多控制时，可以使用检查结果页和规则页。",
+      "listLabel": "入门步骤",
+      "status": {
+        "done": "已完成",
+        "current": "当前步骤",
+        "upcoming": "尚未开始"
+      },
+      "chooseSuggested": {
+        "title": "使用建议顺序",
+        "pending": "你正在查看当前顺序。建议顺序会移动 {count} 个 Mod。",
+        "doneText": "已选择建议顺序。",
+        "doneMatchesFileText": "ModsConfig.xml 已与建议顺序一致。",
+        "button": "使用建议顺序",
+        "reviewLink": "查看建议顺序"
+      },
+      "apply": {
+        "title": "应用",
+        "pending": "查看将写入 ModsConfig.xml 的内容。写入前会先创建备份。",
+        "button": "应用…",
+        "staleBlocked": "自上次扫描以来，你的已启用 Mod 发生了变化。请先重新扫描，再应用。",
+        "rescanButton": "重新扫描"
+      },
+      "confirm": {
+        "title": "确认",
+        "pending": "检查摘要，然后确认。如果有内容会出问题（例如缺少必需的 Mod），会先询问你。"
+      },
+      "done": "ModsConfig.xml 与建议顺序一致。启动 RimWorld 即可开始游戏。",
+      "asOfLastScan": "截至上次扫描或应用时。",
+      "needsInputHint": "{count} 条检查结果待你处理（可选）",
+      "openInbox": "打开检查结果页",
+      "appliedAnnouncement": "已应用。ModsConfig.xml 现已与建议顺序一致。"
+    }
+  },
+  "notifications": {
+    "heading": "通知",
+    "empty": "没有新通知。",
+    "dismiss": "关闭",
+    "mute": "不再提醒",
+    "severityWarn": "需要注意",
+    "severityInfo": "信息",
+    "bell": {
+      "withCount": "通知，{count} 条",
+      "none": "通知，无"
+    },
+    "welcome": {
+      "title": "欢迎使用 Rimmerge",
+      "body": "Rimmerge 可以在每天启动时联系 GitHub 一次：\n- 检查是否发布了更新版本的 Rimmerge（api.github.com）；\n- 下载更新后的规则数据库——社区加载顺序规则和 Rimmerge 自己的规则文件（raw.githubusercontent.com）。更新内容保存在本地；只有当你选择导入时，它们才会改变你的加载顺序。\n\n它不会发送任何关于你、你的 Mod 或你的安装的信息——只是一个普通请求，GitHub 能从中看到你的 IP 地址。大型的 Steam 创意工坊数据库从不自动下载，只会在你点击“刷新”时下载。",
+      "settingsAlreadyRecommended": "你的设置已经符合推荐的默认值。",
+      "steamWorkshopLabel": "Steam 创意工坊数据库（约 49 MB，只在你点击“刷新”时下载）"
+    },
+    "gameVersionChanged": {
+      "title": "游戏版本已变更",
+      "body": "RimWorld 现在是 {current}（之前是 {acknowledged}）。为 {acknowledged} 导出的兼容补丁和补丁制作器 Mod 会继续声明该版本，直到你重新导出它们。",
+      "kindLabel": "游戏版本已变更"
+    },
+    "updateAvailable": {
+      "title": "Rimmerge {version} 现已可用",
+      "body": "你正在运行旧版本。Rimmerge {version} 已发布。",
+      "kindLabel": "有可用更新"
+    },
+    "ruleDatabasesStale": {
+      "title": "{count} 个规则数据库需要注意",
+      "body": "以下规则数据库最近没有刷新：",
+      "kindLabel": "规则数据库已过期",
+      "neverFetched": "从未获取",
+      "lastSuccess": "上次刷新于 {date}",
+      "lastFailure": "上次尝试失败：{reason}"
+    },
+    "importedRulesOutdated": {
+      "title": "{count} 个规则数据库有可导入的新内容",
+      "body": "以下数据库已缓存新内容：",
+      "kindLabel": "有可导入的新规则内容"
+    },
+    "recommendedSources": {
+      "kindLabel": "推荐的规则数据库",
+      "title": "有 {count} 个推荐的规则数据库尚未设置",
+      "body": "使用全部三个规则数据库时，Rimmerge 的排序效果最好。开启后会立即下载它们；之后小型数据库会自动刷新，而 Steam 创意工坊数据库只在你点击“刷新”时刷新。",
+      "bodyWithSteam": "使用全部三个规则数据库时，Rimmerge 的排序效果最好。开启后会立即下载它们。Steam 创意工坊数据库约 49 MB，之后只在你点击“刷新”时刷新；小型数据库会自动刷新。",
+      "sourceOff": "{source}：已关闭",
+      "sourceNotDownloaded": "{source}：已开启，尚未下载"
+    },
+    "actions": {
+      "keepNetworkSettings": "保留这些设置",
+      "turnOffNetwork": "关闭互联网访问",
+      "applyRecommendedSettings": "使用推荐设置",
+      "refreshRuleDatabases": "立即刷新",
+      "openRuleDatabases": "打开规则数据库",
+      "openSettings": "打开设置",
+      "showReleasePage": "复制发布页链接",
+      "openPatches": "打开补丁",
+      "enableRecommendedSources": "开启并下载",
+      "enableRecommendedSourcesToast": "已开启推荐的规则数据库",
+      "enableRecommendedSourcesPartialToast": "已开启推荐的规则数据库，但部分下载未完成。它们仍会列在通知中。",
+      "turnOffNetworkToast": "互联网访问已关闭",
+      "recommendedSettingsAppliedToast": "已应用推荐设置",
+      "linkCopiedToast": "链接已复制"
+    }
+  },
+  "error": {
+    "generic": {
+      "title": "操作失败",
+      "detail": "出现了错误。"
+    },
+    "code": {
+      "no_project_loaded": {
+        "title": "未载入项目",
+        "detail": "请先载入项目，再执行此操作。"
+      },
+      "session_lost": {
+        "title": "会话已丢失",
+        "detail": "一个内部错误中断了你的会话。它将自动重新载入。"
+      },
+      "internal": {
+        "title": "内部错误",
+        "detail": "Rimmerge 自身出现了错误。"
+      },
+      "invalid_input": {
+        "title": "输入无效",
+        "detail": "你输入的值无效。"
+      },
+      "scan_failed": {
+        "title": "扫描失败",
+        "detail": "对该安装的扫描或分析未能完成。"
+      },
+      "mods_config_io_failed": {
+        "title": "无法读取或写入 ModsConfig.xml",
+        "detail": "请检查该文件是否存在，并且不是只读或正被占用。"
+      },
+      "profile_io_failed": {
+        "title": "无法读取或写入你的配置档案",
+        "detail": "请检查 Rimmerge 的配置档案文件夹是否可写。"
+      },
+      "rimsort_import_failed": {
+        "title": "导入失败",
+        "detail": "无法导入 RimSort 数据库文件。"
+      },
+      "rimworld_running": {
+        "title": "RimWorld 正在运行",
+        "detail": "请先关闭 RimWorld，或仍然继续。"
+      },
+      "mod_not_found": {
+        "title": "未找到 Mod",
+        "detail": "该 Mod 不在已启用的 Mod 列表中。"
+      },
+      "finding_not_found": {
+        "title": "未找到检查结果",
+        "detail": "该检查结果已不再有效——它可能已经被解决。"
+      },
+      "merge_source_failed": {
+        "title": "无法读取合并来源",
+        "detail": "自上次扫描以来，某个 Def、模板、补丁或纹理文件已更改或消失。请重新载入项目。"
+      },
+      "merge_mod_io_failed": {
+        "title": "无法写入合并 Mod",
+        "detail": "写入或删除生成的合并 Mod 文件夹失败。"
+      },
+      "patch_not_found": {
+        "title": "未找到补丁",
+        "detail": "该兼容补丁项目已不再载入。"
+      },
+      "patch_identity_invalid": {
+        "title": "补丁标识无效",
+        "detail": "ID 或显示名称无效，或者与其他 Mod 或补丁冲突。"
+      },
+      "def_not_found": {
+        "title": "未找到 Def",
+        "detail": "该 Def 或模板不在本次扫描中。"
+      },
+      "assignment_not_found": {
+        "title": "未找到补丁制作器项目",
+        "detail": "该补丁制作器项目已不再载入。"
+      },
+      "assignment_section_in_use": {
+        "title": "分区仍在使用中",
+        "detail": "另一个分区仍在引用此分区中的行。"
+      },
+      "stale_active_set": {
+        "title": "已启用 Mod 列表已过期",
+        "detail": "请在写入 ModsConfig.xml 之前重新扫描。"
+      },
+      "texture_unsupported_format": {
+        "title": "无法显示此纹理格式",
+        "detail": "该文件不是 PNG 或 JPEG 图像，因此无法在此预览。不支持 DDS 纹理。"
+      }
+    }
+  },
+  "defaultPathsWarning": {
+    "notAnInstall": "{gameDir} 看起来不像 RimWorld 安装目录（缺少 Version.txt 或 Data/Core/）。"
+  },
+  "defaultPathsError": {
+    "noProfileBase": "RIMMERGE_PROFILE_DIR 和 LOCALAPPDATA 均未设置，因此 Rimmerge 没有地方保存它自己的文件。",
+    "gameDirNotFound": "找不到 RimWorld 安装目录。已检查的所有位置请参见下方的技术细节。",
+    "modsConfigNotFound": "Rimmerge 无法确定 ModsConfig.xml 的位置。请参见下方的技术细节。"
+  },
+  "finding": {
+    "kind": {
+      "edgeDropped": "排序约束被舍弃",
+      "anyOfChoice": "任选其一",
+      "defOverride": "Def 覆盖",
+      "patchCollision": "补丁冲突",
+      "textureOverride": "纹理覆盖",
+      "duplicateAssembly": "重复的程序集",
+      "likelyDuplicateMod": "疑似重复的 Mod",
+      "missingMod": "缺失的 Mod",
+      "missingDependency": "缺失的依赖",
+      "incompatiblePair": "不兼容的 Mod 对",
+      "unsupportedVersion": "不支持的版本",
+      "undeclaredHardDependency": "未声明的硬性依赖",
+      "lazyReferenceViolated": "延迟引用被违反",
+      "declarationQuestioned": "声明受到质疑",
+      "declarationOverridden": "声明被覆盖",
+      "duplicateTemplateName": "重复的模板名称",
+      "keyedTranslationCollision": "翻译键冲突",
+      "soundOverride": "音效覆盖",
+      "undeclaredTypeDependency": "未声明的类型依赖",
+      "runtimePatchCollision": "运行时补丁冲突",
+      "transpilerCollision": "转译器冲突",
+      "tagInferred": "推断出的标签",
+      "ruleOverruled": "规则被否决",
+      "placementOverruled": "位置被否决",
+      "placementQuestioned": "位置受到质疑",
+      "placementOrderingOverridden": "位置顺序被覆盖",
+      "placementPromotesDependents": "位置连带提升依赖方",
+      "missingTexturePath": "缺失的纹理路径",
+      "patchWillFail": "补丁将会失败",
+      "contributesNothing": "没有任何作用",
+      "undecodableTexture": "无法加载的纹理",
+      "brokenInheritance": "继承已损坏",
+      "nearMissModReference": "Mod 引用可能有拼写错误",
+      "discardedAddition": "被有意丢弃的添加",
+      "danglingDefReference": "悬空的 Def 引用"
+    },
+    "title": {
+      "edgeDroppedNoWinner": "为打破循环，舍弃了“{before} 先于 {after}”",
+      "edgeDroppedWithWinner": "舍弃了“{before} 先于 {after}”，被 {winner} 否决",
+      "declarationQuestioned": "“{after} 在 {before} 之后”受到“{relation}”关系的质疑",
+      "declarationOverridden": "“{after} 在 {before} 之后”被 {winner} 覆盖",
+      "anyOfChoice": "{after} 需要 {count} 个提供 {assembly} 的 Mod 之一",
+      "textureOverride": "纹理 {texturePath}",
+      "duplicateAssembly": "{assembly} 由 {count} 个 Mod 提供",
+      "duplicateTemplateName": "模板 {name} 被 {count} 个 Mod 注册",
+      "keyedTranslationCollision": "{a} 和 {b} 共用 {count} 个翻译键",
+      "soundOverride": "音效 {path} 由 {count} 个 Mod 提供",
+      "undeclaredTypeDependency": "{user} 使用了 {provider} 的 {typeName}，但没有声明任何关系",
+      "runtimePatchCollision": "{target} 被 {count} 个 Mod 修补",
+      "transpilerCollision": "{target} 被 {count} 个 Mod 转译",
+      "likelyDuplicateMod": "{a} 和 {b} 看起来是重复的（共有 {count} 个相同 Def）",
+      "missingMod": "{modId} 缺失",
+      "missingDependency": "{modId} 缺失其依赖 {dependency}",
+      "incompatiblePair": "{a} 和 {b} 被标记为不兼容",
+      "unsupportedVersion": "{modId} 不支持此 RimWorld 版本",
+      "undeclaredHardDependency": "{after} 在加载时需要 {before}，但没有声明",
+      "lazyReferenceViolated": "{after} 在 {before} 加载之前就引用了它",
+      "tagInferred": "{modId} 被标记为 {tag}",
+      "ruleOverruledNoWinner": "规则“{before} 先于 {after}”被否决",
+      "ruleOverruledWithWinner": "规则“{before} 先于 {after}”被 {winner} 否决",
+      "placementOverruled": "{modId} 的{placement}位置被否决",
+      "placementQuestioned": "{modId} 的{placement}位置受到 {other} 的质疑",
+      "placementOrderingOverridden": "{modId} 覆盖了 {pinned} 自身的位置顺序",
+      "placementPromotesDependents": "{modId} 的位置连带提升了另外 {count} 个 Mod",
+      "missingTexturePath": "{defKey} 的字段 {field} 指定的纹理没有任何已启用的 Mod 提供",
+      "patchWillFail": "预计 {modId} 对 {defKey} 的操作会失败",
+      "contributesNothing": "{modId} 没有任何作用",
+      "undecodableTexture": "{modId} 的 {path} 无法解码",
+      "brokenInheritance": "{modId} 对“{parentName}”的继承已损坏",
+      "nearMissModReference": "{referrer} 对“{written}”的引用可能有拼写错误",
+      "discardedAddition": "{replacer} 有意丢弃了 {adder} 自身的添加内容",
+      "danglingDefReference": "“{name}”不对应任何已启用的 Def"
+    }
+  },
+  "edgeKind": {
+    "assemblyRef": "程序集引用",
+    "forceLoadAfter": "强制在…之后加载",
+    "forceLoadBefore": "强制在…之前加载",
+    "loadAfter": "在…之后加载",
+    "loadBefore": "在…之前加载",
+    "modDependency": "Mod 依赖",
+    "findMod": "查找 Mod",
+    "ifModActive": "Mod 启用时",
+    "patchTargetsDef": "补丁针对 Def",
+    "mayRequire": "可选需要",
+    "patchInjectedNode": "补丁注入的节点",
+    "assemblyVersionPrecedence": "程序集版本优先",
+    "usesType": "使用类型",
+    "parentTemplate": "父模板",
+    "patchRemovedNode": "补丁删除的节点",
+    "retextureAfterOwner": "重绘纹理在原 Mod 之后",
+    "defOverrideAfterOrigin": "Def 覆盖在来源之后",
+    "patchSelectsInjectedNode": "补丁选中注入的节点",
+    "patchInvalidatesPredicate": "补丁使谓词失效",
+    "patchRemovedNodeCosmetic": "删除的节点（无实质影响）",
+    "replaceDiscardsAddition": "替换丢弃了添加"
+  },
+  "tagSignal": {
+    "urlContains": "URL 包含“{needle}”",
+    "assemblyRefTo": "引用了 {mod} 的程序集",
+    "dependsOn": "依赖 {mod}"
+  },
+  "caveat": {
+    "duplicateTemplate": "模板“{name}”被多个 Mod 注册（{owners}）；每个子项各自继承自在它之前（或同一位置）、距离最近加载的那个注册，因此不同的子项可能解析到不同的 Mod",
+    "modSettingDefault": "{modId} 的 {class} 是按其默认设置重放的，不一定与你游戏中的设置相同",
+    "failedOp": "{modId} 对 {xpath} 的补丁操作没有匹配到任何内容",
+    "unscopedOps": "{modId} 有 {count} 个补丁操作无法归属到某个 Def",
+    "malformedOperation": "{modId} 的补丁操作不是格式正确的 XML",
+    "defRemoved": "此 Def 被 {modId} 删除",
+    "positionalItem": "{path} 仅通过位置来识别；之后的重新排序可能让这一选择指向别处",
+    "unsafeXpathValue": "{path} 的值无法安全地写成 xpath，因此未被解析",
+    "unknownOwnerChoice": "{path}：所选的所有者 {modId} 不是此字段的候选项",
+    "invalidValueFragment": "{path}：无法解析输入的值",
+    "unsupportedDrop": "{path}：补丁冲突不支持丢弃",
+    "unreconstructableChain": "{path}：无法重建其所在的结构",
+    "unsettableLeaf": "{path}：继承而来的叶节点无法被取消设置为空",
+    "outOfScopeOwners": "在 {mods} 中任一 Mod 加载于此补丁范围之后的安装中，此补丁可能会改为指向或覆盖该 Mod 的 Def",
+    "clobberedMapEntry": "{path} 由 {by} 添加，但之后的补丁替换了整个映射，导致它被丢弃；已恢复"
+  },
+  "inbox": {
+    "evidence": {
+      "inspectLink": "查看",
+      "ariaLabel": "检查结果证据",
+      "edgeDropped": {
+        "sentence": "已舍弃一条{strength}强度的排序约束（{edgeKind}）：{after} → {before}。"
+      },
+      "anyOfChoice": {
+        "intro": "{modId} 需要 {assembly} 的候选项之一："
+      },
+      "danglingDefReference": {
+        "causeRemovedBy": "它被 {modId} 自身的补丁删除了",
+        "causeOnlyInUnloadedFolder": "它只在 {modId} 自身的“{folder}”文件夹中定义，而本安装不会加载该文件夹",
+        "causeOnlyInInactiveMod": "它只在 {modId} 中定义，而该 Mod 未启用",
+        "causeDefinedNowhere": "没有任何已安装的 Mod（无论是否启用）定义它",
+        "causeUnexplained": "无法确定它缺失的原因",
+        "referrerFromDef": "{modId} 的 {defType}/{defName}（{fieldPath}）",
+        "referrerFromTemplate": "{modId} 的 {defType}/{'@'}{name}（{fieldPath}）",
+        "referrerFromPatch": "{modId} 对 {defType}/{defName} 的补丁（{fieldPath}）",
+        "sentence": "{name} 不对应任何类型的已启用 Def——{cause}。",
+        "likelySound": "这看起来是一个音效引用——缺失的 {soundDef} 会记录一条警告，并静默回退为一个未定义的音效，而不会导致加载失败。",
+        "referencedFrom": "引用位置：",
+        "truncatedReferrers": "另有 {count} 个引用方未显示（显示上限）。"
+      },
+      "textureOverride": {
+        "sentence": "纹理 {path}"
+      },
+      "duplicateAssembly": {
+        "sentence": "程序集 {name}，由以下 Mod 提供："
+      },
+      "likelyDuplicateMod": {
+        "body": "{a} 和 {b} 共有 {count} 个完全相同的 Def 键"
+      },
+      "missingMod": {
+        "body": "{modId} 在列表中，但在磁盘上找不到。"
+      },
+      "missingDependency": {
+        "body": "{modId} 需要 {dependencyLabel}（{dependency}），但它未启用。"
+      },
+      "incompatiblePair": {
+        "body": "{a} 和 {b} 被标记为不兼容。"
+      },
+      "unsupportedVersion": {
+        "body": "{modId} 没有声明支持此游戏版本。"
+      },
+      "undeclaredHardDependency": {
+        "body": "{after} 需要 {before}，但从未声明。"
+      },
+      "lazyReferenceViolated": {
+        "body": "{after} 对 {before} 的延迟引用被违反。"
+      },
+      "declarationQuestioned": {
+        "body": "{declaredAfter} 被声明为在 {declaredBefore} 之后加载，但相反的关系也成立："
+      },
+      "declarationOverridden": {
+        "body": "{declaredAfter} 被声明为在 {declaredBefore} 之后加载，但一条声明覆盖规则给出了相反的结论："
+      },
+      "keyedTranslationCollision": {
+        "body": "{a} 和 {b} 都定义了 {count} 个相同的翻译键："
+      },
+      "soundOverride": {
+        "sentence": "音效 {path}，由以下 Mod 提供："
+      },
+      "undeclaredTypeDependency": {
+        "sentence": "{user} 引用了来自 {provider} 程序集的类型 {typeName}，但两者之间没有声明任何关系。"
+      },
+      "runtimePatchCollision": {
+        "sentence": "{target} 按加载顺序依次被以下 Mod 修补：",
+        "runsLast": "最后运行",
+        "runLastButton": "设为最后运行",
+        "runLastAriaLabel": "让 {modId} 最后运行"
+      },
+      "transpilerCollision": {
+        "sentence": "{target} 被以下每个 Mod 中的运行时补丁转译器改写（按加载顺序）："
+      },
+      "tagInferred": {
+        "sentence": "{modId} 被标记为 {tag}，依据："
+      },
+      "ruleOverruled": {
+        "withWinner": "“{after} 在 {before} 之后加载”（{origin}）被否决：",
+        "byLongerCycle": "“{after} 在 {before} 之后加载”（{origin}）被一个更长的循环否决。",
+        "cycle": "循环：{chain}"
+      },
+      "placementOverruled": {
+        "intro": "{modId} 被固定在{placement}（{origin}），但被以下约束否决：",
+        "landedAt": "最终位于第 {position} 位。"
+      },
+      "placementQuestioned": {
+        "body": "{modId} 被固定在{placement}，但在此固定下，它与 {other} 之间的“{relationKind}”关系无法成立。"
+      },
+      "placementOrderingOverridden": {
+        "body": "一条已接受的排序约束迫使 {modId} 越过了 {pinned} 自身的{placement}固定位置："
+      },
+      "placementPromotesDependents": {
+        "body": "{modId} 被固定在{placement}，使另外 {count} 个 Mod 也越过了同一层级边界："
+      },
+      "showMore": "显示更多（{shown}/{total}）",
+      "missingTexturePath": {
+        "sentence": "{modId} 的 {def} 的字段 {field} 指定了纹理 {path}，但没有任何已启用的 Mod 提供它。"
+      },
+      "undecodableTexture": {
+        "sentence": "{modId} 的 {path} 无法解码（{width}x{height}，{fourcc}）——原版游戏会在该处显示错误纹理占位图。",
+        "pngSibling": "该 Mod 还在同一路径下提供了一个非 DDS 文件，但原版游戏从不回退使用它。"
+      },
+      "brokenInheritance": {
+        "missingParent": "{modId} 的 {child} 继承自 {parentName}——没有任何已启用的 Mod 定义它，因此它加载时不带该父级自身的任何字段。",
+        "wrongType": "{modId} 的 {child} 继承自 {parentName}——在该 Mod 自身的加载位置，它解析为 {parentType}，而不是 {childDefType}。",
+        "affectedCount": "{count} 个受影响的 Def：",
+        "andMore": "……以及另外 {count} 个",
+        "truncated": "另有 {count} 个受影响的 Def 未显示（显示上限）。"
+      },
+      "nearMissModReference": {
+        "findModName": "{modId} 的 FindMod 名称 {written} 不对应任何已启用或已安装的 Mod，但与 {candidateName} 非常相似——可能是拼写错误。",
+        "mayRequireId": "{modId} 的 MayRequire ID {written} 不对应任何已启用或已安装的 Mod，但与 {candidateName} 非常相似——可能是拼写错误。",
+        "writtenIn": "所在文件：{file}"
+      },
+      "patchWillFail": {
+        "causeRemovedBy": "{modId} 对 {defKey} 的 {operation} 预计在此顺序下会失败——先加载的 {causeModId} 会用自身的操作删除目标节点。",
+        "causeNotYetInjected": "{modId} 对 {defKey} 的 {operation} 预计在此顺序下会失败——它针对的是 {causeModId} 注入的节点，但该 Mod 在它之后加载。",
+        "causeDeadTarget": "{modId} 对 {defKey} 的 {operation} 预计在此顺序下会失败——无论加载顺序如何，胜出所有者自身解析后的结构中都没有该节点。",
+        "causeUnclassified": "{modId} 对 {defKey} 的 {operation} 预计在此顺序下会失败——无法判定原因。",
+        "specificField": "具体字段：{leafXpath}"
+      },
+      "contributesNothing": {
+        "body": "在此顺序下，{modId} 没有任何可观察到的作用：没有程序集，它拥有的每个 Def 都被覆盖，它提供的每个纹理和翻译都被覆盖，它的每个补丁操作要么应用失败，要么从未运行。"
+      },
+      "discardedAddition": {
+        "sentence": "{replacer} 声明在 {adder} 之后加载，并替换了 {path}：{adder} 自身在 {adderPath} 处的添加被有意丢弃。"
+      }
+    },
+    "suggestion": {
+      "acceptButton": "接受 (Enter)",
+      "ignoreButton": "忽略 (i)",
+      "revertButton": "恢复 (u)",
+      "alternativesHeading": "备选方案",
+      "addNoteButton": "添加备注 (n)"
+    },
+    "page": {
+      "loadFailed": "载入检查结果失败。",
+      "noSelection": "选择一条检查结果以查看其建议。",
+      "shortcutsHeader": "键盘快捷键",
+      "shortcutMoveCursor": "移动光标",
+      "shortcutAccept": "接受建议",
+      "shortcutPickAlternative": "选择备选方案",
+      "shortcutIgnore": "忽略",
+      "shortcutRevert": "恢复为未决定",
+      "shortcutMerge": "合并 Def 覆盖或补丁冲突",
+      "shortcutAddNote": "添加备注",
+      "shortcutOpenOrder": "在加载顺序视图中打开",
+      "shortcutOpenModDetail": "打开 Mod 详细信息",
+      "shortcutFocusSearch": "聚焦搜索框",
+      "shortcutCycleStatus": "切换状态筛选",
+      "shortcutToggleModLabel": "切换 Mod 名称/ID",
+      "shortcutToggleHelp": "显示/隐藏此帮助"
+    },
+    "alternatives": {
+      "ariaLabel": "备选方案"
+    },
+    "decisionNote": {
+      "label": "备注",
+      "save": "保存备注"
+    },
+    "textureTile": {
+      "winnerBadge": "胜出",
+      "sizeLine": "{format} · {count} 字节",
+      "useThisOne": "使用这个",
+      "shipThisFile": "打包此文件"
+    },
+    "defConflictView": {
+      "sourceFailed": "自扫描以来文件已更改，请重新载入项目。",
+      "loadFailed": "载入冲突视图失败。",
+      "completenessPartial": "不完整",
+      "completenessCompleteWithProblems": "完整，但有问题",
+      "completenessComplete": "完整",
+      "patchCollisionWithSubPath": "补丁冲突——{subPath}",
+      "injectedNodeRelation": "{selector} 的补丁选中了由 {injector} 注入的节点",
+      "showLabel": "显示",
+      "filterAllChanged": "所有更改",
+      "filterConflict": "冲突",
+      "filterCleanMerge": "无冲突合并",
+      "filterListEntries": "列表条目",
+      "filterMapEntries": "映射条目",
+      "filterUnchanged": "未更改",
+      "showMore": "显示更多（{shown}/{total}）",
+      "problemsHeading": "问题",
+      "problemUnsupportedOp": "{modId} 的第 {opIndex} 个操作",
+      "problemReplayStopped": "重放在此停止；上方的行来自它之前的操作。",
+      "problemMissingTemplate": "缺失模板 {name}（{defType}）。",
+      "problemCycle": "循环：{chain}",
+      "problemPlanFailed": "合并规划失败：{reason}"
+    },
+    "fieldRowsTable": {
+      "empty": "没有符合此筛选条件的字段。",
+      "headerPath": "路径",
+      "headerKind": "类型",
+      "headerValues": "值",
+      "headerInGame": "游戏中",
+      "headerAfterMerge": "合并后",
+      "headerPreference": "偏好",
+      "kindConflict": "冲突",
+      "kindCleanMerge": "无冲突合并",
+      "kindListEntry": "列表条目",
+      "kindMapEntry": "映射条目",
+      "kindUnchanged": "未更改",
+      "groupHeader": "{path}（{count} 个条目）",
+      "alsoAddedBy": "也由 {mods} 添加",
+      "mergeChoiceFrom": "{modId} 的值",
+      "mergeChoiceValue": "存储的值“{text}”",
+      "mergeChoiceDropped": "已丢弃",
+      "preferenceLoadOrder": "{winner} 胜出（加载顺序）",
+      "preferenceDecision": "{winner} 胜出（决定）",
+      "preferenceMergeChoice": "{choice}（合并选择）"
+    },
+    "findingList": {
+      "searchPlaceholder": "搜索检查结果…",
+      "filterByStatus": "按状态筛选",
+      "filterByKind": "按类型筛选",
+      "empty": "没有符合此筛选条件的检查结果。",
+      "findingsAriaLabel": "检查结果",
+      "statusAll": "全部",
+      "statusNeedsInput": "待处理",
+      "statusAuto": "自动",
+      "statusOverridden": "手动决定",
+      "filteredByMod": "已筛选为 {mod}",
+      "clearModFilter": "清除 Mod 筛选"
+    },
+    "findingCard": {
+      "undecided": "未决定",
+      "decidedChip": "已决定",
+      "resolvedBySuggestedChip": "由建议顺序解决"
+    },
+    "touchersList": {
+      "mod": "Mod",
+      "role": "角色",
+      "ops": "操作数",
+      "replay": "重放",
+      "generatedSuffix": "（生成）",
+      "roleOwner": "所有者",
+      "rolePatcher": "修补者",
+      "reached": "已执行到",
+      "notReached": "未执行到"
+    }
+  },
+  "merge": {
+    "state": {
+      "merged": "已合并",
+      "needsInput": "{count} 个字段待处理",
+      "structuralGuard": "未自动合并——请确认胜出者",
+      "cannotMerge": "无法合并"
+    },
+    "skipped": {
+      "stillNeedsInput": "仍待处理"
+    },
+    "summary": {
+      "patchCollision": "{count} 个补丁冲突合并（未决定处为自动建议）",
+      "defOverride": "{count} 个 Def 覆盖合并（明确决定）",
+      "asset": "{count} 个打包的资源",
+      "willWrite": "将写入 {parts}。"
+    },
+    "header": {
+      "inspectLink": "查看",
+      "outOfScope": "超出范围，未合并：{mods}",
+      "structuralGuardLine": "{field} 不同（{by} 与基础副本）——对此 Def 进行字段级合并并不安全。请在检查结果页接受此检查结果，以确认加载顺序中的胜出者；它无法以合并方式完成。",
+      "baseTag": "（基础）",
+      "winnerTag": "（胜出）",
+      "totalsFields": "{count} 个字段",
+      "totalsConflicts": "{count} 个冲突",
+      "totalsAuto": "{count} 个自动解决",
+      "totalsUnresolved": "{count} 个未解决",
+      "totalsUnchanged": "{count} 个未更改"
+    },
+    "entryKind": {
+      "defOverride": "Def 覆盖",
+      "patchCollision": "补丁冲突",
+      "asset": "资源"
+    },
+    "mod": {
+      "assetsGroup": "资源",
+      "opsCount": "{count} 个操作",
+      "dependsOn": "依赖于",
+      "openInEditor": "在编辑器中打开",
+      "heading": "合并输出",
+      "mergedDefs": "{count} 个已合并的 Def",
+      "nothingYet": "空",
+      "summary": "Rimmerge 用来写入你的合并与资源决定的兼容 Mod——当前：{contents}。每次应用时都会重新生成；在建议顺序中始终最后加载。",
+      "summaryWithSources": "Rimmerge 用来写入你的合并与资源决定的兼容 Mod——当前：{contents}，来源于 {count} 个 Mod。每次应用时都会重新生成；在建议顺序中始终最后加载。",
+      "loadFailed": "载入合并输出失败。",
+      "packageIdLabel": "ID",
+      "folderLabel": "文件夹",
+      "pathLabel": "路径",
+      "onDiskLabel": "磁盘上",
+      "existsYes": "是——每次应用时重新生成",
+      "existsNo": "尚未生成——勾选“写入合并 Mod”进行应用即可生成",
+      "placementLabel": "加载顺序位置",
+      "placementValue": "最后（排序器总是把生成的 Mod 放在建议顺序的最底部）",
+      "sourceModsLabel": "来源 Mod",
+      "entriesHeading": "条目",
+      "noEntriesYet": "还没有“合并”或“打包资源”决定——使用合并编辑器对 Def 覆盖或补丁冲突检查结果作出决定即可添加。",
+      "filesHeading": "文件",
+      "nothingRendersYet": "至少存在一个“合并”或“打包资源”决定后，文件会显示在这里。",
+      "fileLoadFailed": "渲染此文件失败。"
+    },
+    "filePreviewLabel": "文件预览",
+    "editor": {
+      "sourceFailedSuffix": "{message}——自上次扫描以来，项目的文件已更改。",
+      "reloadProject": "重新载入项目",
+      "loadFailed": "载入合并预览失败。",
+      "showMore": "显示更多（{loaded}/{total}）",
+      "shortcutsHeader": "合并编辑器快捷键",
+      "shortcutMoveRowCursor": "移动行光标",
+      "shortcutNextPrevConflict": "下一个/上一个冲突",
+      "shortcutMoveColumnCursor": "移动列光标",
+      "shortcutChooseColumn": "选择光标所在的列",
+      "shortcutChooseOwnerColumn": "选择第 n 个所有者列（1 = 基础）",
+      "shortcutChooseWinner": "选择所选顺序中的胜出者",
+      "shortcutEditValue": "编辑自由值",
+      "shortcutToggleDrop": "切换丢弃",
+      "shortcutRevertToAuto": "恢复为自动",
+      "shortcutToggleAutoSection": "展开/折叠自动部分",
+      "shortcutToggleUnchanged": "显示/隐藏未更改的行",
+      "shortcutBackToFindings": "返回检查结果"
+    },
+    "table": {
+      "pathHeader": "路径",
+      "classHeader": "分类",
+      "resultHeader": "结果",
+      "actionsHeader": "操作",
+      "sectionConflicts": "冲突（{count}）",
+      "sectionAuto": "自动解决（{count}）",
+      "sectionUnchanged": "未更改（{count}）",
+      "containerEntries": "{count} 个条目",
+      "containerSummary": "{container}——{entries}",
+      "containerConflicts": "{count} 个冲突",
+      "containerSummaryWithConflicts": "{base}，{conflicts}",
+      "acceptSuggested": "接受建议（{count}）"
+    },
+    "field": {
+      "classUnchanged": "未更改",
+      "classOneSided": "由一个 Mod 修改",
+      "classAgreeing": "一致",
+      "classConflict": "冲突",
+      "chooseValueFor": "为 {path} 选择一个值",
+      "suggestedHint": "建议",
+      "takeValue": "采用 {owner} 的值",
+      "dropped": "已丢弃",
+      "needsInput": "待处理",
+      "saving": "保存中…",
+      "drop": "丢弃",
+      "dropUnavailableTitle": "补丁冲突不支持丢弃——RimWorld 自身的补丁总会重放出一个值。",
+      "clearChoice": "清除选择",
+      "autoRevert": "自动"
+    },
+    "value": {
+      "absent": "不存在",
+      "showLess": "收起",
+      "showMore": "显示更多"
+    }
+  },
+  "action": {
+    "accept": "接受",
+    "ignore": "忽略",
+    "reorder": "在 {before} 之后加载 {after}",
+    "preferWinner": "优先使用 {winner} 的 {defKey}",
+    "chooseCandidate": "为 {after} 选择 {chosen}",
+    "dropEdge": "舍弃排序约束 {after} → {before}（{edgeKind}）",
+    "keepEdge": "保留排序约束 {after} → {before}（{edgeKind}）",
+    "addTag": "将 {modId} 标记为 {tag}",
+    "removeTag": "移除 {modId} 的标签 {tag}",
+    "excludeFromCluster": "将 {modId} 从集群 {rule} 中排除",
+    "removeMod": "将 {modId} 从已启用列表中移除",
+    "merge": "合并 {defKey}",
+    "shipAsset": "打包 {from} 的 {texturePath}",
+    "promoteRulePair": "将“{after} 在 {before} 之后”提升为用户决定",
+    "promoteRulePlacement": "将 {modId} 的位置提升为用户决定",
+    "dropRule": "舍弃规则“{after} 在 {before} 之后”"
+  },
+  "patches": {
+    "scopeBadge": {
+      "title": "超出此补丁范围：{mods}",
+      "label": "部分：+{mods}"
+    },
+    "table": {
+      "emptyState": "还没有兼容补丁——按 n 新建一个。",
+      "nameHeader": "名称",
+      "packageIdHeader": "ID",
+      "scopeHeader": "范围",
+      "needsInputHeader": "待处理",
+      "completeHeader": "完成",
+      "lastExportHeader": "上次导出",
+      "notExported": "未导出"
+    },
+    "identityForm": {
+      "nameLabel": "名称",
+      "packageIdLabel": "ID",
+      "packageIdPlaceholder": "author.mymod",
+      "displayNameLabel": "显示名称",
+      "authorLabel": "作者",
+      "descriptionLabel": "描述",
+      "save": "保存"
+    },
+    "list": {
+      "newPatchButton": "新建补丁 (n)",
+      "newPatchHeading": "新建兼容补丁",
+      "scopeHeading": "范围",
+      "loadFailed": "载入补丁失败。"
+    },
+    "detail": {
+      "loadFailed": "载入此补丁失败。",
+      "orphanedCount": "{count} 个孤立决定",
+      "importFromProfileButton": "从配置档案导入决定",
+      "pruneOrphanedButton": "清理孤立决定",
+      "deleteButton": "删除",
+      "identityHeading": "标识",
+      "exportHeading": "导出",
+      "findingsHeading": "检查结果",
+      "importedToastSummary": "已从配置档案导入",
+      "importedNoSkips": "已导入 {count} 个决定。",
+      "rejection": {
+        "outOfScope": "它不是此补丁范围内成员之间的检查结果",
+        "notPatchable": "补丁只能包含“合并”“打包资源”和“忽略”决定，不能包含“{action}”",
+        "choiceOutsideScope": "{path}：其选择指定了 {mod}，但它不在此补丁的范围内",
+        "assetOutsideScope": "它打包的资源来自 {mod}，但该 Mod 不在此补丁的范围内",
+        "actionName": {
+          "accept": "接受",
+          "reorder": "重新排序",
+          "preferWinner": "优先采用胜出者",
+          "chooseCandidate": "选择候选项",
+          "dropEdge": "舍弃排序约束",
+          "keepEdge": "保留排序约束",
+          "addTag": "添加标签",
+          "removeTag": "移除标签",
+          "excludeFromCluster": "从集群中排除",
+          "removeMod": "从已启用列表中移除",
+          "promoteRule": "提升规则",
+          "dropRule": "舍弃规则"
+        }
+      },
+      "importedWithSkips": {
+        "imported": "已导入 {count} 个决定",
+        "skipped": "跳过了 {count} 个决定：{reasons}",
+        "reasonSeparator": "；",
+        "combined": "{imported}。{skipped}"
+      },
+      "prunedToastSummary": "已清理孤立决定",
+      "prunedToastDetail": "已删除 {count} 个当前范围不再接受的决定。",
+      "deleteDialogHeader": "删除此补丁？",
+      "deleteDialogBody": "这会删除该补丁项目。它已导出到磁盘的文件夹不会被改动。"
+    },
+    "inbox": {
+      "loadFailed": "载入此补丁的检查结果失败。",
+      "shortcutFocusScopeSearch": "聚焦范围搜索框",
+      "shortcutFocusExportDir": "聚焦导出目录字段",
+      "shortcutBackToPatch": "返回补丁自身的详细信息"
+    },
+    "scopeEditor": {
+      "minimumSizeTitle": "补丁范围至少需要两个成员。",
+      "membersListLabel": "范围成员",
+      "removeMember": "从范围中移除 {name}",
+      "noMembersYet": "还没有范围成员。",
+      "searchPlaceholder": "搜索要添加的 Mod…",
+      "searchLabel": "搜索要添加到范围的 Mod",
+      "searchResultsLabel": "与搜索匹配的 Mod",
+      "noMatches": "无匹配项。",
+      "scopeShrunk": "范围已缩小——现有 {count} 个决定成为孤立决定。",
+      "remainingChoicesNamingRemoved": "还有 {count} 个剩余选择仍指向已移除的 Mod。"
+    },
+    "exportPanel": {
+      "exportDirLabel": "导出目录",
+      "exportDirPlaceholder": "选择文件夹…",
+      "chooseButton": "选择…",
+      "installCheckboxLabel": "安装到 Mods 文件夹并启用",
+      "staleActiveSetNote": "未包含待定的启用状态更改——如果希望本次安装包含它们，请先重新扫描。",
+      "forceWarning": "RimWorldWin64.exe 似乎正在运行。现在安装会写入 ModsConfig.xml，而游戏退出时会覆盖该文件，因此这次更改可能会丢失。仍然导出？",
+      "exportAnyway": "仍然导出",
+      "export": "导出",
+      "exportedTo": "已导出到：{path}",
+      "installedAt": "已安装到：{path}",
+      "hash": "哈希：{hash}",
+      "unchangedSinceLastExport": "自上次导出以来未更改。",
+      "renderLoadFailed": "渲染此补丁失败。",
+      "dependenciesHeading": "依赖",
+      "entriesHeading": "条目",
+      "noEntriesYet": "还没有“合并”或“打包资源”决定——在此补丁的检查结果中对 Def 覆盖或补丁冲突检查结果作出决定即可添加。",
+      "skippedHeading": "已跳过",
+      "filesHeading": "文件",
+      "nothingRendersYet": "此补丁至少有一个“合并”或“打包资源”决定后，文件会显示在这里。",
+      "fileLoadFailed": "渲染此文件失败。"
+    }
+  },
+  "edgeStrength": {
+    "hard": "硬性",
+    "declared": "声明",
+    "soft": "软性",
+    "awareness": "感知",
+    "inferred": "推断"
+  },
+  "edgeStatus": {
+    "satisfied": "已满足",
+    "violated": "已违反",
+    "unevaluated": "未评估"
+  },
+  "mods": {
+    "changes": {
+      "searchPlaceholder": "搜索…",
+      "loadFailed": "载入此 Mod 的更改失败。",
+      "noMatches": "没有符合此筛选条件的更改。",
+      "kindHeader": "类型",
+      "targetHeader": "目标",
+      "opsHeader": "操作数",
+      "otherTouchersHeader": "其他涉及的 Mod",
+      "findingsHeader": "检查结果",
+      "showMore": "显示更多（{loaded}/{total}）"
+    },
+    "edges": {
+      "none": "无。"
+    },
+    "picker": {
+      "removeMember": "移除 {name}",
+      "noneSelectedYet": "尚未选择。",
+      "searchPlaceholder": "搜索 Mod…",
+      "searchLabel": "为“{target}”搜索 Mod",
+      "noMatches": "无匹配项。"
+    },
+    "table": {
+      "regionLabel": "Mod",
+      "missing": "缺失",
+      "rovingHint": "使用方向键移动，Enter 键打开，空格键切换"
+    },
+    "pendingChanges": {
+      "unscanned": "{count} 项待定更改——重新扫描以更新分析",
+      "unapplied": "{count} 项更改尚未应用到 ModsConfig.xml",
+      "rescanButton": "重新扫描",
+      "rescanFinishedToast": "重新扫描完成，有 {count} 条备注",
+      "rescannedWithWarningsToast": "重新扫描完成，但有警告"
+    },
+    "closeGuard": {
+      "header": "未保存的已启用 Mod 更改",
+      "body": "工作中的已启用 Mod 列表有尚未被重新扫描采纳的更改，或者某个已扫描的顺序尚未应用到 {modsConfig}。现在离开会丢失内存中的这些工作——无论哪种情况，游戏自身的文件都不会被改动。",
+      "stay": "留在此处",
+      "leaveAnyway": "仍然离开"
+    },
+    "scanNotes": {
+      "empty": "没有扫描备注。"
+    },
+    "detail": {
+      "loadFailed": "载入此 Mod 失败。",
+      "idAndSource": "{modId}——{source}",
+      "byAuthors": "作者：{authors}",
+      "tagsHeading": "标签",
+      "declaredOrderHeading": "声明的顺序",
+      "loadAfterLabel": "在…之后加载",
+      "loadBeforeLabel": "在…之前加载",
+      "forceLoadAfterLabel": "强制在…之后加载",
+      "forceLoadBeforeLabel": "强制在…之前加载",
+      "dependenciesLabel": "依赖",
+      "incompatibleWithLabel": "不兼容",
+      "edgesInHeading": "传入的排序约束",
+      "edgesOutHeading": "传出的排序约束",
+      "changesHeading": "更改",
+      "scanNotesHeading": "扫描备注",
+      "findingsHeading": "检查结果",
+      "noLiveFindings": "没有有效的检查结果。"
+    },
+    "page": {
+      "heading": "Mod",
+      "activeTab": "已启用",
+      "inactiveTab": "未启用",
+      "searchPlaceholder": "搜索 Mod…",
+      "tagFilterPlaceholder": "按标签筛选…",
+      "sourcePlaceholder": "来源",
+      "sourceAny": "任意",
+      "deactivateSelectedButton": "禁用所选",
+      "alsoActivateDependenciesLabel": "同时启用依赖",
+      "activateSelectedButton": "启用所选",
+      "loadFailed": "载入 Mod 失败。",
+      "totalMods": "{count} 个 Mod",
+      "pageCapHint": "（仅显示前 {count} 个——可用搜索缩小范围）",
+      "activateDialogHeader": "启用 Mod",
+      "willActivateHeading": "将启用：",
+      "alreadyActiveHeading": "已启用，跳过：",
+      "unresolvableDependency": "{mod} 声明依赖 {deps}，但磁盘上找不到。",
+      "activatedToast": "已启用",
+      "activateButton": "启用",
+      "deactivateDialogHeader": "禁用 Mod",
+      "willDeactivateHeading": "将禁用：",
+      "refusedHeading": "已拒绝（被依赖）：",
+      "dependentsStillActive": "{count} 个已启用的 Mod 仍依赖 {mod}：{deps}。",
+      "deactivatedToast": "已禁用",
+      "deactivateButton": "禁用"
+    },
+    "defSearch": {
+      "ariaLabel": "跳转到 Def",
+      "placeholder": "跳转到 Def…"
+    }
+  },
+  "rules": {
+    "orphaned": {
+      "empty": "没有孤立决定。",
+      "pruneButton": "清理"
+    },
+    "pairTable": {
+      "regionLabel": "成对规则",
+      "afterHeader": "之后",
+      "beforeHeader": "之前",
+      "originHeader": "来源",
+      "commentHeader": "注释",
+      "notAppliedTitle": "未生效：导入的成对规则已关闭",
+      "promotedFrom": "（提升自 {origin}）",
+      "overridesDeclaredTag": "（覆盖声明）",
+      "overridesDeclaredTitle": "此规则被标记为：如果同一对 Mod 之间存在已声明的排序约束（loadAfter/modDependencies），则覆盖它——它仅针对这一对 Mod 胜过作者自己的声明，但永远不会胜过硬性依赖。",
+      "promotedButton": "已提升",
+      "promoteButton": "提升",
+      "deleteButton": "删除"
+    },
+    "addPairDialog": {
+      "header": "添加成对规则",
+      "loadsAfterLabel": "在后加载（依赖方 Mod）",
+      "loadsBeforeLabel": "在前加载（被依赖的 Mod）",
+      "commentLabel": "注释（可选）",
+      "overrideDeclaredLabel": "如果这两个 Mod 之间存在已声明的排序约束，则覆盖它",
+      "overrideDeclaredWarning": "这仅针对这一对 Mod 胜过作者自己的 loadAfter/modDependencies——但永远不会胜过硬性依赖。仅在声明本身已过时或有误时使用。",
+      "sameModError": "成对规则需要两个不同的 Mod。",
+      "replaceWarning": "这会替换该 Mod 对现有的 {origin} 规则。",
+      "addButton": "添加"
+    },
+    "addPlacementDialog": {
+      "header": "添加规则",
+      "modToPinLabel": "要固定的 Mod",
+      "placementLabel": "位置",
+      "placementPlaceholder": "选择位置",
+      "commentLabel": "注释（可选）",
+      "replaceWarning": "这会替换 {mod} 现有的{placement}固定位置（来源：{origin}）。"
+    },
+    "page": {
+      "heading": "规则",
+      "importToggleState": "导入的成对规则：{pairs} · 导入的位置规则：{placements}",
+      "addRuleButton": "添加规则",
+      "addPairRuleButton": "添加成对规则",
+      "reimportHint": "自此配置档案上次导入以来，缓存的数据库已发生变化；重新导入即可使用这些更改。",
+      "importFromRimSortButton": "从 RimSort 导入",
+      "importFinished": "导入完成。",
+      "userRulesCount": "用户规则：{count}",
+      "communityRulesCount": "社区规则：{count}",
+      "steamDependenciesCount": "Steam 依赖：{count}",
+      "notImported": "未导入",
+      "loadFailed": "载入规则失败。",
+      "tabAll": "全部",
+      "tabUserDecision": "你的决定",
+      "tabRimSortUser": "RimSort（用户）",
+      "tabRimSortCommunity": "RimSort（社区）",
+      "tabSteamDb": "SteamDB",
+      "tagsHeading": "标签",
+      "orphanedHeading": "孤立决定"
+    },
+    "databases": {
+      "heading": "规则数据库",
+      "communityLabel": "社区规则",
+      "steamLabel": "Steam 创意工坊",
+      "rimmergeLabel": "Rimmerge 规则",
+      "refreshButton": "刷新",
+      "refreshDisabledTitle": "因“允许访问互联网”已关闭而不可用（见设置页）",
+      "networkDisabledNotice": "互联网访问已关闭，因此无法刷新。仍在使用缓存的数据库。",
+      "failureBanner": "上次刷新时至少有一个来源失败——仍在使用缓存的副本。",
+      "loadFailed": "载入规则数据库失败。",
+      "needsReimport": "（可重新导入）",
+      "neverFetched": "从未获取",
+      "stale": "已过期（{count} 天）",
+      "updated": "更新于 {relative}",
+      "recencyLine": "{recency} · {bytes} · {sha}",
+      "today": "今天",
+      "daysAgo": "{count} 天前",
+      "lastFailureSuffix": " · 上次刷新失败：{reason}",
+      "bundledSuffix": " · 内置 {sha}",
+      "outcomeUpdated": "已更新（{bytes}，sha {sha}）",
+      "outcomeUnchanged": "未更改（sha {sha}）",
+      "outcomeFailed": "失败：{reason}",
+      "outcomeSkippedSourceDisabled": "已跳过（来源已禁用）",
+      "outcomeSkippedNetworkDisabled": "已跳过（互联网访问已关闭）",
+      "outcomeSkippedAutoRefreshDisabled": "已跳过（自动刷新已禁用）",
+      "outcomeSkippedNotDue": "已跳过（尚未到期）",
+      "refreshModeAutomatic": "自动刷新",
+      "refreshModeManual": "仅手动刷新"
+    },
+    "importDialog": {
+      "header": "从 RimSort 导入",
+      "userRulesLabel": "userRules.json",
+      "communityRulesLabel": "communityRules.json",
+      "steamDbLabel": "steamDB.json",
+      "importButton": "导入"
+    },
+    "tagEditor": {
+      "modHeader": "Mod",
+      "tagHeader": "标签",
+      "sourceHeader": "来源",
+      "confidenceHeader": "置信度",
+      "signalsHeader": "信号",
+      "modIdLabel": "Mod ID",
+      "tagLabel": "标签",
+      "modeLabel": "模式",
+      "modeAdd": "添加",
+      "modeRemove": "移除",
+      "saveButton": "保存"
+    },
+    "table": {
+      "pairRulesHeading": "成对规则",
+      "placementRulesHeading": "位置规则",
+      "modHeader": "Mod",
+      "placementHeader": "位置",
+      "originHeader": "来源",
+      "commentHeader": "注释",
+      "promotesHeader": "连带提升",
+      "notAppliedPlacementsTitle": "未生效：导入的位置规则已关闭",
+      "otherMods": "另外 {count} 个 Mod",
+      "incompatibilitiesHeading": "不兼容关系",
+      "aHeader": "A",
+      "bHeader": "B",
+      "empty": "还没有规则。"
+    }
+  },
+  "placement": {
+    "top": "顶部",
+    "bottom": "底部"
+  },
+  "tagProvenance": {
+    "inferred": "推断",
+    "manual": "手动"
+  },
+  "source": {
+    "core": "核心",
+    "dlc": "扩展",
+    "local": "本地",
+    "workshop": "创意工坊"
+  },
+  "cardinality": {
+    "scalar": "单值",
+    "list": "列表"
+  },
+  "fieldRole": {
+    "targetKey": "目标键",
+    "itemSlot": "物品槽",
+    "chances": "概率",
+    "scalar": "标量",
+    "opaque": "不透明"
+  },
+  "changeKind": {
+    "ownsDef": "拥有",
+    "ownsTemplate": "拥有模板",
+    "patchesDef": "修补",
+    "overridesTexture": "覆盖纹理",
+    "overridesSound": "覆盖音效",
+    "overridesKeyedTranslation": "覆盖翻译"
+  },
+  "defPage": {
+    "loadFailed": "载入此 Def 失败。",
+    "sourceTitle": "按{source}顺序查看——点击切换",
+    "partialBanner": "不完整：在 {reason} 处停止。此处之后的字段未显示。",
+    "replayStopper": "{mod} 的操作 {opIndex}：{error}",
+    "ambiguousTemplateIntro": "模板有歧义：此 Name 有 {count} 个注册。RimWorld 会把每个子项各自解析到在它之前（或同一位置）距离最近加载的那个注册——从来不存在唯一的胜出者。上方的“胜出”/“最后加载的代表”只是本应用在没有针对具体子项询问时公开使用的替代项，并不是答案。",
+    "knownChildrenResolve": "{count} 个已知子项解析到此处",
+    "ownersHeading": "所有者",
+    "winnerTag": "（胜出）",
+    "representativeTag": "（最后加载的代表）",
+    "representativeTitle": "仅为代表——不存在唯一答案，请参阅上方的模板歧义提示",
+    "generatedTag": "（生成）",
+    "patchersHeading": "修补者",
+    "patcherStatusNotReached": "未执行到",
+    "patcherStatusReplayFailed": "重放失败",
+    "patcherStatusReplaysCleanly": "重放正常",
+    "wrappedTag": "（已包裹）",
+    "wrappedTitle": "从其第一个发生修改的后代节点开始显示，而不是包裹节点本身",
+    "gatesPrefix": "条件：{gates}",
+    "gate": {
+      "anyActive": "{mods} 中任一已启用",
+      "noneActive": "{mods} 均未启用"
+    },
+    "parentsHeading": "父级",
+    "childrenHeading": "子项",
+    "effectiveDefHeading": "生效的 Def",
+    "onlyPatchedLabel": "仅显示修补/继承的",
+    "provenanceLegendOwner": "所有者",
+    "provenanceLegendPatched": "已修补",
+    "provenanceLegendInherited": "继承",
+    "provenanceOwner": "所有者：{mod}",
+    "provenancePatch": "由 {mod} 修补",
+    "provenanceInherited": "继承自 {defType}/{defName}（{owner}）",
+    "provenanceUnattributedTemplate": "继承自 {defType}/{defName}（所有者未知）",
+    "fields": {
+      "pathHeader": "路径",
+      "valueHeader": "值",
+      "provenanceHeader": "出处",
+      "showMore": "显示更多（{loaded}/{total}）"
+    },
+    "resolvedXmlSummary": "解析后的 XML"
+  },
+  "layer": {
+    "hard": "硬性",
+    "anyOf": "任选其一",
+    "declaredOverride": "声明覆盖",
+    "declared": "声明",
+    "userDecision": "用户决定",
+    "rimSortUser": "RimSort 用户",
+    "rimSortCommunity": "RimSort 社区",
+    "steamDb": "SteamDB",
+    "inferred": "推断",
+    "soft": "软性",
+    "awareness": "感知"
+  },
+  "order": {
+    "heading": "加载顺序——{source}",
+    "loadFailed": "载入顺序失败。",
+    "sortProvenance": {
+      "summary": "并列处理：{tieBreak} · 导入的成对规则：{pairs} · 导入的位置规则：{placements}",
+      "rebuild": "重建",
+      "preserveCurrent": "保留当前顺序",
+      "on": "开",
+      "off": "关"
+    },
+    "table": {
+      "regionLabel": "加载顺序",
+      "nameHeader": "名称",
+      "tierHeader": "层级",
+      "depsHeader": "依赖",
+      "movedFrom": "原第 {position} 位"
+    },
+    "whyPanel": {
+      "headerWithMod": "{mod}——为什么在这里？",
+      "headerFallback": "为什么在这里？",
+      "loadFailed": "载入说明失败。",
+      "positionHeading": "位置",
+      "becameReadyAfterHeading": "在以下之后就绪",
+      "lowerBoundsHeading": "下界（必须在其后加载）",
+      "noLowerBounds": "没有下界。",
+      "upperBoundsHeading": "上界（等待此 Mod 的 Mod）",
+      "noUpperBounds": "没有 Mod 在等待此 Mod。",
+      "advisoryHeading": "参考性排序约束",
+      "softHeading": "软性（延迟引用）",
+      "awarenessHeading": "感知",
+      "none": "无。",
+      "satisfied": "已满足",
+      "violated": "已违反",
+      "droppedHeading": "被舍弃的排序约束",
+      "cycle": "循环：{cycle}",
+      "overruledBy": "被以下约束否决：",
+      "sortSettingsHeading": "排序设置",
+      "tieBreakHeading": "并列处理",
+      "currentPositionKnown": "当前位置：第 {position} 位",
+      "currentPositionUnknown": "当前位置：不在当前顺序中",
+      "effectiveKey": "生效键：{key}",
+      "modsPreferredAhead": "优先排在前面的 Mod：{count}",
+      "pulledForwardBy": "被以下 Mod 提前：",
+      "openInModsLink": "在 Mod 页中打开"
+    },
+    "edgeChip": {
+      "directionAfter": "之后",
+      "directionBefore": "之前",
+      "findingLink": "检查结果"
+    },
+    "tier": {
+      "core": "核心",
+      "dlc": "DLC",
+      "top": "顶部",
+      "body": "主体",
+      "bottom": "底部"
+    },
+    "provenance": {
+      "anyOf": "{assembly} 的任选其一候选项",
+      "rule": "规则（{origin}）",
+      "ruleWithComment": "规则（{origin}）：{comment}",
+      "tier": "层级边界（{tier}）"
+    },
+    "tierReason": {
+      "source": "来源：{source}",
+      "placement": "位置规则（{origin}）",
+      "promotedBy": "由 {before} → {after} 提升",
+      "body": "没有来源或位置信号"
+    }
+  },
+  "apply": {
+    "dialog": {
+      "header": "应用",
+      "defCacheNote": "已启用的 Def 缓存 Mod 以加载顺序作为缓存键；此次应用后的第一次启动将重建该缓存{parenthetical}。",
+      "defCacheParenthetical": "（根据你上次的日志，大约需要 {seconds} 秒）",
+      "writeModsConfigLabel": "写入 ModsConfig.xml（RimWorld 读取的加载顺序）",
+      "staleActiveSetMessage": "工作中的已启用 Mod 集合有待定更改——请重新扫描后再写入 ModsConfig.xml。",
+      "rescanButton": "重新扫描",
+      "writeMergeModLabel": "写入合并 Mod（将生成的 Mod 渲染到 Mods/ 中；如果已没有任何合并/资源决定，则删除它）",
+      "closeButton": "关闭",
+      "cancelButton": "取消",
+      "writeAnywayButton": "仍然写入",
+      "applyButton": "应用",
+      "writeMergeModButton": "写入合并 Mod",
+      "saveDecisionsButton": "保存决定和规则"
+    },
+    "preflight": {
+      "unappliedHeading": "已扫描但尚未应用到 ModsConfig.xml：",
+      "addedLabel": "新增：",
+      "removedLabel": "移除：",
+      "orderLabel": "顺序",
+      "modsConfigLabel": "ModsConfig.xml",
+      "decisionsLabel": "决定",
+      "rulesLabel": "规则",
+      "movedModsLabel": "会移动的 Mod",
+      "needsInputLabel": "待处理",
+      "unansweredReordersWarning": "本次验证运行建议的 {count} 项重新排序还没有对应的成对规则",
+      "problemsRow": "{count} 个问题待确认",
+      "problemsAllDecided": "{count} 个问题，均已决定",
+      "noProblems": "未发现问题",
+      "openInbox": "打开检查结果页"
+    },
+    "progress": {
+      "heading": "验证顺序",
+      "description": "重放每一个作用于其他 Mod 的补丁操作，预测在此顺序下哪些会失败，就像 RimWorld 自己的日志会显示的那样。仅在你请求时运行——大型安装大约需要一分钟。",
+      "verifyingLabel": "正在验证顺序",
+      "checksCaption": "已检查 {checked}/{total} 项",
+      "startingCaption": "正在启动…"
+    },
+    "diff": {
+      "summary": "对照{source}顺序检查了 {count} 个 Def——发现 {list}。",
+      "summaryOperations": "{count} 项预计会失败的操作",
+      "summaryTargets": "{count} 个受影响的 Def 目标",
+      "removedByCount": "被较早加载的 Mod 删除：{count}",
+      "notYetInjectedCount": "尚未注入：{count}",
+      "deadTargetCount": "失效目标：{count}",
+      "unknownCount": "未知：{count}",
+      "orderFixableHeading": "可通过顺序修复——重新排序所指的 Mod 可能解决以下问题：",
+      "cosmeticText": "无实质影响：无论哪种顺序，最终 Def 都相同——不提供重新排序。",
+      "mergeInsteadLink": "改为合并",
+      "mergeInstead": "{link}可保留落败 Mod 自身的意图。",
+      "noMergeAvailable": "此目标没有可用的合并。",
+      "removedByCause": "先加载的 {mod} 会删除目标节点。",
+      "notYetInjectedCause": "目标节点由 {mod} 注入，而该 Mod 在之后才加载。",
+      "modPossessive": "{mod} 的 {operation}",
+      "notFullyFixableHeading": "无法完全通过顺序修复——补丁已过时、原因未分类，或兼而有之；按 Mod 分组：",
+      "groupedByModLine": "{mod}——{list}",
+      "groupedOperations": "{count} 项操作",
+      "groupedTargets": "{count} 个 Def 目标",
+      "partlyFixableHeading": "其中一些可部分通过顺序修复——重新排序可以解决它们的部分 Def 目标：",
+      "skippedCandidates": "{count} 个候选项无法检查。",
+      "pvoMismatchWarning": "导入的日志来自与刚刚验证的顺序不同的 Mod 顺序——下面的计数是在比较两次不相关的运行。",
+      "pvoHeading": "预测与实际观察对比（上次导入的日志）",
+      "pvoSnapshotNote": "导入的日志是控制台快照，而不是整次游戏运行的日志：游戏在控制台最早一条记录之前记录的失败不在其中，因此“已预测，但未观察到”并不能证明失败没有发生。",
+      "pvoCutOffNote": "导入的日志没有正常退出，并且在记录任何补丁结果之前就已结束，因此游戏可能从未进入补丁阶段：“已预测，但未观察到”并不能证明失败没有发生。",
+      "pvoGapsNote": "在写入导入的这份日志期间，游戏曾停止写入消息，因此其中可能缺少某些失败：“已预测，但未观察到”并不能证明失败没有发生。",
+      "pvoMatchedSummary": "日志已证实：{count}",
+      "pvoPredictedOnlySummary": "已预测，但日志中未观察到：{count}",
+      "pvoObservedOnlySummary": "日志中观察到，但未预测：{count}——按原样列出，从不丢弃：",
+      "unattributedRaw": "（无法归属：{raw}）",
+      "counterfactualJobsLine": "{count} 项对照其他加载顺序重新检查的操作",
+      "counterfactualResolvedLine": "{count} 项已得到解释的失败",
+      "counterfactualDemotedLine": "{count} 行被证实可通过调整顺序修复的“失效目标”结果",
+      "counterfactualSkippedLine": "{count} 项被跳过的操作",
+      "counterfactualRejectedLine": "{count} 项因破坏其他操作而被拒绝的重新排序",
+      "counterfactualSummary": "反事实分析：{list}。"
+    },
+    "reorderActions": {
+      "createPairRule": "创建成对规则",
+      "createPairRuleAnyway": "仍然创建成对规则",
+      "conflictText": "与 {kind} 冲突：{detail}（{status}）",
+      "ruleCreated": "规则已创建。请重新运行“验证顺序”来检查它——规则仍可能被作者的声明或另一条规则否决，而且两条方向相反的规则会相互抵消；“规则”页会显示实际生效的内容。",
+      "ruleExists": "规则已存在。"
+    },
+    "result": {
+      "forceWarning": "RimWorldWin64.exe 似乎正在运行。游戏退出时会覆盖 ModsConfig.xml，因此现在写入的内容可能会丢失。仍然写入？",
+      "mergeModPath": "合并 Mod：{path}",
+      "mergeModRemoved": "合并 Mod：已删除（已没有任何合并或资源决定）",
+      "mergeModBackupPath": "合并 Mod 备份：{path}",
+      "skippedHeading": "已跳过——写入合并 Mod 时未包含以下内容：",
+      "toastAppliedSummary": "已应用",
+      "toastSavedSummary": "已保存",
+      "toastModsConfigPath": "ModsConfig：{path}",
+      "toastBackupPath": "备份：{path}",
+      "toastDecisionsPath": "决定：{path}",
+      "toastRulesPath": "规则：{path}",
+      "toastSkippedStillNeedsInput": "已跳过（仍待处理）：{list}"
+    },
+    "confirm": {
+      "heading": "仍要应用？",
+      "intro": "{order}顺序有 {count} 个问题需要在写入前确认：",
+      "acknowledgedHeading": "已在检查结果页中决定",
+      "reviewInInbox": "在检查结果页中查看",
+      "goBackButton": "返回",
+      "applyAnywayButton": "仍然应用"
+    },
+    "problem": {
+      "missingDependencyInactive": "{mod} 需要 {dependency}，它已安装但未启用。",
+      "missingDependencyNotInstalled": "{mod} 需要 {dependency}，但它未安装。",
+      "incompatiblePair": "{a} 和 {b} 被声明为不兼容。",
+      "missingModRemoved": "{mod} 未安装，将从已启用列表中移除。",
+      "missingModKept": "{mod} 未安装，但仍保留在已启用列表中；游戏会跳过它。",
+      "loadRequirementViolated": "{after} 需要 {before} 先加载；此顺序却让 {before} 在其后加载。",
+      "anyOfUnsatisfied": "{mod} 需要 {candidates} 中的一个先加载；但它们都没有先加载。"
+    }
+  },
+  "gameLog": {
+    "heading": "导入的日志：",
+    "kind": {
+      "playerLog": "Player.log",
+      "consoleSnapshot": "控制台快照"
+    },
+    "coverage": {
+      "playerLog": {
+        "cleanExit": "{count} 轮启动；日志以正常退出结束",
+        "crashed": "{count} 轮启动；日志以游戏崩溃结束（崩溃报告：{path}）",
+        "crashedNoPath": "{count} 轮启动；日志以游戏崩溃结束（日志未指明崩溃报告）",
+        "truncated": "{count} 轮启动；日志在运行中途结束，没有退出结尾（卡死、强制关闭，或在游戏运行时复制的副本）"
+      },
+      "snapshot": {
+        "belowCap": "控制台仅保留了 {count} 条记录，因此对于这些记录未显示的任何阶段，这份副本都无法说明任何情况",
+        "atCap": "仅包含控制台保留的 {count} 条记录，已达控制台上限：更早的记录已被游戏丢弃",
+        "overCap": "共 {count} 条记录，超过单个控制台能保留的数量，因此这不是单份控制台副本：可能是多份副本粘贴在一起，或解析出了问题；无法判断游戏丢弃了多少内容",
+        "headTruncated": "该副本从某条记录的中间开始：其第一条记录不完整。"
+      }
+    },
+    "gaps": {
+      "warning": "游戏曾 {count} 次停止写入消息。未写入的内容无法恢复。",
+      "neverResumed": "有 {count} 处日志中断之后没有恢复消息，因此日志中最早那处中断之后的所有内容都不可靠。",
+      "lowerBound": "至少有 {count} 类记录（占日志记录的 {percent}%）跨越了日志中断，因此其计数可能偏少；任何计数都可能偏少。",
+      "resumed": "第 {stop} 行至第 {resume} 行",
+      "open": "第 {stop} 行至日志末尾",
+      "more": "另有 {count} 处"
+    },
+    "losses": {
+      "heading": "读取器不得不限制读取此日志的部分内容，因此摘要缺少该日志的一部分：",
+      "linesTruncated": "{count} 行超过读取器的长度上限，只读取了开头部分",
+      "linesWithInvalidUtf8": "{count} 行含有无效的 UTF-8，已用替换字符读取",
+      "stackBlockLinesDropped": "超出单块上限的 {count} 行堆栈跟踪未被检查",
+      "stackJoinsAbandoned": "{count} 次多行堆栈拼接超出上限，已放弃",
+      "passesFolded": "超出跟踪数量的启动轮次中有 {count} 条记录，已并入最后一个被跟踪的启动轮次",
+      "stackRefsDropped": "{count} 个堆栈反向引用未建立索引",
+      "loggingGapsDropped": "超出列表上限的 {count} 处日志中断只计入数量，未列出",
+      "crashReportPathsTruncated": "{count} 个崩溃报告位置被截断至长度上限"
+    }
+  },
+  "startup": {
+    "heading": "启动开销",
+    "description": "每个已启用的 Mod 一行——会修改内容的补丁操作、慢速形态的 xpath、纹理、DLL 和 Def，不含耗时数据（Rimmerge 从不运行游戏）。导入 {playerLog} 或控制台快照，以填充尺寸异常 DDS 列和实测计时器列（控制台快照无法填充计时器）。",
+    "orderMismatchWarning": "导入的日志来自与当前所选顺序不同的 Mod 顺序——下方的尺寸异常 DDS 列和实测计时器列反映的是那次运行，而不是本次。",
+    "noOrderBlockWarning": "导入的日志完全不含已启用 Mod 列表，因此无法与所选顺序比对——下方的尺寸异常 DDS 列和实测计时器列可能反映的是与本次不同的运行。",
+    "loadFailed": "载入启动开销表失败。",
+    "modHeader": "Mod",
+    "patchOpsHeader": "补丁操作",
+    "slowXpathsHeader": "慢速 xpath",
+    "texFilesHeader": "纹理文件",
+    "texBytesHeader": "纹理字节",
+    "ddsFilesHeader": "DDS 文件",
+    "badDimDdsHeader": "尺寸异常 DDS",
+    "dllsHeader": "DLL",
+    "dllBytesHeader": "DLL 字节",
+    "defsHeader": "Def",
+    "overriddenTexHeader": "被覆盖纹理",
+    "observedTimersHeader": "实测计时器",
+    "contentOnlyHeader": "纯内容",
+    "totalRow": "合计（{count} 个 Mod）",
+    "notImported": "未导入",
+    "notAvailableFromSnapshot": "无法从控制台快照获得",
+    "atLeast": "至少 {count}",
+    "snapshotNote": "导入的日志是控制台快照，而不是整次游戏运行的日志：无法从中获得实测计时器，且尺寸异常 DDS 计数只是下限。",
+    "cutOffNote": "导入的日志在记录任何补丁结果之前就已结束，且没有正常退出，因此下方的计数可能偏少：尺寸异常 DDS 计数和实测计时器都只是下限。",
+    "gapsNote": "在写入导入的这份日志期间，游戏曾停止写入消息，因此下方的计数可能偏少：尺寸异常 DDS 计数和实测计时器都只是下限。",
+    "observedTimersValue": "{count}（{ms} 毫秒）",
+    "observedTimersAtLeast": "至少 {count}（{ms} 毫秒）",
+    "contentOnly": "纯内容"
+  },
+  "assignments": {
+    "editRefsTargets": {
+      "header": "编辑引用与目标",
+      "referencesHeading": "引用 (R)",
+      "targetsHeading": "目标 (T)",
+      "whatChangedHeading": "变更内容",
+      "schemaChangeCounts": {
+        "added": "新增 {count} 个字段",
+        "removed": "移除 {count} 个字段",
+        "reclassified": "重新分类 {count} 个字段"
+      },
+      "reclassifiedNames": "（{names}）",
+      "strandedValuesLine": "有 {count} 个存储值被丢弃——某个重新分类字段的新角色不再接受原先存储的值：",
+      "droppedRowsLine": "有 {count} 行被丢弃——它们的目标已离开目标集合：",
+      "clean": "此更改没有丢弃或搁置任何内容。",
+      "closeButton": "关闭",
+      "saveButton": "保存"
+    },
+    "rowEditor": {
+      "copyFrom": "复制自：",
+      "winnerBadge": "——胜出",
+      "prefillFrom": "——来自 {mod}",
+      "clampedTo": "——已缩减为“{name}”：此槽位只保留一个名称，但该值指定了 {count} 个（{joined}）",
+      "droppedFromCopy": "——跳过了 {count} 个借用值，因为对应的 Def 未启用：{names}",
+      "pairedTo": "与 {slot} 配对",
+      "overrideBadge": "覆盖——已有 {count} 个匹配",
+      "inspectDefLink": "查看 Def",
+      "defNameLabel": "defName",
+      "saveRowButton": "保存行",
+      "clearRowButton": "清除行",
+      "newRowTitle": "新行"
+    },
+    "coverageList": {
+      "searchPlaceholder": "搜索目标…",
+      "ownerFilterPlaceholder": "按所有者筛选",
+      "thisProject": "本项目",
+      "coveredByMod": "已由 {mod} 涵盖",
+      "coveredByAnotherMod": "已由其他 Mod 涵盖",
+      "uncovered": "未涵盖",
+      "wouldWinNoOwner": "——将胜出",
+      "wouldWinWithOwner": "——{mod} 将胜出",
+      "noMatches": "没有匹配的目标。"
+    },
+    "schemaTable": {
+      "fieldHeader": "字段",
+      "roleHeader": "角色",
+      "typeHeader": "类型",
+      "cardinalityHeader": "基数",
+      "observedHeader": "观察到的",
+      "defTypePlaceholder": "Def 类型",
+      "hideButton": "隐藏",
+      "unreadableTargets": "学习结构时，有 {count} 个被引用的目标无法读取：",
+      "unreadableTargetLine": "{field}：{defType}/{defName}——{reason}",
+      "newFieldPathLabel": "新字段路径",
+      "roleLabel": "角色",
+      "defTypeLabel": "Def 类型",
+      "addFieldButton": "添加字段",
+      "pathRequired": "字段路径为必填项。",
+      "pathAlreadyExists": "{path} 已经是此结构的字段。"
+    },
+    "exportPanel": {
+      "exportDirLabel": "导出目录",
+      "exportDirPlaceholder": "选择文件夹…",
+      "chooseButton": "选择…",
+      "installCheckboxLabel": "安装到 Mods 文件夹并启用",
+      "staleActiveSetNote": "未包含待定的启用状态更改——如果希望本次安装包含它们，请先重新扫描。",
+      "forceWarning": "RimWorldWin64.exe 似乎正在运行。现在安装会写入 ModsConfig.xml，而游戏退出时会覆盖该文件，因此这次更改可能会丢失。仍然导出？",
+      "exportAnyway": "仍然导出",
+      "export": "导出",
+      "exportedTo": "已导出到：{path}",
+      "installedAt": "已安装到：{path}",
+      "skippedHeading": "已跳过",
+      "skippedPath": "：{path}"
+    },
+    "editor": {
+      "loadFailed": "载入此项目失败。",
+      "editRefsTargetsButton": "编辑引用与目标",
+      "deleteButton": "删除",
+      "noSections": "还没有分区。",
+      "addSectionButton": "添加分区",
+      "removeSectionButton": "移除分区",
+      "noTargetSelected": "未选择目标。",
+      "ownRowsHeading": "自有行",
+      "newRowButton": "新建行",
+      "standaloneHint": "这是一个独立分区——它自身的行没有可用于匹配的目标，因此这里没有涵盖队列。",
+      "noRowsYet": "还没有行。",
+      "selectOrNewRow": "选择一行，或点击“新建行”创建一行。",
+      "exportHeading": "导出",
+      "deleteDialogHeader": "删除此项目？",
+      "deleteDialogBody": "这会删除该补丁制作器项目。它已导出到磁盘的文件夹不会被改动。",
+      "addSectionDialogHeader": "添加分区",
+      "listingCandidates": "正在列出候选项…",
+      "candidateGroupLabel": "候选分区类型",
+      "noAddableCandidates": "没有可添加的候选项——本项目的引用 Mod 所拥有的每种 Def 类型都已经是一个分区。",
+      "addButton": "添加",
+      "removeSectionDialogHeader": "移除此分区？",
+      "removeSectionBody": "这会移除 {defType} 分区及其所有行。此操作无法在这里撤销。",
+      "sectionInUse": "仍被另一个分区中的 {count} 行引用。仍然移除会使这些引用悬空——之后的导出会将每一个都报告为跳过。",
+      "referenceLine": "{defType} {row}：{path}",
+      "removeAnywayButton": "仍然移除",
+      "removeButton": "移除"
+    },
+    "wizard": {
+      "heading": "新建补丁制作器项目",
+      "identityHeading": "标识",
+      "nameLabel": "名称",
+      "packageIdLabel": "ID",
+      "packageIdPlaceholder": "author.mymod",
+      "displayNameLabel": "显示名称",
+      "referencesHeading": "引用 Mod (R)",
+      "targetsHeading": "目标 (T)",
+      "targetsHint": "留空则创作一个全新的 Def 类型（“新 Def”项目），而不是修补现有的类型。",
+      "listCandidatesButton": "列出候选项",
+      "effectiveRefsHeading": "生效的引用集合",
+      "excludedTitle": "已排除——点击以包含",
+      "includeTitle": "点击以排除",
+      "excludedTag": "已排除",
+      "includedTag": "×",
+      "candidatesHeading": "候选分配类型",
+      "candidateGroupLabel": "候选分配类型",
+      "instanceCount": "{defType}（{count} 个实例）",
+      "inferringSchema": "正在推断结构…",
+      "standaloneNote": "此候选项没有目标键字段——它将是一个“新 Def”项目，其中的行是独立的，而不是与目标匹配的。",
+      "excludedTargetsNote": "有 {count} 个位于 T/Core 之外的被引用目标从未被读取（只读取 T 范围内的目标可以让这一步保持快速）。",
+      "createButton": "创建"
+    },
+    "list": {
+      "newProjectButton": "新建项目",
+      "loadFailed": "载入补丁制作器项目失败。",
+      "empty": "还没有补丁制作器项目。",
+      "nameHeader": "名称",
+      "packageIdHeader": "ID",
+      "sectionsHeader": "分区",
+      "refsHeader": "R",
+      "targetsHeader": "T",
+      "rowsHeader": "行",
+      "uncoveredHeader": "未涵盖",
+      "exportedHeader": "已导出",
+      "notApplicable": "不适用",
+      "exportedYes": "是",
+      "exportedNo": "否"
+    },
+    "itemPicker": {
+      "searchPlaceholder": "搜索条目…",
+      "thisProjectHeading": "本项目",
+      "noMatches": "无匹配项。",
+      "count": "{loaded} / {total}",
+      "clearSelection": "清除选择",
+      "loadMore": "载入更多"
+    }
+  },
+  "rationale": {
+    "layerPhrase": {
+      "hard": "一项硬性（加载时）要求",
+      "anyOf": "一项已解析的任选其一要求",
+      "declaredOverride": "你自己对作者声明的显式覆盖",
+      "declared": "一项作者声明",
+      "userDecision": "你自己的决定",
+      "rimSortUser": "一条 RimSort 用户规则",
+      "rimSortCommunity": "一条 RimSort 社区规则",
+      "steamDb": "一项 Steam 创意工坊依赖",
+      "other": "另一条排序约束"
+    },
+    "placementPhrase": {
+      "top": "顶部",
+      "bottom": "底部"
+    },
+    "relationExplanation": {
+      "presenceOnly": "这只检测某个 Mod 是否存在，而不是它的加载位置",
+      "patchTargetsDef": "补丁作用于所有 Mod 的 Def 加载后合并得到的 Def 文档，与加载顺序无关",
+      "parentTemplate": "不可达：ParentName 排序约束是加载时的排序事实（硬性），从不只是参考",
+      "usesType": "类型会在所有已加载的程序集中解析，与加载顺序无关",
+      "patchSelectsInjectedNode": "被选中的节点可能已经以其他方式存在（内联写入、由多个已启用 Mod 注入，或由进行选择的 Mod 自身的补丁注入），或者位于分析器索引所能检查的深度之外——因此这并不是一个已证实的加载顺序要求",
+      "patchRemovedNode": "分析器根据补丁内容推断：一个 Mod 删除了另一个 Mod 也会修补的节点，删除方必须最后加载，否则另一个补丁会发现没有东西可改——这不是作者自己声明的加载顺序，因此当声明或位置规则与之矛盾时，它会让步",
+      "retextureAfterOwner": "分析器根据共享的纹理路径推断：纯纹理的重绘包必须在它所换皮的内容 Mod 之后加载，否则它的替换纹理会被它本应重绘的内容覆盖——这不是作者自己声明的加载顺序，因此当声明或位置规则与之矛盾时，它会让步",
+      "defOverrideAfterOrigin": "分析器根据模板/Def 数量证据推断：一个 Mod 同时提供了属于另一个 Mod 自身命名空间的 Def，它必须在该命名空间的所有者之后加载，否则它的覆盖会落在来源自身的定义之下，而不是之上——这不是作者自己声明的加载顺序，因此当声明或位置规则与之矛盾时，它会让步",
+      "patchInvalidatesPredicate": "分析器根据补丁内容推断：一个 Replace/Remove 重写或删除了另一个 Mod 自身的 xpath 谓词所读取的节点，读取谓词的操作必须先加载，否则它自身的谓词将不再匹配——这不是作者自己声明的加载顺序，因此当声明或位置规则与之矛盾时，它会让步",
+      "patchRemovedNodeCosmetic": "分析器根据补丁内容推断，但在这里无论哪种顺序，最终的 Def 都相同——只是由哪个 Mod 自身的操作记录失败会改变——因此它是比作者自己声明的加载顺序更弱的证据，当声明或位置规则与之矛盾时会让步",
+      "replaceDiscardsAddition": "分析器根据补丁内容推断：一个 Replace 换入了一个全新的节点，悄无声息地丢弃了之前的添加写入其中的任何内容，因此添加必须在替换之后加载，否则它自身的内容会丢失，而且不会留下任何日志——这不是作者自己声明的加载顺序，因此当声明或位置规则与之矛盾时，它会让步",
+      "interactionEvidence": "这是 Mod 之间存在交互的证据，而不是加载器本身需要的排序事实"
+    },
+    "rulePhrase": {
+      "userDecisionOverride": "你自己的声明约束覆盖",
+      "userDecision": "你自己的决定",
+      "layered": "“{after} 在 {before} 之后加载”（依据{layerPhrase}）"
+    },
+    "edgeDroppedInferred": {
+      "patchRemovedNode": "{after} 删除了 {before} 也会修补的一个节点；{after} 必须在 {before} 之后加载，否则 {before} 自身的补丁会发现没有东西可改。分析器是根据补丁内容推断出这一点的，而不是根据任一 Mod 自己声明的加载顺序。",
+      "retextureAfterOwner": "{after} 是一个纯纹理重绘包，与 {before} 自身的内容共享一个纹理路径；{after} 必须在 {before} 之后加载，否则它的替换纹理会被它本应换皮的内容覆盖。分析器是根据共享的纹理路径推断出这一点的，而不是根据任一 Mod 自己声明的加载顺序。",
+      "defOverrideAfterOrigin": "{before} 拥有此覆盖所属的模板或 Def 系列；{after} 也提供了它的一份副本，必须在 {before} 之后加载，覆盖才能落在来源自身的定义之上。分析器是根据模板/Def 数量证据推断出这一点的，而不是根据任一 Mod 自己声明的加载顺序。",
+      "patchInvalidatesPredicate": "{after} 替换或删除了 {before} 自身的补丁通过谓词选中的一个节点；{after} 必须在 {before} 之后加载，否则 {before} 自身的谓词将不再匹配。分析器是根据补丁内容推断出这一点的，而不是根据任一 Mod 自己声明的加载顺序。",
+      "replaceDiscardsAddition": "{before} 替换了一个 {after} 也会向其中添加内容的节点；{after} 必须在 {before} 之后加载，否则当 {before} 的 Replace 换入一个全新节点时，它自身的添加会被悄无声息地丢弃，而且不会留下任何日志。分析器是根据补丁内容推断出这一点的，而不是根据任一 Mod 自己声明的加载顺序。"
+    },
+    "edgeDroppedCosmetic": "无实质影响：无论哪种顺序，最终的 Def 都相同；只是出现的日志行会有所不同",
+    "keepEdgeInCycle": "保留此排序约束；排序器将改为舍弃循环中次弱的排序约束。",
+    "reorderOverridingEdgeWinner": "改为强制执行此 Mod 自身的顺序，覆盖胜出者。",
+    "edgeDroppedWithWinner": "{after} 反而必须在 {before} 之前加载：{layerPhrase}如此要求（{detail}）。",
+    "edgeDroppedSoftOrAwareness": "为打破循环而舍弃软性或仅感知的排序约束，很少会改变行为。",
+    "edgeDroppedDeclared": "为打破循环，不得不舍弃一条作者声明的排序约束。",
+    "edgeDroppedHard": "为打破循环，不得不舍弃一条硬性（加载时）排序约束：这些 Mod 确实存在冲突。",
+    "removeDependentModBrokenOrder": "将依赖方 Mod 从已启用列表中移除，而不是接受一个有问题的加载顺序。",
+    "declarationQuestioned": "依据{layerPhrase}，{declaredAfter} 在 {declaredBefore} 之后加载（{declaredDetail}）；{relationExplanation}（{relationDetail}）。",
+    "reorderOppositeOfRelation": "以用户决定的形式，强制执行该关系所暗示的相反顺序。",
+    "declarationOverridden": "{declaredAfter} 被声明为在 {declaredBefore} 之后加载（{detail}），但{layerPhrase}给出了相反的结论：{byAfter} 反而在 {byBefore} 之后加载（{byDetail}）。",
+    "anyOfNoCandidate": "没有任何候选项能在不形成循环的情况下满足此约束。",
+    "forceAnyOfCandidateAcceptingCycle": "强制使用此候选项，接受由此在其他地方产生的任何循环。",
+    "anyOfChosenAlreadyBefore": "所选候选项目前已经在依赖方 Mod 之前加载。",
+    "anyOfAlternativeCandidate": "另一个候选项也可以满足此约束。",
+    "anyOfUniqueMaxDependents": "所选候选项是这些候选项中唯一被依赖最多的 Mod。",
+    "anyOfSmallestId": "在其余条件相同的候选项中，按最小的 ID 选出。",
+    "ruleOverruledLongerCycle": "为打破多个 Mod 之间一个更长的循环，不得不舍弃{rulePhrase}。",
+    "ruleOverruledByWinner": "{rulePhrase}被否决：{layerPhrase}表明 {before} 反而应在 {after} 之后加载（{detail}）。",
+    "reorderOverridingRuleWinner": "改为强制执行此规则自身的顺序，覆盖胜出者。",
+    "promoteRuleDespiteOverruled": "将此规则保留为你自己的决定，这样即使它仍被否决，也会保留下来。",
+    "placementOverruled": "{modId} 被固定在{placementPhrase}，但{layerPhrase}否决了它：{detail}。",
+    "promotePlacementDespiteOverruled": "将{placementPhrase}位置保留为你自己的决定，这样即使它被否决，也会保留下来。",
+    "dropRuleOverrulingPlacement": "舍弃否决此位置的规则，让 {modId} 保持在{placementPhrase}。",
+    "placementQuestioned": "{modId} 被固定在{placementPhrase}；{relationExplanation}（{relationDetail}）。",
+    "enforceRelationAsUserDecision": "以用户决定的形式显式强制执行此关系。",
+    "placementOrderingOverridden": {
+      "loadsAfter": "{pinned} 被固定在{placementPhrase}，但 {modId} 仍然必须在它之后加载：{layerPhrase}（{detail}）。",
+      "loadsBefore": "{pinned} 被固定在{placementPhrase}，但 {modId} 仍然必须在它之前加载：{layerPhrase}（{detail}）。"
+    },
+    "placementPromotesDependents": "{modId} 被固定在{placementPhrase}；另有 {count} 个 Mod 也被归因于它，被提升越过了自身的层级边界{sample}",
+    "promotedSample": {
+      "truncated": "（例如 {sample}）",
+      "exact": "（{sample}）"
+    },
+    "tagInferredSignalCount": "{count} 个匹配的信号",
+    "rejectInferredTag": "拒绝推断出的标签。",
+    "forceDefOverrideWinner": "强制让某个所有者的 Def 胜出，无论加载顺序如何。",
+    "defOverrideWinnerDeclaresRelation": "胜出的 Mod 显式声明了与其他每个所有者之间的加载顺序关系。",
+    "defOverrideSameAuthor": "所有所有者都是同一个作者。",
+    "defOverrideLoneNonVanillaOwner": "恰好只有一个已启用的 Mod 覆盖了这个原版 Def；没有其他 Mod 与之争夺。",
+    "defOverrideShadowsFramework": "一个末端 Mod 正在悄悄遮蔽某个共享框架的 Def。",
+    "keepCurrentWinner": "改为保留当前的胜出者。",
+    "defOverrideUnexplained": "多个 Mod 定义了此 Def，但没有明显的信号能解释这一覆盖。",
+    "mergeUnexplainedDefOverride": "逐字段合并，而不是直接接受某一个所有者的 Def。",
+    "mergeShadowsFrameworkFieldByField": "逐字段合并；在末端 Mod 未改动的地方保留框架的值。",
+    "forcePatchCollisionWinner": "强制只应用某一个 Mod 的补丁。",
+    "patchCollisionAdditive": "每个参与的补丁都只是向目标添加内容；顺序不会改变结果。",
+    "patchCollisionContested": "至少有一个参与的补丁会修改目标；加载顺序决定结果。",
+    "patchCollisionWinnerDeclaresRelation": "{winner} 声明在 {others} 之后加载，因此它对“{field}”的更改按原样保留。",
+    "mergeContestedPatchCollision": "逐字段合并，而不是让加载顺序决定整个 Def。",
+    "patchWillFailRemovedBy": "在检查所依据的顺序中，{remover} 自身的操作会删除 {modId} 位于“{xpath}”的操作所针对的节点，并且在它之前加载。",
+    "reorderBeforeRemover": "在 {remover} 之前加载 {modId}，使其操作在节点仍然存在时运行。",
+    "patchWillFailNotYetInjected": "{modId} 位于“{xpath}”的操作针对的是 {injector} 注入的节点，但在检查所依据的顺序中，{injector} 在它之后加载。",
+    "reorderAfterInjector": "在 {injector} 之后加载 {modId}，使其操作能在节点注入后找到它。",
+    "patchWillFailDeadTarget": "{modId} 位于“{xpath}”的操作所针对的节点，在胜出所有者自身解析后的结构中根本不存在，与加载顺序无关——任何重新排序都无法修复。",
+    "patchWillFailUnknownCause": "预计 {modId} 位于“{xpath}”的操作会失败；无法判定原因。",
+    "brokenInheritance": "这个 `ParentName` 引用没有按照子项自身元素类型所期望的方式解析——该 Def 加载时会缺少内容或内容有误。请将此问题报告给引用它的 Mod 的作者。",
+    "danglingDefReference": "此名称不对应任何类型的已启用 Def——{cause}。{soundCaveat}交叉引用会在所有 Mod 的 Def 和补丁都加载之后才解析，因此这与加载顺序无关。",
+    "danglingDefReferenceSoundCaveat": "这看起来是一个音效引用——缺失的 `SoundDef` 会记录一条警告，并静默回退为一个未定义的音效，而不会导致加载失败。",
+    "discardedAdditionDeliberate": "{replacer} 声明在 {adder} 之后加载，并替换了“{path}”：{adder} 自身在“{adderPath}”处的添加被有意丢弃。",
+    "forceTextureWinner": "强制让某一个 Mod 的纹理胜出。",
+    "copyTextureIntoMergeMod": "将此 Mod 的纹理文件复制到合并 Mod 中，不受加载顺序影响。",
+    "textureOverrideCosmetic": "纹理覆盖只影响外观，可在游戏中查看；它从不造成阻碍。",
+    "forceTemplateRegistrationWinner": "强制让此 Mod 的注册应用于该模板的每一个子项，无论加载顺序如何。",
+    "duplicateTemplateNameExplanation": "{ownerCount} 个 Mod 注册了这个模板名称；每个子项各自继承在它之前（或同一位置）距离最近加载的那个注册。如果没有，则回退到原版注册；如果也没有，则回退到加载顺序中最先加载的 Mod 的注册，因此不同的子项可能解析到不同的 Mod。",
+    "keyedTranslationCollision": "这两个 Mod 共有 {keyCount} 个相同的翻译键；每个键都由最后加载的那个 Mod 胜出。",
+    "soundOverrideCosmetic": "音效覆盖无实质影响，可在游戏中听到；它从不造成阻碍。",
+    "forceSoundWinner": "强制让某一个 Mod 的音效胜出。",
+    "missingTexturePath": "没有任何已启用的 Mod 提供此纹理路径——游戏会在该处显示洋红色占位图。",
+    "undecodableTexture": "此 .dds 文件无法解码——原版游戏会在该处显示错误纹理占位图。",
+    "contributesNothing": "在此顺序下，{modId} 没有任何可观察到的作用：它不提供程序集，它拥有的每个 Def 都被之后的副本覆盖，它提供的每个纹理和翻译都被覆盖，它的每个补丁操作要么应用失败，要么从未运行——禁用它不会改变游戏中的任何内容，还能节省它的加载开销。",
+    "undeclaredTypeDependency": "{user} 使用了 {provider} 程序集中的类型，但没有声明对它的依赖。",
+    "pinRelationExplicitly": "将此关系显式固定为一条加载顺序规则。",
+    "runtimePatchCollisionNoLastPatcher": "多个 Mod 修补了 {targetType}.{targetMethod}。",
+    "runtimePatchCollisionLastPatcher": "{ownerCount} 个 Mod 修补了 {targetType}.{targetMethod}；目前 {last} 最后加载，因此它的补丁最后运行。",
+    "forceRuntimePatchLastWinner": "强制让此 Mod 的补丁最后运行，无论加载顺序如何。",
+    "transpilerCollision": "{ownerCount} 个 Mod 通过运行时补丁转译器改写了 {targetType}.{targetMethod} 的 IL；它们的运行顺序可能决定之后运行的那个自身的模式是否仍能匹配。大多数此类冲突是无害的——如果其中某个 Mod 记录了修补错误，请用 `rimmerge rule set-pair` 指定可行的顺序。",
+    "duplicateAssemblyFirstLoadedWins": "有多个已启用的 Mod 提供了同名程序集；运行时以最先加载的副本为准。",
+    "removeDuplicateAssemblyCopy": "将其中一个重复的副本从已启用列表中移除。",
+    "likelyDuplicateMod": "这两个 Mod 共有大量完全相同的 Def，但彼此之间没有声明任何关系。",
+    "removeLikelyDuplicateModA": "将其中一个疑似重复的 Mod 从已启用列表中移除。",
+    "removeLikelyDuplicateModB": "将另一个疑似重复的 Mod 从已启用列表中移除。",
+    "missingModNotInstalled": "此 Mod 在 ModsConfig.xml 中处于启用状态，但并未安装；RimWorld 无论如何都会丢弃未知的 ID。",
+    "keepMissingModId": "在 ModsConfig.xml 中保留该 ID，以防此 Mod 重新出现。",
+    "missingDependencyNotEnforced": "一个已声明的依赖未启用；RimWorld 只会对此发出警告，并不会强制要求。",
+    "incompatiblePair": "这些 Mod 互相声明不兼容。",
+    "removeIncompatibleModA": "将其中一个不兼容的 Mod 从已启用列表中移除。",
+    "removeIncompatibleModB": "将另一个不兼容的 Mod 从已启用列表中移除。",
+    "unsupportedVersionOftenWorks": "此 Mod 没有将当前游戏版本列为受支持版本；不过它通常仍然可以正常运行。",
+    "undeclaredHardDependencyHonored": "尽管作者从未声明，排序器已经遵守了这条硬性（加载时）排序约束。",
+    "pinRelationExplicitlyAnyway": "仍然将此关系显式固定为一条加载顺序规则。",
+    "lazyReferenceViolatedJitResolved": "当前顺序没有遵守这个延迟解析的程序集引用，但它会在所有程序集加载后于 JIT 时解析，因此加载顺序实际上不会影响它。",
+    "nearMissModReference": {
+      "findModName": "这个 FindMod 名称“{written}”不对应任何已启用或已安装的 Mod，但与已启用的 Mod“{candidateName}”非常相似——可能是拼写错误。请将此问题报告给引用它的 Mod 的作者。",
+      "mayRequireId": "这个 MayRequire ID“{written}”不对应任何已启用或已安装的 Mod，但与已启用的 Mod“{candidateName}”非常相似——可能是拼写错误。请将此问题报告给引用它的 Mod 的作者。"
+    },
+    "mergeCompleteNothingToMerge": "游戏会把这些贡献依次应用到同一个值上；没有需要合并的内容",
+    "mergeLeadDefOverrideCombine": "这些 Mod 修改的是不同的字段；合并会把两者结合起来。",
+    "mergePromotedPatchCollisionKeepsBoth": "这些 Mod 修改的是不同的字段；合并会同时保留两者。",
+    "keepLoadOrderWinner": "保留加载顺序中的胜出者。",
+    "mergeStructuralGuard": "{field} 在各所有者之间不同——字段级合并并不安全；请确认加载顺序中的胜出者",
+    "mergeFieldsNeedChoice": "合并，还有 {unresolved} 个字段需要选择。",
+    "identicalCopiesOrderIrrelevant": "副本完全相同；顺序无法改变结果",
+    "notAddressedByPatch": "此补丁未处理；与现在一样由加载顺序决定。"
+  },
+  "modInfo": {
+    "panel": {
+      "regionLabel": "Mod 信息",
+      "close": "关闭",
+      "notFoundTitle": "此 Mod 不在当前扫描中",
+      "allDetailsLink": "全部详细信息",
+      "previewAlt": "{mod} 预览图",
+      "noPreview": "没有预览图",
+      "previewTooLarge": "预览图大于 8 MB",
+      "previewUnsupportedFormat": "预览图不是 PNG 或 JPEG",
+      "previewUnreadable": "无法读取预览图",
+      "missingHeading": "缺失",
+      "missingBody": "列在 ModsConfig.xml 中，但在磁盘上找不到",
+      "requiredByHeading": "被以下 Mod 需要",
+      "pendingActivation": "待启用——应用或重新扫描后生效",
+      "pendingDeactivation": "待禁用——应用或重新扫描后生效",
+      "packageIdLine": "ID：{id}",
+      "workshopCopyNote": "创意工坊副本",
+      "versionLine": "Mod 版本：{version}",
+      "aboutNotOnDisk": "找不到此 Mod 的 About.xml——自上次扫描以来，它的文件可能已被移动或删除。",
+      "supportedVersionsLabel": "支持的版本",
+      "supportsGameVersion": "支持此游戏版本",
+      "doesNotSupportGameVersion": "未声明支持此游戏版本",
+      "openWorkshopButton": "打开创意工坊页面（外部浏览器）",
+      "openHomepageButton": "打开主页（外部浏览器）",
+      "rootFolderLabel": "Mod 文件夹",
+      "loadedFoldersLabel": "已加载的文件夹",
+      "costLabel": "开销",
+      "costLine": "{defsLabel}：{defCount}，{patchOpsLabel}：{patchOps}，{dllsLabel}：{assemblyCount}",
+      "seeStartupLink": "查看启动开销",
+      "tagsLabel": "标签",
+      "hardDependents": "{count} 个硬性依赖方",
+      "softDependents": "{count} 个软性依赖方",
+      "awarenessDependents": "{count} 个感知依赖方",
+      "frameworkCandidate": "看起来是共享框架",
+      "generatedLine": "由 Rimmerge 生成（{kind}）",
+      "generatedMerge": "配置档案合并 Mod",
+      "generatedPatch": "兼容补丁",
+      "generatedAssignment": "补丁制作器项目",
+      "positionLabel": "位置",
+      "previousPositionLine": "之前的位置：第 {position} 位",
+      "whyHereLink": "为什么在这里？",
+      "findingsCount": "{count} 条检查结果",
+      "needsInputCount": "{count} 条待处理",
+      "declaredHeading": "声明的加载顺序",
+      "descriptionHeading": "描述",
+      "noDescription": "未提供描述。",
+      "showMore": "显示更多",
+      "showLess": "收起",
+      "aboutChanged": "自上次扫描以来 About.xml 已更改——请重新扫描",
+      "aboutUnreadable": "无法读取 About.xml：{reason}",
+      "aboutUnreadableIoHeadline": "文件读取失败",
+      "aboutUnreadableXmlHeadline": "文件不是有效的 XML",
+      "descriptionTruncated": "此描述过长，已被截短。"
+    }
+  }
+}

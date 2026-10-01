@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <example.PartDef>
+    <defName>Wrench</defName>
+    <hediffName>Wrench</hediffName>
+  </example.PartDef>
+</Defs>

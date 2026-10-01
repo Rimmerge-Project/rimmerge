@@ -1,0 +1,2055 @@
+{
+  "common": {
+    "verbatim": "{text}",
+    "cancel": "キャンセル",
+    "loading": "読み込み中…",
+    "technicalDetail": "技術的な詳細：{detail}"
+  },
+  "defGraphics": {
+    "viewer": {
+      "regionLabel": "テクスチャのプレビュー",
+      "facingGroupLabel": "向き",
+      "previousVariant": "前のバリエーション",
+      "nextVariant": "次のバリエーション",
+      "variantPosition": "{label}（{index}/{count}）",
+      "variantSelectLabel": "バリエーション",
+      "slotSelectLabel": "テクスチャの提供元",
+      "fromMod": "{mod}から",
+      "overridesOwner": "Defの所有MOD {owner}のテクスチャを上書きしています",
+      "mirrored": "反転して描画",
+      "layoutInferred": "ファイル名から推定したレイアウト",
+      "truncatedVariants": "他{count}件のバリエーションは表示されていません",
+      "truncatedSlots": "他{count}件の提供元は表示されていません"
+    },
+    "facing": {
+      "north": "北",
+      "east": "東",
+      "south": "南",
+      "west": "西"
+    },
+    "facingShort": {
+      "north": "北",
+      "east": "東",
+      "south": "南",
+      "west": "西"
+    },
+    "slot": {
+      "graphic": "グラフィック",
+      "worn": "着用時",
+      "lifeStage": "ライフステージ",
+      "raceKind": "ポーンの種類：{name}",
+      "styleTexture": "スタイルのテクスチャ",
+      "headType": "頭の種類",
+      "bodyType": "体型",
+      "terrain": "地形",
+      "icon": "アイコン",
+      "probe": "パスから検出：{field}"
+    },
+    "variant": {
+      "only": "唯一のグラフィック",
+      "bodyType": "体型：{name}",
+      "lifeStage": "ライフステージ{number}",
+      "female": "女性、ライフステージ{number}",
+      "alternate": "代替{number}",
+      "member": "{name}",
+      "stack": "スタック段階{number}",
+      "stackSingle": "単体",
+      "appearance": "外見：{name}",
+      "wornPath": "着用時パス{number}",
+      "wornPathOnBodyType": "着用時パス{number}、{name}",
+      "field": "{name}"
+    },
+    "state": {
+      "loading": "テクスチャを読み込み中",
+      "noGraphic": "このDefには独自のテクスチャがありません。",
+      "composedAtRuntime": "ゲームはこのポーンを実行時に体・頭・髪のパーツから組み立てるため、表示できる単一のテクスチャはありません。",
+      "notViewable": "ゲーム本体またはアセットバンドルに組み込まれているため、ここでは表示できません。",
+      "notViewableUncertain": "テクスチャファイルが見つかりません。ゲーム本体に組み込まれている可能性があり、その場合はここでは表示できません。",
+      "notFound": "テクスチャファイルが見つかりません。ゲームではエラーテクスチャが表示されます。",
+      "ddsNotPreviewable": "DDSテクスチャです。プレビューはありません。",
+      "undecodableInGame": "ゲームはこのDDSファイルをデコードできず、代わりのテクスチャを表示します。",
+      "pngSiblingNote": "PNGのコピーから表示しています。ゲームが読み込むのはDDSです。",
+      "tooLarge": "画像ファイルが大きすぎるためプレビューできません。",
+      "unsupportedFormat": "この画像形式はプレビューできません。",
+      "unreadable": "画像ファイルを読み取れませんでした。"
+    },
+    "alt": "{def}（{facing}向き）",
+    "altNoFacing": "{def}"
+  },
+  "primevue": {
+    "emptyMessage": "選択肢がありません",
+    "emptyFilterMessage": "結果が見つかりません",
+    "emptySelectionMessage": "選択された項目はありません",
+    "searchMessage": "{count}件の結果があります",
+    "selectionMessage": "{count}件を選択中",
+    "aria": {
+      "trueLabel": "はい",
+      "falseLabel": "いいえ",
+      "nullLabel": "未選択",
+      "close": "閉じる",
+      "previous": "前へ",
+      "next": "次へ",
+      "navigation": "ナビゲーション"
+    }
+  },
+  "shell": {
+    "brand": "Rimmerge",
+    "mainNavigation": "メインナビゲーション",
+    "nav": {
+      "dashboard": "ダッシュボード",
+      "inbox": "検出結果",
+      "mergeMod": "マージ出力",
+      "patches": "互換パッチ",
+      "assignments": "パッチメーカー",
+      "startup": "起動コスト",
+      "order": "ロード順",
+      "rules": "ルール",
+      "mods": "MOD",
+      "settings": "設定"
+    },
+    "orderSource": {
+      "label": "順序の基準",
+      "current": "現在",
+      "suggested": "提案",
+      "inSentenceCurrent": "現在の順序",
+      "inSentenceSuggested": "提案された順序"
+    },
+    "modLabelMode": {
+      "label": "MODの表示形式",
+      "names": "名前",
+      "ids": "ID"
+    },
+    "apply": "適用…",
+    "scanningMods": "MODをスキャン中",
+    "supportLink": "Rimmergeを支援",
+    "liveRegion": {
+      "newNotification": "新しい通知{count}件（最新：{title}）"
+    }
+  },
+  "settings": {
+    "heading": "設定",
+    "interfaceHeading": "インターフェース",
+    "language": {
+      "label": "言語",
+      "system": "システム（{detected}）",
+      "preview": "プレビュー",
+      "optionPreview": "{name}（{preview}）",
+      "previewNote": "誤った翻訳を見つけた場合は、{url}してください。修正します。",
+      "previewNoteLinkText": "Issueを作成"
+    },
+    "thresholdLabel": "信頼度のしきい値（自動／要判断）",
+    "tieBreak": {
+      "label": "同順位の処理",
+      "description": "ほかのどのMODにも固定されていないMODを、どこから並べ始めるかを決めます。「再構築」はそれらのMODを名前順に並べ、現在の順序は無視します。そのため、RimSortで作ったリストを初めて再構築すると、ほとんどのMODが移動するものと考えてください。「現在を維持」は各MODをModsConfig.xml内の位置から並べ始め、移動するMODをできるだけ少なくします。",
+      "rebuild": "再構築",
+      "preserveCurrent": "現在を維持"
+    },
+    "useImportedPairs": {
+      "label": "インポートしたペアルールを使用",
+      "description": "RimSort/SteamDBの「前／後にロード」ルールを順序に反映します。既定でオンです。インポートされたペアのほとんどは、ソーターが自力で適用している根拠を言い直したものです。自分で設定したルールはこの切り替えの影響を受けません。"
+    },
+    "useImportedPlacements": {
+      "label": "インポートした配置ルールを使用",
+      "description": "RimSort/SteamDBの「最初／最後にロード」の配置でMODの階層を固定します。既定でオンです。MOD自身のファイルには「最後にロードして」と指定する手段がないためです。"
+    },
+    "enforceSoft": {
+      "label": "強度「ソフト」の順序制約を強制",
+      "description": "これらの順序制約は、{assemblyRef}への遅延解決される参照に由来します。既定でオフです。強制すると、助言にとどめる場合と比べて、現在の順序から移動するMODが目に見えて多くなることがあります。"
+    },
+    "enforceAwareness": {
+      "label": "強度「認識」の順序制約を強制",
+      "description": "これらの順序制約は{edgeKinds}のヒントに由来します。MOD同士が相互に作用する根拠であって、順序の事実ではありません。既定でオフです。「ソフト」の順序制約よりはるかに多いため、強制すると順序がはるかに大きく乱れます。"
+    },
+    "enforceInferred": {
+      "label": "強度「推論」の順序制約を強制",
+      "description": "これらの順序制約は{edgeKinds}です。2つのMODが相互に作用するというアナライザー自身のヒューリスティックな結論で、「認識」のような存在のシグナルにとどまりません。既定でオンです。「ソフト」や「認識」の順序制約と異なり、アナライザーがすでに順序の事実と結論づけているため、助言のみにするとその根拠を捨てることになります。"
+    },
+    "network": {
+      "heading": "インターネットアクセス",
+      "recoveredWarning": "アプリの設定ファイルを読み取れなかったため、設定を再度保存するまでインターネットアクセスはオフになっています。",
+      "allowNetwork": {
+        "label": "インターネットアクセスを許可",
+        "description": "Rimmergeがインターネット経由で送信するすべての通信（自動・手動を問わず）の主スイッチです。接続先はGitHubの2つのホストのみで、アップデートの確認にはapi.github.com、ルールデータベースの更新にはraw.githubusercontent.comを使います。ローカルネットワークには一切接続しません。オフにすると、アドレスを組み立てたり接続を開いたりする前の段階で、すべてのリクエストを取りやめます。このPC上のこのアプリ全体に適用され、どのRimWorldのインストールを開いても同じです。"
+      },
+      "autoRefreshRuleDatabases": {
+        "label": "ルールデータベースを自動的に更新",
+        "description": "1日1回、起動時に、「ルールデータベース」カードに一覧表示された有効なルールデータベースを取得します。Steamワークショップのデータベースは対象外で、こちらは「更新」をクリックしたときにのみ更新されます。"
+      },
+      "checkForUpdates": {
+        "label": "アップデートを確認",
+        "description": "1日1回、起動時に、Rimmergeの新しいバージョンがリリースされているか確認します。"
+      },
+      "checkNow": {
+        "button": "今すぐ確認",
+        "disabledTitle": "「インターネットアクセスを許可」によりオフになっています",
+        "awaitingFirstRun": "まだ確認していません。先に「ようこそ」の通知に回答してください。",
+        "alreadyRanThisLaunch": "今回の起動ですでに確認済みです。",
+        "networkDisabled": "インターネットアクセスはオフです。",
+        "checkDisabled": "自動確認はオフですが、確認しました。",
+        "notDue": "最近確認済みです。しばらくしてから再度お試しください。",
+        "rateLimited": "GitHubのレート制限に達しました。{until}以降に再度お試しください。",
+        "updated": "新しいバージョンがあります：{version}。",
+        "unchanged": "最新です。",
+        "failed": "前回の確認に失敗しました：{reason}"
+      },
+      "mutedKinds": {
+        "heading": "ミュートした通知",
+        "empty": "ミュートしているものはありません。",
+        "unmuteButton": "ミュート解除"
+      },
+      "resetIncludesSteam": "Steamワークショップのデータベース（約49 MB、更新したときにのみダウンロード）を含め、すべてのスイッチを元に戻します。",
+      "restoreDefaultsButton": "インターネットアクセスを既定に戻す",
+      "restoreDefaultsToast": "インターネットアクセス、アップデートの確認、自動更新を再びオンにしました"
+    },
+    "suggestMergeWhenClean": {
+      "label": "競合のない上書きのマージを提案",
+      "description": "2つのMODが同じDefの異なるフィールドを変更している場合、ロード順で勝つ方を残すのではなく、マージを提案します。マージしたDefは適用時にマージMODへ書き込まれます。"
+    },
+    "showDanglingDefReferences": {
+      "label": "宙に浮いたDef参照の検出結果を表示",
+      "description": "既知の参照箇所（研究の前提条件や能力値オフセットのキーなど）に書かれた名前のうち、どの種類の有効なDefにも存在しないものを指摘します。既定でオフです。大規模な環境では、無視できない数の誤検出が出ることがあります（例：自身を識別するフィールドを相互参照と取り違える）。ロード順は変更しません。"
+    },
+    "saveButton": "保存",
+    "resetButton": "既定に戻す",
+    "dirtyIndicator": "未保存の変更",
+    "resetConfirm": {
+      "header": "既定に戻しますか？",
+      "body": "上のすべての項目を、Rimmerge組み込みの既定値で埋め直します。「保存」を押すまで何も保存されません。",
+      "cancelButton": "キャンセル",
+      "confirmButton": "リセット"
+    },
+    "about": {
+      "heading": "Rimmergeについて",
+      "versionLabel": "バージョン{version}",
+      "repoLink": "GitHubリポジトリ",
+      "issuesLink": "問題を報告",
+      "supportLink": "Rimmergeを支援",
+      "supportBlurb": "Rimmergeは無料のオープンソースソフトウェアです。時間の節約に役立ったなら、開発を支援していただけます。"
+    }
+  },
+  "fetchFailure": {
+    "transportHeadline": "GitHubに接続できませんでした",
+    "httpStatus": "GitHubが予期しないHTTPステータス（{status}）を返しました",
+    "rateLimited": "GitHubのレート制限に達しました。{until}以降に再度お試しください",
+    "notPublished": "Rimmergeのリリースはまだ公開されていません",
+    "tooLarge": "レスポンスが許容サイズを超えていました",
+    "invalidContent": "レスポンスが想定した形式ではありませんでした",
+    "notAStableVersion": "最新の公開タグは安定版ではありません",
+    "notModifiedWithoutCache": "GitHubは変更なしと応答しましたが、まだ何もキャッシュされていません",
+    "readFailedHeadline": "ダウンロードが中断されました",
+    "cacheWriteFailedHeadline": "ダウンロードしたデータをローカルに保存できませんでした",
+    "unclassifiedHeadline": "試行に失敗しました"
+  },
+  "ruleWarning": {
+    "droppedClusterRules": "ロード時に移行前のクラスタールール{count}件を破棄しました：{ids}",
+    "unknownModKnowledgeValue": "{section}ルール内の不明な{what}「{value}」を無視しました",
+    "modKnowledgeCacheUnreadableHeadline": "キャッシュされたRimmergeルールを読み取れませんでした。同梱のスナップショットを使用します",
+    "rowsOverRoleLimit": "{section}ルールの{role}グループで、役割ごとの上限を超えた{count}行を無視しました",
+    "precedenceRuleMissingFramework": "{defType}の優先ルールを無視しました：フレームワークが指定されていません",
+    "what": {
+      "precedenceRule": "優先ルール",
+      "behaviour": "動作",
+      "matchMode": "一致モード",
+      "gateMatchMode": "ゲートの一致モード",
+      "gateBehaviour": "ゲートの動作",
+      "conditionalType": "条件の種類",
+      "topLevelSection": "最上位セクション",
+      "logShapeRole": "ログ形式の役割",
+      "placeholderType": "テンプレートのプレースホルダーの種類"
+    },
+    "refusedRow": {
+      "templateInvalid": "{section}の行「{value}」を無視しました：テンプレートが空、長すぎる、または不正な形式です",
+      "captureMissing": "{section}の行「{value}」を無視しました：テンプレートに、役割に必要なキャプチャがありません",
+      "markerLength": "{section}の行「{value}」を無視しました：マーカー文字列が長さの範囲外です",
+      "idTooLong": "{section}の行を無視しました：IDが長すぎます",
+      "templateUncompilable": "{section}の行「{value}」を無視しました：テンプレートがサイズ制限内でコンパイルできません"
+    }
+  },
+  "setup": {
+    "title": "Rimmergeのセットアップ",
+    "fields": {
+      "gameDir": "RimWorldのインストールフォルダー",
+      "workshopDir": "Steamワークショップのフォルダー",
+      "modsConfig": "ModsConfig.xmlのパス",
+      "profileDir": "プロファイルフォルダー"
+    },
+    "browse": "参照…",
+    "loadProject": "プロジェクトを読み込む",
+    "saveAsDefaults": "既定として保存",
+    "loadingProject": "プロジェクトを読み込み中",
+    "startingCaption": "開始しています…",
+    "stage": {
+      "discovering": "MODを検出中",
+      "scanning": "MODをスキャン中",
+      "analyzing": "解析中",
+      "collectingTagEvidence": "タグの根拠を収集中",
+      "done": "完了"
+    },
+    "scanFinishedToast": "スキャン完了（メモ{count}件）",
+    "projectLoadedWithWarningsToast": "プロジェクトを読み込みました（警告あり）",
+    "savedAsDefaultsToast": "既定として保存しました",
+    "savedAsDefaultsDetail": "次回Rimmergeを起動したとき、これらのパスがあらかじめ入力されます。"
+  },
+  "dashboard": {
+    "title": "ダッシュボード",
+    "counts": {
+      "mods": "MOD",
+      "needsInputCurrent": "要判断（現在）",
+      "needsInputSuggested": "要判断（提案）",
+      "movedMods": "移動するMOD",
+      "selectedOrder": "選択中の順序"
+    },
+    "ledgerStatsHeading": "競合台帳（両方の順序）",
+    "table": {
+      "auto": "自動",
+      "needsInput": "要判断",
+      "overridden": "手動で決定",
+      "resolvedBySuggested": "提案で解決",
+      "current": "現在",
+      "suggested": "提案"
+    },
+    "topKindsHeading": "要判断の多い種類",
+    "topKindsEmpty": "現在、判断が必要なものはありません。",
+    "scanNotesDisclosure": "スキャンのメモ（{count}）",
+    "importLog": {
+      "button": "ゲームログをインポート",
+      "importedToast": "ゲームログをインポートしました",
+      "logFilter": "RimWorldのログ",
+      "allFilesFilter": "すべてのファイル"
+    },
+    "guide": {
+      "heading": "はじめに",
+      "intro": "3つのステップで、提案されたロード順をゲームに反映できます。さらに細かく制御したいときは、「検出結果」と「ルール」のページを使えます。",
+      "listLabel": "はじめの手順",
+      "status": {
+        "done": "完了",
+        "current": "現在の手順",
+        "upcoming": "未着手"
+      },
+      "chooseSuggested": {
+        "title": "提案された順序を使う",
+        "pending": "現在の順序を表示しています。提案された順序では{count}個のMODが移動します。",
+        "doneText": "提案された順序を選択済みです。",
+        "doneMatchesFileText": "ModsConfig.xmlはすでに提案された順序と一致しています。",
+        "button": "提案された順序を使う",
+        "reviewLink": "提案された順序を確認"
+      },
+      "apply": {
+        "title": "適用",
+        "pending": "ModsConfig.xmlに書き込まれる内容を確認します。書き込む前にバックアップを作成します。",
+        "button": "適用…",
+        "staleBlocked": "前回のスキャン以降、有効なMODが変更されています。適用する前に再スキャンしてください。",
+        "rescanButton": "再スキャン"
+      },
+      "confirm": {
+        "title": "確認",
+        "pending": "概要を確認してから確定します。必須のMODが見つからないなど、何かが壊れる場合は、先に確認を求められます。"
+      },
+      "done": "ModsConfig.xmlは提案された順序と一致しています。RimWorldを起動してプレイしてください。",
+      "asOfLastScan": "前回のスキャンまたは適用の時点の情報です。",
+      "needsInputHint": "{count}件の検出結果があなたの判断を待っています（任意）",
+      "openInbox": "「検出結果」を開く",
+      "appliedAnnouncement": "適用しました。ModsConfig.xmlは提案された順序と一致しています。"
+    }
+  },
+  "notifications": {
+    "heading": "通知",
+    "empty": "新しい通知はありません。",
+    "dismiss": "閉じる",
+    "mute": "今後は通知しない",
+    "severityWarn": "要対応",
+    "severityInfo": "お知らせ",
+    "bell": {
+      "withCount": "通知、{count}件",
+      "none": "通知、なし"
+    },
+    "welcome": {
+      "title": "Rimmergeへようこそ",
+      "body": "Rimmergeは起動時に1日1回、GitHubに接続することがあります：\n- Rimmergeの新しいバージョンがリリースされているかを確認するため（api.github.com）。\n- 更新されたルールデータベース（コミュニティのロード順ルールと、Rimmerge独自のルールファイル）をダウンロードするため（raw.githubusercontent.com）。更新はローカルに保存され、インポートを選んだときにのみロード順が変わります。\n\nあなた自身、MOD、インストール環境についての情報は一切送信しません。送信するのは単純なリクエストだけで、GitHubからはあなたのIPアドレスが見えます。大きなSteamワークショップのデータベースは自動ではダウンロードされず、「更新」をクリックしたときにのみダウンロードされます。",
+      "settingsAlreadyRecommended": "設定はすでに推奨の既定値と一致しています。",
+      "steamWorkshopLabel": "Steamワークショップのデータベース（約49 MB、「更新」をクリックしたときにのみダウンロード）"
+    },
+    "gameVersionChanged": {
+      "title": "ゲームのバージョンが変わりました",
+      "body": "RimWorldは{current}になりました（以前は{acknowledged}）。{acknowledged}向けにエクスポートした互換パッチとパッチメーカーのMODは、再エクスポートするまでそのバージョンを宣言したままです。",
+      "kindLabel": "ゲームのバージョン変更"
+    },
+    "updateAvailable": {
+      "title": "Rimmerge {version}が利用可能です",
+      "body": "古いバージョンを使用しています。Rimmerge {version}がリリースされました。",
+      "kindLabel": "アップデートあり"
+    },
+    "ruleDatabasesStale": {
+      "title": "{count}件のルールデータベースに対応が必要です",
+      "body": "次のルールデータベースは最近更新されていません：",
+      "kindLabel": "古いルールデータベース",
+      "neverFetched": "未取得",
+      "lastSuccess": "最終更新：{date}",
+      "lastFailure": "前回の試行に失敗しました：{reason}"
+    },
+    "importedRulesOutdated": {
+      "title": "{count}件のルールデータベースにインポートできる新しい内容があります",
+      "body": "新しい内容がキャッシュされているもの：",
+      "kindLabel": "インポートできる新しいルール"
+    },
+    "recommendedSources": {
+      "kindLabel": "推奨ルールデータベース",
+      "title": "推奨ルールデータベースのうち{count}件が未設定です",
+      "body": "Rimmergeは3つのルールデータベースがすべてそろっているときに最もよく並べ替えます。オンにすると今すぐダウンロードします。以降、小さなデータベースは自動的に更新され、Steamワークショップのデータベースは「更新」をクリックしたときにのみ更新されます。",
+      "bodyWithSteam": "Rimmergeは3つのルールデータベースがすべてそろっているときに最もよく並べ替えます。オンにすると今すぐダウンロードします。Steamワークショップのデータベースは約49 MBで、以降は「更新」をクリックしたときにのみ更新されます。小さなデータベースは自動的に更新されます。",
+      "sourceOff": "{source}：オフ",
+      "sourceNotDownloaded": "{source}：オン、未ダウンロード"
+    },
+    "actions": {
+      "keepNetworkSettings": "この設定のままにする",
+      "turnOffNetwork": "インターネットアクセスをオフにする",
+      "applyRecommendedSettings": "推奨設定を使う",
+      "refreshRuleDatabases": "今すぐ更新",
+      "openRuleDatabases": "ルールデータベースを開く",
+      "openSettings": "設定を開く",
+      "showReleasePage": "リリースのリンクをコピー",
+      "openPatches": "パッチを開く",
+      "enableRecommendedSources": "オンにしてダウンロード",
+      "enableRecommendedSourcesToast": "推奨ルールデータベースをオンにしました",
+      "enableRecommendedSourcesPartialToast": "推奨ルールデータベースをオンにしましたが、一部のダウンロードが完了しませんでした。それらは通知に残ります。",
+      "turnOffNetworkToast": "インターネットアクセスをオフにしました",
+      "recommendedSettingsAppliedToast": "推奨設定を適用しました",
+      "linkCopiedToast": "リンクをコピーしました"
+    }
+  },
+  "error": {
+    "generic": {
+      "title": "操作に失敗しました",
+      "detail": "問題が発生しました。"
+    },
+    "code": {
+      "no_project_loaded": {
+        "title": "プロジェクトが読み込まれていません",
+        "detail": "この操作の前にプロジェクトを読み込んでください。"
+      },
+      "session_lost": {
+        "title": "セッションが失われました",
+        "detail": "内部エラーによりセッションが中断されました。自動的に再読み込みされます。"
+      },
+      "internal": {
+        "title": "内部エラー",
+        "detail": "Rimmerge側で問題が発生しました。"
+      },
+      "invalid_input": {
+        "title": "無効な入力",
+        "detail": "入力された値は無効です。"
+      },
+      "scan_failed": {
+        "title": "スキャンに失敗しました",
+        "detail": "インストールのスキャンまたは解析が完了しませんでした。"
+      },
+      "mods_config_io_failed": {
+        "title": "ModsConfig.xmlを読み書きできませんでした",
+        "detail": "ファイルが存在し、読み取り専用や使用中になっていないか確認してください。"
+      },
+      "profile_io_failed": {
+        "title": "プロファイルを読み書きできませんでした",
+        "detail": "Rimmergeのプロファイルフォルダーに書き込みできるか確認してください。"
+      },
+      "rimsort_import_failed": {
+        "title": "インポートに失敗しました",
+        "detail": "RimSortのデータベースファイルをインポートできませんでした。"
+      },
+      "rimworld_running": {
+        "title": "RimWorldが実行中です",
+        "detail": "先にRimWorldを終了するか、このまま続行してください。"
+      },
+      "mod_not_found": {
+        "title": "MODが見つかりません",
+        "detail": "そのMODは有効なMODリストにありません。"
+      },
+      "finding_not_found": {
+        "title": "検出結果が見つかりません",
+        "detail": "その検出結果はもう存在しません。すでに解決済みの可能性があります。"
+      },
+      "merge_source_failed": {
+        "title": "マージ元を読み取れませんでした",
+        "detail": "前回のスキャン以降に、Def、テンプレート、パッチ、またはテクスチャのファイルが変更または削除されました。プロジェクトを再読み込みしてください。"
+      },
+      "merge_mod_io_failed": {
+        "title": "マージMODを書き込めませんでした",
+        "detail": "生成したマージMODのフォルダーの書き込みまたは削除に失敗しました。"
+      },
+      "patch_not_found": {
+        "title": "パッチが見つかりません",
+        "detail": "その互換パッチのプロジェクトはもう読み込まれていません。"
+      },
+      "patch_identity_invalid": {
+        "title": "パッチの識別情報が無効です",
+        "detail": "パッケージIDまたは表示名が無効か、他のMODやパッチと重複しています。"
+      },
+      "def_not_found": {
+        "title": "Defが見つかりません",
+        "detail": "そのDefまたはテンプレートは今回のスキャンに含まれていません。"
+      },
+      "assignment_not_found": {
+        "title": "割り当てが見つかりません",
+        "detail": "そのパッチメーカーのプロジェクトはもう読み込まれていません。"
+      },
+      "assignment_section_in_use": {
+        "title": "セクションはまだ使用中です",
+        "detail": "別のセクションが、まだこのセクションの行を参照しています。"
+      },
+      "stale_active_set": {
+        "title": "有効なMODのリストが古くなっています",
+        "detail": "ModsConfig.xmlに書き込む前に再スキャンしてください。"
+      },
+      "texture_unsupported_format": {
+        "title": "このテクスチャ形式は表示できません",
+        "detail": "ファイルがPNGまたはJPEG画像ではないため、ここではプレビューできません。DDSテクスチャには対応していません。"
+      }
+    }
+  },
+  "defaultPathsWarning": {
+    "notAnInstall": "{gameDir}はRimWorldのインストールではないようです（Version.txtまたはData/Core/がありません）。"
+  },
+  "defaultPathsError": {
+    "noProfileBase": "RIMMERGE_PROFILE_DIRもLOCALAPPDATAも設定されていないため、Rimmergeが自身のファイルを保存する場所がありません。",
+    "gameDirNotFound": "RimWorldのインストールフォルダーが見つかりませんでした。確認したすべての場所は、下の技術的な詳細を参照してください。",
+    "modsConfigNotFound": "RimmergeはModsConfig.xmlの場所を特定できませんでした。下の技術的な詳細を参照してください。"
+  },
+  "finding": {
+    "kind": {
+      "edgeDropped": "順序制約の破棄",
+      "anyOfChoice": "いずれか1つの選択",
+      "defOverride": "Defの上書き",
+      "patchCollision": "パッチの衝突",
+      "textureOverride": "テクスチャの上書き",
+      "duplicateAssembly": "重複したアセンブリ",
+      "likelyDuplicateMod": "重複の可能性があるMOD",
+      "missingMod": "見つからないMOD",
+      "missingDependency": "見つからない依存MOD",
+      "incompatiblePair": "非互換のペア",
+      "unsupportedVersion": "非対応のバージョン",
+      "undeclaredHardDependency": "宣言されていない必須の依存関係",
+      "lazyReferenceViolated": "遅延参照の違反",
+      "declarationQuestioned": "疑わしい宣言",
+      "declarationOverridden": "上書きされた宣言",
+      "duplicateTemplateName": "重複したテンプレート名",
+      "keyedTranslationCollision": "Keyed翻訳キーの衝突",
+      "soundOverride": "サウンドの上書き",
+      "undeclaredTypeDependency": "宣言されていない型の依存関係",
+      "runtimePatchCollision": "ランタイムパッチの衝突",
+      "transpilerCollision": "トランスパイラーの衝突",
+      "tagInferred": "推定されたタグ",
+      "ruleOverruled": "否決されたルール",
+      "placementOverruled": "否決された配置",
+      "placementQuestioned": "疑わしい配置",
+      "placementOrderingOverridden": "上書きされた配置順",
+      "placementPromotesDependents": "依存MODを引き上げる配置",
+      "missingTexturePath": "見つからないテクスチャパス",
+      "patchWillFail": "失敗するパッチ",
+      "contributesNothing": "何も寄与しない",
+      "undecodableTexture": "読み込めないテクスチャ",
+      "brokenInheritance": "壊れた継承",
+      "nearMissModReference": "MOD参照の誤記の可能性",
+      "discardedAddition": "意図的に破棄された追加",
+      "danglingDefReference": "宙に浮いたDef参照"
+    },
+    "title": {
+      "edgeDroppedNoWinner": "循環を解消するため、{before}を{after}より前にする制約を破棄",
+      "edgeDroppedWithWinner": "{before}を{after}より前にする制約を破棄（{winner}により否決）",
+      "declarationQuestioned": "{after}を{before}より後にする宣言に、{relation}の関係から疑義",
+      "declarationOverridden": "{after}を{before}より後にする宣言を{winner}が上書き",
+      "anyOfChoice": "{after}には、{assembly}を提供する{count}個のMODのうち1つが必要",
+      "textureOverride": "テクスチャ{texturePath}",
+      "duplicateAssembly": "{assembly}を{count}個のMODが同梱",
+      "duplicateTemplateName": "テンプレート{name}を{count}個のMODが登録",
+      "keyedTranslationCollision": "{a}と{b}が{count}個の翻訳キーを共有",
+      "soundOverride": "サウンド{path}を{count}個のMODが同梱",
+      "undeclaredTypeDependency": "{user}が関係を宣言せずに{provider}の{typeName}を使用",
+      "runtimePatchCollision": "{target}を{count}個のMODがパッチ",
+      "transpilerCollision": "{target}を{count}個のMODがトランスパイル",
+      "likelyDuplicateMod": "{a}と{b}は重複しているようです（共有Def{count}個）",
+      "missingMod": "{modId}が見つかりません",
+      "missingDependency": "{modId}の依存MOD {dependency}が見つかりません",
+      "incompatiblePair": "{a}と{b}は非互換とされています",
+      "unsupportedVersion": "{modId}はこのRimWorldのバージョンに対応していません",
+      "undeclaredHardDependency": "{after}は宣言なしでロード時に{before}を必要としています",
+      "lazyReferenceViolated": "{after}が、ロードされる前の{before}を参照しています",
+      "tagInferred": "{modId}にタグ{tag}を付与",
+      "ruleOverruledNoWinner": "{before}を{after}より前にするルールが否決されました",
+      "ruleOverruledWithWinner": "{before}を{after}より前にするルールが{winner}により否決されました",
+      "placementOverruled": "{modId}の{placement}配置が否決されました",
+      "placementQuestioned": "{modId}の{placement}配置に{other}が疑義を提示",
+      "placementOrderingOverridden": "{modId}が{pinned}自身の配置順を上書きしています",
+      "placementPromotesDependents": "{modId}の配置により、他の{count}個のMODが引き上げられます",
+      "missingTexturePath": "{defKey}のフィールド{field}が、どの有効なMODにも含まれないテクスチャを指定しています",
+      "patchWillFail": "{modId}による{defKey}への操作は失敗すると予測されます",
+      "contributesNothing": "{modId}は何も寄与していません",
+      "undecodableTexture": "{modId}の{path}をデコードできません",
+      "brokenInheritance": "{modId}の「{parentName}」からの継承が壊れています",
+      "nearMissModReference": "{referrer}による「{written}」への参照は誤記の可能性があります",
+      "discardedAddition": "{replacer}が{adder}自身の追加を意図的に破棄しています",
+      "danglingDefReference": "「{name}」に該当する有効なDefがありません"
+    }
+  },
+  "edgeKind": {
+    "assemblyRef": "アセンブリ参照",
+    "forceLoadAfter": "強制的に後にロード",
+    "forceLoadBefore": "強制的に前にロード",
+    "loadAfter": "後にロード",
+    "loadBefore": "前にロード",
+    "modDependency": "MODの依存関係",
+    "findMod": "FindMod",
+    "ifModActive": "MODが有効な場合",
+    "patchTargetsDef": "パッチの対象Def",
+    "mayRequire": "MayRequire",
+    "patchInjectedNode": "パッチが挿入したノード",
+    "assemblyVersionPrecedence": "アセンブリのバージョン優先",
+    "usesType": "型の使用",
+    "parentTemplate": "親テンプレート",
+    "patchRemovedNode": "パッチが削除したノード",
+    "retextureAfterOwner": "所有MODの後にテクスチャ変更",
+    "defOverrideAfterOrigin": "元のDefの後に上書き",
+    "patchSelectsInjectedNode": "挿入されたノードを選択するパッチ",
+    "patchInvalidatesPredicate": "条件を無効にするパッチ",
+    "patchRemovedNodeCosmetic": "削除されたノード（見た目のみ）",
+    "replaceDiscardsAddition": "置換による追加の破棄"
+  },
+  "tagSignal": {
+    "urlContains": "URLに「{needle}」を含む",
+    "assemblyRefTo": "{mod}へのアセンブリ参照",
+    "dependsOn": "{mod}に依存"
+  },
+  "caveat": {
+    "duplicateTemplate": "テンプレート「{name}」は複数のMOD（{owners}）によって登録されています。各子Defは、自身と同じ位置かそれより前で最も近くにロードされる登録からそれぞれ継承するため、子Defごとに異なるMODに解決されることがあります",
+    "modSettingDefault": "{modId}の{class}は既定の設定でリプレイされたもので、あなたのゲームの設定とは限りません",
+    "failedOp": "{modId}による{xpath}へのパッチ操作は何にも一致しませんでした",
+    "unscopedOps": "{modId}には、Defに対応付けられないパッチ操作が{count}件あります",
+    "malformedOperation": "{modId}のパッチ操作は正しい形式のXMLではありませんでした",
+    "defRemoved": "このDefは{modId}によって削除されます",
+    "positionalItem": "{path}は位置だけで識別されています。後で並べ替えると、この選択が別の項目を指す可能性があります",
+    "unsafeXpathValue": "{path}の値はxpathとして安全に書き込めないため、未解決のままにしました",
+    "unknownOwnerChoice": "{path}：選択された所有MOD {modId}は、このフィールドの候補ではありません",
+    "invalidValueFragment": "{path}：入力された値を解析できませんでした",
+    "unsupportedDrop": "{path}：パッチの衝突では破棄に対応していません",
+    "unreconstructableChain": "{path}：外側の構造を再構成できませんでした",
+    "unsettableLeaf": "{path}：継承された末端の値を未設定に戻すことはできません",
+    "outOfScopeOwners": "{mods}のいずれかがこのパッチの範囲より後にロードされる環境では、このパッチが代わりにそのMODのDefを対象にしたり上書きしたりする可能性があります",
+    "clobberedMapEntry": "{path}は{by}によって追加されましたが、後のパッチがマップ全体を置き換えて消失したため、復元しました"
+  },
+  "inbox": {
+    "evidence": {
+      "inspectLink": "詳しく見る",
+      "ariaLabel": "検出結果の根拠",
+      "edgeDropped": {
+        "sentence": "強度{strength}の{edgeKind}の順序制約を破棄しました：{after} → {before}。"
+      },
+      "anyOfChoice": {
+        "intro": "{modId}には、{assembly}の候補のうち1つが必要です："
+      },
+      "danglingDefReference": {
+        "causeRemovedBy": "{modId}自身のパッチによって削除されました",
+        "causeOnlyInUnloadedFolder": "{modId}自身の「{folder}」フォルダーでのみ定義されていますが、この環境ではそのフォルダーは読み込まれません",
+        "causeOnlyInInactiveMod": "有効になっていない{modId}でのみ定義されています",
+        "causeDefinedNowhere": "有効・無効を問わず、インストール済みのどのMODも定義していません",
+        "causeUnexplained": "見つからない理由を特定できませんでした",
+        "referrerFromDef": "{modId}の{defType}/{defName}（{fieldPath}）",
+        "referrerFromTemplate": "{modId}の{defType}/{'@'}{name}（{fieldPath}）",
+        "referrerFromPatch": "{modId}による{defType}/{defName}へのパッチ（{fieldPath}）",
+        "sentence": "{name}に該当する有効なDefは、どの種類にもありません。理由：{cause}。",
+        "likelySound": "サウンドの参照のようです。{soundDef}が見つからない場合、ゲームは読み込みに失敗するのではなく、警告をログに出して未定義のサウンドに黙って切り替えます。",
+        "referencedFrom": "参照元：",
+        "truncatedReferrers": "他{count}件の参照元は表示されていません（表示上限）。"
+      },
+      "textureOverride": {
+        "sentence": "テクスチャ{path}"
+      },
+      "duplicateAssembly": {
+        "sentence": "アセンブリ{name}を同梱しているMOD："
+      },
+      "likelyDuplicateMod": {
+        "body": "{a}と{b}は、同一のDefキーを{count}個共有しています"
+      },
+      "missingMod": {
+        "body": "{modId}はリストにありますが、ディスク上に見つかりませんでした。"
+      },
+      "missingDependency": {
+        "body": "{modId}には{dependencyLabel}（{dependency}）が必要ですが、有効になっていません。"
+      },
+      "incompatiblePair": {
+        "body": "{a}と{b}は非互換とされています。"
+      },
+      "unsupportedVersion": {
+        "body": "{modId}はこのゲームのバージョンへの対応を宣言していません。"
+      },
+      "undeclaredHardDependency": {
+        "body": "{after}は{before}を必要としていますが、それを宣言していません。"
+      },
+      "lazyReferenceViolated": {
+        "body": "{after}から{before}への遅延参照が満たされていません。"
+      },
+      "declarationQuestioned": {
+        "body": "{declaredAfter}は{declaredBefore}より後にロードすると宣言されていますが、逆の関係も成り立っています："
+      },
+      "declarationOverridden": {
+        "body": "{declaredAfter}は{declaredBefore}より後にロードすると宣言されていますが、宣言済みの順序制約を上書きするルールが別の指定をしています："
+      },
+      "keyedTranslationCollision": {
+        "body": "{a}と{b}の両方が、{count}個の翻訳キーを定義しています："
+      },
+      "soundOverride": {
+        "sentence": "サウンド{path}を同梱しているMOD："
+      },
+      "undeclaredTypeDependency": {
+        "sentence": "{user}は{provider}のアセンブリにある型{typeName}を指定していますが、両者の間に宣言された関係はありません。"
+      },
+      "runtimePatchCollision": {
+        "sentence": "{target}をパッチしているMOD（ロード順）：",
+        "runsLast": "最後に実行",
+        "runLastButton": "最後に実行",
+        "runLastAriaLabel": "{modId}を最後に実行"
+      },
+      "transpilerCollision": {
+        "sentence": "{target}は、次の各MODのランタイムパッチのトランスパイラーによって書き換えられます（ロード順）："
+      },
+      "tagInferred": {
+        "sentence": "{modId}には次の根拠からタグ{tag}が付けられました："
+      },
+      "ruleOverruled": {
+        "withWinner": "{after}を{before}より後にロードするルール（{origin}）は否決されました：",
+        "byLongerCycle": "{after}を{before}より後にロードするルール（{origin}）は、より長い循環によって否決されました。",
+        "cycle": "循環：{chain}"
+      },
+      "placementOverruled": {
+        "intro": "{modId}は{placement}に固定されています（{origin}）が、次によって否決されました：",
+        "landedAt": "実際の位置：#{position}。"
+      },
+      "placementQuestioned": {
+        "body": "{modId}は{placement}に固定されていますが、そのままでは{other}との{relationKind}の関係が成り立ちません。"
+      },
+      "placementOrderingOverridden": {
+        "body": "受け入れられた順序制約により、{modId}は{pinned}自身の{placement}固定を越えて移動させられました："
+      },
+      "placementPromotesDependents": {
+        "body": "{modId}は{placement}に固定されているため、他の{count}個のMODが同じ階層の境界を越えて引き上げられます："
+      },
+      "showMore": "さらに表示（{shown}/{total}）",
+      "missingTexturePath": {
+        "sentence": "{modId}の{def}のフィールド{field}はテクスチャ{path}を指定していますが、どの有効なMODにも含まれていません。"
+      },
+      "undecodableTexture": {
+        "sentence": "{modId}の{path}をデコードできません（{width}x{height}、{fourcc}）。ゲーム本体は代わりに不正なテクスチャ用のプレースホルダーを表示します。",
+        "pngSibling": "このMODは同じパスにDDS以外のファイルも同梱していますが、ゲーム本体がそちらに切り替えることはありません。"
+      },
+      "brokenInheritance": {
+        "missingParent": "{modId}の{child}は{parentName}を継承していますが、それを定義している有効なMODがないため、その親のフィールドを一切持たずに読み込まれます。",
+        "wrongType": "{modId}の{child}は{parentName}を継承していますが、このMOD自身のロード位置では、それは{childDefType}ではなく{parentType}に解決されます。",
+        "affectedCount": "影響を受けるDef（{count}個）：",
+        "andMore": "…ほか{count}個",
+        "truncated": "影響を受ける他の{count}個のDefは表示されていません（表示上限）。"
+      },
+      "nearMissModReference": {
+        "findModName": "{modId}のFindModの名前{written}は、有効またはインストール済みのどのMODにも該当しませんが、{candidateName}によく似ています。誤記の可能性があります。",
+        "mayRequireId": "{modId}のMayRequireのID {written}は、有効またはインストール済みのどのMODにも該当しませんが、{candidateName}によく似ています。誤記の可能性があります。",
+        "writtenIn": "記述場所：{file}"
+      },
+      "patchWillFail": {
+        "causeRemovedBy": "{modId}の{defKey}に対する{operation}は、この順序では失敗すると予測されます。先にロードされる{causeModId}が、自身の操作で対象のノードを削除するためです。",
+        "causeNotYetInjected": "{modId}の{defKey}に対する{operation}は、この順序では失敗すると予測されます。{causeModId}が挿入するノードを対象にしていますが、そのMODは後にロードされます。",
+        "causeDeadTarget": "{modId}の{defKey}に対する{operation}は、この順序では失敗すると予測されます。ロード順にかかわらず、優先される所有MODの解決後の構造にそのノードが存在しないためです。",
+        "causeUnclassified": "{modId}の{defKey}に対する{operation}は、この順序では失敗すると予測されます。原因は分類できませんでした。",
+        "specificField": "対象のフィールド：{leafXpath}"
+      },
+      "contributesNothing": {
+        "body": "この順序では、{modId}による目に見える効果は何もありません。アセンブリがなく、所有するDefはすべて上書きされ、同梱するテクスチャと翻訳もすべて上書きされ、パッチ操作はすべて適用に失敗するか一度も実行されません。"
+      },
+      "discardedAddition": {
+        "sentence": "{replacer}は{adder}より後にロードすると宣言し、{path}を置き換えています。{adderPath}にある{adder}自身の追加は意図的に破棄されます。"
+      }
+    },
+    "suggestion": {
+      "acceptButton": "受諾（Enter）",
+      "ignoreButton": "無視（i）",
+      "revertButton": "元に戻す（u）",
+      "alternativesHeading": "代替案",
+      "addNoteButton": "メモを追加（n）"
+    },
+    "page": {
+      "loadFailed": "検出結果を読み込めませんでした。",
+      "noSelection": "検出結果を選択すると、その提案が表示されます。",
+      "shortcutsHeader": "キーボードショートカット",
+      "shortcutMoveCursor": "カーソルを移動",
+      "shortcutAccept": "提案を受諾",
+      "shortcutPickAlternative": "代替案を選択",
+      "shortcutIgnore": "無視",
+      "shortcutRevert": "決定を元に戻す",
+      "shortcutMerge": "Defの上書きまたはパッチの衝突をマージ",
+      "shortcutAddNote": "メモを追加",
+      "shortcutOpenOrder": "ロード順の表示で開く",
+      "shortcutOpenModDetail": "MODの詳細を開く",
+      "shortcutFocusSearch": "検索にフォーカス",
+      "shortcutCycleStatus": "状態フィルターを切り替え",
+      "shortcutToggleModLabel": "MODの名前／IDを切り替え",
+      "shortcutToggleHelp": "このヘルプの表示を切り替え"
+    },
+    "alternatives": {
+      "ariaLabel": "代替案"
+    },
+    "decisionNote": {
+      "label": "メモ",
+      "save": "メモを保存"
+    },
+    "textureTile": {
+      "winnerBadge": "優先",
+      "sizeLine": "{format} · {count}バイト",
+      "useThisOne": "これを使う",
+      "shipThisFile": "このファイルを同梱"
+    },
+    "defConflictView": {
+      "sourceFailed": "スキャン以降にファイルが変更されました。プロジェクトを再読み込みしてください。",
+      "loadFailed": "競合の表示を読み込めませんでした。",
+      "completenessPartial": "部分的",
+      "completenessCompleteWithProblems": "完全（問題あり）",
+      "completenessComplete": "完全",
+      "patchCollisionWithSubPath": "パッチの衝突：{subPath}",
+      "injectedNodeRelation": "{selector}のパッチが、{injector}が挿入したノードを選択しています",
+      "showLabel": "表示",
+      "filterAllChanged": "変更ありすべて",
+      "filterConflict": "競合",
+      "filterCleanMerge": "競合なしのマージ",
+      "filterListEntries": "リストの項目",
+      "filterMapEntries": "マップの項目",
+      "filterUnchanged": "変更なし",
+      "showMore": "さらに表示（{shown}/{total}）",
+      "problemsHeading": "問題",
+      "problemUnsupportedOp": "{modId}の操作#{opIndex}",
+      "problemReplayStopped": "リプレイはここで停止しました。上の行はそれより前の操作によるものです。",
+      "problemMissingTemplate": "テンプレート{name}（{defType}）が見つかりません。",
+      "problemCycle": "循環：{chain}",
+      "problemPlanFailed": "マージの計画に失敗しました：{reason}"
+    },
+    "fieldRowsTable": {
+      "empty": "このフィルターに一致するフィールドはありません。",
+      "headerPath": "パス",
+      "headerKind": "種類",
+      "headerValues": "値",
+      "headerInGame": "ゲーム内",
+      "headerAfterMerge": "マージ後",
+      "headerPreference": "優先",
+      "kindConflict": "競合",
+      "kindCleanMerge": "競合なしのマージ",
+      "kindListEntry": "リストの項目",
+      "kindMapEntry": "マップの項目",
+      "kindUnchanged": "変更なし",
+      "groupHeader": "{path}（{count}個の項目）",
+      "alsoAddedBy": "{mods}も追加しています",
+      "mergeChoiceFrom": "{modId}の値",
+      "mergeChoiceValue": "保存された値「{text}」",
+      "mergeChoiceDropped": "破棄",
+      "preferenceLoadOrder": "{winner}が優先（ロード順）",
+      "preferenceDecision": "{winner}が優先（決定）",
+      "preferenceMergeChoice": "{choice}（マージの選択）"
+    },
+    "findingList": {
+      "searchPlaceholder": "検出結果を検索…",
+      "filterByStatus": "状態で絞り込む",
+      "filterByKind": "種類で絞り込む",
+      "empty": "このフィルターに一致する検出結果はありません。",
+      "findingsAriaLabel": "検出結果",
+      "statusAll": "すべて",
+      "statusNeedsInput": "要判断",
+      "statusAuto": "自動",
+      "statusOverridden": "手動で決定",
+      "filteredByMod": "{mod}で絞り込み中",
+      "clearModFilter": "MODの絞り込みを解除"
+    },
+    "findingCard": {
+      "undecided": "未決定",
+      "decidedChip": "決定済み",
+      "resolvedBySuggestedChip": "提案で解決"
+    },
+    "touchersList": {
+      "mod": "MOD",
+      "role": "役割",
+      "ops": "操作数",
+      "replay": "リプレイ",
+      "generatedSuffix": "（生成）",
+      "roleOwner": "所有",
+      "rolePatcher": "パッチ",
+      "reached": "到達",
+      "notReached": "未到達"
+    }
+  },
+  "merge": {
+    "state": {
+      "merged": "マージ済み",
+      "needsInput": "{count}個のフィールドが要判断",
+      "structuralGuard": "自動マージされません。優先する側を確定してください",
+      "cannotMerge": "マージ不可"
+    },
+    "skipped": {
+      "stillNeedsInput": "まだ判断が必要"
+    },
+    "summary": {
+      "patchCollision": "パッチの衝突のマージ{count}件（未決定のものは自動提案）",
+      "defOverride": "Defの上書きのマージ{count}件（明示的に決定済み）",
+      "asset": "同梱するアセット{count}件",
+      "willWrite": "書き込む内容：{parts}。"
+    },
+    "header": {
+      "inspectLink": "詳しく見る",
+      "outOfScope": "範囲外のためマージしません：{mods}",
+      "structuralGuardLine": "{field}が{by}とベースのコピーで異なります。このDefではフィールド単位のマージは安全ではありません。「検出結果」ページでこの検出結果を受諾して、ロード順で優先される側を確定してください。マージとして完了することはできません。",
+      "baseTag": "（ベース）",
+      "winnerTag": "（優先）",
+      "totalsFields": "フィールド{count}個",
+      "totalsConflicts": "競合{count}個",
+      "totalsAuto": "自動{count}個",
+      "totalsUnresolved": "未解決{count}個",
+      "totalsUnchanged": "変更なし{count}個"
+    },
+    "entryKind": {
+      "defOverride": "Defの上書き",
+      "patchCollision": "パッチの衝突",
+      "asset": "アセット"
+    },
+    "mod": {
+      "assetsGroup": "アセット",
+      "opsCount": "操作{count}件",
+      "dependsOn": "依存先",
+      "openInEditor": "エディターで開く",
+      "heading": "マージ出力",
+      "mergedDefs": "マージしたDef{count}個",
+      "nothingYet": "空",
+      "summary": "Rimmergeがマージとアセットの決定を書き込む互換MODです。現在の内容：{contents}。「適用」のたびに再生成され、提案された順序では常に最後にロードされます。",
+      "summaryWithSources": "Rimmergeがマージとアセットの決定を書き込む互換MODです。現在の内容：{contents}（{count}個のMODから取得）。「適用」のたびに再生成され、提案された順序では常に最後にロードされます。",
+      "loadFailed": "マージ出力を読み込めませんでした。",
+      "packageIdLabel": "パッケージID",
+      "folderLabel": "フォルダー",
+      "pathLabel": "パス",
+      "onDiskLabel": "ディスク上",
+      "existsYes": "あり（適用のたびに再生成）",
+      "existsNo": "まだありません。「マージMODを書き込む」をオンにして適用すると生成されます",
+      "placementLabel": "ロード順での配置",
+      "placementValue": "最後（ソーターは生成されたMODを常に提案された順序の末尾に配置します）",
+      "sourceModsLabel": "元のMOD",
+      "entriesHeading": "エントリ",
+      "noEntriesYet": "マージまたはアセット同梱の決定はまだありません。マージエディターでDefの上書きまたはパッチの衝突の検出結果を決定すると追加されます。",
+      "filesHeading": "ファイル",
+      "nothingRendersYet": "マージまたはアセット同梱の決定が1件以上あると、ここにファイルが表示されます。",
+      "fileLoadFailed": "このファイルを生成できませんでした。"
+    },
+    "filePreviewLabel": "ファイルのプレビュー",
+    "editor": {
+      "sourceFailedSuffix": "{message}。前回のスキャン以降にプロジェクトのファイルが変更されています。",
+      "reloadProject": "プロジェクトを再読み込み",
+      "loadFailed": "マージのプレビューを読み込めませんでした。",
+      "showMore": "さらに表示（{loaded}/{total}）",
+      "shortcutsHeader": "マージエディターのショートカット",
+      "shortcutMoveRowCursor": "行カーソルを移動",
+      "shortcutNextPrevConflict": "次／前の競合",
+      "shortcutMoveColumnCursor": "列カーソルを移動",
+      "shortcutChooseColumn": "カーソル位置の列を選択",
+      "shortcutChooseOwnerColumn": "所有MODの列nを選択（1＝ベース）",
+      "shortcutChooseWinner": "選択中の順序で優先される側を選択",
+      "shortcutEditValue": "自由な値を編集",
+      "shortcutToggleDrop": "破棄を切り替え",
+      "shortcutRevertToAuto": "自動に戻す",
+      "shortcutToggleAutoSection": "自動セクションの表示を切り替え",
+      "shortcutToggleUnchanged": "変更なしの行の表示を切り替え",
+      "shortcutBackToFindings": "検出結果に戻る"
+    },
+    "table": {
+      "pathHeader": "パス",
+      "classHeader": "分類",
+      "resultHeader": "結果",
+      "actionsHeader": "操作",
+      "sectionConflicts": "競合（{count}）",
+      "sectionAuto": "自動で解決（{count}）",
+      "sectionUnchanged": "変更なし（{count}）",
+      "containerEntries": "{count}項目",
+      "containerSummary": "{container}：{entries}",
+      "containerConflicts": "競合{count}個",
+      "containerSummaryWithConflicts": "{base}、{conflicts}",
+      "acceptSuggested": "提案を受諾（{count}）"
+    },
+    "field": {
+      "classUnchanged": "変更なし",
+      "classOneSided": "1つのMODのみ変更",
+      "classAgreeing": "一致",
+      "classConflict": "競合",
+      "chooseValueFor": "{path}の値を選択",
+      "suggestedHint": "提案",
+      "takeValue": "{owner}の値を使う",
+      "dropped": "破棄",
+      "needsInput": "要判断",
+      "saving": "保存中…",
+      "drop": "破棄",
+      "dropUnavailableTitle": "パッチの衝突では破棄に対応していません。RimWorld自身のパッチは必ず何らかの値にリプレイされます。",
+      "clearChoice": "選択を解除",
+      "autoRevert": "自動"
+    },
+    "value": {
+      "absent": "なし",
+      "showLess": "折りたたむ",
+      "showMore": "さらに表示"
+    }
+  },
+  "action": {
+    "accept": "受諾",
+    "ignore": "無視",
+    "reorder": "{after}を{before}の後にロード",
+    "preferWinner": "{winner}の{defKey}を優先",
+    "chooseCandidate": "{after}に{chosen}を選択",
+    "dropEdge": "{edgeKind}の順序制約{after} → {before}を破棄",
+    "keepEdge": "{edgeKind}の順序制約{after} → {before}を維持",
+    "addTag": "{modId}にタグ{tag}を付ける",
+    "removeTag": "{modId}からタグ{tag}を外す",
+    "excludeFromCluster": "{modId}をクラスター{rule}から除外",
+    "removeMod": "{modId}を有効なMODリストから外す",
+    "merge": "{defKey}をマージ",
+    "shipAsset": "{from}の{texturePath}を同梱",
+    "promoteRulePair": "「{after}を{before}の後に」をユーザーの決定に昇格",
+    "promoteRulePlacement": "{modId}の配置をユーザーの決定に昇格",
+    "dropRule": "ルール「{after}を{before}の後に」を破棄"
+  },
+  "patches": {
+    "scopeBadge": {
+      "title": "このパッチの範囲外：{mods}",
+      "label": "一部：+{mods}"
+    },
+    "table": {
+      "emptyState": "互換パッチはまだありません。nキーで作成できます。",
+      "nameHeader": "名前",
+      "packageIdHeader": "パッケージID",
+      "scopeHeader": "範囲",
+      "needsInputHeader": "要判断",
+      "completeHeader": "完了",
+      "lastExportHeader": "最終エクスポート",
+      "notExported": "未エクスポート"
+    },
+    "identityForm": {
+      "nameLabel": "名前",
+      "packageIdLabel": "パッケージID",
+      "packageIdPlaceholder": "author.mymod",
+      "displayNameLabel": "表示名",
+      "authorLabel": "作者",
+      "descriptionLabel": "説明",
+      "save": "保存"
+    },
+    "list": {
+      "newPatchButton": "新規パッチ（n）",
+      "newPatchHeading": "新しい互換パッチ",
+      "scopeHeading": "範囲",
+      "loadFailed": "パッチを読み込めませんでした。"
+    },
+    "detail": {
+      "loadFailed": "このパッチを読み込めませんでした。",
+      "orphanedCount": "孤立した決定{count}件",
+      "importFromProfileButton": "プロファイルから決定をインポート",
+      "pruneOrphanedButton": "孤立した決定を整理",
+      "deleteButton": "削除",
+      "identityHeading": "識別情報",
+      "exportHeading": "エクスポート",
+      "findingsHeading": "検出結果",
+      "importedToastSummary": "プロファイルからインポートしました",
+      "importedNoSkips": "{count}件の決定をインポートしました。",
+      "rejection": {
+        "outOfScope": "このパッチの範囲に含まれるMOD同士の検出結果ではありません",
+        "notPatchable": "パッチに含められるのは「マージ」「アセットの同梱」「無視」の決定のみで、「{action}」は含められません",
+        "choiceOutsideScope": "{path}：選択で{mod}が指定されていますが、このパッチの範囲に含まれていません",
+        "assetOutsideScope": "同梱アセットの提供元である{mod}が、このパッチの範囲に含まれていません",
+        "actionName": {
+          "accept": "受諾",
+          "reorder": "並べ替え",
+          "preferWinner": "優先される側を採用",
+          "chooseCandidate": "候補を選択",
+          "dropEdge": "順序制約を破棄",
+          "keepEdge": "順序制約を維持",
+          "addTag": "タグを追加",
+          "removeTag": "タグを削除",
+          "excludeFromCluster": "クラスターから除外",
+          "removeMod": "有効なMODリストから外す",
+          "promoteRule": "ルールを昇格",
+          "dropRule": "ルールを破棄"
+        }
+      },
+      "importedWithSkips": {
+        "imported": "{count}件の決定をインポートしました",
+        "skipped": "{count}件の決定をスキップしました：{reasons}",
+        "reasonSeparator": "。",
+        "combined": "{imported}。{skipped}"
+      },
+      "prunedToastSummary": "孤立した決定を整理しました",
+      "prunedToastDetail": "現在の範囲に当てはまらなくなった{count}件の決定を削除しました。",
+      "deleteDialogHeader": "このパッチを削除しますか？",
+      "deleteDialogBody": "パッチのプロジェクトを削除します。すでにディスクへエクスポートしたフォルダーはそのまま残ります。"
+    },
+    "inbox": {
+      "loadFailed": "このパッチの検出結果を読み込めませんでした。",
+      "shortcutFocusScopeSearch": "範囲の検索にフォーカス",
+      "shortcutFocusExportDir": "エクスポート先フォルダーの欄にフォーカス",
+      "shortcutBackToPatch": "パッチ自体の詳細に戻る"
+    },
+    "scopeEditor": {
+      "minimumSizeTitle": "パッチの範囲には2つ以上のMODが必要です。",
+      "membersListLabel": "範囲に含まれるMOD",
+      "removeMember": "{name}を範囲から削除",
+      "noMembersYet": "範囲に含まれるMODはまだありません。",
+      "searchPlaceholder": "追加するMODを検索…",
+      "searchLabel": "範囲に追加するMODを検索",
+      "searchResultsLabel": "検索に一致するMOD",
+      "noMatches": "一致するものはありません。",
+      "scopeShrunk": "範囲が縮小されました。{count}件の決定が孤立しました。",
+      "remainingChoicesNamingRemoved": "残りの選択のうち{count}件が、まだ範囲から削除したMODを指定しています。"
+    },
+    "exportPanel": {
+      "exportDirLabel": "エクスポート先フォルダー",
+      "exportDirPlaceholder": "フォルダーを選択…",
+      "chooseButton": "選択…",
+      "installCheckboxLabel": "Modsフォルダーにインストールして有効化",
+      "staleActiveSetNote": "保留中の有効化の変更は含まれません。このインストールに反映したい場合は、先に再スキャンしてください。",
+      "forceWarning": "RimWorldWin64.exeが実行中のようです。今インストールするとModsConfig.xmlに書き込みますが、ゲームは終了時にこのファイルを上書きするため、変更が失われるおそれがあります。それでもエクスポートしますか？",
+      "exportAnyway": "それでもエクスポート",
+      "export": "エクスポート",
+      "exportedTo": "エクスポート先：{path}",
+      "installedAt": "インストール先：{path}",
+      "hash": "ハッシュ：{hash}",
+      "unchangedSinceLastExport": "前回のエクスポートから変更はありません。",
+      "renderLoadFailed": "このパッチを生成できませんでした。",
+      "dependenciesHeading": "依存関係",
+      "entriesHeading": "エントリ",
+      "noEntriesYet": "マージまたはアセット同梱の決定はまだありません。このパッチの検出結果で、Defの上書きまたはパッチの衝突を決定すると追加されます。",
+      "skippedHeading": "スキップ",
+      "filesHeading": "ファイル",
+      "nothingRendersYet": "このパッチにマージまたはアセット同梱の決定が1件以上あると、ここにファイルが表示されます。",
+      "fileLoadFailed": "このファイルを生成できませんでした。"
+    }
+  },
+  "edgeStrength": {
+    "hard": "ハード",
+    "declared": "宣言",
+    "soft": "ソフト",
+    "awareness": "認識",
+    "inferred": "推論"
+  },
+  "edgeStatus": {
+    "satisfied": "充足",
+    "violated": "違反",
+    "unevaluated": "未評価"
+  },
+  "mods": {
+    "changes": {
+      "searchPlaceholder": "検索…",
+      "loadFailed": "このMODの変更を読み込めませんでした。",
+      "noMatches": "このフィルターに一致する変更はありません。",
+      "kindHeader": "種類",
+      "targetHeader": "対象",
+      "opsHeader": "操作数",
+      "otherTouchersHeader": "他の変更元",
+      "findingsHeader": "検出結果",
+      "showMore": "さらに表示（{loaded}/{total}）"
+    },
+    "edges": {
+      "none": "なし。"
+    },
+    "picker": {
+      "removeMember": "{name}を削除",
+      "noneSelectedYet": "まだ何も選択されていません。",
+      "searchPlaceholder": "MODを検索…",
+      "searchLabel": "MODを検索（{target}）",
+      "noMatches": "一致するものはありません。"
+    },
+    "table": {
+      "regionLabel": "MOD",
+      "missing": "見つからない",
+      "rovingHint": "矢印キーで移動、Enterで開く、Spaceで切り替え"
+    },
+    "pendingChanges": {
+      "unscanned": "保留中の変更{count}件。解析を更新するには再スキャンしてください",
+      "unapplied": "ModsConfig.xmlにまだ適用されていない変更{count}件",
+      "rescanButton": "再スキャン",
+      "rescanFinishedToast": "再スキャン完了（メモ{count}件）",
+      "rescannedWithWarningsToast": "再スキャンしました（警告あり）"
+    },
+    "closeGuard": {
+      "header": "有効なMODへの未保存の変更",
+      "body": "作業中の有効なMODのリストに、まだ再スキャンで反映されていない変更があるか、スキャン済みの順序が{modsConfig}に適用されていません。今離れると、メモリ上のその作業は失われます。いずれの場合もゲーム自体のファイルは変更されません。",
+      "stay": "とどまる",
+      "leaveAnyway": "それでも離れる"
+    },
+    "scanNotes": {
+      "empty": "スキャンのメモはありません。"
+    },
+    "detail": {
+      "loadFailed": "このMODを読み込めませんでした。",
+      "idAndSource": "{modId}：{source}",
+      "byAuthors": "作者：{authors}",
+      "tagsHeading": "タグ",
+      "declaredOrderHeading": "宣言された順序",
+      "loadAfterLabel": "後にロード",
+      "loadBeforeLabel": "前にロード",
+      "forceLoadAfterLabel": "強制的に後にロード",
+      "forceLoadBeforeLabel": "強制的に前にロード",
+      "dependenciesLabel": "依存関係",
+      "incompatibleWithLabel": "非互換のMOD",
+      "edgesInHeading": "入ってくる順序制約",
+      "edgesOutHeading": "出ていく順序制約",
+      "changesHeading": "変更",
+      "scanNotesHeading": "スキャンのメモ",
+      "findingsHeading": "検出結果",
+      "noLiveFindings": "現在の検出結果はありません。"
+    },
+    "page": {
+      "heading": "MOD",
+      "activeTab": "有効",
+      "inactiveTab": "無効",
+      "searchPlaceholder": "MODを検索…",
+      "tagFilterPlaceholder": "タグで絞り込む…",
+      "sourcePlaceholder": "入手元",
+      "sourceAny": "すべて",
+      "deactivateSelectedButton": "選択したMODを無効化",
+      "alsoActivateDependenciesLabel": "依存MODも有効化",
+      "activateSelectedButton": "選択したMODを有効化",
+      "loadFailed": "MODを読み込めませんでした。",
+      "totalMods": "{count}個のMOD",
+      "pageCapHint": "（最初の{count}個を表示中。検索で絞り込んでください）",
+      "activateDialogHeader": "MODの有効化",
+      "willActivateHeading": "有効化するMOD：",
+      "alreadyActiveHeading": "有効化済みのためスキップ：",
+      "unresolvableDependency": "{mod}は{deps}への依存を宣言していますが、ディスク上にありません。",
+      "activatedToast": "有効化しました",
+      "activateButton": "有効化",
+      "deactivateDialogHeader": "MODの無効化",
+      "willDeactivateHeading": "無効化するMOD：",
+      "refusedHeading": "拒否（必須）：",
+      "dependentsStillActive": "{count}個の有効なMODが、まだ{mod}に依存しています：{deps}。",
+      "deactivatedToast": "無効化しました",
+      "deactivateButton": "無効化"
+    },
+    "defSearch": {
+      "ariaLabel": "Defへ移動",
+      "placeholder": "Defへ移動…"
+    }
+  },
+  "rules": {
+    "orphaned": {
+      "empty": "孤立した決定はありません。",
+      "pruneButton": "整理"
+    },
+    "pairTable": {
+      "regionLabel": "ペアルール",
+      "afterHeader": "後",
+      "beforeHeader": "前",
+      "originHeader": "由来",
+      "commentHeader": "コメント",
+      "notAppliedTitle": "未反映：インポートしたペアルールはオフです",
+      "promotedFrom": "（{origin}から昇格）",
+      "overridesDeclaredTag": "（宣言を上書き）",
+      "overridesDeclaredTitle": "このルールには、同じ2つのMOD間に宣言済みの順序制約（loadAfter/modDependencies）があれば、それを上書きする指定が付いています。このペアに限っては作者自身の宣言より優先されますが、ハードの依存関係より優先されることはありません。",
+      "promotedButton": "昇格済み",
+      "promoteButton": "昇格",
+      "deleteButton": "削除"
+    },
+    "addPairDialog": {
+      "header": "ペアルールを追加",
+      "loadsAfterLabel": "後にロードするMOD（依存する側）",
+      "loadsBeforeLabel": "先にロードするMOD（依存される側）",
+      "commentLabel": "コメント（任意）",
+      "overrideDeclaredLabel": "これらのMOD間に宣言済みの順序制約があれば上書きする",
+      "overrideDeclaredWarning": "このペアに限り、作者自身のloadAfter/modDependenciesより優先されます。ハードの依存関係より優先されることはありません。宣言自体が古いか誤っている場合にのみ使用してください。",
+      "sameModError": "ペアルールには異なる2つのMODが必要です。",
+      "replaceWarning": "このペアの既存の{origin}ルールを置き換えます。",
+      "addButton": "追加"
+    },
+    "addPlacementDialog": {
+      "header": "ルールを追加",
+      "modToPinLabel": "固定するMOD",
+      "placementLabel": "配置",
+      "placementPlaceholder": "配置を選択",
+      "commentLabel": "コメント（任意）",
+      "replaceWarning": "{mod}の既存の{placement}固定（由来：{origin}）を置き換えます。"
+    },
+    "page": {
+      "heading": "ルール",
+      "importToggleState": "インポートしたペアルール：{pairs} · インポートした配置ルール：{placements}",
+      "addRuleButton": "ルールを追加",
+      "addPairRuleButton": "ペアルールを追加",
+      "reimportHint": "このプロファイルが前回インポートした後に、キャッシュされたデータベースが変更されています。変更を反映するには、もう一度インポートしてください。",
+      "importFromRimSortButton": "RimSortからインポート",
+      "importFinished": "インポートが完了しました。",
+      "userRulesCount": "ユーザールール：{count}",
+      "communityRulesCount": "コミュニティルール：{count}",
+      "steamDependenciesCount": "Steamの依存関係：{count}",
+      "notImported": "未インポート",
+      "loadFailed": "ルールを読み込めませんでした。",
+      "tabAll": "すべて",
+      "tabUserDecision": "あなたの決定",
+      "tabRimSortUser": "RimSort（ユーザー）",
+      "tabRimSortCommunity": "RimSort（コミュニティ）",
+      "tabSteamDb": "SteamDB",
+      "tagsHeading": "タグ",
+      "orphanedHeading": "孤立した決定"
+    },
+    "databases": {
+      "heading": "ルールデータベース",
+      "communityLabel": "コミュニティルール",
+      "steamLabel": "Steamワークショップ",
+      "rimmergeLabel": "Rimmergeルール",
+      "refreshButton": "更新",
+      "refreshDisabledTitle": "「インターネットアクセスを許可」によりオフになっています（設定ページ）",
+      "networkDisabledNotice": "インターネットアクセスがオフのため、更新は無効です。キャッシュされたデータベースは引き続き使用されます。",
+      "failureBanner": "前回の更新が少なくとも1つの取得元で失敗しました。キャッシュされたコピーを引き続き使用しています。",
+      "loadFailed": "ルールデータベースを読み込めませんでした。",
+      "needsReimport": "（再インポート可能）",
+      "neverFetched": "未取得",
+      "stale": "古い（{count}日経過）",
+      "updated": "更新：{relative}",
+      "recencyLine": "{recency} · {bytes} · {sha}",
+      "today": "今日",
+      "daysAgo": "{count}日前",
+      "lastFailureSuffix": " · 前回の更新に失敗：{reason}",
+      "bundledSuffix": " · 同梱版：{sha}",
+      "outcomeUpdated": "更新済み（{bytes}、sha {sha}）",
+      "outcomeUnchanged": "変更なし（sha {sha}）",
+      "outcomeFailed": "失敗：{reason}",
+      "outcomeSkippedSourceDisabled": "スキップ（取得元が無効）",
+      "outcomeSkippedNetworkDisabled": "スキップ（インターネットアクセスがオフ）",
+      "outcomeSkippedAutoRefreshDisabled": "スキップ（自動更新が無効）",
+      "outcomeSkippedNotDue": "スキップ（更新時期前）",
+      "refreshModeAutomatic": "自動的に更新",
+      "refreshModeManual": "手動更新のみ"
+    },
+    "importDialog": {
+      "header": "RimSortからインポート",
+      "userRulesLabel": "userRules.json",
+      "communityRulesLabel": "communityRules.json",
+      "steamDbLabel": "steamDB.json",
+      "importButton": "インポート"
+    },
+    "tagEditor": {
+      "modHeader": "MOD",
+      "tagHeader": "タグ",
+      "sourceHeader": "由来",
+      "confidenceHeader": "信頼度",
+      "signalsHeader": "シグナル",
+      "modIdLabel": "MOD ID",
+      "tagLabel": "タグ",
+      "modeLabel": "モード",
+      "modeAdd": "追加",
+      "modeRemove": "削除",
+      "saveButton": "保存"
+    },
+    "table": {
+      "pairRulesHeading": "ペアルール",
+      "placementRulesHeading": "配置ルール",
+      "modHeader": "MOD",
+      "placementHeader": "配置",
+      "originHeader": "由来",
+      "commentHeader": "コメント",
+      "promotesHeader": "引き上げ",
+      "notAppliedPlacementsTitle": "未反映：インポートした配置ルールはオフです",
+      "otherMods": "他{count}個のMOD",
+      "incompatibilitiesHeading": "非互換",
+      "aHeader": "A",
+      "bHeader": "B",
+      "empty": "ルールはまだありません。"
+    }
+  },
+  "placement": {
+    "top": "先頭",
+    "bottom": "末尾"
+  },
+  "tagProvenance": {
+    "inferred": "推定",
+    "manual": "手動"
+  },
+  "source": {
+    "core": "Core",
+    "dlc": "DLC",
+    "local": "ローカル",
+    "workshop": "ワークショップ"
+  },
+  "cardinality": {
+    "scalar": "単一値",
+    "list": "リスト"
+  },
+  "fieldRole": {
+    "targetKey": "対象キー",
+    "itemSlot": "アイテム枠",
+    "chances": "確率",
+    "scalar": "単一値",
+    "opaque": "不透明"
+  },
+  "changeKind": {
+    "ownsDef": "所有",
+    "ownsTemplate": "テンプレートを所有",
+    "patchesDef": "パッチ",
+    "overridesTexture": "テクスチャを上書き",
+    "overridesSound": "サウンドを上書き",
+    "overridesKeyedTranslation": "翻訳を上書き"
+  },
+  "defPage": {
+    "loadFailed": "このDefを読み込めませんでした。",
+    "sourceTitle": "{source}で表示中。クリックで切り替え",
+    "partialBanner": "不完全：{reason}で停止しました。これ以降のフィールドは表示されません。",
+    "replayStopper": "{mod}の操作{opIndex}：{error}",
+    "ambiguousTemplateIntro": "曖昧なテンプレート：このNameには{count}件の登録があります。RimWorldは各子Defを、自身と同じ位置かそれより前で最も近くにロードされる登録へ個別に解決するため、単一の優先される側は存在しません。上の「優先」／「最後にロードされた代表」は、特定の子Defを問わない場合にこのアプリが明示的に示す代用にすぎず、答えではありません。",
+    "knownChildrenResolve": "既知の子Def{count}個がここに解決されます",
+    "ownersHeading": "所有MOD",
+    "winnerTag": "（優先）",
+    "representativeTag": "（最後にロードされた代表）",
+    "representativeTitle": "代表にすぎません。単一の答えは存在しないため、上の曖昧なテンプレートの注意を参照してください",
+    "generatedTag": "（生成）",
+    "patchersHeading": "パッチ適用元",
+    "patcherStatusNotReached": "未到達",
+    "patcherStatusReplayFailed": "リプレイ失敗",
+    "patcherStatusReplaysCleanly": "問題なくリプレイ",
+    "wrappedTag": "（ラップ）",
+    "wrappedTitle": "ラッパーノード自体ではなく、最初に変更を行う子孫ノードから表示しています",
+    "gatesPrefix": "条件：{gates}",
+    "gate": {
+      "anyActive": "{mods}のいずれかが有効",
+      "noneActive": "{mods}のいずれも無効"
+    },
+    "parentsHeading": "親",
+    "childrenHeading": "子",
+    "effectiveDefHeading": "最終的なDef",
+    "onlyPatchedLabel": "パッチ／継承のみ",
+    "provenanceLegendOwner": "所有",
+    "provenanceLegendPatched": "パッチ",
+    "provenanceLegendInherited": "継承",
+    "provenanceOwner": "所有：{mod}",
+    "provenancePatch": "パッチ元：{mod}",
+    "provenanceInherited": "{defType}/{defName}から継承（{owner}）",
+    "provenanceUnattributedTemplate": "{defType}/{defName}から継承（所有MOD不明）",
+    "fields": {
+      "pathHeader": "パス",
+      "valueHeader": "値",
+      "provenanceHeader": "由来",
+      "showMore": "さらに表示（{loaded}/{total}）"
+    },
+    "resolvedXmlSummary": "解決後のXML"
+  },
+  "layer": {
+    "hard": "ハード",
+    "anyOf": "いずれか",
+    "declaredOverride": "宣言の上書き",
+    "declared": "宣言",
+    "userDecision": "ユーザーの決定",
+    "rimSortUser": "RimSort（ユーザー）",
+    "rimSortCommunity": "RimSort（コミュニティ）",
+    "steamDb": "SteamDB",
+    "inferred": "推論",
+    "soft": "ソフト",
+    "awareness": "認識"
+  },
+  "order": {
+    "heading": "ロード順：{source}",
+    "loadFailed": "順序を読み込めませんでした。",
+    "sortProvenance": {
+      "summary": "同順位の処理：{tieBreak} · インポートしたペアルール：{pairs} · インポートした配置ルール：{placements}",
+      "rebuild": "再構築",
+      "preserveCurrent": "現在を維持",
+      "on": "オン",
+      "off": "オフ"
+    },
+    "table": {
+      "regionLabel": "ロード順",
+      "nameHeader": "名前",
+      "tierHeader": "階層",
+      "depsHeader": "依存",
+      "movedFrom": "#{position}から"
+    },
+    "whyPanel": {
+      "headerWithMod": "{mod}：なぜこの位置？",
+      "headerFallback": "なぜこの位置？",
+      "loadFailed": "説明を読み込めませんでした。",
+      "positionHeading": "位置",
+      "becameReadyAfterHeading": "配置可能になった契機",
+      "lowerBoundsHeading": "下限（このMODより先にロードが必要なMOD）",
+      "noLowerBounds": "下限はありません。",
+      "upperBoundsHeading": "上限（このMODを待っているMOD）",
+      "noUpperBounds": "このMODを待っているものはありません。",
+      "advisoryHeading": "助言的な順序制約",
+      "softHeading": "ソフト（遅延参照）",
+      "awarenessHeading": "認識",
+      "none": "なし。",
+      "satisfied": "充足",
+      "violated": "違反",
+      "droppedHeading": "破棄された順序制約",
+      "cycle": "循環：{cycle}",
+      "overruledBy": "否決したもの：",
+      "sortSettingsHeading": "並べ替えの設定",
+      "tieBreakHeading": "同順位の処理",
+      "currentPositionKnown": "現在の位置：#{position}",
+      "currentPositionUnknown": "現在の位置：現在の順序にありません",
+      "effectiveKey": "実効キー：{key}",
+      "modsPreferredAhead": "前に優先されるMOD：{count}",
+      "pulledForwardBy": "前に引き寄せたもの：",
+      "openInModsLink": "MODページで開く"
+    },
+    "edgeChip": {
+      "directionAfter": "後",
+      "directionBefore": "前",
+      "findingLink": "検出結果"
+    },
+    "tier": {
+      "core": "Core",
+      "dlc": "DLC",
+      "top": "上部",
+      "body": "本体",
+      "bottom": "下部"
+    },
+    "provenance": {
+      "anyOf": "{assembly}のいずれか1つの候補",
+      "rule": "ルール（{origin}）",
+      "ruleWithComment": "ルール（{origin}）：{comment}",
+      "tier": "階層の境界（{tier}）"
+    },
+    "tierReason": {
+      "source": "入手元：{source}",
+      "placement": "配置ルール（{origin}）",
+      "promotedBy": "{before} → {after}により引き上げ",
+      "body": "入手元や配置のシグナルなし"
+    }
+  },
+  "apply": {
+    "dialog": {
+      "header": "適用",
+      "defCacheNote": "有効なDefキャッシュMODはロード順をキーにキャッシュを保持しているため、この適用後の初回起動時にキャッシュが再構築されます{parenthetical}。",
+      "defCacheParenthetical": "（前回のログでは約{seconds}秒）",
+      "writeModsConfigLabel": "ModsConfig.xmlに書き込む（RimWorldが読み込むロード順）",
+      "staleActiveSetMessage": "作業中の有効なMODのセットに保留中の変更があります。ModsConfig.xmlに書き込むには再スキャンしてください。",
+      "rescanButton": "再スキャン",
+      "writeMergeModLabel": "マージMODを書き込む（生成したMODをMods/に出力。マージ／アセットの決定が残っていない場合は削除）",
+      "closeButton": "閉じる",
+      "cancelButton": "キャンセル",
+      "writeAnywayButton": "それでも書き込む",
+      "applyButton": "適用",
+      "writeMergeModButton": "マージMODを書き込む",
+      "saveDecisionsButton": "決定とルールを保存"
+    },
+    "preflight": {
+      "unappliedHeading": "スキャン済みだが、まだModsConfig.xmlに適用されていない変更：",
+      "addedLabel": "追加：",
+      "removedLabel": "削除：",
+      "orderLabel": "順序",
+      "modsConfigLabel": "ModsConfig.xml",
+      "decisionsLabel": "決定",
+      "rulesLabel": "ルール",
+      "movedModsLabel": "移動するMOD",
+      "needsInputLabel": "要判断",
+      "unansweredReordersWarning": "この検証で提案された並べ替えのうち{count}件に、まだペアルールがありません",
+      "problemsRow": "確認が必要な問題{count}件",
+      "problemsAllDecided": "問題{count}件（決定済み）",
+      "noProblems": "問題は見つかりませんでした",
+      "openInbox": "「検出結果」を開く"
+    },
+    "progress": {
+      "heading": "順序を検証",
+      "description": "他のMODによるパッチ操作をすべてリプレイし、この順序でどれが失敗するかを、RimWorld自身のログに出る形で予測します。実行は要求時のみで、大規模な環境では約1分かかります。",
+      "verifyingLabel": "順序を検証中",
+      "checksCaption": "{checked}/{total}件を確認",
+      "startingCaption": "開始しています…"
+    },
+    "diff": {
+      "summary": "{source}に対して{count}個のDefを確認しました（{list}）。",
+      "summaryOperations": "失敗が予測される操作{count}件",
+      "summaryTargets": "影響を受ける対象Def{count}個",
+      "removedByCount": "先にロードされるMODによる削除：{count}",
+      "notYetInjectedCount": "まだ挿入されていない：{count}",
+      "deadTargetCount": "存在しない対象：{count}",
+      "unknownCount": "不明：{count}",
+      "orderFixableHeading": "順序で修正可能。指定されたMODを並べ替えると解決する場合があります：",
+      "cosmeticText": "見た目のみ：どちらの順序でも最終的なDefは同じなので、並べ替えは提案しません。",
+      "mergeInsteadLink": "代わりにマージ",
+      "mergeInstead": "{link}すると、優先されない側のMOD自身の意図が保たれます。",
+      "noMergeAvailable": "この対象にはマージがありません。",
+      "removedByCause": "先にロードされる{mod}が、対象のノードを削除します。",
+      "notYetInjectedCause": "対象のノードは、後にロードされる{mod}が挿入します。",
+      "modPossessive": "{mod}の{operation}",
+      "notFullyFixableHeading": "順序だけでは完全に修正できません（古いパッチ、分類できない原因、またはその混在）。MODごとにまとめています：",
+      "groupedByModLine": "{mod}：{list}",
+      "groupedOperations": "操作{count}件",
+      "groupedTargets": "対象Def{count}個",
+      "partlyFixableHeading": "このうち一部は部分的に順序で修正できます。並べ替えで対象Defの一部が解決します：",
+      "skippedCandidates": "{count}個の候補を確認できませんでした。",
+      "pvoMismatchWarning": "インポートしたログは、今検証した順序とは異なるMODの順序で作成されたものです。以下の件数は、無関係な2つの実行を比較しています。",
+      "pvoHeading": "予測と観測（最後にインポートしたログ）",
+      "pvoSnapshotNote": "インポートしたログはコンソールのスナップショットで、1回のゲーム実行全体のログではありません。コンソールで最も古いエントリより前にゲームが記録した失敗は含まれないため、「予測されたが未観測」は失敗が起きなかった根拠にはなりません。",
+      "pvoCutOffNote": "インポートしたログは正常終了せず、パッチの結果が記録される前に終わっているため、ゲームはパッチの段階に達しなかった可能性があります。「予測されたが未観測」は失敗が起きなかった根拠にはなりません。",
+      "pvoGapsNote": "インポートしたログの途中でゲームがメッセージの記録を停止したため、失敗が記録から漏れている可能性があります。「予測されたが未観測」は失敗が起きなかった根拠にはなりません。",
+      "pvoMatchedSummary": "ログで確認済み：{count}",
+      "pvoPredictedOnlySummary": "予測されたが、ログでは未観測：{count}",
+      "pvoObservedOnlySummary": "ログで観測されたが、予測されていない：{count}。そのまま一覧表示し、除外はしません：",
+      "unattributedRaw": "（帰属不明：{raw}）",
+      "counterfactualJobsLine": "{count}件の操作を他のロード順で再確認",
+      "counterfactualResolvedLine": "{count}件は原因を特定",
+      "counterfactualDemotedLine": "「存在しない対象」の{count}行が順序で修正可能と判明",
+      "counterfactualSkippedLine": "{count}件はスキップ",
+      "counterfactualRejectedLine": "別の操作を壊すため{count}件の並べ替えを却下",
+      "counterfactualSummary": "反実仮想：{list}。"
+    },
+    "reorderActions": {
+      "createPairRule": "ペアルールを作成",
+      "createPairRuleAnyway": "それでもペアルールを作成",
+      "conflictText": "{kind}と矛盾：{detail}（{status}）",
+      "ruleCreated": "ルールを作成しました。確認するには「順序を検証」を再実行してください。ルールは作者の宣言や別のルールによって否決されることがあり、向きが逆の2つのルールは互いに打ち消し合います。実際に有効になったものは「ルール」ページで確認できます。",
+      "ruleExists": "ルールはすでに存在します。"
+    },
+    "result": {
+      "forceWarning": "RimWorldWin64.exeが実行中のようです。ゲームは終了時にModsConfig.xmlを上書きするため、今書き込んだ内容が失われるおそれがあります。それでも書き込みますか？",
+      "mergeModPath": "マージMOD：{path}",
+      "mergeModRemoved": "マージMOD：削除済み（マージ／アセットの決定が残っていません）",
+      "mergeModBackupPath": "マージMODのバックアップ：{path}",
+      "skippedHeading": "スキップ。次の項目を含めずにマージMODを書き込みました：",
+      "toastAppliedSummary": "適用しました",
+      "toastSavedSummary": "保存しました",
+      "toastModsConfigPath": "ModsConfig：{path}",
+      "toastBackupPath": "バックアップ：{path}",
+      "toastDecisionsPath": "決定：{path}",
+      "toastRulesPath": "ルール：{path}",
+      "toastSkippedStillNeedsInput": "スキップ（まだ判断が必要）：{list}"
+    },
+    "confirm": {
+      "heading": "それでも適用しますか？",
+      "intro": "{order}には、書き込む前に確認が必要な問題が{count}件あります：",
+      "acknowledgedHeading": "「検出結果」で決定済み",
+      "reviewInInbox": "「検出結果」で確認",
+      "goBackButton": "戻る",
+      "applyAnywayButton": "それでも適用"
+    },
+    "problem": {
+      "missingDependencyInactive": "{mod}には{dependency}が必要ですが、インストール済みで有効になっていません。",
+      "missingDependencyNotInstalled": "{mod}には{dependency}が必要ですが、インストールされていません。",
+      "incompatiblePair": "{a}と{b}は非互換と宣言されています。",
+      "missingModRemoved": "{mod}はインストールされていないため、有効なMODリストから外されます。",
+      "missingModKept": "{mod}はインストールされていませんが、有効なMODリストに残ります。ゲームはこのMODをスキップします。",
+      "loadRequirementViolated": "{after}は{before}が先にロードされる必要がありますが、この順序では後にロードされます。",
+      "anyOfUnsatisfied": "{mod}は{candidates}のいずれかが先にロードされる必要がありますが、どれも先にロードされません。"
+    }
+  },
+  "gameLog": {
+    "heading": "インポートしたログ：",
+    "kind": {
+      "playerLog": "Player.log",
+      "consoleSnapshot": "コンソールのスナップショット"
+    },
+    "coverage": {
+      "playerLog": {
+        "cleanExit": "起動{count}回。ログは正常終了で終わっています",
+        "crashed": "起動{count}回。ログはゲームのクラッシュで終わっています（クラッシュレポート：{path}）",
+        "crashedNoPath": "起動{count}回。ログはゲームのクラッシュで終わっています（クラッシュレポートの記載なし）",
+        "truncated": "起動{count}回。ログは終了の記録がなく、実行の途中で終わっています（フリーズ、強制終了、またはゲーム実行中に取ったコピー）"
+      },
+      "snapshot": {
+        "belowCap": "コンソールには{count}件のエントリしかなかったため、このコピーからは、それらのエントリに表れていない段階については何もわかりません",
+        "atCap": "コンソールが保持していた{count}件のエントリのみです（コンソールの上限）。それより古いエントリはゲームによって破棄されました",
+        "overCap": "エントリが{count}件あり、1つのコンソールが保持できる数を超えています。単一のコンソールのコピーではなく、複数のコピーを貼り合わせたものか、解析の問題です。ゲームがどれだけ破棄したかはわかりません",
+        "headTruncated": "コピーがエントリの途中から始まっています。最初のエントリは不完全です。"
+      }
+    },
+    "gaps": {
+      "warning": "ゲームがメッセージの記録を{count}回停止しました。記録されなかった内容は復元できません。",
+      "neverResumed": "再開メッセージのないログ記録の停止が{count}回あります。そのため、最初に停止した時点以降のログの内容はすべて信頼できません。",
+      "lowerBound": "少なくとも{count}個のエントリ群（ログのエントリの{percent}%）がログ記録の中断をまたいでいるため、その件数は実際より少ない可能性があります。どの件数も少ない可能性があります。",
+      "resumed": "{stop}行目から{resume}行目まで",
+      "open": "{stop}行目からログの末尾まで",
+      "more": "ほか{count}件"
+    },
+    "losses": {
+      "heading": "読み取り処理がこのログの一部を制限したため、概要には欠けている部分があります：",
+      "linesTruncated": "{count}行が読み取りの上限より長かったため、先頭部分のみ読み取りました",
+      "linesWithInvalidUtf8": "{count}行に無効なUTF-8が含まれていたため、置換文字で読み取りました",
+      "stackBlockLinesDropped": "ブロックごとの上限を超えたスタックトレースの{count}行は調べていません",
+      "stackJoinsAbandoned": "複数行のスタックの結合{count}件が上限を超えたため、中止しました",
+      "passesFolded": "追跡対象を超えた起動回の{count}件のエントリは、最後に追跡した起動回にまとめました",
+      "stackRefsDropped": "スタックの後方参照{count}件はインデックスしていません",
+      "loggingGapsDropped": "一覧の上限を超えたログ記録の中断{count}件は、件数のみ数えて一覧には載せていません",
+      "crashReportPathsTruncated": "クラッシュレポートの場所{count}件を長さの上限で切り詰めました"
+    }
+  },
+  "startup": {
+    "heading": "起動コスト",
+    "description": "有効なMODごとに1行で、変更を伴うパッチ操作、低速になりやすい形のxpath、テクスチャ、DLL、Defを示します。所要時間は含みません（Rimmergeはゲームを実行しません）。{playerLog}またはコンソールのスナップショットをインポートすると、不正寸法のDDSと観測タイマーの列が埋まります（コンソールのスナップショットではタイマーは埋まりません）。",
+    "orderMismatchWarning": "インポートしたログは、現在選択中の順序とは異なるMODの順序で作成されたものです。以下の不正寸法のDDSと観測タイマーの列は、今回ではなくその別の実行を反映しています。",
+    "noOrderBlockWarning": "インポートしたログには有効なMODのリストがまったく含まれていないため、選択中の順序と照合できません。以下の不正寸法のDDSと観測タイマーの列は、今回とは別の実行を反映している可能性があります。",
+    "loadFailed": "起動コストの表を読み込めませんでした。",
+    "modHeader": "MOD",
+    "patchOpsHeader": "パッチ操作",
+    "slowXpathsHeader": "遅いxpath",
+    "texFilesHeader": "テクスチャ数",
+    "texBytesHeader": "テクスチャ容量",
+    "ddsFilesHeader": "DDS数",
+    "badDimDdsHeader": "不正寸法DDS",
+    "dllsHeader": "DLL数",
+    "dllBytesHeader": "DLL容量",
+    "defsHeader": "Def数",
+    "overriddenTexHeader": "上書きテクスチャ",
+    "observedTimersHeader": "観測タイマー",
+    "contentOnlyHeader": "コンテンツのみ",
+    "totalRow": "合計（{count}個のMOD）",
+    "notImported": "未インポート",
+    "notAvailableFromSnapshot": "コンソールのスナップショットからは取得できません",
+    "atLeast": "{count}以上",
+    "snapshotNote": "インポートしたログはコンソールのスナップショットで、1回のゲーム実行全体のログではありません。スナップショットからは観測タイマーを取得できず、不正寸法のDDSの件数は下限値です。",
+    "cutOffNote": "インポートしたログは、パッチの結果が記録される前に、正常終了せずに終わっているため、以下の件数は実際より少ない可能性があります。不正寸法のDDSの件数と観測タイマーは下限値です。",
+    "gapsNote": "インポートしたログの途中でゲームがメッセージの記録を停止したため、以下の件数は実際より少ない可能性があります。不正寸法のDDSの件数と観測タイマーは下限値です。",
+    "observedTimersValue": "{count}（{ms} ms）",
+    "observedTimersAtLeast": "{count}以上（{ms} ms）",
+    "contentOnly": "コンテンツのみ"
+  },
+  "assignments": {
+    "editRefsTargets": {
+      "header": "参照と対象を編集",
+      "referencesHeading": "参照（R）",
+      "targetsHeading": "対象（T）",
+      "whatChangedHeading": "変更内容",
+      "schemaChangeCounts": {
+        "added": "{count}個のフィールドを追加",
+        "removed": "{count}個のフィールドを削除",
+        "reclassified": "{count}個のフィールドを再分類"
+      },
+      "reclassifiedNames": "（{names}）",
+      "strandedValuesLine": "保存されていた値{count}件を破棄しました。再分類されたフィールドの新しい役割では、そこに保存されていた値を受け付けません：",
+      "droppedRowsLine": "{count}行を破棄しました。対象が対象セットから外れました：",
+      "clean": "この変更で破棄されたり行き場を失ったりしたものはありません。",
+      "closeButton": "閉じる",
+      "saveButton": "保存"
+    },
+    "rowEditor": {
+      "copyFrom": "コピー元：",
+      "winnerBadge": "— 優先",
+      "prefillFrom": "— {mod}から",
+      "clampedTo": "— 「{name}」に縮小：この枠には名前を1つしか保持できませんが、この値は{count}個（{joined}）を指定していました",
+      "droppedFromCopy": "— 該当するDefが有効でないため、借用した値{count}件をスキップしました：{names}",
+      "pairedTo": "{slot}と対応",
+      "overrideBadge": "上書き：既存の一致{count}件",
+      "inspectDefLink": "Defを詳しく見る",
+      "defNameLabel": "defName",
+      "saveRowButton": "行を保存",
+      "clearRowButton": "行をクリア",
+      "newRowTitle": "新しい行"
+    },
+    "coverageList": {
+      "searchPlaceholder": "対象を検索…",
+      "ownerFilterPlaceholder": "所有MODで絞り込む",
+      "thisProject": "このプロジェクト",
+      "coveredByMod": "{mod}が対応済み",
+      "coveredByAnotherMod": "別のMODが対応済み",
+      "uncovered": "未対応",
+      "wouldWinNoOwner": "— 優先される見込み",
+      "wouldWinWithOwner": "— {mod}が優先される見込み",
+      "noMatches": "一致する対象はありません。"
+    },
+    "schemaTable": {
+      "fieldHeader": "フィールド",
+      "roleHeader": "役割",
+      "typeHeader": "型",
+      "cardinalityHeader": "多重度",
+      "observedHeader": "観測値",
+      "defTypePlaceholder": "Defの種類",
+      "hideButton": "非表示",
+      "unreadableTargets": "形状の学習中に、参照された対象{count}件を読み取れませんでした：",
+      "unreadableTargetLine": "{field}：{defType}/{defName}（{reason}）",
+      "newFieldPathLabel": "新しいフィールドのパス",
+      "roleLabel": "役割",
+      "defTypeLabel": "Defの種類",
+      "addFieldButton": "フィールドを追加",
+      "pathRequired": "フィールドのパスは必須です。",
+      "pathAlreadyExists": "{path}はすでにこのスキーマのフィールドです。"
+    },
+    "exportPanel": {
+      "exportDirLabel": "エクスポート先フォルダー",
+      "exportDirPlaceholder": "フォルダーを選択…",
+      "chooseButton": "選択…",
+      "installCheckboxLabel": "Modsフォルダーにインストールして有効化",
+      "staleActiveSetNote": "保留中の有効化の変更は含まれません。このインストールに反映したい場合は、先に再スキャンしてください。",
+      "forceWarning": "RimWorldWin64.exeが実行中のようです。今インストールするとModsConfig.xmlに書き込みますが、ゲームは終了時にこのファイルを上書きするため、変更が失われるおそれがあります。それでもエクスポートしますか？",
+      "exportAnyway": "それでもエクスポート",
+      "export": "エクスポート",
+      "exportedTo": "エクスポート先：{path}",
+      "installedAt": "インストール先：{path}",
+      "skippedHeading": "スキップ",
+      "skippedPath": "：{path}"
+    },
+    "editor": {
+      "loadFailed": "このプロジェクトを読み込めませんでした。",
+      "editRefsTargetsButton": "参照と対象を編集",
+      "deleteButton": "削除",
+      "noSections": "セクションはまだありません。",
+      "addSectionButton": "セクションを追加",
+      "removeSectionButton": "セクションを削除",
+      "noTargetSelected": "対象が選択されていません。",
+      "ownRowsHeading": "独自の行",
+      "newRowButton": "新しい行",
+      "standaloneHint": "これは独立したセクションです。独自の行には照合する対象がないため、ここにはカバー状況のキューはありません。",
+      "noRowsYet": "行はまだありません。",
+      "selectOrNewRow": "行を選択するか、「新しい行」をクリックして作成してください。",
+      "exportHeading": "エクスポート",
+      "deleteDialogHeader": "このプロジェクトを削除しますか？",
+      "deleteDialogBody": "パッチメーカーのプロジェクトを削除します。すでにディスクへエクスポートしたフォルダーはそのまま残ります。",
+      "addSectionDialogHeader": "セクションを追加",
+      "listingCandidates": "候補を一覧表示中…",
+      "candidateGroupLabel": "候補のセクションの種類",
+      "noAddableCandidates": "追加できる候補はありません。このプロジェクトの参照MODが所有するDefの種類は、すべてすでにセクションになっています。",
+      "addButton": "追加",
+      "removeSectionDialogHeader": "このセクションを削除しますか？",
+      "removeSectionBody": "{defType}セクションと、そのすべての行を削除します。ここからは元に戻せません。",
+      "sectionInUse": "まだ別のセクションの{count}行から参照されています。それでも削除すると、それらの参照は宙に浮いたままになり、後のエクスポートでそれぞれがスキップとして報告されます。",
+      "referenceLine": "{defType} {row}：{path}",
+      "removeAnywayButton": "それでも削除",
+      "removeButton": "削除"
+    },
+    "wizard": {
+      "heading": "新しいパッチメーカーのプロジェクト",
+      "identityHeading": "識別情報",
+      "nameLabel": "名前",
+      "packageIdLabel": "パッケージID",
+      "packageIdPlaceholder": "author.mymod",
+      "displayNameLabel": "表示名",
+      "referencesHeading": "参照MOD（R）",
+      "targetsHeading": "対象（T）",
+      "targetsHint": "既存のDefの種類にパッチを当てる代わりに、まったく新しいDefの種類を作成する場合（「新規Def」プロジェクト）は空のままにしてください。",
+      "listCandidatesButton": "候補を一覧表示",
+      "effectiveRefsHeading": "実効的な参照セット",
+      "excludedTitle": "除外中。クリックで含める",
+      "includeTitle": "クリックで除外",
+      "excludedTag": "除外",
+      "includedTag": "×",
+      "candidatesHeading": "割り当ての種類の候補",
+      "candidateGroupLabel": "割り当ての種類の候補",
+      "instanceCount": "{defType}（インスタンス{count}個）",
+      "inferringSchema": "スキーマを推定中…",
+      "standaloneNote": "この候補には対象キーのフィールドがないため、「新規Def」プロジェクトになり、対象に照合する行ではなく独立した行を使います。",
+      "excludedTargetsNote": "T/Core以外の参照された対象{count}件は読み取っていません（Tに従うことで高速化しています）。",
+      "createButton": "作成"
+    },
+    "list": {
+      "newProjectButton": "新規プロジェクト",
+      "loadFailed": "割り当てを読み込めませんでした。",
+      "empty": "パッチメーカーのプロジェクトはまだありません。",
+      "nameHeader": "名前",
+      "packageIdHeader": "パッケージID",
+      "sectionsHeader": "セクション",
+      "refsHeader": "R",
+      "targetsHeader": "T",
+      "rowsHeader": "行",
+      "uncoveredHeader": "未対応",
+      "exportedHeader": "エクスポート",
+      "notApplicable": "該当なし",
+      "exportedYes": "済",
+      "exportedNo": "未"
+    },
+    "itemPicker": {
+      "searchPlaceholder": "項目を検索…",
+      "thisProjectHeading": "このプロジェクト",
+      "noMatches": "一致するものはありません。",
+      "count": "{loaded} / {total}",
+      "clearSelection": "選択を解除",
+      "loadMore": "さらに読み込む"
+    }
+  },
+  "rationale": {
+    "layerPhrase": {
+      "hard": "ハード（ロード時）の要件",
+      "anyOf": "解決済みの「いずれか」の要件",
+      "declaredOverride": "作者の宣言に対するあなた自身の明示的な上書き",
+      "declared": "作者の宣言",
+      "userDecision": "あなた自身の決定",
+      "rimSortUser": "RimSortのユーザールール",
+      "rimSortCommunity": "RimSortのコミュニティルール",
+      "steamDb": "Steamワークショップの依存関係",
+      "other": "別の順序制約"
+    },
+    "placementPhrase": {
+      "top": "先頭",
+      "bottom": "末尾"
+    },
+    "relationExplanation": {
+      "presenceOnly": "これはMODが存在するかどうかを調べるだけで、ロード位置は調べません",
+      "patchTargetsDef": "パッチは、ロード順にかかわらず、すべてのMODのDefが読み込まれた後の統合されたDefドキュメントに適用されます",
+      "parentTemplate": "到達不能：ParentNameの順序制約はロード時の順序の事実（ハード）であり、助言的になることはありません",
+      "usesType": "型は、ロード順にかかわらず、読み込まれたすべてのアセンブリから解決されます",
+      "patchSelectsInjectedNode": "選択されたノードは別の方法ですでに存在している（直接記述されている、複数の有効なMODが挿入している、選択する側のMOD自身のパッチが挿入している）か、アナライザーが確認のためにインデックスする深さより深い位置にある可能性があります。そのため、これは証明されたロード順の要件ではありません",
+      "patchRemovedNode": "アナライザーはパッチの内容からこれを推論しています。あるMODが、別のMODもパッチするノードを削除しており、削除する側が最後にロードされないと、もう一方のパッチは対象を見つけられません。作者自身が宣言したロード順ではないため、宣言や配置と食い違う場合はそちらに譲ります",
+      "retextureAfterOwner": "アナライザーは共有されたテクスチャパスからこれを推論しています。テクスチャのみのリテクスチャパックは、見た目を変える対象のコンテンツMODより後にロードされる必要があり、そうでないと置き換えたテクスチャが元のコンテンツで上書きされます。作者自身が宣言したロード順ではないため、宣言や配置と食い違う場合はそちらに譲ります",
+      "defOverrideAfterOrigin": "アナライザーはテンプレート／Defの数の根拠からこれを推論しています。別のMODの名前空間に属するDefも同梱しているMODは、その名前空間の所有MODより後にロードされる必要があり、そうでないと上書きが元の定義の上ではなく下に置かれます。作者自身が宣言したロード順ではないため、宣言や配置と食い違う場合はそちらに譲ります",
+      "patchInvalidatesPredicate": "アナライザーはパッチの内容からこれを推論しています。Replace/Removeが、別のMODのxpathの条件式が読み取るノードを書き換えるか削除するため、条件式を読み取る操作が先にロードされないと、その条件式は一致しなくなります。作者自身が宣言したロード順ではないため、宣言や配置と食い違う場合はそちらに譲ります",
+      "patchRemovedNodeCosmetic": "アナライザーはパッチの内容からこれを推論していますが、ここではどちらの順序でも最終的なDefは同じで、どのMODの操作が失敗をログに出すかが変わるだけです。そのため、作者自身が宣言したロード順より弱い根拠であり、宣言や配置と食い違う場合はそちらに譲ります",
+      "replaceDiscardsAddition": "アナライザーはパッチの内容からこれを推論しています。Replaceはノード全体を新しいものと入れ替え、それ以前の追加が書き込んだ内容を黙って破棄します。そのため、追加する側はReplaceより後にロードされる必要があり、そうでないとその内容はログに一切残らずに失われます。作者自身が宣言したロード順ではないため、宣言や配置と食い違う場合はそちらに譲ります",
+      "interactionEvidence": "これはMOD同士が相互に作用する根拠であって、ローダー自体が必要とする順序の事実ではありません"
+    },
+    "rulePhrase": {
+      "userDecisionOverride": "あなた自身による宣言済み順序制約の上書き",
+      "userDecision": "あなた自身の決定",
+      "layered": "{layerPhrase}による「{after}を{before}より後にロード」"
+    },
+    "edgeDroppedInferred": {
+      "patchRemovedNode": "{after}は、{before}もパッチするノードを削除します。{after}は{before}より後にロードされる必要があり、そうでないと{before}自身のパッチは対象を見つけられません。アナライザーはこれを、どちらのMODが宣言したロード順でもなく、パッチの内容から推論しました。",
+      "retextureAfterOwner": "{after}はテクスチャのみのリテクスチャパックで、{before}自身のコンテンツとテクスチャパスを共有しています。{after}は{before}より後にロードされる必要があり、そうでないと置き換えたテクスチャが、見た目を変える対象のコンテンツで上書きされます。アナライザーはこれを、どちらのMODが宣言したロード順でもなく、共有されたテクスチャパスから推論しました。",
+      "defOverrideAfterOrigin": "{before}は、この上書きが属するテンプレートまたはDefの系統を所有しています。{after}もそのコピーを同梱しており、上書きが元の定義の上に置かれるよう、{before}より後にロードされる必要があります。アナライザーはこれを、どちらのMODが宣言したロード順でもなく、テンプレート／Defの数の根拠から推論しました。",
+      "patchInvalidatesPredicate": "{after}は、{before}自身のパッチが条件式で選択するノードを置き換えるか削除します。{after}は{before}より後にロードされる必要があり、そうでないと{before}自身の条件式は一致しなくなります。アナライザーはこれを、どちらのMODが宣言したロード順でもなく、パッチの内容から推論しました。",
+      "replaceDiscardsAddition": "{before}は、{after}も内容を追加するノードを置き換えます。{after}は{before}より後にロードされる必要があり、そうでないと{before}のReplaceがノード全体を新しいものと入れ替えたときに、{after}自身の追加はログに一切残らずに黙って破棄されます。アナライザーはこれを、どちらのMODが宣言したロード順でもなく、パッチの内容から推論しました。"
+    },
+    "edgeDroppedCosmetic": "見た目のみ：どちらの順序でも最終的なDefは同じで、どのログ行が出るかが変わるだけです",
+    "keepEdgeInCycle": "この順序制約を維持します。ソーターは代わりに、循環内で次に弱い順序制約を破棄します。",
+    "reorderOverridingEdgeWinner": "優先される側を上書きして、代わりにこのMOD自身の順序を強制します。",
+    "edgeDroppedWithWinner": "代わりに{after}を{before}より前にロードする必要があります：{layerPhrase}がそう示しています（{detail}）。",
+    "edgeDroppedSoftOrAwareness": "循環を解消するためにソフトまたは認識のみの順序制約を破棄しても、動作が変わることはほとんどありません。",
+    "edgeDroppedDeclared": "循環を解消するため、作者が宣言した順序制約を破棄する必要がありました。",
+    "edgeDroppedHard": "循環を解消するため、ハード（ロード時）の順序制約を破棄する必要がありました。これらのMODは本当に競合しています。",
+    "removeDependentModBrokenOrder": "壊れたロード順を受け入れる代わりに、依存する側のMODを有効なMODリストから外します。",
+    "declarationQuestioned": "{declaredAfter}は{layerPhrase}に従い{declaredBefore}より後にロードされます（{declaredDetail}）。ただし、{relationExplanation}（{relationDetail}）。",
+    "reorderOppositeOfRelation": "この関係が示す順序とは逆の順序を、ユーザーの決定として強制します。",
+    "declarationOverridden": "{declaredAfter}は{declaredBefore}より後にロードすると宣言されています（{detail}）が、{layerPhrase}は別の指定をしています：代わりに{byAfter}が{byBefore}より後にロードされます（{byDetail}）。",
+    "anyOfNoCandidate": "循環を生じさせずにこの制約を満たせる候補はありませんでした。",
+    "forceAnyOfCandidateAcceptingCycle": "他の場所でどのような循環が生じても受け入れて、この候補を強制します。",
+    "anyOfChosenAlreadyBefore": "選ばれた候補は、現時点ですでに依存する側のMODより前にロードされています。",
+    "anyOfAlternativeCandidate": "別の候補でもこの制約を満たせます。",
+    "anyOfUniqueMaxDependents": "選ばれた候補は、候補の中で最も多くのMODから依存されている唯一のMODです。",
+    "anyOfSmallestId": "他の条件が同じ候補の中から、最も小さいIDで選ばれました。",
+    "ruleOverruledLongerCycle": "複数のMOD間のより長い循環を解消するため、{rulePhrase}を破棄する必要がありました。",
+    "ruleOverruledByWinner": "{rulePhrase}は否決されました：{layerPhrase}は代わりに{before}を{after}より後にロードすると示しています（{detail}）。",
+    "reorderOverridingRuleWinner": "優先される側を上書きして、代わりにこのルール自身の順序を強制します。",
+    "promoteRuleDespiteOverruled": "このルールをあなた自身の決定として残し、否決されたままでも保持されるようにします。",
+    "placementOverruled": "{modId}は{placementPhrase}に固定されていますが、{layerPhrase}がそれを否決しています：{detail}。",
+    "promotePlacementDespiteOverruled": "{placementPhrase}の配置をあなた自身の決定として残し、否決されていても保持されるようにします。",
+    "dropRuleOverrulingPlacement": "この配置を否決したルールを破棄し、{modId}を{placementPhrase}に保ちます。",
+    "placementQuestioned": "{modId}は{placementPhrase}に固定されています。{relationExplanation}（{relationDetail}）。",
+    "enforceRelationAsUserDecision": "この関係を、ユーザーの決定として明示的に適用します。",
+    "placementOrderingOverridden": {
+      "loadsAfter": "{pinned}は{placementPhrase}に固定されていますが、{modId}はそれでもその後にロードされる必要があります：{layerPhrase}（{detail}）。",
+      "loadsBefore": "{pinned}は{placementPhrase}に固定されていますが、{modId}はそれでもその前にロードされる必要があります：{layerPhrase}（{detail}）。"
+    },
+    "placementPromotesDependents": "{modId}は{placementPhrase}に固定されています。他の{count}個のMOD{sample}も、これにより自身の階層の境界を越えて引き上げられたとみなされます",
+    "promotedSample": {
+      "truncated": "（例：{sample}）",
+      "exact": "（{sample}）"
+    },
+    "tagInferredSignalCount": "一致するシグナル{count}件",
+    "rejectInferredTag": "推定されたタグを却下します。",
+    "forceDefOverrideWinner": "ロード順にかかわらず、特定の所有MODのDefを優先させます。",
+    "defOverrideWinnerDeclaresRelation": "優先されるMODは、他のすべての所有MODに対してロード順の関係を明示的に宣言しています。",
+    "defOverrideSameAuthor": "すべての所有MODの作者が同じです。",
+    "defOverrideLoneNonVanillaOwner": "このバニラのDefを上書きしている有効なMODは1つだけで、他に競合するものはありません。",
+    "defOverrideShadowsFramework": "末端のMODが、共有フレームワークのDefを気づかれないまま覆い隠しています。",
+    "keepCurrentWinner": "代わりに、現在優先されている側を維持します。",
+    "defOverrideUnexplained": "複数のMODがこのDefを定義しており、上書きを説明する強いシグナルがありません。",
+    "mergeUnexplainedDefOverride": "1つの所有MODのDefをそのまま受け入れる代わりに、フィールド単位でマージします。",
+    "mergeShadowsFrameworkFieldByField": "フィールド単位でマージし、末端のMODが変更していない箇所はフレームワークの値を維持します。",
+    "forcePatchCollisionWinner": "1つのMODのパッチだけを適用させます。",
+    "patchCollisionAdditive": "関係するパッチはすべて対象に追加するだけなので、順序によって結果は変わりません。",
+    "patchCollisionContested": "関係するパッチの少なくとも1つが対象を変更するため、ロード順によって結果が決まります。",
+    "patchCollisionWinnerDeclaresRelation": "{winner}は{others}より後にロードすると宣言しているため、「{field}」への変更は記述どおりに維持されます。",
+    "mergeContestedPatchCollision": "Def全体をロード順に任せる代わりに、フィールド単位でマージします。",
+    "patchWillFailRemovedBy": "確認に使用した順序では、{remover}が先にロードされ、その操作が、{modId}の「{xpath}」での操作が対象とするノードを削除します。",
+    "reorderBeforeRemover": "{modId}を{remover}より前にロードし、ノードがまだ存在するうちに操作が実行されるようにします。",
+    "patchWillFailNotYetInjected": "{modId}の「{xpath}」での操作は{injector}が挿入するノードを対象にしていますが、確認に使用した順序では{injector}はその後にロードされます。",
+    "reorderAfterInjector": "{modId}を{injector}より後にロードし、ノードが挿入された後に操作が対象を見つけられるようにします。",
+    "patchWillFailDeadTarget": "{modId}の「{xpath}」での操作は、ロード順にかかわらず、優先される所有MODの解決後の構造に存在しないノードを対象にしています。並べ替えでは修正できません。",
+    "patchWillFailUnknownCause": "{modId}の「{xpath}」での操作は失敗すると予測されます。原因は分類できませんでした。",
+    "brokenInheritance": "この`ParentName`参照は、子Defの要素の種類が想定するとおりに解決されません。Defは内容が欠けているか誤った状態で読み込まれます。参照しているMODの作者に報告してください。",
+    "danglingDefReference": "この名前に該当する有効なDefは、どの種類にもありません。理由：{cause}。{soundCaveat}相互参照は、すべてのMODのDefとパッチが読み込まれた後に解決されるため、これはロード順に左右されません。",
+    "danglingDefReferenceSoundCaveat": "サウンドの参照のようです。`SoundDef`が見つからない場合、ゲームは読み込みに失敗するのではなく、警告をログに出して未定義のサウンドに黙って切り替えます。",
+    "discardedAdditionDeliberate": "{replacer}は{adder}より後にロードすると宣言し、「{path}」を置き換えています。「{adderPath}」にある{adder}自身の追加は意図的に破棄されます。",
+    "forceTextureWinner": "1つのMODのテクスチャを優先させます。",
+    "copyTextureIntoMergeMod": "ロード順に関係なく、このMODのテクスチャファイルをマージMODにコピーします。",
+    "textureOverrideCosmetic": "テクスチャの上書きは見た目だけの問題で、ゲーム内で確認できます。妨げになることはありません。",
+    "forceTemplateRegistrationWinner": "ロード順にかかわらず、このMODの登録をテンプレートのすべての子Defに適用させます。",
+    "duplicateTemplateNameExplanation": "{ownerCount}個のMODがこのテンプレート名を登録しています。各子Defは、自身と同じ位置かそれより前で最も近くにロードされる登録から個別に継承します。該当する登録がなければバニラの登録に、それもなければロード順で最初にロードされるMODの登録にフォールバックするため、子Defごとに異なるMODに解決されることがあります。",
+    "keyedTranslationCollision": "この2つのMODは{keyCount}個の翻訳キーを共有しています。キーごとに、最後にロードされた方が優先されます。",
+    "soundOverrideCosmetic": "サウンドの上書きは演出上の問題で、ゲーム内で聞いて確認できます。妨げになることはありません。",
+    "forceSoundWinner": "1つのMODのサウンドを優先させます。",
+    "missingTexturePath": "このテクスチャパスを同梱している有効なMODはありません。ゲームでは代わりにマゼンタのプレースホルダーが表示されます。",
+    "undecodableTexture": "この.ddsファイルはデコードできません。ゲーム本体は代わりに不正なテクスチャ用のプレースホルダーを表示します。",
+    "contributesNothing": "この順序では、{modId}による目に見える効果は何もありません。アセンブリを同梱しておらず、所有するDefはすべて後のコピーに上書きされ、同梱するテクスチャと翻訳もすべて上書きされ、パッチ操作はすべて適用に失敗するか一度も実行されません。無効化してもゲーム内では何も変わらず、そのロードのコストを節約できます。",
+    "undeclaredTypeDependency": "{user}は{provider}のアセンブリにある型を使用していますが、それへの依存を宣言していません。",
+    "pinRelationExplicitly": "この関係を、ロード順のルールとして明示的に固定します。",
+    "runtimePatchCollisionNoLastPatcher": "複数のMODが{targetType}.{targetMethod}をパッチしています。",
+    "runtimePatchCollisionLastPatcher": "{ownerCount}個のMODが{targetType}.{targetMethod}をパッチしています。現在は{last}が最後にロードされるため、そのパッチが最後に実行されます。",
+    "forceRuntimePatchLastWinner": "ロード順にかかわらず、このMODのパッチを最後に実行させます。",
+    "transpilerCollision": "{ownerCount}個のMODが、それぞれランタイムパッチのトランスパイラーで{targetType}.{targetMethod}のILを書き換えています。実行される順序によって、後のトランスパイラーのパターンが一致するかどうかが決まることがあります。このような衝突のほとんどは無害です。これらのMODのいずれかがパッチのエラーをログに出す場合は、`rimmerge rule set-pair`で正しく動作する順序を指定してください。",
+    "duplicateAssemblyFirstLoadedWins": "この名前のアセンブリを複数の有効なMODが同梱しています。実行時には最初にロードされたコピーが優先されます。",
+    "removeDuplicateAssemblyCopy": "重複したコピーのうち1つを有効なMODリストから外します。",
+    "likelyDuplicateMod": "この2つのMODは、間に宣言された関係がないまま、同一のDefを多数共有しています。",
+    "removeLikelyDuplicateModA": "重複の可能性があるMODの一方を有効なMODリストから外します。",
+    "removeLikelyDuplicateModB": "重複の可能性があるMODのもう一方を有効なMODリストから外します。",
+    "missingModNotInstalled": "このMODはModsConfig.xmlでは有効ですが、インストールされていません。いずれにせよ、RimWorldは不明なIDを除外します。",
+    "keepMissingModId": "MODが再び現れる場合に備えて、ModsConfig.xmlにIDを残します。",
+    "missingDependencyNotEnforced": "宣言された依存MODが有効になっていません。RimWorldはこれについて警告するだけで、強制はしません。",
+    "incompatiblePair": "これらのMODは互いに非互換であると宣言しています。",
+    "removeIncompatibleModA": "非互換のMODの一方を有効なMODリストから外します。",
+    "removeIncompatibleModB": "非互換のMODのもう一方を有効なMODリストから外します。",
+    "unsupportedVersionOftenWorks": "このMODは現在のゲームのバージョンを対応バージョンとして挙げていませんが、それでも動作することはよくあります。",
+    "undeclaredHardDependencyHonored": "作者が宣言していなくても、ソーターはすでにこのハード（ロード時）の順序制約に従っています。",
+    "pinRelationExplicitlyAnyway": "それでもこの関係を、ロード順のルールとして明示的に固定します。",
+    "lazyReferenceViolatedJitResolved": "この遅延解決されるアセンブリ参照は現在の順序では守られていませんが、すべてのアセンブリが読み込まれた後のJIT時に解決されるため、実際にはロード順の影響を受けません。",
+    "nearMissModReference": {
+      "findModName": "このFindModの名前「{written}」は、有効またはインストール済みのどのMODにも該当しませんが、有効なMOD「{candidateName}」によく似ています。誤記の可能性があります。参照しているMODの作者に報告してください。",
+      "mayRequireId": "このMayRequireのID「{written}」は、有効またはインストール済みのどのMODにも該当しませんが、有効なMOD「{candidateName}」によく似ています。誤記の可能性があります。参照しているMODの作者に報告してください。"
+    },
+    "mergeCompleteNothingToMerge": "ゲームはこれらの寄与を1つの値に順番に適用するため、マージするものはありません",
+    "mergeLeadDefOverrideCombine": "MODはそれぞれ異なるフィールドを変更しています。マージすると両方が統合されます。",
+    "mergePromotedPatchCollisionKeepsBoth": "MODはそれぞれ異なるフィールドを変更しています。マージすると両方が維持されます。",
+    "keepLoadOrderWinner": "ロード順で優先される側を維持します。",
+    "mergeStructuralGuard": "{field}が所有MOD間で異なります。フィールド単位のマージは安全ではありません。ロード順で優先される側を確定してください",
+    "mergeFieldsNeedChoice": "マージ（{unresolved}個のフィールドで選択が必要）。",
+    "identicalCopiesOrderIrrelevant": "同一のコピーなので、順序によって結果は変わりません",
+    "notAddressedByPatch": "このパッチでは扱いません。現在どおりロード順で決まります。"
+  },
+  "modInfo": {
+    "panel": {
+      "regionLabel": "MODの情報",
+      "close": "閉じる",
+      "notFoundTitle": "このMODは今回のスキャンに含まれていません",
+      "allDetailsLink": "すべての詳細",
+      "previewAlt": "{mod}のプレビュー画像",
+      "noPreview": "プレビュー画像なし",
+      "previewTooLarge": "プレビューが8 MBを超えています",
+      "previewUnsupportedFormat": "プレビューがPNGまたはJPEGではありません",
+      "previewUnreadable": "プレビューを読み取れませんでした",
+      "missingHeading": "見つからない",
+      "missingBody": "ModsConfig.xmlに記載されていますが、ディスク上に見つかりません",
+      "requiredByHeading": "必要としているMOD",
+      "pendingActivation": "有効化を保留中。反映するには適用または再スキャンしてください",
+      "pendingDeactivation": "無効化を保留中。反映するには適用または再スキャンしてください",
+      "packageIdLine": "パッケージID：{id}",
+      "workshopCopyNote": "ワークショップ版のコピー",
+      "versionLine": "MODバージョン：{version}",
+      "aboutNotOnDisk": "このMODのAbout.xmlが見つかりませんでした。前回のスキャン以降に、ファイルが移動または削除された可能性があります。",
+      "supportedVersionsLabel": "対応バージョン",
+      "supportsGameVersion": "このゲームのバージョンに対応",
+      "doesNotSupportGameVersion": "このゲームのバージョンへの対応を宣言していません",
+      "openWorkshopButton": "ワークショップのページを開く（外部ブラウザー）",
+      "openHomepageButton": "ホームページを開く（外部ブラウザー）",
+      "rootFolderLabel": "MODフォルダー",
+      "loadedFoldersLabel": "読み込まれるフォルダー",
+      "costLabel": "コスト",
+      "costLine": "{defsLabel}：{defCount}、{patchOpsLabel}：{patchOps}、{dllsLabel}：{assemblyCount}",
+      "seeStartupLink": "起動コストを見る",
+      "tagsLabel": "タグ",
+      "hardDependents": "ハード依存しているMOD{count}個",
+      "softDependents": "ソフト依存しているMOD{count}個",
+      "awarenessDependents": "認識で依存しているMOD{count}個",
+      "frameworkCandidate": "共有フレームワークのようです",
+      "generatedLine": "Rimmergeが生成（{kind}）",
+      "generatedMerge": "プロファイルのマージMOD",
+      "generatedPatch": "互換パッチ",
+      "generatedAssignment": "割り当てプロジェクト",
+      "positionLabel": "位置",
+      "previousPositionLine": "以前の位置：#{position}",
+      "whyHereLink": "なぜこの位置？",
+      "findingsCount": "検出結果{count}件",
+      "needsInputCount": "要判断{count}件",
+      "declaredHeading": "宣言されたロード順",
+      "descriptionHeading": "説明",
+      "noDescription": "説明はありません。",
+      "showMore": "さらに表示",
+      "showLess": "折りたたむ",
+      "aboutChanged": "前回のスキャン以降にAbout.xmlが変更されました。再スキャンしてください",
+      "aboutUnreadable": "About.xmlを読み取れませんでした：{reason}",
+      "aboutUnreadableIoHeadline": "ファイルを読み取れませんでした",
+      "aboutUnreadableXmlHeadline": "ファイルが有効なXMLではありません",
+      "descriptionTruncated": "この説明は長すぎたため、短縮されています。"
+    }
+  }
+}

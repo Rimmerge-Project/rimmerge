@@ -1,0 +1,21 @@
+<!--
+  Source: Example Weapons Pack,
+  1.6/Patches/ExampleQuestRewardPatch.xml
+  Trimmed to the first operation; structure verbatim,
+  mod/def/class names invented.
+
+  Two features at once: a custom class with a `<match>` branch and no
+  `<xpath>` (a mod-setting toggle defaulting to enabled, so `<match>`
+  runs), wrapping a Replace with `<success>Always</success>` — the
+  Replace matches nothing when the def has no such tag, and Always still
+  reports success to the enclosing operation.
+-->
+<Operation Class="ExampleWeapons.PatchOperation_ChargeQuestRewardCommonality">
+  <match Class="PatchOperationReplace">
+    <success>Always</success>
+    <xpath>Defs/ThingDef[defName= "Gun_Revolver_Unique"]/thingSetMakerTags/li[text() = "RewardStandardLowFreq"]</xpath>
+    <value>
+      <li>RewardStandardHighFreq</li>
+    </value>
+  </match>
+</Operation>

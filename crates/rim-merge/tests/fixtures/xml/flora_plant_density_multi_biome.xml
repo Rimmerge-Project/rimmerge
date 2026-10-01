@@ -1,0 +1,40 @@
+<!--
+  Source: Example Flora (example.flora.core),
+  1.6/Patches/_ModSettings/General-Patches.xml
+  Trimmed to a handful of the real biome replaces this single
+  ExampleSettingsFramework.PatchOperationModOption's <operations> list
+  carries (BorealForest, Tundra, TemperateForest, Desert) — used by the
+  op-scoping regression test: replaying this against TemperateForest's own tree
+  must apply only the TemperateForest op, never another biome's value.
+-->
+<Operation Class="ExampleSettingsFramework.PatchOperationModOption">
+  <defaultValue>True</defaultValue>
+  <label>Increase vanilla plant density</label>
+  <id>EXFL_IncreaseDensity</id>
+  <operations>
+    <li Class="PatchOperationReplace">
+      <xpath>/Defs/BiomeDef[defName="BorealForest"]/plantDensity</xpath>
+      <value>
+        <plantDensity>1.0</plantDensity>
+      </value>
+    </li>
+    <li Class="PatchOperationReplace">
+      <xpath>/Defs/BiomeDef[defName="Tundra"]/plantDensity</xpath>
+      <value>
+        <plantDensity>0.6</plantDensity>
+      </value>
+    </li>
+    <li Class="PatchOperationReplace">
+      <xpath>/Defs/BiomeDef[defName="TemperateForest"]/plantDensity</xpath>
+      <value>
+        <plantDensity>0.9</plantDensity>
+      </value>
+    </li>
+    <li Class="PatchOperationReplace">
+      <xpath>/Defs/BiomeDef[defName="Desert"]/plantDensity</xpath>
+      <value>
+        <plantDensity>0.45</plantDensity>
+      </value>
+    </li>
+  </operations>
+</Operation>

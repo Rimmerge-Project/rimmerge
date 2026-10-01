@@ -1,0 +1,110 @@
+{
+  "metadata": {
+    "game_dir": "C:\\game",
+    "workshop_dir": "C:\\workshop",
+    "mods_config": "C:\\ModsConfig.xml",
+    "game_version": "1.6",
+    "generated_at": "2026-09-05T00:00:00Z",
+    "active_mod_count": 2,
+    "scanned_mod_count": 2,
+    "mods_with_assemblies": 0,
+    "mods_with_patches": 0,
+    "mods_with_defs": 0,
+    "total_defs_indexed": 0,
+    "distinct_texture_paths": 0
+  },
+  "mods": [
+    {
+      "id": "addon.mod",
+      "name": "Addon Mod",
+      "authors": [],
+      "url": null,
+      "path": "C:\\Mods\\addon",
+      "source": "local",
+      "supported_versions": [],
+      "declared": {
+        "load_after": [],
+        "load_before": [],
+        "force_load_after": [],
+        "force_load_before": [],
+        "dependencies": [],
+        "incompatible_with": []
+      },
+      "loaded_folders": [],
+      "hard_dependents": 0,
+      "soft_dependents": 0,
+      "awareness_dependents": 0,
+      "is_framework_candidate": false
+    },
+    {
+      "id": "framework.mod",
+      "name": "Framework Mod",
+      "authors": [],
+      "url": null,
+      "path": "C:\\Mods\\framework",
+      "source": "local",
+      "supported_versions": [],
+      "declared": {
+        "load_after": [],
+        "load_before": [],
+        "force_load_after": [],
+        "force_load_before": [],
+        "dependencies": [],
+        "incompatible_with": []
+      },
+      "loaded_folders": [],
+      "hard_dependents": 1,
+      "soft_dependents": 0,
+      "awareness_dependents": 0,
+      "is_framework_candidate": false
+    }
+  ],
+  "edges": [
+    {
+      "after": "addon.mod",
+      "before": "framework.mod",
+      "kind": "load_after",
+      "detail": "loadAfter",
+      "load_time": true,
+      "status": "violated"
+    }
+  ],
+  "conflicts": [],
+  "constraints": [],
+  "undeclared_hard_dependencies": [],
+  "missing_mods": [],
+  "missing_dependencies": [],
+  "incompatible_active_pairs": [],
+  "unsupported_version_mods": [],
+  "unresolved_find_mod_names": [],
+  "find_mod_names_using_package_id": [],
+  "warnings": [],
+  "mod_costs": [
+    {
+      "mod_id": "addon.mod",
+      "patch_ops": 0,
+      "slow_xpath_ops": 0,
+      "texture_files": 2,
+      "texture_bytes": 500,
+      "dds_files": 0,
+      "assembly_count": 0,
+      "assembly_bytes": 0,
+      "def_count": 1,
+      "content_only": true,
+      "overridden_texture_bytes": 0
+    },
+    {
+      "mod_id": "framework.mod",
+      "patch_ops": 3,
+      "slow_xpath_ops": 1,
+      "texture_files": 10,
+      "texture_bytes": 5000,
+      "dds_files": 4,
+      "assembly_count": 1,
+      "assembly_bytes": 20000,
+      "def_count": 5,
+      "content_only": false,
+      "overridden_texture_bytes": 100
+    }
+  ]
+}

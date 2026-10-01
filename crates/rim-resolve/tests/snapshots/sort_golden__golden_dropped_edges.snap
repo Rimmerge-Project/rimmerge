@@ -1,0 +1,11 @@
+---
+source: crates/rim-resolve/tests/sort_golden.rs
+expression: dropped_snapshot
+---
+[
+    "synth.cycle.001.a after synth.cycle.001.b (Engine { kind: LoadAfter, detail: \"synth.cycle.001.a declares loadAfter synth.cycle.001.b\" })",
+    "synth.cycle.002.a after synth.cycle.002.b (Engine { kind: LoadAfter, detail: \"synth.cycle.002.a declares loadAfter synth.cycle.002.b\" })",
+    "synth.cycle.003.a after synth.cycle.003.b (Engine { kind: LoadAfter, detail: \"synth.cycle.003.a declares loadAfter synth.cycle.003.b\" })",
+    "synth.cycle.004.a after synth.cycle.004.b (Engine { kind: LoadAfter, detail: \"synth.cycle.004.a declares loadAfter synth.cycle.004.b\" })",
+    "synth.cycle.005.a after synth.cycle.005.b (Engine { kind: LoadAfter, detail: \"synth.cycle.005.a declares loadAfter synth.cycle.005.b\" })",
+]

@@ -1,0 +1,2055 @@
+{
+  "common": {
+    "verbatim": "{text}",
+    "cancel": "Скасувати",
+    "loading": "Завантаження…",
+    "technicalDetail": "Технічні подробиці: {detail}"
+  },
+  "defGraphics": {
+    "viewer": {
+      "regionLabel": "Попередній перегляд текстури",
+      "facingGroupLabel": "Напрямок",
+      "previousVariant": "Попередній варіант",
+      "nextVariant": "Наступний варіант",
+      "variantPosition": "{label} ({index} з {count})",
+      "variantSelectLabel": "Варіант",
+      "slotSelectLabel": "Джерело текстури",
+      "fromMod": "З мода {mod}",
+      "overridesOwner": "Перевизначає текстуру мода {owner}, власника Def",
+      "mirrored": "Віддзеркалено",
+      "layoutInferred": "Розкладку визначено за назвами файлів",
+      "truncatedVariants": "Ще {count} варіант не показано | Ще {count} варіанти не показано | Ще {count} варіантів не показано",
+      "truncatedSlots": "Ще {count} джерело не показано | Ще {count} джерела не показано | Ще {count} джерел не показано"
+    },
+    "facing": {
+      "north": "Північ",
+      "east": "Схід",
+      "south": "Південь",
+      "west": "Захід"
+    },
+    "facingShort": {
+      "north": "Пн",
+      "east": "Сх",
+      "south": "Пд",
+      "west": "Зх"
+    },
+    "slot": {
+      "graphic": "Графіка",
+      "worn": "Одягнене",
+      "lifeStage": "Етапи життя",
+      "raceKind": "Тип істоти: {name}",
+      "styleTexture": "Текстура стилю",
+      "headType": "Тип голови",
+      "bodyType": "Тип тіла",
+      "terrain": "Поверхня",
+      "icon": "Іконка",
+      "probe": "Знайдено за шляхом: {field}"
+    },
+    "variant": {
+      "only": "Єдина графіка",
+      "bodyType": "Тип тіла: {name}",
+      "lifeStage": "Етап життя {number}",
+      "female": "Жіноча, етап життя {number}",
+      "alternate": "Альтернатива {number}",
+      "member": "{name}",
+      "stack": "Крок стосу {number}",
+      "stackSingle": "Один предмет",
+      "appearance": "Вигляд: {name}",
+      "wornPath": "Шлях одягу {number}",
+      "wornPathOnBodyType": "Шлях одягу {number}, {name}",
+      "field": "{name}"
+    },
+    "state": {
+      "loading": "Завантаження текстури",
+      "noGraphic": "Цей Def не має власної текстури.",
+      "composedAtRuntime": "Гра складає цю істоту з частин тіла, голови й волосся під час роботи, тож єдиної текстури для показу немає.",
+      "notViewable": "Вбудовано в гру або в пакет ресурсів, тож показати тут неможливо.",
+      "notViewableUncertain": "Файл текстури не знайдено. Можливо, її вбудовано в гру, а таке тут показати неможливо.",
+      "notFound": "Файл текстури не знайдено. Гра показує свою текстуру помилки.",
+      "ddsNotPreviewable": "Текстура DDS. Попередній перегляд недоступний.",
+      "undecodableInGame": "Гра не може декодувати цей файл DDS і показує заглушку.",
+      "pngSiblingNote": "Показано копію PNG; гра завантажує DDS.",
+      "tooLarge": "Файл зображення завеликий для попереднього перегляду.",
+      "unsupportedFormat": "Цей формат зображення не підтримує попередній перегляд.",
+      "unreadable": "Не вдалося прочитати файл зображення."
+    },
+    "alt": "{def}, вигляд: {facing}",
+    "altNoFacing": "{def}"
+  },
+  "primevue": {
+    "emptyMessage": "Немає доступних варіантів",
+    "emptyFilterMessage": "Нічого не знайдено",
+    "emptySelectionMessage": "Нічого не вибрано",
+    "searchMessage": "Доступно результатів: {count}",
+    "selectionMessage": "Вибрано елементів: {count}",
+    "aria": {
+      "trueLabel": "Так",
+      "falseLabel": "Ні",
+      "nullLabel": "Не вибрано",
+      "close": "Закрити",
+      "previous": "Попередній",
+      "next": "Наступний",
+      "navigation": "Навігація"
+    }
+  },
+  "shell": {
+    "brand": "Rimmerge",
+    "mainNavigation": "Головна навігація",
+    "nav": {
+      "dashboard": "Зведення",
+      "inbox": "Знахідки",
+      "mergeMod": "Результат об'єднання",
+      "patches": "Патчі сумісності",
+      "assignments": "Конструктор патчів",
+      "startup": "Витрати на запуск",
+      "order": "Порядок завантаження",
+      "rules": "Правила",
+      "mods": "Моди",
+      "settings": "Налаштування"
+    },
+    "orderSource": {
+      "label": "Джерело порядку",
+      "current": "Поточний",
+      "suggested": "Запропонований",
+      "inSentenceCurrent": "поточним",
+      "inSentenceSuggested": "запропонованим"
+    },
+    "modLabelMode": {
+      "label": "Підписи модів",
+      "names": "Назви",
+      "ids": "ID"
+    },
+    "apply": "Застосувати…",
+    "scanningMods": "Сканування модів",
+    "supportLink": "Підтримати Rimmerge",
+    "liveRegion": {
+      "newNotification": "{count} нове сповіщення, останнє: {title} | {count} нові сповіщення, останнє: {title} | {count} нових сповіщень, останнє: {title}"
+    }
+  },
+  "settings": {
+    "heading": "Налаштування",
+    "interfaceHeading": "Інтерфейс",
+    "language": {
+      "label": "Мова",
+      "system": "Системна ({detected})",
+      "preview": "тестова версія",
+      "optionPreview": "{name} ({preview})",
+      "previewNote": "Якщо ви помітили неправильний переклад, будь ласка, {url}, і ми виправимо переклад.",
+      "previewNoteLinkText": "створіть звернення"
+    },
+    "thresholdLabel": "Поріг впевненості (авто чи потребує рішення)",
+    "tieBreak": {
+      "label": "Розв'язання нічиїх",
+      "description": "Визначає, звідки стартує мод, якого не закріплює жоден інший мод. «Перебудувати» впорядковує такі моди за назвою й ігнорує ваш поточний порядок, тож очікуйте, що більшість модів переміститься, коли ви вперше перебудуєте список, створений RimSort. «Зберегти поточний» починає кожен мод із його позиції в ModsConfig.xml і переміщує якомога менше модів.",
+      "rebuild": "Перебудувати",
+      "preserveCurrent": "Зберегти поточний"
+    },
+    "useImportedPairs": {
+      "label": "Використовувати імпортовані парні правила",
+      "description": "Дозволити правилам RimSort/SteamDB «завантажувати перед/після» впливати на порядок. Увімкнено за замовчуванням — більшість імпортованих пар лише повторює ознаки, які сортувальник і так враховує сам. На правило, яке ви задали самі, цей перемикач ніколи не впливає."
+    },
+    "useImportedPlacements": {
+      "label": "Використовувати імпортовані правила розміщення",
+      "description": "Дозволити розміщенням RimSort/SteamDB «завантажувати першим/останнім» закріплювати ярус мода. Увімкнено за замовчуванням — ніщо у власних файлах мода не може сказати «завантаж мене останнім»."
+    },
+    "enforceSoft": {
+      "label": "Застосовувати обмеження сили «М'яка»",
+      "description": "Ці обмеження походять із відкладено розв'язуваних посилань на {assemblyRef}. Вимкнено за замовчуванням: якщо їх застосовувати, з поточного порядку може зсунутися помітно більше модів, ніж якщо лишити їх рекомендаційними."
+    },
+    "enforceAwareness": {
+      "label": "Застосовувати обмеження сили «Обізнаність»",
+      "description": "Ці обмеження походять із підказок {edgeKinds} — ознак того, що моди взаємодіють, а не факту порядку. Вимкнено за замовчуванням: вони трапляються набагато частіше за обмеження сили «М'яка», тож їх застосування значно сильніше порушує порядок."
+    },
+    "enforceInferred": {
+      "label": "Застосовувати обмеження сили «Виведена»",
+      "description": "Ці обмеження — це {edgeKinds}: власні евристичні висновки аналізатора про те, що два моди взаємодіють, а не лише сигнал присутності, як «Обізнаність». Увімкнено за замовчуванням: на відміну від обмежень сили «М'яка» й «Обізнаність», ці аналізатор уже визнав фактами порядку, тож лишити їх тільки рекомендаційними означало б відкинути ці докази."
+    },
+    "network": {
+      "heading": "Доступ до інтернету",
+      "recoveredWarning": "Не вдалося прочитати файл налаштувань застосунку, тому доступ до інтернету вимкнено, доки ви знову не збережете налаштування.",
+      "allowNetwork": {
+        "label": "Дозволити доступ до інтернету",
+        "description": "Головний перемикач для всього, що Rimmerge надсилає через інтернет, автоматично чи вручну. Застосунок звертається лише до двох хостів GitHub — api.github.com для перевірки оновлень і raw.githubusercontent.com для оновлення баз правил — і ніколи до вашої локальної мережі. Якщо вимкнено, кожен запит пропускається ще до того, як сформовано будь-яку адресу чи відкрито з'єднання. Діє на весь застосунок на цьому комп'ютері, хоч би яку інсталяцію RimWorld ви відкрили."
+      },
+      "autoRefreshRuleDatabases": {
+        "label": "Автоматично оновлювати бази правил",
+        "description": "Раз на день, під час запуску, завантажувати увімкнені бази правил зі списку картки «Бази правил» — але ніколи базу Майстерні Steam, яка оновлюється лише тоді, коли ви натискаєте «Оновити»."
+      },
+      "checkForUpdates": {
+        "label": "Перевіряти оновлення",
+        "description": "Раз на день, під час запуску, перевіряти, чи вийшла новіша версія Rimmerge."
+      },
+      "checkNow": {
+        "button": "Перевірити зараз",
+        "disabledTitle": "Вимкнено параметром «Дозволити доступ до інтернету»",
+        "awaitingFirstRun": "Ще не перевірено — спершу дайте відповідь на вітальне повідомлення.",
+        "alreadyRanThisLaunch": "Уже перевірено під час цього запуску.",
+        "networkDisabled": "Доступ до інтернету вимкнено.",
+        "checkDisabled": "Все одно перевірено — автоматичні перевірки вимкнено.",
+        "notDue": "Нещодавно перевірено — спробуйте пізніше.",
+        "rateLimited": "Досягнуто ліміту запитів GitHub; спробуйте знову після {until}.",
+        "updated": "Доступна новіша версія: {version}.",
+        "unchanged": "У вас найновіша версія.",
+        "failed": "Остання перевірка не вдалася: {reason}"
+      },
+      "mutedKinds": {
+        "heading": "Приглушені сповіщення",
+        "empty": "Нічого не приглушено.",
+        "unmuteButton": "Скасувати приглушення"
+      },
+      "resetIncludesSteam": "Відновлює всі перемикачі, зокрема для бази Майстерні Steam (близько 49 МБ, завантажується лише під час оновлення).",
+      "restoreDefaultsButton": "Відновити типові налаштування доступу до інтернету",
+      "restoreDefaultsToast": "Доступ до інтернету, перевірку оновлень і автоматичне оновлення знову ввімкнено"
+    },
+    "suggestMergeWhenClean": {
+      "label": "Пропонувати об'єднання чистих перевизначень",
+      "description": "Коли два моди змінюють різні поля одного Def, пропонувати об'єднати їх замість того, щоб лишати переможця за порядком завантаження. Об'єднані Def записуються в мод об'єднання під час застосування."
+    },
+    "showDanglingDefReferences": {
+      "label": "Показувати знахідки про висячі посилання на Def",
+      "description": "Позначати назву, записану в розпізнаному місці посилання (напр., передумова дослідження, ключ зміщення характеристики), якої не має жоден активний Def будь-якого типу. Вимкнено за замовчуванням — на великій інсталяції це може дати чимало хибних спрацьовувань (наприклад, поле самоідентифікації, прийняте за перехресне посилання). Ніколи не змінює порядок завантаження."
+    },
+    "saveButton": "Зберегти",
+    "resetButton": "Скинути до типових",
+    "dirtyIndicator": "Незбережені зміни",
+    "resetConfirm": {
+      "header": "Скинути до типових?",
+      "body": "Заповнює кожне поле вище вбудованими типовими значеннями Rimmerge. Нічого не буде збережено, доки ви не натиснете «Зберегти».",
+      "cancelButton": "Скасувати",
+      "confirmButton": "Скинути"
+    },
+    "about": {
+      "heading": "Про застосунок",
+      "versionLabel": "Версія {version}",
+      "repoLink": "Репозиторій GitHub",
+      "issuesLink": "Повідомити про проблему",
+      "supportLink": "Підтримати Rimmerge",
+      "supportBlurb": "Rimmerge — безкоштовний застосунок із відкритим кодом. Якщо він заощаджує вам час, ви можете підтримати його розробку."
+    }
+  },
+  "fetchFailure": {
+    "transportHeadline": "Не вдалося зв'язатися з GitHub",
+    "httpStatus": "GitHub відповів неочікуваним HTTP-статусом ({status})",
+    "rateLimited": "Досягнуто ліміту запитів GitHub; спробуйте знову після {until}",
+    "notPublished": "Ще не опубліковано жодного випуску Rimmerge",
+    "tooLarge": "Відповідь перевищила дозволений розмір",
+    "invalidContent": "Відповідь має неочікуваний формат",
+    "notAStableVersion": "Останній опублікований тег не є стабільною версією",
+    "notModifiedWithoutCache": "GitHub повідомив, що змін немає, але в кеші ще нічого немає",
+    "readFailedHeadline": "Завантаження перервано",
+    "cacheWriteFailedHeadline": "Не вдалося зберегти завантажене локально",
+    "unclassifiedHeadline": "Спроба не вдалася"
+  },
+  "ruleWarning": {
+    "droppedClusterRules": "Під час завантаження відкинуто {count} кластерне правило, створене до міграції: {ids} | Під час завантаження відкинуто {count} кластерні правила, створені до міграції: {ids} | Під час завантаження відкинуто {count} кластерних правил, створених до міграції: {ids}",
+    "unknownModKnowledgeValue": "Проігноровано невідоме значення «{value}» ({what}) у розділі правил {section}",
+    "modKnowledgeCacheUnreadableHeadline": "Не вдалося прочитати кешовані правила Rimmerge; використовується вбудований знімок",
+    "rowsOverRoleLimit": "Проігноровано {count} рядок понад ліміт для ролі в групі {role} розділу правил {section} | Проігноровано {count} рядки понад ліміт для ролі в групі {role} розділу правил {section} | Проігноровано {count} рядків понад ліміт для ролі в групі {role} розділу правил {section}",
+    "precedenceRuleMissingFramework": "Проігноровано правило пріоритету для {defType}: у ньому не вказано фреймворк",
+    "what": {
+      "precedenceRule": "правило пріоритету",
+      "behaviour": "поведінка",
+      "matchMode": "режим збігу",
+      "gateMatchMode": "режим збігу умови",
+      "gateBehaviour": "поведінка умови",
+      "conditionalType": "умовний тип",
+      "topLevelSection": "розділ верхнього рівня",
+      "logShapeRole": "роль форми журналу",
+      "placeholderType": "тип заповнювача шаблону"
+    },
+    "refusedRow": {
+      "templateInvalid": "Проігноровано рядок «{value}» розділу {section}: його шаблон порожній, задовгий або має неправильний формат",
+      "captureMissing": "Проігноровано рядок «{value}» розділу {section}: у його шаблоні бракує групи захоплення, потрібної для його ролі",
+      "markerLength": "Проігноровано рядок «{value}» розділу {section}: рядок-маркер виходить за межі допустимої довжини",
+      "idTooLong": "Проігноровано рядок розділу {section}: його ID задовгий",
+      "templateUncompilable": "Проігноровано рядок «{value}» розділу {section}: його шаблон не компілюється в межах обмежень розміру"
+    }
+  },
+  "setup": {
+    "title": "Початкове налаштування Rimmerge",
+    "fields": {
+      "gameDir": "Тека встановлення RimWorld",
+      "workshopDir": "Тека Майстерні Steam",
+      "modsConfig": "Шлях до ModsConfig.xml",
+      "profileDir": "Тека профілю"
+    },
+    "browse": "Огляд…",
+    "loadProject": "Завантажити проєкт",
+    "saveAsDefaults": "Зберегти як типові",
+    "loadingProject": "Завантаження проєкту",
+    "startingCaption": "Запуск…",
+    "stage": {
+      "discovering": "Пошук модів",
+      "scanning": "Сканування модів",
+      "analyzing": "Аналіз",
+      "collectingTagEvidence": "Збирання ознак для тегів",
+      "done": "Готово"
+    },
+    "scanFinishedToast": "Сканування завершено, {count} примітка | Сканування завершено, {count} примітки | Сканування завершено, {count} приміток",
+    "projectLoadedWithWarningsToast": "Проєкт завантажено з попередженнями",
+    "savedAsDefaultsToast": "Збережено як типові",
+    "savedAsDefaultsDetail": "Ці шляхи буде підставлено під час наступного запуску Rimmerge."
+  },
+  "dashboard": {
+    "title": "Зведення",
+    "counts": {
+      "mods": "Моди",
+      "needsInputCurrent": "Потребують рішення (поточний)",
+      "needsInputSuggested": "Потребують рішення (запропонований)",
+      "movedMods": "Моди, що переміщуються",
+      "selectedOrder": "Вибраний порядок"
+    },
+    "ledgerStatsHeading": "Реєстр конфліктів, обидва порядки",
+    "table": {
+      "auto": "Авто",
+      "needsInput": "Потребує рішення",
+      "overridden": "Перевизначено",
+      "resolvedBySuggested": "Розв'язано запропонованим",
+      "current": "Поточний",
+      "suggested": "Запропонований"
+    },
+    "topKindsHeading": "Найчастіші види, що потребують рішення",
+    "topKindsEmpty": "Зараз нічого не потребує рішення.",
+    "scanNotesDisclosure": "Примітки сканування ({count})",
+    "importLog": {
+      "button": "Імпортувати журнал гри",
+      "importedToast": "Журнал гри імпортовано",
+      "logFilter": "Журнал RimWorld",
+      "allFilesFilter": "Усі файли"
+    },
+    "guide": {
+      "heading": "Початок роботи",
+      "intro": "Три кроки переносять запропонований порядок завантаження в гру. Сторінки «Знахідки» і «Правила» знадобляться, коли захочете більше контролю.",
+      "listLabel": "Кроки початку роботи",
+      "status": {
+        "done": "Готово",
+        "current": "Поточний крок",
+        "upcoming": "Ще ні"
+      },
+      "chooseSuggested": {
+        "title": "Використати запропонований порядок",
+        "pending": "Ви переглядаєте свій поточний порядок. Запропонований порядок переміщує {count} мод. | Ви переглядаєте свій поточний порядок. Запропонований порядок переміщує {count} моди. | Ви переглядаєте свій поточний порядок. Запропонований порядок переміщує {count} модів.",
+        "doneText": "Вибрано запропонований порядок.",
+        "doneMatchesFileText": "ModsConfig.xml уже відповідає запропонованому порядку.",
+        "button": "Використати запропонований порядок",
+        "reviewLink": "Переглянути запропонований порядок"
+      },
+      "apply": {
+        "title": "Застосувати",
+        "pending": "Подивіться, що буде записано в ModsConfig.xml. Спершу створюється резервна копія.",
+        "button": "Застосувати…",
+        "staleBlocked": "Ваші активні моди змінилися після останнього сканування. Перескануйте перед застосуванням.",
+        "rescanButton": "Пересканувати"
+      },
+      "confirm": {
+        "title": "Підтвердити",
+        "pending": "Перегляньте підсумок, потім підтвердьте. Якщо щось зламається, наприклад бракуватиме потрібного мода, вас спершу запитають."
+      },
+      "done": "ModsConfig.xml відповідає запропонованому порядку. Запустіть RimWorld, щоб грати.",
+      "asOfLastScan": "Станом на останнє сканування чи застосування.",
+      "needsInputHint": "{count} знахідка потребує вашого рішення (необов'язково) | {count} знахідки потребують вашого рішення (необов'язково) | {count} знахідок потребують вашого рішення (необов'язково)",
+      "openInbox": "Відкрити «Знахідки»",
+      "appliedAnnouncement": "Застосовано. ModsConfig.xml тепер відповідає запропонованому порядку."
+    }
+  },
+  "notifications": {
+    "heading": "Сповіщення",
+    "empty": "Нових сповіщень немає.",
+    "dismiss": "Сховати",
+    "mute": "Більше не нагадувати",
+    "severityWarn": "Потребує уваги",
+    "severityInfo": "Для інформації",
+    "bell": {
+      "withCount": "Сповіщення: {count}",
+      "none": "Сповіщень немає"
+    },
+    "welcome": {
+      "title": "Ласкаво просимо до Rimmerge",
+      "body": "Rimmerge може звертатися до GitHub раз на день, під час запуску:\n- щоб перевірити, чи вийшла новіша версія Rimmerge (api.github.com);\n- щоб завантажити оновлені бази правил — правила порядку завантаження від спільноти та власний файл правил Rimmerge (raw.githubusercontent.com). Оновлення зберігаються локально; вони змінюють ваш порядок завантаження, лише коли ви самі вирішите їх імпортувати.\n\nЗастосунок не надсилає нічого про вас, ваші моди чи вашу інсталяцію — лише звичайний запит, під час якого GitHub бачить вашу IP-адресу. Велика база Майстерні Steam ніколи не завантажується автоматично, лише коли ви натискаєте «Оновити».",
+      "settingsAlreadyRecommended": "Ваші налаштування вже відповідають рекомендованим типовим.",
+      "steamWorkshopLabel": "База Майстерні Steam (близько 49 МБ, завантажується лише тоді, коли ви натискаєте «Оновити»)"
+    },
+    "gameVersionChanged": {
+      "title": "Версію гри змінено",
+      "body": "RimWorld тепер має версію {current} (була {acknowledged}). Патчі сумісності та моди конструктора патчів, експортовані для {acknowledged}, і далі вказують ту версію, доки ви не експортуєте їх повторно.",
+      "kindLabel": "Версію гри змінено"
+    },
+    "updateAvailable": {
+      "title": "Доступна версія Rimmerge {version}",
+      "body": "У вас старіша версія. Вийшла версія Rimmerge {version}.",
+      "kindLabel": "Доступне оновлення"
+    },
+    "ruleDatabasesStale": {
+      "title": "{count} база правил потребує уваги | {count} бази правил потребують уваги | {count} баз правил потребують уваги",
+      "body": "Ці бази правил давно не оновлювалися:",
+      "kindLabel": "Бази правил застаріли",
+      "neverFetched": "Ще жодного разу не завантажено",
+      "lastSuccess": "Востаннє оновлено {date}",
+      "lastFailure": "Остання спроба не вдалася: {reason}"
+    },
+    "importedRulesOutdated": {
+      "title": "{count} база правил має новий вміст для імпорту | {count} бази правил мають новий вміст для імпорту | {count} баз правил мають новий вміст для імпорту",
+      "body": "Новий вміст є в кеші для:",
+      "kindLabel": "Новий вміст правил для імпорту"
+    },
+    "recommendedSources": {
+      "kindLabel": "Рекомендовані бази правил",
+      "title": "{count} рекомендовану базу правил не налаштовано | {count} рекомендовані бази правил не налаштовано | {count} рекомендованих баз правил не налаштовано",
+      "body": "Rimmerge сортує найкраще з усіма трьома базами правил. Якщо їх увімкнути, вони завантажаться зараз; після цього малі бази оновлюватимуться автоматично, а база Майстерні Steam — лише коли ви натиснете «Оновити».",
+      "bodyWithSteam": "Rimmerge сортує найкраще з усіма трьома базами правил. Якщо їх увімкнути, вони завантажаться зараз. База Майстерні Steam має близько 49 МБ, і після цього вона оновлюється лише тоді, коли ви натискаєте «Оновити»; малі бази оновлюються автоматично.",
+      "sourceOff": "{source}: вимкнено",
+      "sourceNotDownloaded": "{source}: увімкнено, ще не завантажено"
+    },
+    "actions": {
+      "keepNetworkSettings": "Залишити ці налаштування",
+      "turnOffNetwork": "Вимкнути доступ до інтернету",
+      "applyRecommendedSettings": "Використати рекомендовані налаштування",
+      "refreshRuleDatabases": "Оновити зараз",
+      "openRuleDatabases": "Відкрити бази правил",
+      "openSettings": "Відкрити налаштування",
+      "showReleasePage": "Копіювати посилання на випуск",
+      "openPatches": "Відкрити патчі",
+      "enableRecommendedSources": "Увімкнути й завантажити",
+      "enableRecommendedSourcesToast": "Рекомендовані бази правил увімкнено",
+      "enableRecommendedSourcesPartialToast": "Рекомендовані бази правил увімкнено, але деякі завантаження не завершилися. Вони залишаються в списку сповіщення.",
+      "turnOffNetworkToast": "Доступ до інтернету вимкнено",
+      "recommendedSettingsAppliedToast": "Рекомендовані налаштування застосовано",
+      "linkCopiedToast": "Посилання скопійовано"
+    }
+  },
+  "error": {
+    "generic": {
+      "title": "Дію не виконано",
+      "detail": "Щось пішло не так."
+    },
+    "code": {
+      "no_project_loaded": {
+        "title": "Проєкт не завантажено",
+        "detail": "Спершу завантажте проєкт."
+      },
+      "session_lost": {
+        "title": "Сеанс втрачено",
+        "detail": "Внутрішня помилка перервала ваш сеанс. Його буде перезавантажено автоматично."
+      },
+      "internal": {
+        "title": "Внутрішня помилка",
+        "detail": "Щось пішло не так на боці самого Rimmerge."
+      },
+      "invalid_input": {
+        "title": "Неправильне введення",
+        "detail": "Введене значення недійсне."
+      },
+      "scan_failed": {
+        "title": "Сканування не вдалося",
+        "detail": "Сканування або аналіз інсталяції не завершилися."
+      },
+      "mods_config_io_failed": {
+        "title": "Не вдалося прочитати чи записати ModsConfig.xml",
+        "detail": "Переконайтеся, що файл існує, не доступний лише для читання й не використовується."
+      },
+      "profile_io_failed": {
+        "title": "Не вдалося прочитати чи записати ваш профіль",
+        "detail": "Переконайтеся, що в теку профілю Rimmerge можна записувати."
+      },
+      "rimsort_import_failed": {
+        "title": "Імпорт не вдався",
+        "detail": "Не вдалося імпортувати файл бази даних RimSort."
+      },
+      "rimworld_running": {
+        "title": "RimWorld запущено",
+        "detail": "Спершу закрийте RimWorld або все одно продовжте."
+      },
+      "mod_not_found": {
+        "title": "Мод не знайдено",
+        "detail": "Цього мода немає в списку активних модів."
+      },
+      "finding_not_found": {
+        "title": "Знахідку не знайдено",
+        "detail": "Ця знахідка вже не актуальна — можливо, її вже розв'язано."
+      },
+      "merge_source_failed": {
+        "title": "Не вдалося прочитати джерело об'єднання",
+        "detail": "Файл Def, шаблону, патча чи текстури змінився або зник після останнього сканування. Перезавантажте проєкт."
+      },
+      "merge_mod_io_failed": {
+        "title": "Не вдалося записати мод об'єднання",
+        "detail": "Не вдалося записати або видалити теку згенерованого мода об'єднання."
+      },
+      "patch_not_found": {
+        "title": "Патч не знайдено",
+        "detail": "Цей проєкт патча сумісності більше не завантажено."
+      },
+      "patch_identity_invalid": {
+        "title": "Недійсні ідентифікаційні дані патча",
+        "detail": "ID пакета або відображувана назва недійсні або збігаються з іншим модом чи патчем."
+      },
+      "def_not_found": {
+        "title": "Def не знайдено",
+        "detail": "Цього Def чи шаблону немає в цьому скануванні."
+      },
+      "assignment_not_found": {
+        "title": "Призначення не знайдено",
+        "detail": "Цей проєкт конструктора патчів більше не завантажено."
+      },
+      "assignment_section_in_use": {
+        "title": "Розділ досі використовується",
+        "detail": "Інший розділ досі посилається на рядки цього розділу."
+      },
+      "stale_active_set": {
+        "title": "Список активних модів застарів",
+        "detail": "Перескануйте перед записом ModsConfig.xml."
+      },
+      "texture_unsupported_format": {
+        "title": "Цей формат текстури не можна показати",
+        "detail": "Файл не є зображенням PNG чи JPEG, тож його не можна переглянути тут. Текстури DDS не підтримуються."
+      }
+    }
+  },
+  "defaultPathsWarning": {
+    "notAnInstall": "{gameDir} не схоже на інсталяцію RimWorld (немає Version.txt або Data/Core/)."
+  },
+  "defaultPathsError": {
+    "noProfileBase": "Не задано ні RIMMERGE_PROFILE_DIR, ні LOCALAPPDATA, тож Rimmerge ніде зберігати власні файли.",
+    "gameDirNotFound": "Не вдалося знайти теку встановлення RimWorld. Усі перевірені розташування наведено в технічних подробицях нижче.",
+    "modsConfigNotFound": "Rimmerge не зміг визначити, де розташований ModsConfig.xml. Див. технічні подробиці нижче."
+  },
+  "finding": {
+    "kind": {
+      "edgeDropped": "Обмеження відкинуто",
+      "anyOfChoice": "Вибір одного з кількох",
+      "defOverride": "Перевизначення Def",
+      "patchCollision": "Колізія патчів",
+      "textureOverride": "Перевизначення текстури",
+      "duplicateAssembly": "Дубльована збірка",
+      "likelyDuplicateMod": "Ймовірний дублікат мода",
+      "missingMod": "Відсутній мод",
+      "missingDependency": "Відсутня залежність",
+      "incompatiblePair": "Несумісна пара",
+      "unsupportedVersion": "Непідтримувана версія",
+      "undeclaredHardDependency": "Незадекларована жорстка залежність",
+      "lazyReferenceViolated": "Порушене відкладене посилання",
+      "declarationQuestioned": "Декларація під сумнівом",
+      "declarationOverridden": "Декларацію перевизначено",
+      "duplicateTemplateName": "Дубльована назва шаблону",
+      "keyedTranslationCollision": "Колізія ключів перекладу",
+      "soundOverride": "Перевизначення звуку",
+      "undeclaredTypeDependency": "Незадекларована залежність від типу",
+      "runtimePatchCollision": "Колізія патчів під час виконання",
+      "transpilerCollision": "Колізія транспілерів",
+      "tagInferred": "Виведений тег",
+      "ruleOverruled": "Правило відхилено",
+      "placementOverruled": "Розміщення відхилено",
+      "placementQuestioned": "Розміщення під сумнівом",
+      "placementOrderingOverridden": "Порядок розміщення перевизначено",
+      "placementPromotesDependents": "Розміщення просуває залежні моди",
+      "missingTexturePath": "Відсутній шлях текстури",
+      "patchWillFail": "Патч не спрацює",
+      "contributesNothing": "Нічого не додає",
+      "undecodableTexture": "Текстура, що не завантажиться",
+      "brokenInheritance": "Зламане успадкування",
+      "nearMissModReference": "Можлива помилка в посиланні на мод",
+      "discardedAddition": "Навмисно відкинуте додавання",
+      "danglingDefReference": "Висяче посилання на Def"
+    },
+    "title": {
+      "edgeDroppedNoWinner": "«{before} перед {after}» відкинуто, щоб розірвати цикл",
+      "edgeDroppedWithWinner": "«{before} перед {after}» відкинуто, переважив мод {winner}",
+      "declarationQuestioned": "«{after} після {before}» під сумнівом через зв'язок «{relation}»",
+      "declarationOverridden": "«{after} після {before}» перевизначено на користь мода {winner}",
+      "anyOfChoice": "{after} потребує одного з {count} мода, що надає {assembly} | {after} потребує одного з {count} модів, що надають {assembly} | {after} потребує одного з {count} модів, що надають {assembly}",
+      "textureOverride": "текстура {texturePath}",
+      "duplicateAssembly": "{assembly} постачає {count} мод | {assembly} постачають {count} моди | {assembly} постачають {count} модів",
+      "duplicateTemplateName": "Шаблон {name} зареєстровано в {count} моді | Шаблон {name} зареєстровано в {count} модах | Шаблон {name} зареєстровано в {count} модах",
+      "keyedTranslationCollision": "{a} і {b} мають {count} спільний ключ перекладу | {a} і {b} мають {count} спільні ключі перекладу | {a} і {b} мають {count} спільних ключів перекладу",
+      "soundOverride": "Звук {path} постачає {count} мод | Звук {path} постачають {count} моди | Звук {path} постачають {count} модів",
+      "undeclaredTypeDependency": "{user} використовує тип {typeName} мода {provider} без задекларованого зв'язку",
+      "runtimePatchCollision": "{target} патчить {count} мод | {target} патчать {count} моди | {target} патчать {count} модів",
+      "transpilerCollision": "{target} транспілює {count} мод | {target} транспілюють {count} моди | {target} транспілюють {count} модів",
+      "likelyDuplicateMod": "{a} і {b} схожі на дублікати ({count} спільний Def) | {a} і {b} схожі на дублікати ({count} спільні Def) | {a} і {b} схожі на дублікати ({count} спільних Def)",
+      "missingMod": "Мод {modId} відсутній",
+      "missingDependency": "У мода {modId} відсутня залежність {dependency}",
+      "incompatiblePair": "{a} і {b} позначено як несумісні",
+      "unsupportedVersion": "Мод {modId} не підтримує цю версію RimWorld",
+      "undeclaredHardDependency": "{after} потребує мода {before} під час завантаження, але не декларує цього",
+      "lazyReferenceViolated": "{after} посилається на мод {before} ще до того, як той завантажиться",
+      "tagInferred": "Мод {modId} позначено тегом {tag}",
+      "ruleOverruledNoWinner": "Правило «{before} перед {after}» відхилено",
+      "ruleOverruledWithWinner": "Правило «{before} перед {after}» відхилено на користь мода {winner}",
+      "placementOverruled": "Розміщення «{placement}» мода {modId} відхилено",
+      "placementQuestioned": "Розміщення «{placement}» мода {modId} під сумнівом через мод {other}",
+      "placementOrderingOverridden": "{modId} перевизначає власний порядок розміщення мода {pinned}",
+      "placementPromotesDependents": "Розміщення мода {modId} просуває ще {count} мод | Розміщення мода {modId} просуває ще {count} моди | Розміщення мода {modId} просуває ще {count} модів",
+      "missingTexturePath": "Поле {field} у {defKey} вказує текстуру, якої не постачає жоден активний мод",
+      "patchWillFail": "Операція мода {modId} над {defKey}, за прогнозом, не спрацює",
+      "contributesNothing": "Мод {modId} нічого не додає",
+      "undecodableTexture": "{path} мода {modId} не декодується",
+      "brokenInheritance": "Успадкування мода {modId} від «{parentName}» зламане",
+      "nearMissModReference": "Посилання мода {referrer} на «{written}», можливо, містить помилку",
+      "discardedAddition": "{replacer} навмисно відкидає власне додавання мода {adder}",
+      "danglingDefReference": "«{name}» не відповідає жодному активному Def"
+    }
+  },
+  "edgeKind": {
+    "assemblyRef": "Посилання на збірку",
+    "forceLoadAfter": "Примусово після",
+    "forceLoadBefore": "Примусово перед",
+    "loadAfter": "Завантажувати після",
+    "loadBefore": "Завантажувати перед",
+    "modDependency": "Залежність від мода",
+    "findMod": "Пошук мода",
+    "ifModActive": "Якщо мод активний",
+    "patchTargetsDef": "Патч цілить у Def",
+    "mayRequire": "Може потребувати",
+    "patchInjectedNode": "Вузол, вставлений патчем",
+    "assemblyVersionPrecedence": "Пріоритет версії збірки",
+    "usesType": "Використовує тип",
+    "parentTemplate": "Батьківський шаблон",
+    "patchRemovedNode": "Вузол, вилучений патчем",
+    "retextureAfterOwner": "Ретекстур після власника",
+    "defOverrideAfterOrigin": "Перевизначення Def після оригіналу",
+    "patchSelectsInjectedNode": "Патч вибирає вставлений вузол",
+    "patchInvalidatesPredicate": "Патч порушує предикат",
+    "patchRemovedNodeCosmetic": "Вилучений вузол (косметично)",
+    "replaceDiscardsAddition": "Заміна відкидає додане"
+  },
+  "tagSignal": {
+    "urlContains": "URL містить «{needle}»",
+    "assemblyRefTo": "посилання збірки на {mod}",
+    "dependsOn": "залежить від {mod}"
+  },
+  "caveat": {
+    "duplicateTemplate": "шаблон «{name}» зареєстровано в кількох модах ({owners}); кожен нащадок незалежно успадковує від тієї реєстрації, що завантажується найближче на його позиції або перед нею, тож різні нащадки можуть розв'язатися до різних модів",
+    "modSettingDefault": "{class} мода {modId} відтворено з типовим налаштуванням, яке не обов'язково збігається з вашою грою",
+    "failedOp": "операція патча мода {modId} над {xpath} не знайшла збігів",
+    "unscopedOps": "мод {modId} має {count} операцію патча, яку не вдалося прив'язати до Def | мод {modId} має {count} операції патча, які не вдалося прив'язати до Def | мод {modId} має {count} операцій патча, які не вдалося прив'язати до Def",
+    "malformedOperation": "операція патча мода {modId} не є коректним XML",
+    "defRemoved": "цей Def вилучає мод {modId}",
+    "positionalItem": "{path} визначено лише за позицією; подальша перестановка може перенаправити цей вибір",
+    "unsafeXpathValue": "значення {path} не можна безпечно записати як xpath, тож його лишено нерозв'язаним",
+    "unknownOwnerChoice": "{path}: вибраний власник {modId} не є кандидатом для цього поля",
+    "invalidValueFragment": "{path}: не вдалося розібрати введене значення",
+    "unsupportedDrop": "{path}: вилучення не підтримується для колізії патчів",
+    "unreconstructableChain": "{path}: не вдалося відтворити структуру, що його містить",
+    "unsettableLeaf": "{path}: успадкований листовий вузол не можна скинути до порожнього",
+    "outOfScopeOwners": "в інсталяції, де будь-який із модів {mods} завантажується після області дії цього патча, патч може натомість зачепити або перезаписати Def цього мода",
+    "clobberedMapEntry": "{path} додав мод {by}, але пізніший патч замінив увесь словник і вилучив його; відновлено"
+  },
+  "inbox": {
+    "evidence": {
+      "inspectLink": "Переглянути",
+      "ariaLabel": "Ознаки знахідки",
+      "edgeDropped": {
+        "sentence": "Відкинуто обмеження «{edgeKind}» (сила: {strength}): {after} → {before}."
+      },
+      "anyOfChoice": {
+        "intro": "{modId} потребує одного з кандидатів для {assembly}:"
+      },
+      "danglingDefReference": {
+        "causeRemovedBy": "його вилучив власний патч мода {modId}",
+        "causeOnlyInUnloadedFolder": "його визначено лише у власній теці «{folder}» мода {modId}, яку ця інсталяція не завантажує",
+        "causeOnlyInInactiveMod": "його визначено лише в моді {modId}, який не активний",
+        "causeDefinedNowhere": "його не визначає жоден встановлений мод, ні активний, ні неактивний",
+        "causeUnexplained": "не вдалося з'ясувати, чому його немає",
+        "referrerFromDef": "{defType}/{defName} мода {modId} ({fieldPath})",
+        "referrerFromTemplate": "{defType}/{'@'}{name} мода {modId} ({fieldPath})",
+        "referrerFromPatch": "патч мода {modId} на {defType}/{defName} ({fieldPath})",
+        "sentence": "{name} не відповідає жодному активному Def будь-якого типу — {cause}.",
+        "likelySound": "Схоже на посилання на звук — відсутній {soundDef} записує в журнал попередження й тихо підставляє невизначений звук, а не зриває завантаження.",
+        "referencedFrom": "Посилання з:",
+        "truncatedReferrers": "Ще {count} джерело посилання не показано (ліміт показу). | Ще {count} джерела посилань не показано (ліміт показу). | Ще {count} джерел посилань не показано (ліміт показу)."
+      },
+      "textureOverride": {
+        "sentence": "Текстура {path}"
+      },
+      "duplicateAssembly": {
+        "sentence": "Збірка {name}, яку постачають:"
+      },
+      "likelyDuplicateMod": {
+        "body": "{a} і {b} мають {count} однаковий ключ Def | {a} і {b} мають {count} однакові ключі Def | {a} і {b} мають {count} однакових ключів Def"
+      },
+      "missingMod": {
+        "body": "{modId} є в списку, але на диску його не знайдено."
+      },
+      "missingDependency": {
+        "body": "{modId} потребує мода {dependencyLabel} ({dependency}), який не активний."
+      },
+      "incompatiblePair": {
+        "body": "{a} і {b} позначено як несумісні."
+      },
+      "unsupportedVersion": {
+        "body": "{modId} не декларує підтримки цієї версії гри."
+      },
+      "undeclaredHardDependency": {
+        "body": "{after} потребує мода {before}, але ніде цього не декларує."
+      },
+      "lazyReferenceViolated": {
+        "body": "Порушено відкладене посилання з {after} на {before}."
+      },
+      "declarationQuestioned": {
+        "body": "Задекларовано, що {declaredAfter} завантажується після {declaredBefore}, але зворотний зв'язок теж діє:"
+      },
+      "declarationOverridden": {
+        "body": "Задекларовано, що {declaredAfter} завантажується після {declaredBefore}, але перевизначення задекларованого обмеження каже інакше:"
+      },
+      "keyedTranslationCollision": {
+        "body": "{a} і {b} обидва визначають {count} ключ перекладу: | {a} і {b} обидва визначають {count} ключі перекладу: | {a} і {b} обидва визначають {count} ключів перекладу:"
+      },
+      "soundOverride": {
+        "sentence": "Звук {path}, який постачають:"
+      },
+      "undeclaredTypeDependency": {
+        "sentence": "{user} називає тип {typeName} зі збірки мода {provider}, але між ними немає задекларованого зв'язку."
+      },
+      "runtimePatchCollision": {
+        "sentence": "{target} патчать (у порядку завантаження):",
+        "runsLast": "виконується останнім",
+        "runLastButton": "Виконувати останнім",
+        "runLastAriaLabel": "Виконувати {modId} останнім"
+      },
+      "transpilerCollision": {
+        "sentence": "{target} переписує транспілер патча під час виконання в кожному з цих модів, у порядку завантаження:"
+      },
+      "tagInferred": {
+        "sentence": "{modId} позначено тегом {tag} на основі:"
+      },
+      "ruleOverruled": {
+        "withWinner": "Завантаження мода {after} після мода {before} ({origin}) відхилено:",
+        "byLongerCycle": "Завантаження мода {after} після мода {before} ({origin}) відхилено через довший цикл.",
+        "cycle": "цикл: {chain}"
+      },
+      "placementOverruled": {
+        "intro": "Мод {modId} закріплено в позиції «{placement}» ({origin}), але це відхилено через:",
+        "landedAt": "Потрапив на позицію #{position}."
+      },
+      "placementQuestioned": {
+        "body": "Мод {modId} закріплено в позиції «{placement}», але зв'язок «{relationKind}» з модом {other} за такого розміщення не може виконуватися."
+      },
+      "placementOrderingOverridden": {
+        "body": "Прийняте обмеження змусило мод {modId} перетнути власне закріплення «{placement}» мода {pinned}:"
+      },
+      "placementPromotesDependents": {
+        "body": "Мод {modId} закріплено в позиції «{placement}», через що ще {count} мод просувається за ту саму межу ярусу: | Мод {modId} закріплено в позиції «{placement}», через що ще {count} моди просуваються за ту саму межу ярусу: | Мод {modId} закріплено в позиції «{placement}», через що ще {count} модів просуваються за ту саму межу ярусу:"
+      },
+      "showMore": "Показати більше ({shown} з {total})",
+      "missingTexturePath": {
+        "sentence": "Поле {field} у {def} мода {modId} вказує текстуру {path}, якої не постачає жоден активний мод."
+      },
+      "undecodableTexture": {
+        "sentence": "{path} мода {modId} не декодується ({width}x{height}, {fourcc}) — базова гра показує замість нього заглушку зіпсованої текстури.",
+        "pngSibling": "Цей мод також постачає файл не-DDS за тим самим шляхом, але базова гра ніколи не переходить на нього."
+      },
+      "brokenInheritance": {
+        "missingParent": "{child} мода {modId} успадковує від {parentName} — жоден активний мод його не визначає, тож він завантажується без жодного з власних полів цього батька.",
+        "wrongType": "{child} мода {modId} успадковує від {parentName} — на позиції завантаження цього мода він розв'язується до {parentType}, а не {childDefType}.",
+        "affectedCount": "{count} зачеплений Def: | {count} зачеплені Def: | {count} зачеплених Def:",
+        "andMore": "… і ще {count}",
+        "truncated": "Ще {count} зачеплений Def не показано (ліміт показу). | Ще {count} зачеплені Def не показано (ліміт показу). | Ще {count} зачеплених Def не показано (ліміт показу)."
+      },
+      "nearMissModReference": {
+        "findModName": "Назва FindMod {written} мода {modId} не відповідає жодному активному чи встановленому моду, але дуже схожа на {candidateName} — можливо, це помилка.",
+        "mayRequireId": "ID MayRequire {written} мода {modId} не відповідає жодному активному чи встановленому моду, але дуже схожий на {candidateName} — можливо, це помилка.",
+        "writtenIn": "Записано у {file}"
+      },
+      "patchWillFail": {
+        "causeRemovedBy": "Операція {operation} мода {modId} над {defKey}, за прогнозом, не спрацює за цього порядку — мод {causeModId}, що завантажується раніше, власною операцією вилучає цільовий вузол.",
+        "causeNotYetInjected": "Операція {operation} мода {modId} над {defKey}, за прогнозом, не спрацює за цього порядку — вона націлена на вузол, який вставляє {causeModId}, але цей мод завантажується після неї.",
+        "causeDeadTarget": "Операція {operation} мода {modId} над {defKey}, за прогнозом, не спрацює за цього порядку — власна розв'язана структура власника-переможця ніколи не містить цього вузла, хоч би яким був порядок завантаження.",
+        "causeUnclassified": "Операція {operation} мода {modId} над {defKey}, за прогнозом, не спрацює за цього порядку — причину не вдалося класифікувати.",
+        "specificField": "Конкретне поле: {leafXpath}"
+      },
+      "contributesNothing": {
+        "body": "{modId} нічого помітного не додає за цього порядку: збірки немає, кожен його Def перевизначено, кожну текстуру й переклад, які він постачає, перевизначено, а кожна його операція патча або не застосовується, або ніколи не виконується."
+      },
+      "discardedAddition": {
+        "sentence": "{replacer} декларує, що завантажується після {adder}, і замінює {path}: власне додавання мода {adder} у {adderPath} відкидається навмисно."
+      }
+    },
+    "suggestion": {
+      "acceptButton": "Прийняти (Enter)",
+      "ignoreButton": "Ігнорувати (i)",
+      "revertButton": "Повернути (u)",
+      "alternativesHeading": "Альтернативи",
+      "addNoteButton": "Додати нотатку (n)"
+    },
+    "page": {
+      "loadFailed": "Не вдалося завантажити знахідки.",
+      "noSelection": "Виберіть знахідку, щоб побачити пропозицію.",
+      "shortcutsHeader": "Клавіатурні скорочення",
+      "shortcutMoveCursor": "перемістити курсор",
+      "shortcutAccept": "прийняти пропозицію",
+      "shortcutPickAlternative": "вибрати альтернативу",
+      "shortcutIgnore": "ігнорувати",
+      "shortcutRevert": "повернути рішення",
+      "shortcutMerge": "об'єднати перевизначення Def чи колізію патчів",
+      "shortcutAddNote": "додати нотатку",
+      "shortcutOpenOrder": "відкрити в поданні порядку завантаження",
+      "shortcutOpenModDetail": "відкрити подробиці мода",
+      "shortcutFocusSearch": "перейти до пошуку",
+      "shortcutCycleStatus": "перемикати фільтр статусу",
+      "shortcutToggleModLabel": "перемкнути назви/ID модів",
+      "shortcutToggleHelp": "показати/сховати цю довідку"
+    },
+    "alternatives": {
+      "ariaLabel": "Альтернативи"
+    },
+    "decisionNote": {
+      "label": "Нотатка",
+      "save": "Зберегти нотатку"
+    },
+    "textureTile": {
+      "winnerBadge": "переможець",
+      "sizeLine": "{format} · {count} байт | {format} · {count} байти | {format} · {count} байтів",
+      "useThisOne": "Використати цей",
+      "shipThisFile": "Постачати цей файл"
+    },
+    "defConflictView": {
+      "sourceFailed": "Файли змінилися після сканування, перезавантажте проєкт.",
+      "loadFailed": "Не вдалося завантажити подання конфлікту.",
+      "completenessPartial": "Частково",
+      "completenessCompleteWithProblems": "Повністю, з проблемами",
+      "completenessComplete": "Повністю",
+      "patchCollisionWithSubPath": "Колізія патчів — {subPath}",
+      "injectedNodeRelation": "Патч мода {selector} вибирає вузол, вставлений модом {injector}",
+      "showLabel": "Показати",
+      "filterAllChanged": "Усі змінені",
+      "filterConflict": "Конфлікт",
+      "filterCleanMerge": "Чисте об'єднання",
+      "filterListEntries": "Елементи списків",
+      "filterMapEntries": "Елементи словників",
+      "filterUnchanged": "Без змін",
+      "showMore": "Показати більше ({shown} з {total})",
+      "problemsHeading": "Проблеми",
+      "problemUnsupportedOp": "Операція #{opIndex} мода {modId}",
+      "problemReplayStopped": "Відтворення зупинилося тут; рядки вище — з операцій перед нею.",
+      "problemMissingTemplate": "Відсутній шаблон {name} ({defType}).",
+      "problemCycle": "Цикл: {chain}",
+      "problemPlanFailed": "Не вдалося спланувати об'єднання: {reason}"
+    },
+    "fieldRowsTable": {
+      "empty": "Жодне поле не відповідає цьому фільтру.",
+      "headerPath": "Шлях",
+      "headerKind": "Вид",
+      "headerValues": "Значення",
+      "headerInGame": "У грі",
+      "headerAfterMerge": "Після об'єднання",
+      "headerPreference": "Перевага",
+      "kindConflict": "Конфлікт",
+      "kindCleanMerge": "Чисте об'єднання",
+      "kindListEntry": "Елемент списку",
+      "kindMapEntry": "Елемент словника",
+      "kindUnchanged": "Без змін",
+      "groupHeader": "{path} ({count} елемент) | {path} ({count} елементи) | {path} ({count} елементів)",
+      "alsoAddedBy": "Також додали: {mods}",
+      "mergeChoiceFrom": "значення мода {modId}",
+      "mergeChoiceValue": "збережене значення «{text}»",
+      "mergeChoiceDropped": "вилучено",
+      "preferenceLoadOrder": "перемагає {winner} (порядок завантаження)",
+      "preferenceDecision": "перемагає {winner} (рішення)",
+      "preferenceMergeChoice": "{choice} (вибір об'єднання)"
+    },
+    "findingList": {
+      "searchPlaceholder": "Пошук знахідок…",
+      "filterByStatus": "Фільтр за статусом",
+      "filterByKind": "Фільтр за видом",
+      "empty": "Жодна знахідка не відповідає цьому фільтру.",
+      "findingsAriaLabel": "Знахідки",
+      "statusAll": "Усі",
+      "statusNeedsInput": "Потребує рішення",
+      "statusAuto": "Авто",
+      "statusOverridden": "Перевизначено",
+      "filteredByMod": "Відфільтровано за модом {mod}",
+      "clearModFilter": "Скинути фільтр мода"
+    },
+    "findingCard": {
+      "undecided": "Не вирішено",
+      "decidedChip": "вирішено",
+      "resolvedBySuggestedChip": "розв'язано запропонованим"
+    },
+    "touchersList": {
+      "mod": "Мод",
+      "role": "Роль",
+      "ops": "Операції",
+      "replay": "Відтворення",
+      "generatedSuffix": "(згенеровано)",
+      "roleOwner": "власник",
+      "rolePatcher": "патчер",
+      "reached": "досягнуто",
+      "notReached": "не досягнуто"
+    }
+  },
+  "merge": {
+    "state": {
+      "merged": "об'єднано",
+      "needsInput": "{count} поле потребує рішення | {count} поля потребують рішення | {count} полів потребують рішення",
+      "structuralGuard": "не об'єднано автоматично — підтвердьте переможця",
+      "cannotMerge": "неможливо об'єднати"
+    },
+    "skipped": {
+      "stillNeedsInput": "досі потребує рішення"
+    },
+    "summary": {
+      "patchCollision": "{count} об'єднання колізії патчів (автопропозиція там, де не вирішено) | {count} об'єднання колізій патчів (автопропозиція там, де не вирішено) | {count} об'єднань колізій патчів (автопропозиція там, де не вирішено)",
+      "defOverride": "{count} об'єднання перевизначення Def (явно вирішене) | {count} об'єднання перевизначень Def (явно вирішені) | {count} об'єднань перевизначень Def (явно вирішених)",
+      "asset": "{count} постачений ресурс | {count} постачені ресурси | {count} постачених ресурсів",
+      "willWrite": "Буде записано: {parts}."
+    },
+    "header": {
+      "inspectLink": "Переглянути",
+      "outOfScope": "Поза областю дії, не об'єднано: {mods}",
+      "structuralGuardLine": "{field} відрізняється ({by} порівняно з базовою копією) — об'єднання на рівні полів для цього Def небезпечне. Підтвердьте переможця за порядком завантаження, прийнявши цю знахідку на сторінці «Знахідки»; завершити це як об'єднання неможливо.",
+      "baseTag": "(база)",
+      "winnerTag": "(переможець)",
+      "totalsFields": "{count} поле | {count} поля | {count} полів",
+      "totalsConflicts": "{count} конфлікт | {count} конфлікти | {count} конфліктів",
+      "totalsAuto": "{count} автоматичне | {count} автоматичні | {count} автоматичних",
+      "totalsUnresolved": "{count} нерозв'язане | {count} нерозв'язані | {count} нерозв'язаних",
+      "totalsUnchanged": "{count} незмінне | {count} незмінні | {count} незмінних"
+    },
+    "entryKind": {
+      "defOverride": "перевизначення Def",
+      "patchCollision": "колізія патчів",
+      "asset": "ресурс"
+    },
+    "mod": {
+      "assetsGroup": "Ресурси",
+      "opsCount": "{count} операція | {count} операції | {count} операцій",
+      "dependsOn": "залежить від",
+      "openInEditor": "Відкрити в редакторі",
+      "heading": "Результат об'єднання",
+      "mergedDefs": "{count} об'єднаний Def | {count} об'єднані Def | {count} об'єднаних Def",
+      "nothingYet": "нічого",
+      "summary": "Мод сумісності, у який Rimmerge записує ваші рішення щодо об'єднання й ресурсів, — наразі містить: {contents}. Перегенеровується під час кожного застосування; у запропонованому порядку завжди завантажується останнім.",
+      "summaryWithSources": "Мод сумісності, у який Rimmerge записує ваші рішення щодо об'єднання й ресурсів, — наразі містить: {contents} (з {count} мода). Перегенеровується під час кожного застосування; у запропонованому порядку завжди завантажується останнім. | Мод сумісності, у який Rimmerge записує ваші рішення щодо об'єднання й ресурсів, — наразі містить: {contents} (з {count} модів). Перегенеровується під час кожного застосування; у запропонованому порядку завжди завантажується останнім. | Мод сумісності, у який Rimmerge записує ваші рішення щодо об'єднання й ресурсів, — наразі містить: {contents} (з {count} модів). Перегенеровується під час кожного застосування; у запропонованому порядку завжди завантажується останнім.",
+      "loadFailed": "Не вдалося завантажити результат об'єднання.",
+      "packageIdLabel": "ID пакета",
+      "folderLabel": "Тека",
+      "pathLabel": "Шлях",
+      "onDiskLabel": "На диску",
+      "existsYes": "Так — перегенеровується під час кожного застосування",
+      "existsNo": "Ще ні — застосуйте з параметром «Записати мод об'єднання», щоб згенерувати його",
+      "placementLabel": "Розміщення в порядку завантаження",
+      "placementValue": "Останнім (сортувальник завжди ставить згенерований мод у кінець запропонованого порядку)",
+      "sourceModsLabel": "Моди-джерела",
+      "entriesHeading": "Елементи",
+      "noEntriesYet": "Ще немає рішень про об'єднання чи постачений ресурс — вирішіть знахідку перевизначення Def або колізії патчів у редакторі об'єднання, щоб додати таке рішення.",
+      "filesHeading": "Файли",
+      "nothingRendersYet": "Файли з'являться тут, щойно буде хоча б одне рішення про об'єднання чи постачений ресурс.",
+      "fileLoadFailed": "Не вдалося сформувати цей файл."
+    },
+    "filePreviewLabel": "Попередній перегляд файлу",
+    "editor": {
+      "sourceFailedSuffix": "{message} — файли проєкту змінилися після останнього сканування.",
+      "reloadProject": "Перезавантажити проєкт",
+      "loadFailed": "Не вдалося завантажити попередній перегляд об'єднання.",
+      "showMore": "Показати більше ({loaded} з {total})",
+      "shortcutsHeader": "Скорочення редактора об'єднання",
+      "shortcutMoveRowCursor": "перемістити курсор рядка",
+      "shortcutNextPrevConflict": "наступний/попередній конфлікт",
+      "shortcutMoveColumnCursor": "перемістити курсор стовпця",
+      "shortcutChooseColumn": "вибрати стовпець під курсором",
+      "shortcutChooseOwnerColumn": "вибрати стовпець власника n (1 = база)",
+      "shortcutChooseWinner": "вибрати переможця вибраного порядку",
+      "shortcutEditValue": "редагувати довільне значення",
+      "shortcutToggleDrop": "перемкнути вилучення",
+      "shortcutRevertToAuto": "повернути до авто",
+      "shortcutToggleAutoSection": "показати/сховати розділ авто",
+      "shortcutToggleUnchanged": "показати/сховати незмінені рядки",
+      "shortcutBackToFindings": "назад до знахідок"
+    },
+    "table": {
+      "pathHeader": "Шлях",
+      "classHeader": "Клас",
+      "resultHeader": "Результат",
+      "actionsHeader": "Дії",
+      "sectionConflicts": "Конфлікти ({count})",
+      "sectionAuto": "Розв'язано автоматично ({count})",
+      "sectionUnchanged": "Без змін ({count})",
+      "containerEntries": "{count} елемент | {count} елементи | {count} елементів",
+      "containerSummary": "{container} — {entries}",
+      "containerConflicts": "{count} конфлікт | {count} конфлікти | {count} конфліктів",
+      "containerSummaryWithConflicts": "{base}, {conflicts}",
+      "acceptSuggested": "Прийняти запропоновані ({count})"
+    },
+    "field": {
+      "classUnchanged": "без змін",
+      "classOneSided": "змінене одним модом",
+      "classAgreeing": "узгоджене",
+      "classConflict": "конфлікт",
+      "chooseValueFor": "Виберіть значення для {path}",
+      "suggestedHint": "запропоновано",
+      "takeValue": "Взяти значення мода {owner}",
+      "dropped": "вилучено",
+      "needsInput": "потребує рішення",
+      "saving": "збереження…",
+      "drop": "Вилучити",
+      "dropUnavailableTitle": "Вилучення не підтримується для колізії патчів — власні патчі RimWorld завжди відтворюються до якогось значення.",
+      "clearChoice": "Скинути вибір",
+      "autoRevert": "Авто"
+    },
+    "value": {
+      "absent": "відсутнє",
+      "showLess": "Показати менше",
+      "showMore": "Показати більше"
+    }
+  },
+  "action": {
+    "accept": "Прийняти",
+    "ignore": "Ігнорувати",
+    "reorder": "Завантажувати {after} після {before}",
+    "preferWinner": "Віддати перевагу {defKey} мода {winner}",
+    "chooseCandidate": "Вибрати {chosen} для мода {after}",
+    "dropEdge": "Відкинути обмеження «{edgeKind}» {after} → {before}",
+    "keepEdge": "Зберегти обмеження «{edgeKind}» {after} → {before}",
+    "addTag": "Позначити {modId} тегом {tag}",
+    "removeTag": "Прибрати тег {tag} з мода {modId}",
+    "excludeFromCluster": "Виключити {modId} з кластера {rule}",
+    "removeMod": "Прибрати мод {modId} з активного списку",
+    "merge": "Об'єднати {defKey}",
+    "shipAsset": "Постачати {texturePath} мода {from}",
+    "promoteRulePair": "Перенести «{after} після {before}» у рішення користувача",
+    "promoteRulePlacement": "Перенести розміщення мода {modId} у рішення користувача",
+    "dropRule": "Відкинути правило «{after} після {before}»"
+  },
+  "patches": {
+    "scopeBadge": {
+      "title": "Поза областю дії цього патча: {mods}",
+      "label": "частково: +{mods}"
+    },
+    "table": {
+      "emptyState": "Патчів сумісності ще немає — натисніть n, щоб створити.",
+      "nameHeader": "Назва",
+      "packageIdHeader": "ID пакета",
+      "scopeHeader": "Область дії",
+      "needsInputHeader": "Потребує рішення",
+      "completeHeader": "Завершено",
+      "lastExportHeader": "Останній експорт",
+      "notExported": "Не експортовано"
+    },
+    "identityForm": {
+      "nameLabel": "Назва",
+      "packageIdLabel": "ID пакета",
+      "packageIdPlaceholder": "author.mymod",
+      "displayNameLabel": "Відображувана назва",
+      "authorLabel": "Автор",
+      "descriptionLabel": "Опис",
+      "save": "Зберегти"
+    },
+    "list": {
+      "newPatchButton": "Новий патч (n)",
+      "newPatchHeading": "Новий патч сумісності",
+      "scopeHeading": "Область дії",
+      "loadFailed": "Не вдалося завантажити патчі."
+    },
+    "detail": {
+      "loadFailed": "Не вдалося завантажити цей патч.",
+      "orphanedCount": "{count} осиротіле рішення | {count} осиротілі рішення | {count} осиротілих рішень",
+      "importFromProfileButton": "Імпортувати рішення з профілю",
+      "pruneOrphanedButton": "Очистити осиротілі",
+      "deleteButton": "Видалити",
+      "identityHeading": "Ідентифікація",
+      "exportHeading": "Експорт",
+      "findingsHeading": "Знахідки",
+      "importedToastSummary": "Імпортовано з профілю",
+      "importedNoSkips": "Імпортовано {count} рішення. | Імпортовано {count} рішення. | Імпортовано {count} рішень.",
+      "rejection": {
+        "outOfScope": "це не знахідка між учасниками області дії цього патча",
+        "notPatchable": "патч може містити лише рішення про об'єднання, постачений ресурс або ігнорування — не «{action}»",
+        "choiceOutsideScope": "{path}: вибраний варіант вказує на мод {mod}, якого немає в області дії цього патча",
+        "assetOutsideScope": "постачений ресурс походить із мода {mod}, якого немає в області дії цього патча",
+        "actionName": {
+          "accept": "Прийняти",
+          "reorder": "Переставити",
+          "preferWinner": "Віддати перевагу переможцю",
+          "chooseCandidate": "Вибрати кандидата",
+          "dropEdge": "Відкинути обмеження",
+          "keepEdge": "Зберегти обмеження",
+          "addTag": "Додати тег",
+          "removeTag": "Прибрати тег",
+          "excludeFromCluster": "Виключити з кластера",
+          "removeMod": "Прибрати з активного списку",
+          "promoteRule": "Перенести правило в рішення",
+          "dropRule": "Відкинути правило"
+        }
+      },
+      "importedWithSkips": {
+        "imported": "Імпортовано {count} рішення | Імпортовано {count} рішення | Імпортовано {count} рішень",
+        "skipped": "{count} рішення пропущено: {reasons} | {count} рішення пропущено: {reasons} | {count} рішень пропущено: {reasons}",
+        "reasonSeparator": "; ",
+        "combined": "{imported}. {skipped}"
+      },
+      "prunedToastSummary": "Осиротілі рішення очищено",
+      "prunedToastDetail": "Вилучено {count} рішення, яке поточна область дії більше не допускає. | Вилучено {count} рішення, які поточна область дії більше не допускає. | Вилучено {count} рішень, які поточна область дії більше не допускає.",
+      "deleteDialogHeader": "Видалити цей патч?",
+      "deleteDialogBody": "Це видаляє проєкт патча. Тека, яку він уже експортував на диск, залишається недоторканою."
+    },
+    "inbox": {
+      "loadFailed": "Не вдалося завантажити знахідки цього патча.",
+      "shortcutFocusScopeSearch": "перейти до пошуку в області дії",
+      "shortcutFocusExportDir": "перейти до поля теки експорту",
+      "shortcutBackToPatch": "назад до подробиць патча"
+    },
+    "scopeEditor": {
+      "minimumSizeTitle": "Область дії патча потребує щонайменше двох учасників.",
+      "membersListLabel": "Учасники області дії",
+      "removeMember": "Прибрати {name} з області дії",
+      "noMembersYet": "Учасників ще немає.",
+      "searchPlaceholder": "Пошук модів для додавання…",
+      "searchLabel": "Пошук модів для додавання до області дії",
+      "searchResultsLabel": "Моди, що відповідають пошуку",
+      "noMatches": "Нічого не знайдено.",
+      "scopeShrunk": "Область дії звужено — {count} рішення тепер осиротіле. | Область дії звужено — {count} рішення тепер осиротілі. | Область дії звужено — {count} рішень тепер осиротілі.",
+      "remainingChoicesNamingRemoved": "Ще {count} вибір досі називає прибраний мод. | Ще {count} вибори досі називають прибраний мод. | Ще {count} виборів досі називають прибраний мод."
+    },
+    "exportPanel": {
+      "exportDirLabel": "Тека експорту",
+      "exportDirPlaceholder": "Виберіть теку…",
+      "chooseButton": "Вибрати…",
+      "installCheckboxLabel": "Встановити в Mods і увімкнути",
+      "staleActiveSetNote": "Зміни активації, що очікують застосування, не включено — спершу перескануйте, якщо хочете, щоб вони потрапили в це встановлення.",
+      "forceWarning": "Схоже, RimWorldWin64.exe запущено. Встановлення зараз записує ModsConfig.xml, який гра перезаписує, коли завершує роботу, тож зміну може бути втрачено. Все одно експортувати?",
+      "exportAnyway": "Все одно експортувати",
+      "export": "Експортувати",
+      "exportedTo": "Експортовано в: {path}",
+      "installedAt": "Встановлено в: {path}",
+      "hash": "Хеш: {hash}",
+      "unchangedSinceLastExport": "Без змін після останнього експорту.",
+      "renderLoadFailed": "Не вдалося сформувати цей патч.",
+      "dependenciesHeading": "Залежності",
+      "entriesHeading": "Елементи",
+      "noEntriesYet": "Ще немає рішень про об'єднання чи постачений ресурс — вирішіть знахідку перевизначення Def або колізії патчів серед знахідок цього патча, щоб додати таке рішення.",
+      "skippedHeading": "Пропущено",
+      "filesHeading": "Файли",
+      "nothingRendersYet": "Файли з'являться тут, щойно в цьому патчі буде хоча б одне рішення про об'єднання чи постачений ресурс.",
+      "fileLoadFailed": "Не вдалося сформувати цей файл."
+    }
+  },
+  "edgeStrength": {
+    "hard": "Жорстка",
+    "declared": "Задекларована",
+    "soft": "М'яка",
+    "awareness": "Обізнаність",
+    "inferred": "Виведена"
+  },
+  "edgeStatus": {
+    "satisfied": "виконано",
+    "violated": "порушено",
+    "unevaluated": "не оцінено"
+  },
+  "mods": {
+    "changes": {
+      "searchPlaceholder": "Пошук…",
+      "loadFailed": "Не вдалося завантажити зміни цього мода.",
+      "noMatches": "Жодна зміна не відповідає цьому фільтру.",
+      "kindHeader": "Вид",
+      "targetHeader": "Ціль",
+      "opsHeader": "Операції",
+      "otherTouchersHeader": "Інші моди",
+      "findingsHeader": "Знахідки",
+      "showMore": "Показати більше ({loaded} з {total})"
+    },
+    "edges": {
+      "none": "Немає."
+    },
+    "picker": {
+      "removeMember": "Прибрати {name}",
+      "noneSelectedYet": "Ще нічого не вибрано.",
+      "searchPlaceholder": "Пошук модів…",
+      "searchLabel": "Пошук модів для списку «{target}»",
+      "noMatches": "Нічого не знайдено."
+    },
+    "table": {
+      "regionLabel": "Моди",
+      "missing": "відсутній",
+      "rovingHint": "Стрілки — переміщення, Enter — відкрити, пробіл — перемкнути"
+    },
+    "pendingChanges": {
+      "unscanned": "{count} зміна очікує — перескануйте, щоб оновити аналіз | {count} зміни очікують — перескануйте, щоб оновити аналіз | {count} змін очікують — перескануйте, щоб оновити аналіз",
+      "unapplied": "{count} зміну ще не застосовано до ModsConfig.xml | {count} зміни ще не застосовано до ModsConfig.xml | {count} змін ще не застосовано до ModsConfig.xml",
+      "rescanButton": "Пересканувати",
+      "rescanFinishedToast": "Пересканування завершено, {count} примітка | Пересканування завершено, {count} примітки | Пересканування завершено, {count} приміток",
+      "rescannedWithWarningsToast": "Пересканування завершено з попередженнями"
+    },
+    "closeGuard": {
+      "header": "Незбережені зміни активних модів",
+      "body": "У робочому списку активних модів є зміни, яких ще не врахувало жодне пересканування, або відсканований порядок ще не застосовано до {modsConfig}. Якщо піти зараз, цю роботу в пам'яті буде втрачено — власний файл гри в будь-якому разі залишається незмінним.",
+      "stay": "Залишитися",
+      "leaveAnyway": "Все одно піти"
+    },
+    "scanNotes": {
+      "empty": "Приміток сканування немає."
+    },
+    "detail": {
+      "loadFailed": "Не вдалося завантажити цей мод.",
+      "idAndSource": "{modId} — {source}",
+      "byAuthors": "Автор: {authors}",
+      "tagsHeading": "Теги",
+      "declaredOrderHeading": "Задекларований порядок",
+      "loadAfterLabel": "Завантажувати після",
+      "loadBeforeLabel": "Завантажувати перед",
+      "forceLoadAfterLabel": "Примусово після",
+      "forceLoadBeforeLabel": "Примусово перед",
+      "dependenciesLabel": "Залежності",
+      "incompatibleWithLabel": "Несумісний з",
+      "edgesInHeading": "Вхідні обмеження",
+      "edgesOutHeading": "Вихідні обмеження",
+      "changesHeading": "Зміни",
+      "scanNotesHeading": "Примітки сканування",
+      "findingsHeading": "Знахідки",
+      "noLiveFindings": "Актуальних знахідок немає."
+    },
+    "page": {
+      "heading": "Моди",
+      "activeTab": "Активні",
+      "inactiveTab": "Неактивні",
+      "searchPlaceholder": "Пошук модів…",
+      "tagFilterPlaceholder": "Фільтр за тегом…",
+      "sourcePlaceholder": "Джерело",
+      "sourceAny": "Будь-яке",
+      "deactivateSelectedButton": "Вимкнути вибрані",
+      "alsoActivateDependenciesLabel": "Також увімкнути залежності",
+      "activateSelectedButton": "Увімкнути вибрані",
+      "loadFailed": "Не вдалося завантажити моди.",
+      "totalMods": "{count} мод | {count} моди | {count} модів",
+      "pageCapHint": "(показано перші {count} — звузьте пошуком)",
+      "activateDialogHeader": "Увімкнути моди",
+      "willActivateHeading": "Буде увімкнено:",
+      "alreadyActiveHeading": "Уже активні, пропущено:",
+      "unresolvableDependency": "Мод {mod} декларує залежність від {deps} — на диску не знайдено. | Мод {mod} декларує залежності від {deps}, яких немає на диску. | Мод {mod} декларує залежності від {deps}, яких немає на диску.",
+      "activatedToast": "Увімкнено",
+      "activateButton": "Увімкнути",
+      "deactivateDialogHeader": "Вимкнути моди",
+      "willDeactivateHeading": "Буде вимкнено:",
+      "refusedHeading": "Відмовлено (потрібні):",
+      "dependentsStillActive": "{count} активний мод досі залежить від мода {mod}: {deps}. | {count} активні моди досі залежать від мода {mod}: {deps}. | {count} активних модів досі залежать від мода {mod}: {deps}.",
+      "deactivatedToast": "Вимкнено",
+      "deactivateButton": "Вимкнути"
+    },
+    "defSearch": {
+      "ariaLabel": "Перейти до Def",
+      "placeholder": "Перейти до Def…"
+    }
+  },
+  "rules": {
+    "orphaned": {
+      "empty": "Осиротілих рішень немає.",
+      "pruneButton": "Очистити"
+    },
+    "pairTable": {
+      "regionLabel": "Парні правила",
+      "afterHeader": "Після",
+      "beforeHeader": "Перед",
+      "originHeader": "Походження",
+      "commentHeader": "Коментар",
+      "notAppliedTitle": "Не діє: імпортовані пари вимкнено",
+      "promotedFrom": "(перенесено з {origin})",
+      "overridesDeclaredTag": "(перевизначає задеклароване)",
+      "overridesDeclaredTitle": "Це правило позначено як таке, що перевизначає задеклароване обмеження (loadAfter/modDependencies) між тими самими двома модами, якщо воно існує, — воно переважає власну декларацію автора саме для цієї пари, але ніколи не жорстку залежність.",
+      "promotedButton": "Перенесено",
+      "promoteButton": "Перенести в рішення",
+      "deleteButton": "Видалити"
+    },
+    "addPairDialog": {
+      "header": "Додати парне правило",
+      "loadsAfterLabel": "Завантажується після (залежний мод)",
+      "loadsBeforeLabel": "Завантажується перед (залежність)",
+      "commentLabel": "Коментар (необов'язково)",
+      "overrideDeclaredLabel": "Перевизначити задеклароване обмеження між цими модами, якщо воно існує",
+      "overrideDeclaredWarning": "Це переважає власні loadAfter/modDependencies автора саме для цієї пари — але ніколи не залежність сили «Жорстка». Використовуйте, лише коли сама декларація застаріла або хибна.",
+      "sameModError": "Парне правило потребує двох різних модів.",
+      "replaceWarning": "Це замінить наявне правило {origin} для цієї пари.",
+      "addButton": "Додати"
+    },
+    "addPlacementDialog": {
+      "header": "Додати правило",
+      "modToPinLabel": "Мод для закріплення",
+      "placementLabel": "Розміщення",
+      "placementPlaceholder": "Виберіть розміщення",
+      "commentLabel": "Коментар (необов'язково)",
+      "replaceWarning": "Це замінить наявне закріплення «{placement}» мода {mod} (джерело: {origin})."
+    },
+    "page": {
+      "heading": "Правила",
+      "importToggleState": "Імпортовані пари: {pairs} · Імпортовані розміщення: {placements}",
+      "addRuleButton": "Додати правило",
+      "addPairRuleButton": "Додати парне правило",
+      "reimportHint": "Кешовані бази змінилися після того, як цей профіль востаннє їх імпортував; імпортуйте їх повторно, щоб використати зміни.",
+      "importFromRimSortButton": "Імпортувати з RimSort",
+      "importFinished": "Імпорт завершено.",
+      "userRulesCount": "Правила користувача: {count}",
+      "communityRulesCount": "Правила спільноти: {count}",
+      "steamDependenciesCount": "Залежності Steam: {count}",
+      "notImported": "не імпортовано",
+      "loadFailed": "Не вдалося завантажити правила.",
+      "tabAll": "Усі",
+      "tabUserDecision": "Ваші рішення",
+      "tabRimSortUser": "RimSort (користувач)",
+      "tabRimSortCommunity": "RimSort (спільнота)",
+      "tabSteamDb": "SteamDB",
+      "tagsHeading": "Теги",
+      "orphanedHeading": "Осиротілі рішення"
+    },
+    "databases": {
+      "heading": "Бази правил",
+      "communityLabel": "Правила спільноти",
+      "steamLabel": "Майстерня Steam",
+      "rimmergeLabel": "Правила Rimmerge",
+      "refreshButton": "Оновити",
+      "refreshDisabledTitle": "Вимкнено параметром «Дозволити доступ до інтернету» (сторінка «Налаштування»)",
+      "networkDisabledNotice": "Доступ до інтернету вимкнено, тому оновлення недоступне. Кешовані бази й далі використовуються.",
+      "failureBanner": "Останнє оновлення не вдалося щонайменше для одного джерела — кешована копія й далі використовується.",
+      "loadFailed": "Не вдалося завантажити бази правил.",
+      "needsReimport": "(доступний повторний імпорт)",
+      "neverFetched": "Ще жодного разу не завантажено",
+      "stale": "Застаріла ({count} день) | Застаріла ({count} дні) | Застаріла ({count} днів)",
+      "updated": "Оновлено {relative}",
+      "recencyLine": "{recency} · {bytes} · {sha}",
+      "today": "сьогодні",
+      "daysAgo": "{count} день тому | {count} дні тому | {count} днів тому",
+      "lastFailureSuffix": " · Останнє оновлення не вдалося: {reason}",
+      "bundledSuffix": " · Вбудована {sha}",
+      "outcomeUpdated": "оновлено ({bytes}, sha {sha})",
+      "outcomeUnchanged": "без змін (sha {sha})",
+      "outcomeFailed": "помилка: {reason}",
+      "outcomeSkippedSourceDisabled": "пропущено (джерело вимкнено)",
+      "outcomeSkippedNetworkDisabled": "пропущено (доступ до інтернету вимкнено)",
+      "outcomeSkippedAutoRefreshDisabled": "пропущено (автоматичне оновлення вимкнено)",
+      "outcomeSkippedNotDue": "пропущено (ще не час)",
+      "refreshModeAutomatic": "Оновлюється автоматично",
+      "refreshModeManual": "Лише ручне оновлення"
+    },
+    "importDialog": {
+      "header": "Імпорт з RimSort",
+      "userRulesLabel": "userRules.json",
+      "communityRulesLabel": "communityRules.json",
+      "steamDbLabel": "steamDB.json",
+      "importButton": "Імпортувати"
+    },
+    "tagEditor": {
+      "modHeader": "Мод",
+      "tagHeader": "Тег",
+      "sourceHeader": "Джерело",
+      "confidenceHeader": "Впевненість",
+      "signalsHeader": "Сигнали",
+      "modIdLabel": "ID мода",
+      "tagLabel": "Тег",
+      "modeLabel": "Режим",
+      "modeAdd": "Додати",
+      "modeRemove": "Прибрати",
+      "saveButton": "Зберегти"
+    },
+    "table": {
+      "pairRulesHeading": "Парні правила",
+      "placementRulesHeading": "Правила розміщення",
+      "modHeader": "Мод",
+      "placementHeader": "Розміщення",
+      "originHeader": "Походження",
+      "commentHeader": "Коментар",
+      "promotesHeader": "Просуває",
+      "notAppliedPlacementsTitle": "Не діє: імпортовані розміщення вимкнено",
+      "otherMods": "ще {count} мод | ще {count} моди | ще {count} модів",
+      "incompatibilitiesHeading": "Несумісності",
+      "aHeader": "A",
+      "bHeader": "B",
+      "empty": "Правил ще немає."
+    }
+  },
+  "placement": {
+    "top": "Верх",
+    "bottom": "Низ"
+  },
+  "tagProvenance": {
+    "inferred": "виведено",
+    "manual": "вручну"
+  },
+  "source": {
+    "core": "Core",
+    "dlc": "Розширення",
+    "local": "Локальний",
+    "workshop": "Майстерня"
+  },
+  "cardinality": {
+    "scalar": "скаляр",
+    "list": "список"
+  },
+  "fieldRole": {
+    "targetKey": "Ключ цілі",
+    "itemSlot": "Слот предмета",
+    "chances": "Шанси",
+    "scalar": "Скаляр",
+    "opaque": "Непрозоре"
+  },
+  "changeKind": {
+    "ownsDef": "Володіє",
+    "ownsTemplate": "Володіє шаблоном",
+    "patchesDef": "Патчить",
+    "overridesTexture": "Перевизначає текстуру",
+    "overridesSound": "Перевизначає звук",
+    "overridesKeyedTranslation": "Перевизначає переклад"
+  },
+  "defPage": {
+    "loadFailed": "Не вдалося завантажити цей Def.",
+    "sourceTitle": "Показано за {source} порядком — натисніть, щоб перемкнути",
+    "partialBanner": "Неповно. Місце зупинки: {reason}. Поля після нього не показано.",
+    "replayStopper": "Операція {opIndex} мода {mod}: {error}",
+    "ambiguousTemplateIntro": "Неоднозначний шаблон: ця назва (Name) має {count} реєстрацію. RimWorld розв'язує кожного нащадка незалежно до тієї реєстрації, що завантажується найближче на його позиції або перед нею, — ніколи не до єдиного переможця. «Переможець»/«представник, завантажений останнім» вище — лише явно позначена заміна, яку показує цей застосунок, коли не йдеться про конкретного нащадка, а не відповідь. | Неоднозначний шаблон: ця назва (Name) має {count} реєстрації. RimWorld розв'язує кожного нащадка незалежно до тієї реєстрації, що завантажується найближче на його позиції або перед нею, — ніколи не до єдиного переможця. «Переможець»/«представник, завантажений останнім» вище — лише явно позначена заміна, яку показує цей застосунок, коли не йдеться про конкретного нащадка, а не відповідь. | Неоднозначний шаблон: ця назва (Name) має {count} реєстрацій. RimWorld розв'язує кожного нащадка незалежно до тієї реєстрації, що завантажується найближче на його позиції або перед нею, — ніколи не до єдиного переможця. «Переможець»/«представник, завантажений останнім» вище — лише явно позначена заміна, яку показує цей застосунок, коли не йдеться про конкретного нащадка, а не відповідь.",
+    "knownChildrenResolve": "{count} відомий нащадок розв'язується сюди | {count} відомі нащадки розв'язуються сюди | {count} відомих нащадків розв'язуються сюди",
+    "ownersHeading": "Власники",
+    "winnerTag": "(переможець)",
+    "representativeTag": "(представник, завантажений останнім)",
+    "representativeTitle": "Лише представник — єдиної відповіді не існує, див. повідомлення про неоднозначний шаблон вище",
+    "generatedTag": "(згенеровано)",
+    "patchersHeading": "Патчери",
+    "patcherStatusNotReached": "не досягнуто",
+    "patcherStatusReplayFailed": "відтворення не вдалося",
+    "patcherStatusReplaysCleanly": "відтворюється без помилок",
+    "wrappedTag": "(обгорнуто)",
+    "wrappedTitle": "Показано від першого нащадка, що вносить зміни, а не від самого вузла-обгортки",
+    "gatesPrefix": "умови: {gates}",
+    "gate": {
+      "anyActive": "активний хоча б один із модів {mods}",
+      "noneActive": "не активний жоден із модів {mods}"
+    },
+    "parentsHeading": "Батьки",
+    "childrenHeading": "Нащадки",
+    "effectiveDefHeading": "Фактичний Def",
+    "onlyPatchedLabel": "Лише патчені/успадковані",
+    "provenanceLegendOwner": "Власник",
+    "provenanceLegendPatched": "Патчено",
+    "provenanceLegendInherited": "Успадковано",
+    "provenanceOwner": "власник: {mod}",
+    "provenancePatch": "патчено модом {mod}",
+    "provenanceInherited": "успадковано від {defType}/{defName} ({owner})",
+    "provenanceUnattributedTemplate": "успадковано від {defType}/{defName} (власник невідомий)",
+    "fields": {
+      "pathHeader": "Шлях",
+      "valueHeader": "Значення",
+      "provenanceHeader": "Походження",
+      "showMore": "Показати більше ({loaded} з {total})"
+    },
+    "resolvedXmlSummary": "Розв'язаний XML"
+  },
+  "layer": {
+    "hard": "Жорстка",
+    "anyOf": "Будь-який з",
+    "declaredOverride": "Перевизначення декларації",
+    "declared": "Задекларована",
+    "userDecision": "Рішення користувача",
+    "rimSortUser": "RimSort, користувач",
+    "rimSortCommunity": "RimSort, спільнота",
+    "steamDb": "SteamDB",
+    "inferred": "Виведена",
+    "soft": "М'яка",
+    "awareness": "Обізнаність"
+  },
+  "order": {
+    "heading": "Порядок завантаження — {source}",
+    "loadFailed": "Не вдалося завантажити порядок.",
+    "sortProvenance": {
+      "summary": "розв'язання нічиїх: {tieBreak} · імпортовані пари: {pairs} · імпортовані розміщення: {placements}",
+      "rebuild": "перебудувати",
+      "preserveCurrent": "зберегти поточний",
+      "on": "увімк.",
+      "off": "вимк."
+    },
+    "table": {
+      "regionLabel": "Порядок завантаження",
+      "nameHeader": "Назва",
+      "tierHeader": "Ярус",
+      "depsHeader": "Залежн.",
+      "movedFrom": "з #{position}"
+    },
+    "whyPanel": {
+      "headerWithMod": "{mod} — чому тут?",
+      "headerFallback": "Чому тут?",
+      "loadFailed": "Не вдалося завантажити пояснення.",
+      "positionHeading": "Позиція",
+      "becameReadyAfterHeading": "Став готовим після",
+      "lowerBoundsHeading": "Нижні межі (має завантажуватися після)",
+      "noLowerBounds": "Нижніх меж немає.",
+      "upperBoundsHeading": "Верхні межі (моди, що чекають на цей)",
+      "noUpperBounds": "Ніщо не чекає на цей мод.",
+      "advisoryHeading": "Рекомендаційні обмеження",
+      "softHeading": "М'які (відкладені посилання)",
+      "awarenessHeading": "Обізнаність",
+      "none": "Немає.",
+      "satisfied": "виконано",
+      "violated": "порушено",
+      "droppedHeading": "Відкинуті обмеження",
+      "cycle": "цикл: {cycle}",
+      "overruledBy": "Відхилено через:",
+      "sortSettingsHeading": "Налаштування сортування",
+      "tieBreakHeading": "Розв'язання нічиїх",
+      "currentPositionKnown": "Поточна позиція: #{position}",
+      "currentPositionUnknown": "Поточна позиція: немає в поточному порядку",
+      "effectiveKey": "Фактичний ключ: {key}",
+      "modsPreferredAhead": "Модів, яким надано перевагу перед цим: {count}",
+      "pulledForwardBy": "Підтягнуто вперед через:",
+      "openInModsLink": "Відкрити в «Модах»"
+    },
+    "edgeChip": {
+      "directionAfter": "після",
+      "directionBefore": "перед",
+      "findingLink": "знахідка"
+    },
+    "tier": {
+      "core": "Core",
+      "dlc": "DLC",
+      "top": "Верх",
+      "body": "Основа",
+      "bottom": "Низ"
+    },
+    "provenance": {
+      "anyOf": "кандидат «будь-який з» для {assembly}",
+      "rule": "правило ({origin})",
+      "ruleWithComment": "правило ({origin}): {comment}",
+      "tier": "межа ярусу ({tier})"
+    },
+    "tierReason": {
+      "source": "джерело: {source}",
+      "placement": "правило розміщення ({origin})",
+      "promotedBy": "просунуто через {before} → {after}",
+      "body": "немає сигналу джерела чи розміщення"
+    }
+  },
+  "apply": {
+    "dialog": {
+      "header": "Застосувати",
+      "defCacheNote": "Активний мод кешування Def прив'язує свій кеш до порядку завантаження; перший запуск гри після цього застосування перебудує кеш{parenthetical}.",
+      "defCacheParenthetical": " (близько {seconds} с за вашим останнім журналом)",
+      "writeModsConfigLabel": "Записати ModsConfig.xml (порядок завантаження, який читає RimWorld)",
+      "staleActiveSetMessage": "Робочий набір активних модів має зміни, що очікують, — перескануйте, щоб записати ModsConfig.xml.",
+      "rescanButton": "Пересканувати",
+      "writeMergeModLabel": "Записати мод об'єднання (сформувати згенерований мод у Mods/ або видалити його, якщо не лишилося рішень щодо об'єднання чи ресурсів)",
+      "closeButton": "Закрити",
+      "cancelButton": "Скасувати",
+      "writeAnywayButton": "Все одно записати",
+      "applyButton": "Застосувати",
+      "writeMergeModButton": "Записати мод об'єднання",
+      "saveDecisionsButton": "Зберегти рішення й правила"
+    },
+    "preflight": {
+      "unappliedHeading": "Відскановано, але ще не застосовано до ModsConfig.xml:",
+      "addedLabel": "Додано:",
+      "removedLabel": "Прибрано:",
+      "orderLabel": "Порядок",
+      "modsConfigLabel": "ModsConfig.xml",
+      "decisionsLabel": "Рішення",
+      "rulesLabel": "Правила",
+      "movedModsLabel": "Моди, що переміщуються",
+      "needsInputLabel": "Потребують рішення",
+      "unansweredReordersWarning": "{count} запропонована перестановка з цієї перевірки ще не має парного правила | {count} запропоновані перестановки з цієї перевірки ще не мають парного правила | {count} запропонованих перестановок з цієї перевірки ще не мають парного правила",
+      "problemsRow": "{count} проблема для підтвердження | {count} проблеми для підтвердження | {count} проблем для підтвердження",
+      "problemsAllDecided": "{count} проблема, уже вирішена | {count} проблеми, уже вирішені | {count} проблем, уже вирішених",
+      "noProblems": "Проблем не знайдено",
+      "openInbox": "Відкрити «Знахідки»"
+    },
+    "progress": {
+      "heading": "Перевірити порядок",
+      "description": "Відтворює кожну операцію чужих патчів, щоб передбачити, які з них не спрацюють за цього порядку, — так, як це показав би власний журнал RimWorld. Лише на вимогу — для великої інсталяції це займає близько хвилини.",
+      "verifyingLabel": "Перевірка порядку",
+      "checksCaption": "Перевірок: {checked} з {total}",
+      "startingCaption": "Запуск…"
+    },
+    "diff": {
+      "summary": "Перевірено {count} Def за {source} порядком — {list}. | Перевірено {count} Def за {source} порядком — {list}. | Перевірено {count} Def за {source} порядком — {list}.",
+      "summaryOperations": "{count} операція з прогнозованим збоєм | {count} операції з прогнозованим збоєм | {count} операцій з прогнозованим збоєм",
+      "summaryTargets": "{count} зачеплена ціль Def | {count} зачеплені цілі Def | {count} зачеплених цілей Def",
+      "removedByCount": "Вилучено попереднім модом: {count}",
+      "notYetInjectedCount": "Ще не вставлено: {count}",
+      "deadTargetCount": "Мертва ціль: {count}",
+      "unknownCount": "Невідомо: {count}",
+      "orderFixableHeading": "Виправні порядком — перестановка названого мода може це розв'язати:",
+      "cosmeticText": "косметично: той самий кінцевий Def за будь-якого порядку — перестановку не пропоновано.",
+      "mergeInsteadLink": "Об'єднання замість цього",
+      "mergeInstead": "{link} зберігає власний задум мода, що програє.",
+      "noMergeAvailable": "Для цієї цілі об'єднання недоступне.",
+      "removedByCause": "Мод {mod}, що завантажується раніше, вилучає цільовий вузол.",
+      "notYetInjectedCause": "цільовий вузол вставляє мод {mod}, що завантажується пізніше.",
+      "modPossessive": "{operation} мода {mod}",
+      "notFullyFixableHeading": "Не повністю виправні порядком — застарілі патчі, некласифікована причина або їх поєднання; згруповано за модом:",
+      "groupedByModLine": "{mod} — {list}",
+      "groupedOperations": "{count} операція | {count} операції | {count} операцій",
+      "groupedTargets": "{count} ціль Def | {count} цілі Def | {count} цілей Def",
+      "partlyFixableHeading": "Деякі з них частково виправні порядком — перестановка розв'язує частину їхніх цілей Def:",
+      "skippedCandidates": "Не вдалося перевірити {count} кандидата. | Не вдалося перевірити {count} кандидатів. | Не вдалося перевірити {count} кандидатів.",
+      "pvoMismatchWarning": "Імпортований журнал створено за іншого порядку модів, ніж щойно перевірений, — лічильники нижче порівнюють два непов'язані запуски.",
+      "pvoHeading": "Прогноз і спостереження (останній імпортований журнал)",
+      "pvoSnapshotNote": "Імпортований журнал — знімок консолі, а не журнал усього ігрового сеансу: збою, який гра записала до найстарішого запису консолі, у ньому немає, тож «передбачено, не спостережено» не доводить, що збою не було.",
+      "pvoCutOffNote": "Імпортований журнал закінчився без штатного виходу й до того, як було записано будь-який результат патчів, тож гра могла так і не дійти до етапу патчів: «передбачено, не спостережено» не доводить, що збою не було.",
+      "pvoGapsNote": "Поки писався імпортований журнал, гра переставала записувати повідомлення, тож якогось збою в ньому може бракувати: «передбачено, не спостережено» не доводить, що збою не було.",
+      "pvoMatchedSummary": "Підтверджено журналом: {count}",
+      "pvoPredictedOnlySummary": "Передбачено, не спостережено в журналі: {count}",
+      "pvoObservedOnlySummary": "Спостережено в журналі, не передбачено: {count} — наведено як є, нічого не відкинуто:",
+      "unattributedRaw": "(без прив'язки: {raw})",
+      "counterfactualJobsLine": "{count} операцію повторно перевірено за іншими порядками завантаження | {count} операції повторно перевірено за іншими порядками завантаження | {count} операцій повторно перевірено за іншими порядками завантаження",
+      "counterfactualResolvedLine": "{count} збій пояснено | {count} збої пояснено | {count} збоїв пояснено",
+      "counterfactualDemotedLine": "{count} рядок «мертва ціль» виявився виправним зміною порядку | {count} рядки «мертва ціль» виявилися виправними зміною порядку | {count} рядків «мертва ціль» виявилися виправними зміною порядку",
+      "counterfactualSkippedLine": "{count} операцію пропущено | {count} операції пропущено | {count} операцій пропущено",
+      "counterfactualRejectedLine": "{count} перестановку відхилено, щоб не зламати іншу операцію | {count} перестановки відхилено, щоб не зламати іншу операцію | {count} перестановок відхилено, щоб не зламати іншу операцію",
+      "counterfactualSummary": "Контрфактичний аналіз: {list}."
+    },
+    "reorderActions": {
+      "createPairRule": "Створити парне правило",
+      "createPairRuleAnyway": "Все одно створити парне правило",
+      "conflictText": "конфліктує з {kind}: {detail} ({status})",
+      "ruleCreated": "Правило створено. Запустіть «Перевірити порядок» знову, щоб перевірити його, — правило все ще може бути відхилене декларацією автора чи іншим правилом, а два правила протилежного напрямку взаємно скасовуються; сторінка «Правила» показує, що насправді набуло чинності.",
+      "ruleExists": "Правило вже існує."
+    },
+    "result": {
+      "forceWarning": "Схоже, RimWorldWin64.exe запущено. Гра перезаписує ModsConfig.xml, коли завершує роботу, тож те, що ви запишете зараз, може бути втрачено. Все одно записати?",
+      "mergeModPath": "Мод об'єднання: {path}",
+      "mergeModRemoved": "Мод об'єднання: видалено (не лишилося рішень щодо об'єднання чи ресурсів)",
+      "mergeModBackupPath": "Резервна копія мода об'єднання: {path}",
+      "skippedHeading": "Пропущено — мод об'єднання записано без них:",
+      "toastAppliedSummary": "Застосовано",
+      "toastSavedSummary": "Збережено",
+      "toastModsConfigPath": "ModsConfig: {path}",
+      "toastBackupPath": "Резервна копія: {path}",
+      "toastDecisionsPath": "Рішення: {path}",
+      "toastRulesPath": "Правила: {path}",
+      "toastSkippedStillNeedsInput": "Пропущено (досі потребує рішення): {list}"
+    },
+    "confirm": {
+      "heading": "Все одно застосувати?",
+      "intro": "Із {order} порядком пов'язано {count} проблему, яку треба підтвердити перед записом: | Із {order} порядком пов'язано {count} проблеми, які треба підтвердити перед записом: | Із {order} порядком пов'язано {count} проблем, які треба підтвердити перед записом:",
+      "acknowledgedHeading": "Уже вирішено в «Знахідках»",
+      "reviewInInbox": "Переглянути в «Знахідках»",
+      "goBackButton": "Назад",
+      "applyAnywayButton": "Все одно застосувати"
+    },
+    "problem": {
+      "missingDependencyInactive": "{mod} потребує мода {dependency}, який встановлено, але він не активний.",
+      "missingDependencyNotInstalled": "{mod} потребує мода {dependency}, який не встановлено.",
+      "incompatiblePair": "{a} і {b} задекларовано як несумісні.",
+      "missingModRemoved": "{mod} не встановлено, тож його буде прибрано зі списку активних.",
+      "missingModKept": "{mod} не встановлено, але він залишається в списку активних; гра його пропускає.",
+      "loadRequirementViolated": "{after} потребує, щоб {before} завантажувався раніше; цей порядок завантажує його пізніше.",
+      "anyOfUnsatisfied": "{mod} потребує, щоб один із {candidates} завантажувався раніше; жоден із них цього не робить."
+    }
+  },
+  "gameLog": {
+    "heading": "Імпортований журнал:",
+    "kind": {
+      "playerLog": "Player.log",
+      "consoleSnapshot": "Знімок консолі"
+    },
+    "coverage": {
+      "playerLog": {
+        "cleanExit": "{count} запуск; журнал закінчується штатним виходом | {count} запуски; журнал закінчується штатним виходом | {count} запусків; журнал закінчується штатним виходом",
+        "crashed": "{count} запуск; журнал закінчується аварійним завершенням гри (звіт про збій: {path}) | {count} запуски; журнал закінчується аварійним завершенням гри (звіт про збій: {path}) | {count} запусків; журнал закінчується аварійним завершенням гри (звіт про збій: {path})",
+        "crashedNoPath": "{count} запуск; журнал закінчується аварійним завершенням гри (звіт про збій у ньому не вказано) | {count} запуски; журнал закінчується аварійним завершенням гри (звіт про збій у ньому не вказано) | {count} запусків; журнал закінчується аварійним завершенням гри (звіт про збій у ньому не вказано)",
+        "truncated": "{count} запуск; журнал обривається посеред роботи без завершального блоку виходу (зависання, примусове закриття або копія, зроблена під час роботи гри) | {count} запуски; журнал обривається посеред роботи без завершального блоку виходу (зависання, примусове закриття або копія, зроблена під час роботи гри) | {count} запусків; журнал обривається посеред роботи без завершального блоку виходу (зависання, примусове закриття або копія, зроблена під час роботи гри)"
+      },
+      "snapshot": {
+        "belowCap": "Консоль містила лише {count} запис, тож ця копія нічого не каже про етапи, яких у ній не видно | Консоль містила лише {count} записи, тож ця копія нічого не каже про етапи, яких у ній не видно | Консоль містила лише {count} записів, тож ця копія нічого не каже про етапи, яких у ній не видно",
+        "atCap": "Лише {count} запис, який вміщала консоль, — на межі її ліміту: старіші записи гра відкинула | Лише {count} записи, які вміщала консоль, — на межі її ліміту: старіші записи гра відкинула | Лише {count} записів, які вміщала консоль, — на межі її ліміту: старіші записи гра відкинула",
+        "overCap": "{count} запис — більше, ніж вміщає одна консоль, тож це не одна копія консолі: кілька копій, вставлених разом, або проблема розбору; скільки відкинула гра, сказати неможливо | {count} записи — більше, ніж вміщає одна консоль, тож це не одна копія консолі: кілька копій, вставлених разом, або проблема розбору; скільки відкинула гра, сказати неможливо | {count} записів — більше, ніж вміщає одна консоль, тож це не одна копія консолі: кілька копій, вставлених разом, або проблема розбору; скільки відкинула гра, сказати неможливо",
+        "headTruncated": "Копія починається посеред запису: її перший запис неповний."
+      }
+    },
+    "gaps": {
+      "warning": "Гра {count} раз переставала записувати повідомлення. Те, чого вона так і не записала, відновити неможливо. | Гра {count} рази переставала записувати повідомлення. Те, чого вона так і не записала, відновити неможливо. | Гра {count} разів переставала записувати повідомлення. Те, чого вона так і не записала, відновити неможливо.",
+      "neverResumed": "{count} зупинка журналювання не має після себе повідомлення про відновлення, тож усе в журналі після першої такої зупинки ненадійне. | {count} зупинки журналювання не мають після себе повідомлення про відновлення, тож усе в журналі після першої з них ненадійне. | {count} зупинок журналювання не мають після себе повідомлення про відновлення, тож усе в журналі після першої з них ненадійне.",
+      "lowerBound": "Щонайменше {count} сімейство записів ({percent}% записів журналу) охоплює пропуск, тож відповідні лічильники можуть бути заниженими; будь-який лічильник може бути заниженим. | Щонайменше {count} сімейства записів ({percent}% записів журналу) охоплюють пропуск, тож відповідні лічильники можуть бути заниженими; будь-який лічильник може бути заниженим. | Щонайменше {count} сімейств записів ({percent}% записів журналу) охоплюють пропуск, тож відповідні лічильники можуть бути заниженими; будь-який лічильник може бути заниженим.",
+      "resumed": "Рядки з {stop} по {resume}",
+      "open": "Від рядка {stop} до кінця журналу",
+      "more": "І ще {count}"
+    },
+    "losses": {
+      "heading": "Зчитувачу довелося обмежити частину цього журналу, тож у підсумку бракує частини даних:",
+      "linesTruncated": "{count} рядок був довшим за ліміт зчитувача; прочитано лише його початок | {count} рядки були довшими за ліміт зчитувача; прочитано лише їхні початки | {count} рядків були довшими за ліміт зчитувача; прочитано лише їхні початки",
+      "linesWithInvalidUtf8": "{count} рядок містив недійсний UTF-8 і був прочитаний із символами заміни | {count} рядки містили недійсний UTF-8 і були прочитані із символами заміни | {count} рядків містили недійсний UTF-8 і були прочитані із символами заміни",
+      "stackBlockLinesDropped": "{count} рядок трасування стека понад ліміт блоку не перевірено | {count} рядки трасування стека понад ліміт блоку не перевірено | {count} рядків трасування стека понад ліміт блоку не перевірено",
+      "stackJoinsAbandoned": "{count} багаторядкове з'єднання стека перевищило ліміт і було покинуте | {count} багаторядкові з'єднання стека перевищили ліміт і були покинуті | {count} багаторядкових з'єднань стека перевищили ліміт і були покинуті",
+      "passesFolded": "{count} запис із запуску понад відстежувані додано до останнього відстежуваного запуску | {count} записи із запусків понад відстежувані додано до останнього відстежуваного запуску | {count} записів із запусків понад відстежувані додано до останнього відстежуваного запуску",
+      "stackRefsDropped": "{count} зворотне посилання стека не проіндексовано | {count} зворотні посилання стека не проіндексовано | {count} зворотних посилань стека не проіндексовано",
+      "loggingGapsDropped": "{count} пропуск журналювання понад ліміт списку пораховано, але не наведено | {count} пропуски журналювання понад ліміт списку пораховано, але не наведено | {count} пропусків журналювання понад ліміт списку пораховано, але не наведено",
+      "crashReportPathsTruncated": "{count} розташування звіту про збій обрізано до ліміту довжини | {count} розташування звітів про збій обрізано до ліміту довжини | {count} розташувань звітів про збій обрізано до ліміту довжини"
+    }
+  },
+  "startup": {
+    "heading": "Витрати на запуск",
+    "description": "По рядку на кожен активний мод — операції патчів, що вносять зміни, xpath повільної форми, текстури, DLL і Def, без вимірювань часу (Rimmerge ніколи не запускає гру). Імпортуйте {playerLog} або знімок консолі, щоб заповнити стовпці DDS із поганими розмірами й спостережених таймерів (знімок консолі не може заповнити таймери).",
+    "orderMismatchWarning": "Імпортований журнал створено за іншого порядку модів, ніж вибраний зараз, — стовпці DDS із поганими розмірами й спостережених таймерів нижче відображають той інший запуск, а не цей.",
+    "noOrderBlockWarning": "Імпортований журнал узагалі не містить списку активних модів, тож його не можна звірити з вибраним порядком — стовпці DDS із поганими розмірами й спостережених таймерів нижче можуть відображати інший запуск, ніж цей.",
+    "loadFailed": "Не вдалося завантажити таблицю витрат на запуск.",
+    "modHeader": "Мод",
+    "patchOpsHeader": "Операції патчів",
+    "slowXpathsHeader": "Повільні xpath",
+    "texFilesHeader": "Файли текст.",
+    "texBytesHeader": "Байти текст.",
+    "ddsFilesHeader": "Файли DDS",
+    "badDimDdsHeader": "DDS з пог. розм.",
+    "dllsHeader": "DLL",
+    "dllBytesHeader": "Байти DLL",
+    "defsHeader": "Def",
+    "overriddenTexHeader": "Перевизн. текст.",
+    "observedTimersHeader": "Спостережені таймери",
+    "contentOnlyHeader": "Лише вміст",
+    "totalRow": "Усього ({count} мод) | Усього ({count} моди) | Усього ({count} модів)",
+    "notImported": "не імпортовано",
+    "notAvailableFromSnapshot": "недоступно зі знімка консолі",
+    "atLeast": "щонайменше {count}",
+    "snapshotNote": "Імпортований журнал — знімок консолі, а не журнал усього ігрового сеансу: спостережені таймери з нього недоступні, а лічильники DDS із поганими розмірами — лише мінімальні значення.",
+    "cutOffNote": "Імпортований журнал закінчується до того, як було записано будь-який результат патчів, і без штатного виходу, тож лічильники нижче можуть бути заниженими: лічильники DDS із поганими розмірами та спостережені таймери — лише мінімальні значення.",
+    "gapsNote": "Поки писався імпортований журнал, гра переставала записувати повідомлення, тож лічильники нижче можуть бути заниженими: лічильники DDS із поганими розмірами та спостережені таймери — лише мінімальні значення.",
+    "observedTimersValue": "{count} ({ms} мс)",
+    "observedTimersAtLeast": "щонайменше {count} ({ms} мс)",
+    "contentOnly": "лише вміст"
+  },
+  "assignments": {
+    "editRefsTargets": {
+      "header": "Редагувати посилання й цілі",
+      "referencesHeading": "Посилання (R)",
+      "targetsHeading": "Цілі (T)",
+      "whatChangedHeading": "Що змінилося",
+      "schemaChangeCounts": {
+        "added": "{count} поле додано | {count} поля додано | {count} полів додано",
+        "removed": "{count} поле вилучено | {count} поля вилучено | {count} полів вилучено",
+        "reclassified": "{count} поле перекласифіковано | {count} поля перекласифіковано | {count} полів перекласифіковано"
+      },
+      "reclassifiedNames": " ({names})",
+      "strandedValuesLine": "{count} збережене значення відкинуто — нова роль перекласифікованого поля більше не приймає того, що там зберігалося: | {count} збережені значення відкинуто — нова роль перекласифікованого поля більше не приймає того, що там зберігалося: | {count} збережених значень відкинуто — нова роль перекласифікованого поля більше не приймає того, що там зберігалося:",
+      "droppedRowsLine": "{count} рядок відкинуто — його ціль вийшла з набору цілей: | {count} рядки відкинуто — їхні цілі вийшли з набору цілей: | {count} рядків відкинуто — їхні цілі вийшли з набору цілей:",
+      "clean": "Ця зміна нічого не відкинула й не залишила без місця.",
+      "closeButton": "Закрити",
+      "saveButton": "Зберегти"
+    },
+    "rowEditor": {
+      "copyFrom": "Копіювати з:",
+      "winnerBadge": "— переможець",
+      "prefillFrom": "— з мода {mod}",
+      "clampedTo": "— скорочено до «{name}»: цей слот зберігає лише одну назву, а це значення містило назв: {count} ({joined})",
+      "droppedFromCopy": "— {count} запозичене значення пропущено, бо його Def не активний: {names} | — {count} запозичені значення пропущено, бо їхні Def не активні: {names} | — {count} запозичених значень пропущено, бо їхні Def не активні: {names}",
+      "pairedTo": "у парі з {slot}",
+      "overrideBadge": "Перевизначення — {count} наявний збіг | Перевизначення — {count} наявні збіги | Перевизначення — {count} наявних збігів",
+      "inspectDefLink": "Переглянути Def",
+      "defNameLabel": "defName",
+      "saveRowButton": "Зберегти рядок",
+      "clearRowButton": "Очистити рядок",
+      "newRowTitle": "Новий рядок"
+    },
+    "coverageList": {
+      "searchPlaceholder": "Пошук цілей…",
+      "ownerFilterPlaceholder": "Фільтр за власником",
+      "thisProject": "цей проєкт",
+      "coveredByMod": "охоплено модом {mod}",
+      "coveredByAnotherMod": "охоплено іншим модом",
+      "uncovered": "не охоплено",
+      "wouldWinNoOwner": "— переміг би",
+      "wouldWinWithOwner": "— переміг би {mod}",
+      "noMatches": "Відповідних цілей немає."
+    },
+    "schemaTable": {
+      "fieldHeader": "Поле",
+      "roleHeader": "Роль",
+      "typeHeader": "Тип",
+      "cardinalityHeader": "Кратність",
+      "observedHeader": "Спостережено",
+      "defTypePlaceholder": "тип Def",
+      "hideButton": "Сховати",
+      "unreadableTargets": "{count} ціль, на яку є посилання, не вдалося прочитати під час вивчення форми: | {count} цілі, на які є посилання, не вдалося прочитати під час вивчення форми: | {count} цілей, на які є посилання, не вдалося прочитати під час вивчення форми:",
+      "unreadableTargetLine": "{field}: {defType}/{defName} — {reason}",
+      "newFieldPathLabel": "Шлях нового поля",
+      "roleLabel": "Роль",
+      "defTypeLabel": "Тип Def",
+      "addFieldButton": "Додати поле",
+      "pathRequired": "Потрібен шлях поля.",
+      "pathAlreadyExists": "{path} уже є полем цієї схеми."
+    },
+    "exportPanel": {
+      "exportDirLabel": "Тека експорту",
+      "exportDirPlaceholder": "Виберіть теку…",
+      "chooseButton": "Вибрати…",
+      "installCheckboxLabel": "Встановити в Mods і увімкнути",
+      "staleActiveSetNote": "Зміни активації, що очікують застосування, не включено — спершу перескануйте, якщо хочете, щоб вони потрапили в це встановлення.",
+      "forceWarning": "Схоже, RimWorldWin64.exe запущено. Встановлення зараз записує ModsConfig.xml, який гра перезаписує, коли завершує роботу, тож зміну може бути втрачено. Все одно експортувати?",
+      "exportAnyway": "Все одно експортувати",
+      "export": "Експортувати",
+      "exportedTo": "Експортовано в: {path}",
+      "installedAt": "Встановлено в: {path}",
+      "skippedHeading": "Пропущено",
+      "skippedPath": ": {path}"
+    },
+    "editor": {
+      "loadFailed": "Не вдалося завантажити цей проєкт.",
+      "editRefsTargetsButton": "Редагувати посилання й цілі",
+      "deleteButton": "Видалити",
+      "noSections": "Розділів ще немає.",
+      "addSectionButton": "Додати розділ",
+      "removeSectionButton": "Видалити розділ",
+      "noTargetSelected": "Ціль не вибрано.",
+      "ownRowsHeading": "Власні рядки",
+      "newRowButton": "Новий рядок",
+      "standaloneHint": "Це окремий розділ — його власні рядки не мають цілі для зіставлення, тож черги охоплення тут немає.",
+      "noRowsYet": "Рядків ще немає.",
+      "selectOrNewRow": "Виберіть рядок або натисніть «Новий рядок», щоб створити його.",
+      "exportHeading": "Експорт",
+      "deleteDialogHeader": "Видалити цей проєкт?",
+      "deleteDialogBody": "Це видаляє проєкт конструктора патчів. Тека, яку він уже експортував на диск, залишається недоторканою.",
+      "addSectionDialogHeader": "Додати розділ",
+      "listingCandidates": "Пошук кандидатів…",
+      "candidateGroupLabel": "Тип розділу-кандидата",
+      "noAddableCandidates": "Немає кандидатів для додавання — кожен тип Def, яким володіють власні моди-посилання цього проєкту, уже є розділом.",
+      "addButton": "Додати",
+      "removeSectionDialogHeader": "Видалити цей розділ?",
+      "removeSectionBody": "Це видаляє розділ {defType} і всі його рядки. Тут цю дію не можна скасувати.",
+      "sectionInUse": "На нього досі посилається {count} рядок в іншому розділі. Якщо все одно видалити, ці посилання стануть висячими — подальший експорт повідомить про кожне як про пропуск. | На нього досі посилаються {count} рядки в іншому розділі. Якщо все одно видалити, ці посилання стануть висячими — подальший експорт повідомить про кожне як про пропуск. | На нього досі посилаються {count} рядків в іншому розділі. Якщо все одно видалити, ці посилання стануть висячими — подальший експорт повідомить про кожне як про пропуск.",
+      "referenceLine": "{defType} {row}: {path}",
+      "removeAnywayButton": "Все одно видалити",
+      "removeButton": "Видалити"
+    },
+    "wizard": {
+      "heading": "Новий проєкт конструктора патчів",
+      "identityHeading": "Ідентифікація",
+      "nameLabel": "Назва",
+      "packageIdLabel": "ID пакета",
+      "packageIdPlaceholder": "author.mymod",
+      "displayNameLabel": "Відображувана назва",
+      "referencesHeading": "Моди-посилання (R)",
+      "targetsHeading": "Цілі (T)",
+      "targetsHint": "Залиште порожнім, щоб створити абсолютно новий тип Def (проєкт «новий Def») замість патчування наявного.",
+      "listCandidatesButton": "Показати кандидатів",
+      "effectiveRefsHeading": "Фактичний набір посилань",
+      "excludedTitle": "Виключено — натисніть, щоб включити",
+      "includeTitle": "Натисніть, щоб виключити",
+      "excludedTag": "виключено",
+      "includedTag": "×",
+      "candidatesHeading": "Типи призначень-кандидати",
+      "candidateGroupLabel": "Тип призначення-кандидат",
+      "instanceCount": "{defType} ({count} екземпляр) | {defType} ({count} екземпляри) | {defType} ({count} екземплярів)",
+      "inferringSchema": "Визначення схеми…",
+      "standaloneNote": "Цей кандидат не має поля ключа цілі — це буде проєкт «новий Def» з окремими рядками замість рядків, зіставлених із цілями.",
+      "excludedTargetsNote": "{count} ціль із посиланням поза T/Core ніколи не читалася (дотримання T пришвидшує роботу). | {count} цілі з посиланнями поза T/Core ніколи не читалися (дотримання T пришвидшує роботу). | {count} цілей з посиланнями поза T/Core ніколи не читалися (дотримання T пришвидшує роботу).",
+      "createButton": "Створити"
+    },
+    "list": {
+      "newProjectButton": "Новий проєкт",
+      "loadFailed": "Не вдалося завантажити призначення.",
+      "empty": "Проєктів конструктора патчів ще немає.",
+      "nameHeader": "Назва",
+      "packageIdHeader": "ID пакета",
+      "sectionsHeader": "Розділи",
+      "refsHeader": "R",
+      "targetsHeader": "T",
+      "rowsHeader": "Рядки",
+      "uncoveredHeader": "Не охоплено",
+      "exportedHeader": "Експортовано",
+      "notApplicable": "н/д",
+      "exportedYes": "так",
+      "exportedNo": "ні"
+    },
+    "itemPicker": {
+      "searchPlaceholder": "Пошук елементів…",
+      "thisProjectHeading": "Цей проєкт",
+      "noMatches": "Нічого не знайдено.",
+      "count": "{loaded} / {total}",
+      "clearSelection": "Скинути вибір",
+      "loadMore": "Завантажити ще"
+    }
+  },
+  "rationale": {
+    "layerPhrase": {
+      "hard": "жорстка вимога (етапу завантаження)",
+      "anyOf": "розв'язана вимога «будь-який з»",
+      "declaredOverride": "ваше власне явне перевизначення декларації автора",
+      "declared": "декларація автора",
+      "userDecision": "ваше власне рішення",
+      "rimSortUser": "правило користувача RimSort",
+      "rimSortCommunity": "правило спільноти RimSort",
+      "steamDb": "залежність у Майстерні Steam",
+      "other": "інше обмеження"
+    },
+    "placementPhrase": {
+      "top": "вгорі",
+      "bottom": "внизу"
+    },
+    "relationExplanation": {
+      "presenceOnly": "це лише перевіряє, чи мод присутній, а не його позицію завантаження",
+      "patchTargetsDef": "патчі застосовуються до об'єднаного документа Def після завантаження Def усіх модів, незалежно від порядку завантаження",
+      "parentTemplate": "недосяжно: обмеження ParentName — це факт порядку на етапі завантаження (жорсткий), а не рекомендація",
+      "usesType": "тип розв'язується серед усіх завантажених збірок незалежно від порядку завантаження",
+      "patchSelectsInjectedNode": "вибраний вузол може вже існувати іншим шляхом (записаний безпосередньо, вставлений кількома активними модами або власним патчем мода, що його вибирає) або лежить глибше, ніж аналізатор індексує для перевірки, — тож це не доведена вимога порядку завантаження",
+      "patchRemovedNode": "аналізатор виводить це з вмісту патчів: один мод вилучає вузол, який патчить і інший мод, і мод, що вилучає, має завантажуватися останнім, інакше інший патч не знайде, що змінювати, — це не задекларований автором порядок завантаження, тож це обмеження поступається, якщо йому суперечить декларація чи розміщення",
+      "retextureAfterOwner": "аналізатор виводить це зі спільного шляху текстури: пакет ретекстуру лише з текстурами має завантажуватися після мода з контентом, який він перефарбовує, інакше його заміну перезапише той самий контент, — це не задекларований автором порядок завантаження, тож це обмеження поступається, якщо йому суперечить декларація чи розміщення",
+      "defOverrideAfterOrigin": "аналізатор виводить це з ознак шаблонів/кількості Def: мод, який також постачає Def із простору імен іншого мода, має завантажуватися після власника цього простору імен, інакше його перевизначення опиниться під власним визначенням оригіналу, а не поверх нього, — це не задекларований автором порядок завантаження, тож це обмеження поступається, якщо йому суперечить декларація чи розміщення",
+      "patchInvalidatesPredicate": "аналізатор виводить це з вмісту патчів: Replace/Remove переписує або видаляє вузол, який читає предикат xpath іншого мода, і операція з цим предикатом має завантажуватися першою, інакше її предикат більше не збігатиметься, — це не задекларований автором порядок завантаження, тож це обмеження поступається, якщо йому суперечить декларація чи розміщення",
+      "patchRemovedNodeCosmetic": "аналізатор виводить це з вмісту патчів, але кінцеві Def тут однакові за будь-якого порядку — змінюється лише те, чия операція записує збій у журнал, — тож це слабша ознака, ніж задекларований автором порядок завантаження, і вона поступається, якщо їй суперечить декларація чи розміщення",
+      "replaceDiscardsAddition": "аналізатор виводить це з вмісту патчів: Replace підставляє цілком новий вузол і тихо відкидає все, що раніше записало туди додавання, тож додавання має завантажуватися після заміни, інакше його вміст втрачається без жодного рядка в журналі, — це не задекларований автором порядок завантаження, тож це обмеження поступається, якщо йому суперечить декларація чи розміщення",
+      "interactionEvidence": "це ознака того, що моди взаємодіють, а не факт порядку, потрібний самому завантажувачу"
+    },
+    "rulePhrase": {
+      "userDecisionOverride": "Ваше власне перевизначення задекларованого обмеження",
+      "userDecision": "Ваше власне рішення",
+      "layered": "Завантаження мода {after} після мода {before} (підстава: {layerPhrase})"
+    },
+    "edgeDroppedInferred": {
+      "patchRemovedNode": "{after} вилучає вузол, який також патчить {before}; {after} має завантажуватися після {before}, інакше власний патч мода {before} не знайде, що змінювати. Аналізатор вивів це з вмісту патчів, а не із задекларованого порядку завантаження будь-якого з модів.",
+      "retextureAfterOwner": "{after} — пакет ретекстуру лише з текстурами, що має спільний шлях текстури з власним контентом мода {before}; {after} має завантажуватися після {before}, інакше його текстуру-заміну перезапише контент, який він має перефарбувати. Аналізатор вивів це зі спільного шляху текстури, а не із задекларованого порядку завантаження будь-якого з модів.",
+      "defOverrideAfterOrigin": "{before} володіє шаблоном або сімейством Def, до якого належить це перевизначення; {after} також постачає його копію і має завантажуватися після {before}, щоб перевизначення лягло поверх власного визначення оригіналу. Аналізатор вивів це з ознак шаблонів/кількості Def, а не із задекларованого порядку завантаження будь-якого з модів.",
+      "patchInvalidatesPredicate": "{after} замінює або вилучає вузол, який власний патч мода {before} вибирає через предикат; {after} має завантажуватися після {before}, інакше власний предикат мода {before} більше не збігатиметься. Аналізатор вивів це з вмісту патчів, а не із задекларованого порядку завантаження будь-якого з модів.",
+      "replaceDiscardsAddition": "{before} замінює вузол, у який {after} також додає вміст; {after} має завантажуватися після {before}, інакше його власне додавання тихо відкидається, коли Replace мода {before} підставляє цілком новий вузол, без жодного рядка в журналі. Аналізатор вивів це з вмісту патчів, а не із задекларованого порядку завантаження будь-якого з модів."
+    },
+    "edgeDroppedCosmetic": "косметично: кінцеві Def однакові за будь-якого порядку; змінюється лише те, який рядок з'являється в журналі",
+    "keepEdgeInCycle": "Зберегти це обмеження; сортувальник натомість відкине наступне найслабше обмеження в циклі.",
+    "reorderOverridingEdgeWinner": "Натомість примусово застосувати власний порядок цього мода, перевизначивши переможця.",
+    "edgeDroppedWithWinner": "{after} натомість має завантажуватися перед {before}: так вказує {layerPhrase} ({detail}).",
+    "edgeDroppedSoftOrAwareness": "Відкидання м'якого обмеження або обмеження лише обізнаності, щоб розірвати цикл, рідко змінює поведінку.",
+    "edgeDroppedDeclared": "Довелося відкинути задеклароване автором обмеження, щоб розірвати цикл.",
+    "edgeDroppedHard": "Довелося відкинути жорстке обмеження (етапу завантаження), щоб розірвати цикл: моди справді конфліктують.",
+    "removeDependentModBrokenOrder": "Прибрати залежний мод з активного списку замість того, щоб приймати зламаний порядок завантаження.",
+    "declarationQuestioned": "{declaredAfter} завантажується після {declaredBefore} — підстава: {layerPhrase} ({declaredDetail}); {relationExplanation} ({relationDetail}).",
+    "reorderOppositeOfRelation": "Примусово застосувати протилежний порядок, який випливає зі зв'язку, як рішення користувача.",
+    "declarationOverridden": "Задекларовано, що {declaredAfter} завантажується після {declaredBefore} ({detail}), але {layerPhrase} вказує інакше: натомість {byAfter} завантажується після {byBefore} ({byDetail}).",
+    "anyOfNoCandidate": "Жоден кандидат не може задовольнити це обмеження, не замкнувши цикл.",
+    "forceAnyOfCandidateAcceptingCycle": "Примусово вибрати цього кандидата, прийнявши будь-який цикл, що виникне деінде.",
+    "anyOfChosenAlreadyBefore": "Вибраний кандидат уже зараз завантажується перед залежним модом.",
+    "anyOfAlternativeCandidate": "Це обмеження міг би задовольнити й інший кандидат.",
+    "anyOfUniqueMaxDependents": "Вибраний кандидат — єдиний мод серед кандидатів, від якого залежить найбільше модів.",
+    "anyOfSmallestId": "Вибрано за найменшим ID серед кандидатів, рівних в усьому іншому.",
+    "ruleOverruledLongerCycle": "{rulePhrase} довелося відкинути, щоб розірвати довший цикл між кількома модами.",
+    "ruleOverruledByWinner": "{rulePhrase} відхилено: {layerPhrase} вказує, що натомість {before} завантажується після {after} ({detail}).",
+    "reorderOverridingRuleWinner": "Натомість примусово застосувати власний порядок цього правила, перевизначивши переможця.",
+    "promoteRuleDespiteOverruled": "Зберегти це правило як ваше власне рішення, щоб воно залишилося, хоч і далі буде відхилене.",
+    "placementOverruled": "Мод {modId} закріплено {placementPhrase}, але {layerPhrase} це відхиляє: {detail}.",
+    "promotePlacementDespiteOverruled": "Зберегти розміщення {placementPhrase} як ваше власне рішення, щоб воно залишилося, хоч його й відхилено.",
+    "dropRuleOverrulingPlacement": "Відкинути правило, яке відхилило це розміщення, щоб {modId} залишився {placementPhrase}.",
+    "placementQuestioned": "Мод {modId} закріплено {placementPhrase}; {relationExplanation} ({relationDetail}).",
+    "enforceRelationAsUserDecision": "Явно закріпити цей зв'язок як рішення користувача.",
+    "placementOrderingOverridden": {
+      "loadsAfter": "{pinned} закріплено {placementPhrase}, але {modId} однаково має завантажуватися після нього: {layerPhrase} ({detail}).",
+      "loadsBefore": "{pinned} закріплено {placementPhrase}, але {modId} однаково має завантажуватися перед ним: {layerPhrase} ({detail})."
+    },
+    "placementPromotesDependents": "Мод {modId} закріплено {placementPhrase}; ще {count} мод вважається просунутим через нього за межу власного ярусу{sample} | Мод {modId} закріплено {placementPhrase}; ще {count} моди вважаються просунутими через нього за межу власного ярусу{sample} | Мод {modId} закріплено {placementPhrase}; ще {count} модів вважаються просунутими через нього за межу власного ярусу{sample}",
+    "promotedSample": {
+      "truncated": " (напр., {sample})",
+      "exact": " ({sample})"
+    },
+    "tagInferredSignalCount": "{count} відповідний сигнал | {count} відповідні сигнали | {count} відповідних сигналів",
+    "rejectInferredTag": "Відхилити виведений тег.",
+    "forceDefOverrideWinner": "Примусово зробити переможцем Def певного власника незалежно від порядку завантаження.",
+    "defOverrideWinnerDeclaresRelation": "Мод-переможець явно декларує зв'язок порядку завантаження з кожним іншим власником.",
+    "defOverrideSameAuthor": "Усі власники мають спільного автора.",
+    "defOverrideLoneNonVanillaOwner": "Рівно один активний мод перевизначає цей ванільний Def; більше ніхто на нього не претендує.",
+    "defOverrideShadowsFramework": "Кінцевий мод непомітно затіняє Def спільного фреймворку.",
+    "keepCurrentWinner": "Натомість залишити поточного переможця.",
+    "defOverrideUnexplained": "Кілька модів визначають цей Def, і жоден сильний сигнал не пояснює перевизначення.",
+    "mergeUnexplainedDefOverride": "Об'єднати поле за полем замість того, щоб повністю прийняти Def одного власника.",
+    "mergeShadowsFrameworkFieldByField": "Об'єднати поле за полем; зберегти значення фреймворку там, де кінцевий мод їх не змінював.",
+    "forcePatchCollisionWinner": "Примусово застосувати патч лише одного мода.",
+    "patchCollisionAdditive": "Кожен причетний патч лише додає до цілі; порядок не змінює результату.",
+    "patchCollisionContested": "Щонайменше один причетний патч змінює ціль; результат вирішує порядок завантаження.",
+    "patchCollisionWinnerDeclaresRelation": "{winner} декларує, що завантажується після {others}, тож його зміна поля «{field}» зберігається як записано.",
+    "mergeContestedPatchCollision": "Об'єднати поле за полем замість того, щоб порядок завантаження вирішував увесь Def.",
+    "patchWillFailRemovedBy": "Власна операція мода {remover} вилучає вузол, на який націлена операція мода {modId} у «{xpath}», і в порядку, за яким це перевіряли, завантажується раніше за неї.",
+    "reorderBeforeRemover": "Завантажувати {modId} перед {remover}, щоб його операція виконувалася, поки вузол ще існує.",
+    "patchWillFailNotYetInjected": "Операція мода {modId} у «{xpath}» націлена на вузол, який вставляє {injector}, але {injector} у порядку, за яким це перевіряли, завантажується після неї.",
+    "reorderAfterInjector": "Завантажувати {modId} після {injector}, щоб його операція знайшла вузол, коли його вже вставлено.",
+    "patchWillFailDeadTarget": "Операція мода {modId} у «{xpath}» націлена на вузол, якого ніколи немає у власній розв'язаній структурі власника-переможця, незалежно від порядку завантаження, — жодна перестановка цього не виправить.",
+    "patchWillFailUnknownCause": "Операція мода {modId} у «{xpath}», за прогнозом, не спрацює; причину не вдалося класифікувати.",
+    "brokenInheritance": "Це посилання `ParentName` розв'язується не так, як очікує власний тип елемента нащадка, — Def завантажується з відсутнім або хибним вмістом. Повідомте про це автора мода, що посилається.",
+    "danglingDefReference": "Ця назва не відповідає жодному активному Def будь-якого типу — {cause}.{soundCaveat} Перехресні посилання розв'язуються після того, як завантажено Def і патчі всіх модів, тож це ніколи не залежить від порядку завантаження.",
+    "danglingDefReferenceSoundCaveat": " Схоже на посилання на звук — відсутній `SoundDef` записує в журнал попередження й тихо підставляє невизначений звук, а не зриває завантаження.",
+    "discardedAdditionDeliberate": "{replacer} декларує, що завантажується після {adder}, і замінює «{path}»: власне додавання мода {adder} у «{adderPath}» відкидається навмисно.",
+    "forceTextureWinner": "Примусово зробити переможцем текстуру одного мода.",
+    "copyTextureIntoMergeMod": "Скопіювати файл текстури цього мода в мод об'єднання, незалежно від порядку завантаження.",
+    "textureOverrideCosmetic": "Перевизначення текстури — косметичне, його видно в грі; воно ніколи не блокує.",
+    "forceTemplateRegistrationWinner": "Примусово застосувати реєстрацію цього мода до кожного нащадка шаблону, незалежно від порядку завантаження.",
+    "duplicateTemplateNameExplanation": "{ownerCount} мод реєструє цю назву шаблону; кожен нащадок незалежно успадковує від тієї реєстрації, що завантажується найближче на його позиції або перед нею. Якщо такої немає, нащадок бере ванільну реєстрацію, а за її відсутності — реєстрацію з мода, що завантажується першим у порядку завантаження, тож різні нащадки можуть розв'язатися до різних модів. | {ownerCount} моди реєструють цю назву шаблону; кожен нащадок незалежно успадковує від тієї реєстрації, що завантажується найближче на його позиції або перед нею. Якщо такої немає, нащадок бере ванільну реєстрацію, а за її відсутності — реєстрацію з мода, що завантажується першим у порядку завантаження, тож різні нащадки можуть розв'язатися до різних модів. | {ownerCount} модів реєструють цю назву шаблону; кожен нащадок незалежно успадковує від тієї реєстрації, що завантажується найближче на його позиції або перед нею. Якщо такої немає, нащадок бере ванільну реєстрацію, а за її відсутності — реєстрацію з мода, що завантажується першим у порядку завантаження, тож різні нащадки можуть розв'язатися до різних модів.",
+    "keyedTranslationCollision": "Ці два моди визначають {keyCount} однаковий ключ перекладу; перемагає той, що завантажено останнім. | Ці два моди визначають {keyCount} однакові ключі перекладу; щоразу перемагає той, що завантажено останнім. | Ці два моди визначають {keyCount} однакових ключів перекладу; щоразу перемагає той, що завантажено останнім.",
+    "soundOverrideCosmetic": "Перевизначення звуку — косметичне, його чути в грі; воно ніколи не блокує.",
+    "forceSoundWinner": "Примусово зробити переможцем звук одного мода.",
+    "missingTexturePath": "Цей шлях текстури не постачає жоден активний мод — гра показуватиме замість нього пурпурову заглушку.",
+    "undecodableTexture": "Цей файл .dds не декодується — базова гра показує замість нього заглушку зіпсованої текстури.",
+    "contributesNothing": "{modId} нічого помітного не додає за цього порядку: він не постачає збірки, кожен його Def перевизначено пізнішою копією, кожну текстуру й переклад, які він постачає, перевизначено, а кожна його операція патча або не застосовується, або ніколи не виконується, — його вимкнення нічого не змінить у грі й заощадить час на його завантаження.",
+    "undeclaredTypeDependency": "{user} використовує тип зі збірки мода {provider}, але не декларує залежності від нього.",
+    "pinRelationExplicitly": "Явно закріпити зв'язок як правило порядку завантаження.",
+    "runtimePatchCollisionNoLastPatcher": "Кілька модів патчать {targetType}.{targetMethod}.",
+    "runtimePatchCollisionLastPatcher": "{ownerCount} мод патчить {targetType}.{targetMethod}; мод {last} зараз завантажується останнім, тож його патч виконується останнім. | {ownerCount} моди патчать {targetType}.{targetMethod}; мод {last} зараз завантажується останнім, тож його патч виконується останнім. | {ownerCount} модів патчать {targetType}.{targetMethod}; мод {last} зараз завантажується останнім, тож його патч виконується останнім.",
+    "forceRuntimePatchLastWinner": "Примусово виконувати патч цього мода останнім, незалежно від порядку завантаження.",
+    "transpilerCollision": "{ownerCount} мод переписує IL {targetType}.{targetMethod} транспілером патча під час виконання; порядок їх виконання може вирішити, чи збігатиметься ще власний шаблон пізнішого з них. Більшість таких колізій нешкідливі — якщо один із цих модів записує в журнал помилку патчування, задайте робочий порядок командою `rimmerge rule set-pair`. | {ownerCount} моди, кожен окремо, переписують IL {targetType}.{targetMethod} транспілером патча під час виконання; порядок їх виконання може вирішити, чи збігатиметься ще власний шаблон пізнішого з них. Більшість таких колізій нешкідливі — якщо один із цих модів записує в журнал помилку патчування, задайте робочий порядок командою `rimmerge rule set-pair`. | {ownerCount} модів, кожен окремо, переписують IL {targetType}.{targetMethod} транспілером патча під час виконання; порядок їх виконання може вирішити, чи збігатиметься ще власний шаблон пізнішого з них. Більшість таких колізій нешкідливі — якщо один із цих модів записує в журнал помилку патчування, задайте робочий порядок командою `rimmerge rule set-pair`.",
+    "duplicateAssemblyFirstLoadedWins": "Збірку з такою назвою постачає більше ніж один активний мод; під час виконання перемагає копія, завантажена першою.",
+    "removeDuplicateAssemblyCopy": "Прибрати з активного списку одну з дубльованих копій.",
+    "likelyDuplicateMod": "Ці два моди мають велику кількість однакових Def без задекларованого зв'язку між ними.",
+    "removeLikelyDuplicateModA": "Прибрати з активного списку один із ймовірних модів-дублікатів.",
+    "removeLikelyDuplicateModB": "Прибрати з активного списку інший ймовірний мод-дублікат.",
+    "missingModNotInstalled": "Цей мод активний у ModsConfig.xml, але не встановлений; RimWorld однаково відкидає невідомі ID.",
+    "keepMissingModId": "Залишити ID в ModsConfig.xml на випадок, якщо мод з'явиться знову.",
+    "missingDependencyNotEnforced": "Задекларована залежність не активна; RimWorld лише попереджає про це, але не вимагає її.",
+    "incompatiblePair": "Ці моди декларують один одного несумісними.",
+    "removeIncompatibleModA": "Прибрати з активного списку один із несумісних модів.",
+    "removeIncompatibleModB": "Прибрати з активного списку інший несумісний мод.",
+    "unsupportedVersionOftenWorks": "Цей мод не вказує активну версію гри серед підтримуваних; часто він однаково працює.",
+    "undeclaredHardDependencyHonored": "Сортувальник уже враховує це жорстке обмеження (етапу завантаження), хоча автор його ніколи не декларував.",
+    "pinRelationExplicitlyAnyway": "Все одно явно закріпити зв'язок як правило порядку завантаження.",
+    "lazyReferenceViolatedJitResolved": "Поточний порядок не дотримується цього відкладено розв'язуваного посилання на збірку, але воно розв'язується під час JIT-компіляції, коли вже завантажено всі збірки, тож порядок завантаження на нього насправді не впливає.",
+    "nearMissModReference": {
+      "findModName": "Ця назва FindMod «{written}» не відповідає жодному активному чи встановленому моду, але дуже схожа на активний мод «{candidateName}» — можливо, це помилка. Повідомте про це автора мода, що посилається.",
+      "mayRequireId": "Цей ID MayRequire «{written}» не відповідає жодному активному чи встановленому моду, але дуже схожий на активний мод «{candidateName}» — можливо, це помилка. Повідомте про це автора мода, що посилається."
+    },
+    "mergeCompleteNothingToMerge": "гра застосовує ці внески послідовно до одного значення; об'єднувати нічого",
+    "mergeLeadDefOverrideCombine": "Моди змінюють різні поля; об'єднання поєднало б обидва.",
+    "mergePromotedPatchCollisionKeepsBoth": "Моди змінюють різні поля; об'єднання зберігає обидва.",
+    "keepLoadOrderWinner": "Залишити переможця за порядком завантаження.",
+    "mergeStructuralGuard": "{field} відрізняється між власниками — об'єднання на рівні полів небезпечне; підтвердьте переможця за порядком завантаження",
+    "mergeFieldsNeedChoice": "Об'єднати, {unresolved} поле потребує вибору. | Об'єднати, {unresolved} поля потребують вибору. | Об'єднати, {unresolved} полів потребують вибору.",
+    "identicalCopiesOrderIrrelevant": "ідентичні копії; порядок не може змінити результату",
+    "notAddressedByPatch": "Цей патч цього не охоплює; як і зараз, вирішує порядок завантаження."
+  },
+  "modInfo": {
+    "panel": {
+      "regionLabel": "Інформація про мод",
+      "close": "Закрити",
+      "notFoundTitle": "Цього мода немає в поточному скануванні",
+      "allDetailsLink": "Усі подробиці",
+      "previewAlt": "Зображення попереднього перегляду {mod}",
+      "noPreview": "Немає зображення попереднього перегляду",
+      "previewTooLarge": "Зображення перевищує 8 МБ",
+      "previewUnsupportedFormat": "Зображення не у форматі PNG чи JPEG",
+      "previewUnreadable": "Не вдалося прочитати зображення",
+      "missingHeading": "Відсутній",
+      "missingBody": "Є в ModsConfig.xml, але на диску не знайдено",
+      "requiredByHeading": "Потрібен для",
+      "pendingActivation": "Очікує ввімкнення — застосуйте або перескануйте, щоб зміна набула чинності",
+      "pendingDeactivation": "Очікує вимкнення — застосуйте або перескануйте, щоб зміна набула чинності",
+      "packageIdLine": "ID пакета: {id}",
+      "workshopCopyNote": "Копія з Майстерні",
+      "versionLine": "Версія мода: {version}",
+      "aboutNotOnDisk": "Не вдалося знайти About.xml цього мода — його файли могли бути переміщені або видалені після останнього сканування.",
+      "supportedVersionsLabel": "Підтримувані версії",
+      "supportsGameVersion": "Підтримує цю версію гри",
+      "doesNotSupportGameVersion": "Не декларує підтримки цієї версії гри",
+      "openWorkshopButton": "Відкрити сторінку в Майстерні (зовнішній браузер)",
+      "openHomepageButton": "Відкрити домашню сторінку (зовнішній браузер)",
+      "rootFolderLabel": "Тека мода",
+      "loadedFoldersLabel": "Завантажувані теки",
+      "costLabel": "Витрати",
+      "costLine": "{defsLabel}: {defCount}, {patchOpsLabel}: {patchOps}, {dllsLabel}: {assemblyCount}",
+      "seeStartupLink": "Див. «Витрати на запуск»",
+      "tagsLabel": "Теги",
+      "hardDependents": "{count} жорстко залежний | {count} жорстко залежні | {count} жорстко залежних",
+      "softDependents": "{count} м'яко залежний | {count} м'яко залежні | {count} м'яко залежних",
+      "awarenessDependents": "{count} залежний через обізнаність | {count} залежні через обізнаність | {count} залежних через обізнаність",
+      "frameworkCandidate": "Схоже на спільний фреймворк",
+      "generatedLine": "Згенеровано Rimmerge ({kind})",
+      "generatedMerge": "мод об'єднання профілю",
+      "generatedPatch": "патч сумісності",
+      "generatedAssignment": "проєкт призначення",
+      "positionLabel": "Позиція",
+      "previousPositionLine": "Попередня позиція: #{position}",
+      "whyHereLink": "Чому тут?",
+      "findingsCount": "{count} знахідка | {count} знахідки | {count} знахідок",
+      "needsInputCount": "{count} потребує рішення | {count} потребують рішення | {count} потребують рішення",
+      "declaredHeading": "Задекларований порядок завантаження",
+      "descriptionHeading": "Опис",
+      "noDescription": "Опис відсутній.",
+      "showMore": "Показати більше",
+      "showLess": "Показати менше",
+      "aboutChanged": "About.xml змінився після останнього сканування — перескануйте",
+      "aboutUnreadable": "Не вдалося прочитати About.xml: {reason}",
+      "aboutUnreadableIoHeadline": "файл не вдалося прочитати",
+      "aboutUnreadableXmlHeadline": "файл не є коректним XML",
+      "descriptionTruncated": "Цей опис був задовгим, тому його скорочено."
+    }
+  }
+}

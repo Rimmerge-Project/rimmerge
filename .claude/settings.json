@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo fmt:*)",
+      "Bash(cargo check:*)",
+      "Bash(cargo clippy:*)",
+      "Bash(cargo build:*)",
+      "Bash(cargo test:*)",
+      "Bash(cargo nextest run:*)",
+      "Bash(cargo nextest list:*)",
+      "Bash(cargo deny check:*)",
+      "Bash(cargo tree:*)",
+      "Bash(cargo doc:*)",
+      "Bash(bun run typecheck:*)",
+      "Bash(bun run types:check:*)",
+      "Bash(bun run lint:*)",
+      "Bash(bun run test:*)",
+      "Bash(bun run e2e:*)",
+      "Bash(bunx biome check:*)",
+      "Bash(bunx eslint:*)",
+      "Bash(bunx vitest run:*)",
+      "Bash(bunx playwright test:*)",
+      "Bash(bunx tsc:*)",
+      "Bash(bunx vue-tsc:*)"
+    ]
+  }
+}

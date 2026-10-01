@@ -1,0 +1,15 @@
+<!--
+  Source: Core (ludeon.rimworld), Data/Core/Defs/BiomeDefs/Biomes_Arid.xml
+  Trimmed to the AridShrubland BiomeDef's defName and wildAnimals fields
+  (a tag-keyed Dictionary<PawnKindDef, float>, 4 keys) — the keyed-map
+  worked example.
+-->
+<BiomeDef Name="AridShrubland">
+  <defName>AridShrubland</defName>
+  <wildAnimals>
+    <Tortoise>0.4</Tortoise>
+    <Cobra>0.3</Cobra>
+    <Warg>0.2</Warg>
+    <Camel>0.1</Camel>
+  </wildAnimals>
+</BiomeDef>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Trimmed copy of two Core hediff templates, used to test that
+  abstract, Name-attributed nodes index as TemplateEntry with the right
+  parent_name chain. Source: RimWorld Core,
+  Data/Core/Defs/HediffDefs/BodyParts/Hediffs_BodyParts_Base.xml
+  (elements unrelated to the ParentName chain removed).
+-->
+<Defs>
+  <HediffDef Name="ImplantHediffBase" Abstract="True">
+    <hediffClass>Hediff_Implant</hediffClass>
+    <defaultLabelColor>(0.6, 0.6, 1.0)</defaultLabelColor>
+    <isBad>false</isBad>
+    <priceImpact>true</priceImpact>
+    <countsAsAddedPartOrImplant>true</countsAsAddedPartOrImplant>
+    <allowMothballIfLowPriorityWorldPawn>true</allowMothballIfLowPriorityWorldPawn>
+  </HediffDef>
+
+  <HediffDef Name="AddedBodyPartBase" ParentName="ImplantHediffBase" Abstract="True">
+    <hediffClass>Hediff_AddedPart</hediffClass>
+    <priceImpact>true</priceImpact>
+  </HediffDef>
+</Defs>

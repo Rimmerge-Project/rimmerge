@@ -1,0 +1,19 @@
+---
+source: crates/rim-merge/src/emit/emit_tests.rs
+assertion_line: 337
+expression: text
+---
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <!-- BiomeDef/TemperateForest — owners: example.flora.core,examplebiomes.biomes,ludeon.rimworld -->
+  <Operation Class="PatchOperationSequence">
+    <operations>
+      <li Class="PatchOperationReplace" MayRequire="examplebiomes.biomes">
+        <xpath>Defs/BiomeDef[defName="TemperateForest"]/plantDensity</xpath>
+        <value>
+          <plantDensity>1.2</plantDensity>
+        </value>
+      </li>
+    </operations>
+  </Operation>
+</Patch>

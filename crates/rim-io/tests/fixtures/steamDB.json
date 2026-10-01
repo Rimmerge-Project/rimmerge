@@ -1,0 +1,22 @@
+{
+    "version": 1700000000,
+    "database": {
+        "1000001": {
+            "appid": false,
+            "url": "https://mods.example/1000001",
+            "packageId": "fixture.meru",
+            "name": "Fixture Meru",
+            "authors": "Synthetic Author",
+            "dependencies": {
+                "1000002": ["Example Framework"]
+            }
+        },
+        "1000002": {
+            "appid": false,
+            "url": "https://mods.example/1000002",
+            "packageId": "example.patchlib",
+            "name": "Example PatchLib",
+            "authors": "Synthetic Author Two"
+        }
+    }
+}

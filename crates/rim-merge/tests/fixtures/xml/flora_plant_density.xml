@@ -1,0 +1,21 @@
+<!--
+  Source: Example Flora (example.flora.core),
+  1.6/Patches/_ModSettings/General-Patches.xml
+  Trimmed to the single TemperateForest plantDensity replace, still
+  wrapped in the real ExampleSettingsFramework.PatchOperationModOption
+  (treated as a PatchOperationSequence gated by <defaultValue>, default
+  True here as in the real file) — the plantDensity worked example.
+-->
+<Operation Class="ExampleSettingsFramework.PatchOperationModOption">
+  <defaultValue>True</defaultValue>
+  <label>Increase vanilla plant density</label>
+  <id>EXFL_IncreaseDensity</id>
+  <operations>
+    <li Class="PatchOperationReplace">
+      <xpath>/Defs/BiomeDef[defName="TemperateForest"]/plantDensity</xpath>
+      <value>
+        <plantDensity>0.9</plantDensity>
+      </value>
+    </li>
+  </operations>
+</Operation>

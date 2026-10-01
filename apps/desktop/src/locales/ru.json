@@ -1,0 +1,2055 @@
+{
+  "common": {
+    "verbatim": "{text}",
+    "cancel": "Отменить",
+    "loading": "Загрузка…",
+    "technicalDetail": "Технические подробности: {detail}"
+  },
+  "defGraphics": {
+    "viewer": {
+      "regionLabel": "Предпросмотр текстуры",
+      "facingGroupLabel": "Направление",
+      "previousVariant": "Предыдущий вариант",
+      "nextVariant": "Следующий вариант",
+      "variantPosition": "{label} ({index} из {count})",
+      "variantSelectLabel": "Вариант",
+      "slotSelectLabel": "Источник текстуры",
+      "fromMod": "Из мода {mod}",
+      "overridesOwner": "Заменяет текстуру мода {owner}, владельца Def",
+      "mirrored": "Отображается зеркально",
+      "layoutInferred": "Раскладка определена по именам файлов",
+      "truncatedVariants": "Ещё {count} вариант не показан | Ещё {count} варианта не показаны | Ещё {count} вариантов не показано",
+      "truncatedSlots": "Ещё {count} источник не показан | Ещё {count} источника не показаны | Ещё {count} источников не показано"
+    },
+    "facing": {
+      "north": "Север",
+      "east": "Восток",
+      "south": "Юг",
+      "west": "Запад"
+    },
+    "facingShort": {
+      "north": "С",
+      "east": "В",
+      "south": "Ю",
+      "west": "З"
+    },
+    "slot": {
+      "graphic": "Графика",
+      "worn": "Надетое",
+      "lifeStage": "Стадии жизни",
+      "raceKind": "Тип пешки: {name}",
+      "styleTexture": "Текстура стиля",
+      "headType": "Тип головы",
+      "bodyType": "Тип тела",
+      "terrain": "Поверхность",
+      "icon": "Значок",
+      "probe": "Найдено по пути: {field}"
+    },
+    "variant": {
+      "only": "Единственная графика",
+      "bodyType": "Тип тела: {name}",
+      "lifeStage": "Стадия жизни {number}",
+      "female": "Женская, стадия жизни {number}",
+      "alternate": "Альтернатива {number}",
+      "member": "{name}",
+      "stack": "Шаг стопки {number}",
+      "stackSingle": "Один предмет",
+      "appearance": "Внешний вид: {name}",
+      "wornPath": "Путь надетого {number}",
+      "wornPathOnBodyType": "Путь надетого {number}, {name}",
+      "field": "{name}"
+    },
+    "state": {
+      "loading": "Загрузка текстуры",
+      "noGraphic": "У этого Def нет собственной текстуры.",
+      "composedAtRuntime": "Игра собирает эту пешку из частей тела, головы и волос во время работы, поэтому единой текстуры для показа нет.",
+      "notViewable": "Встроено в игру или в пакет ресурсов — такое здесь показать нельзя.",
+      "notViewableUncertain": "Файл текстуры не найден. Возможно, она встроена в игру, а такие текстуры здесь показать нельзя.",
+      "notFound": "Файл текстуры не найден. Игра покажет свою текстуру ошибки.",
+      "ddsNotPreviewable": "Текстура DDS. Предпросмотр недоступен.",
+      "undecodableInGame": "Игра не может декодировать этот файл DDS и показывает заглушку.",
+      "pngSiblingNote": "Показана копия в PNG; игра загружает DDS.",
+      "tooLarge": "Файл изображения слишком велик для предпросмотра.",
+      "unsupportedFormat": "Формат изображения не поддерживает предпросмотр.",
+      "unreadable": "Не удалось прочитать файл изображения."
+    },
+    "alt": "{def}, вид: {facing}",
+    "altNoFacing": "{def}"
+  },
+  "primevue": {
+    "emptyMessage": "Нет доступных вариантов",
+    "emptyFilterMessage": "Ничего не найдено",
+    "emptySelectionMessage": "Ничего не выбрано",
+    "searchMessage": "Доступно результатов: {count}",
+    "selectionMessage": "Выбрано элементов: {count}",
+    "aria": {
+      "trueLabel": "Да",
+      "falseLabel": "Нет",
+      "nullLabel": "Не выбрано",
+      "close": "Закрыть",
+      "previous": "Назад",
+      "next": "Далее",
+      "navigation": "Навигация"
+    }
+  },
+  "shell": {
+    "brand": "Rimmerge",
+    "mainNavigation": "Основная навигация",
+    "nav": {
+      "dashboard": "Сводка",
+      "inbox": "Замечания",
+      "mergeMod": "Слияние",
+      "patches": "Патчи совместимости",
+      "assignments": "Конструктор патчей",
+      "startup": "Затраты на запуск",
+      "order": "Порядок загрузки",
+      "rules": "Правила",
+      "mods": "Моды",
+      "settings": "Настройки"
+    },
+    "orderSource": {
+      "label": "Источник порядка",
+      "current": "Текущий",
+      "suggested": "Предлагаемый",
+      "inSentenceCurrent": "текущий",
+      "inSentenceSuggested": "предлагаемый"
+    },
+    "modLabelMode": {
+      "label": "Подписи модов",
+      "names": "Названия",
+      "ids": "ID"
+    },
+    "apply": "Применить…",
+    "scanningMods": "Сканирование модов",
+    "supportLink": "Поддержать Rimmerge",
+    "liveRegion": {
+      "newNotification": "{count} новое уведомление, последнее: {title} | {count} новых уведомления, последнее: {title} | {count} новых уведомлений, последнее: {title}"
+    }
+  },
+  "settings": {
+    "heading": "Настройки",
+    "interfaceHeading": "Интерфейс",
+    "language": {
+      "label": "Язык",
+      "system": "Системный ({detected})",
+      "preview": "предварительный",
+      "optionPreview": "{name} ({preview})",
+      "previewNote": "Если вы заметили ошибку в переводе, {url}, и мы её исправим.",
+      "previewNoteLinkText": "сообщите о ней"
+    },
+    "thresholdLabel": "Порог уверенности (авто или требует решения)",
+    "tieBreak": {
+      "label": "Порядок при равенстве",
+      "description": "Задаёт, с какого места начинает мод, который не закреплён ни одним другим модом. «Перестроить» упорядочивает такие моды по имени и не учитывает текущий порядок, поэтому при первой перестройке списка, составленного RimSort, большинство модов, скорее всего, переместится. «Сохранить текущий» начинает каждый мод с его позиции в ModsConfig.xml и перемещает как можно меньше модов.",
+      "rebuild": "Перестроить",
+      "preserveCurrent": "Сохранить текущий"
+    },
+    "useImportedPairs": {
+      "label": "Использовать импортированные парные правила",
+      "description": "Разрешить правилам RimSort/SteamDB «загружать до/после» влиять на порядок. Включено по умолчанию: большинство импортированных пар повторяют то, что сортировщик и так соблюдает сам. На правила, заданные вами, этот переключатель никогда не влияет."
+    },
+    "useImportedPlacements": {
+      "label": "Использовать импортированные правила позиции",
+      "description": "Разрешить правилам RimSort/SteamDB «загружать первым/последним» закреплять ярус мода. Включено по умолчанию: в собственных файлах мода ничто не может сказать «загружай меня последним»."
+    },
+    "enforceSoft": {
+      "label": "Соблюдать мягкие связи",
+      "description": "Эти связи возникают из отложенно разрешаемых ссылок на {assemblyRef}. Отключено по умолчанию: их соблюдение может сдвинуть с текущих мест заметно больше модов, чем если оставить их рекомендательными."
+    },
+    "enforceAwareness": {
+      "label": "Соблюдать сигнальные связи",
+      "description": "Эти связи возникают из подсказок {edgeKinds} — признака того, что моды взаимодействуют, а не факта о порядке. Отключено по умолчанию: такие связи встречаются гораздо чаще мягких, поэтому их соблюдение намного сильнее меняет порядок."
+    },
+    "enforceInferred": {
+      "label": "Соблюдать выведенные связи",
+      "description": "Эти связи — {edgeKinds}: собственные эвристические выводы анализатора о том, что два мода взаимодействуют, а не просто признак присутствия, как у сигнальных. Включено по умолчанию: в отличие от мягких и сигнальных связей, их анализатор уже признал фактами о порядке, и если оставить их только рекомендательными, эти данные будут отброшены."
+    },
+    "network": {
+      "heading": "Доступ в интернет",
+      "recoveredWarning": "Не удалось прочитать файл настроек приложения, поэтому доступ в интернет отключён, пока вы снова не сохраните настройки.",
+      "allowNetwork": {
+        "label": "Разрешить доступ в интернет",
+        "description": "Главный переключатель для всего, что Rimmerge отправляет через интернет, автоматически или вручную. Приложение обращается только к двум хостам GitHub: api.github.com для проверки обновлений и raw.githubusercontent.com для обновления баз правил, и никогда к вашей локальной сети. Если выключено, каждый запрос пропускается ещё до того, как составлен адрес или открыто соединение. Действует на всё приложение на этом компьютере, какую бы установку RimWorld вы ни открыли."
+      },
+      "autoRefreshRuleDatabases": {
+        "label": "Автоматически обновлять базы правил",
+        "description": "Раз в день, при запуске, загружать включённые базы правил, перечисленные в карточке «Базы правил», но никогда не базу Мастерской Steam: она обновляется, только когда вы нажимаете «Обновить»."
+      },
+      "checkForUpdates": {
+        "label": "Проверять обновления",
+        "description": "Раз в день, при запуске, проверять, не вышла ли новая версия Rimmerge."
+      },
+      "checkNow": {
+        "button": "Проверить сейчас",
+        "disabledTitle": "Отключено параметром «Разрешить доступ в интернет»",
+        "awaitingFirstRun": "Ещё не проверено: сначала ответьте на приветственное уведомление.",
+        "alreadyRanThisLaunch": "Уже проверено при этом запуске.",
+        "networkDisabled": "Доступ в интернет отключён.",
+        "checkDisabled": "Проверено, хотя автоматические проверки отключены.",
+        "notDue": "Недавно проверялось, попробуйте позже.",
+        "rateLimited": "Достигнут лимит запросов GitHub; попробуйте снова после {until}.",
+        "updated": "Доступна новая версия: {version}.",
+        "unchanged": "Установлена последняя версия.",
+        "failed": "Последняя проверка не удалась: {reason}"
+      },
+      "mutedKinds": {
+        "heading": "Скрытые уведомления",
+        "empty": "Ничего не скрыто.",
+        "unmuteButton": "Показывать снова"
+      },
+      "resetIncludesSteam": "Возвращает все переключатели, включая базу Мастерской Steam (около 49 МБ, загружается только при обновлении).",
+      "restoreDefaultsButton": "Сбросить настройки доступа в интернет",
+      "restoreDefaultsToast": "Доступ в интернет, проверка обновлений и автообновление снова включены"
+    },
+    "suggestMergeWhenClean": {
+      "label": "Предлагать слияние чистых переопределений",
+      "description": "Когда два мода меняют разные поля одного Def, предлагать их слияние вместо того, чтобы оставлять победителя по порядку загрузки. Объединённые Def записываются в мод слияния при применении."
+    },
+    "showDanglingDefReferences": {
+      "label": "Показывать замечания о висячих ссылках на Def",
+      "description": "Отмечать имя, записанное в известном месте ссылки (например, в требуемом исследовании или в ключе смещения характеристики), которого нет ни у одного активного Def любого типа. Отключено по умолчанию: на большой установке это может давать заметное число ложных срабатываний (например, поле, обозначающее сам Def, принятое за перекрёстную ссылку). Никогда не меняет порядок загрузки."
+    },
+    "saveButton": "Сохранить",
+    "resetButton": "Сбросить к умолчаниям",
+    "dirtyIndicator": "Несохранённые изменения",
+    "resetConfirm": {
+      "header": "Сбросить к умолчаниям?",
+      "body": "Заполняет все поля выше встроенными значениями Rimmerge по умолчанию. Ничего не сохраняется, пока вы не нажмёте «Сохранить».",
+      "cancelButton": "Отменить",
+      "confirmButton": "Сбросить"
+    },
+    "about": {
+      "heading": "О программе",
+      "versionLabel": "Версия {version}",
+      "repoLink": "Репозиторий на GitHub",
+      "issuesLink": "Сообщить о проблеме",
+      "supportLink": "Поддержать Rimmerge",
+      "supportBlurb": "Rimmerge — бесплатная программа с открытым исходным кодом. Если она экономит вам время, вы можете поддержать её разработку."
+    }
+  },
+  "fetchFailure": {
+    "transportHeadline": "Не удалось связаться с GitHub",
+    "httpStatus": "GitHub ответил неожиданным HTTP-статусом ({status})",
+    "rateLimited": "Достигнут лимит запросов GitHub; попробуйте снова после {until}",
+    "notPublished": "Ни одного выпуска Rimmerge ещё не опубликовано",
+    "tooLarge": "Ответ превысил допустимый размер",
+    "invalidContent": "Ответ пришёл не в ожидаемом формате",
+    "notAStableVersion": "Последний опубликованный тег не является стабильной версией",
+    "notModifiedWithoutCache": "GitHub сообщил, что изменений нет, но в кэше ещё ничего нет",
+    "readFailedHeadline": "Загрузка прервалась",
+    "cacheWriteFailedHeadline": "Не удалось сохранить загруженное локально",
+    "unclassifiedHeadline": "Попытка не удалась"
+  },
+  "ruleWarning": {
+    "droppedClusterRules": "При загрузке отброшено {count} кластерное правило старого формата: {ids} | При загрузке отброшено {count} кластерных правила старого формата: {ids} | При загрузке отброшено {count} кластерных правил старого формата: {ids}",
+    "unknownModKnowledgeValue": "Пропущено неизвестное значение «{value}» ({what}) в правилах раздела {section}",
+    "modKnowledgeCacheUnreadableHeadline": "Не удалось прочитать кэшированные правила Rimmerge; используется встроенный снимок",
+    "rowsOverRoleLimit": "Пропущена {count} строка сверх лимита роли в группе {role} правил раздела {section} | Пропущено {count} строки сверх лимита роли в группе {role} правил раздела {section} | Пропущено {count} строк сверх лимита роли в группе {role} правил раздела {section}",
+    "precedenceRuleMissingFramework": "Пропущено правило приоритета для {defType}: в нём не указан фреймворк",
+    "what": {
+      "precedenceRule": "правило приоритета",
+      "behaviour": "поведение",
+      "matchMode": "режим сопоставления",
+      "gateMatchMode": "режим сопоставления условия",
+      "gateBehaviour": "поведение условия",
+      "conditionalType": "условный тип",
+      "topLevelSection": "раздел верхнего уровня",
+      "logShapeRole": "роль формы журнала",
+      "placeholderType": "тип подстановки шаблона"
+    },
+    "refusedRow": {
+      "templateInvalid": "Пропущена строка «{value}» раздела {section}: её шаблон пуст, слишком длинный или искажён",
+      "captureMissing": "Пропущена строка «{value}» раздела {section}: в её шаблоне нет захвата, нужного её роли",
+      "markerLength": "Пропущена строка «{value}» раздела {section}: строка-маркер выходит за допустимую длину",
+      "idTooLong": "Пропущена строка раздела {section}: её ID слишком длинный",
+      "templateUncompilable": "Пропущена строка «{value}» раздела {section}: её шаблон не компилируется в пределах ограничений размера"
+    }
+  },
+  "setup": {
+    "title": "Настройка Rimmerge",
+    "fields": {
+      "gameDir": "Папка установки RimWorld",
+      "workshopDir": "Папка Мастерской Steam",
+      "modsConfig": "Путь к ModsConfig.xml",
+      "profileDir": "Папка профиля"
+    },
+    "browse": "Обзор…",
+    "loadProject": "Загрузить проект",
+    "saveAsDefaults": "Сохранить как пути по умолчанию",
+    "loadingProject": "Загрузка проекта",
+    "startingCaption": "Запуск…",
+    "stage": {
+      "discovering": "Поиск модов",
+      "scanning": "Сканирование модов",
+      "analyzing": "Анализ",
+      "collectingTagEvidence": "Сбор данных для тегов",
+      "done": "Готово"
+    },
+    "scanFinishedToast": "Сканирование завершено, {count} примечание | Сканирование завершено, {count} примечания | Сканирование завершено, {count} примечаний",
+    "projectLoadedWithWarningsToast": "Проект загружен с предупреждениями",
+    "savedAsDefaultsToast": "Пути сохранены как значения по умолчанию",
+    "savedAsDefaultsDetail": "Эти пути будут подставлены при следующем запуске Rimmerge."
+  },
+  "dashboard": {
+    "title": "Сводка",
+    "counts": {
+      "mods": "Моды",
+      "needsInputCurrent": "Требуют решения (текущий)",
+      "needsInputSuggested": "Требуют решения (предлагаемый)",
+      "movedMods": "Перемещаемые моды",
+      "selectedOrder": "Выбранный порядок"
+    },
+    "ledgerStatsHeading": "Реестр, оба порядка",
+    "table": {
+      "auto": "Авто",
+      "needsInput": "Требует решения",
+      "overridden": "Переопределено",
+      "resolvedBySuggested": "Решено предлагаемым",
+      "current": "Текущий",
+      "suggested": "Предлагаемый"
+    },
+    "topKindsHeading": "Частые виды, требующие решения",
+    "topKindsEmpty": "Сейчас ничего не требует решения.",
+    "scanNotesDisclosure": "Примечания сканирования ({count})",
+    "importLog": {
+      "button": "Импорт журнала игры",
+      "importedToast": "Журнал игры импортирован",
+      "logFilter": "Журнал RimWorld",
+      "allFilesFilter": "Все файлы"
+    },
+    "guide": {
+      "heading": "С чего начать",
+      "intro": "Три шага переносят предлагаемый порядок загрузки в игру. Страницы «Замечания» и «Правила» пригодятся, когда понадобится больше контроля.",
+      "listLabel": "Шаги начала работы",
+      "status": {
+        "done": "Готово",
+        "current": "Текущий шаг",
+        "upcoming": "Ещё впереди"
+      },
+      "chooseSuggested": {
+        "title": "Использовать предлагаемый порядок",
+        "pending": "Сейчас показан ваш текущий порядок. Предлагаемый порядок перемещает {count} мод. | Сейчас показан ваш текущий порядок. Предлагаемый порядок перемещает {count} мода. | Сейчас показан ваш текущий порядок. Предлагаемый порядок перемещает {count} модов.",
+        "doneText": "Выбран предлагаемый порядок.",
+        "doneMatchesFileText": "ModsConfig.xml уже соответствует предлагаемому порядку.",
+        "button": "Использовать предлагаемый",
+        "reviewLink": "Просмотреть предлагаемый порядок"
+      },
+      "apply": {
+        "title": "Применить",
+        "pending": "Посмотрите, что будет записано в ModsConfig.xml. Сначала создаётся резервная копия.",
+        "button": "Применить…",
+        "staleBlocked": "Ваши активные моды изменились после последнего сканирования. Пересканируйте перед применением.",
+        "rescanButton": "Пересканировать"
+      },
+      "confirm": {
+        "title": "Подтвердить",
+        "pending": "Проверьте сводку и подтвердите. Если что-то сломается, например не хватает обязательного мода, вас сначала спросят."
+      },
+      "done": "ModsConfig.xml соответствует предлагаемому порядку. Запустите RimWorld и играйте.",
+      "asOfLastScan": "По состоянию на последнее сканирование или применение.",
+      "needsInputHint": "{count} замечание требует вашего решения (необязательно) | {count} замечания требуют вашего решения (необязательно) | {count} замечаний требуют вашего решения (необязательно)",
+      "openInbox": "Открыть замечания",
+      "appliedAnnouncement": "Применено. ModsConfig.xml теперь соответствует предлагаемому порядку."
+    }
+  },
+  "notifications": {
+    "heading": "Уведомления",
+    "empty": "Новых уведомлений нет.",
+    "dismiss": "Скрыть",
+    "mute": "Больше не напоминать",
+    "severityWarn": "Требует внимания",
+    "severityInfo": "Для сведения",
+    "bell": {
+      "withCount": "Уведомления: {count}",
+      "none": "Уведомлений нет"
+    },
+    "welcome": {
+      "title": "Добро пожаловать в Rimmerge",
+      "body": "Rimmerge может обращаться к GitHub раз в день, при запуске:\n- чтобы проверить, не вышла ли новая версия Rimmerge (api.github.com);\n- чтобы загрузить обновлённые базы правил: правила порядка загрузки от сообщества и собственный файл правил Rimmerge (raw.githubusercontent.com). Обновления хранятся локально; они меняют ваш порядок загрузки, только когда вы сами решите их импортировать.\n\nПриложение ничего не отправляет о вас, ваших модах или вашей установке: только обычный запрос, по которому GitHub видит ваш IP-адрес. Большая база Мастерской Steam никогда не загружается автоматически, только когда вы нажимаете «Обновить».",
+      "settingsAlreadyRecommended": "Ваши настройки уже совпадают с рекомендуемыми.",
+      "steamWorkshopLabel": "База Мастерской Steam (около 49 МБ, загружается, только когда вы нажимаете «Обновить»)"
+    },
+    "gameVersionChanged": {
+      "title": "Версия игры изменилась",
+      "body": "Версия RimWorld теперь {current} (была {acknowledged}). Патчи совместимости и моды конструктора патчей, экспортированные для {acknowledged}, по-прежнему указывают эту версию, пока вы не экспортируете их заново.",
+      "kindLabel": "Версия игры изменилась"
+    },
+    "updateAvailable": {
+      "title": "Доступен Rimmerge {version}",
+      "body": "У вас устаревшая версия. Вышел Rimmerge {version}.",
+      "kindLabel": "Доступно обновление"
+    },
+    "ruleDatabasesStale": {
+      "title": "{count} база правил требует внимания | {count} базы правил требуют внимания | {count} баз правил требуют внимания",
+      "body": "Следующие базы правил давно не обновлялись:",
+      "kindLabel": "Базы правил устарели",
+      "neverFetched": "Ни разу не загружалась",
+      "lastSuccess": "Последнее обновление: {date}",
+      "lastFailure": "Последняя попытка не удалась: {reason}"
+    },
+    "importedRulesOutdated": {
+      "title": "В {count} базе правил есть новое содержимое для импорта | В {count} базах правил есть новое содержимое для импорта | В {count} базах правил есть новое содержимое для импорта",
+      "body": "Новое содержимое закэшировано для:",
+      "kindLabel": "Новые правила для импорта"
+    },
+    "recommendedSources": {
+      "kindLabel": "Рекомендуемые базы правил",
+      "title": "{count} рекомендуемая база правил не настроена | {count} рекомендуемые базы правил не настроены | {count} рекомендуемых баз правил не настроено",
+      "body": "Rimmerge лучше всего сортирует со всеми тремя базами правил. При включении они сразу загрузятся; после этого небольшие базы обновляются автоматически, а база Мастерской Steam — только когда вы нажимаете «Обновить».",
+      "bodyWithSteam": "Rimmerge лучше всего сортирует со всеми тремя базами правил. При включении они сразу загрузятся. База Мастерской Steam занимает около 49 МБ и после этого обновляется, только когда вы нажимаете «Обновить»; небольшие базы обновляются автоматически.",
+      "sourceOff": "{source}: отключена",
+      "sourceNotDownloaded": "{source}: включена, ещё не загружена"
+    },
+    "actions": {
+      "keepNetworkSettings": "Оставить эти настройки",
+      "turnOffNetwork": "Отключить доступ в интернет",
+      "applyRecommendedSettings": "Использовать рекомендуемые",
+      "refreshRuleDatabases": "Обновить сейчас",
+      "openRuleDatabases": "Открыть базы правил",
+      "openSettings": "Открыть настройки",
+      "showReleasePage": "Копировать ссылку на выпуск",
+      "openPatches": "Открыть патчи",
+      "enableRecommendedSources": "Включить и загрузить",
+      "enableRecommendedSourcesToast": "Рекомендуемые базы правил включены",
+      "enableRecommendedSourcesPartialToast": "Рекомендуемые базы правил включены, но некоторые загрузки не завершились. Они остаются в списке уведомления.",
+      "turnOffNetworkToast": "Доступ в интернет отключён",
+      "recommendedSettingsAppliedToast": "Рекомендуемые настройки применены",
+      "linkCopiedToast": "Ссылка скопирована"
+    }
+  },
+  "error": {
+    "generic": {
+      "title": "Действие не выполнено",
+      "detail": "Что-то пошло не так."
+    },
+    "code": {
+      "no_project_loaded": {
+        "title": "Проект не загружен",
+        "detail": "Сначала загрузите проект."
+      },
+      "session_lost": {
+        "title": "Сеанс потерян",
+        "detail": "Внутренняя ошибка прервала ваш сеанс. Он перезагрузится автоматически."
+      },
+      "internal": {
+        "title": "Внутренняя ошибка",
+        "detail": "Что-то пошло не так на стороне самого Rimmerge."
+      },
+      "invalid_input": {
+        "title": "Недопустимый ввод",
+        "detail": "Введённое значение недопустимо."
+      },
+      "scan_failed": {
+        "title": "Сканирование не удалось",
+        "detail": "Сканирование или анализ установки не завершились."
+      },
+      "mods_config_io_failed": {
+        "title": "Не удалось прочитать или записать ModsConfig.xml",
+        "detail": "Убедитесь, что файл существует, не доступен только для чтения и не занят другой программой."
+      },
+      "profile_io_failed": {
+        "title": "Не удалось прочитать или записать ваш профиль",
+        "detail": "Убедитесь, что в папку профиля Rimmerge можно записывать."
+      },
+      "rimsort_import_failed": {
+        "title": "Импорт не удался",
+        "detail": "Не удалось импортировать файл базы данных RimSort."
+      },
+      "rimworld_running": {
+        "title": "RimWorld запущен",
+        "detail": "Сначала закройте RimWorld или всё равно продолжите."
+      },
+      "mod_not_found": {
+        "title": "Мод не найден",
+        "detail": "Этого мода нет в списке активных модов."
+      },
+      "finding_not_found": {
+        "title": "Замечание не найдено",
+        "detail": "Это замечание больше не актуально: возможно, оно уже решено."
+      },
+      "merge_source_failed": {
+        "title": "Не удалось прочитать источник слияния",
+        "detail": "Файл Def, шаблона, патча или текстуры изменился или исчез после последнего сканирования. Перезагрузите проект."
+      },
+      "merge_mod_io_failed": {
+        "title": "Не удалось записать мод слияния",
+        "detail": "Не удалось записать или удалить папку созданного мода слияния."
+      },
+      "patch_not_found": {
+        "title": "Патч не найден",
+        "detail": "Этот проект патча совместимости больше не загружен."
+      },
+      "patch_identity_invalid": {
+        "title": "Недопустимые данные патча",
+        "detail": "ID пакета или отображаемое название недопустимы либо совпадают с другим модом или патчем."
+      },
+      "def_not_found": {
+        "title": "Def не найден",
+        "detail": "Этого Def или шаблона нет в данном сканировании."
+      },
+      "assignment_not_found": {
+        "title": "Назначение не найдено",
+        "detail": "Этот проект конструктора патчей больше не загружен."
+      },
+      "assignment_section_in_use": {
+        "title": "Раздел ещё используется",
+        "detail": "Другой раздел всё ещё ссылается на строки этого."
+      },
+      "stale_active_set": {
+        "title": "Список активных модов устарел",
+        "detail": "Пересканируйте перед записью ModsConfig.xml."
+      },
+      "texture_unsupported_format": {
+        "title": "Формат текстуры не поддерживается",
+        "detail": "Файл не является изображением PNG или JPEG, поэтому его нельзя здесь просмотреть. Текстуры DDS не поддерживаются."
+      }
+    }
+  },
+  "defaultPathsWarning": {
+    "notAnInstall": "{gameDir} не похоже на установку RimWorld (отсутствует Version.txt или Data/Core/)."
+  },
+  "defaultPathsError": {
+    "noProfileBase": "Не задана ни RIMMERGE_PROFILE_DIR, ни LOCALAPPDATA, поэтому Rimmerge негде хранить свои файлы.",
+    "gameDirNotFound": "Не удалось найти папку установки RimWorld. Все проверенные места перечислены в технических подробностях ниже.",
+    "modsConfigNotFound": "Rimmerge не удалось определить, где находится ModsConfig.xml. См. технические подробности ниже."
+  },
+  "finding": {
+    "kind": {
+      "edgeDropped": "Связь отброшена",
+      "anyOfChoice": "Выбор одного из",
+      "defOverride": "Переопределение Def",
+      "patchCollision": "Конфликт патчей",
+      "textureOverride": "Замена текстуры",
+      "duplicateAssembly": "Дублирующаяся сборка",
+      "likelyDuplicateMod": "Вероятный дубликат мода",
+      "missingMod": "Отсутствующий мод",
+      "missingDependency": "Отсутствующая зависимость",
+      "incompatiblePair": "Несовместимая пара",
+      "unsupportedVersion": "Неподдерживаемая версия",
+      "undeclaredHardDependency": "Необъявленная жёсткая зависимость",
+      "lazyReferenceViolated": "Нарушена отложенная ссылка",
+      "declarationQuestioned": "Объявление под сомнением",
+      "declarationOverridden": "Объявление переопределено",
+      "duplicateTemplateName": "Повторяющееся имя шаблона",
+      "keyedTranslationCollision": "Конфликт ключей перевода",
+      "soundOverride": "Замена звука",
+      "undeclaredTypeDependency": "Необъявленная зависимость от типа",
+      "runtimePatchCollision": "Конфликт патчей времени выполнения",
+      "transpilerCollision": "Конфликт транспайлеров",
+      "tagInferred": "Выведен тег",
+      "ruleOverruled": "Правило отвергнуто",
+      "placementOverruled": "Позиция отвергнута",
+      "placementQuestioned": "Позиция под сомнением",
+      "placementOrderingOverridden": "Порядок позиции переопределён",
+      "placementPromotesDependents": "Позиция продвигает зависимые моды",
+      "missingTexturePath": "Отсутствующий путь текстуры",
+      "patchWillFail": "Патч не сработает",
+      "contributesNothing": "Ничего не добавляет",
+      "undecodableTexture": "Текстура не загрузится",
+      "brokenInheritance": "Нарушенное наследование",
+      "nearMissModReference": "Возможная опечатка в ссылке на мод",
+      "discardedAddition": "Намеренно отброшенное добавление",
+      "danglingDefReference": "Висячая ссылка на Def"
+    },
+    "title": {
+      "edgeDroppedNoWinner": "{before} перед {after}: отброшено для разрыва цикла",
+      "edgeDroppedWithWinner": "{before} перед {after}: отброшено в пользу {winner}",
+      "declarationQuestioned": "{after} после {before}: под сомнением из-за связи «{relation}»",
+      "declarationOverridden": "{after} после {before}: переопределено в пользу {winner}",
+      "anyOfChoice": "{after} требует один из {count} мода, предоставляющих {assembly} | {after} требует один из {count} модов, предоставляющих {assembly} | {after} требует один из {count} модов, предоставляющих {assembly}",
+      "textureOverride": "текстура {texturePath}",
+      "duplicateAssembly": "{assembly} поставляется {count} модом | {assembly} поставляется {count} модами | {assembly} поставляется {count} модами",
+      "duplicateTemplateName": "Шаблон {name} зарегистрирован {count} модом | Шаблон {name} зарегистрирован {count} модами | Шаблон {name} зарегистрирован {count} модами",
+      "keyedTranslationCollision": "{a} и {b}: {count} общий ключ перевода | {a} и {b}: {count} общих ключа перевода | {a} и {b}: {count} общих ключей перевода",
+      "soundOverride": "Звук {path} поставляется {count} модом | Звук {path} поставляется {count} модами | Звук {path} поставляется {count} модами",
+      "undeclaredTypeDependency": "{user} использует тип {typeName} из мода {provider} без объявленной связи",
+      "runtimePatchCollision": "{target} патчится {count} модом | {target} патчится {count} модами | {target} патчится {count} модами",
+      "transpilerCollision": "{target} транспилируется {count} модом | {target} транспилируется {count} модами | {target} транспилируется {count} модами",
+      "likelyDuplicateMod": "{a} и {b} похожи на дубликаты ({count} общий Def) | {a} и {b} похожи на дубликаты ({count} общих Def) | {a} и {b} похожи на дубликаты ({count} общих Def)",
+      "missingMod": "{modId} отсутствует",
+      "missingDependency": "{modId}: отсутствует зависимость {dependency}",
+      "incompatiblePair": "{a} и {b} отмечены как несовместимые",
+      "unsupportedVersion": "{modId} не поддерживает эту версию RimWorld",
+      "undeclaredHardDependency": "{after} требует {before} при загрузке, но не объявляет этого",
+      "lazyReferenceViolated": "{after} ссылается на {before} до его загрузки",
+      "tagInferred": "{modId} получил тег {tag}",
+      "ruleOverruledNoWinner": "Правило «{before} перед {after}» отвергнуто",
+      "ruleOverruledWithWinner": "Правило «{before} перед {after}» отвергнуто в пользу {winner}",
+      "placementOverruled": "Позиция «{placement}» мода {modId} отвергнута",
+      "placementQuestioned": "Позиция «{placement}» мода {modId} под сомнением из-за мода {other}",
+      "placementOrderingOverridden": "{modId} переопределяет порядок позиции мода {pinned}",
+      "placementPromotesDependents": "Позиция мода {modId} продвигает {count} другой мод | Позиция мода {modId} продвигает {count} других мода | Позиция мода {modId} продвигает {count} других модов",
+      "missingTexturePath": "{defKey}, поле {field}: такой текстуры нет ни в одном активном моде",
+      "patchWillFail": "Операция мода {modId} над {defKey}, по прогнозу, не сработает",
+      "contributesNothing": "{modId} ничего не добавляет",
+      "undecodableTexture": "{path} мода {modId} не декодируется",
+      "brokenInheritance": "{modId}: нарушено наследование от «{parentName}»",
+      "nearMissModReference": "{referrer}: ссылка на «{written}» может быть опечаткой",
+      "discardedAddition": "{replacer} намеренно отбрасывает добавление мода {adder}",
+      "danglingDefReference": "«{name}» не соответствует ни одному активному Def"
+    }
+  },
+  "edgeKind": {
+    "assemblyRef": "Ссылка на сборку",
+    "forceLoadAfter": "Принудительно после",
+    "forceLoadBefore": "Принудительно до",
+    "loadAfter": "Загружать после",
+    "loadBefore": "Загружать до",
+    "modDependency": "Зависимость мода",
+    "findMod": "Поиск мода",
+    "ifModActive": "Если мод активен",
+    "patchTargetsDef": "Патч нацелен на Def",
+    "mayRequire": "Может требовать",
+    "patchInjectedNode": "Узел, внедрённый патчем",
+    "assemblyVersionPrecedence": "Приоритет версии сборки",
+    "usesType": "Использует тип",
+    "parentTemplate": "Родительский шаблон",
+    "patchRemovedNode": "Патч удалил узел",
+    "retextureAfterOwner": "Ретекстур после владельца",
+    "defOverrideAfterOrigin": "Переопределение Def после исходного",
+    "patchSelectsInjectedNode": "Патч выбирает внедрённый узел",
+    "patchInvalidatesPredicate": "Патч нарушает условие",
+    "patchRemovedNodeCosmetic": "Удалённый узел (косметика)",
+    "replaceDiscardsAddition": "Замена отбрасывает добавление"
+  },
+  "tagSignal": {
+    "urlContains": "URL содержит «{needle}»",
+    "assemblyRefTo": "ссылка на сборку мода {mod}",
+    "dependsOn": "зависит от {mod}"
+  },
+  "caveat": {
+    "duplicateTemplate": "шаблон «{name}» зарегистрирован несколькими модами ({owners}); каждый потомок независимо наследует от той регистрации, что загружается ближе всего к нему (на его месте или раньше), поэтому разные потомки могут разрешиться в разные моды",
+    "modSettingDefault": "{class} мода {modId} воспроизведён с настройкой по умолчанию, а не обязательно с той, что в вашей игре",
+    "failedOp": "операция патча мода {modId} над {xpath} ничего не нашла",
+    "unscopedOps": "{modId}: не удалось привязать к Def {count} операцию патча | {modId}: не удалось привязать к Def {count} операции патча | {modId}: не удалось привязать к Def {count} операций патча",
+    "malformedOperation": "операция патча мода {modId} не является корректным XML",
+    "defRemoved": "этот Def удаляется модом {modId}",
+    "positionalItem": "{path} определяется только своей позицией; последующая перестановка может перенаправить этот выбор",
+    "unsafeXpathValue": "значение {path} нельзя безопасно записать в xpath, оно оставлено неразрешённым",
+    "unknownOwnerChoice": "{path}: выбранный владелец {modId} не является кандидатом для этого поля",
+    "invalidValueFragment": "{path}: не удалось разобрать введённое значение",
+    "unsupportedDrop": "{path}: исключение не поддерживается для конфликта патчей",
+    "unreconstructableChain": "{path}: не удалось восстановить содержащую структуру",
+    "unsettableLeaf": "{path}: унаследованный конечный узел нельзя сбросить в пустое значение",
+    "outOfScopeOwners": "если в установке любой из модов {mods} загружается после области действия этого патча, патч может вместо этого затронуть или перезаписать Def этого мода",
+    "clobberedMapEntry": "{path} добавлен модом {by}, но более поздний патч заменил всю таблицу и удалил его; восстановлено"
+  },
+  "inbox": {
+    "evidence": {
+      "inspectLink": "Изучить",
+      "ariaLabel": "Данные замечания",
+      "edgeDropped": {
+        "sentence": "Отброшена связь ({strength}, {edgeKind}): {after} → {before}."
+      },
+      "anyOfChoice": {
+        "intro": "{modId} требует одного из кандидатов {assembly}:"
+      },
+      "danglingDefReference": {
+        "causeRemovedBy": "его удаляет собственный патч мода {modId}",
+        "causeOnlyInUnloadedFolder": "он определён только в папке «{folder}» мода {modId}, которую эта установка не загружает",
+        "causeOnlyInInactiveMod": "он определён только в моде {modId}, который не активен",
+        "causeDefinedNowhere": "ни один установленный мод, активный или нет, его не определяет",
+        "causeUnexplained": "не удалось определить, почему он отсутствует",
+        "referrerFromDef": "{defType}/{defName} мода {modId} ({fieldPath})",
+        "referrerFromTemplate": "{defType}/{'@'}{name} мода {modId} ({fieldPath})",
+        "referrerFromPatch": "патч мода {modId} на {defType}/{defName} ({fieldPath})",
+        "sentence": "{name} не соответствует ни одному активному Def любого типа: {cause}.",
+        "likelySound": "Похоже на ссылку на звук: отсутствующий {soundDef} пишет предупреждение в журнал и молча заменяется неопределённым звуком, а не вызывает ошибку загрузки.",
+        "referencedFrom": "Ссылки из:",
+        "truncatedReferrers": "Ещё {count} ссылающийся объект не показан (ограничение отображения). | Ещё {count} ссылающихся объекта не показаны (ограничение отображения). | Ещё {count} ссылающихся объектов не показано (ограничение отображения)."
+      },
+      "textureOverride": {
+        "sentence": "Текстура {path}"
+      },
+      "duplicateAssembly": {
+        "sentence": "Сборка {name}; поставляют:"
+      },
+      "likelyDuplicateMod": {
+        "body": "{a} и {b}: {count} общий идентичный ключ Def | {a} и {b}: {count} общих идентичных ключа Def | {a} и {b}: {count} общих идентичных ключей Def"
+      },
+      "missingMod": {
+        "body": "{modId} есть в списке, но не найден на диске."
+      },
+      "missingDependency": {
+        "body": "{modId} требует {dependencyLabel} ({dependency}), но тот не активен."
+      },
+      "incompatiblePair": {
+        "body": "{a} и {b} отмечены как несовместимые."
+      },
+      "unsupportedVersion": {
+        "body": "{modId} не объявляет поддержку этой версии игры."
+      },
+      "undeclaredHardDependency": {
+        "body": "{after} требует {before}, но нигде этого не объявляет."
+      },
+      "lazyReferenceViolated": {
+        "body": "Нарушена отложенная ссылка из {after} на {before}."
+      },
+      "declarationQuestioned": {
+        "body": "Объявлено, что {declaredAfter} загружается после {declaredBefore}, но обратная связь тоже действует:"
+      },
+      "declarationOverridden": {
+        "body": "Объявлено, что {declaredAfter} загружается после {declaredBefore}, но переопределение объявленной связи говорит иначе:"
+      },
+      "keyedTranslationCollision": {
+        "body": "{a} и {b} оба определяют {count} ключ перевода: | {a} и {b} оба определяют {count} ключа перевода: | {a} и {b} оба определяют {count} ключей перевода:"
+      },
+      "soundOverride": {
+        "sentence": "Звук {path}; поставляют:"
+      },
+      "undeclaredTypeDependency": {
+        "sentence": "{user} использует тип {typeName} из сборки мода {provider}, но связь между ними не объявлена."
+      },
+      "runtimePatchCollision": {
+        "sentence": "{target}; патчат (в порядке загрузки):",
+        "runsLast": "выполняется последним",
+        "runLastButton": "Выполнять последним",
+        "runLastAriaLabel": "Выполнять {modId} последним"
+      },
+      "transpilerCollision": {
+        "sentence": "{target} переписывается транспайлером патча времени выполнения в каждом из этих модов, в порядке загрузки:"
+      },
+      "tagInferred": {
+        "sentence": "{modId} получил тег {tag} на основании:"
+      },
+      "ruleOverruled": {
+        "withWinner": "Загрузка {after} после {before} ({origin}) отвергнута:",
+        "byLongerCycle": "Загрузка {after} после {before} ({origin}) отвергнута более длинным циклом.",
+        "cycle": "цикл: {chain}"
+      },
+      "placementOverruled": {
+        "intro": "{modId} закреплён в позиции «{placement}» ({origin}), но это отвергнуто из-за:",
+        "landedAt": "Итоговое место: #{position}."
+      },
+      "placementQuestioned": {
+        "body": "{modId} закреплён в позиции «{placement}», но связь «{relationKind}» с модом {other} при этом не может соблюдаться."
+      },
+      "placementOrderingOverridden": {
+        "body": "{modId} перемещён через закрепление «{placement}» мода {pinned} принятой связью:"
+      },
+      "placementPromotesDependents": {
+        "body": "{modId} закреплён в позиции «{placement}» и продвигает {count} другой мод за ту же границу яруса: | {modId} закреплён в позиции «{placement}» и продвигает {count} других мода за ту же границу яруса: | {modId} закреплён в позиции «{placement}» и продвигает {count} других модов за ту же границу яруса:"
+      },
+      "showMore": "Показать ещё ({shown} из {total})",
+      "missingTexturePath": {
+        "sentence": "{def} мода {modId}, поле {field}: указана текстура {path}, которой нет ни в одном активном моде."
+      },
+      "undecodableTexture": {
+        "sentence": "{path} мода {modId} не декодируется ({width}x{height}, {fourcc}): базовая игра показывает на её месте заглушку битой текстуры.",
+        "pngSibling": "Этот мод также содержит файл не в формате DDS по тому же пути, но базовая игра никогда на него не переключается."
+      },
+      "brokenInheritance": {
+        "missingParent": "{child} мода {modId} наследует от {parentName}, но ни один активный мод его не определяет, поэтому он загружается без собственных полей этого родителя.",
+        "wrongType": "{child} мода {modId} наследует от {parentName}, который в позиции загрузки этого мода разрешается в {parentType}, а не в {childDefType}.",
+        "affectedCount": "{count} затронутый Def: | {count} затронутых Def: | {count} затронутых Def:",
+        "andMore": "… и ещё {count}",
+        "truncated": "Ещё {count} затронутый Def не показан (ограничение отображения). | Ещё {count} затронутых Def не показаны (ограничение отображения). | Ещё {count} затронутых Def не показано (ограничение отображения)."
+      },
+      "nearMissModReference": {
+        "findModName": "Имя FindMod {written} в моде {modId} не соответствует ни одному активному или установленному моду, но очень похоже на {candidateName}: возможно, это опечатка.",
+        "mayRequireId": "ID MayRequire {written} в моде {modId} не соответствует ни одному активному или установленному моду, но очень похож на {candidateName}: возможно, это опечатка.",
+        "writtenIn": "Записано в {file}"
+      },
+      "patchWillFail": {
+        "causeRemovedBy": "{operation} мода {modId} над {defKey}, по прогнозу, не сработает при этом порядке: мод {causeModId}, загружаемый раньше, удаляет целевой узел собственной операцией.",
+        "causeNotYetInjected": "{operation} мода {modId} над {defKey}, по прогнозу, не сработает при этом порядке: она нацелена на узел, который внедряет {causeModId}, но этот мод загружается позже.",
+        "causeDeadTarget": "{operation} мода {modId} над {defKey}, по прогнозу, не сработает при этом порядке: в итоговой структуре владельца-победителя этого узла нет вообще, при любом порядке загрузки.",
+        "causeUnclassified": "{operation} мода {modId} над {defKey}, по прогнозу, не сработает при этом порядке: причину не удалось классифицировать.",
+        "specificField": "Конкретное поле: {leafXpath}"
+      },
+      "contributesNothing": {
+        "body": "{modId} ничего заметного не добавляет при этом порядке: у него нет сборки, каждый его Def переопределён, каждая поставляемая им текстура и каждый перевод переопределены, а каждая его операция патча либо не применяется, либо вообще не выполняется."
+      },
+      "discardedAddition": {
+        "sentence": "{replacer} объявляет загрузку после {adder} и заменяет {path}: добавление мода {adder} в {adderPath} намеренно отбрасывается."
+      }
+    },
+    "suggestion": {
+      "acceptButton": "Принять (Enter)",
+      "ignoreButton": "Игнорировать (i)",
+      "revertButton": "Откатить (u)",
+      "alternativesHeading": "Альтернативы",
+      "addNoteButton": "Добавить заметку (n)"
+    },
+    "page": {
+      "loadFailed": "Не удалось загрузить замечания.",
+      "noSelection": "Выберите замечание, чтобы увидеть предложение.",
+      "shortcutsHeader": "Сочетания клавиш",
+      "shortcutMoveCursor": "переместить курсор",
+      "shortcutAccept": "принять предложение",
+      "shortcutPickAlternative": "выбрать альтернативу",
+      "shortcutIgnore": "игнорировать",
+      "shortcutRevert": "откатить решение",
+      "shortcutMerge": "объединить переопределение Def или конфликт патчей",
+      "shortcutAddNote": "добавить заметку",
+      "shortcutOpenOrder": "открыть в порядке загрузки",
+      "shortcutOpenModDetail": "открыть сведения о моде",
+      "shortcutFocusSearch": "перейти к поиску",
+      "shortcutCycleStatus": "переключить фильтр статуса",
+      "shortcutToggleModLabel": "переключить названия/ID модов",
+      "shortcutToggleHelp": "показать или скрыть эту справку"
+    },
+    "alternatives": {
+      "ariaLabel": "Альтернативы"
+    },
+    "decisionNote": {
+      "label": "Заметка",
+      "save": "Сохранить заметку"
+    },
+    "textureTile": {
+      "winnerBadge": "победитель",
+      "sizeLine": "{format} · {count} байт | {format} · {count} байта | {format} · {count} байт",
+      "useThisOne": "Использовать эту",
+      "shipThisFile": "Взять этот файл"
+    },
+    "defConflictView": {
+      "sourceFailed": "Файлы изменились после сканирования, перезагрузите проект.",
+      "loadFailed": "Не удалось загрузить обзор конфликта.",
+      "completenessPartial": "Частично",
+      "completenessCompleteWithProblems": "Полностью, с проблемами",
+      "completenessComplete": "Полностью",
+      "patchCollisionWithSubPath": "Конфликт патчей — {subPath}",
+      "injectedNodeRelation": "патч мода {selector} выбирает узел, внедрённый модом {injector}",
+      "showLabel": "Показать",
+      "filterAllChanged": "Все изменённые",
+      "filterConflict": "Конфликт",
+      "filterCleanMerge": "Чистое слияние",
+      "filterListEntries": "Элементы списков",
+      "filterMapEntries": "Элементы таблиц",
+      "filterUnchanged": "Без изменений",
+      "showMore": "Показать ещё ({shown} из {total})",
+      "problemsHeading": "Проблемы",
+      "problemUnsupportedOp": "Операция #{opIndex} мода {modId}",
+      "problemReplayStopped": "Воспроизведение остановилось здесь; строки выше получены из операций до этой.",
+      "problemMissingTemplate": "Отсутствует шаблон {name} ({defType}).",
+      "problemCycle": "Цикл: {chain}",
+      "problemPlanFailed": "Не удалось спланировать слияние: {reason}"
+    },
+    "fieldRowsTable": {
+      "empty": "Нет полей, подходящих под этот фильтр.",
+      "headerPath": "Путь",
+      "headerKind": "Вид",
+      "headerValues": "Значения",
+      "headerInGame": "В игре",
+      "headerAfterMerge": "После слияния",
+      "headerPreference": "Предпочтение",
+      "kindConflict": "Конфликт",
+      "kindCleanMerge": "Чистое слияние",
+      "kindListEntry": "Элемент списка",
+      "kindMapEntry": "Элемент таблицы",
+      "kindUnchanged": "Без изменений",
+      "groupHeader": "{path} ({count} элемент) | {path} ({count} элемента) | {path} ({count} элементов)",
+      "alsoAddedBy": "Также добавляют: {mods}",
+      "mergeChoiceFrom": "значение мода {modId}",
+      "mergeChoiceValue": "сохранённое значение «{text}»",
+      "mergeChoiceDropped": "исключено",
+      "preferenceLoadOrder": "побеждает {winner} (порядок загрузки)",
+      "preferenceDecision": "побеждает {winner} (решение)",
+      "preferenceMergeChoice": "{choice} (выбор слияния)"
+    },
+    "findingList": {
+      "searchPlaceholder": "Поиск замечаний…",
+      "filterByStatus": "Фильтр по статусу",
+      "filterByKind": "Фильтр по виду",
+      "empty": "Нет замечаний, подходящих под этот фильтр.",
+      "findingsAriaLabel": "Замечания",
+      "statusAll": "Все",
+      "statusNeedsInput": "Требует решения",
+      "statusAuto": "Авто",
+      "statusOverridden": "Переопределено",
+      "filteredByMod": "Только мод {mod}",
+      "clearModFilter": "Сбросить фильтр по моду"
+    },
+    "findingCard": {
+      "undecided": "Не решено",
+      "decidedChip": "решено",
+      "resolvedBySuggestedChip": "решено предлагаемым"
+    },
+    "touchersList": {
+      "mod": "Мод",
+      "role": "Роль",
+      "ops": "Операции",
+      "replay": "Воспроизведение",
+      "generatedSuffix": "(сгенерирован)",
+      "roleOwner": "владелец",
+      "rolePatcher": "патчер",
+      "reached": "достигнуто",
+      "notReached": "не достигнуто"
+    }
+  },
+  "merge": {
+    "state": {
+      "merged": "объединено",
+      "needsInput": "{count} поле требует решения | {count} поля требуют решения | {count} полей требуют решения",
+      "structuralGuard": "не объединено автоматически — подтвердите победителя",
+      "cannotMerge": "объединение невозможно"
+    },
+    "skipped": {
+      "stillNeedsInput": "всё ещё требует решения"
+    },
+    "summary": {
+      "patchCollision": "{count} слияние конфликта патчей (предложено автоматически, где нет решения) | {count} слияния конфликтов патчей (предложены автоматически, где нет решения) | {count} слияний конфликтов патчей (предложены автоматически, где нет решения)",
+      "defOverride": "{count} слияние переопределения Def (решено явно) | {count} слияния переопределений Def (решены явно) | {count} слияний переопределений Def (решены явно)",
+      "asset": "{count} поставляемый ресурс | {count} поставляемых ресурса | {count} поставляемых ресурсов",
+      "willWrite": "Будет записано: {parts}."
+    },
+    "header": {
+      "inspectLink": "Изучить",
+      "outOfScope": "Вне области, не объединено: {mods}",
+      "structuralGuardLine": "{field} отличается ({by} по сравнению с базовой копией): слияние по полям для этого Def небезопасно. Подтвердите победителя по порядку загрузки, приняв это замечание на странице «Замечания»; завершить его как слияние нельзя.",
+      "baseTag": "(база)",
+      "winnerTag": "(победитель)",
+      "totalsFields": "{count} поле | {count} поля | {count} полей",
+      "totalsConflicts": "{count} конфликт | {count} конфликта | {count} конфликтов",
+      "totalsAuto": "{count} авто | {count} авто | {count} авто",
+      "totalsUnresolved": "{count} нерешённое | {count} нерешённых | {count} нерешённых",
+      "totalsUnchanged": "{count} без изменений | {count} без изменений | {count} без изменений"
+    },
+    "entryKind": {
+      "defOverride": "переопределение Def",
+      "patchCollision": "конфликт патчей",
+      "asset": "ресурс"
+    },
+    "mod": {
+      "assetsGroup": "Ресурсы",
+      "opsCount": "{count} операция | {count} операции | {count} операций",
+      "dependsOn": "зависит от",
+      "openInEditor": "Открыть в редакторе",
+      "heading": "Результат слияния",
+      "mergedDefs": "{count} объединённый Def | {count} объединённых Def | {count} объединённых Def",
+      "nothingYet": "пусто",
+      "summary": "Мод совместимости, в который Rimmerge записывает ваши решения о слиянии и ресурсах; сейчас в нём: {contents}. Создаётся заново при каждом применении; в предлагаемом порядке всегда загружается последним.",
+      "summaryWithSources": "Мод совместимости, в который Rimmerge записывает ваши решения о слиянии и ресурсах; сейчас в нём: {contents} (взято из {count} мода). Создаётся заново при каждом применении; в предлагаемом порядке всегда загружается последним. | Мод совместимости, в который Rimmerge записывает ваши решения о слиянии и ресурсах; сейчас в нём: {contents} (взято из {count} модов). Создаётся заново при каждом применении; в предлагаемом порядке всегда загружается последним. | Мод совместимости, в который Rimmerge записывает ваши решения о слиянии и ресурсах; сейчас в нём: {contents} (взято из {count} модов). Создаётся заново при каждом применении; в предлагаемом порядке всегда загружается последним.",
+      "loadFailed": "Не удалось загрузить результат слияния.",
+      "packageIdLabel": "ID пакета",
+      "folderLabel": "Папка",
+      "pathLabel": "Путь",
+      "onDiskLabel": "На диске",
+      "existsYes": "Да, создаётся заново при каждом применении",
+      "existsNo": "Ещё нет: примените с параметром «Записать мод слияния», чтобы его создать",
+      "placementLabel": "Место в порядке загрузки",
+      "placementValue": "Последний (сортировщик всегда ставит созданный мод в конец предлагаемого порядка)",
+      "sourceModsLabel": "Исходные моды",
+      "entriesHeading": "Записи",
+      "noEntriesYet": "Решений о слиянии или поставляемых ресурсах пока нет: чтобы добавить первое, примите решение по замечанию о переопределении Def или конфликте патчей в редакторе слияния.",
+      "filesHeading": "Файлы",
+      "nothingRendersYet": "Файлы появятся здесь, когда будет хотя бы одно решение о слиянии или поставляемом ресурсе.",
+      "fileLoadFailed": "Не удалось отобразить этот файл."
+    },
+    "filePreviewLabel": "Предпросмотр файла",
+    "editor": {
+      "sourceFailedSuffix": "{message}: файлы проекта изменились после последнего сканирования.",
+      "reloadProject": "Перезагрузить проект",
+      "loadFailed": "Не удалось загрузить предпросмотр слияния.",
+      "showMore": "Показать ещё ({loaded} из {total})",
+      "shortcutsHeader": "Сочетания клавиш редактора слияния",
+      "shortcutMoveRowCursor": "переместить курсор по строкам",
+      "shortcutNextPrevConflict": "следующий/предыдущий конфликт",
+      "shortcutMoveColumnCursor": "переместить курсор по столбцам",
+      "shortcutChooseColumn": "выбрать столбец под курсором",
+      "shortcutChooseOwnerColumn": "выбрать столбец владельца n (1 = база)",
+      "shortcutChooseWinner": "выбрать победителя выбранного порядка",
+      "shortcutEditValue": "изменить произвольное значение",
+      "shortcutToggleDrop": "переключить исключение",
+      "shortcutRevertToAuto": "вернуть к авто",
+      "shortcutToggleAutoSection": "показать или скрыть раздел авто",
+      "shortcutToggleUnchanged": "показать или скрыть строки без изменений",
+      "shortcutBackToFindings": "назад к замечаниям"
+    },
+    "table": {
+      "pathHeader": "Путь",
+      "classHeader": "Класс",
+      "resultHeader": "Результат",
+      "actionsHeader": "Действия",
+      "sectionConflicts": "Конфликты ({count})",
+      "sectionAuto": "Решено автоматически ({count})",
+      "sectionUnchanged": "Без изменений ({count})",
+      "containerEntries": "{count} элемент | {count} элемента | {count} элементов",
+      "containerSummary": "{container} — {entries}",
+      "containerConflicts": "{count} конфликт | {count} конфликта | {count} конфликтов",
+      "containerSummaryWithConflicts": "{base}, {conflicts}",
+      "acceptSuggested": "Принять предложенное ({count})"
+    },
+    "field": {
+      "classUnchanged": "без изменений",
+      "classOneSided": "изменено одним модом",
+      "classAgreeing": "совпадают",
+      "classConflict": "конфликт",
+      "chooseValueFor": "Выберите значение для {path}",
+      "suggestedHint": "предлагается",
+      "takeValue": "Взять значение мода {owner}",
+      "dropped": "исключено",
+      "needsInput": "требует решения",
+      "saving": "сохранение…",
+      "drop": "Исключить",
+      "dropUnavailableTitle": "Исключение не поддерживается для конфликта патчей: собственные патчи RimWorld при воспроизведении всегда дают какое-то значение.",
+      "clearChoice": "Сбросить выбор",
+      "autoRevert": "Авто"
+    },
+    "value": {
+      "absent": "отсутствует",
+      "showLess": "Свернуть",
+      "showMore": "Развернуть"
+    }
+  },
+  "action": {
+    "accept": "Принять",
+    "ignore": "Игнорировать",
+    "reorder": "Загружать {after} после {before}",
+    "preferWinner": "Предпочесть {defKey} мода {winner}",
+    "chooseCandidate": "Выбрать {chosen} для {after}",
+    "dropEdge": "Отбросить связь «{edgeKind}» {after} → {before}",
+    "keepEdge": "Сохранить связь «{edgeKind}» {after} → {before}",
+    "addTag": "Добавить тег {tag} для {modId}",
+    "removeTag": "Убрать тег {tag} у {modId}",
+    "excludeFromCluster": "Исключить {modId} из кластера {rule}",
+    "removeMod": "Убрать мод {modId} из списка активных",
+    "merge": "Объединить {defKey}",
+    "shipAsset": "Взять {texturePath} из мода {from}",
+    "promoteRulePair": "Сделать «{after} после {before}» своим решением",
+    "promoteRulePlacement": "Сделать позицию мода {modId} своим решением",
+    "dropRule": "Отбросить правило «{after} после {before}»"
+  },
+  "patches": {
+    "scopeBadge": {
+      "title": "Вне области этого патча: {mods}",
+      "label": "частично: +{mods}"
+    },
+    "table": {
+      "emptyState": "Патчей совместимости пока нет. Нажмите n, чтобы создать.",
+      "nameHeader": "Название",
+      "packageIdHeader": "ID пакета",
+      "scopeHeader": "Область",
+      "needsInputHeader": "Требует решения",
+      "completeHeader": "Готово",
+      "lastExportHeader": "Последний экспорт",
+      "notExported": "Не экспортирован"
+    },
+    "identityForm": {
+      "nameLabel": "Название",
+      "packageIdLabel": "ID пакета",
+      "packageIdPlaceholder": "author.mymod",
+      "displayNameLabel": "Отображаемое название",
+      "authorLabel": "Автор",
+      "descriptionLabel": "Описание",
+      "save": "Сохранить"
+    },
+    "list": {
+      "newPatchButton": "Новый патч (n)",
+      "newPatchHeading": "Новый патч совместимости",
+      "scopeHeading": "Область",
+      "loadFailed": "Не удалось загрузить патчи."
+    },
+    "detail": {
+      "loadFailed": "Не удалось загрузить этот патч.",
+      "orphanedCount": "{count} осиротевшее решение | {count} осиротевших решения | {count} осиротевших решений",
+      "importFromProfileButton": "Импортировать решения из профиля",
+      "pruneOrphanedButton": "Очистить осиротевшие",
+      "deleteButton": "Удалить",
+      "identityHeading": "Сведения",
+      "exportHeading": "Экспорт",
+      "findingsHeading": "Замечания",
+      "importedToastSummary": "Импортировано из профиля",
+      "importedNoSkips": "Импортировано {count} решение. | Импортировано {count} решения. | Импортировано {count} решений.",
+      "rejection": {
+        "outOfScope": "это не замечание между участниками области этого патча",
+        "notPatchable": "патч может содержать только решения о слиянии, поставляемых ресурсах и игнорировании, но не «{action}»",
+        "choiceOutsideScope": "{path}: выбор указывает на {mod}, а этого мода нет в области патча",
+        "assetOutsideScope": "его поставляемый ресурс взят из мода {mod}, а этого мода нет в области патча",
+        "actionName": {
+          "accept": "Принять",
+          "reorder": "Переупорядочить",
+          "preferWinner": "Предпочесть победителя",
+          "chooseCandidate": "Выбрать кандидата",
+          "dropEdge": "Отбросить связь",
+          "keepEdge": "Сохранить связь",
+          "addTag": "Добавить тег",
+          "removeTag": "Убрать тег",
+          "excludeFromCluster": "Исключить из кластера",
+          "removeMod": "Убрать из списка активных",
+          "promoteRule": "Сделать правило своим",
+          "dropRule": "Отбросить правило"
+        }
+      },
+      "importedWithSkips": {
+        "imported": "Импортировано {count} решение | Импортировано {count} решения | Импортировано {count} решений",
+        "skipped": "{count} решение пропущено: {reasons} | {count} решения пропущены: {reasons} | {count} решений пропущено: {reasons}",
+        "reasonSeparator": "; ",
+        "combined": "{imported}. {skipped}"
+      },
+      "prunedToastSummary": "Осиротевшие решения очищены",
+      "prunedToastDetail": "Удалено {count} решение, которое текущая область больше не допускает. | Удалено {count} решения, которые текущая область больше не допускает. | Удалено {count} решений, которые текущая область больше не допускает.",
+      "deleteDialogHeader": "Удалить этот патч?",
+      "deleteDialogBody": "Проект патча будет удалён. Папка, которую он уже экспортировал на диск, останется нетронутой."
+    },
+    "inbox": {
+      "loadFailed": "Не удалось загрузить замечания этого патча.",
+      "shortcutFocusScopeSearch": "перейти к поиску по области",
+      "shortcutFocusExportDir": "перейти к полю папки экспорта",
+      "shortcutBackToPatch": "назад к сведениям патча"
+    },
+    "scopeEditor": {
+      "minimumSizeTitle": "В области патча должно быть не менее двух участников.",
+      "membersListLabel": "Участники области",
+      "removeMember": "Убрать {name} из области",
+      "noMembersYet": "Участников пока нет.",
+      "searchPlaceholder": "Найти моды для добавления…",
+      "searchLabel": "Поиск модов для добавления в область",
+      "searchResultsLabel": "Найденные моды",
+      "noMatches": "Совпадений нет.",
+      "scopeShrunk": "Область сократилась: {count} решение теперь осиротело. | Область сократилась: {count} решения теперь осиротели. | Область сократилась: {count} решений теперь осиротели.",
+      "remainingChoicesNamingRemoved": "{count} оставшееся выбранное значение всё ещё указывает на убранный мод. | {count} оставшихся выбранных значения всё ещё указывают на убранный мод. | {count} оставшихся выбранных значений всё ещё указывают на убранный мод."
+    },
+    "exportPanel": {
+      "exportDirLabel": "Папка экспорта",
+      "exportDirPlaceholder": "Выберите папку…",
+      "chooseButton": "Выбрать…",
+      "installCheckboxLabel": "Установить в Mods и включить",
+      "staleActiveSetNote": "Ожидающие изменения активации не учтены — сначала пересканируйте, если хотите, чтобы они вошли в эту установку.",
+      "forceWarning": "Похоже, RimWorldWin64.exe запущен. Установка сейчас записывает ModsConfig.xml, а игра перезаписывает этот файл при выходе, поэтому изменение может потеряться. Всё равно экспортировать?",
+      "exportAnyway": "Всё равно экспортировать",
+      "export": "Экспортировать",
+      "exportedTo": "Экспортировано в: {path}",
+      "installedAt": "Установлено в: {path}",
+      "hash": "Хеш: {hash}",
+      "unchangedSinceLastExport": "Без изменений с последнего экспорта.",
+      "renderLoadFailed": "Не удалось отобразить этот патч.",
+      "dependenciesHeading": "Зависимости",
+      "entriesHeading": "Записи",
+      "noEntriesYet": "Решений о слиянии или поставляемых ресурсах пока нет: чтобы добавить первое, примите решение по замечанию о переопределении Def или конфликте патчей среди замечаний этого патча.",
+      "skippedHeading": "Пропущено",
+      "filesHeading": "Файлы",
+      "nothingRendersYet": "Файлы появятся здесь, когда у этого патча будет хотя бы одно решение о слиянии или поставляемом ресурсе.",
+      "fileLoadFailed": "Не удалось отобразить этот файл."
+    }
+  },
+  "edgeStrength": {
+    "hard": "Жёсткая",
+    "declared": "Объявленная",
+    "soft": "Мягкая",
+    "awareness": "Сигнальная",
+    "inferred": "Выведенная"
+  },
+  "edgeStatus": {
+    "satisfied": "соблюдена",
+    "violated": "нарушена",
+    "unevaluated": "не оценена"
+  },
+  "mods": {
+    "changes": {
+      "searchPlaceholder": "Поиск…",
+      "loadFailed": "Не удалось загрузить изменения этого мода.",
+      "noMatches": "Нет изменений, подходящих под этот фильтр.",
+      "kindHeader": "Вид",
+      "targetHeader": "Цель",
+      "opsHeader": "Операции",
+      "otherTouchersHeader": "Другие моды",
+      "findingsHeader": "Замечания",
+      "showMore": "Показать ещё ({loaded} из {total})"
+    },
+    "edges": {
+      "none": "Нет."
+    },
+    "picker": {
+      "removeMember": "Убрать {name}",
+      "noneSelectedYet": "Пока ничего не выбрано.",
+      "searchPlaceholder": "Поиск модов…",
+      "searchLabel": "Поиск модов для поля «{target}»",
+      "noMatches": "Совпадений нет."
+    },
+    "table": {
+      "regionLabel": "Моды",
+      "missing": "отсутствует",
+      "rovingHint": "Стрелки — перемещение, Enter — открыть, пробел — переключить"
+    },
+    "pendingChanges": {
+      "unscanned": "{count} ожидающее изменение — пересканируйте, чтобы обновить анализ | {count} ожидающих изменения — пересканируйте, чтобы обновить анализ | {count} ожидающих изменений — пересканируйте, чтобы обновить анализ",
+      "unapplied": "{count} изменение ещё не применено к ModsConfig.xml | {count} изменения ещё не применены к ModsConfig.xml | {count} изменений ещё не применено к ModsConfig.xml",
+      "rescanButton": "Пересканировать",
+      "rescanFinishedToast": "Повторное сканирование завершено, {count} примечание | Повторное сканирование завершено, {count} примечания | Повторное сканирование завершено, {count} примечаний",
+      "rescannedWithWarningsToast": "Пересканировано с предупреждениями"
+    },
+    "closeGuard": {
+      "header": "Несохранённые изменения активных модов",
+      "body": "В рабочем списке активных модов есть изменения, которые ещё не учтены пересканированием, или отсканированный порядок не применён к {modsConfig}. Если уйти сейчас, эта работа в памяти будет потеряна; собственный файл игры в любом случае не затрагивается.",
+      "stay": "Остаться",
+      "leaveAnyway": "Всё равно уйти"
+    },
+    "scanNotes": {
+      "empty": "Примечаний сканирования нет."
+    },
+    "detail": {
+      "loadFailed": "Не удалось загрузить этот мод.",
+      "idAndSource": "{modId} — {source}",
+      "byAuthors": "Автор: {authors}",
+      "tagsHeading": "Теги",
+      "declaredOrderHeading": "Объявленный порядок",
+      "loadAfterLabel": "Загружать после",
+      "loadBeforeLabel": "Загружать до",
+      "forceLoadAfterLabel": "Принудительно после",
+      "forceLoadBeforeLabel": "Принудительно до",
+      "dependenciesLabel": "Зависимости",
+      "incompatibleWithLabel": "Несовместим с",
+      "edgesInHeading": "Входящие связи",
+      "edgesOutHeading": "Исходящие связи",
+      "changesHeading": "Изменения",
+      "scanNotesHeading": "Примечания сканирования",
+      "findingsHeading": "Замечания",
+      "noLiveFindings": "Нет актуальных замечаний."
+    },
+    "page": {
+      "heading": "Моды",
+      "activeTab": "Активные",
+      "inactiveTab": "Неактивные",
+      "searchPlaceholder": "Поиск модов…",
+      "tagFilterPlaceholder": "Фильтр по тегу…",
+      "sourcePlaceholder": "Источник",
+      "sourceAny": "Любой",
+      "deactivateSelectedButton": "Отключить выбранные",
+      "alsoActivateDependenciesLabel": "Также включить зависимости",
+      "activateSelectedButton": "Включить выбранные",
+      "loadFailed": "Не удалось загрузить моды.",
+      "totalMods": "{count} мод | {count} мода | {count} модов",
+      "pageCapHint": "(показаны первые {count}, уточните поиском)",
+      "activateDialogHeader": "Включение модов",
+      "willActivateHeading": "Будут включены:",
+      "alreadyActiveHeading": "Уже активны, пропущены:",
+      "unresolvableDependency": "{mod} объявляет зависимость, которой нет на диске: {deps}. | {mod} объявляет зависимости, которых нет на диске: {deps}. | {mod} объявляет зависимости, которых нет на диске: {deps}.",
+      "activatedToast": "Включено",
+      "activateButton": "Включить",
+      "deactivateDialogHeader": "Отключение модов",
+      "willDeactivateHeading": "Будут отключены:",
+      "refusedHeading": "Отказано (обязательные):",
+      "dependentsStillActive": "От мода {mod} всё ещё зависит {count} активный мод: {deps}. | От мода {mod} всё ещё зависят {count} активных мода: {deps}. | От мода {mod} всё ещё зависят {count} активных модов: {deps}.",
+      "deactivatedToast": "Отключено",
+      "deactivateButton": "Отключить"
+    },
+    "defSearch": {
+      "ariaLabel": "Перейти к Def",
+      "placeholder": "Перейти к Def…"
+    }
+  },
+  "rules": {
+    "orphaned": {
+      "empty": "Осиротевших решений нет.",
+      "pruneButton": "Очистить"
+    },
+    "pairTable": {
+      "regionLabel": "Парные правила",
+      "afterHeader": "После",
+      "beforeHeader": "До",
+      "originHeader": "Источник",
+      "commentHeader": "Комментарий",
+      "notAppliedTitle": "Не действует: импортированные пары отключены",
+      "promotedFrom": "(сделано своим, источник: {origin})",
+      "overridesDeclaredTag": "(переопределяет объявленную)",
+      "overridesDeclaredTitle": "Это правило помечено как переопределяющее объявленную связь (loadAfter/modDependencies) между теми же двумя модами, если она есть: для этой пары оно сильнее собственного объявления автора, но никогда не сильнее жёсткой зависимости.",
+      "promotedButton": "Уже своё",
+      "promoteButton": "Сделать своим",
+      "deleteButton": "Удалить"
+    },
+    "addPairDialog": {
+      "header": "Добавить парное правило",
+      "loadsAfterLabel": "Загружается после (зависимый мод)",
+      "loadsBeforeLabel": "Загружается до (зависимость)",
+      "commentLabel": "Комментарий (необязательно)",
+      "overrideDeclaredLabel": "Переопределить объявленную связь между этими модами, если она есть",
+      "overrideDeclaredWarning": "Для этой пары это сильнее собственных loadAfter/modDependencies автора, но никогда не сильнее жёсткой зависимости. Используйте, только если само объявление устарело или ошибочно.",
+      "sameModError": "Для парного правила нужны два разных мода.",
+      "replaceWarning": "Это заменит существующее правило ({origin}) для этой пары.",
+      "addButton": "Добавить"
+    },
+    "addPlacementDialog": {
+      "header": "Добавить правило",
+      "modToPinLabel": "Закрепляемый мод",
+      "placementLabel": "Позиция",
+      "placementPlaceholder": "Выберите позицию",
+      "commentLabel": "Комментарий (необязательно)",
+      "replaceWarning": "Это заменит существующее закрепление «{placement}» мода {mod} (источник: {origin})."
+    },
+    "page": {
+      "heading": "Правила",
+      "importToggleState": "Импортированные пары: {pairs} · Импортированные позиции: {placements}",
+      "addRuleButton": "Добавить правило",
+      "addPairRuleButton": "Добавить парное правило",
+      "reimportHint": "Кэшированные базы изменились после того, как этот профиль импортировал их в последний раз; импортируйте их заново, чтобы использовать изменения.",
+      "importFromRimSortButton": "Импорт из RimSort",
+      "importFinished": "Импорт завершён.",
+      "userRulesCount": "Правила пользователя: {count}",
+      "communityRulesCount": "Правила сообщества: {count}",
+      "steamDependenciesCount": "Зависимости Steam: {count}",
+      "notImported": "не импортировано",
+      "loadFailed": "Не удалось загрузить правила.",
+      "tabAll": "Все",
+      "tabUserDecision": "Ваши решения",
+      "tabRimSortUser": "RimSort (пользователь)",
+      "tabRimSortCommunity": "RimSort (сообщество)",
+      "tabSteamDb": "SteamDB",
+      "tagsHeading": "Теги",
+      "orphanedHeading": "Осиротевшие решения"
+    },
+    "databases": {
+      "heading": "Базы правил",
+      "communityLabel": "Правила сообщества",
+      "steamLabel": "Мастерская Steam",
+      "rimmergeLabel": "Правила Rimmerge",
+      "refreshButton": "Обновить",
+      "refreshDisabledTitle": "Отключено параметром «Разрешить доступ в интернет» (страница настроек)",
+      "networkDisabledNotice": "Доступ в интернет отключён, поэтому обновление недоступно. Кэшированные базы по-прежнему используются.",
+      "failureBanner": "Последнее обновление не удалось хотя бы для одного источника: по-прежнему используется кэшированная копия.",
+      "loadFailed": "Не удалось загрузить базы правил.",
+      "needsReimport": "(доступен повторный импорт)",
+      "neverFetched": "Ни разу не загружалась",
+      "stale": "Устарела ({count} день) | Устарела ({count} дня) | Устарела ({count} дней)",
+      "updated": "Обновлено {relative}",
+      "recencyLine": "{recency} · {bytes} · {sha}",
+      "today": "сегодня",
+      "daysAgo": "{count} день назад | {count} дня назад | {count} дней назад",
+      "lastFailureSuffix": " · Последнее обновление не удалось: {reason}",
+      "bundledSuffix": " · Встроенная {sha}",
+      "outcomeUpdated": "обновлено ({bytes}, sha {sha})",
+      "outcomeUnchanged": "без изменений (sha {sha})",
+      "outcomeFailed": "ошибка: {reason}",
+      "outcomeSkippedSourceDisabled": "пропущено (источник отключён)",
+      "outcomeSkippedNetworkDisabled": "пропущено (доступ в интернет отключён)",
+      "outcomeSkippedAutoRefreshDisabled": "пропущено (автообновление отключено)",
+      "outcomeSkippedNotDue": "пропущено (ещё не пора)",
+      "refreshModeAutomatic": "Обновляется автоматически",
+      "refreshModeManual": "Только ручное обновление"
+    },
+    "importDialog": {
+      "header": "Импорт из RimSort",
+      "userRulesLabel": "userRules.json",
+      "communityRulesLabel": "communityRules.json",
+      "steamDbLabel": "steamDB.json",
+      "importButton": "Импортировать"
+    },
+    "tagEditor": {
+      "modHeader": "Мод",
+      "tagHeader": "Тег",
+      "sourceHeader": "Источник",
+      "confidenceHeader": "Уверенность",
+      "signalsHeader": "Признаки",
+      "modIdLabel": "ID мода",
+      "tagLabel": "Тег",
+      "modeLabel": "Режим",
+      "modeAdd": "Добавить",
+      "modeRemove": "Убрать",
+      "saveButton": "Сохранить"
+    },
+    "table": {
+      "pairRulesHeading": "Парные правила",
+      "placementRulesHeading": "Правила позиции",
+      "modHeader": "Мод",
+      "placementHeader": "Позиция",
+      "originHeader": "Источник",
+      "commentHeader": "Комментарий",
+      "promotesHeader": "Продвигает",
+      "notAppliedPlacementsTitle": "Не действует: импортированные позиции отключены",
+      "otherMods": "{count} другой мод | {count} других мода | {count} других модов",
+      "incompatibilitiesHeading": "Несовместимости",
+      "aHeader": "A",
+      "bHeader": "B",
+      "empty": "Правил пока нет."
+    }
+  },
+  "placement": {
+    "top": "Вверху",
+    "bottom": "Внизу"
+  },
+  "tagProvenance": {
+    "inferred": "выведен",
+    "manual": "вручную"
+  },
+  "source": {
+    "core": "Core",
+    "dlc": "DLC",
+    "local": "Локальный",
+    "workshop": "Мастерская"
+  },
+  "cardinality": {
+    "scalar": "скаляр",
+    "list": "список"
+  },
+  "fieldRole": {
+    "targetKey": "Целевой ключ",
+    "itemSlot": "Слот предмета",
+    "chances": "Шансы",
+    "scalar": "Скаляр",
+    "opaque": "Непрозрачный"
+  },
+  "changeKind": {
+    "ownsDef": "Владеет",
+    "ownsTemplate": "Владеет шаблоном",
+    "patchesDef": "Патчит",
+    "overridesTexture": "Заменяет текстуру",
+    "overridesSound": "Заменяет звук",
+    "overridesKeyedTranslation": "Заменяет перевод"
+  },
+  "defPage": {
+    "loadFailed": "Не удалось загрузить этот Def.",
+    "sourceTitle": "Показано для порядка «{source}» — нажмите, чтобы переключить",
+    "partialBanner": "Неполные данные, причина остановки: {reason}. Поля после этого места не показаны.",
+    "replayStopper": "Операция {opIndex} мода {mod}: {error}",
+    "ambiguousTemplateIntro": "Неоднозначный шаблон: у этого Name {count} регистрация. RimWorld разрешает каждого потомка независимо, к той регистрации, что загружается ближе всего к нему (на его месте или раньше), — единого победителя нет никогда. «Победитель»/«последний загруженный представитель» выше — лишь открыто обозначенная условная замена, которую приложение показывает, когда речь не идёт о конкретном потомке, а не ответ. | Неоднозначный шаблон: у этого Name {count} регистрации. RimWorld разрешает каждого потомка независимо, к той регистрации, что загружается ближе всего к нему (на его месте или раньше), — единого победителя нет никогда. «Победитель»/«последний загруженный представитель» выше — лишь открыто обозначенная условная замена, которую приложение показывает, когда речь не идёт о конкретном потомке, а не ответ. | Неоднозначный шаблон: у этого Name {count} регистраций. RimWorld разрешает каждого потомка независимо, к той регистрации, что загружается ближе всего к нему (на его месте или раньше), — единого победителя нет никогда. «Победитель»/«последний загруженный представитель» выше — лишь открыто обозначенная условная замена, которую приложение показывает, когда речь не идёт о конкретном потомке, а не ответ.",
+    "knownChildrenResolve": "{count} известный потомок разрешается сюда | {count} известных потомка разрешаются сюда | {count} известных потомков разрешаются сюда",
+    "ownersHeading": "Владельцы",
+    "winnerTag": "(победитель)",
+    "representativeTag": "(последний загруженный представитель)",
+    "representativeTitle": "Только представитель: единого ответа нет, см. уведомление о неоднозначном шаблоне выше",
+    "generatedTag": "(сгенерирован)",
+    "patchersHeading": "Патчеры",
+    "patcherStatusNotReached": "не достигнуто",
+    "patcherStatusReplayFailed": "воспроизведение не удалось",
+    "patcherStatusReplaysCleanly": "воспроизводится без ошибок",
+    "wrappedTag": "(в обёртке)",
+    "wrappedTitle": "Показано начиная с первого изменяющего потомка, а не с самого узла-обёртки",
+    "gatesPrefix": "условия: {gates}",
+    "gate": {
+      "anyActive": "активен любой из модов {mods}",
+      "noneActive": "не активен ни один из модов {mods}"
+    },
+    "parentsHeading": "Родители",
+    "childrenHeading": "Потомки",
+    "effectiveDefHeading": "Итоговый Def",
+    "onlyPatchedLabel": "Только изменённые патчами/унаследованные",
+    "provenanceLegendOwner": "Владелец",
+    "provenanceLegendPatched": "Изменено патчем",
+    "provenanceLegendInherited": "Унаследовано",
+    "provenanceOwner": "владелец: {mod}",
+    "provenancePatch": "патч: {mod}",
+    "provenanceInherited": "унаследовано от {defType}/{defName} ({owner})",
+    "provenanceUnattributedTemplate": "унаследовано от {defType}/{defName} (владелец неизвестен)",
+    "fields": {
+      "pathHeader": "Путь",
+      "valueHeader": "Значение",
+      "provenanceHeader": "Происхождение",
+      "showMore": "Показать ещё ({loaded} из {total})"
+    },
+    "resolvedXmlSummary": "Итоговый XML"
+  },
+  "layer": {
+    "hard": "Жёсткая",
+    "anyOf": "Одно из",
+    "declaredOverride": "Переопределение объявления",
+    "declared": "Объявленная",
+    "userDecision": "Решение пользователя",
+    "rimSortUser": "RimSort, пользователь",
+    "rimSortCommunity": "RimSort, сообщество",
+    "steamDb": "SteamDB",
+    "inferred": "Выведенная",
+    "soft": "Мягкая",
+    "awareness": "Сигнальная"
+  },
+  "order": {
+    "heading": "Порядок загрузки — {source}",
+    "loadFailed": "Не удалось загрузить порядок.",
+    "sortProvenance": {
+      "summary": "при равенстве: {tieBreak} · импортированные пары: {pairs} · импортированные позиции: {placements}",
+      "rebuild": "перестроить",
+      "preserveCurrent": "сохранить текущий",
+      "on": "вкл.",
+      "off": "выкл."
+    },
+    "table": {
+      "regionLabel": "Порядок загрузки",
+      "nameHeader": "Название",
+      "tierHeader": "Ярус",
+      "depsHeader": "Завис.",
+      "movedFrom": "было #{position}"
+    },
+    "whyPanel": {
+      "headerWithMod": "{mod} — почему здесь?",
+      "headerFallback": "Почему здесь?",
+      "loadFailed": "Не удалось загрузить объяснение.",
+      "positionHeading": "Позиция",
+      "becameReadyAfterHeading": "Стал доступен после",
+      "lowerBoundsHeading": "Нижние границы (должен загружаться после)",
+      "noLowerBounds": "Нижних границ нет.",
+      "upperBoundsHeading": "Верхние границы (моды, ожидающие этот)",
+      "noUpperBounds": "Этот мод никто не ожидает.",
+      "advisoryHeading": "Рекомендательные связи",
+      "softHeading": "Мягкие (отложенные ссылки)",
+      "awarenessHeading": "Сигнальные",
+      "none": "Нет.",
+      "satisfied": "соблюдена",
+      "violated": "нарушена",
+      "droppedHeading": "Отброшенные связи",
+      "cycle": "цикл: {cycle}",
+      "overruledBy": "Отвергнуто из-за:",
+      "sortSettingsHeading": "Настройки сортировки",
+      "tieBreakHeading": "Порядок при равенстве",
+      "currentPositionKnown": "Текущая позиция: #{position}",
+      "currentPositionUnknown": "Текущая позиция: нет в текущем порядке",
+      "effectiveKey": "Итоговый ключ: {key}",
+      "modsPreferredAhead": "Модов с приоритетом впереди: {count}",
+      "pulledForwardBy": "Подтянут вперёд из-за:",
+      "openInModsLink": "Открыть в «Модах»"
+    },
+    "edgeChip": {
+      "directionAfter": "после",
+      "directionBefore": "до",
+      "findingLink": "замечание"
+    },
+    "tier": {
+      "core": "Core",
+      "dlc": "DLC",
+      "top": "Верх",
+      "body": "Середина",
+      "bottom": "Низ"
+    },
+    "provenance": {
+      "anyOf": "кандидат «одно из» для {assembly}",
+      "rule": "правило ({origin})",
+      "ruleWithComment": "правило ({origin}): {comment}",
+      "tier": "граница яруса ({tier})"
+    },
+    "tierReason": {
+      "source": "источник: {source}",
+      "placement": "правило позиции ({origin})",
+      "promotedBy": "продвинут связью {before} → {after}",
+      "body": "нет признаков источника или позиции"
+    }
+  },
+  "apply": {
+    "dialog": {
+      "header": "Применить",
+      "defCacheNote": "Активный мод кэширования Def привязывает свой кэш к порядку загрузки; при первом запуске после этого применения кэш будет перестроен{parenthetical}.",
+      "defCacheParenthetical": " (около {seconds} с по вашему последнему журналу)",
+      "writeModsConfigLabel": "Записать ModsConfig.xml (порядок загрузки, который читает RimWorld)",
+      "staleActiveSetMessage": "В рабочем наборе активных модов есть ожидающие изменения: пересканируйте, чтобы записать ModsConfig.xml.",
+      "rescanButton": "Пересканировать",
+      "writeMergeModLabel": "Записать мод слияния (создать сгенерированный мод в Mods/ или удалить его, если решений о слиянии или ресурсах не осталось)",
+      "closeButton": "Закрыть",
+      "cancelButton": "Отменить",
+      "writeAnywayButton": "Всё равно записать",
+      "applyButton": "Применить",
+      "writeMergeModButton": "Записать мод слияния",
+      "saveDecisionsButton": "Сохранить решения и правила"
+    },
+    "preflight": {
+      "unappliedHeading": "Отсканировано, но ещё не применено к ModsConfig.xml:",
+      "addedLabel": "Добавлены:",
+      "removedLabel": "Убраны:",
+      "orderLabel": "Порядок",
+      "modsConfigLabel": "ModsConfig.xml",
+      "decisionsLabel": "Решения",
+      "rulesLabel": "Правила",
+      "movedModsLabel": "Перемещаемые моды",
+      "needsInputLabel": "Требуют решения",
+      "unansweredReordersWarning": "{count} предложенная перестановка из этой проверки порядка пока без парного правила | {count} предложенные перестановки из этой проверки порядка пока без парного правила | {count} предложенных перестановок из этой проверки порядка пока без парного правила",
+      "problemsRow": "{count} проблема для подтверждения | {count} проблемы для подтверждения | {count} проблем для подтверждения",
+      "problemsAllDecided": "{count} проблема, уже решена | {count} проблемы, уже решены | {count} проблем, уже решены",
+      "noProblems": "Проблем не найдено",
+      "openInbox": "Открыть замечания"
+    },
+    "progress": {
+      "heading": "Проверить порядок",
+      "description": "Воспроизводит каждую стороннюю операцию патча, чтобы предсказать, какие из них не сработают при этом порядке, — так, как это показал бы собственный журнал RimWorld. Только по запросу: на большой установке это занимает около минуты.",
+      "verifyingLabel": "Проверка порядка",
+      "checksCaption": "Проверок: {checked} из {total}",
+      "startingCaption": "Запуск…"
+    },
+    "diff": {
+      "summary": "Проверен {count} Def (порядок: {source}) — {list}. | Проверено {count} Def (порядок: {source}) — {list}. | Проверено {count} Def (порядок: {source}) — {list}.",
+      "summaryOperations": "{count} операция с прогнозом сбоя | {count} операции с прогнозом сбоя | {count} операций с прогнозом сбоя",
+      "summaryTargets": "{count} затронутый целевой Def | {count} затронутых целевых Def | {count} затронутых целевых Def",
+      "removedByCount": "Удалено более ранним модом: {count}",
+      "notYetInjectedCount": "Ещё не внедрено: {count}",
+      "deadTargetCount": "Мёртвая цель: {count}",
+      "unknownCount": "Неизвестно: {count}",
+      "orderFixableHeading": "Исправимо порядком — перестановка указанного мода может это решить:",
+      "cosmeticText": "косметика: итоговый Def одинаков при любом порядке — перестановка не предлагается.",
+      "mergeInsteadLink": "Объединить вместо этого",
+      "mergeInstead": "{link} — так сохранится замысел проигравшего мода.",
+      "noMergeAvailable": "Для этой цели слияние недоступно.",
+      "removedByCause": "мод {mod} загружается раньше и удаляет целевой узел.",
+      "notYetInjectedCause": "целевой узел внедряет мод {mod}, который загружается позже.",
+      "modPossessive": "{operation} мода {mod}",
+      "notFullyFixableHeading": "Не полностью исправимо порядком — устаревшие патчи, неклассифицированная причина или их сочетание; по модам:",
+      "groupedByModLine": "{mod} — {list}",
+      "groupedOperations": "{count} операция | {count} операции | {count} операций",
+      "groupedTargets": "{count} целевой Def | {count} целевых Def | {count} целевых Def",
+      "partlyFixableHeading": "Часть из них частично исправима порядком — перестановка решает часть их целевых Def:",
+      "skippedCandidates": "{count} кандидат остался непроверенным. | {count} кандидата остались непроверенными. | {count} кандидатов остались непроверенными.",
+      "pvoMismatchWarning": "Импортированный журнал получен при другом порядке модов, чем только что проверенный: счётчики ниже сравнивают два не связанных запуска.",
+      "pvoHeading": "Прогноз и наблюдение (последний импортированный журнал)",
+      "pvoSnapshotNote": "Импортированный журнал — снимок консоли, а не журнал целой сессии игры: сбоя, записанного игрой раньше самой старой записи консоли, в нём нет, поэтому «предсказано, не наблюдалось» не доказывает, что сбоя не было.",
+      "pvoCutOffNote": "Импортированный журнал закончился без штатного выхода и до того, как был записан хоть один результат патчей, поэтому игра могла вообще не дойти до этапа патчей: «предсказано, не наблюдалось» не доказывает, что сбоя не было.",
+      "pvoGapsNote": "Пока создавался импортированный журнал, в записи сообщений игры были перерывы, поэтому сбой может в нём отсутствовать: «предсказано, не наблюдалось» не доказывает, что сбоя не было.",
+      "pvoMatchedSummary": "Подтверждено журналом: {count}",
+      "pvoPredictedOnlySummary": "Предсказано, не наблюдалось в журнале: {count}",
+      "pvoObservedOnlySummary": "Наблюдалось в журнале, не предсказано: {count} — показано как есть, ничего не отброшено:",
+      "unattributedRaw": "(без привязки: {raw})",
+      "counterfactualJobsLine": "{count} операция перепроверена на других порядках загрузки | {count} операции перепроверены на других порядках загрузки | {count} операций перепроверено на других порядках загрузки",
+      "counterfactualResolvedLine": "{count} сбой объяснён | {count} сбоя объяснены | {count} сбоев объяснено",
+      "counterfactualDemotedLine": "{count} строка «мёртвая цель» оказалась исправимой порядком | {count} строки «мёртвая цель» оказались исправимыми порядком | {count} строк «мёртвая цель» оказались исправимыми порядком",
+      "counterfactualSkippedLine": "{count} операция пропущена | {count} операции пропущены | {count} операций пропущено",
+      "counterfactualRejectedLine": "{count} перестановка отклонена, так как ломает другую операцию | {count} перестановки отклонены, так как ломают другую операцию | {count} перестановок отклонено, так как ломают другую операцию",
+      "counterfactualSummary": "Контрфактическая проверка: {list}."
+    },
+    "reorderActions": {
+      "createPairRule": "Создать парное правило",
+      "createPairRuleAnyway": "Всё равно создать парное правило",
+      "conflictText": "конфликтует со связью «{kind}»: {detail} ({status})",
+      "ruleCreated": "Правило создано. Снова запустите «Проверить порядок», чтобы проверить его: правило всё ещё может быть отвергнуто объявлением автора или другим правилом, а два правила противоположного направления взаимно отменяются; что на самом деле вступило в силу, видно на странице «Правила».",
+      "ruleExists": "Правило уже существует."
+    },
+    "result": {
+      "forceWarning": "Похоже, RimWorldWin64.exe запущен. Игра перезаписывает ModsConfig.xml при выходе, поэтому то, что вы запишете сейчас, может потеряться. Всё равно записать?",
+      "mergeModPath": "Мод слияния: {path}",
+      "mergeModRemoved": "Мод слияния: удалён (решений о слиянии или ресурсах не осталось)",
+      "mergeModBackupPath": "Резервная копия мода слияния: {path}",
+      "skippedHeading": "Пропущено — мод слияния записан без них:",
+      "toastAppliedSummary": "Применено",
+      "toastSavedSummary": "Сохранено",
+      "toastModsConfigPath": "ModsConfig: {path}",
+      "toastBackupPath": "Резервная копия: {path}",
+      "toastDecisionsPath": "Решения: {path}",
+      "toastRulesPath": "Правила: {path}",
+      "toastSkippedStillNeedsInput": "Пропущено (всё ещё требует решения): {list}"
+    },
+    "confirm": {
+      "heading": "Всё равно применить?",
+      "intro": "В порядке «{order}» {count} проблема, которую нужно подтвердить перед записью: | В порядке «{order}» {count} проблемы, которые нужно подтвердить перед записью: | В порядке «{order}» {count} проблем, которые нужно подтвердить перед записью:",
+      "acknowledgedHeading": "Уже решено на странице «Замечания»",
+      "reviewInInbox": "Просмотреть в замечаниях",
+      "goBackButton": "Назад",
+      "applyAnywayButton": "Всё равно применить"
+    },
+    "problem": {
+      "missingDependencyInactive": "{mod} требует {dependency}: он установлен, но не активен.",
+      "missingDependencyNotInstalled": "{mod} требует {dependency}: он не установлен.",
+      "incompatiblePair": "{a} и {b} объявлены несовместимыми.",
+      "missingModRemoved": "{mod} не установлен и будет убран из списка активных.",
+      "missingModKept": "{mod} не установлен и остаётся в списке активных; игра его пропускает.",
+      "loadRequirementViolated": "{after} требует, чтобы {before} загружался раньше; в этом порядке он загружается позже.",
+      "anyOfUnsatisfied": "{mod} требует, чтобы раньше загружался один из модов: {candidates}; ни один из них не загружается раньше."
+    }
+  },
+  "gameLog": {
+    "heading": "Импортированный журнал:",
+    "kind": {
+      "playerLog": "Player.log",
+      "consoleSnapshot": "Снимок консоли"
+    },
+    "coverage": {
+      "playerLog": {
+        "cleanExit": "{count} запуск; журнал заканчивается штатным выходом | {count} запуска; журнал заканчивается штатным выходом | {count} запусков; журнал заканчивается штатным выходом",
+        "crashed": "{count} запуск; журнал заканчивается вылетом игры (отчёт о сбое: {path}) | {count} запуска; журнал заканчивается вылетом игры (отчёт о сбое: {path}) | {count} запусков; журнал заканчивается вылетом игры (отчёт о сбое: {path})",
+        "crashedNoPath": "{count} запуск; журнал заканчивается вылетом игры (отчёт о сбое в нём не указан) | {count} запуска; журнал заканчивается вылетом игры (отчёт о сбое в нём не указан) | {count} запусков; журнал заканчивается вылетом игры (отчёт о сбое в нём не указан)",
+        "truncated": "{count} запуск; журнал обрывается посреди работы, без завершающего блока (зависание, принудительное закрытие или копия, снятая во время работы игры) | {count} запуска; журнал обрывается посреди работы, без завершающего блока (зависание, принудительное закрытие или копия, снятая во время работы игры) | {count} запусков; журнал обрывается посреди работы, без завершающего блока (зависание, принудительное закрытие или копия, снятая во время работы игры)"
+      },
+      "snapshot": {
+        "belowCap": "В консоли была только {count} запись, поэтому эта копия ничего не говорит об этапах, которые в неё не попали | В консоли было только {count} записи, поэтому эта копия ничего не говорит об этапах, которые в неё не попали | В консоли было только {count} записей, поэтому эта копия ничего не говорит об этапах, которые в неё не попали",
+        "atCap": "Только {count} запись, которую вмещала консоль (это её предел): более старые записи игра отбросила | Только {count} записи, которые вмещала консоль (это её предел): более старые записи игра отбросила | Только {count} записей, которые вмещала консоль (это её предел): более старые записи игра отбросила",
+        "overCap": "{count} запись — больше, чем вмещает одна консоль, так что это не одна копия консоли: несколько склеенных копий или ошибка разбора; сколько записей отбросила игра, сказать нельзя | {count} записи — больше, чем вмещает одна консоль, так что это не одна копия консоли: несколько склеенных копий или ошибка разбора; сколько записей отбросила игра, сказать нельзя | {count} записей — больше, чем вмещает одна консоль, так что это не одна копия консоли: несколько склеенных копий или ошибка разбора; сколько записей отбросила игра, сказать нельзя",
+        "headTruncated": "Копия начинается с середины записи: первая запись неполная."
+      }
+    },
+    "gaps": {
+      "warning": "Игра переставала записывать сообщения {count} раз. То, что она не записала, восстановить нельзя. | Игра переставала записывать сообщения {count} раза. То, что она не записала, восстановить нельзя. | Игра переставала записывать сообщения {count} раз. То, что она не записала, восстановить нельзя.",
+      "neverResumed": "{count} остановка записи в журнал не сопровождается сообщением о возобновлении, поэтому всё, что в журнале после первой такой остановки, ненадёжно. | {count} остановки записи в журнал не сопровождаются сообщением о возобновлении, поэтому всё, что в журнале после первой из них, ненадёжно. | {count} остановок записи в журнал не сопровождаются сообщением о возобновлении, поэтому всё, что в журнале после первой из них, ненадёжно.",
+      "lowerBound": "Как минимум {count} группа записей ({percent}% записей журнала) пересекает перерыв в записи, поэтому счётчики могут быть занижены; занижен может быть любой счётчик. | Как минимум {count} группы записей ({percent}% записей журнала) пересекают перерыв в записи, поэтому их счётчики могут быть занижены; занижен может быть любой счётчик. | Как минимум {count} групп записей ({percent}% записей журнала) пересекают перерыв в записи, поэтому их счётчики могут быть занижены; занижен может быть любой счётчик.",
+      "resumed": "Строки с {stop} по {resume}",
+      "open": "Со строки {stop} до конца журнала",
+      "more": "И ещё {count}"
+    },
+    "losses": {
+      "heading": "Модулю чтения пришлось ограничить часть журнала, поэтому в сводке её не хватает:",
+      "linesTruncated": "{count} строка превысила лимит модуля чтения, прочитано лишь начало | {count} строки превысили лимит модуля чтения, прочитано лишь начало | {count} строк превысили лимит модуля чтения, прочитано лишь начало",
+      "linesWithInvalidUtf8": "{count} строка содержала недопустимый UTF-8 и прочитана с символами замены | {count} строки содержали недопустимый UTF-8 и прочитаны с символами замены | {count} строк содержали недопустимый UTF-8 и прочитаны с символами замены",
+      "stackBlockLinesDropped": "{count} строка трассировки стека сверх лимита блока не проверена | {count} строки трассировки стека сверх лимита блока не проверены | {count} строк трассировки стека сверх лимита блока не проверены",
+      "stackJoinsAbandoned": "{count} многострочное объединение стека превысило лимит и было прервано | {count} многострочных объединения стека превысили лимит и были прерваны | {count} многострочных объединений стека превысили лимит и были прерваны",
+      "passesFolded": "{count} запись из запусков сверх отслеживаемых добавлена к последнему отслеживаемому запуску | {count} записи из запусков сверх отслеживаемых добавлены к последнему отслеживаемому запуску | {count} записей из запусков сверх отслеживаемых добавлены к последнему отслеживаемому запуску",
+      "stackRefsDropped": "{count} обратная ссылка стека не проиндексирована | {count} обратные ссылки стека не проиндексированы | {count} обратных ссылок стека не проиндексированы",
+      "loggingGapsDropped": "{count} перерыв в записи сверх лимита списка учтён, но не показан | {count} перерыва в записи сверх лимита списка учтены, но не показаны | {count} перерывов в записи сверх лимита списка учтены, но не показаны",
+      "crashReportPathsTruncated": "{count} путь к отчёту о сбое обрезан до предельной длины | {count} пути к отчётам о сбое обрезаны до предельной длины | {count} путей к отчётам о сбое обрезаны до предельной длины"
+    }
+  },
+  "startup": {
+    "heading": "Затраты на запуск",
+    "description": "По строке на каждый активный мод: изменяющие операции патчей, медленные xpath, текстуры, DLL и Def, без замеров времени (Rimmerge никогда не запускает игру). Импортируйте {playerLog} или снимок консоли, чтобы заполнить столбцы DDS с неверными размерами и наблюдаемых таймеров (снимок консоли таймеры не заполняет).",
+    "orderMismatchWarning": "Импортированный журнал получен при другом порядке модов, чем выбранный сейчас: столбцы DDS с неверными размерами и наблюдаемых таймеров ниже отражают тот запуск, а не этот.",
+    "noOrderBlockWarning": "В импортированном журнале вообще нет списка активных модов, поэтому его нельзя сверить с выбранным порядком: столбцы DDS с неверными размерами и наблюдаемых таймеров ниже могут отражать другой запуск.",
+    "loadFailed": "Не удалось загрузить таблицу затрат на запуск.",
+    "modHeader": "Мод",
+    "patchOpsHeader": "Операции патчей",
+    "slowXpathsHeader": "Медленные xpath",
+    "texFilesHeader": "Файлы текстур",
+    "texBytesHeader": "Байты текстур",
+    "ddsFilesHeader": "Файлы DDS",
+    "badDimDdsHeader": "DDS: неверн. размер",
+    "dllsHeader": "DLL",
+    "dllBytesHeader": "Байты DLL",
+    "defsHeader": "Def",
+    "overriddenTexHeader": "Заменённые текстуры",
+    "observedTimersHeader": "Наблюдаемые таймеры",
+    "contentOnlyHeader": "Только контент",
+    "totalRow": "Итого ({count} мод) | Итого ({count} мода) | Итого ({count} модов)",
+    "notImported": "не импортировано",
+    "notAvailableFromSnapshot": "недоступно из снимка консоли",
+    "atLeast": "не менее {count}",
+    "snapshotNote": "Импортированный журнал — снимок консоли, а не журнал целой сессии игры: наблюдаемые таймеры из него недоступны, а счётчики DDS с неверными размерами — минимальные значения.",
+    "cutOffNote": "Импортированный журнал заканчивается до того, как был записан хоть один результат патчей, и без штатного выхода, поэтому счётчики ниже могут быть занижены: счётчики DDS с неверными размерами и наблюдаемые таймеры — минимальные значения.",
+    "gapsNote": "Пока создавался импортированный журнал, в записи сообщений игры были перерывы, поэтому счётчики ниже могут быть занижены: счётчики DDS с неверными размерами и наблюдаемые таймеры — минимальные значения.",
+    "observedTimersValue": "{count} ({ms} мс)",
+    "observedTimersAtLeast": "не менее {count} ({ms} мс)",
+    "contentOnly": "только контент"
+  },
+  "assignments": {
+    "editRefsTargets": {
+      "header": "Изменить справочные моды и цели",
+      "referencesHeading": "Справочные моды (R)",
+      "targetsHeading": "Цели (T)",
+      "whatChangedHeading": "Что изменилось",
+      "schemaChangeCounts": {
+        "added": "{count} поле добавлено | {count} поля добавлены | {count} полей добавлено",
+        "removed": "{count} поле удалено | {count} поля удалены | {count} полей удалено",
+        "reclassified": "{count} поле переклассифицировано | {count} поля переклассифицированы | {count} полей переклассифицировано"
+      },
+      "reclassifiedNames": " ({names})",
+      "strandedValuesLine": "{count} сохранённое значение отброшено — новая роль переклассифицированного поля больше не принимает то, что в нём хранилось: | {count} сохранённых значения отброшены — новая роль переклассифицированного поля больше не принимает то, что в нём хранилось: | {count} сохранённых значений отброшены — новая роль переклассифицированного поля больше не принимает то, что в нём хранилось:",
+      "droppedRowsLine": "{count} строка отброшена — её цель выпала из набора целей: | {count} строки отброшены — их цели выпали из набора целей: | {count} строк отброшены — их цели выпали из набора целей:",
+      "clean": "Это изменение ничего не отбросило и ничего не оставило без привязки.",
+      "closeButton": "Закрыть",
+      "saveButton": "Сохранить"
+    },
+    "rowEditor": {
+      "copyFrom": "Копировать из:",
+      "winnerBadge": "— победитель",
+      "prefillFrom": "— из мода {mod}",
+      "clampedTo": "— сокращено до «{name}»: этот слот хранит только одно имя, а в значении их было {count} ({joined})",
+      "droppedFromCopy": "— {count} заимствованное значение пропущено из-за неактивных Def: {names} | — {count} заимствованных значения пропущены из-за неактивных Def: {names} | — {count} заимствованных значений пропущены из-за неактивных Def: {names}",
+      "pairedTo": "в паре с {slot}",
+      "overrideBadge": "Переопределение — {count} существующее совпадение | Переопределение — {count} существующих совпадения | Переопределение — {count} существующих совпадений",
+      "inspectDefLink": "Изучить Def",
+      "defNameLabel": "defName",
+      "saveRowButton": "Сохранить строку",
+      "clearRowButton": "Очистить строку",
+      "newRowTitle": "Новая строка"
+    },
+    "coverageList": {
+      "searchPlaceholder": "Поиск целей…",
+      "ownerFilterPlaceholder": "Фильтр по владельцу",
+      "thisProject": "этот проект",
+      "coveredByMod": "покрыто модом {mod}",
+      "coveredByAnotherMod": "покрыто другим модом",
+      "uncovered": "не покрыто",
+      "wouldWinNoOwner": "— победит",
+      "wouldWinWithOwner": "— победит {mod}",
+      "noMatches": "Подходящих целей нет."
+    },
+    "schemaTable": {
+      "fieldHeader": "Поле",
+      "roleHeader": "Роль",
+      "typeHeader": "Тип",
+      "cardinalityHeader": "Кратность",
+      "observedHeader": "Наблюдается",
+      "defTypePlaceholder": "тип Def",
+      "hideButton": "Скрыть",
+      "unreadableTargets": "{count} целевой объект, на который есть ссылка, не удалось прочитать при определении формы: | {count} целевых объекта, на которые есть ссылки, не удалось прочитать при определении формы: | {count} целевых объектов, на которые есть ссылки, не удалось прочитать при определении формы:",
+      "unreadableTargetLine": "{field}: {defType}/{defName} — {reason}",
+      "newFieldPathLabel": "Путь нового поля",
+      "roleLabel": "Роль",
+      "defTypeLabel": "Тип Def",
+      "addFieldButton": "Добавить поле",
+      "pathRequired": "Нужен путь поля.",
+      "pathAlreadyExists": "{path} уже является полем этой схемы."
+    },
+    "exportPanel": {
+      "exportDirLabel": "Папка экспорта",
+      "exportDirPlaceholder": "Выберите папку…",
+      "chooseButton": "Выбрать…",
+      "installCheckboxLabel": "Установить в Mods и включить",
+      "staleActiveSetNote": "Ожидающие изменения активации не учтены — сначала пересканируйте, если хотите, чтобы они вошли в эту установку.",
+      "forceWarning": "Похоже, RimWorldWin64.exe запущен. Установка сейчас записывает ModsConfig.xml, а игра перезаписывает этот файл при выходе, поэтому изменение может потеряться. Всё равно экспортировать?",
+      "exportAnyway": "Всё равно экспортировать",
+      "export": "Экспортировать",
+      "exportedTo": "Экспортировано в: {path}",
+      "installedAt": "Установлено в: {path}",
+      "skippedHeading": "Пропущено",
+      "skippedPath": ": {path}"
+    },
+    "editor": {
+      "loadFailed": "Не удалось загрузить этот проект.",
+      "editRefsTargetsButton": "Изменить справочные моды и цели",
+      "deleteButton": "Удалить",
+      "noSections": "Разделов пока нет.",
+      "addSectionButton": "Добавить раздел",
+      "removeSectionButton": "Убрать раздел",
+      "noTargetSelected": "Цель не выбрана.",
+      "ownRowsHeading": "Собственные строки",
+      "newRowButton": "Новая строка",
+      "standaloneHint": "Это отдельный раздел: у его строк нет цели для сопоставления, поэтому очереди покрытия здесь нет.",
+      "noRowsYet": "Строк пока нет.",
+      "selectOrNewRow": "Выберите строку или нажмите «Новая строка», чтобы создать её.",
+      "exportHeading": "Экспорт",
+      "deleteDialogHeader": "Удалить этот проект?",
+      "deleteDialogBody": "Проект конструктора патчей будет удалён. Папка, которую он уже экспортировал на диск, останется нетронутой.",
+      "addSectionDialogHeader": "Добавление раздела",
+      "listingCandidates": "Поиск кандидатов…",
+      "candidateGroupLabel": "Тип раздела-кандидата",
+      "noAddableCandidates": "Нет кандидатов для добавления: каждый тип Def, которым владеют справочные моды этого проекта, уже является разделом.",
+      "addButton": "Добавить",
+      "removeSectionDialogHeader": "Убрать этот раздел?",
+      "removeSectionBody": "Будет убран раздел {defType} вместе со всеми его строками. Отменить это отсюда нельзя.",
+      "sectionInUse": "На него всё ещё ссылается {count} строка в другом разделе. Если всё равно убрать раздел, эти ссылки станут висячими — при следующем экспорте каждая будет отмечена как пропуск. | На него всё ещё ссылаются {count} строки в другом разделе. Если всё равно убрать раздел, эти ссылки станут висячими — при следующем экспорте каждая будет отмечена как пропуск. | На него всё ещё ссылаются {count} строк в другом разделе. Если всё равно убрать раздел, эти ссылки станут висячими — при следующем экспорте каждая будет отмечена как пропуск.",
+      "referenceLine": "{defType} {row}: {path}",
+      "removeAnywayButton": "Всё равно убрать",
+      "removeButton": "Убрать"
+    },
+    "wizard": {
+      "heading": "Новый проект конструктора патчей",
+      "identityHeading": "Сведения",
+      "nameLabel": "Название",
+      "packageIdLabel": "ID пакета",
+      "packageIdPlaceholder": "author.mymod",
+      "displayNameLabel": "Отображаемое название",
+      "referencesHeading": "Справочные моды (R)",
+      "targetsHeading": "Цели (T)",
+      "targetsHint": "Оставьте пустым, чтобы создать совершенно новый тип Def (проект «новый Def»), а не патчить существующий.",
+      "listCandidatesButton": "Показать кандидатов",
+      "effectiveRefsHeading": "Итоговый набор справочных модов",
+      "excludedTitle": "Исключено — нажмите, чтобы включить",
+      "includeTitle": "Нажмите, чтобы исключить",
+      "excludedTag": "исключено",
+      "includedTag": "×",
+      "candidatesHeading": "Типы назначений-кандидаты",
+      "candidateGroupLabel": "Тип назначения-кандидат",
+      "instanceCount": "{defType} ({count} экземпляр) | {defType} ({count} экземпляра) | {defType} ({count} экземпляров)",
+      "inferringSchema": "Определение схемы…",
+      "standaloneNote": "У этого кандидата нет поля целевого ключа: это будет проект «новый Def» с отдельными строками, а не сопоставленными с целями.",
+      "excludedTargetsNote": "{count} целевой объект вне T/Core, на который есть ссылка, не читался (соблюдение T ускоряет работу). | {count} целевых объекта вне T/Core, на которые есть ссылки, не читались (соблюдение T ускоряет работу). | {count} целевых объектов вне T/Core, на которые есть ссылки, не читались (соблюдение T ускоряет работу).",
+      "createButton": "Создать"
+    },
+    "list": {
+      "newProjectButton": "Новый проект",
+      "loadFailed": "Не удалось загрузить назначения.",
+      "empty": "Проектов конструктора патчей пока нет.",
+      "nameHeader": "Название",
+      "packageIdHeader": "ID пакета",
+      "sectionsHeader": "Разделы",
+      "refsHeader": "R",
+      "targetsHeader": "T",
+      "rowsHeader": "Строки",
+      "uncoveredHeader": "Не покрыто",
+      "exportedHeader": "Экспорт",
+      "notApplicable": "н/д",
+      "exportedYes": "да",
+      "exportedNo": "нет"
+    },
+    "itemPicker": {
+      "searchPlaceholder": "Поиск элементов…",
+      "thisProjectHeading": "Этот проект",
+      "noMatches": "Совпадений нет.",
+      "count": "{loaded} / {total}",
+      "clearSelection": "Сбросить выбор",
+      "loadMore": "Загрузить ещё"
+    }
+  },
+  "rationale": {
+    "layerPhrase": {
+      "hard": "жёсткое требование (при загрузке)",
+      "anyOf": "разрешённое требование «одно из»",
+      "declaredOverride": "ваше собственное явное переопределение объявления автора",
+      "declared": "объявление автора",
+      "userDecision": "ваше собственное решение",
+      "rimSortUser": "пользовательское правило RimSort",
+      "rimSortCommunity": "правило сообщества RimSort",
+      "steamDb": "зависимость из Мастерской Steam",
+      "other": "другая связь"
+    },
+    "placementPhrase": {
+      "top": "вверху",
+      "bottom": "внизу"
+    },
+    "relationExplanation": {
+      "presenceOnly": "это лишь проверка того, присутствует ли мод, а не его позиции загрузки",
+      "patchTargetsDef": "патчи применяются к объединённому документу Def после загрузки Def всех модов, независимо от порядка загрузки",
+      "parentTemplate": "недостижимо: связь ParentName — факт порядка при загрузке (жёсткая), никогда не рекомендательная",
+      "usesType": "тип разрешается по всем загруженным сборкам независимо от порядка загрузки",
+      "patchSelectsInjectedNode": "выбранный узел может уже существовать иным образом (записан напрямую, внедряется более чем одним активным модом или собственным патчем выбирающего мода) либо лежит глубже, чем анализатор индексирует для проверки, — поэтому это не доказанное требование порядка загрузки",
+      "patchRemovedNode": "анализатор выводит это из содержимого патчей: один мод удаляет узел, который патчит и другой мод, и удаляющий должен загружаться последним, иначе другому патчу нечего будет изменять; это не объявленный автором порядок загрузки, поэтому связь уступает, если объявление или позиция ей противоречат",
+      "retextureAfterOwner": "анализатор выводит это из общего пути текстуры: пакет ретекстура, содержащий только текстуры, должен загружаться после мода с контентом, который он перерисовывает, иначе его замену перезапишет тот самый контент; это не объявленный автором порядок загрузки, поэтому связь уступает, если объявление или позиция ей противоречат",
+      "defOverrideAfterOrigin": "анализатор выводит это из данных о шаблонах и числе Def: мод, который также поставляет Def из пространства имён другого мода, должен загружаться после владельца этого пространства имён, иначе его переопределение окажется под исходным определением, а не поверх него; это не объявленный автором порядок загрузки, поэтому связь уступает, если объявление или позиция ей противоречат",
+      "patchInvalidatesPredicate": "анализатор выводит это из содержимого патчей: Replace/Remove переписывает или удаляет узел, который читает xpath-условие другого мода, и операция с этим условием должна загружаться первой, иначе её условие больше не совпадёт; это не объявленный автором порядок загрузки, поэтому связь уступает, если объявление или позиция ей противоречат",
+      "patchRemovedNodeCosmetic": "анализатор выводит это из содержимого патчей, но итоговые Def здесь одинаковы при любом порядке — меняется лишь то, чья операция запишет ошибку в журнал, — поэтому это более слабые данные, чем объявленный автором порядок загрузки, и связь уступает, если объявление или позиция ей противоречат",
+      "replaceDiscardsAddition": "анализатор выводит это из содержимого патчей: Replace подставляет целиком новый узел и молча отбрасывает всё, что записало в него более раннее добавление, поэтому добавление должно загружаться после замены, иначе его содержимое пропадёт без единой строки в журнале; это не объявленный автором порядок загрузки, поэтому связь уступает, если объявление или позиция ей противоречат",
+      "interactionEvidence": "это признак того, что моды взаимодействуют, а не факт о порядке, нужный самому загрузчику"
+    },
+    "rulePhrase": {
+      "userDecisionOverride": "Ваше собственное переопределение объявленной связи",
+      "userDecision": "Ваше собственное решение",
+      "layered": "Загрузка {after} после {before} (основание: {layerPhrase})"
+    },
+    "edgeDroppedInferred": {
+      "patchRemovedNode": "{after} удаляет узел, который патчит и {before}; {after} должен загружаться после {before}, иначе собственному патчу мода {before} нечего будет изменять. Анализатор вывел это из содержимого патчей, а не из объявленного порядка загрузки какого-либо из модов.",
+      "retextureAfterOwner": "{after} — пакет ретекстура только из текстур, у которого общий путь текстуры с контентом мода {before}; {after} должен загружаться после {before}, иначе его текстуру-замену перезапишет контент, который он должен перерисовать. Анализатор вывел это из общего пути текстуры, а не из объявленного порядка загрузки какого-либо из модов.",
+      "defOverrideAfterOrigin": "{before} владеет шаблоном или семейством Def, к которому относится это переопределение; {after} тоже поставляет его копию и должен загружаться после {before}, чтобы переопределение легло поверх исходного определения. Анализатор вывел это из данных о шаблонах и числе Def, а не из объявленного порядка загрузки какого-либо из модов.",
+      "patchInvalidatesPredicate": "{after} заменяет или удаляет узел, который собственный патч мода {before} выбирает через условие; {after} должен загружаться после {before}, иначе условие мода {before} больше не совпадёт. Анализатор вывел это из содержимого патчей, а не из объявленного порядка загрузки какого-либо из модов.",
+      "replaceDiscardsAddition": "{before} заменяет узел, в который {after} тоже добавляет содержимое; {after} должен загружаться после {before}, иначе его добавление молча отбрасывается, когда Replace мода {before} подставляет целиком новый узел, без единой строки в журнале. Анализатор вывел это из содержимого патчей, а не из объявленного порядка загрузки какого-либо из модов."
+    },
+    "edgeDroppedCosmetic": "косметика: итоговые Def одинаковы при любом порядке; меняется лишь то, какая строка появится в журнале",
+    "keepEdgeInCycle": "Сохранить эту связь; вместо неё сортировщик отбросит следующую по слабости связь в цикле.",
+    "reorderOverridingEdgeWinner": "Принудительно применить собственный порядок этого мода, переопределив победителя.",
+    "edgeDroppedWithWinner": "Вместо этого {after} должен загружаться перед {before}: так требует {layerPhrase} ({detail}).",
+    "edgeDroppedSoftOrAwareness": "Отбрасывание мягкой или чисто сигнальной связи для разрыва цикла редко меняет поведение.",
+    "edgeDroppedDeclared": "Для разрыва цикла пришлось отбросить связь, объявленную автором.",
+    "edgeDroppedHard": "Для разрыва цикла пришлось отбросить жёсткую связь (при загрузке): моды действительно конфликтуют.",
+    "removeDependentModBrokenOrder": "Убрать зависимый мод из списка активных, а не принимать нарушенный порядок загрузки.",
+    "declarationQuestioned": "{declaredAfter} загружается после {declaredBefore} (основание: {layerPhrase}, {declaredDetail}); {relationExplanation} ({relationDetail}).",
+    "reorderOppositeOfRelation": "Принудительно задать обратный порядок, который подразумевает связь, как решение пользователя.",
+    "declarationOverridden": "Объявлено, что {declaredAfter} загружается после {declaredBefore} ({detail}), но {layerPhrase} говорит иное: вместо этого {byAfter} загружается после {byBefore} ({byDetail}).",
+    "anyOfNoCandidate": "Ни один кандидат не может выполнить это ограничение, не замкнув цикл.",
+    "forceAnyOfCandidateAcceptingCycle": "Принудительно выбрать этого кандидата, смирившись с любым циклом, который возникнет в другом месте.",
+    "anyOfChosenAlreadyBefore": "Выбранный кандидат уже сейчас загружается перед зависимым модом.",
+    "anyOfAlternativeCandidate": "Это ограничение может выполнить и другой кандидат.",
+    "anyOfUniqueMaxDependents": "Выбранный кандидат — единственный мод, от которого среди кандидатов зависит больше всего модов.",
+    "anyOfSmallestId": "Выбран по наименьшему ID среди кандидатов, равных во всём остальном.",
+    "ruleOverruledLongerCycle": "{rulePhrase}: пришлось отбросить, чтобы разорвать более длинный цикл между несколькими модами.",
+    "ruleOverruledByWinner": "{rulePhrase}: отвергнуто — {layerPhrase} говорит, что вместо этого {before} загружается после {after} ({detail}).",
+    "reorderOverridingRuleWinner": "Принудительно применить собственный порядок этого правила, переопределив победителя.",
+    "promoteRuleDespiteOverruled": "Сохранить это правило как своё решение, чтобы оно не пропало, хотя и остаётся отвергнутым.",
+    "placementOverruled": "{modId} закреплён {placementPhrase}, но это отвергает {layerPhrase}: {detail}.",
+    "promotePlacementDespiteOverruled": "Сохранить закрепление {placementPhrase} как своё решение, чтобы оно не пропало, хотя и отвергнуто.",
+    "dropRuleOverrulingPlacement": "Отбросить правило, отвергнувшее эту позицию, и оставить {modId} {placementPhrase}.",
+    "placementQuestioned": "{modId} закреплён {placementPhrase}; {relationExplanation} ({relationDetail}).",
+    "enforceRelationAsUserDecision": "Явно закрепить эту связь как решение пользователя.",
+    "placementOrderingOverridden": {
+      "loadsAfter": "{pinned} закреплён {placementPhrase}, но {modId} всё равно должен загружаться после него: {layerPhrase} ({detail}).",
+      "loadsBefore": "{pinned} закреплён {placementPhrase}, но {modId} всё равно должен загружаться перед ним: {layerPhrase} ({detail})."
+    },
+    "placementPromotesDependents": "{modId} закреплён {placementPhrase}; ему также приписывается продвижение {count} другого мода за границу его яруса{sample} | {modId} закреплён {placementPhrase}; ему также приписывается продвижение {count} других модов за границу их яруса{sample} | {modId} закреплён {placementPhrase}; ему также приписывается продвижение {count} других модов за границу их яруса{sample}",
+    "promotedSample": {
+      "truncated": " (например, {sample})",
+      "exact": " ({sample})"
+    },
+    "tagInferredSignalCount": "{count} совпавший признак | {count} совпавших признака | {count} совпавших признаков",
+    "rejectInferredTag": "Отклонить выведенный тег.",
+    "forceDefOverrideWinner": "Принудительно сделать победителем Def определённого владельца независимо от порядка загрузки.",
+    "defOverrideWinnerDeclaresRelation": "Мод-победитель явно объявляет связь порядка загрузки со всеми остальными владельцами.",
+    "defOverrideSameAuthor": "У всех владельцев один автор.",
+    "defOverrideLoneNonVanillaOwner": "Этот ванильный Def переопределяет ровно один активный мод; больше никто на него не претендует.",
+    "defOverrideShadowsFramework": "Конечный мод незаметно перекрывает Def общего фреймворка.",
+    "keepCurrentWinner": "Оставить текущего победителя.",
+    "defOverrideUnexplained": "Этот Def определяют несколько модов, и нет сильного признака, объясняющего переопределение.",
+    "mergeUnexplainedDefOverride": "Объединить по полям вместо того, чтобы целиком принять Def одного владельца.",
+    "mergeShadowsFrameworkFieldByField": "Объединить по полям; сохранить значения фреймворка там, где конечный мод их не менял.",
+    "forcePatchCollisionWinner": "Принудительно применять только патч одного мода.",
+    "patchCollisionAdditive": "Каждый участвующий патч только добавляет к цели; порядок не меняет результат.",
+    "patchCollisionContested": "Хотя бы один участвующий патч изменяет цель; результат определяет порядок загрузки.",
+    "patchCollisionWinnerDeclaresRelation": "{winner} объявляет, что загружается после {others}, поэтому его изменение «{field}» сохраняется как записано.",
+    "mergeContestedPatchCollision": "Объединить по полям вместо того, чтобы порядок загрузки решал за весь Def.",
+    "patchWillFailRemovedBy": "Собственная операция мода {remover} удаляет узел, на который нацелена операция мода {modId} по «{xpath}», и загружается раньше неё в порядке, по которому шла проверка.",
+    "reorderBeforeRemover": "Загружать {modId} перед {remover}, чтобы его операция выполнилась, пока узел ещё существует.",
+    "patchWillFailNotYetInjected": "Операция мода {modId} по «{xpath}» нацелена на узел, который внедряет {injector}, но {injector} загружается позже в порядке, по которому шла проверка.",
+    "reorderAfterInjector": "Загружать {modId} после {injector}, чтобы его операция нашла уже внедрённый узел.",
+    "patchWillFailDeadTarget": "Операция мода {modId} по «{xpath}» нацелена на узел, которого нет в итоговой структуре владельца-победителя при любом порядке загрузки, — перестановка этого не исправит.",
+    "patchWillFailUnknownCause": "Операция мода {modId} по «{xpath}», по прогнозу, не сработает; причину не удалось классифицировать.",
+    "brokenInheritance": "Эта ссылка `ParentName` разрешается не так, как ожидает тип элемента потомка, — Def загружается с отсутствующим или неверным содержимым. Сообщите об этом автору мода, который на неё ссылается.",
+    "danglingDefReference": "Это имя не соответствует ни одному активному Def любого типа: {cause}.{soundCaveat} Перекрёстные ссылки разрешаются после загрузки Def и патчей всех модов, поэтому от порядка загрузки это никогда не зависит.",
+    "danglingDefReferenceSoundCaveat": " Похоже на ссылку на звук: отсутствующий `SoundDef` пишет предупреждение в журнал и молча заменяется неопределённым звуком, а не вызывает ошибку загрузки.",
+    "discardedAdditionDeliberate": "{replacer} объявляет загрузку после {adder} и заменяет «{path}»: добавление мода {adder} в «{adderPath}» намеренно отбрасывается.",
+    "forceTextureWinner": "Принудительно сделать победителем текстуру одного мода.",
+    "copyTextureIntoMergeMod": "Скопировать файл текстуры этого мода в мод слияния независимо от порядка загрузки.",
+    "textureOverrideCosmetic": "Замена текстуры — косметика, её можно увидеть в игре; она никогда ничего не блокирует.",
+    "forceTemplateRegistrationWinner": "Принудительно применить регистрацию этого мода ко всем потомкам шаблона независимо от порядка загрузки.",
+    "duplicateTemplateNameExplanation": "{ownerCount} мод регистрирует это имя шаблона; каждый потомок независимо наследует от той регистрации, что загружается ближе всего к нему (на его месте или раньше). Если такой нет, используется ванильная регистрация, а если нет и её — регистрация мода, который загружается первым в порядке загрузки, поэтому разные потомки могут разрешиться в разные моды. | {ownerCount} мода регистрируют это имя шаблона; каждый потомок независимо наследует от той регистрации, что загружается ближе всего к нему (на его месте или раньше). Если такой нет, используется ванильная регистрация, а если нет и её — регистрация мода, который загружается первым в порядке загрузки, поэтому разные потомки могут разрешиться в разные моды. | {ownerCount} модов регистрируют это имя шаблона; каждый потомок независимо наследует от той регистрации, что загружается ближе всего к нему (на его месте или раньше). Если такой нет, используется ванильная регистрация, а если нет и её — регистрация мода, который загружается первым в порядке загрузки, поэтому разные потомки могут разрешиться в разные моды.",
+    "keyedTranslationCollision": "Эти два мода определяют {keyCount} общий ключ перевода; побеждает загруженный последним. | Эти два мода определяют {keyCount} общих ключа перевода; каждый раз побеждает загруженный последним. | Эти два мода определяют {keyCount} общих ключей перевода; каждый раз побеждает загруженный последним.",
+    "soundOverrideCosmetic": "Замена звука — косметика, её можно услышать в игре; она никогда ничего не блокирует.",
+    "forceSoundWinner": "Принудительно сделать победителем звук одного мода.",
+    "missingTexturePath": "Этот путь текстуры не поставляет ни один активный мод — игра покажет на его месте пурпурную заглушку.",
+    "undecodableTexture": "Этот файл .dds не декодируется — базовая игра показывает на его месте заглушку битой текстуры.",
+    "contributesNothing": "{modId} ничего заметного не добавляет при этом порядке: у него нет сборки, каждый его Def переопределён более поздней копией, каждая поставляемая им текстура и каждый перевод переопределены, а каждая его операция патча либо не применяется, либо вообще не выполняется — его отключение ничего не меняет в игре и экономит время на его загрузку.",
+    "undeclaredTypeDependency": "{user} использует тип из сборки мода {provider}, но не объявляет зависимости от него.",
+    "pinRelationExplicitly": "Явно закрепить связь как правило порядка загрузки.",
+    "runtimePatchCollisionNoLastPatcher": "Несколько модов патчат {targetType}.{targetMethod}.",
+    "runtimePatchCollisionLastPatcher": "{ownerCount} мод патчит {targetType}.{targetMethod}; сейчас {last} загружается последним, поэтому его патч выполняется последним. | {ownerCount} мода патчат {targetType}.{targetMethod}; сейчас {last} загружается последним, поэтому его патч выполняется последним. | {ownerCount} модов патчат {targetType}.{targetMethod}; сейчас {last} загружается последним, поэтому его патч выполняется последним.",
+    "forceRuntimePatchLastWinner": "Принудительно выполнять патч этого мода последним независимо от порядка загрузки.",
+    "transpilerCollision": "{ownerCount} мод переписывает IL метода {targetType}.{targetMethod} транспайлером патча времени выполнения; порядок их выполнения может решить, совпадёт ли ещё шаблон более позднего. Большинство таких конфликтов безвредны — если один из этих модов пишет в журнал ошибку патчинга, задайте рабочий порядок командой `rimmerge rule set-pair`. | {ownerCount} мода переписывают IL метода {targetType}.{targetMethod} транспайлером патча времени выполнения; порядок их выполнения может решить, совпадёт ли ещё шаблон более позднего. Большинство таких конфликтов безвредны — если один из этих модов пишет в журнал ошибку патчинга, задайте рабочий порядок командой `rimmerge rule set-pair`. | {ownerCount} модов переписывают IL метода {targetType}.{targetMethod} транспайлером патча времени выполнения; порядок их выполнения может решить, совпадёт ли ещё шаблон более позднего. Большинство таких конфликтов безвредны — если один из этих модов пишет в журнал ошибку патчинга, задайте рабочий порядок командой `rimmerge rule set-pair`.",
+    "duplicateAssemblyFirstLoadedWins": "Сборку с этим именем поставляют несколько активных модов; во время работы побеждает копия, загруженная первой.",
+    "removeDuplicateAssemblyCopy": "Убрать одну из дублирующихся копий из списка активных.",
+    "likelyDuplicateMod": "У этих двух модов много одинаковых Def, а связь между ними не объявлена.",
+    "removeLikelyDuplicateModA": "Убрать один из вероятных дубликатов из списка активных.",
+    "removeLikelyDuplicateModB": "Убрать другой вероятный дубликат из списка активных.",
+    "missingModNotInstalled": "Этот мод активен в ModsConfig.xml, но не установлен; RimWorld всё равно отбрасывает неизвестные ID.",
+    "keepMissingModId": "Оставить ID в ModsConfig.xml на случай, если мод появится снова.",
+    "missingDependencyNotEnforced": "Объявленная зависимость не активна; RimWorld лишь предупреждает об этом, но не требует.",
+    "incompatiblePair": "Эти моды объявляют друг друга несовместимыми.",
+    "removeIncompatibleModA": "Убрать один из несовместимых модов из списка активных.",
+    "removeIncompatibleModB": "Убрать другой несовместимый мод из списка активных.",
+    "unsupportedVersionOftenWorks": "Этот мод не указывает текущую версию игры как поддерживаемую; часто он всё равно работает.",
+    "undeclaredHardDependencyHonored": "Сортировщик уже соблюдает эту жёсткую связь (при загрузке), хотя автор её не объявил.",
+    "pinRelationExplicitlyAnyway": "Всё равно явно закрепить связь как правило порядка загрузки.",
+    "lazyReferenceViolatedJitResolved": "Текущий порядок не соблюдает эту отложенно разрешаемую ссылку на сборку, но она разрешается при JIT-компиляции, после загрузки всех сборок, поэтому порядок загрузки на неё фактически не влияет.",
+    "nearMissModReference": {
+      "findModName": "Имя FindMod «{written}» не соответствует ни одному активному или установленному моду, но очень похоже на активный мод «{candidateName}» — возможно, это опечатка. Сообщите об этом автору мода, который на него ссылается.",
+      "mayRequireId": "ID MayRequire «{written}» не соответствует ни одному активному или установленному моду, но очень похож на активный мод «{candidateName}» — возможно, это опечатка. Сообщите об этом автору мода, который на него ссылается."
+    },
+    "mergeCompleteNothingToMerge": "игра применяет эти изменения к одному значению по очереди; объединять нечего",
+    "mergeLeadDefOverrideCombine": "Моды меняют разные поля; слияние объединит оба набора изменений.",
+    "mergePromotedPatchCollisionKeepsBoth": "Моды меняют разные поля; слияние сохранит изменения обоих.",
+    "keepLoadOrderWinner": "Оставить победителя по порядку загрузки.",
+    "mergeStructuralGuard": "{field} отличается у разных владельцев — слияние по полям небезопасно; подтвердите победителя по порядку загрузки",
+    "mergeFieldsNeedChoice": "Объединить, {unresolved} поле требует выбора. | Объединить, {unresolved} поля требуют выбора. | Объединить, {unresolved} полей требуют выбора.",
+    "identicalCopiesOrderIrrelevant": "одинаковые копии; порядок не может изменить результат",
+    "notAddressedByPatch": "Не затрагивается этим патчем; решает порядок загрузки, как и сейчас."
+  },
+  "modInfo": {
+    "panel": {
+      "regionLabel": "Сведения о моде",
+      "close": "Закрыть",
+      "notFoundTitle": "Этого мода нет в текущем сканировании",
+      "allDetailsLink": "Все подробности",
+      "previewAlt": "Превью мода {mod}",
+      "noPreview": "Нет превью",
+      "previewTooLarge": "Превью больше 8 МБ",
+      "previewUnsupportedFormat": "Превью не в формате PNG или JPEG",
+      "previewUnreadable": "Не удалось прочитать превью",
+      "missingHeading": "Отсутствует",
+      "missingBody": "Указан в ModsConfig.xml, но не найден на диске",
+      "requiredByHeading": "Требуется для",
+      "pendingActivation": "Ожидает включения — примените или пересканируйте, чтобы изменение вступило в силу",
+      "pendingDeactivation": "Ожидает отключения — примените или пересканируйте, чтобы изменение вступило в силу",
+      "packageIdLine": "ID пакета: {id}",
+      "workshopCopyNote": "Копия из Мастерской",
+      "versionLine": "Версия мода: {version}",
+      "aboutNotOnDisk": "Не удалось найти About.xml этого мода — возможно, его файлы были перемещены или удалены после последнего сканирования.",
+      "supportedVersionsLabel": "Поддерживаемые версии",
+      "supportsGameVersion": "Поддерживает эту версию игры",
+      "doesNotSupportGameVersion": "Не объявляет поддержку этой версии игры",
+      "openWorkshopButton": "Открыть страницу в Мастерской (во внешнем браузере)",
+      "openHomepageButton": "Открыть домашнюю страницу (во внешнем браузере)",
+      "rootFolderLabel": "Папка мода",
+      "loadedFoldersLabel": "Загружаемые папки",
+      "costLabel": "Затраты",
+      "costLine": "{defsLabel}: {defCount}, {patchOpsLabel}: {patchOps}, {dllsLabel}: {assemblyCount}",
+      "seeStartupLink": "Открыть «Затраты на запуск»",
+      "tagsLabel": "Теги",
+      "hardDependents": "{count} мод с жёсткой зависимостью | {count} мода с жёсткой зависимостью | {count} модов с жёсткой зависимостью",
+      "softDependents": "{count} мод с мягкой зависимостью | {count} мода с мягкой зависимостью | {count} модов с мягкой зависимостью",
+      "awarenessDependents": "{count} мод с сигнальной связью | {count} мода с сигнальной связью | {count} модов с сигнальной связью",
+      "frameworkCandidate": "Похоже на общий фреймворк",
+      "generatedLine": "Создан Rimmerge ({kind})",
+      "generatedMerge": "мод слияния профиля",
+      "generatedPatch": "патч совместимости",
+      "generatedAssignment": "проект назначения",
+      "positionLabel": "Позиция",
+      "previousPositionLine": "Предыдущая позиция: #{position}",
+      "whyHereLink": "Почему здесь?",
+      "findingsCount": "{count} замечание | {count} замечания | {count} замечаний",
+      "needsInputCount": "{count} требует решения | {count} требуют решения | {count} требуют решения",
+      "declaredHeading": "Объявленный порядок загрузки",
+      "descriptionHeading": "Описание",
+      "noDescription": "Описание отсутствует.",
+      "showMore": "Развернуть",
+      "showLess": "Свернуть",
+      "aboutChanged": "About.xml изменился после последнего сканирования — пересканируйте",
+      "aboutUnreadable": "Не удалось прочитать About.xml: {reason}",
+      "aboutUnreadableIoHeadline": "файл не удалось прочитать",
+      "aboutUnreadableXmlHeadline": "файл не является корректным XML",
+      "descriptionTruncated": "Описание было слишком длинным и сокращено."
+    }
+  }
+}

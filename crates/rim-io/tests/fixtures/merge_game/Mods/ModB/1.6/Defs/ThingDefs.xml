@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="Fixture_WallBase2">
+    <defName>Fixture_Wall</defName>
+    <label>reinforced fixture wall</label>
+    <statBases>
+      <MaxHitPoints>300</MaxHitPoints>
+    </statBases>
+  </ThingDef>
+</Defs>

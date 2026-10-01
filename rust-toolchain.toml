@@ -1,0 +1,9 @@
+[toolchain]
+# Plain "stable", not a host-triple-suffixed channel: rustup resolves
+# "stable" to whatever toolchain is already installed for the host
+# running it, and every contributor and CI runner here is a fixed
+# Windows/MSVC host (see the root README's "Development" section) — a
+# pinned `-x86_64-pc-windows-msvc` suffix only pays off across mixed
+# hosts, which this project doesn't have.
+channel = "stable"
+components = ["rustfmt", "clippy"]

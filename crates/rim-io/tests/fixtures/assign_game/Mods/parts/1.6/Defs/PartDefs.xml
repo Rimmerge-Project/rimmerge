@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <example.PartDef>
+    <defName>Part0</defName>
+    <effect>EffectAlpha</effect>
+  </example.PartDef>
+
+  <example.PartDef>
+    <defName>Part1</defName>
+    <effect>EffectBeta</effect>
+  </example.PartDef>
+
+  <example.PartDef>
+    <defName>Part2</defName>
+    <effect>EffectGamma</effect>
+  </example.PartDef>
+
+  <example.PartDef>
+    <defName>Part3</defName>
+    <effect>EffectDelta</effect>
+  </example.PartDef>
+
+  <example.PartDef>
+    <defName>Part4</defName>
+    <effect>EffectEpsilon</effect>
+  </example.PartDef>
+</Defs>

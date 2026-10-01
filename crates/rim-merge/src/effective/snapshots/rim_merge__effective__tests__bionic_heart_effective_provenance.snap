@@ -1,0 +1,229 @@
+---
+source: crates/rim-merge/src/effective.rs
+assertion_line: 1028
+expression: "&effective.provenance"
+---
+{
+    FieldPath(
+        [
+            Child(
+                "addedPartProps",
+            ),
+            Child(
+                "betterThanNatural",
+            ),
+        ],
+    ): Owner(
+        ModId(
+            "example.bionicsfork",
+        ),
+    ),
+    FieldPath(
+        [
+            Child(
+                "addedPartProps",
+            ),
+            Child(
+                "partEfficiency",
+            ),
+        ],
+    ): Owner(
+        ModId(
+            "example.bionicsfork",
+        ),
+    ),
+    FieldPath(
+        [
+            Child(
+                "addedPartProps",
+            ),
+            Child(
+                "solid",
+            ),
+        ],
+    ): Owner(
+        ModId(
+            "example.bionicsfork",
+        ),
+    ),
+    FieldPath(
+        [
+            Child(
+                "allowMothballIfLowPriorityWorldPawn",
+            ),
+        ],
+    ): Inherited {
+        template: DefKey {
+            def_type: "HediffDef",
+            def_name: "ImplantHediffBase",
+        },
+        owner: ModId(
+            "ludeon.rimworld",
+        ),
+    },
+    FieldPath(
+        [
+            Child(
+                "comps",
+            ),
+            Item(
+                Class(
+                    "ExampleBody.Hediffs.HediffCompProperties_MaxHPAdjust",
+                ),
+            ),
+        ],
+    ): Inherited {
+        template: DefKey {
+            def_type: "HediffDef",
+            def_name: "addedPartExampleSynth",
+        },
+        owner: ModId(
+            "example.bionicsfork",
+        ),
+    },
+    FieldPath(
+        [
+            Child(
+                "countsAsAddedPartOrImplant",
+            ),
+        ],
+    ): Inherited {
+        template: DefKey {
+            def_type: "HediffDef",
+            def_name: "ImplantHediffBase",
+        },
+        owner: ModId(
+            "ludeon.rimworld",
+        ),
+    },
+    FieldPath(
+        [
+            Child(
+                "defName",
+            ),
+        ],
+    ): Owner(
+        ModId(
+            "example.bionicsfork",
+        ),
+    ),
+    FieldPath(
+        [
+            Child(
+                "defaultLabelColor",
+            ),
+        ],
+    ): Inherited {
+        template: DefKey {
+            def_type: "HediffDef",
+            def_name: "addedPartExampleSynth",
+        },
+        owner: ModId(
+            "example.bionicsfork",
+        ),
+    },
+    FieldPath(
+        [
+            Child(
+                "description",
+            ),
+        ],
+    ): Owner(
+        ModId(
+            "example.bionicsfork",
+        ),
+    ),
+    FieldPath(
+        [
+            Child(
+                "descriptionHyperlinks",
+            ),
+            Child(
+                "ThingDef",
+            ),
+        ],
+    ): Owner(
+        ModId(
+            "example.bionicsfork",
+        ),
+    ),
+    FieldPath(
+        [
+            Child(
+                "hediffClass",
+            ),
+        ],
+    ): Inherited {
+        template: DefKey {
+            def_type: "HediffDef",
+            def_name: "AddedBodyPartBase",
+        },
+        owner: ModId(
+            "ludeon.rimworld",
+        ),
+    },
+    FieldPath(
+        [
+            Child(
+                "isBad",
+            ),
+        ],
+    ): Inherited {
+        template: DefKey {
+            def_type: "HediffDef",
+            def_name: "ImplantHediffBase",
+        },
+        owner: ModId(
+            "ludeon.rimworld",
+        ),
+    },
+    FieldPath(
+        [
+            Child(
+                "label",
+            ),
+        ],
+    ): Patch {
+        mod_id: ModId(
+            "mod.compat",
+        ),
+        op_index: 0,
+    },
+    FieldPath(
+        [
+            Child(
+                "labelNoun",
+            ),
+        ],
+    ): Owner(
+        ModId(
+            "example.bionicsfork",
+        ),
+    ),
+    FieldPath(
+        [
+            Child(
+                "priceImpact",
+            ),
+        ],
+    ): Inherited {
+        template: DefKey {
+            def_type: "HediffDef",
+            def_name: "AddedBodyPartBase",
+        },
+        owner: ModId(
+            "ludeon.rimworld",
+        ),
+    },
+    FieldPath(
+        [
+            Child(
+                "spawnThingOnRemoved",
+            ),
+        ],
+    ): Owner(
+        ModId(
+            "example.bionicsfork",
+        ),
+    ),
+}

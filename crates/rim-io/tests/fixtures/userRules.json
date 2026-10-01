@@ -1,0 +1,31 @@
+{
+    "timestamp": 1700000000,
+    "rules": {
+        "fixture.addon.a": {
+            "loadAfter": {
+                "example.framework": {
+                    "comment": "must be loaded after the framework"
+                }
+            }
+        },
+        "fixture.inactive.addon": {
+            "loadAfter": {
+                "example.framework": {
+                    "comment": "inactive on this call, never in the active set"
+                }
+            }
+        },
+        "fixture.pinned.bottom": {
+            "loadBottom": {
+                "value": true,
+                "comment": "pin to the bottom"
+            }
+        },
+        "fixture.pinned.top": {
+            "loadTop": {
+                "value": true,
+                "comment": "pin to the top"
+            }
+        }
+    }
+}

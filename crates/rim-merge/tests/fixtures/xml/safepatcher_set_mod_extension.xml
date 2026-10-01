@@ -1,0 +1,18 @@
+<!--
+  Source: Example Weapon FX,
+  ExampleFlash/Patches/Patches.xml — one `<li>` of the real
+  PatchOperationSequence, promoted to a top-level `<Operation>` (which is
+  how a DefSourceReader hands a contribution to `replay`).
+-->
+<Operation Class="SafePatcher.PatchOperationSetModExtension">
+  <xpath>Defs/ThingDef[defName="EF_ChargedRifle"]</xpath>
+  <value>
+    <li Class="ExampleFlash.FlashProps">
+      <def>EF_ChargedRifleFlash</def>
+      <drawSize>(1,1)</drawSize>
+      <offsets>
+        <li>(0.32,0)</li>
+      </offsets>
+    </li>
+  </value>
+</Operation>

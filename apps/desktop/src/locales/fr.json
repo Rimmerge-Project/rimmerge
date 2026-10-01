@@ -1,0 +1,2055 @@
+{
+  "common": {
+    "verbatim": "{text}",
+    "cancel": "Annuler",
+    "loading": "Chargement…",
+    "technicalDetail": "Détails techniques : {detail}"
+  },
+  "defGraphics": {
+    "viewer": {
+      "regionLabel": "Aperçu de la texture",
+      "facingGroupLabel": "Orientation",
+      "previousVariant": "Variante précédente",
+      "nextVariant": "Variante suivante",
+      "variantPosition": "{label} ({index} sur {count})",
+      "variantSelectLabel": "Variante",
+      "slotSelectLabel": "Source de la texture",
+      "fromMod": "Source : {mod}",
+      "overridesOwner": "Remplace la texture de {owner}, propriétaire de la def",
+      "mirrored": "Dessinée en miroir",
+      "layoutInferred": "Disposition déduite des noms de fichiers",
+      "truncatedVariants": "{count} autre variante non affichée | {count} autres variantes non affichées",
+      "truncatedSlots": "{count} autre source non affichée | {count} autres sources non affichées"
+    },
+    "facing": {
+      "north": "Nord",
+      "east": "Est",
+      "south": "Sud",
+      "west": "Ouest"
+    },
+    "facingShort": {
+      "north": "N",
+      "east": "E",
+      "south": "S",
+      "west": "O"
+    },
+    "slot": {
+      "graphic": "Graphique",
+      "worn": "Porté",
+      "lifeStage": "Stades de vie",
+      "raceKind": "Type de personnage : {name}",
+      "styleTexture": "Texture de style",
+      "headType": "Type de tête",
+      "bodyType": "Type de corps",
+      "terrain": "Terrain",
+      "icon": "Icône",
+      "probe": "Trouvée par chemin : {field}"
+    },
+    "variant": {
+      "only": "Graphique unique",
+      "bodyType": "Type de corps : {name}",
+      "lifeStage": "Stade de vie {number}",
+      "female": "Femelle, stade de vie {number}",
+      "alternate": "Alternative {number}",
+      "member": "{name}",
+      "stack": "Palier de pile {number}",
+      "stackSingle": "Objet seul",
+      "appearance": "Apparence : {name}",
+      "wornPath": "Chemin porté {number}",
+      "wornPathOnBodyType": "Chemin porté {number}, {name}",
+      "field": "{name}"
+    },
+    "state": {
+      "loading": "Chargement de la texture",
+      "noGraphic": "Cette def n’affiche aucune texture propre.",
+      "composedAtRuntime": "Le jeu assemble ce personnage à partir du corps, de la tête et des cheveux pendant l’exécution : il n’y a donc pas de texture unique à afficher.",
+      "notViewable": "Intégrée au jeu ou à un paquet de ressources, elle ne peut pas être affichée ici.",
+      "notViewableUncertain": "Aucun fichier de texture trouvé. Elle est peut-être intégrée au jeu et ne peut alors pas être affichée ici.",
+      "notFound": "Aucun fichier de texture trouvé. Le jeu affiche sa texture d’erreur.",
+      "ddsNotPreviewable": "Texture DDS. Aucun aperçu disponible.",
+      "undecodableInGame": "Le jeu ne peut pas décoder ce fichier DDS et affiche une texture de remplacement.",
+      "pngSiblingNote": "Affichée depuis la copie PNG ; le jeu charge le DDS.",
+      "tooLarge": "Le fichier image est trop volumineux pour l’aperçu.",
+      "unsupportedFormat": "Ce format d’image ne peut pas être prévisualisé.",
+      "unreadable": "Le fichier image n’a pas pu être lu."
+    },
+    "alt": "{def}, orientation {facing}",
+    "altNoFacing": "{def}"
+  },
+  "primevue": {
+    "emptyMessage": "Aucune option disponible",
+    "emptyFilterMessage": "Aucun résultat",
+    "emptySelectionMessage": "Aucun élément sélectionné",
+    "searchMessage": "{count} résultats disponibles",
+    "selectionMessage": "{count} éléments sélectionnés",
+    "aria": {
+      "trueLabel": "Vrai",
+      "falseLabel": "Faux",
+      "nullLabel": "Non sélectionné",
+      "close": "Fermer",
+      "previous": "Précédent",
+      "next": "Suivant",
+      "navigation": "Navigation"
+    }
+  },
+  "shell": {
+    "brand": "Rimmerge",
+    "mainNavigation": "Navigation principale",
+    "nav": {
+      "dashboard": "Tableau de bord",
+      "inbox": "Constats",
+      "mergeMod": "Résultat de fusion",
+      "patches": "Patchs de compat.",
+      "assignments": "Créateur de patchs",
+      "startup": "Coût au démarrage",
+      "order": "Ordre de chargement",
+      "rules": "Règles",
+      "mods": "Mods",
+      "settings": "Paramètres"
+    },
+    "orderSource": {
+      "label": "Source de l’ordre",
+      "current": "Actuel",
+      "suggested": "Suggéré",
+      "inSentenceCurrent": "actuel",
+      "inSentenceSuggested": "suggéré"
+    },
+    "modLabelMode": {
+      "label": "Affichage des mods",
+      "names": "Noms",
+      "ids": "ID"
+    },
+    "apply": "Appliquer…",
+    "scanningMods": "Analyse des mods",
+    "supportLink": "Soutenir Rimmerge",
+    "liveRegion": {
+      "newNotification": "{count} nouvelle notification : {title} | {count} nouvelles notifications, la plus récente : {title}"
+    }
+  },
+  "settings": {
+    "heading": "Paramètres",
+    "interfaceHeading": "Interface",
+    "language": {
+      "label": "Langue",
+      "system": "Système ({detected})",
+      "preview": "aperçu",
+      "optionPreview": "{name} ({preview})",
+      "previewNote": "Si vous repérez une traduction erronée, veuillez {url} et nous la corrigerons.",
+      "previewNoteLinkText": "ouvrir un ticket"
+    },
+    "thresholdLabel": "Seuil de confiance (auto ou décision requise)",
+    "tieBreak": {
+      "label": "Départage",
+      "description": "Définit le point de départ d’un mod qu’aucun autre mod ne fixe. Reconstruire classe ces mods par nom et ignore votre ordre actuel : attendez-vous à ce que la plupart des mods bougent la première fois que vous reconstruisez une liste produite par RimSort. Conserver l’actuel fait partir chaque mod de sa position dans ModsConfig.xml et en déplace le moins possible.",
+      "rebuild": "Reconstruire",
+      "preserveCurrent": "Conserver l’actuel"
+    },
+    "useImportedPairs": {
+      "label": "Utiliser les règles de paire importées",
+      "description": "Laisse les règles « charger avant/après » de RimSort/SteamDB influer sur l’ordre. Activé par défaut : la plupart des paires importées reprennent des indices que le tri impose déjà de lui-même. Une règle que vous avez définie vous-même n’est jamais affectée par cette option."
+    },
+    "useImportedPlacements": {
+      "label": "Utiliser les règles de placement importées",
+      "description": "Laisse les placements « charger en premier/en dernier » de RimSort/SteamDB fixer la tranche d’un mod. Activé par défaut : rien dans les fichiers d’un mod ne peut dire « chargez-moi en dernier »."
+    },
+    "enforceSoft": {
+      "label": "Imposer les contraintes souples",
+      "description": "Ces contraintes viennent de références à {assemblyRef} résolues de façon différée. Désactivé par défaut : les imposer peut déplacer nettement plus de mods par rapport à leur ordre actuel que de les laisser indicatives."
+    },
+    "enforceAwareness": {
+      "label": "Imposer les contraintes de perception",
+      "description": "Ces contraintes viennent d’indices {edgeKinds} : la preuve que les mods interagissent, pas un fait d’ordre. Désactivé par défaut : elles sont bien plus fréquentes que les contraintes souples, si bien que les imposer perturbe bien davantage l’ordre."
+    },
+    "enforceInferred": {
+      "label": "Imposer les contraintes déduites",
+      "description": "Ces contraintes sont des {edgeKinds} : les conclusions heuristiques de l’analyseur lui-même selon lesquelles deux mods interagissent, et pas seulement un signal de présence comme Perception. Activé par défaut : contrairement aux contraintes souples et de perception, l’analyseur a déjà conclu qu’il s’agit de faits d’ordre ; les laisser simplement indicatives reviendrait à négliger cette preuve."
+    },
+    "network": {
+      "heading": "Accès à Internet",
+      "recoveredWarning": "Le fichier de paramètres de l’application n’a pas pu être lu : l’accès à Internet reste désactivé jusqu’à ce que vous enregistriez à nouveau les paramètres.",
+      "allowNetwork": {
+        "label": "Autoriser l’accès à Internet",
+        "description": "L’interrupteur principal de tout ce que Rimmerge envoie sur Internet, automatiquement ou manuellement. Il ne contacte jamais que deux hôtes GitHub (api.github.com pour la recherche de mises à jour et raw.githubusercontent.com pour l’actualisation des bases de règles), et jamais votre réseau local. Désactivé, chaque requête est ignorée avant qu’une adresse soit construite ou une connexion ouverte. S’applique à toute l’application, sur cet ordinateur, quelle que soit l’installation de RimWorld ouverte."
+      },
+      "autoRefreshRuleDatabases": {
+        "label": "Actualiser automatiquement les bases de règles",
+        "description": "Une fois par jour, au lancement, télécharge les bases de règles activées listées dans la carte Bases de règles, jamais la base Steam Workshop, qui ne s’actualise que lorsque vous cliquez sur Actualiser."
+      },
+      "checkForUpdates": {
+        "label": "Rechercher des mises à jour",
+        "description": "Une fois par jour, au lancement, vérifie si une version plus récente de Rimmerge est sortie."
+      },
+      "checkNow": {
+        "button": "Vérifier maintenant",
+        "disabledTitle": "Désactivé par « Autoriser l’accès à Internet »",
+        "awaitingFirstRun": "Pas encore vérifié : répondez d’abord à l’avis de bienvenue.",
+        "alreadyRanThisLaunch": "Déjà vérifié lors de ce lancement.",
+        "networkDisabled": "L’accès à Internet est désactivé.",
+        "checkDisabled": "Vérifié malgré tout : les vérifications automatiques sont désactivées.",
+        "notDue": "Vérifié récemment : réessayez plus tard.",
+        "rateLimited": "La limite de requêtes de GitHub a été atteinte ; réessayez après {until}.",
+        "updated": "Une version plus récente est disponible : {version}.",
+        "unchanged": "À jour.",
+        "failed": "Échec de la dernière vérification : {reason}"
+      },
+      "mutedKinds": {
+        "heading": "Avis masqués",
+        "empty": "Aucun avis masqué.",
+        "unmuteButton": "Réafficher"
+      },
+      "resetIncludesSteam": "Rétablit chaque interrupteur, y compris celui de la base Steam Workshop (environ 49 Mo, téléchargée uniquement lorsque vous l’actualisez).",
+      "restoreDefaultsButton": "Rétablir l’accès à Internet par défaut",
+      "restoreDefaultsToast": "Accès à Internet, recherche de mises à jour et actualisation automatique réactivés"
+    },
+    "suggestMergeWhenClean": {
+      "label": "Suggérer de fusionner les remplacements sans conflit",
+      "description": "Quand deux mods modifient des champs différents d’une même def, suggère de les fusionner au lieu de garder le gagnant selon l’ordre de chargement. Les defs fusionnées sont écrites dans le mod de fusion lors de l’application."
+    },
+    "showDanglingDefReferences": {
+      "label": "Afficher les constats de référence de def orpheline",
+      "description": "Signale un nom écrit à un emplacement de référence reconnu (par ex. un prérequis de recherche, une clé de modificateur de statistique) qu’aucune def active, de quelque type que ce soit, ne porte réellement. Désactivé par défaut : cela peut produire un nombre important de faux positifs sur une grosse installation (par exemple un champ d’auto-identification pris pour une référence croisée). Ne modifie jamais l’ordre de chargement."
+    },
+    "saveButton": "Enregistrer",
+    "resetButton": "Rétablir les valeurs par défaut",
+    "dirtyIndicator": "Modifications non enregistrées",
+    "resetConfirm": {
+      "header": "Rétablir les valeurs par défaut ?",
+      "body": "Remplit chaque champ ci-dessus avec les valeurs par défaut intégrées de Rimmerge. Rien n’est enregistré tant que vous n’avez pas cliqué sur Enregistrer.",
+      "cancelButton": "Annuler",
+      "confirmButton": "Réinitialiser"
+    },
+    "about": {
+      "heading": "À propos",
+      "versionLabel": "Version {version}",
+      "repoLink": "Dépôt GitHub",
+      "issuesLink": "Signaler un problème",
+      "supportLink": "Soutenir Rimmerge",
+      "supportBlurb": "Rimmerge est libre et open source. S’il vous fait gagner du temps, vous pouvez soutenir son développement."
+    }
+  },
+  "fetchFailure": {
+    "transportHeadline": "Impossible de joindre GitHub",
+    "httpStatus": "GitHub a répondu avec un statut HTTP inattendu ({status})",
+    "rateLimited": "La limite de requêtes de GitHub a été atteinte ; réessayez après {until}",
+    "notPublished": "Aucune version de Rimmerge n’a encore été publiée",
+    "tooLarge": "La réponse dépassait la taille autorisée",
+    "invalidContent": "La réponse n’était pas au format attendu",
+    "notAStableVersion": "Le dernier tag publié n’est pas une version stable",
+    "notModifiedWithoutCache": "GitHub n’a signalé aucun changement, mais rien n’est encore en cache",
+    "readFailedHeadline": "Le téléchargement a été interrompu",
+    "cacheWriteFailedHeadline": "Le téléchargement n’a pas pu être enregistré localement",
+    "unclassifiedHeadline": "La tentative a échoué"
+  },
+  "ruleWarning": {
+    "droppedClusterRules": "{count} règle de groupe antérieure à la migration abandonnée au chargement : {ids} | {count} règles de groupe antérieures à la migration abandonnées au chargement : {ids}",
+    "unknownModKnowledgeValue": "Valeur inconnue « {value} » ignorée ({what}) dans les règles {section}",
+    "modKnowledgeCacheUnreadableHeadline": "Impossible de lire les règles Rimmerge en cache ; utilisation de l’instantané intégré",
+    "rowsOverRoleLimit": "{count} ligne au-delà de la limite par rôle ignorée dans le groupe {role} des règles {section} | {count} lignes au-delà de la limite par rôle ignorées dans le groupe {role} des règles {section}",
+    "precedenceRuleMissingFramework": "Règle de priorité ignorée pour {defType} : elle ne nomme aucun framework",
+    "what": {
+      "precedenceRule": "règle de priorité",
+      "behaviour": "comportement",
+      "matchMode": "mode de correspondance",
+      "gateMatchMode": "mode de correspondance de condition",
+      "gateBehaviour": "comportement de condition",
+      "conditionalType": "type conditionnel",
+      "topLevelSection": "section de premier niveau",
+      "logShapeRole": "rôle de forme de journal",
+      "placeholderType": "type d’espace réservé du modèle"
+    },
+    "refusedRow": {
+      "templateInvalid": "Ligne {section} « {value} » ignorée : son modèle est vide, trop long ou mal formé",
+      "captureMissing": "Ligne {section} « {value} » ignorée : il manque à son modèle une capture requise par son rôle",
+      "markerLength": "Ligne {section} « {value} » ignorée : une chaîne de marqueur sort de ses limites de longueur",
+      "idTooLong": "Ligne {section} ignorée : son identifiant est trop long",
+      "templateUncompilable": "Ligne {section} « {value} » ignorée : son modèle ne se compile pas dans les limites de taille"
+    }
+  },
+  "setup": {
+    "title": "Configurer Rimmerge",
+    "fields": {
+      "gameDir": "Dossier d’installation de RimWorld",
+      "workshopDir": "Dossier du Steam Workshop",
+      "modsConfig": "Chemin de ModsConfig.xml",
+      "profileDir": "Dossier du profil"
+    },
+    "browse": "Parcourir…",
+    "loadProject": "Charger le projet",
+    "saveAsDefaults": "Enregistrer comme valeurs par défaut",
+    "loadingProject": "Chargement du projet",
+    "startingCaption": "Démarrage…",
+    "stage": {
+      "discovering": "Découverte des mods",
+      "scanning": "Analyse des mods",
+      "analyzing": "Évaluation",
+      "collectingTagEvidence": "Collecte des indices de tags",
+      "done": "Terminé"
+    },
+    "scanFinishedToast": "Analyse terminée avec {count} remarque | Analyse terminée avec {count} remarques",
+    "projectLoadedWithWarningsToast": "Projet chargé avec des avertissements",
+    "savedAsDefaultsToast": "Enregistré comme valeurs par défaut",
+    "savedAsDefaultsDetail": "Ces chemins seront préremplis au prochain démarrage de Rimmerge."
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "counts": {
+      "mods": "Mods",
+      "needsInputCurrent": "Décision requise (actuel)",
+      "needsInputSuggested": "Décision requise (suggéré)",
+      "movedMods": "Mods déplacés",
+      "selectedOrder": "Ordre sélectionné"
+    },
+    "ledgerStatsHeading": "Registre des conflits, pour les deux ordres",
+    "table": {
+      "auto": "Auto",
+      "needsInput": "Décision requise",
+      "overridden": "Choix manuel",
+      "resolvedBySuggested": "Résolu par l’ordre suggéré",
+      "current": "Actuel",
+      "suggested": "Suggéré"
+    },
+    "topKindsHeading": "Types les plus fréquents à décider",
+    "topKindsEmpty": "Aucune décision requise pour l’instant.",
+    "scanNotesDisclosure": "Remarques de l’analyse ({count})",
+    "importLog": {
+      "button": "Importer un journal du jeu",
+      "importedToast": "Journal du jeu importé",
+      "logFilter": "Journal RimWorld",
+      "allFilesFilter": "Tous les fichiers"
+    },
+    "guide": {
+      "heading": "Premiers pas",
+      "intro": "Trois étapes suffisent pour mettre l’ordre de chargement suggéré dans le jeu. Les pages Constats et Règles sont là si vous voulez plus de contrôle.",
+      "listLabel": "Étapes pour commencer",
+      "status": {
+        "done": "Terminé",
+        "current": "Étape en cours",
+        "upcoming": "Pas encore"
+      },
+      "chooseSuggested": {
+        "title": "Utiliser l’ordre suggéré",
+        "pending": "Vous consultez votre ordre actuel. L’ordre suggéré déplace {count} mod. | Vous consultez votre ordre actuel. L’ordre suggéré déplace {count} mods.",
+        "doneText": "L’ordre suggéré est sélectionné.",
+        "doneMatchesFileText": "ModsConfig.xml correspond déjà à l’ordre suggéré.",
+        "button": "Utiliser l’ordre suggéré",
+        "reviewLink": "Examiner l’ordre suggéré"
+      },
+      "apply": {
+        "title": "Appliquer",
+        "pending": "Consultez ce qui sera écrit dans ModsConfig.xml. Une sauvegarde est créée au préalable.",
+        "button": "Appliquer…",
+        "staleBlocked": "Vos mods actifs ont changé depuis la dernière analyse. Réanalysez avant d’appliquer.",
+        "rescanButton": "Réanalyser"
+      },
+      "confirm": {
+        "title": "Confirmer",
+        "pending": "Vérifiez le récapitulatif, puis confirmez. Si quelque chose va casser, comme un mod requis manquant, une confirmation vous est d’abord demandée."
+      },
+      "done": "ModsConfig.xml correspond à l’ordre suggéré. Lancez RimWorld pour jouer.",
+      "asOfLastScan": "Selon la dernière analyse ou application.",
+      "needsInputHint": "{count} constat attend votre décision (facultatif) | {count} constats attendent votre décision (facultatif)",
+      "openInbox": "Ouvrir les constats",
+      "appliedAnnouncement": "Appliqué. ModsConfig.xml correspond désormais à l’ordre suggéré."
+    }
+  },
+  "notifications": {
+    "heading": "Notifications",
+    "empty": "Vous êtes à jour.",
+    "dismiss": "Masquer",
+    "mute": "Ne plus me le rappeler",
+    "severityWarn": "Requiert votre attention",
+    "severityInfo": "Pour information",
+    "bell": {
+      "withCount": "Notifications, {count}",
+      "none": "Notifications, aucune"
+    },
+    "welcome": {
+      "title": "Bienvenue dans Rimmerge",
+      "body": "Rimmerge peut contacter GitHub une fois par jour, au démarrage :\n- pour vérifier si une version plus récente de Rimmerge est sortie (api.github.com) ;\n- pour télécharger les bases de règles mises à jour : les règles d’ordre de chargement de la communauté et le fichier de règles propre à Rimmerge (raw.githubusercontent.com). Les mises à jour sont stockées localement ; elles ne modifient votre ordre de chargement que si vous choisissez de les importer.\n\nIl n’envoie rien sur vous, vos mods ou votre installation : seulement une requête ordinaire, lors de laquelle GitHub voit votre adresse IP. La volumineuse base Steam Workshop n’est jamais téléchargée automatiquement, uniquement lorsque vous cliquez sur Actualiser.",
+      "settingsAlreadyRecommended": "Vos paramètres correspondent déjà aux valeurs par défaut recommandées.",
+      "steamWorkshopLabel": "Base Steam Workshop (environ 49 Mo, téléchargée uniquement lorsque vous cliquez sur Actualiser)"
+    },
+    "gameVersionChanged": {
+      "title": "Version du jeu modifiée",
+      "body": "RimWorld est désormais en version {current} (auparavant {acknowledged}). Les patchs de compatibilité et les mods du créateur de patchs exportés pour {acknowledged} déclarent toujours cette version tant que vous ne les réexportez pas.",
+      "kindLabel": "Version du jeu modifiée"
+    },
+    "updateAvailable": {
+      "title": "Rimmerge {version} est disponible",
+      "body": "Vous utilisez une version plus ancienne. Rimmerge {version} est sorti.",
+      "kindLabel": "Mise à jour disponible"
+    },
+    "ruleDatabasesStale": {
+      "title": "{count} base de règles requiert votre attention | {count} bases de règles requièrent votre attention",
+      "body": "Les bases de règles suivantes n’ont pas été actualisées récemment :",
+      "kindLabel": "Bases de règles obsolètes",
+      "neverFetched": "Jamais téléchargée",
+      "lastSuccess": "Dernière actualisation : {date}",
+      "lastFailure": "Échec de la dernière tentative : {reason}"
+    },
+    "importedRulesOutdated": {
+      "title": "{count} base de règles a du nouveau contenu à importer | {count} bases de règles ont du nouveau contenu à importer",
+      "body": "Nouveau contenu en cache pour :",
+      "kindLabel": "Nouvelles règles à importer"
+    },
+    "recommendedSources": {
+      "kindLabel": "Bases de règles recommandées",
+      "title": "{count} base de règles recommandée n’est pas configurée | {count} bases de règles recommandées ne sont pas configurées",
+      "body": "Rimmerge trie au mieux avec les trois bases de règles. Les activer les télécharge maintenant ; ensuite, les petites s’actualisent automatiquement, et la base Steam Workshop uniquement lorsque vous cliquez sur Actualiser.",
+      "bodyWithSteam": "Rimmerge trie au mieux avec les trois bases de règles. Les activer les télécharge maintenant. La base Steam Workshop pèse environ 49 Mo et ne s’actualise ensuite que lorsque vous cliquez sur Actualiser ; les petites s’actualisent automatiquement.",
+      "sourceOff": "{source} : désactivée",
+      "sourceNotDownloaded": "{source} : activée, pas encore téléchargée"
+    },
+    "actions": {
+      "keepNetworkSettings": "Garder ces paramètres",
+      "turnOffNetwork": "Désactiver l’accès à Internet",
+      "applyRecommendedSettings": "Utiliser les paramètres recommandés",
+      "refreshRuleDatabases": "Actualiser maintenant",
+      "openRuleDatabases": "Ouvrir les bases de règles",
+      "openSettings": "Ouvrir les paramètres",
+      "showReleasePage": "Copier le lien de la version",
+      "openPatches": "Ouvrir les patchs",
+      "enableRecommendedSources": "Activer et télécharger",
+      "enableRecommendedSourcesToast": "Bases de règles recommandées activées",
+      "enableRecommendedSourcesPartialToast": "Bases de règles recommandées activées, mais certains téléchargements n’ont pas abouti. Elles restent listées dans l’avis.",
+      "turnOffNetworkToast": "Accès à Internet désactivé",
+      "recommendedSettingsAppliedToast": "Paramètres recommandés appliqués",
+      "linkCopiedToast": "Lien copié"
+    }
+  },
+  "error": {
+    "generic": {
+      "title": "Échec de l’action",
+      "detail": "Un problème est survenu."
+    },
+    "code": {
+      "no_project_loaded": {
+        "title": "Aucun projet chargé",
+        "detail": "Chargez un projet avant d’effectuer cette action."
+      },
+      "session_lost": {
+        "title": "Session perdue",
+        "detail": "Une erreur interne a interrompu votre session. Elle va se recharger automatiquement."
+      },
+      "internal": {
+        "title": "Erreur interne",
+        "detail": "Un problème est survenu du côté de Rimmerge lui-même."
+      },
+      "invalid_input": {
+        "title": "Saisie non valide",
+        "detail": "La valeur saisie n’est pas valide."
+      },
+      "scan_failed": {
+        "title": "Échec de l’analyse",
+        "detail": "L’analyse ou l’évaluation de l’installation n’a pas abouti."
+      },
+      "mods_config_io_failed": {
+        "title": "Impossible de lire ou d’écrire ModsConfig.xml",
+        "detail": "Vérifiez que le fichier existe, qu’il n’est pas en lecture seule et qu’il n’est pas utilisé."
+      },
+      "profile_io_failed": {
+        "title": "Impossible de lire ou d’écrire votre profil",
+        "detail": "Vérifiez que le dossier de profil de Rimmerge est accessible en écriture."
+      },
+      "rimsort_import_failed": {
+        "title": "Échec de l’importation",
+        "detail": "Le fichier de base de données RimSort n’a pas pu être importé."
+      },
+      "rimworld_running": {
+        "title": "RimWorld est en cours d’exécution",
+        "detail": "Fermez d’abord RimWorld, ou continuez malgré tout."
+      },
+      "mod_not_found": {
+        "title": "Mod introuvable",
+        "detail": "Ce mod ne figure pas dans la liste des mods actifs."
+      },
+      "finding_not_found": {
+        "title": "Constat introuvable",
+        "detail": "Ce constat n’est plus actuel : il est peut-être déjà résolu."
+      },
+      "merge_source_failed": {
+        "title": "Impossible de lire une source de fusion",
+        "detail": "Un fichier de def, de modèle, de patch ou de texture a changé ou disparu depuis la dernière analyse. Rechargez le projet."
+      },
+      "merge_mod_io_failed": {
+        "title": "Impossible d’écrire le mod de fusion",
+        "detail": "L’écriture ou la suppression du dossier du mod de fusion généré a échoué."
+      },
+      "patch_not_found": {
+        "title": "Patch introuvable",
+        "detail": "Ce projet de patch de compatibilité n’est plus chargé."
+      },
+      "patch_identity_invalid": {
+        "title": "Identité du patch non valide",
+        "detail": "L’ID du paquet ou le nom affiché n’est pas valide, ou il entre en conflit avec un autre mod ou patch."
+      },
+      "def_not_found": {
+        "title": "Def introuvable",
+        "detail": "Cette def ou ce modèle ne figure pas dans cette analyse."
+      },
+      "assignment_not_found": {
+        "title": "Attribution introuvable",
+        "detail": "Ce projet du créateur de patchs n’est plus chargé."
+      },
+      "assignment_section_in_use": {
+        "title": "Section encore utilisée",
+        "detail": "Une autre section fait encore référence à des lignes de celle-ci."
+      },
+      "stale_active_set": {
+        "title": "La liste des mods actifs n’est plus à jour",
+        "detail": "Réanalysez avant d’écrire ModsConfig.xml."
+      },
+      "texture_unsupported_format": {
+        "title": "Format de texture non affichable",
+        "detail": "Le fichier n’est pas une image PNG ou JPEG : il ne peut donc pas être prévisualisé ici. Les textures DDS ne sont pas prises en charge."
+      }
+    }
+  },
+  "defaultPathsWarning": {
+    "notAnInstall": "{gameDir} ne ressemble pas à une installation de RimWorld (Version.txt ou Data/Core/ est absent)."
+  },
+  "defaultPathsError": {
+    "noProfileBase": "Ni RIMMERGE_PROFILE_DIR ni LOCALAPPDATA n’est défini : Rimmerge n’a nulle part où conserver ses propres fichiers.",
+    "gameDirNotFound": "Aucun dossier d’installation de RimWorld n’a été trouvé. Consultez les détails techniques ci-dessous pour voir chaque emplacement vérifié.",
+    "modsConfigNotFound": "Rimmerge n’a pas pu déterminer l’emplacement de ModsConfig.xml. Consultez les détails techniques ci-dessous."
+  },
+  "finding": {
+    "kind": {
+      "edgeDropped": "Contrainte abandonnée",
+      "anyOfChoice": "Choix parmi des candidats",
+      "defOverride": "Remplacement de def",
+      "patchCollision": "Collision de patchs",
+      "textureOverride": "Remplacement de texture",
+      "duplicateAssembly": "Assembly en double",
+      "likelyDuplicateMod": "Mod probablement en double",
+      "missingMod": "Mod manquant",
+      "missingDependency": "Dépendance manquante",
+      "incompatiblePair": "Paire incompatible",
+      "unsupportedVersion": "Version non prise en charge",
+      "undeclaredHardDependency": "Dépendance stricte non déclarée",
+      "lazyReferenceViolated": "Référence différée violée",
+      "declarationQuestioned": "Déclaration contestée",
+      "declarationOverridden": "Déclaration outrepassée",
+      "duplicateTemplateName": "Nom de modèle en double",
+      "keyedTranslationCollision": "Collision de traductions Keyed",
+      "soundOverride": "Remplacement de son",
+      "undeclaredTypeDependency": "Dépendance de type non déclarée",
+      "runtimePatchCollision": "Collision de patchs d’exécution",
+      "transpilerCollision": "Collision de transpilers",
+      "tagInferred": "Tag déduit",
+      "ruleOverruled": "Règle rejetée",
+      "placementOverruled": "Placement rejeté",
+      "placementQuestioned": "Placement contesté",
+      "placementOrderingOverridden": "Ordre de placement outrepassé",
+      "placementPromotesDependents": "Placement qui fait remonter des dépendants",
+      "missingTexturePath": "Chemin de texture manquant",
+      "patchWillFail": "Patch voué à l’échec",
+      "contributesNothing": "N’apporte rien",
+      "undecodableTexture": "Texture qui ne se chargera pas",
+      "brokenInheritance": "Héritage rompu",
+      "nearMissModReference": "Faute de frappe possible dans une référence de mod",
+      "discardedAddition": "Ajout délibérément écarté",
+      "danglingDefReference": "Référence de def orpheline"
+    },
+    "title": {
+      "edgeDroppedNoWinner": "Contrainte {before} avant {after} abandonnée pour rompre un cycle",
+      "edgeDroppedWithWinner": "Contrainte {before} avant {after} abandonnée, rejetée par {winner}",
+      "declarationQuestioned": "Déclaration {after} après {before} contestée par une relation {relation}",
+      "declarationOverridden": "Déclaration {after} après {before} outrepassée par {winner}",
+      "anyOfChoice": "{after} a besoin d’un mod fournissant {assembly} ({count} candidat) | {after} a besoin de l’un des {count} mods fournissant {assembly}",
+      "textureOverride": "texture {texturePath}",
+      "duplicateAssembly": "{assembly} fourni par {count} mod | {assembly} fourni par {count} mods",
+      "duplicateTemplateName": "Modèle {name} enregistré par {count} mod | Modèle {name} enregistré par {count} mods",
+      "keyedTranslationCollision": "{a} et {b} partagent {count} clé de traduction | {a} et {b} partagent {count} clés de traduction",
+      "soundOverride": "Son {path} fourni par {count} mod | Son {path} fourni par {count} mods",
+      "undeclaredTypeDependency": "{user} utilise {typeName} de {provider} sans relation déclarée",
+      "runtimePatchCollision": "{target} patché par {count} mod | {target} patché par {count} mods",
+      "transpilerCollision": "{target} transpilé par {count} mod | {target} transpilé par {count} mods",
+      "likelyDuplicateMod": "{a} et {b} semblent être des doublons ({count} def partagée) | {a} et {b} semblent être des doublons ({count} defs partagées)",
+      "missingMod": "{modId} est manquant",
+      "missingDependency": "Il manque à {modId} sa dépendance {dependency}",
+      "incompatiblePair": "{a} et {b} sont marqués comme incompatibles",
+      "unsupportedVersion": "{modId} ne prend pas en charge cette version de RimWorld",
+      "undeclaredHardDependency": "{after} a besoin de {before} au chargement sans le déclarer",
+      "lazyReferenceViolated": "{after} fait référence à {before} avant son chargement",
+      "tagInferred": "Tag {tag} attribué à {modId}",
+      "ruleOverruledNoWinner": "Règle {before} avant {after} rejetée",
+      "ruleOverruledWithWinner": "Règle {before} avant {after} rejetée par {winner}",
+      "placementOverruled": "Placement {placement} de {modId} rejeté",
+      "placementQuestioned": "Placement {placement} de {modId} contesté par {other}",
+      "placementOrderingOverridden": "{modId} outrepasse l’ordre de placement propre à {pinned}",
+      "placementPromotesDependents": "Le placement de {modId} fait remonter {count} autre mod | Le placement de {modId} fait remonter {count} autres mods",
+      "missingTexturePath": "Le champ {field} de {defKey} désigne une texture qu’aucun mod actif ne fournit",
+      "patchWillFail": "L’opération de {modId} sur {defKey} devrait échouer",
+      "contributesNothing": "{modId} n’apporte rien",
+      "undecodableTexture": "{path} de {modId} ne se décode pas",
+      "brokenInheritance": "L’héritage de {modId} depuis « {parentName} » est rompu",
+      "nearMissModReference": "La référence de {referrer} à « {written} » est peut-être une faute de frappe",
+      "discardedAddition": "{replacer} écarte délibérément l’ajout propre à {adder}",
+      "danglingDefReference": "« {name} » ne correspond à aucune def active"
+    }
+  },
+  "edgeKind": {
+    "assemblyRef": "Référence d’assembly",
+    "forceLoadAfter": "Chargement forcé après",
+    "forceLoadBefore": "Chargement forcé avant",
+    "loadAfter": "Charger après",
+    "loadBefore": "Charger avant",
+    "modDependency": "Dépendance de mod",
+    "findMod": "FindMod",
+    "ifModActive": "Si mod actif",
+    "patchTargetsDef": "Patch ciblant une def",
+    "mayRequire": "MayRequire",
+    "patchInjectedNode": "Nœud injecté par patch",
+    "assemblyVersionPrecedence": "Priorité de version d’assembly",
+    "usesType": "Utilise un type",
+    "parentTemplate": "Modèle parent",
+    "patchRemovedNode": "Nœud supprimé par patch",
+    "retextureAfterOwner": "Retexturage après le propriétaire",
+    "defOverrideAfterOrigin": "Remplacement de def après l’origine",
+    "patchSelectsInjectedNode": "Patch sélectionnant un nœud injecté",
+    "patchInvalidatesPredicate": "Patch invalidant un prédicat",
+    "patchRemovedNodeCosmetic": "Nœud supprimé (cosmétique)",
+    "replaceDiscardsAddition": "Remplacement écartant un ajout"
+  },
+  "tagSignal": {
+    "urlContains": "l’URL contient « {needle} »",
+    "assemblyRefTo": "réf. d’assembly vers {mod}",
+    "dependsOn": "dépend de {mod}"
+  },
+  "caveat": {
+    "duplicateTemplate": "le modèle « {name} » est enregistré par plusieurs mods ({owners}) ; chaque enfant hérite indépendamment de l’enregistrement chargé le plus près, à sa position ou avant lui, si bien que des enfants différents peuvent se résoudre vers des mods différents",
+    "modSettingDefault": "{class} de {modId} a été rejoué avec son réglage par défaut, pas forcément celui de votre partie",
+    "failedOp": "l’opération de patch de {modId} sur {xpath} n’a rien trouvé",
+    "unscopedOps": "{modId} a {count} opération de patch qui n’a pas pu être rattachée à une def | {modId} a {count} opérations de patch qui n’ont pas pu être rattachées à une def",
+    "malformedOperation": "l’opération de patch de {modId} n’était pas du XML bien formé",
+    "defRemoved": "cette def est supprimée par {modId}",
+    "positionalItem": "{path} n’est identifié que par sa position ; un réordonnancement ultérieur pourrait faire pointer ce choix ailleurs",
+    "unsafeXpathValue": "la valeur de {path} ne peut pas être écrite sans risque en xpath et n’a pas été résolue",
+    "unknownOwnerChoice": "{path} : le propriétaire choisi, {modId}, n’est pas candidat pour ce champ",
+    "invalidValueFragment": "{path} : la valeur saisie n’a pas pu être interprétée",
+    "unsupportedDrop": "{path} : écarter une valeur n’est pas possible pour une collision de patchs",
+    "unreconstructableChain": "{path} : la structure englobante n’a pas pu être reconstituée",
+    "unsettableLeaf": "{path} : une valeur héritée ne peut pas être effacée",
+    "outOfScopeOwners": "dans une installation où l’un de {mods} se charge après la portée de ce patch, ce patch risque de cibler ou d’écraser la def de ce mod à la place",
+    "clobberedMapEntry": "{path} avait été ajouté par {by}, mais un patch ultérieur a remplacé toute la table et l’a perdu ; restauré"
+  },
+  "inbox": {
+    "evidence": {
+      "inspectLink": "Inspecter",
+      "ariaLabel": "Indices du constat",
+      "edgeDropped": {
+        "sentence": "Contrainte {edgeKind} de force {strength} abandonnée : {after} → {before}."
+      },
+      "anyOfChoice": {
+        "intro": "{modId} a besoin de l’un des candidats de {assembly} :"
+      },
+      "danglingDefReference": {
+        "causeRemovedBy": "elle a été supprimée par le propre patch de {modId}",
+        "causeOnlyInUnloadedFolder": "elle n’est définie que dans le dossier « {folder} » de {modId}, que cette installation ne charge pas",
+        "causeOnlyInInactiveMod": "elle n’est définie que dans {modId}, qui n’est pas actif",
+        "causeDefinedNowhere": "aucun mod installé, actif ou non, ne la définit",
+        "causeUnexplained": "la raison de son absence n’a pas pu être déterminée",
+        "referrerFromDef": "{defType}/{defName} de {modId} ({fieldPath})",
+        "referrerFromTemplate": "{defType}/{'@'}{name} de {modId} ({fieldPath})",
+        "referrerFromPatch": "patch de {modId} sur {defType}/{defName} ({fieldPath})",
+        "sentence": "{name} ne correspond à aucune def active, de quelque type que ce soit : {cause}.",
+        "likelySound": "Cela ressemble à une référence de son : un {soundDef} manquant consigne un avertissement et se rabat silencieusement sur un son non défini, au lieu d’empêcher le chargement.",
+        "referencedFrom": "Référencée depuis :",
+        "truncatedReferrers": "{count} autre référent non affiché (limite d’affichage). | {count} autres référents non affichés (limite d’affichage)."
+      },
+      "textureOverride": {
+        "sentence": "Texture {path}"
+      },
+      "duplicateAssembly": {
+        "sentence": "Assembly {name}, fourni par :"
+      },
+      "likelyDuplicateMod": {
+        "body": "{a} et {b} partagent {count} clé de def identique | {a} et {b} partagent {count} clés de def identiques"
+      },
+      "missingMod": {
+        "body": "{modId} est listé, mais n’a pas été trouvé sur le disque."
+      },
+      "missingDependency": {
+        "body": "{modId} a besoin de {dependencyLabel} ({dependency}), qui n’est pas actif."
+      },
+      "incompatiblePair": {
+        "body": "{a} et {b} sont marqués comme incompatibles."
+      },
+      "unsupportedVersion": {
+        "body": "{modId} ne déclare pas prendre en charge cette version du jeu."
+      },
+      "undeclaredHardDependency": {
+        "body": "{after} a besoin de {before}, mais ne le déclare jamais."
+      },
+      "lazyReferenceViolated": {
+        "body": "Une référence différée de {after} vers {before} est violée."
+      },
+      "declarationQuestioned": {
+        "body": "{declaredAfter} est déclaré se charger après {declaredBefore}, mais la relation inverse s’applique aussi :"
+      },
+      "declarationOverridden": {
+        "body": "{declaredAfter} est déclaré se charger après {declaredBefore}, mais une règle qui outrepasse la contrainte déclarée dit le contraire :"
+      },
+      "keyedTranslationCollision": {
+        "body": "{a} et {b} définissent tous deux {count} clé de traduction : | {a} et {b} définissent tous deux {count} clés de traduction :"
+      },
+      "soundOverride": {
+        "sentence": "Son {path}, fourni par :"
+      },
+      "undeclaredTypeDependency": {
+        "sentence": "{user} nomme le type {typeName} de l’assembly de {provider}, sans relation déclarée entre eux."
+      },
+      "runtimePatchCollision": {
+        "sentence": "{target}, patché par, dans l’ordre de chargement :",
+        "runsLast": "s’exécute en dernier",
+        "runLastButton": "Exécuter en dernier",
+        "runLastAriaLabel": "Exécuter {modId} en dernier"
+      },
+      "transpilerCollision": {
+        "sentence": "{target} est réécrit par un transpiler de patch d’exécution dans chacun de ces mods, dans l’ordre de chargement :"
+      },
+      "tagInferred": {
+        "sentence": "{modId} a reçu le tag {tag} d’après :"
+      },
+      "ruleOverruled": {
+        "withWinner": "Le chargement de {after} après {before} ({origin}) a été rejeté :",
+        "byLongerCycle": "Le chargement de {after} après {before} ({origin}) a été rejeté par un cycle plus long.",
+        "cycle": "cycle : {chain}"
+      },
+      "placementOverruled": {
+        "intro": "{modId} est fixé en position {placement} ({origin}), rejeté par :",
+        "landedAt": "Arrivé au rang {position}."
+      },
+      "placementQuestioned": {
+        "body": "{modId} est fixé en position {placement}, mais la relation {relationKind} avec {other} ne peut pas être respectée ainsi."
+      },
+      "placementOrderingOverridden": {
+        "body": "{modId} a été forcé à franchir la fixation {placement} propre à {pinned} par une contrainte acceptée :"
+      },
+      "placementPromotesDependents": {
+        "body": "{modId} est fixé en position {placement}, ce qui fait passer {count} autre mod au-delà de la même limite de tranche : | {modId} est fixé en position {placement}, ce qui fait passer {count} autres mods au-delà de la même limite de tranche :"
+      },
+      "showMore": "Afficher plus ({shown} sur {total})",
+      "missingTexturePath": {
+        "sentence": "Dans {def} de {modId}, le champ {field} désigne la texture {path}, qu’aucun mod actif ne fournit."
+      },
+      "undecodableTexture": {
+        "sentence": "{path} de {modId} ne se décode pas ({width}x{height}, {fourcc}) : le jeu de base affiche à sa place la texture de remplacement des textures invalides.",
+        "pngSibling": "Ce mod fournit aussi un fichier non DDS au même chemin, mais le jeu de base ne se rabat jamais dessus."
+      },
+      "brokenInheritance": {
+        "missingParent": "{child} de {modId} hérite de {parentName} : aucun mod actif ne le définit, la def se charge donc sans aucun des champs propres à ce parent.",
+        "wrongType": "{child} de {modId} hérite de {parentName} : à la position de chargement de ce mod, ce parent se résout en {parentType}, et non en {childDefType}.",
+        "affectedCount": "{count} def concernée : | {count} defs concernées :",
+        "andMore": "… et {count} de plus",
+        "truncated": "{count} autre def concernée non affichée (limite d’affichage). | {count} autres defs concernées non affichées (limite d’affichage)."
+      },
+      "nearMissModReference": {
+        "findModName": "Le nom FindMod {written} de {modId} ne correspond à aucun mod actif ou installé, mais ressemble beaucoup à {candidateName} : peut-être une faute de frappe.",
+        "mayRequireId": "L’ID MayRequire {written} de {modId} ne correspond à aucun mod actif ou installé, mais ressemble beaucoup à {candidateName} : peut-être une faute de frappe.",
+        "writtenIn": "Écrit dans {file}"
+      },
+      "patchWillFail": {
+        "causeRemovedBy": "L’opération {operation} de {modId}, sur {defKey}, devrait échouer avec cet ordre : {causeModId}, qui se charge en premier, supprime par sa propre opération le nœud ciblé.",
+        "causeNotYetInjected": "L’opération {operation} de {modId}, sur {defKey}, devrait échouer avec cet ordre : elle cible un nœud injecté par {causeModId}, mais ce mod se charge après elle.",
+        "causeDeadTarget": "L’opération {operation} de {modId}, sur {defKey}, devrait échouer avec cet ordre : la structure résolue du propriétaire gagnant n’a jamais ce nœud, quel que soit l’ordre de chargement.",
+        "causeUnclassified": "L’opération {operation} de {modId}, sur {defKey}, devrait échouer avec cet ordre : la cause n’a pas pu être déterminée.",
+        "specificField": "Champ précis : {leafXpath}"
+      },
+      "contributesNothing": {
+        "body": "{modId} n’apporte rien d’observable avec cet ordre : aucun assembly, chaque def qu’il possède est remplacée, chaque texture et traduction qu’il fournit est remplacée, et chacune de ses opérations de patch échoue ou ne s’exécute jamais."
+      },
+      "discardedAddition": {
+        "sentence": "{replacer} déclare se charger après {adder} et remplace {path} : l’ajout propre à {adder} en {adderPath} est écarté volontairement."
+      }
+    },
+    "suggestion": {
+      "acceptButton": "Accepter (Entrée)",
+      "ignoreButton": "Ignorer (i)",
+      "revertButton": "Révoquer (u)",
+      "alternativesHeading": "Alternatives",
+      "addNoteButton": "Ajouter une note (n)"
+    },
+    "page": {
+      "loadFailed": "Échec du chargement des constats.",
+      "noSelection": "Sélectionnez un constat pour voir sa suggestion.",
+      "shortcutsHeader": "Raccourcis clavier",
+      "shortcutMoveCursor": "déplacer le curseur",
+      "shortcutAccept": "accepter la suggestion",
+      "shortcutPickAlternative": "choisir une alternative",
+      "shortcutIgnore": "ignorer",
+      "shortcutRevert": "révoquer la décision",
+      "shortcutMerge": "fusionner un remplacement de def ou une collision de patchs",
+      "shortcutAddNote": "ajouter une note",
+      "shortcutOpenOrder": "ouvrir dans la vue de l’ordre de chargement",
+      "shortcutOpenModDetail": "ouvrir le détail du mod",
+      "shortcutFocusSearch": "aller à la recherche",
+      "shortcutCycleStatus": "parcourir le filtre de statut",
+      "shortcutToggleModLabel": "basculer noms/ID des mods",
+      "shortcutToggleHelp": "afficher/masquer cette aide"
+    },
+    "alternatives": {
+      "ariaLabel": "Alternatives"
+    },
+    "decisionNote": {
+      "label": "Note",
+      "save": "Enregistrer la note"
+    },
+    "textureTile": {
+      "winnerBadge": "gagnant",
+      "sizeLine": "{format} · {count} octet | {format} · {count} octets",
+      "useThisOne": "Utiliser celle-ci",
+      "shipThisFile": "Fournir ce fichier"
+    },
+    "defConflictView": {
+      "sourceFailed": "Des fichiers ont changé depuis l’analyse, rechargez le projet.",
+      "loadFailed": "Échec du chargement de la vue du conflit.",
+      "completenessPartial": "Partielle",
+      "completenessCompleteWithProblems": "Complète, avec problèmes",
+      "completenessComplete": "Complète",
+      "patchCollisionWithSubPath": "Collision de patchs — {subPath}",
+      "injectedNodeRelation": "Le patch de {selector} sélectionne un nœud injecté par {injector}",
+      "showLabel": "Afficher",
+      "filterAllChanged": "Toutes les modifications",
+      "filterConflict": "Conflit",
+      "filterCleanMerge": "Fusion sans conflit",
+      "filterListEntries": "Entrées de liste",
+      "filterMapEntries": "Entrées de table",
+      "filterUnchanged": "Inchangés",
+      "showMore": "Afficher plus ({shown} sur {total})",
+      "problemsHeading": "Problèmes",
+      "problemUnsupportedOp": "Opération n° {opIndex} de {modId}",
+      "problemReplayStopped": "Le rejeu s’est arrêté ici ; les lignes ci-dessus proviennent des opérations précédentes.",
+      "problemMissingTemplate": "Modèle {name} manquant ({defType}).",
+      "problemCycle": "Cycle : {chain}",
+      "problemPlanFailed": "Échec de la planification de la fusion : {reason}"
+    },
+    "fieldRowsTable": {
+      "empty": "Aucun champ ne correspond à ce filtre.",
+      "headerPath": "Chemin",
+      "headerKind": "Type",
+      "headerValues": "Valeurs",
+      "headerInGame": "En jeu",
+      "headerAfterMerge": "Après fusion",
+      "headerPreference": "Préférence",
+      "kindConflict": "Conflit",
+      "kindCleanMerge": "Fusion sans conflit",
+      "kindListEntry": "Entrée de liste",
+      "kindMapEntry": "Entrée de table",
+      "kindUnchanged": "Inchangé",
+      "groupHeader": "{path} ({count} entrée) | {path} ({count} entrées)",
+      "alsoAddedBy": "Également ajouté par {mods}",
+      "mergeChoiceFrom": "valeur de {modId}",
+      "mergeChoiceValue": "la valeur stockée « {text} »",
+      "mergeChoiceDropped": "écartée",
+      "preferenceLoadOrder": "{winner} l’emporte (ordre de chargement)",
+      "preferenceDecision": "{winner} l’emporte (décision)",
+      "preferenceMergeChoice": "{choice} (choix de fusion)"
+    },
+    "findingList": {
+      "searchPlaceholder": "Rechercher des constats…",
+      "filterByStatus": "Filtrer par statut",
+      "filterByKind": "Filtrer par type",
+      "empty": "Aucun constat ne correspond à ce filtre.",
+      "findingsAriaLabel": "Constats",
+      "statusAll": "Tous",
+      "statusNeedsInput": "Décision requise",
+      "statusAuto": "Auto",
+      "statusOverridden": "Choix manuel",
+      "filteredByMod": "Filtré sur {mod}",
+      "clearModFilter": "Retirer le filtre de mod"
+    },
+    "findingCard": {
+      "undecided": "Non décidé",
+      "decidedChip": "décidé",
+      "resolvedBySuggestedChip": "résolu par l’ordre suggéré"
+    },
+    "touchersList": {
+      "mod": "Mod",
+      "role": "Rôle",
+      "ops": "Op.",
+      "replay": "Rejeu",
+      "generatedSuffix": "(généré)",
+      "roleOwner": "propriétaire",
+      "rolePatcher": "patcheur",
+      "reached": "atteint",
+      "notReached": "non atteint"
+    }
+  },
+  "merge": {
+    "state": {
+      "merged": "fusionné",
+      "needsInput": "{count} champ requiert une décision | {count} champs requièrent une décision",
+      "structuralGuard": "pas de fusion auto : confirmez le gagnant",
+      "cannotMerge": "fusion impossible"
+    },
+    "skipped": {
+      "stillNeedsInput": "décision encore requise"
+    },
+    "summary": {
+      "patchCollision": "{count} fusion de collision de patchs (suggérée automatiquement si non décidée) | {count} fusions de collision de patchs (suggérées automatiquement si non décidées)",
+      "defOverride": "{count} fusion de remplacement de def (décidée explicitement) | {count} fusions de remplacement de def (décidées explicitement)",
+      "asset": "{count} ressource fournie | {count} ressources fournies",
+      "willWrite": "Écriture prévue : {parts}."
+    },
+    "header": {
+      "inspectLink": "Inspecter",
+      "outOfScope": "Hors de portée, non fusionné : {mods}",
+      "structuralGuardLine": "{field} diffère ({by} par rapport à la copie de base) : la fusion champ par champ n’est pas sûre pour cette def. Confirmez le gagnant selon l’ordre de chargement en acceptant ce constat sur la page Constats ; il ne peut pas être finalisé comme une fusion.",
+      "baseTag": "(base)",
+      "winnerTag": "(gagnant)",
+      "totalsFields": "{count} champ | {count} champs",
+      "totalsConflicts": "{count} conflit | {count} conflits",
+      "totalsAuto": "{count} auto | {count} auto",
+      "totalsUnresolved": "{count} non résolu | {count} non résolus",
+      "totalsUnchanged": "{count} inchangé | {count} inchangés"
+    },
+    "entryKind": {
+      "defOverride": "remplacement de def",
+      "patchCollision": "collision de patchs",
+      "asset": "ressource"
+    },
+    "mod": {
+      "assetsGroup": "Ressources",
+      "opsCount": "{count} op. | {count} op.",
+      "dependsOn": "dépend de",
+      "openInEditor": "Ouvrir dans l’éditeur",
+      "heading": "Résultat de fusion",
+      "mergedDefs": "{count} def fusionnée | {count} defs fusionnées",
+      "nothingYet": "vide",
+      "summary": "Le mod de compatibilité dans lequel Rimmerge écrit vos décisions de fusion et de ressources. Contenu actuel : {contents}. Régénéré chaque fois que vous appliquez ; toujours chargé en dernier dans l’ordre suggéré.",
+      "summaryWithSources": "Le mod de compatibilité dans lequel Rimmerge écrit vos décisions de fusion et de ressources. Contenu actuel : {contents}, provenant de {count} mod. Régénéré chaque fois que vous appliquez ; toujours chargé en dernier dans l’ordre suggéré. | Le mod de compatibilité dans lequel Rimmerge écrit vos décisions de fusion et de ressources. Contenu actuel : {contents}, provenant de {count} mods. Régénéré chaque fois que vous appliquez ; toujours chargé en dernier dans l’ordre suggéré.",
+      "loadFailed": "Échec du chargement du résultat de fusion.",
+      "packageIdLabel": "ID du paquet",
+      "folderLabel": "Dossier",
+      "pathLabel": "Chemin",
+      "onDiskLabel": "Sur le disque",
+      "existsYes": "Oui : régénéré à chaque application",
+      "existsNo": "Pas encore : appliquez avec « Écrire le mod de fusion » pour le générer",
+      "placementLabel": "Position dans l’ordre de chargement",
+      "placementValue": "Dernier (le tri place toujours le mod généré en bas de l’ordre suggéré)",
+      "sourceModsLabel": "Mods sources",
+      "entriesHeading": "Entrées",
+      "noEntriesYet": "Aucune décision de fusion ou de ressource fournie pour l’instant : décidez un constat de remplacement de def ou de collision de patchs avec l’éditeur de fusion pour en ajouter une.",
+      "filesHeading": "Fichiers",
+      "nothingRendersYet": "Les fichiers apparaissent ici dès qu’il existe au moins une décision de fusion ou de ressource fournie.",
+      "fileLoadFailed": "Échec du rendu de ce fichier."
+    },
+    "filePreviewLabel": "Aperçu du fichier",
+    "editor": {
+      "sourceFailedSuffix": "{message} : les fichiers du projet ont changé depuis la dernière analyse.",
+      "reloadProject": "Recharger le projet",
+      "loadFailed": "Échec du chargement de l’aperçu de la fusion.",
+      "showMore": "Afficher plus ({loaded} sur {total})",
+      "shortcutsHeader": "Raccourcis de l’éditeur de fusion",
+      "shortcutMoveRowCursor": "déplacer le curseur de ligne",
+      "shortcutNextPrevConflict": "conflit suivant/précédent",
+      "shortcutMoveColumnCursor": "déplacer le curseur de colonne",
+      "shortcutChooseColumn": "choisir la colonne sous le curseur",
+      "shortcutChooseOwnerColumn": "choisir la colonne de propriétaire n (1 = base)",
+      "shortcutChooseWinner": "choisir le gagnant de l’ordre sélectionné",
+      "shortcutEditValue": "modifier une valeur libre",
+      "shortcutToggleDrop": "écarter/rétablir",
+      "shortcutRevertToAuto": "revenir à auto",
+      "shortcutToggleAutoSection": "afficher/masquer la section auto",
+      "shortcutToggleUnchanged": "afficher/masquer les lignes inchangées",
+      "shortcutBackToFindings": "retour aux constats"
+    },
+    "table": {
+      "pathHeader": "Chemin",
+      "classHeader": "Classe",
+      "resultHeader": "Résultat",
+      "actionsHeader": "Actions",
+      "sectionConflicts": "Conflits ({count})",
+      "sectionAuto": "Résolus automatiquement ({count})",
+      "sectionUnchanged": "Inchangés ({count})",
+      "containerEntries": "{count} entrée | {count} entrées",
+      "containerSummary": "{container} — {entries}",
+      "containerConflicts": "{count} conflit | {count} conflits",
+      "containerSummaryWithConflicts": "{base}, {conflicts}",
+      "acceptSuggested": "Accepter les suggestions ({count})"
+    },
+    "field": {
+      "classUnchanged": "inchangé",
+      "classOneSided": "modifié par un seul mod",
+      "classAgreeing": "concordant",
+      "classConflict": "conflit",
+      "chooseValueFor": "Choisir une valeur pour {path}",
+      "suggestedHint": "suggéré",
+      "takeValue": "Prendre la valeur de {owner}",
+      "dropped": "écarté",
+      "needsInput": "décision requise",
+      "saving": "enregistrement…",
+      "drop": "Écarter",
+      "dropUnavailableTitle": "Écarter une valeur n’est pas possible pour une collision de patchs : une fois rejoués, les patchs de RimWorld aboutissent toujours à une valeur.",
+      "clearChoice": "Effacer le choix",
+      "autoRevert": "Auto"
+    },
+    "value": {
+      "absent": "absent",
+      "showLess": "Afficher moins",
+      "showMore": "Afficher plus"
+    }
+  },
+  "action": {
+    "accept": "Accepter",
+    "ignore": "Ignorer",
+    "reorder": "Charger {after} après {before}",
+    "preferWinner": "Préférer {defKey} de {winner}",
+    "chooseCandidate": "Choisir {chosen} pour {after}",
+    "dropEdge": "Abandonner la contrainte {edgeKind} {after} → {before}",
+    "keepEdge": "Conserver la contrainte {edgeKind} {after} → {before}",
+    "addTag": "Attribuer le tag {tag} à {modId}",
+    "removeTag": "Retirer le tag {tag} de {modId}",
+    "excludeFromCluster": "Exclure {modId} du groupe {rule}",
+    "removeMod": "Retirer {modId} de la liste des mods actifs",
+    "merge": "Fusionner {defKey}",
+    "shipAsset": "Fournir {texturePath} de {from}",
+    "promoteRulePair": "Promouvoir {after} après {before} en décision utilisateur",
+    "promoteRulePlacement": "Promouvoir le placement de {modId} en décision utilisateur",
+    "dropRule": "Abandonner la règle {after} après {before}"
+  },
+  "patches": {
+    "scopeBadge": {
+      "title": "Hors de la portée de ce patch : {mods}",
+      "label": "partielle : +{mods}"
+    },
+    "table": {
+      "emptyState": "Aucun patch de compatibilité pour l’instant : appuyez sur n pour en créer un.",
+      "nameHeader": "Nom",
+      "packageIdHeader": "ID du paquet",
+      "scopeHeader": "Portée",
+      "needsInputHeader": "Décision requise",
+      "completeHeader": "Complet",
+      "lastExportHeader": "Dernier export",
+      "notExported": "Non exporté"
+    },
+    "identityForm": {
+      "nameLabel": "Nom",
+      "packageIdLabel": "ID du paquet",
+      "packageIdPlaceholder": "auteur.monmod",
+      "displayNameLabel": "Nom affiché",
+      "authorLabel": "Auteur",
+      "descriptionLabel": "Description",
+      "save": "Enregistrer"
+    },
+    "list": {
+      "newPatchButton": "Nouveau patch (n)",
+      "newPatchHeading": "Nouveau patch de compatibilité",
+      "scopeHeading": "Portée",
+      "loadFailed": "Échec du chargement des patchs."
+    },
+    "detail": {
+      "loadFailed": "Échec du chargement de ce patch.",
+      "orphanedCount": "{count} décision orpheline | {count} décisions orphelines",
+      "importFromProfileButton": "Importer les décisions du profil",
+      "pruneOrphanedButton": "Purger les orphelines",
+      "deleteButton": "Supprimer",
+      "identityHeading": "Identité",
+      "exportHeading": "Export",
+      "findingsHeading": "Constats",
+      "importedToastSummary": "Importé depuis le profil",
+      "importedNoSkips": "{count} décision importée. | {count} décisions importées.",
+      "rejection": {
+        "outOfScope": "ce n’est pas un constat entre membres de la portée de ce patch",
+        "notPatchable": "un patch ne peut contenir que des décisions de fusion, de ressource fournie ou « Ignorer », pas « {action} »",
+        "choiceOutsideScope": "{path} : son choix désigne {mod}, qui ne fait pas partie de la portée de ce patch",
+        "assetOutsideScope": "sa ressource fournie vient de {mod}, qui ne fait pas partie de la portée de ce patch",
+        "actionName": {
+          "accept": "Accepter",
+          "reorder": "Réordonner",
+          "preferWinner": "Préférer le gagnant",
+          "chooseCandidate": "Choisir un candidat",
+          "dropEdge": "Abandonner la contrainte",
+          "keepEdge": "Conserver la contrainte",
+          "addTag": "Ajouter un tag",
+          "removeTag": "Retirer un tag",
+          "excludeFromCluster": "Exclure du groupe",
+          "removeMod": "Retirer de la liste des mods actifs",
+          "promoteRule": "Promouvoir la règle",
+          "dropRule": "Abandonner la règle"
+        }
+      },
+      "importedWithSkips": {
+        "imported": "{count} décision importée | {count} décisions importées",
+        "skipped": "{count} décision non importée : {reasons} | {count} décisions non importées : {reasons}",
+        "reasonSeparator": " ; ",
+        "combined": "{imported}. {skipped}"
+      },
+      "prunedToastSummary": "Décisions orphelines purgées",
+      "prunedToastDetail": "{count} décision que la portée actuelle n’admet plus a été retirée. | {count} décisions que la portée actuelle n’admet plus ont été retirées.",
+      "deleteDialogHeader": "Supprimer ce patch ?",
+      "deleteDialogBody": "Cela supprime le projet de patch. Un dossier qu’il a déjà exporté sur le disque n’est pas touché."
+    },
+    "inbox": {
+      "loadFailed": "Échec du chargement des constats de ce patch.",
+      "shortcutFocusScopeSearch": "aller à la recherche de portée",
+      "shortcutFocusExportDir": "aller au champ du dossier d’export",
+      "shortcutBackToPatch": "retour aux détails du patch"
+    },
+    "scopeEditor": {
+      "minimumSizeTitle": "Une portée de patch nécessite au moins deux membres.",
+      "membersListLabel": "Membres de la portée",
+      "removeMember": "Retirer {name} de la portée",
+      "noMembersYet": "Aucun membre dans la portée pour l’instant.",
+      "searchPlaceholder": "Rechercher des mods à ajouter…",
+      "searchLabel": "Rechercher des mods à ajouter à la portée",
+      "searchResultsLabel": "Mods correspondant à la recherche",
+      "noMatches": "Aucun résultat.",
+      "scopeShrunk": "Portée réduite : {count} décision est désormais orpheline. | Portée réduite : {count} décisions sont désormais orphelines.",
+      "remainingChoicesNamingRemoved": "{count} choix restant désigne encore un mod retiré. | {count} choix restants désignent encore un mod retiré."
+    },
+    "exportPanel": {
+      "exportDirLabel": "Dossier d’export",
+      "exportDirPlaceholder": "Choisir un dossier…",
+      "chooseButton": "Choisir…",
+      "installCheckboxLabel": "Installer dans Mods et activer",
+      "staleActiveSetNote": "Les modifications d’activation en attente ne sont pas incluses : réanalysez d’abord si vous voulez qu’elles figurent dans cette installation.",
+      "forceWarning": "RimWorldWin64.exe semble être en cours d’exécution. Si vous installez maintenant, ModsConfig.xml sera écrit, or le jeu l’écrase en quittant : la modification risque donc d’être perdue. Exporter malgré tout ?",
+      "exportAnyway": "Exporter malgré tout",
+      "export": "Exporter",
+      "exportedTo": "Exporté vers : {path}",
+      "installedAt": "Installé dans : {path}",
+      "hash": "Empreinte : {hash}",
+      "unchangedSinceLastExport": "Inchangé depuis le dernier export.",
+      "renderLoadFailed": "Échec du rendu de ce patch.",
+      "dependenciesHeading": "Dépendances",
+      "entriesHeading": "Entrées",
+      "noEntriesYet": "Aucune décision de fusion ou de ressource fournie pour l’instant : décidez un constat de remplacement de def ou de collision de patchs dans les constats de ce patch pour en ajouter une.",
+      "skippedHeading": "Ignorées",
+      "filesHeading": "Fichiers",
+      "nothingRendersYet": "Les fichiers apparaissent ici dès que ce patch a au moins une décision de fusion ou de ressource fournie.",
+      "fileLoadFailed": "Échec du rendu de ce fichier."
+    }
+  },
+  "edgeStrength": {
+    "hard": "Stricte",
+    "declared": "Déclarée",
+    "soft": "Souple",
+    "awareness": "Perception",
+    "inferred": "Déduite"
+  },
+  "edgeStatus": {
+    "satisfied": "respectée",
+    "violated": "violée",
+    "unevaluated": "non évaluée"
+  },
+  "mods": {
+    "changes": {
+      "searchPlaceholder": "Rechercher…",
+      "loadFailed": "Échec du chargement des modifications de ce mod.",
+      "noMatches": "Aucune modification ne correspond à ce filtre.",
+      "kindHeader": "Type",
+      "targetHeader": "Cible",
+      "opsHeader": "Op.",
+      "otherTouchersHeader": "Autres mods concernés",
+      "findingsHeader": "Constats",
+      "showMore": "Afficher plus ({loaded} sur {total})"
+    },
+    "edges": {
+      "none": "Aucune."
+    },
+    "picker": {
+      "removeMember": "Retirer {name}",
+      "noneSelectedYet": "Aucune sélection pour l’instant.",
+      "searchPlaceholder": "Rechercher des mods…",
+      "searchLabel": "Rechercher des mods pour {target}",
+      "noMatches": "Aucun résultat."
+    },
+    "table": {
+      "regionLabel": "Mods",
+      "missing": "manquant",
+      "rovingHint": "Flèches pour se déplacer, Entrée pour ouvrir, Espace pour cocher ou décocher"
+    },
+    "pendingChanges": {
+      "unscanned": "{count} modification en attente : réanalysez pour mettre à jour les résultats | {count} modifications en attente : réanalysez pour mettre à jour les résultats",
+      "unapplied": "{count} modification pas encore appliquée à ModsConfig.xml | {count} modifications pas encore appliquées à ModsConfig.xml",
+      "rescanButton": "Réanalyser",
+      "rescanFinishedToast": "Nouvelle analyse terminée avec {count} remarque | Nouvelle analyse terminée avec {count} remarques",
+      "rescannedWithWarningsToast": "Réanalysé avec des avertissements"
+    },
+    "closeGuard": {
+      "header": "Modifications des mods actifs non enregistrées",
+      "body": "La liste de travail des mods actifs contient des modifications qu’aucune nouvelle analyse n’a encore prises en compte, ou un ordre analysé n’a pas été appliqué à {modsConfig}. Si vous quittez maintenant, ce travail en mémoire sera perdu ; le fichier du jeu, lui, reste intact dans tous les cas.",
+      "stay": "Rester",
+      "leaveAnyway": "Quitter malgré tout"
+    },
+    "scanNotes": {
+      "empty": "Aucune remarque d’analyse."
+    },
+    "detail": {
+      "loadFailed": "Échec du chargement de ce mod.",
+      "idAndSource": "{modId} — {source}",
+      "byAuthors": "Par {authors}",
+      "tagsHeading": "Tags",
+      "declaredOrderHeading": "Ordre déclaré",
+      "loadAfterLabel": "Charger après",
+      "loadBeforeLabel": "Charger avant",
+      "forceLoadAfterLabel": "Chargement forcé après",
+      "forceLoadBeforeLabel": "Chargement forcé avant",
+      "dependenciesLabel": "Dépendances",
+      "incompatibleWithLabel": "Incompatible avec",
+      "edgesInHeading": "Contraintes entrantes",
+      "edgesOutHeading": "Contraintes sortantes",
+      "changesHeading": "Modifications",
+      "scanNotesHeading": "Remarques d’analyse",
+      "findingsHeading": "Constats",
+      "noLiveFindings": "Aucun constat actuel."
+    },
+    "page": {
+      "heading": "Mods",
+      "activeTab": "Actifs",
+      "inactiveTab": "Inactifs",
+      "searchPlaceholder": "Rechercher des mods…",
+      "tagFilterPlaceholder": "Filtrer par tag…",
+      "sourcePlaceholder": "Source",
+      "sourceAny": "Toutes",
+      "deactivateSelectedButton": "Désactiver la sélection",
+      "alsoActivateDependenciesLabel": "Activer aussi les dépendances",
+      "activateSelectedButton": "Activer la sélection",
+      "loadFailed": "Échec du chargement des mods.",
+      "totalMods": "{count} mod | {count} mods",
+      "pageCapHint": "(affichage des {count} premiers : affinez avec la recherche)",
+      "activateDialogHeader": "Activer des mods",
+      "willActivateHeading": "Seront activés :",
+      "alreadyActiveHeading": "Déjà actifs, ignorés :",
+      "unresolvableDependency": "{mod} déclare une dépendance envers {deps}, introuvable sur le disque. | {mod} déclare des dépendances envers {deps}, introuvables sur le disque.",
+      "activatedToast": "Activés",
+      "activateButton": "Activer",
+      "deactivateDialogHeader": "Désactiver des mods",
+      "willDeactivateHeading": "Seront désactivés :",
+      "refusedHeading": "Refusés (requis) :",
+      "dependentsStillActive": "{count} mod actif dépend encore de {mod} : {deps}. | {count} mods actifs dépendent encore de {mod} : {deps}.",
+      "deactivatedToast": "Désactivés",
+      "deactivateButton": "Désactiver"
+    },
+    "defSearch": {
+      "ariaLabel": "Aller à une def",
+      "placeholder": "Aller à une def…"
+    }
+  },
+  "rules": {
+    "orphaned": {
+      "empty": "Aucune décision orpheline.",
+      "pruneButton": "Purger"
+    },
+    "pairTable": {
+      "regionLabel": "Règles de paire",
+      "afterHeader": "Après",
+      "beforeHeader": "Avant",
+      "originHeader": "Origine",
+      "commentHeader": "Commentaire",
+      "notAppliedTitle": "Pas en vigueur : les paires importées sont désactivées",
+      "promotedFrom": "(promue depuis {origin})",
+      "overridesDeclaredTag": "(outrepasse la déclaration)",
+      "overridesDeclaredTitle": "Cette règle est marquée pour outrepasser une contrainte déclarée (loadAfter/modDependencies) entre les deux mêmes mods, s’il en existe une : elle l’emporte sur la déclaration de l’auteur pour cette paire précise, mais jamais sur une dépendance stricte.",
+      "promotedButton": "Promue",
+      "promoteButton": "Promouvoir",
+      "deleteButton": "Supprimer"
+    },
+    "addPairDialog": {
+      "header": "Ajouter une règle de paire",
+      "loadsAfterLabel": "Se charge après (le mod dépendant)",
+      "loadsBeforeLabel": "Se charge avant (la dépendance)",
+      "commentLabel": "Commentaire (facultatif)",
+      "overrideDeclaredLabel": "Outrepasser une contrainte déclarée entre ces mods, s’il en existe une",
+      "overrideDeclaredWarning": "Cela l’emporte sur les loadAfter/modDependencies de l’auteur pour cette paire précise, jamais sur une dépendance stricte. À n’utiliser que si la déclaration elle-même est obsolète ou erronée.",
+      "sameModError": "Une règle de paire nécessite deux mods différents.",
+      "replaceWarning": "Cela remplace la règle existante pour cette paire (origine : {origin}).",
+      "addButton": "Ajouter"
+    },
+    "addPlacementDialog": {
+      "header": "Ajouter une règle",
+      "modToPinLabel": "Mod à fixer",
+      "placementLabel": "Placement",
+      "placementPlaceholder": "Sélectionner un placement",
+      "commentLabel": "Commentaire (facultatif)",
+      "replaceWarning": "Cela remplace la fixation existante de {mod} ({placement}, source : {origin})."
+    },
+    "page": {
+      "heading": "Règles",
+      "importToggleState": "Paires importées : {pairs} · Placements importés : {placements}",
+      "addRuleButton": "Ajouter une règle",
+      "addPairRuleButton": "Ajouter une règle de paire",
+      "reimportHint": "Les bases en cache ont changé depuis leur dernière importation par ce profil ; importez-les à nouveau pour utiliser les modifications.",
+      "importFromRimSortButton": "Importer depuis RimSort",
+      "importFinished": "Importation terminée.",
+      "userRulesCount": "Règles utilisateur : {count}",
+      "communityRulesCount": "Règles de la communauté : {count}",
+      "steamDependenciesCount": "Dépendances Steam : {count}",
+      "notImported": "non importé",
+      "loadFailed": "Échec du chargement des règles.",
+      "tabAll": "Toutes",
+      "tabUserDecision": "Vos décisions",
+      "tabRimSortUser": "RimSort (utilisateur)",
+      "tabRimSortCommunity": "RimSort (communauté)",
+      "tabSteamDb": "SteamDB",
+      "tagsHeading": "Tags",
+      "orphanedHeading": "Décisions orphelines"
+    },
+    "databases": {
+      "heading": "Bases de règles",
+      "communityLabel": "Règles de la communauté",
+      "steamLabel": "Steam Workshop",
+      "rimmergeLabel": "Règles Rimmerge",
+      "refreshButton": "Actualiser",
+      "refreshDisabledTitle": "Désactivé par « Autoriser l’accès à Internet » (page Paramètres)",
+      "networkDisabledNotice": "L’accès à Internet est désactivé : l’actualisation est donc impossible. Les bases en cache restent utilisées.",
+      "failureBanner": "La dernière actualisation a échoué pour au moins une source : la copie en cache reste utilisée.",
+      "loadFailed": "Échec du chargement des bases de règles.",
+      "needsReimport": "(réimportation disponible)",
+      "neverFetched": "Jamais téléchargée",
+      "stale": "Obsolète ({count} jour) | Obsolète ({count} jours)",
+      "updated": "Mise à jour {relative}",
+      "recencyLine": "{recency} · {bytes} · {sha}",
+      "today": "aujourd’hui",
+      "daysAgo": "il y a {count} jour | il y a {count} jours",
+      "lastFailureSuffix": " · Échec de la dernière actualisation : {reason}",
+      "bundledSuffix": " · Intégrée {sha}",
+      "outcomeUpdated": "mise à jour ({bytes}, sha {sha})",
+      "outcomeUnchanged": "inchangée (sha {sha})",
+      "outcomeFailed": "échec : {reason}",
+      "outcomeSkippedSourceDisabled": "ignorée (source désactivée)",
+      "outcomeSkippedNetworkDisabled": "ignorée (accès à Internet désactivé)",
+      "outcomeSkippedAutoRefreshDisabled": "ignorée (actualisation automatique désactivée)",
+      "outcomeSkippedNotDue": "ignorée (pas encore due)",
+      "refreshModeAutomatic": "Actualisation automatique",
+      "refreshModeManual": "Actualisation manuelle uniquement"
+    },
+    "importDialog": {
+      "header": "Importer depuis RimSort",
+      "userRulesLabel": "userRules.json",
+      "communityRulesLabel": "communityRules.json",
+      "steamDbLabel": "steamDB.json",
+      "importButton": "Importer"
+    },
+    "tagEditor": {
+      "modHeader": "Mod",
+      "tagHeader": "Tag",
+      "sourceHeader": "Source",
+      "confidenceHeader": "Confiance",
+      "signalsHeader": "Signaux",
+      "modIdLabel": "ID du mod",
+      "tagLabel": "Tag",
+      "modeLabel": "Mode",
+      "modeAdd": "Ajouter",
+      "modeRemove": "Retirer",
+      "saveButton": "Enregistrer"
+    },
+    "table": {
+      "pairRulesHeading": "Règles de paire",
+      "placementRulesHeading": "Règles de placement",
+      "modHeader": "Mod",
+      "placementHeader": "Placement",
+      "originHeader": "Origine",
+      "commentHeader": "Commentaire",
+      "promotesHeader": "Fait remonter",
+      "notAppliedPlacementsTitle": "Pas en vigueur : les placements importés sont désactivés",
+      "otherMods": "{count} autre mod | {count} autres mods",
+      "incompatibilitiesHeading": "Incompatibilités",
+      "aHeader": "A",
+      "bHeader": "B",
+      "empty": "Aucune règle pour l’instant."
+    }
+  },
+  "placement": {
+    "top": "Haut",
+    "bottom": "Bas"
+  },
+  "tagProvenance": {
+    "inferred": "déduit",
+    "manual": "manuel"
+  },
+  "source": {
+    "core": "Core",
+    "dlc": "Extension",
+    "local": "Local",
+    "workshop": "Workshop"
+  },
+  "cardinality": {
+    "scalar": "scalaire",
+    "list": "liste"
+  },
+  "fieldRole": {
+    "targetKey": "Clé cible",
+    "itemSlot": "Emplacement d’objet",
+    "chances": "Chances",
+    "scalar": "Scalaire",
+    "opaque": "Opaque"
+  },
+  "changeKind": {
+    "ownsDef": "Possède",
+    "ownsTemplate": "Possède le modèle",
+    "patchesDef": "Patche",
+    "overridesTexture": "Remplace la texture",
+    "overridesSound": "Remplace le son",
+    "overridesKeyedTranslation": "Remplace la traduction"
+  },
+  "defPage": {
+    "loadFailed": "Échec du chargement de cette def.",
+    "sourceTitle": "Vue selon l’ordre {source} : cliquez pour changer",
+    "partialBanner": "Incomplet : arrêté à {reason}. Les champs au-delà de ce point ne sont pas affichés.",
+    "replayStopper": "Opération {opIndex} de {mod} : {error}",
+    "ambiguousTemplateIntro": "Modèle ambigu : ce Name a {count} enregistrement. RimWorld résout chaque enfant indépendamment vers l’enregistrement chargé le plus près, à sa position ou avant lui : jamais un gagnant unique. « Gagnant » et « représentant chargé en dernier » ci-dessus ne sont qu’un substitut, signalé comme tel par cette application, pour le cas où aucun enfant précis n’est demandé ; ce n’est pas une réponse. | Modèle ambigu : ce Name a {count} enregistrements. RimWorld résout chaque enfant indépendamment vers l’enregistrement chargé le plus près, à sa position ou avant lui : jamais un gagnant unique. « Gagnant » et « représentant chargé en dernier » ci-dessus ne sont qu’un substitut, signalé comme tel par cette application, pour le cas où aucun enfant précis n’est demandé ; ce n’est pas une réponse.",
+    "knownChildrenResolve": "{count} enfant connu se résout ici | {count} enfants connus se résolvent ici",
+    "ownersHeading": "Propriétaires",
+    "winnerTag": "(gagnant)",
+    "representativeTag": "(représentant chargé en dernier)",
+    "representativeTitle": "Représentant uniquement : il n’existe pas de réponse unique, voir l’avis sur le modèle ambigu ci-dessus",
+    "generatedTag": "(généré)",
+    "patchersHeading": "Patcheurs",
+    "patcherStatusNotReached": "non atteint",
+    "patcherStatusReplayFailed": "échec du rejeu",
+    "patcherStatusReplaysCleanly": "rejeu sans erreur",
+    "wrappedTag": "(enveloppé)",
+    "wrappedTitle": "Affiché à partir de son premier descendant qui modifie, pas du nœud enveloppe lui-même",
+    "gatesPrefix": "conditions : {gates}",
+    "gate": {
+      "anyActive": "au moins un de {mods} actif",
+      "noneActive": "aucun de {mods} actif"
+    },
+    "parentsHeading": "Parents",
+    "childrenHeading": "Enfants",
+    "effectiveDefHeading": "Def effective",
+    "onlyPatchedLabel": "Uniquement patché/hérité",
+    "provenanceLegendOwner": "Propriétaire",
+    "provenanceLegendPatched": "Patché",
+    "provenanceLegendInherited": "Hérité",
+    "provenanceOwner": "propriétaire : {mod}",
+    "provenancePatch": "patché par {mod}",
+    "provenanceInherited": "hérité de {defType}/{defName} ({owner})",
+    "provenanceUnattributedTemplate": "hérité de {defType}/{defName} (propriétaire inconnu)",
+    "fields": {
+      "pathHeader": "Chemin",
+      "valueHeader": "Valeur",
+      "provenanceHeader": "Provenance",
+      "showMore": "Afficher plus ({loaded} sur {total})"
+    },
+    "resolvedXmlSummary": "XML résolu"
+  },
+  "layer": {
+    "hard": "Stricte",
+    "anyOf": "Au choix",
+    "declaredOverride": "Dérogation à la déclaration",
+    "declared": "Déclarée",
+    "userDecision": "Décision utilisateur",
+    "rimSortUser": "RimSort utilisateur",
+    "rimSortCommunity": "RimSort communauté",
+    "steamDb": "SteamDB",
+    "inferred": "Déduite",
+    "soft": "Souple",
+    "awareness": "Perception"
+  },
+  "order": {
+    "heading": "Ordre de chargement — {source}",
+    "loadFailed": "Échec du chargement de l’ordre.",
+    "sortProvenance": {
+      "summary": "départage : {tieBreak} · paires importées : {pairs} · placements importés : {placements}",
+      "rebuild": "reconstruire",
+      "preserveCurrent": "conserver l’actuel",
+      "on": "activé",
+      "off": "désactivé"
+    },
+    "table": {
+      "regionLabel": "Ordre de chargement",
+      "nameHeader": "Nom",
+      "tierHeader": "Tranche",
+      "depsHeader": "Dép.",
+      "movedFrom": "depuis le n° {position}"
+    },
+    "whyPanel": {
+      "headerWithMod": "{mod} : pourquoi ici ?",
+      "headerFallback": "Pourquoi ici ?",
+      "loadFailed": "Échec du chargement de l’explication.",
+      "positionHeading": "Position",
+      "becameReadyAfterHeading": "Devenu prêt après",
+      "lowerBoundsHeading": "Bornes inférieures (doit se charger après)",
+      "noLowerBounds": "Aucune borne inférieure.",
+      "upperBoundsHeading": "Bornes supérieures (mods qui attendent celui-ci)",
+      "noUpperBounds": "Aucun mod n’attend celui-ci.",
+      "advisoryHeading": "Contraintes indicatives",
+      "softHeading": "Souples (références différées)",
+      "awarenessHeading": "Perception",
+      "none": "Aucune.",
+      "satisfied": "respectée",
+      "violated": "violée",
+      "droppedHeading": "Contraintes abandonnées",
+      "cycle": "cycle : {cycle}",
+      "overruledBy": "Rejetée par :",
+      "sortSettingsHeading": "Paramètres de tri",
+      "tieBreakHeading": "Départage",
+      "currentPositionKnown": "Position actuelle : n° {position}",
+      "currentPositionUnknown": "Position actuelle : absent de l’ordre actuel",
+      "effectiveKey": "Clé effective : {key}",
+      "modsPreferredAhead": "Mods préférés avant celui-ci : {count}",
+      "pulledForwardBy": "Avancé par :",
+      "openInModsLink": "Ouvrir dans Mods"
+    },
+    "edgeChip": {
+      "directionAfter": "après",
+      "directionBefore": "avant",
+      "findingLink": "constat"
+    },
+    "tier": {
+      "core": "Core",
+      "dlc": "DLC",
+      "top": "Haut",
+      "body": "Milieu",
+      "bottom": "Bas"
+    },
+    "provenance": {
+      "anyOf": "candidat au choix pour {assembly}",
+      "rule": "règle ({origin})",
+      "ruleWithComment": "règle ({origin}) : {comment}",
+      "tier": "limite de tranche ({tier})"
+    },
+    "tierReason": {
+      "source": "source : {source}",
+      "placement": "règle de placement ({origin})",
+      "promotedBy": "remonté par {before} → {after}",
+      "body": "aucun signal de source ni de placement"
+    }
+  },
+  "apply": {
+    "dialog": {
+      "header": "Appliquer",
+      "defCacheNote": "Un mod de cache de defs actif indexe son cache sur l’ordre de chargement ; le premier lancement après cette application le reconstruira{parenthetical}.",
+      "defCacheParenthetical": " (environ {seconds} secondes d’après votre dernier journal)",
+      "writeModsConfigLabel": "Écrire ModsConfig.xml (l’ordre de chargement lu par RimWorld)",
+      "staleActiveSetMessage": "La liste de travail des mods actifs a des modifications en attente : réanalysez pour écrire ModsConfig.xml.",
+      "rescanButton": "Réanalyser",
+      "writeMergeModLabel": "Écrire le mod de fusion (génère le mod dans Mods/, ou le supprime s’il ne reste aucune décision de fusion ou de ressource)",
+      "closeButton": "Fermer",
+      "cancelButton": "Annuler",
+      "writeAnywayButton": "Écrire malgré tout",
+      "applyButton": "Appliquer",
+      "writeMergeModButton": "Écrire le mod de fusion",
+      "saveDecisionsButton": "Enregistrer les décisions et règles"
+    },
+    "preflight": {
+      "unappliedHeading": "Analysé, mais pas encore appliqué à ModsConfig.xml :",
+      "addedLabel": "Ajoutés :",
+      "removedLabel": "Retirés :",
+      "orderLabel": "Ordre",
+      "modsConfigLabel": "ModsConfig.xml",
+      "decisionsLabel": "Décisions",
+      "rulesLabel": "Règles",
+      "movedModsLabel": "Mods déplacés",
+      "needsInputLabel": "Décision requise",
+      "unansweredReordersWarning": "{count} réordonnancement suggéré par cette vérification n’a pas encore de règle de paire | {count} réordonnancements suggérés par cette vérification n’ont pas encore de règle de paire",
+      "problemsRow": "{count} problème à confirmer | {count} problèmes à confirmer",
+      "problemsAllDecided": "{count} problème, déjà décidé | {count} problèmes, déjà décidés",
+      "noProblems": "Aucun problème trouvé",
+      "openInbox": "Ouvrir les constats"
+    },
+    "progress": {
+      "heading": "Vérifier l’ordre",
+      "description": "Rejoue chaque opération de patch externe pour prévoir lesquelles échoueraient avec cet ordre, comme le montrerait le journal de RimWorld. Uniquement à la demande : une grosse installation prend environ une minute.",
+      "verifyingLabel": "Vérification de l’ordre",
+      "checksCaption": "Vérifications : {checked} sur {total}",
+      "startingCaption": "Démarrage…"
+    },
+    "diff": {
+      "summary": "{count} def vérifiée avec l’ordre {source} : {list}. | {count} defs vérifiées avec l’ordre {source} : {list}.",
+      "summaryOperations": "{count} opération dont l’échec est prévu | {count} opérations dont l’échec est prévu",
+      "summaryTargets": "{count} def cible touchée | {count} defs cibles touchées",
+      "removedByCount": "Nœud supprimé par un mod chargé avant : {count}",
+      "notYetInjectedCount": "Pas encore injecté : {count}",
+      "deadTargetCount": "Cible morte : {count}",
+      "unknownCount": "Inconnu : {count}",
+      "orderFixableHeading": "Corrigeable par l’ordre : réordonner le mod indiqué peut les résoudre :",
+      "cosmeticText": "cosmétique : la def finale est la même dans les deux ordres ; aucun réordonnancement proposé.",
+      "mergeInsteadLink": "Fusionner plutôt",
+      "mergeInstead": "{link} pour préserver l’intention propre du mod perdant.",
+      "noMergeAvailable": "Aucune fusion n’est disponible pour cette cible.",
+      "removedByCause": "{mod}, qui se charge en premier, supprime le nœud ciblé.",
+      "notYetInjectedCause": "le nœud ciblé est injecté par {mod}, qui se charge plus tard.",
+      "modPossessive": "{operation} de {mod}",
+      "notFullyFixableHeading": "Pas entièrement corrigeable par l’ordre (patchs obsolètes, cause non déterminée, ou un mélange des deux) ; regroupé par mod :",
+      "groupedByModLine": "{mod} — {list}",
+      "groupedOperations": "{count} opération | {count} opérations",
+      "groupedTargets": "{count} def cible | {count} defs cibles",
+      "partlyFixableHeading": "Certains sont en partie corrigeables par l’ordre : un réordonnancement résout une partie de leurs defs cibles :",
+      "skippedCandidates": "{count} candidat n’a pas pu être vérifié. | {count} candidats n’ont pas pu être vérifiés.",
+      "pvoMismatchWarning": "Le journal importé a été produit par un ordre de mods différent de celui qui vient d’être vérifié : les décomptes ci-dessous comparent deux exécutions sans rapport.",
+      "pvoHeading": "Prévu / observé (dernier journal importé)",
+      "pvoSnapshotNote": "Le journal importé est une capture de la console, pas le journal d’une exécution complète du jeu : un échec que le jeu a consigné avant l’entrée la plus ancienne de la console n’y figure pas ; « prévu, non observé » ne prouve donc pas qu’un échec n’a pas eu lieu.",
+      "pvoCutOffNote": "Le journal importé s’est terminé sans sortie propre et avant qu’un résultat de patch ait été consigné : le jeu n’a peut-être jamais atteint la phase des patchs ; « prévu, non observé » ne prouve donc pas qu’un échec n’a pas eu lieu.",
+      "pvoGapsNote": "Le jeu a cessé d’écrire des messages pendant la période couverte par le journal importé : un échec peut donc y manquer, et « prévu, non observé » ne prouve pas qu’un échec n’a pas eu lieu.",
+      "pvoMatchedSummary": "Confirmés par le journal : {count}",
+      "pvoPredictedOnlySummary": "Prévus, non observés dans le journal : {count}",
+      "pvoObservedOnlySummary": "Observés dans le journal, non prévus : {count} ; listés tels quels, jamais écartés :",
+      "unattributedRaw": "(non attribué : {raw})",
+      "counterfactualJobsLine": "{count} opération revérifiée avec d’autres ordres de chargement | {count} opérations revérifiées avec d’autres ordres de chargement",
+      "counterfactualResolvedLine": "{count} échec expliqué | {count} échecs expliqués",
+      "counterfactualDemotedLine": "{count} ligne « cible morte » finalement corrigeable par l’ordre | {count} lignes « cible morte » finalement corrigeables par l’ordre",
+      "counterfactualSkippedLine": "{count} opération ignorée | {count} opérations ignorées",
+      "counterfactualRejectedLine": "{count} réordonnancement rejeté, car il faisait échouer une autre opération | {count} réordonnancements rejetés, car ils faisaient échouer une autre opération",
+      "counterfactualSummary": "Contrefactuel : {list}."
+    },
+    "reorderActions": {
+      "createPairRule": "Créer une règle de paire",
+      "createPairRuleAnyway": "Créer quand même une règle de paire",
+      "conflictText": "en conflit avec {kind} : {detail} ({status})",
+      "ruleCreated": "Règle créée. Relancez « Vérifier l’ordre » pour la contrôler : une règle peut encore être rejetée par une déclaration d’auteur ou par une autre règle, et deux règles de sens opposé s’annulent ; la page Règles montre ce qui a réellement pris effet.",
+      "ruleExists": "La règle existe déjà."
+    },
+    "result": {
+      "forceWarning": "RimWorldWin64.exe semble être en cours d’exécution. Le jeu écrase ModsConfig.xml en quittant : ce que vous écrivez maintenant risque donc d’être perdu. Écrire malgré tout ?",
+      "mergeModPath": "Mod de fusion : {path}",
+      "mergeModRemoved": "Mod de fusion : supprimé (il ne reste aucune décision de fusion ou de ressource)",
+      "mergeModBackupPath": "Sauvegarde du mod de fusion : {path}",
+      "skippedHeading": "Ignorées (le mod de fusion a été écrit sans elles) :",
+      "toastAppliedSummary": "Appliqué",
+      "toastSavedSummary": "Enregistré",
+      "toastModsConfigPath": "ModsConfig : {path}",
+      "toastBackupPath": "Sauvegarde : {path}",
+      "toastDecisionsPath": "Décisions : {path}",
+      "toastRulesPath": "Règles : {path}",
+      "toastSkippedStillNeedsInput": "Ignorées (décision encore requise) : {list}"
+    },
+    "confirm": {
+      "heading": "Appliquer malgré tout ?",
+      "intro": "L’ordre {order} a {count} problème à confirmer avant l’écriture : | L’ordre {order} a {count} problèmes à confirmer avant l’écriture :",
+      "acknowledgedHeading": "Déjà décidés dans les constats",
+      "reviewInInbox": "Examiner dans les constats",
+      "goBackButton": "Revenir",
+      "applyAnywayButton": "Appliquer malgré tout"
+    },
+    "problem": {
+      "missingDependencyInactive": "{mod} nécessite {dependency}, qui est installé mais pas actif.",
+      "missingDependencyNotInstalled": "{mod} nécessite {dependency}, qui n’est pas installé.",
+      "incompatiblePair": "{a} et {b} sont déclarés incompatibles.",
+      "missingModRemoved": "{mod} n’est pas installé et sera retiré de la liste des mods actifs.",
+      "missingModKept": "{mod} n’est pas installé et reste dans la liste des mods actifs ; le jeu l’ignore.",
+      "loadRequirementViolated": "{after} a besoin que {before} se charge avant lui ; cet ordre le charge plus tard.",
+      "anyOfUnsatisfied": "{mod} a besoin que l’un de {candidates} se charge avant lui ; aucun ne le fait."
+    }
+  },
+  "gameLog": {
+    "heading": "Journal importé :",
+    "kind": {
+      "playerLog": "Player.log",
+      "consoleSnapshot": "Capture de la console"
+    },
+    "coverage": {
+      "playerLog": {
+        "cleanExit": "{count} démarrage ; le journal se termine par une sortie propre | {count} démarrages ; le journal se termine par une sortie propre",
+        "crashed": "{count} démarrage ; le journal se termine par un plantage du jeu (rapport de plantage : {path}) | {count} démarrages ; le journal se termine par un plantage du jeu (rapport de plantage : {path})",
+        "crashedNoPath": "{count} démarrage ; le journal se termine par un plantage du jeu (aucun rapport de plantage n’y est indiqué) | {count} démarrages ; le journal se termine par un plantage du jeu (aucun rapport de plantage n’y est indiqué)",
+        "truncated": "{count} démarrage ; le journal s’arrête en pleine exécution, sans message de fermeture (un gel, une fermeture forcée ou une copie faite pendant que le jeu tournait) | {count} démarrages ; le journal s’arrête en pleine exécution, sans message de fermeture (un gel, une fermeture forcée ou une copie faite pendant que le jeu tournait)"
+      },
+      "snapshot": {
+        "belowCap": "La console ne contenait que {count} entrée : cette copie ne dit donc rien des étapes que cette entrée ne montre pas | La console ne contenait que {count} entrées : cette copie ne dit donc rien des étapes que ces entrées ne montrent pas",
+        "atCap": "Uniquement {count} entrée, celle que contenait la console, à sa limite : le jeu a supprimé les entrées plus anciennes | Uniquement les {count} entrées que contenait la console, à sa limite : le jeu a supprimé les entrées plus anciennes",
+        "overCap": "{count} entrée, plus qu’une console n’en contient : ce n’est donc pas une copie unique de la console, mais plusieurs copies collées ensemble ou un problème de lecture ; impossible de dire ce que le jeu a supprimé | {count} entrées, plus qu’une console n’en contient : ce n’est donc pas une copie unique de la console, mais plusieurs copies collées ensemble ou un problème de lecture ; impossible de dire ce que le jeu a supprimé",
+        "headTruncated": "La copie commence au milieu d’une entrée : sa première entrée est incomplète."
+      }
+    },
+    "gaps": {
+      "warning": "Le jeu a cessé d’écrire des messages {count} fois. Ce qu’il n’a jamais écrit ne peut pas être récupéré. | Le jeu a cessé d’écrire des messages {count} fois. Ce qu’il n’a jamais écrit ne peut pas être récupéré.",
+      "neverResumed": "{count} arrêt de la journalisation n’est suivi d’aucun message de reprise : tout ce qui suit ce point dans le journal n’est donc pas fiable. | {count} arrêts de la journalisation ne sont suivis d’aucun message de reprise : tout ce qui suit le premier d’entre eux dans le journal n’est donc pas fiable.",
+      "lowerBound": "Au moins {count} famille d’entrées ({percent} % des entrées du journal) chevauche une interruption : son décompte peut être incomplet ; tout décompte peut l’être. | Au moins {count} familles d’entrées ({percent} % des entrées du journal) chevauchent une interruption : leurs décomptes peuvent être incomplets ; tout décompte peut l’être.",
+      "resumed": "De la ligne {stop} à la ligne {resume}",
+      "open": "De la ligne {stop} à la fin du journal",
+      "more": "Et {count} de plus"
+    },
+    "losses": {
+      "heading": "Le lecteur a dû limiter sa lecture de ce journal ; le résumé en omet donc une partie :",
+      "linesTruncated": "{count} ligne dépassait la limite du lecteur ; seul son début a été lu | {count} lignes dépassaient la limite du lecteur ; seuls leurs débuts ont été lus",
+      "linesWithInvalidUtf8": "{count} ligne contenait de l’UTF-8 non valide et a été lue avec des caractères de remplacement | {count} lignes contenaient de l’UTF-8 non valide et ont été lues avec des caractères de remplacement",
+      "stackBlockLinesDropped": "{count} ligne de trace de pile au-delà de la limite par bloc n’a pas été examinée | {count} lignes de trace de pile au-delà de la limite par bloc n’ont pas été examinées",
+      "stackJoinsAbandoned": "{count} jonction de pile multiligne a dépassé sa limite et a été abandonnée | {count} jonctions de pile multilignes ont dépassé leur limite et ont été abandonnées",
+      "passesFolded": "{count} entrée issue d’un démarrage au-delà de ceux suivis a été rattachée au dernier démarrage suivi | {count} entrées issues de démarrages au-delà de ceux suivis ont été rattachées au dernier démarrage suivi",
+      "stackRefsDropped": "{count} référence arrière de pile n’a pas été indexée | {count} références arrière de pile n’ont pas été indexées",
+      "loggingGapsDropped": "{count} interruption de la journalisation au-delà de la limite de la liste a été comptée, mais pas listée | {count} interruptions de la journalisation au-delà de la limite de la liste ont été comptées, mais pas listées",
+      "crashReportPathsTruncated": "{count} emplacement de rapport de plantage a été tronqué à sa longueur maximale | {count} emplacements de rapport de plantage ont été tronqués à leur longueur maximale"
+    }
+  },
+  "startup": {
+    "heading": "Coût au démarrage",
+    "description": "Une ligne par mod actif : opérations de patch qui modifient, xpaths de forme lente, textures, DLL et defs, sans durées (Rimmerge ne lance jamais le jeu). Importez un {playerLog} ou une capture de la console pour remplir les colonnes DDS aux dimensions invalides et minuteurs observés (une capture de la console ne peut pas remplir les minuteurs).",
+    "orderMismatchWarning": "Le journal importé a été produit par un ordre de mods différent de celui actuellement sélectionné : les colonnes DDS aux dimensions invalides et minuteurs observés ci-dessous reflètent cette autre exécution, pas celle-ci.",
+    "noOrderBlockWarning": "Le journal importé ne contient aucune liste de mods actifs : il ne peut donc pas être comparé à l’ordre sélectionné, et les colonnes DDS aux dimensions invalides et minuteurs observés ci-dessous peuvent refléter une autre exécution que celle-ci.",
+    "loadFailed": "Échec du chargement du tableau du coût au démarrage.",
+    "modHeader": "Mod",
+    "patchOpsHeader": "Op. de patch",
+    "slowXpathsHeader": "Xpaths lents",
+    "texFilesHeader": "Fich. tex.",
+    "texBytesHeader": "Octets tex.",
+    "ddsFilesHeader": "Fichiers DDS",
+    "badDimDdsHeader": "DDS dim. invalides",
+    "dllsHeader": "DLL",
+    "dllBytesHeader": "Octets DLL",
+    "defsHeader": "Defs",
+    "overriddenTexHeader": "Tex. remplacées",
+    "observedTimersHeader": "Minuteurs observés",
+    "contentOnlyHeader": "Contenu seul",
+    "totalRow": "Total ({count} mod) | Total ({count} mods)",
+    "notImported": "non importé",
+    "notAvailableFromSnapshot": "indisponible avec une capture de la console",
+    "atLeast": "au moins {count}",
+    "snapshotNote": "Le journal importé est une capture de la console, pas le journal d’une exécution complète du jeu : les minuteurs observés n’y sont pas disponibles, et les décomptes de DDS aux dimensions invalides sont des valeurs minimales.",
+    "cutOffNote": "Le journal importé se termine avant qu’un résultat de patch ait été consigné, et sans sortie propre : les décomptes ci-dessous peuvent donc être incomplets ; les décomptes de DDS aux dimensions invalides et les minuteurs observés sont des valeurs minimales.",
+    "gapsNote": "Le jeu a cessé d’écrire des messages pendant la période couverte par le journal importé : les décomptes ci-dessous peuvent donc être incomplets ; les décomptes de DDS aux dimensions invalides et les minuteurs observés sont des valeurs minimales.",
+    "observedTimersValue": "{count} ({ms} ms)",
+    "observedTimersAtLeast": "au moins {count} ({ms} ms)",
+    "contentOnly": "contenu seul"
+  },
+  "assignments": {
+    "editRefsTargets": {
+      "header": "Modifier les références et les cibles",
+      "referencesHeading": "Références (R)",
+      "targetsHeading": "Cibles (T)",
+      "whatChangedHeading": "Ce qui a changé",
+      "schemaChangeCounts": {
+        "added": "{count} champ ajouté | {count} champs ajoutés",
+        "removed": "{count} champ retiré | {count} champs retirés",
+        "reclassified": "{count} champ reclassé | {count} champs reclassés"
+      },
+      "reclassifiedNames": " ({names})",
+      "strandedValuesLine": "{count} valeur stockée a été abandonnée, car le nouveau rôle d’un champ reclassé n’accepte plus ce qui y était stocké : | {count} valeurs stockées ont été abandonnées, car le nouveau rôle d’un champ reclassé n’accepte plus ce qui y était stocké :",
+      "droppedRowsLine": "{count} ligne a été abandonnée, car sa cible a quitté l’ensemble des cibles : | {count} lignes ont été abandonnées, car leur cible a quitté l’ensemble des cibles :",
+      "clean": "Rien n’a été abandonné ni laissé en suspens par ce changement.",
+      "closeButton": "Fermer",
+      "saveButton": "Enregistrer"
+    },
+    "rowEditor": {
+      "copyFrom": "Copier depuis :",
+      "winnerBadge": "— gagnant",
+      "prefillFrom": "— depuis {mod}",
+      "clampedTo": "— réduit à « {name} » : cet emplacement ne garde qu’un seul nom, mais cette valeur en nommait {count} ({joined})",
+      "droppedFromCopy": "— {count} valeur empruntée ignorée, car cette def n’est pas active : {names} | — {count} valeurs empruntées ignorées, car ces defs ne sont pas actives : {names}",
+      "pairedTo": "associé à {slot}",
+      "overrideBadge": "Remplacement — {count} correspondance existante | Remplacement — {count} correspondances existantes",
+      "inspectDefLink": "Inspecter la def",
+      "defNameLabel": "defName",
+      "saveRowButton": "Enregistrer la ligne",
+      "clearRowButton": "Effacer la ligne",
+      "newRowTitle": "Nouvelle ligne"
+    },
+    "coverageList": {
+      "searchPlaceholder": "Rechercher des cibles…",
+      "ownerFilterPlaceholder": "Filtrer par propriétaire",
+      "thisProject": "ce projet",
+      "coveredByMod": "couverte par {mod}",
+      "coveredByAnotherMod": "couverte par un autre mod",
+      "uncovered": "non couverte",
+      "wouldWinNoOwner": "— l’emporterait",
+      "wouldWinWithOwner": "— {mod} l’emporterait",
+      "noMatches": "Aucune cible correspondante."
+    },
+    "schemaTable": {
+      "fieldHeader": "Champ",
+      "roleHeader": "Rôle",
+      "typeHeader": "Type",
+      "cardinalityHeader": "Cardinalité",
+      "observedHeader": "Observé",
+      "defTypePlaceholder": "type de def",
+      "hideButton": "Masquer",
+      "unreadableTargets": "{count} cible référencée n’a pas pu être lue pendant l’apprentissage d’une structure : | {count} cibles référencées n’ont pas pu être lues pendant l’apprentissage d’une structure :",
+      "unreadableTargetLine": "{field} : {defType}/{defName} — {reason}",
+      "newFieldPathLabel": "Chemin du nouveau champ",
+      "roleLabel": "Rôle",
+      "defTypeLabel": "Type de def",
+      "addFieldButton": "Ajouter un champ",
+      "pathRequired": "Un chemin de champ est requis.",
+      "pathAlreadyExists": "{path} est déjà un champ de ce schéma."
+    },
+    "exportPanel": {
+      "exportDirLabel": "Dossier d’export",
+      "exportDirPlaceholder": "Choisir un dossier…",
+      "chooseButton": "Choisir…",
+      "installCheckboxLabel": "Installer dans Mods et activer",
+      "staleActiveSetNote": "Les modifications d’activation en attente ne sont pas incluses : réanalysez d’abord si vous voulez qu’elles figurent dans cette installation.",
+      "forceWarning": "RimWorldWin64.exe semble être en cours d’exécution. Si vous installez maintenant, ModsConfig.xml sera écrit, or le jeu l’écrase en quittant : la modification risque donc d’être perdue. Exporter malgré tout ?",
+      "exportAnyway": "Exporter malgré tout",
+      "export": "Exporter",
+      "exportedTo": "Exporté vers : {path}",
+      "installedAt": "Installé dans : {path}",
+      "skippedHeading": "Ignorés",
+      "skippedPath": " : {path}"
+    },
+    "editor": {
+      "loadFailed": "Échec du chargement de ce projet.",
+      "editRefsTargetsButton": "Modifier les références et les cibles",
+      "deleteButton": "Supprimer",
+      "noSections": "Aucune section pour l’instant.",
+      "addSectionButton": "Ajouter une section",
+      "removeSectionButton": "Retirer la section",
+      "noTargetSelected": "Aucune cible sélectionnée.",
+      "ownRowsHeading": "Lignes propres",
+      "newRowButton": "Nouvelle ligne",
+      "standaloneHint": "Cette section est autonome : ses lignes n’ont aucune cible par laquelle établir une correspondance, il n’y a donc pas de file de couverture ici.",
+      "noRowsYet": "Aucune ligne pour l’instant.",
+      "selectOrNewRow": "Sélectionnez une ligne, ou cliquez sur « Nouvelle ligne » pour en créer une.",
+      "exportHeading": "Export",
+      "deleteDialogHeader": "Supprimer ce projet ?",
+      "deleteDialogBody": "Cela supprime le projet du créateur de patchs. Un dossier qu’il a déjà exporté sur le disque n’est pas touché.",
+      "addSectionDialogHeader": "Ajouter une section",
+      "listingCandidates": "Recherche des candidats…",
+      "candidateGroupLabel": "Type de section candidat",
+      "noAddableCandidates": "Aucun candidat à ajouter : chaque type de def que possèdent les mods de référence de ce projet est déjà une section.",
+      "addButton": "Ajouter",
+      "removeSectionDialogHeader": "Retirer cette section ?",
+      "removeSectionBody": "Cela supprime la section {defType} et toutes ses lignes. Cette action ne peut pas être annulée d’ici.",
+      "sectionInUse": "Encore référencée par {count} ligne d’une autre section. La retirer malgré tout laisse ces références orphelines : un export ultérieur signale chacune d’elles comme ignorée. | Encore référencée par {count} lignes d’une autre section. La retirer malgré tout laisse ces références orphelines : un export ultérieur signale chacune d’elles comme ignorée.",
+      "referenceLine": "{defType} {row} : {path}",
+      "removeAnywayButton": "Retirer malgré tout",
+      "removeButton": "Retirer"
+    },
+    "wizard": {
+      "heading": "Nouveau projet du créateur de patchs",
+      "identityHeading": "Identité",
+      "nameLabel": "Nom",
+      "packageIdLabel": "ID du paquet",
+      "packageIdPlaceholder": "auteur.monmod",
+      "displayNameLabel": "Nom affiché",
+      "referencesHeading": "Mods de référence (R)",
+      "targetsHeading": "Cibles (T)",
+      "targetsHint": "Laissez vide pour créer un tout nouveau type de def (un projet « nouvelle def ») au lieu de patcher un type existant.",
+      "listCandidatesButton": "Lister les candidats",
+      "effectiveRefsHeading": "Ensemble de références effectif",
+      "excludedTitle": "Exclu : cliquez pour l’inclure",
+      "includeTitle": "Cliquez pour exclure",
+      "excludedTag": "exclu",
+      "includedTag": "×",
+      "candidatesHeading": "Types d’attribution candidats",
+      "candidateGroupLabel": "Type d’attribution candidat",
+      "instanceCount": "{defType} ({count} instance) | {defType} ({count} instances)",
+      "inferringSchema": "Déduction du schéma…",
+      "standaloneNote": "Ce candidat n’a pas de champ de clé cible : ce sera un projet « nouvelle def », avec des lignes autonomes au lieu de lignes associées à des cibles.",
+      "excludedTargetsNote": "{count} cible référencée hors de T/Core n’a jamais été lue (respecter T permet de rester rapide). | {count} cibles référencées hors de T/Core n’ont jamais été lues (respecter T permet de rester rapide).",
+      "createButton": "Créer"
+    },
+    "list": {
+      "newProjectButton": "Nouveau projet",
+      "loadFailed": "Échec du chargement des attributions.",
+      "empty": "Aucun projet du créateur de patchs pour l’instant.",
+      "nameHeader": "Nom",
+      "packageIdHeader": "ID du paquet",
+      "sectionsHeader": "Sections",
+      "refsHeader": "R",
+      "targetsHeader": "T",
+      "rowsHeader": "Lignes",
+      "uncoveredHeader": "Non couvertes",
+      "exportedHeader": "Exporté",
+      "notApplicable": "s.o.",
+      "exportedYes": "oui",
+      "exportedNo": "non"
+    },
+    "itemPicker": {
+      "searchPlaceholder": "Rechercher des éléments…",
+      "thisProjectHeading": "Ce projet",
+      "noMatches": "Aucun résultat.",
+      "count": "{loaded} / {total}",
+      "clearSelection": "Effacer la sélection",
+      "loadMore": "Charger plus"
+    }
+  },
+  "rationale": {
+    "layerPhrase": {
+      "hard": "une exigence stricte (au chargement)",
+      "anyOf": "une exigence au choix résolue",
+      "declaredOverride": "votre propre dérogation explicite à la déclaration de l’auteur",
+      "declared": "une déclaration de l’auteur",
+      "userDecision": "votre propre décision",
+      "rimSortUser": "une règle utilisateur RimSort",
+      "rimSortCommunity": "une règle communautaire RimSort",
+      "steamDb": "une dépendance du Steam Workshop",
+      "other": "une autre contrainte"
+    },
+    "placementPhrase": {
+      "top": "en haut",
+      "bottom": "en bas"
+    },
+    "relationExplanation": {
+      "presenceOnly": "cela teste seulement la présence d’un mod, pas sa position de chargement",
+      "patchTargetsDef": "les patchs s’appliquent au document de defs fusionné une fois chargées les defs de tous les mods, quel que soit l’ordre de chargement",
+      "parentTemplate": "impossible : une contrainte ParentName est un fait d’ordre au chargement (Stricte), jamais indicatif",
+      "usesType": "le type est résolu parmi tous les assemblies chargés, quel que soit l’ordre de chargement",
+      "patchSelectsInjectedNode": "le nœud sélectionné existe peut-être déjà par un autre moyen (écrit directement dans la def, injecté par plusieurs mods actifs, ou injecté par le propre patch du mod qui le sélectionne), ou se trouve plus profond que ce que l’analyseur indexe pour le vérifier : ce n’est donc pas une exigence d’ordre de chargement prouvée",
+      "patchRemovedNode": "l’analyseur le déduit du contenu des patchs : un mod supprime un nœud qu’un autre mod patche aussi, et celui qui supprime doit se charger en dernier, sinon l’autre patch ne trouve plus rien à modifier ; ce n’est pas un ordre de chargement déclaré par un auteur, il cède donc face à une déclaration ou un placement contraire",
+      "retextureAfterOwner": "l’analyseur le déduit d’un chemin de texture partagé : un pack de retexture contenant uniquement des textures doit se charger après le mod de contenu qu’il rhabille, sinon son remplacement est écrasé par le contenu qu’il est censé retexturer ; ce n’est pas un ordre de chargement déclaré par un auteur, il cède donc face à une déclaration ou un placement contraire",
+      "defOverrideAfterOrigin": "l’analyseur le déduit d’indices sur les modèles et le nombre de defs : un mod qui fournit aussi une def appartenant à l’espace de noms d’un autre mod doit se charger après le propriétaire de cet espace de noms, sinon son remplacement arrive sous la définition d’origine au lieu de la recouvrir ; ce n’est pas un ordre de chargement déclaré par un auteur, il cède donc face à une déclaration ou un placement contraire",
+      "patchInvalidatesPredicate": "l’analyseur le déduit du contenu des patchs : un Replace/Remove réécrit ou supprime un nœud que lit le prédicat xpath d’un autre mod, et l’opération qui lit ce prédicat doit se charger en premier, sinon son prédicat ne correspond plus ; ce n’est pas un ordre de chargement déclaré par un auteur, il cède donc face à une déclaration ou un placement contraire",
+      "patchRemovedNodeCosmetic": "l’analyseur le déduit du contenu des patchs, mais les defs finales sont ici identiques dans les deux ordres (seul change le mod dont l’opération consigne l’échec) : c’est donc un indice plus faible qu’un ordre de chargement déclaré par un auteur, et il cède face à une déclaration ou un placement contraire",
+      "replaceDiscardsAddition": "l’analyseur le déduit du contenu des patchs : un Replace met en place un nœud entièrement nouveau et écarte silencieusement ce qu’un ajout antérieur y avait écrit, l’ajout doit donc se charger après le Replace, sinon son contenu est perdu sans aucune ligne de journal ; ce n’est pas un ordre de chargement déclaré par un auteur, il cède donc face à une déclaration ou un placement contraire",
+      "interactionEvidence": "c’est la preuve que les mods interagissent, pas un fait d’ordre dont le chargeur lui-même a besoin"
+    },
+    "rulePhrase": {
+      "userDecisionOverride": "votre propre dérogation à une contrainte déclarée",
+      "userDecision": "votre propre décision",
+      "layered": "le chargement de {after} après {before} selon {layerPhrase}"
+    },
+    "edgeDroppedInferred": {
+      "patchRemovedNode": "{after} supprime un nœud que {before} patche aussi ; {after} doit se charger après {before}, sinon le patch de {before} ne trouverait plus rien à modifier. L’analyseur l’a déduit du contenu des patchs, pas de l’ordre de chargement déclaré par l’un ou l’autre mod.",
+      "retextureAfterOwner": "{after} est un pack de retexture contenant uniquement des textures, qui partage un chemin de texture avec le contenu de {before} ; {after} doit se charger après {before}, sinon sa texture de remplacement est écrasée par le contenu qu’elle est censée rhabiller. L’analyseur l’a déduit du chemin de texture partagé, pas de l’ordre de chargement déclaré par l’un ou l’autre mod.",
+      "defOverrideAfterOrigin": "{before} possède le modèle ou la famille de defs dont relève ce remplacement ; {after} en fournit aussi une copie et doit se charger après {before} pour que le remplacement recouvre la définition d’origine. L’analyseur l’a déduit d’indices sur les modèles et le nombre de defs, pas de l’ordre de chargement déclaré par l’un ou l’autre mod.",
+      "patchInvalidatesPredicate": "{after} remplace ou supprime un nœud que le patch de {before} sélectionne via un prédicat ; {after} doit se charger après {before}, sinon le prédicat de {before} ne correspondrait plus. L’analyseur l’a déduit du contenu des patchs, pas de l’ordre de chargement déclaré par l’un ou l’autre mod.",
+      "replaceDiscardsAddition": "{before} remplace un nœud dans lequel {after} ajoute aussi du contenu ; {after} doit se charger après {before}, sinon son ajout est écarté silencieusement, sans aucune ligne de journal, quand le Replace de {before} met en place un nœud entièrement nouveau. L’analyseur l’a déduit du contenu des patchs, pas de l’ordre de chargement déclaré par l’un ou l’autre mod."
+    },
+    "edgeDroppedCosmetic": "cosmétique : les defs finales sont identiques dans les deux ordres ; seule change la ligne de journal qui apparaît",
+    "keepEdgeInCycle": "Conserver cette contrainte ; le tri abandonnera à la place la contrainte suivante la plus faible du cycle.",
+    "reorderOverridingEdgeWinner": "Imposer plutôt l’ordre propre à ce mod, en outrepassant le gagnant.",
+    "edgeDroppedWithWinner": "{after} doit plutôt se charger avant {before} : {layerPhrase} l’indique ({detail}).",
+    "edgeDroppedSoftOrAwareness": "Abandonner une contrainte souple ou de simple perception pour rompre un cycle change rarement le comportement.",
+    "edgeDroppedDeclared": "Une contrainte déclarée par un auteur a dû être abandonnée pour rompre un cycle.",
+    "edgeDroppedHard": "Une contrainte stricte (au chargement) a dû être abandonnée pour rompre un cycle : les mods sont réellement en conflit.",
+    "removeDependentModBrokenOrder": "Retirer le mod dépendant de la liste des mods actifs plutôt que d’accepter un ordre de chargement cassé.",
+    "declarationQuestioned": "{declaredAfter} se charge après {declaredBefore} selon {layerPhrase} ({declaredDetail}) ; {relationExplanation} ({relationDetail}).",
+    "reorderOppositeOfRelation": "Imposer l’ordre inverse de celui qu’implique la relation, en tant que décision utilisateur.",
+    "declarationOverridden": "{declaredAfter} est déclaré se charger après {declaredBefore} ({detail}), mais {layerPhrase} dit le contraire : {byAfter} se charge plutôt après {byBefore} ({byDetail}).",
+    "anyOfNoCandidate": "Aucun candidat ne pouvait satisfaire cette contrainte sans fermer un cycle.",
+    "forceAnyOfCandidateAcceptingCycle": "Imposer ce candidat, en acceptant le cycle qui en résulte ailleurs.",
+    "anyOfChosenAlreadyBefore": "Le candidat choisi se charge déjà aujourd’hui avant le mod dépendant.",
+    "anyOfAlternativeCandidate": "Un autre candidat pourrait aussi satisfaire cette contrainte.",
+    "anyOfUniqueMaxDependents": "Parmi les candidats, le candidat choisi est le seul mod dont dépendent le plus de mods.",
+    "anyOfSmallestId": "Choisi pour son identifiant le plus petit parmi des candidats autrement à égalité.",
+    "ruleOverruledLongerCycle": "Il a fallu abandonner {rulePhrase} pour rompre un cycle plus long entre plusieurs mods.",
+    "ruleOverruledByWinner": "Le tri a rejeté {rulePhrase} : {layerPhrase} indique plutôt que {before} se charge après {after} ({detail}).",
+    "reorderOverridingRuleWinner": "Imposer plutôt l’ordre propre à cette règle, en outrepassant le gagnant.",
+    "promoteRuleDespiteOverruled": "Garder cette règle comme votre propre décision, pour qu’elle subsiste même si elle reste rejetée.",
+    "placementOverruled": "{modId} est fixé {placementPhrase}, mais {layerPhrase} le rejette : {detail}.",
+    "promotePlacementDespiteOverruled": "Garder le placement {placementPhrase} comme votre propre décision, pour qu’il subsiste même s’il est rejeté.",
+    "dropRuleOverrulingPlacement": "Abandonner la règle qui a rejeté ce placement, en gardant {modId} {placementPhrase}.",
+    "placementQuestioned": "{modId} est fixé {placementPhrase} ; {relationExplanation} ({relationDetail}).",
+    "enforceRelationAsUserDecision": "Imposer explicitement cette relation en tant que décision utilisateur.",
+    "placementOrderingOverridden": {
+      "loadsAfter": "{pinned} est fixé {placementPhrase}, mais {modId} doit malgré tout se charger après lui : {layerPhrase} ({detail}).",
+      "loadsBefore": "{pinned} est fixé {placementPhrase}, mais {modId} doit malgré tout se charger avant lui : {layerPhrase} ({detail})."
+    },
+    "placementPromotesDependents": "{modId} est fixé {placementPhrase} ; {count} autre mod lui est attribué comme ayant lui aussi franchi la limite de sa propre tranche{sample} | {modId} est fixé {placementPhrase} ; {count} autres mods lui sont attribués comme ayant eux aussi franchi la limite de leur propre tranche{sample}",
+    "promotedSample": {
+      "truncated": " (par ex. {sample})",
+      "exact": " ({sample})"
+    },
+    "tagInferredSignalCount": "{count} signal correspondant | {count} signaux correspondants",
+    "rejectInferredTag": "Rejeter le tag déduit.",
+    "forceDefOverrideWinner": "Imposer la def d’un propriétaire précis comme gagnante, quel que soit l’ordre de chargement.",
+    "defOverrideWinnerDeclaresRelation": "Le mod gagnant déclare explicitement une relation d’ordre de chargement avec chacun des autres propriétaires.",
+    "defOverrideSameAuthor": "Tous les propriétaires ont un auteur en commun.",
+    "defOverrideLoneNonVanillaOwner": "Un seul mod actif remplace cette def vanilla ; rien d’autre ne la conteste.",
+    "defOverrideShadowsFramework": "Un mod terminal masque discrètement la def d’un framework partagé.",
+    "keepCurrentWinner": "Garder plutôt le gagnant actuel.",
+    "defOverrideUnexplained": "Plusieurs mods définissent cette def sans qu’aucun signal fort n’explique le remplacement.",
+    "mergeUnexplainedDefOverride": "Fusionner champ par champ au lieu d’accepter telle quelle la def d’un seul propriétaire.",
+    "mergeShadowsFrameworkFieldByField": "Fusionner champ par champ ; garder les valeurs du framework là où le mod terminal ne les a pas modifiées.",
+    "forcePatchCollisionWinner": "Imposer que le patch d’un seul mod s’applique exclusivement.",
+    "patchCollisionAdditive": "Chaque patch contributeur ne fait qu’ajouter à la cible ; l’ordre ne change pas le résultat.",
+    "patchCollisionContested": "Au moins un patch contributeur modifie la cible ; l’ordre de chargement décide du résultat.",
+    "patchCollisionWinnerDeclaresRelation": "{winner} déclare se charger après {others} : sa modification de « {field} » est donc conservée telle qu’écrite.",
+    "mergeContestedPatchCollision": "Fusionner champ par champ au lieu de laisser l’ordre de chargement décider de toute la def.",
+    "patchWillFailRemovedBy": "{remover}, chargé avant {modId} dans l’ordre vérifié, supprime par sa propre opération le nœud que cible l’opération de {modId} en « {xpath} ».",
+    "reorderBeforeRemover": "Charger {modId} avant {remover}, pour que son opération s’exécute tant que le nœud existe encore.",
+    "patchWillFailNotYetInjected": "L’opération de {modId} en « {xpath} » cible un nœud qu’injecte {injector}, mais {injector} se charge après elle dans l’ordre vérifié.",
+    "reorderAfterInjector": "Charger {modId} après {injector}, pour que son opération trouve le nœud une fois injecté.",
+    "patchWillFailDeadTarget": "L’opération de {modId} en « {xpath} » cible un nœud que la structure résolue du propriétaire gagnant n’a jamais, quel que soit l’ordre de chargement : aucun réordonnancement ne corrige cela.",
+    "patchWillFailUnknownCause": "L’opération de {modId} en « {xpath} » devrait échouer ; la cause n’a pas pu être déterminée.",
+    "brokenInheritance": "Cette référence `ParentName` ne se résout pas comme l’attend le type d’élément de l’enfant : la def se charge avec du contenu manquant ou erroné. Signalez-le à l’auteur du mod qui fait la référence.",
+    "danglingDefReference": "Ce nom ne correspond à aucune def active, de quelque type que ce soit : {cause}.{soundCaveat} Les références croisées sont résolues une fois chargés les defs et les patchs de tous les mods : cela ne dépend donc jamais de l’ordre de chargement.",
+    "danglingDefReferenceSoundCaveat": " Cela ressemble à une référence de son : un `SoundDef` manquant consigne un avertissement et se rabat silencieusement sur un son non défini, au lieu d’empêcher le chargement.",
+    "discardedAdditionDeliberate": "{replacer} déclare se charger après {adder} et remplace « {path} » : l’ajout propre à {adder} en « {adderPath} » est écarté volontairement.",
+    "forceTextureWinner": "Imposer la texture d’un seul mod comme gagnante.",
+    "copyTextureIntoMergeMod": "Copier le fichier de texture de ce mod dans le mod de fusion, indépendamment de l’ordre de chargement.",
+    "textureOverrideCosmetic": "Un remplacement de texture est cosmétique et visible en jeu ; il ne bloque jamais.",
+    "forceTemplateRegistrationWinner": "Imposer que l’enregistrement de ce mod s’applique à chacun des enfants du modèle, quel que soit l’ordre de chargement.",
+    "duplicateTemplateNameExplanation": "{ownerCount} mod enregistre ce nom de modèle ; chaque enfant hérite indépendamment de l’enregistrement chargé le plus près, à sa position ou avant lui. S’il n’y en a aucun, il se rabat sur un enregistrement vanilla ou, à défaut, sur celui du mod chargé en premier dans l’ordre de chargement, si bien que des enfants différents peuvent se résoudre vers des mods différents. | {ownerCount} mods enregistrent ce nom de modèle ; chaque enfant hérite indépendamment de l’enregistrement chargé le plus près, à sa position ou avant lui. S’il n’y en a aucun, il se rabat sur un enregistrement vanilla ou, à défaut, sur celui du mod chargé en premier dans l’ordre de chargement, si bien que des enfants différents peuvent se résoudre vers des mods différents.",
+    "keyedTranslationCollision": "Ces deux mods partagent {keyCount} clé de traduction ; celui chargé en dernier l’emporte. | Ces deux mods partagent {keyCount} clés de traduction ; celui chargé en dernier l’emporte pour chacune.",
+    "soundOverrideCosmetic": "Un remplacement de son est cosmétique et audible en jeu ; il ne bloque jamais.",
+    "forceSoundWinner": "Imposer le son d’un seul mod comme gagnant.",
+    "missingTexturePath": "Aucun mod actif ne fournit ce chemin de texture : le jeu affichera à sa place une texture magenta de remplacement.",
+    "undecodableTexture": "Ce fichier .dds ne se décode pas : le jeu de base affiche à sa place la texture de remplacement des textures invalides.",
+    "contributesNothing": "{modId} n’apporte rien d’observable avec cet ordre : il ne fournit aucun assembly, chaque def qu’il possède est remplacée par une copie chargée plus tard, chaque texture et traduction qu’il fournit est remplacée, et chacune de ses opérations de patch échoue ou ne s’exécute jamais. Le désactiver ne change rien en jeu et économise son coût de chargement.",
+    "undeclaredTypeDependency": "{user} utilise un type de l’assembly de {provider}, mais ne déclare aucune dépendance envers lui.",
+    "pinRelationExplicitly": "Fixer explicitement la relation par une règle d’ordre de chargement.",
+    "runtimePatchCollisionNoLastPatcher": "Plusieurs mods patchent {targetType}.{targetMethod}.",
+    "runtimePatchCollisionLastPatcher": "{ownerCount} mod patche {targetType}.{targetMethod} ; {last} se charge en dernier aujourd’hui, son patch s’exécute donc en dernier. | {ownerCount} mods patchent {targetType}.{targetMethod} ; {last} se charge en dernier aujourd’hui, son patch s’exécute donc en dernier.",
+    "forceRuntimePatchLastWinner": "Imposer que le patch de ce mod s’exécute en dernier, quel que soit l’ordre de chargement.",
+    "transpilerCollision": "{ownerCount} mod réécrit l’IL de {targetType}.{targetMethod} avec un transpiler de patch d’exécution ; l’ordre dans lequel ils s’exécutent peut décider si le motif d’un transpiler ultérieur correspond encore. La plupart de ces collisions sont sans conséquence : si l’un de ces mods consigne une erreur de patch, indiquez l’ordre qui fonctionne avec `rimmerge rule set-pair`. | {ownerCount} mods réécrivent chacun l’IL de {targetType}.{targetMethod} avec un transpiler de patch d’exécution ; l’ordre dans lequel ils s’exécutent peut décider si le motif d’un transpiler ultérieur correspond encore. La plupart de ces collisions sont sans conséquence : si l’un de ces mods consigne une erreur de patch, indiquez l’ordre qui fonctionne avec `rimmerge rule set-pair`.",
+    "duplicateAssemblyFirstLoadedWins": "Plusieurs mods actifs fournissent un assembly portant ce nom ; la copie chargée en premier l’emporte à l’exécution.",
+    "removeDuplicateAssemblyCopy": "Retirer l’une des copies en double de la liste des mods actifs.",
+    "likelyDuplicateMod": "Ces deux mods partagent un grand nombre de defs identiques, sans relation déclarée entre eux.",
+    "removeLikelyDuplicateModA": "Retirer l’un des mods probablement en double de la liste des mods actifs.",
+    "removeLikelyDuplicateModB": "Retirer l’autre mod probablement en double de la liste des mods actifs.",
+    "missingModNotInstalled": "Ce mod est actif dans ModsConfig.xml, mais n’est pas installé ; RimWorld supprime de toute façon les identifiants inconnus.",
+    "keepMissingModId": "Garder l’identifiant dans ModsConfig.xml au cas où le mod réapparaîtrait.",
+    "missingDependencyNotEnforced": "Une dépendance déclarée n’est pas active ; RimWorld se contente d’avertir, sans l’imposer.",
+    "incompatiblePair": "Ces mods se déclarent mutuellement incompatibles.",
+    "removeIncompatibleModA": "Retirer l’un des mods incompatibles de la liste des mods actifs.",
+    "removeIncompatibleModB": "Retirer l’autre mod incompatible de la liste des mods actifs.",
+    "unsupportedVersionOftenWorks": "Ce mod n’indique pas la version active du jeu comme prise en charge ; il fonctionne souvent malgré tout.",
+    "undeclaredHardDependencyHonored": "Le tri respecte déjà cette contrainte stricte (au chargement), même si l’auteur ne l’a jamais déclarée.",
+    "pinRelationExplicitlyAnyway": "Fixer malgré tout explicitement la relation par une règle d’ordre de chargement.",
+    "lazyReferenceViolatedJitResolved": "Cette référence d’assembly résolue de façon différée n’est pas respectée par l’ordre actuel, mais elle est résolue à la compilation JIT, une fois tous les assemblies chargés : l’ordre de chargement ne l’affecte donc pas réellement.",
+    "nearMissModReference": {
+      "findModName": "Ce nom FindMod « {written} » ne correspond à aucun mod actif ou installé, mais ressemble beaucoup au mod actif « {candidateName} » : peut-être une faute de frappe. Signalez-le à l’auteur du mod qui fait la référence.",
+      "mayRequireId": "Cet ID MayRequire « {written} » ne correspond à aucun mod actif ou installé, mais ressemble beaucoup au mod actif « {candidateName} » : peut-être une faute de frappe. Signalez-le à l’auteur du mod qui fait la référence."
+    },
+    "mergeCompleteNothingToMerge": "le jeu applique ces contributions l’une après l’autre à une seule valeur ; rien à fusionner",
+    "mergeLeadDefOverrideCombine": "Les mods modifient des champs différents ; une fusion combinerait les deux.",
+    "mergePromotedPatchCollisionKeepsBoth": "Les mods modifient des champs différents ; la fusion conserve les deux.",
+    "keepLoadOrderWinner": "Garder le gagnant de l’ordre de chargement.",
+    "mergeStructuralGuard": "{field} diffère selon les propriétaires : la fusion champ par champ n’est pas sûre ; confirmez le gagnant de l’ordre de chargement",
+    "mergeFieldsNeedChoice": "Fusion : {unresolved} champ requiert un choix. | Fusion : {unresolved} champs requièrent un choix.",
+    "identicalCopiesOrderIrrelevant": "copies identiques ; l’ordre ne peut pas changer le résultat",
+    "notAddressedByPatch": "Non traité par ce patch ; l’ordre de chargement décide comme aujourd’hui."
+  },
+  "modInfo": {
+    "panel": {
+      "regionLabel": "Informations sur le mod",
+      "close": "Fermer",
+      "notFoundTitle": "Ce mod ne figure pas dans l’analyse actuelle",
+      "allDetailsLink": "Tous les détails",
+      "previewAlt": "Image d’aperçu de {mod}",
+      "noPreview": "Aucune image d’aperçu",
+      "previewTooLarge": "L’aperçu dépasse 8 Mo",
+      "previewUnsupportedFormat": "L’aperçu n’est pas au format PNG ou JPEG",
+      "previewUnreadable": "L’aperçu n’a pas pu être lu",
+      "missingHeading": "Manquant",
+      "missingBody": "Listé dans ModsConfig.xml, mais introuvable sur le disque",
+      "requiredByHeading": "Requis par",
+      "pendingActivation": "Activation en attente : appliquez ou réanalysez pour qu’elle prenne effet",
+      "pendingDeactivation": "Désactivation en attente : appliquez ou réanalysez pour qu’elle prenne effet",
+      "packageIdLine": "ID du paquet : {id}",
+      "workshopCopyNote": "Copie du Workshop",
+      "versionLine": "Version de mod : {version}",
+      "aboutNotOnDisk": "Le fichier About.xml de ce mod est introuvable : ses fichiers ont peut-être été déplacés ou supprimés depuis la dernière analyse.",
+      "supportedVersionsLabel": "Versions prises en charge",
+      "supportsGameVersion": "Prend en charge cette version du jeu",
+      "doesNotSupportGameVersion": "Ne déclare pas prendre en charge cette version du jeu",
+      "openWorkshopButton": "Ouvrir la page du Workshop (navigateur externe)",
+      "openHomepageButton": "Ouvrir la page d’accueil (navigateur externe)",
+      "rootFolderLabel": "Dossier du mod",
+      "loadedFoldersLabel": "Dossiers chargés",
+      "costLabel": "Coût",
+      "costLine": "{defsLabel} : {defCount}, {patchOpsLabel} : {patchOps}, {dllsLabel} : {assemblyCount}",
+      "seeStartupLink": "Voir le coût au démarrage",
+      "tagsLabel": "Tags",
+      "hardDependents": "{count} dépendant strict | {count} dépendants stricts",
+      "softDependents": "{count} dépendant souple | {count} dépendants souples",
+      "awarenessDependents": "{count} dépendant par perception | {count} dépendants par perception",
+      "frameworkCandidate": "Ressemble à un framework partagé",
+      "generatedLine": "Généré par Rimmerge ({kind})",
+      "generatedMerge": "mod de fusion du profil",
+      "generatedPatch": "patch de compatibilité",
+      "generatedAssignment": "projet d’attribution",
+      "positionLabel": "Position",
+      "previousPositionLine": "Position précédente : n° {position}",
+      "whyHereLink": "Pourquoi ici ?",
+      "findingsCount": "{count} constat | {count} constats",
+      "needsInputCount": "{count} requiert une décision | {count} requièrent une décision",
+      "declaredHeading": "Ordre de chargement déclaré",
+      "descriptionHeading": "Description",
+      "noDescription": "Aucune description fournie.",
+      "showMore": "Afficher plus",
+      "showLess": "Afficher moins",
+      "aboutChanged": "About.xml a changé depuis la dernière analyse : réanalysez",
+      "aboutUnreadable": "Impossible de lire About.xml : {reason}",
+      "aboutUnreadableIoHeadline": "le fichier n’a pas pu être lu",
+      "aboutUnreadableXmlHeadline": "le fichier n’est pas du XML valide",
+      "descriptionTruncated": "Cette description était trop longue et a été raccourcie."
+    }
+  }
+}

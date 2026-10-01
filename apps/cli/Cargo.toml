@@ -1,0 +1,36 @@
+[package]
+name = "rimmerge-cli"
+version = "1.0.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Rimmerge CLI: sort/ledger/import/apply/fixture commands"
+
+[[bin]]
+name = "rimmerge"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+rim-analyzer = { workspace = true }
+rim-merge = { workspace = true }
+rim-resolve = { workspace = true }
+rim-session = { workspace = true }
+rim-io = { workspace = true }
+anyhow = { workspace = true }
+clap = { workspace = true }
+jiff = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+assert_cmd = { workspace = true }
+predicates = "3.1"
+tempfile = { workspace = true }
+# `test-support` unlocks `rim_resolve::domain::AssignmentSchema::reference_field_diagnostics`
+# for `tests/real_install_def_suffix_exemption.rs` — see that file's own
+# module doc comment.
+rim-resolve = { workspace = true, features = ["test-support"] }

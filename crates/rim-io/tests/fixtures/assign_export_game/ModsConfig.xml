@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModsConfigData>
+  <version>1.6.4871 rev590</version>
+  <activeMods>
+    <li>export.framework</li>
+    <li>export.target</li>
+    <li>export.existing</li>
+  </activeMods>
+</ModsConfigData>

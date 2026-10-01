@@ -1,0 +1,19 @@
+{
+    "timestamp": 1700000000,
+    "rules": {
+        "example.architect": {
+            "incompatibleWith": {
+                "example.framework": {
+                    "comment": "known incompatible with the framework"
+                }
+            }
+        },
+        "fixture.inactive.addon": {
+            "incompatibleWith": {
+                "example.framework": {
+                    "comment": "inactive on this call, never in the active set"
+                }
+            }
+        }
+    }
+}

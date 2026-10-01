@@ -1,0 +1,102 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/rim-analyzer",
+    "crates/rim-resolve",
+    "crates/rim-merge",
+    "crates/rim-session",
+    "crates/rim-io",
+    "apps/cli",
+    "apps/desktop/src-tauri",
+]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.98"
+license = "MIT OR Apache-2.0"
+# Every crate here is an internal implementation detail of the
+# `rimmerge` app, never published to crates.io. `publish = false` is
+# unrelated to the `license` field above: it just keeps `cargo publish`
+# from ever trying to push one of these to crates.io.
+publish = false
+
+[workspace.dependencies]
+# `version` pinned alongside `path` (matching each crate's own
+# `[package].version`) even though nothing outside this workspace ever
+# resolves these from a registry — a bare `path` dependency carries no
+# version requirement at all, which `cargo-deny`'s `bans.wildcards`
+# check (deny.toml) correctly flags as a wildcard otherwise.
+rim-analyzer = { path = "crates/rim-analyzer", version = "1.0.0" }
+rim-resolve = { path = "crates/rim-resolve", version = "1.0.0" }
+rim-merge = { path = "crates/rim-merge", version = "1.0.0" }
+rim-session = { path = "crates/rim-session", version = "1.0.0" }
+rim-io = { path = "crates/rim-io", version = "1.0.0" }
+anyhow = "1.0.104"
+assert_cmd = "2.0"
+clap = { version = "4.6.6", features = ["derive"] }
+# Already in the tree as a transitive dependency of `petgraph`
+# (rank-indexed bitset closures in `rim-resolve`'s `sort::direction`).
+fixedbitset = "0.5"
+insta = "1.41"
+jiff = "0.2.35"
+petgraph = "0.8"
+proptest = "1.11.0"
+pretty_assertions = "1.4.1"
+regex = "1.13.1"
+roxmltree = "0.21.1"
+# Already in the tree as a transitive dependency; pre-release/build-suffix
+# semver precedence (`AppVersion`, `rim-session::notifications::version`)
+# is exactly the kind of rule that gets hand-rolled wrong.
+semver = "1.0.28"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+sha2 = "0.11"
+sysinfo = { version = "0.39", default-features = false, features = ["system"] }
+tauri = "2.11"
+tauri-build = "2.6"
+tauri-plugin-dialog = "2"
+tempfile = "3.14"
+thiserror = "2.0.20"
+tokio = "1"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+ts-rs = "12"
+# rustls, not the default `native-tls`/schannel. `default-features =
+# false` drops the default `gzip` feature (pulls in `flate2` for
+# nothing rim-io needs — no source this workspace fetches uses HTTP
+# content-encoding).
+#
+# Deliberately `rustls-no-provider` + `_ring` + `platform-verifier`
+# instead of the umbrella `rustls` feature: `rustls` unconditionally pulls
+# in `rustls-webpki-roots` (`dep:webpki-roots`), and a real `cargo deny
+# check` run against that combination rejects it — `webpki-roots` 1.0.9 is
+# `CDLA-Permissive-2.0`, which `deny.toml`'s allow list does not cover.
+# Using the OS trust store via `rustls-platform-verifier`
+# (`MIT OR Apache-2.0`, already an allowed license) instead of a bundled
+# Mozilla root list avoids that dependency entirely — no `deny.toml` edit
+# needed. This
+# requires `rim_io`'s `UreqHttpGet` to explicitly configure
+# `TlsConfig::root_certs(RootCerts::PlatformVerifier)`: with
+# `rustls-webpki-roots` off, ureq's own default (`RootCerts::WebPki`)
+# panics at first use.
+ureq = { version = "3.4.1", default-features = false, features = [
+    "rustls-no-provider",
+    "_ring",
+    "platform-verifier",
+] }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+
+[profile.release]
+lto = "thin"
+strip = true
+codegen-units = 1
+
+[profile.dev.package."*"]
+opt-level = 2

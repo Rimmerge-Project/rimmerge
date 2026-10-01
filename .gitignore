@@ -1,0 +1,27 @@
+/target
+node_modules/
+dist/
+
+# Maintainer-only: design history, real logs, real reports, local lists
+/.journal/
+
+# Claude Code: share the project permission list; keep agent memory, the
+# local subagents (.claude/agents/) and their shared skills
+# (.claude/skills/) private. The glob covers a `.claude/` created in any
+# subdirectory (an agent whose cwd is apps/desktop); it excludes the
+# directory's contents, not the directory, so the re-include below works.
+**/.claude/*
+!/.claude/settings.json
+
+# Personal, machine-specific notes
+CLAUDE.local.md
+
+# Tool caches
+.ruff_cache/
+
+# Build and scratch output at the repo root: the packaging OutDir
+# (release.yml's `../../portable`, the zip it produces) and the
+# golden-regeneration scratch install (see docs/testing.md)
+/portable/
+/*.zip
+/synthetic-install/

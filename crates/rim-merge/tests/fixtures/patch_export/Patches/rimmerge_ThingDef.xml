@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <!-- ThingDef/Fixture_Wall — owners: fixture.moda,fixture.modb -->
+  <Operation Class="PatchOperationSequence">
+    <operations>
+      <li Class="PatchOperationReplace" MayRequire="fixture.moda,fixture.modb">
+        <xpath>Defs/ThingDef[defName="Fixture_Wall"]/statBases/MaxHitPoints</xpath>
+        <value>
+          <MaxHitPoints>150</MaxHitPoints>
+        </value>
+      </li>
+    </operations>
+  </Operation>
+</Patch>

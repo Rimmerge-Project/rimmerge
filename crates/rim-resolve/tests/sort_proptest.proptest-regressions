@@ -1,0 +1,13 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+#
+# NOTE: `arb_case` gained a fourth component (each mod's own optional
+# Placement), so the "shrinks to (n, dag, extra) = ..." text on the seed
+# below records the case that seed produced under the *old* strategy
+# shape. The seed itself still replays and is still worth keeping; the
+# value it now generates differs.
+cc ffc416d1aed49f785b8d11882ed251009343bc6a84a5d64a7b45c79577b26c35 # shrinks to (n, dag, extra) = (7, [(1, 4, LoadAfter), (2, 6, LoadAfter)], [(0, 1, LoadAfter), (1, 5, LoadAfter), (2, 5, LoadAfter), (3, 4, LoadAfter), (4, 3, LoadAfter), (4, 6, LoadAfter), (5, 2, LoadAfter), (6, 0, LoadAfter)])

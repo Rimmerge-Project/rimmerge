@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef>
+    <defName>Race0</defName>
+    <label>race zero</label>
+    <race>
+      <body>Human</body>
+    </race>
+  </ThingDef>
+
+  <ThingDef>
+    <defName>Race1</defName>
+    <label>race one</label>
+    <race>
+      <body>Human</body>
+    </race>
+  </ThingDef>
+
+  <ThingDef>
+    <defName>Race2</defName>
+    <label>race two</label>
+    <race>
+      <body>Human</body>
+    </race>
+  </ThingDef>
+
+  <ThingDef>
+    <defName>Race3</defName>
+    <label>race three</label>
+    <race>
+      <body>Human</body>
+    </race>
+  </ThingDef>
+
+  <ThingDef>
+    <defName>Race4</defName>
+    <label>race four</label>
+    <race>
+      <body>Human</body>
+    </race>
+  </ThingDef>
+</Defs>

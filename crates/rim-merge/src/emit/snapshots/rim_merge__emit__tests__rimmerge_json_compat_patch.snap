@@ -1,0 +1,6 @@
+---
+source: crates/rim-merge/src/emit.rs
+assertion_line: 1318
+expression: text
+---
+{"kind":"patch","patchId":"3f9a1c02be77","profileHash":"3f9a1c2b7d5e","scope":["fixture.moda","fixture.modb"],"decisionsSha256":"deadbeef","rimmergeVersion":"0.1.0"}

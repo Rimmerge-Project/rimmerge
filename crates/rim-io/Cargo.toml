@@ -1,0 +1,45 @@
+[package]
+name = "rim-io"
+version = "1.0.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Infrastructure adapters for Rimmerge: ModsConfig I/O, decisions/rules files, RimSort import, and the analyzer scanner"
+
+[lib]
+name = "rim_io"
+path = "src/lib.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+rim-analyzer = { workspace = true }
+rim-merge = { workspace = true }
+rim-resolve = { workspace = true }
+rim-session = { workspace = true }
+jiff = { workspace = true }
+regex = { workspace = true }
+roxmltree = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+sysinfo = { workspace = true }
+thiserror = { workspace = true }
+ureq = { workspace = true }
+walkdir = "2.5.0"
+
+[dev-dependencies]
+rim-resolve = { workspace = true, features = ["test-support"] }
+rim-session = { workspace = true, features = ["test-support"] }
+pretty_assertions = { workspace = true }
+proptest = { workspace = true }
+tempfile = { workspace = true }
+
+[build-dependencies]
+# build.rs hashes the embedded rules bundle so `db status`/the desktop's
+# Databases card can show its identity next to a fetched cache's own
+# sha256 — the same crate this crate's own runtime code already uses for
+# that.
+sha2 = { workspace = true }

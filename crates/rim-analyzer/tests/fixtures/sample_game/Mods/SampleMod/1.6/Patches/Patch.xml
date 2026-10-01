@@ -1,0 +1,18 @@
+<Patch>
+  <Operation Class="PatchOperationFindMod">
+    <mods>
+      <li>Sample Mod</li>
+    </mods>
+    <match Class="PatchOperationFindMod">
+      <mods>
+        <li>Nonexistent Mod</li>
+      </mods>
+      <match Class="PatchOperationAdd">
+        <xpath>Defs/ThingDef[defName="SampleWall"]/comps</xpath>
+        <value>
+          <li Class="CompProperties_Fixture" />
+        </value>
+      </match>
+    </match>
+  </Operation>
+</Patch>

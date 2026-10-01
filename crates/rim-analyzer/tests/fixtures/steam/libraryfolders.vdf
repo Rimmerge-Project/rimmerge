@@ -1,0 +1,45 @@
+// Sample Steam `libraryfolders.vdf` for `rim_analyzer::infra::paths`'
+// hand-rolled reader. Invented drive letters and an invented Linux mount
+// point on purpose: no real machine's layout is committed here, and the
+// three entries between them cover the three shapes the reader has to
+// survive — a default root, a second library on another drive, and a
+// non-Windows path with no backslashes at all.
+"libraryfolders"
+{
+	"0"
+	{
+		"path"		"Q:\\Steam"
+		"label"		""
+		"contentid"		"1111111111111111111"
+		"totalsize"		"0"
+		"update_clean_bytes_tally"		"12345678"
+		"time_last_update_corruption"		"0"
+		"apps"
+		{
+			"294100"		"1234567890"
+		}
+	}
+	"1"
+	{
+		"path"		"W:\\SteamGames"
+		"label"		"spare drive"
+		"contentid"		"2222222222222222222"
+		"totalsize"		"1000204886016"
+		"update_clean_bytes_tally"		"87654321"
+		"time_last_update_corruption"		"0"
+		"apps"
+		{
+			"294100"		"1234567890"
+		}
+	}
+	"2"
+	{
+		"path"		"/media/example/steam"
+		"label"		""
+		"contentid"		"3333333333333333333"
+		"totalsize"		"500107862016"
+		"apps"
+		{
+		}
+	}
+}

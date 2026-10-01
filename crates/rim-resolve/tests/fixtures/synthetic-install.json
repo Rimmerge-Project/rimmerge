@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "seed": 20260913,
+  "game_version": "1.6",
+  "mod_count": 300,
+  "archetypes": {
+    "frameworks": 8,
+    "framework_dependents": 60,
+    "content_mods": 176,
+    "retextures": 24,
+    "translations": 10,
+    "patch_only": 22
+  },
+  "planted": {
+    "def_overrides": 40,
+    "patch_collisions": 30,
+    "texture_overrides": 12,
+    "sound_overrides": 4,
+    "duplicate_assemblies": 3,
+    "likely_duplicate_mods": 2,
+    "duplicate_template_names": 4,
+    "keyed_translation_collisions": 5,
+    "missing_texture_paths": 3,
+    "runtime_patch_collisions": 6,
+    "transpiler_collisions": 2,
+    "cycles_forcing_dropped_edges": 5,
+    "any_of_constraints": 6,
+    "missing_dependencies": 3,
+    "incompatible_pairs": 2,
+    "unsupported_versions": 4,
+    "top_pinned": 1,
+    "bottom_pinned": 1
+  },
+  "inactive": 30
+}

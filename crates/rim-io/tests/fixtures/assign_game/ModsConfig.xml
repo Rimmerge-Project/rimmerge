@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModsConfigData>
+  <version>1.6.4871 rev590</version>
+  <activeMods>
+    <li>fixture.framework</li>
+    <li>fixture.parts</li>
+    <li>fixture.target</li>
+  </activeMods>
+</ModsConfigData>
