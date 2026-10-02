@@ -319,12 +319,48 @@
     },
     "guide": {
       "heading": "Erste Schritte",
-      "intro": "Drei Schritte bringen die vorgeschlagene Ladereihenfolge ins Spiel. Die Seiten „Befunde“ und „Regeln“ stehen bereit, wenn du mehr Kontrolle willst.",
+      "intro": "Vier Schritte bringen die vorgeschlagene Ladereihenfolge ins Spiel. Die Seiten „Befunde“ und „Regeln“ stehen bereit, wenn du mehr Kontrolle willst.",
       "listLabel": "Schritte für den Einstieg",
       "status": {
         "done": "Erledigt",
         "current": "Aktueller Schritt",
-        "upcoming": "Noch nicht"
+        "upcoming": "Noch nicht",
+        "skipped": "Übersprungen",
+        "unavailable": "Nicht verfügbar"
+      },
+      "getRules": {
+        "title": "Empfohlene Regeln holen",
+        "pending": "Holt die empfohlenen Regeldatenbanken (die Ladereihenfolge-Regeln der Community und die Steam-Workshop-Datenbank) und importiert sie in dieses Profil, damit die vorgeschlagene Reihenfolge, die du als Nächstes prüfst, sie bereits verwendet.",
+        "sourceTurnOn": "{source}: aus. Diese Datenbank wird beim Klick eingeschaltet und heruntergeladen.",
+        "sourceDownload": "{source}: noch nicht heruntergeladen.",
+        "sourceRetry": "{source}: Der letzte Download ist fehlgeschlagen ({reason}).",
+        "sourceImport": "{source}: heruntergeladen, noch nicht importiert.",
+        "downloadButton": "Herunterladen und importieren",
+        "downloadButtonWithSteam": "Herunterladen und importieren (etwa 49 MB)",
+        "retryButton": "Erneut versuchen",
+        "retryButtonWithSteam": "Erneut versuchen (etwa 49 MB)",
+        "importButton": "Importieren",
+        "skip": "Überspringen",
+        "skippedText": "Übersprungen. Du kannst sie weiterhin über die Seite „Regeln“ holen.",
+        "getNowButton": "Jetzt holen",
+        "getNowButtonWithSteam": "Jetzt holen (etwa 49 MB)",
+        "doneText": "Importiert. Die vorgeschlagene Reihenfolge verwendet sie.",
+        "doneNotInUseText": "Importiert, aber importierte Regeln sind in den Einstellungen ausgeschaltet, daher verwendet die vorgeschlagene Reihenfolge sie nicht.",
+        "networkOff": "Der Internetzugriff ist aus, daher kann nichts heruntergeladen werden.",
+        "openSettings": "Einstellungen öffnen",
+        "awaitingFirstRun": "Beantworte zuerst den oben stehenden Willkommenshinweis.",
+        "loadFailed": "Es konnte nicht geprüft werden, ob die empfohlenen Regeln eingerichtet sind.",
+        "downloading": "Datenbank „{source}“ wird heruntergeladen…",
+        "importing": "Wird importiert…",
+        "slowNote": "Das Herunterladen der Steam-Workshop-Datenbank kann bei einer langsamen Verbindung einige Minuten dauern.",
+        "resultDone": "Empfohlene Regeln importiert.",
+        "resultPartial": "Einige Regeldatenbanken konnten nicht heruntergeladen werden. Was heruntergeladen wurde, ist importiert. Versuche es später erneut.",
+        "resultDownloadFailed": "Die Regeldatenbanken konnten nicht heruntergeladen werden. Prüfe deine Verbindung und versuche es später erneut.",
+        "resultNothingToDo": "Die empfohlenen Regeln waren bereits importiert. Es gab nichts herunterzuladen.",
+        "resultImportFailedReadingFile": "Die Regeln wurden heruntergeladen, konnten aber für den Import nicht gelesen werden.",
+        "resultImportFailedSaving": "Die Regeln wurden heruntergeladen, konnten aber nicht in diesem Profil gespeichert werden. Es wurde nichts geändert.",
+        "resultManifestNotRecorded": "Die Regeln wurden importiert, aber der Importvermerk konnte nicht gespeichert werden. Klicke erneut, um den Vorgang abzuschließen.",
+        "resultProfileChanged": "Die Regeln wurden heruntergeladen. Inzwischen wurde ein anderes Profil geöffnet, daher wurde nichts importiert."
       },
       "chooseSuggested": {
         "title": "Vorgeschlagene Reihenfolge verwenden",
@@ -498,6 +534,20 @@
       "stale_active_set": {
         "title": "Liste der aktiven Mods ist veraltet",
         "detail": "Scanne erneut, bevor ModsConfig.xml geschrieben wird."
+      },
+      "already_running": {
+        "title": "Wird bereits ausgeführt",
+        "detail": "Rimmerge führt diesen Vorgang bereits aus. Warte, bis er abgeschlossen ist."
+      },
+      "recommended_rules_unavailable": {
+        "title": "Die empfohlenen Regeln können gerade nicht geholt werden",
+        "detail": "Das Herunterladen ist gerade nicht verfügbar.",
+        "networkOff": "Der Internetzugriff ist aus. Schalte ihn in den Einstellungen ein und versuche es dann erneut.",
+        "awaitingFirstRun": "Beantworte zuerst den Willkommenshinweis im Dashboard und versuche es dann erneut."
+      },
+      "app_settings_damaged": {
+        "title": "Deine App-Einstellungsdatei ist beschädigt",
+        "detail": "Rimmerge hat die Datei nicht angetastet. Öffne die Einstellungen und speichere sie, um die Datei zu reparieren. Versuche es dann erneut."
       },
       "texture_unsupported_format": {
         "title": "Texturformat kann nicht angezeigt werden",

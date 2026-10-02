@@ -319,12 +319,48 @@
     },
     "guide": {
       "heading": "Başlarken",
-      "intro": "Önerilen yükleme sırasını oyuna aktarmak üç adım sürer. Daha fazla denetim istediğinde Bulgular ve Kurallar sayfalarını kullanabilirsin.",
+      "intro": "Önerilen yükleme sırasını oyuna aktarmak dört adım sürer. Daha fazla denetim istediğinde Bulgular ve Kurallar sayfalarını kullanabilirsin.",
       "listLabel": "Başlangıç adımları",
       "status": {
         "done": "Tamamlandı",
         "current": "Geçerli adım",
-        "upcoming": "Henüz değil"
+        "upcoming": "Henüz değil",
+        "skipped": "Atlandı",
+        "unavailable": "Kullanılamıyor"
+      },
+      "getRules": {
+        "title": "Önerilen kuralları al",
+        "pending": "Önerilen kural veritabanlarını (topluluğun yükleme sırası kuralları ve Steam Atölyesi veritabanı) alır ve bu profile içe aktarır; böylece sonra inceleyeceğin önerilen sıra onları zaten kullanır.",
+        "sourceTurnOn": "{source}: kapalı. Açılacak ve indirilecek.",
+        "sourceDownload": "{source}: henüz indirilmedi.",
+        "sourceRetry": "{source}: son indirme başarısız oldu ({reason}).",
+        "sourceImport": "{source}: indirildi, henüz içe aktarılmadı.",
+        "downloadButton": "İndir ve içe aktar",
+        "downloadButtonWithSteam": "İndir ve içe aktar (yaklaşık 49 MB)",
+        "retryButton": "Yeniden dene",
+        "retryButtonWithSteam": "Yeniden dene (yaklaşık 49 MB)",
+        "importButton": "İçe aktar",
+        "skip": "Atla",
+        "skippedText": "Atlandı. Onları yine de Kurallar sayfasından alabilirsin.",
+        "getNowButton": "Kuralları şimdi al",
+        "getNowButtonWithSteam": "Kuralları şimdi al (yaklaşık 49 MB)",
+        "doneText": "İçe aktarıldı. Önerilen sıra onları kullanıyor.",
+        "doneNotInUseText": "İçe aktarıldı, ancak içe aktarılan kurallar Ayarlar sayfasında kapalı; bu yüzden önerilen sıra onları kullanmıyor.",
+        "networkOff": "İnternet erişimi kapalı, bu yüzden hiçbir şey indirilemez.",
+        "openSettings": "Ayarları aç",
+        "awaitingFirstRun": "Önce yukarıdaki Hoş geldin bildirimini yanıtla.",
+        "loadFailed": "Önerilen kuralların hazır olup olmadığı denetlenemedi.",
+        "downloading": "{source} veritabanı indiriliyor…",
+        "importing": "İçe aktarılıyor…",
+        "slowNote": "Yavaş bir bağlantıda Steam Atölyesi veritabanını indirmek birkaç dakika sürebilir.",
+        "resultDone": "Önerilen kurallar içe aktarıldı.",
+        "resultPartial": "Bazı kural veritabanları indirilemedi. İndirilenler içe aktarıldı. Daha sonra yeniden dene.",
+        "resultDownloadFailed": "Kural veritabanları indirilemedi. Bağlantını denetle ve daha sonra yeniden dene.",
+        "resultNothingToDo": "Önerilen kurallar zaten içe aktarılmıştı. İndirilecek bir şey yoktu.",
+        "resultImportFailedReadingFile": "Kurallar indirildi, ancak içe aktarmak için okunamadı.",
+        "resultImportFailedSaving": "Kurallar indirildi, ancak bu profile kaydedilemedi. Hiçbir şey değiştirilmedi.",
+        "resultManifestNotRecorded": "Kurallar içe aktarıldı, ancak içe aktarma kaydı yazılamadı. Tamamlamak için yeniden tıkla.",
+        "resultProfileChanged": "Kurallar indirildi. Bu sırada başka bir profil açıldığı için hiçbir şey içe aktarılmadı."
       },
       "chooseSuggested": {
         "title": "Önerilen sırayı kullan",
@@ -498,6 +534,20 @@
       "stale_active_set": {
         "title": "Etkin mod listesi güncel değil",
         "detail": "ModsConfig.xml dosyasına yazmadan önce yeniden tara."
+      },
+      "already_running": {
+        "title": "İşlem zaten sürüyor",
+        "detail": "Rimmerge bunu zaten yapıyor. Bitmesini bekle."
+      },
+      "recommended_rules_unavailable": {
+        "title": "Önerilen kurallar şu anda alınamıyor",
+        "detail": "İndirme şu anda kullanılamıyor.",
+        "networkOff": "İnternet erişimi kapalı. Ayarlar sayfasında internet erişimini aç, ardından yeniden dene.",
+        "awaitingFirstRun": "Önce Pano'daki Hoş geldin bildirimini yanıtla, ardından yeniden dene."
+      },
+      "app_settings_damaged": {
+        "title": "Uygulama ayarları dosyan bozuk",
+        "detail": "Rimmerge ona dokunmadı. Onarmak için Ayarlar sayfasını aç ve ayarlarını kaydet, ardından yeniden dene."
       },
       "texture_unsupported_format": {
         "title": "Doku biçimi gösterilemiyor",

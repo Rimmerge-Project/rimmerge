@@ -67,29 +67,24 @@ pub fn resolve_from_cache(
     cache_dir: &Path,
     user_rules_override: Option<&Path>,
 ) -> RimSortPaths {
-    let enabled = BTreeMap::from([
-        (
-            RuleDatabase::CommunityRules,
-            policy.fetches(RuleDatabase::CommunityRules),
-        ),
-        (
-            RuleDatabase::SteamWorkshop,
-            policy.fetches(RuleDatabase::SteamWorkshop),
-        ),
-    ]);
+    let enabled: BTreeMap<RuleDatabase, bool> = RuleDatabase::ALL
+        .into_iter()
+        .filter(|database| database.is_importable())
+        .map(|database| (database, policy.fetches(database)))
+        .collect();
     let mut community_rules = None;
     let mut steam_db = None;
     for status in fetcher.status(cache_dir, &enabled) {
-        if !should_import_from_cache(status.enabled, status.path.is_file()) {
+        if !status.database.is_importable()
+            || !should_import_from_cache(status.enabled, status.path.is_file())
+        {
             continue;
         }
         match status.database {
             RuleDatabase::CommunityRules => community_rules = Some(status.path),
             RuleDatabase::SteamWorkshop => steam_db = Some(status.path),
-            // Not a RimSort file and not part of a RimSort import at all:
-            // its four load-time sections are read straight from the
-            // cache by `ModKnowledgeStore` (never through an import), and
-            // its fifth (tag rules) has no importer yet.
+            // Not importable (`RuleDatabase::is_importable`), so filtered
+            // out above; the arm only keeps this `match` closed.
             RuleDatabase::RimmergeRules => {}
         }
     }

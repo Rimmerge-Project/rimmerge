@@ -1,4 +1,4 @@
-// GuidedFlowStrip: the three steps are derived from facts; only the button actions change state.
+// GuidedFlowStrip: the four steps are derived from facts; only the button actions change state.
 
 import { PiniaColada } from "@pinia/colada";
 import Aura from "@primevue/themes/aura";
@@ -22,6 +22,7 @@ import { installMockIpc } from "@/services/ipc.mock";
 import type { DashboardDto } from "@/types/generated/DashboardDto";
 import type { OrderSourceDto } from "@/types/generated/OrderSourceDto";
 import type { PendingActiveChangesDto } from "@/types/generated/PendingActiveChangesDto";
+import type { RecommendedRulesStepDto } from "@/types/generated/RecommendedRulesStepDto";
 
 const STALE: PendingActiveChangesDto = {
   unscanned: { added: ["new.mod"], removed: [] },
@@ -53,9 +54,16 @@ function mountStrip(data: DashboardDto) {
   });
 }
 
-function install(pending: PendingActiveChangesDto = EMPTY_PENDING_ACTIVE_CHANGES) {
+const RULES_DONE: RecommendedRulesStepDto = { kind: "done", importedRulesInUse: true };
+
+function install(
+  pending: PendingActiveChangesDto = EMPTY_PENDING_ACTIVE_CHANGES,
+  rules: RecommendedRulesStepDto = RULES_DONE,
+) {
   const selects: OrderSourceDto[] = [];
   installMockIpc({
+    // Step 1 reads this; the default (done) leaves the other three steps as they were.
+    get_recommended_rules_step: rules,
     // The strip owns an Apply dialog, which reads these while mounted (hidden).
     list_rules: EMPTY_RULE_SET,
     list_mod_names: {},

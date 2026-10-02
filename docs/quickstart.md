@@ -81,19 +81,26 @@ ask anything.
 
 ### On the desktop: the guided path
 
-The Dashboard shows the same flow as three steps, read from what the app
-already knows (nothing about your progress is saved):
+The Dashboard shows the same flow as four steps, read from what the app
+already knows (nothing about your progress is saved, except that you
+skipped step one):
 
-1. **Use the suggested order.** It is already selected when a project
+1. **Get the recommended rules.** One click downloads the community
+   rules and the Steam Workshop database (about 49 MB) and imports them,
+   so the suggested order already uses them. It needs internet access
+   unless only an import is left, and never runs without the click;
+   **Skip** moves on, and **Get them now** stays available, still listing
+   what it will do and the download size.
+2. **Use the suggested order.** It is already selected when a project
    opens. If you switched to Current, one button switches back; a link
    takes you to the Load order page to look first.
-2. **Apply.** Opens the Apply dialog, which shows the diff before it
+3. **Apply.** Opens the Apply dialog, which shows the diff before it
    writes anything and a stale-order warning if your install has changed
    since the order was built (the strip offers Rescan instead of Apply
    until you do).
    Findings that still need your input are shown as a count with a link
    to the Inbox; they do not block Apply.
-3. **Confirm.** If the order has hard problems you have not already
+4. **Confirm.** If the order has hard problems you have not already
    decided in the Inbox, an "Apply anyway?" panel lists them first, with
    **Go back** focused. Nothing is asked when there are none, or when you
    already decided each one. If RimWorld looks like it is running, a
@@ -125,8 +132,9 @@ order, as of the last scan or apply. See
   notice explains this and offers to turn it off; the largest database
   (the Steam Workshop one, about 49 MB) is on by default but never
   fetched automatically, only by a manual Refresh click, `rimmerge db
-  refresh`, or the recommended-databases notice's "Turn on and download"
-  button. The CLI never contacts either host on its own. See
+  refresh`, the recommended-databases notice's "Turn on and download"
+  button, or the Dashboard's "Get the recommended rules" step. The CLI
+  never contacts either host on its own. See
   [privacy-and-network.md](privacy-and-network.md).
 
 ## Going further

@@ -319,12 +319,48 @@
     },
     "guide": {
       "heading": "Primeros pasos",
-      "intro": "Tres pasos llevan el orden de carga sugerido al juego. Las páginas Hallazgos y Reglas están ahí cuando quieras más control.",
+      "intro": "Cuatro pasos llevan el orden de carga sugerido al juego. Las páginas Hallazgos y Reglas están ahí si quieres más control.",
       "listLabel": "Pasos para empezar",
       "status": {
         "done": "Hecho",
         "current": "Paso actual",
-        "upcoming": "Todavía no"
+        "upcoming": "Todavía no",
+        "skipped": "Omitido",
+        "unavailable": "No disponible"
+      },
+      "getRules": {
+        "title": "Obtener las reglas recomendadas",
+        "pending": "Obtiene las bases de datos de reglas recomendadas (las reglas de orden de carga de la comunidad y la base de datos de Steam Workshop) y las importa en este perfil, para que el orden sugerido que revisarás después ya las use.",
+        "sourceTurnOn": "{source}: base de datos desactivada. Se activará y se descargará.",
+        "sourceDownload": "{source}: base de datos aún no descargada.",
+        "sourceRetry": "{source}: la última descarga falló ({reason}).",
+        "sourceImport": "{source}: base de datos descargada, aún no importada.",
+        "downloadButton": "Descargar e importar",
+        "downloadButtonWithSteam": "Descargar e importar (unos 49 MB)",
+        "retryButton": "Reintentar",
+        "retryButtonWithSteam": "Reintentar (unos 49 MB)",
+        "importButton": "Importar",
+        "skip": "Omitir",
+        "skippedText": "Omitido. Aún puedes obtenerlas desde la página Reglas.",
+        "getNowButton": "Obtenerlas ahora",
+        "getNowButtonWithSteam": "Obtenerlas ahora (unos 49 MB)",
+        "doneText": "Importadas. El orden sugerido las usa.",
+        "doneNotInUseText": "Importadas, pero las reglas importadas están desactivadas en Ajustes, así que el orden sugerido no las usa.",
+        "networkOff": "El acceso a internet está desactivado, así que no se puede descargar nada.",
+        "openSettings": "Abrir ajustes",
+        "awaitingFirstRun": "Responde primero al aviso de bienvenida de arriba.",
+        "loadFailed": "No se pudo comprobar si las reglas recomendadas están configuradas.",
+        "downloading": "Descargando la base de datos de {source}…",
+        "importing": "Importando…",
+        "slowNote": "La descarga de la base de datos de Steam Workshop puede tardar unos minutos con una conexión lenta.",
+        "resultDone": "Reglas recomendadas importadas.",
+        "resultPartial": "No se pudieron descargar algunas bases de datos de reglas. Lo que sí se descargó se ha importado. Inténtalo de nuevo más tarde.",
+        "resultDownloadFailed": "No se pudieron descargar las bases de datos de reglas. Comprueba tu conexión e inténtalo de nuevo más tarde.",
+        "resultNothingToDo": "Las reglas recomendadas ya estaban importadas. No había nada que descargar.",
+        "resultImportFailedReadingFile": "Las reglas se descargaron, pero no se pudieron leer para importarlas.",
+        "resultImportFailedSaving": "Las reglas se descargaron, pero no se pudieron guardar en este perfil. No se ha cambiado nada.",
+        "resultManifestNotRecorded": "Las reglas se importaron, pero no se pudo dejar constancia de la importación. Haz clic de nuevo para terminar.",
+        "resultProfileChanged": "Las reglas se descargaron. Mientras tanto se abrió otro perfil, así que no se importó nada."
       },
       "chooseSuggested": {
         "title": "Usar el orden sugerido",
@@ -397,8 +433,8 @@
       "title": "{count} base de datos de reglas recomendada no está configurada | {count} bases de datos de reglas recomendadas no están configuradas",
       "body": "Rimmerge ordena mejor con las tres bases de datos de reglas. Al activarlas se descargan ahora; después, las pequeñas se actualizan automáticamente y la de Steam Workshop solo cuando haces clic en «Actualizar».",
       "bodyWithSteam": "Rimmerge ordena mejor con las tres bases de datos de reglas. Al activarlas se descargan ahora. La base de datos de Steam Workshop ocupa unos 49 MB y, después, solo se actualiza cuando haces clic en «Actualizar»; las pequeñas se actualizan automáticamente.",
-      "sourceOff": "{source}: desactivada",
-      "sourceNotDownloaded": "{source}: activada, aún no descargada"
+      "sourceOff": "{source}: base de datos desactivada",
+      "sourceNotDownloaded": "{source}: base de datos activada, aún no descargada"
     },
     "actions": {
       "keepNetworkSettings": "Mantener estos ajustes",
@@ -498,6 +534,20 @@
       "stale_active_set": {
         "title": "La lista de mods activos está desactualizada",
         "detail": "Vuelve a escanear antes de escribir ModsConfig.xml."
+      },
+      "already_running": {
+        "title": "Ya está en curso",
+        "detail": "Rimmerge ya está haciendo esto. Espera a que termine."
+      },
+      "recommended_rules_unavailable": {
+        "title": "Ahora no se pueden obtener las reglas recomendadas",
+        "detail": "La descarga no está disponible en este momento.",
+        "networkOff": "El acceso a internet está desactivado. Actívalo en Ajustes y vuelve a intentarlo.",
+        "awaitingFirstRun": "Responde primero al aviso de bienvenida del Panel y vuelve a intentarlo."
+      },
+      "app_settings_damaged": {
+        "title": "Tu archivo de ajustes de la aplicación está dañado",
+        "detail": "Rimmerge no lo ha modificado. Abre Ajustes y guarda tus ajustes para repararlo; después, vuelve a intentarlo."
       },
       "texture_unsupported_format": {
         "title": "No se puede mostrar este formato de textura",

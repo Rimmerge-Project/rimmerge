@@ -99,42 +99,11 @@ impl<Store: AppSettingsStore> EnableRecommendedSources<Store> {
 
 #[cfg(test)]
 mod tests {
-    use std::cell::RefCell;
     use std::path::PathBuf;
 
     use super::*;
     use crate::app_settings::{ReminderPolicy, StaleAfterDays};
-
-    #[derive(Default)]
-    struct InMemoryAppSettingsStore {
-        saved: RefCell<Option<AppSettings>>,
-        is_recovered: bool,
-    }
-
-    impl AppSettingsStore for InMemoryAppSettingsStore {
-        fn load(&self, _base: &Path) -> AppSettingsLoad {
-            if self.is_recovered {
-                return AppSettingsLoad::Recovered {
-                    reason: "corrupt".to_string(),
-                };
-            }
-            self.saved
-                .borrow()
-                .map_or(AppSettingsLoad::Missing, AppSettingsLoad::Loaded)
-        }
-
-        fn save(&self, _base: &Path, settings: &AppSettings) -> Result<(), StoreError> {
-            *self.saved.borrow_mut() = Some(*settings);
-            Ok(())
-        }
-
-        fn save_if_missing(&self, base: &Path, settings: &AppSettings) -> Result<(), StoreError> {
-            if self.saved.borrow().is_some() {
-                return Ok(());
-            }
-            self.save(base, settings)
-        }
-    }
+    use crate::test_support::InMemoryAppSettingsStore;
 
     #[test]
     fn update_app_settings_saves_whatever_it_is_given() {
@@ -224,15 +193,12 @@ mod tests {
 
     #[test]
     fn enable_recommended_sources_refuses_to_overwrite_a_damaged_file() {
-        let store = InMemoryAppSettingsStore {
-            is_recovered: true,
-            ..InMemoryAppSettingsStore::default()
-        };
+        let store = InMemoryAppSettingsStore::recovered();
         let use_case = EnableRecommendedSources::new(store);
 
         let result = use_case.execute(&PathBuf::from("base"));
 
         assert!(result.is_err());
-        assert_eq!(*use_case.store.saved.borrow(), None, "nothing was written");
+        assert_eq!(use_case.store.saved(), None, "nothing was written");
     }
 }

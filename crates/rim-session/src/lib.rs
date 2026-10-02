@@ -20,6 +20,7 @@ pub mod mod_info;
 mod mod_inventory;
 mod mod_knowledge;
 mod paths;
+mod recommended_rules;
 mod session;
 mod settings;
 
@@ -50,6 +51,10 @@ pub use mod_index::{ModFilter, ModPage, ModSummary};
 pub use mod_inventory::{InventoryEntry, ModInventory};
 pub use mod_knowledge::ModKnowledge;
 pub use paths::ProjectPaths;
+pub use recommended_rules::{
+    FirstRun, RecommendedRulesFacts, RecommendedRulesStep, SourceNeed, StepSkip, Unavailable,
+    recommended_rules_step,
+};
 pub use session::{PatchDecideError, RuleKey, Session, UnknownAssignment, UnknownPatch};
 pub use settings::{Settings, SortProvenance, filter_imported_rules};
 

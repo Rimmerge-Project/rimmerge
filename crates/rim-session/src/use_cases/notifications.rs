@@ -16,21 +16,26 @@ use crate::ports::{
     AppSettingsStore, NotificationState, NotificationStateStore, ProfileNotificationStateStore,
     StoreError,
 };
+use crate::recommended_rules::StepSkip;
 use crate::settings::Settings;
 use crate::use_cases::RuleDatabaseView;
 
-/// This profile's current game version and what it last acknowledged —
+/// What this profile's own notification state contributes: its current game
+/// version, what it last acknowledged, and whether it skipped the
+/// recommended-rules step —
 /// bundled into one parameter for [`ListNotifications::execute`], the
 /// same convention `databases`/`running` already follow: the caller
 /// already has both, from its own already-loaded `Session` and a
 /// [`ProfileNotificationStateStore`] read, and reuses rather than
 /// re-derives them.
 #[derive(Debug, Clone)]
-pub struct GameVersionAcknowledgement {
+pub struct ProfileNotificationFacts {
     /// This profile's current game `major.minor` version.
     pub current: GameMajorMinor,
     /// The version this profile last acknowledged, if any.
     pub acknowledged: Option<GameMajorMinor>,
+    /// Whether this profile skipped the "Get the recommended rules" step.
+    pub recommended_rules_skip: StepSkip,
 }
 
 /// Builds the active notice list. Read-only — never touches
@@ -67,7 +72,7 @@ impl<AppStore: AppSettingsStore, StateStore: NotificationStateStore>
         profile: Settings,
         databases: Vec<RuleDatabaseView>,
         running: AppVersion,
-        game_version: GameVersionAcknowledgement,
+        profile_facts: ProfileNotificationFacts,
         now: jiff::Timestamp,
     ) -> Vec<Notification> {
         let app = self.app_settings_store.load(base).settings();
@@ -77,8 +82,9 @@ impl<AppStore: AppSettingsStore, StateStore: NotificationStateStore>
             profile,
             databases,
             running,
-            current_game_version: game_version.current,
-            acknowledged_game_version: game_version.acknowledged,
+            current_game_version: profile_facts.current,
+            acknowledged_game_version: profile_facts.acknowledged,
+            recommended_rules_skip: profile_facts.recommended_rules_skip,
         };
         evaluate(&inputs, &state, now)
     }
@@ -318,87 +324,9 @@ mod tests {
 
     use super::*;
     use crate::app_settings::AppSettings;
-    use crate::ports::AppSettingsLoad;
-
-    #[derive(Default)]
-    struct InMemoryAppSettingsStore {
-        settings: RefCell<Option<AppSettings>>,
-        is_recovered: RefCell<bool>,
-        fail_next_save: RefCell<bool>,
-        /// A file another writer creates between this store's `load` and
-        /// its next write: `load` still answers `Missing`, then the first
-        /// `save_if_missing` finds the winner's file there.
-        racing_writer: RefCell<Option<AppSettings>>,
-    }
-
-    impl InMemoryAppSettingsStore {
-        fn losing_a_race_to(winner: AppSettings) -> Self {
-            Self {
-                racing_writer: RefCell::new(Some(winner)),
-                ..Self::default()
-            }
-        }
-
-        fn loaded(settings: AppSettings) -> Self {
-            Self {
-                settings: RefCell::new(Some(settings)),
-                ..Self::default()
-            }
-        }
-
-        fn recovered() -> Self {
-            Self {
-                is_recovered: RefCell::new(true),
-                ..Self::default()
-            }
-        }
-
-        fn failing_next_save() -> Self {
-            Self {
-                fail_next_save: RefCell::new(true),
-                ..Self::default()
-            }
-        }
-
-        fn saved(&self) -> Option<AppSettings> {
-            *self.settings.borrow()
-        }
-    }
-
-    impl AppSettingsStore for InMemoryAppSettingsStore {
-        fn load(&self, _base: &Path) -> AppSettingsLoad {
-            if *self.is_recovered.borrow() {
-                return AppSettingsLoad::Recovered {
-                    reason: "corrupt".to_string(),
-                };
-            }
-            self.settings
-                .borrow()
-                .map_or(AppSettingsLoad::Missing, AppSettingsLoad::Loaded)
-        }
-
-        fn save(&self, _base: &Path, settings: &AppSettings) -> Result<(), StoreError> {
-            if *self.fail_next_save.borrow() {
-                *self.fail_next_save.borrow_mut() = false;
-                return Err(StoreError("boom".to_string()));
-            }
-            *self.settings.borrow_mut() = Some(*settings);
-            Ok(())
-        }
-
-        fn save_if_missing(&self, base: &Path, settings: &AppSettings) -> Result<(), StoreError> {
-            if let Some(winner) = self.racing_writer.borrow_mut().take() {
-                // The other writer's file appeared after this caller last
-                // looked: it stands, and nothing is written.
-                *self.settings.borrow_mut() = Some(winner);
-                return Ok(());
-            }
-            if *self.is_recovered.borrow() || self.settings.borrow().is_some() {
-                return Ok(());
-            }
-            self.save(base, settings)
-        }
-    }
+    use crate::notifications::SourceSetup;
+    use crate::ports::RuleDatabase;
+    use crate::test_support::{InMemoryAppSettingsStore, InMemoryProfileNotificationStateStore};
 
     #[derive(Default)]
     struct InMemoryNotificationStateStore {
@@ -427,35 +355,16 @@ mod tests {
         }
     }
 
-    #[derive(Default)]
-    struct InMemoryProfileNotificationStateStore {
-        state: RefCell<Option<crate::ports::ProfileNotificationState>>,
-    }
-
-    impl ProfileNotificationStateStore for InMemoryProfileNotificationStateStore {
-        fn load(&self, _profile_dir: &Path) -> crate::ports::ProfileNotificationState {
-            self.state.borrow().clone().unwrap_or_default()
-        }
-
-        fn save(
-            &self,
-            _profile_dir: &Path,
-            state: &crate::ports::ProfileNotificationState,
-        ) -> Result<(), StoreError> {
-            *self.state.borrow_mut() = Some(state.clone());
-            Ok(())
-        }
-    }
-
     fn running() -> AppVersion {
         AppVersion::running("0.1.0").expect("valid version")
     }
 
     /// No `GameVersionChanged` notice: acknowledged equals current.
-    fn no_game_version_change() -> GameVersionAcknowledgement {
-        GameVersionAcknowledgement {
+    fn no_game_version_change() -> ProfileNotificationFacts {
+        ProfileNotificationFacts {
             current: GameMajorMinor::parse("1.6"),
             acknowledged: Some(GameMajorMinor::parse("1.6")),
+            recommended_rules_skip: StepSkip::NotSkipped,
         }
     }
 
@@ -481,6 +390,70 @@ mod tests {
             "a brand-new machine shows exactly the Welcome notice"
         );
         assert_eq!(notices[0].kind(), NotificationKind::Welcome);
+    }
+
+    /// An uncached, never-imported source with its toggle on.
+    fn uncached_view(database: RuleDatabase) -> RuleDatabaseView {
+        RuleDatabaseView {
+            status: crate::ports::DatabaseStatus {
+                database,
+                enabled: true,
+                path: PathBuf::from("x.json"),
+                cached: None,
+                last_failure: None,
+                last_attempt_at: None,
+            },
+            imported_sha256: None,
+            needs_reimport: false,
+        }
+    }
+
+    fn steam_listed_as_not_downloaded(skip: StepSkip) -> bool {
+        let base = PathBuf::from("base");
+        let state_store = InMemoryNotificationStateStore::default();
+        let now = jiff::Timestamp::now();
+        state_store
+            .save(
+                &base,
+                &NotificationState {
+                    welcome_completed_at: Some(now),
+                    ..NotificationState::default()
+                },
+            )
+            .expect("seed Welcome as answered");
+        let use_case = ListNotifications::new(InMemoryAppSettingsStore::default(), state_store);
+
+        let notices = use_case.execute(
+            &base,
+            Settings::default(),
+            vec![
+                uncached_view(RuleDatabase::CommunityRules),
+                uncached_view(RuleDatabase::SteamWorkshop),
+            ],
+            running(),
+            ProfileNotificationFacts {
+                recommended_rules_skip: skip,
+                ..no_game_version_change()
+            },
+            now,
+        );
+
+        notices.iter().any(|notice| {
+            matches!(notice, Notification::RecommendedSourcesIncomplete { sources }
+                if sources.get(&RuleDatabase::SteamWorkshop) == Some(&SourceSetup::NotDownloaded))
+        })
+    }
+
+    #[test]
+    fn list_notifications_hands_the_profiles_skip_to_the_evaluator() {
+        assert!(
+            !steam_listed_as_not_downloaded(StepSkip::NotSkipped),
+            "the step offers Steam, so the notice leaves it out"
+        );
+        assert!(
+            steam_listed_as_not_downloaded(StepSkip::Skipped),
+            "a skipped step leaves the notice as it was"
+        );
     }
 
     #[test]
@@ -877,7 +850,7 @@ mod tests {
 
     #[test]
     fn sync_game_version_acknowledgement_seeds_only_the_first_time() {
-        let store = InMemoryProfileNotificationStateStore::default();
+        let store = InMemoryProfileNotificationStateStore::new();
         let profile_dir = PathBuf::from("profile");
         let sync = SyncGameVersionAcknowledgement::new(store);
 
@@ -902,7 +875,7 @@ mod tests {
 
     #[test]
     fn acknowledge_game_version_overwrites_whatever_was_stored() {
-        let store = InMemoryProfileNotificationStateStore::default();
+        let store = InMemoryProfileNotificationStateStore::new();
         let profile_dir = PathBuf::from("profile");
         let acknowledge = AcknowledgeGameVersion::new(store);
 

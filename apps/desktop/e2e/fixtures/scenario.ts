@@ -62,6 +62,9 @@ import type { PreviewMergeModFileRequestDto } from "../../src/types/generated/Pr
 import type { ProgressEventDto } from "../../src/types/generated/ProgressEventDto";
 import type { RationaleDto } from "../../src/types/generated/RationaleDto";
 import type { ReadDefTextureRequestDto } from "../../src/types/generated/ReadDefTextureRequestDto";
+import type { RecommendedRulesProgressEventDto } from "../../src/types/generated/RecommendedRulesProgressEventDto";
+import type { RecommendedRulesReportDto } from "../../src/types/generated/RecommendedRulesReportDto";
+import type { RecommendedRulesStepDto } from "../../src/types/generated/RecommendedRulesStepDto";
 import type { RefreshRuleDatabasesRequestDto } from "../../src/types/generated/RefreshRuleDatabasesRequestDto";
 import type { RemoveAssignmentSectionRequestDto } from "../../src/types/generated/RemoveAssignmentSectionRequestDto";
 import type { ResolutionStatusDto } from "../../src/types/generated/ResolutionStatusDto";
@@ -79,6 +82,7 @@ import type { SetMergeChoicesRequestDto } from "../../src/types/generated/SetMer
 import type { SettingsDto } from "../../src/types/generated/SettingsDto";
 import type { SkippedImportDto } from "../../src/types/generated/SkippedImportDto";
 import type { SlotSourceDto } from "../../src/types/generated/SlotSourceDto";
+import type { SourceNeedEntryDto } from "../../src/types/generated/SourceNeedEntryDto";
 import type { TextureDto } from "../../src/types/generated/TextureDto";
 import type { UpdateAssignmentRequestDto } from "../../src/types/generated/UpdateAssignmentRequestDto";
 import type { UpdatePatchRequestDto } from "../../src/types/generated/UpdatePatchRequestDto";
@@ -262,6 +266,21 @@ declare global {
     __RUN_LAUNCH_NETWORK_CHECKS_CALLS__?: number;
     /** Every `update_app_settings` payload the mock received, in order. */
     __UPDATE_APP_SETTINGS_CALLS__?: AppSettingsDto[];
+    /** How many `get_recommended_rules` calls the mock received, refused ones included. */
+    __GET_RECOMMENDED_RULES_CALLS__?: number;
+    /** How many `skip_recommended_rules_step` calls the mock received. */
+    __SKIP_RECOMMENDED_RULES_CALLS__?: number;
+    /** Every `rules://recommended-progress` payload the mock emitted, in order. */
+    __RECOMMENDED_RULES_PROGRESS__?: RecommendedRulesProgressEventDto[];
+    /**
+     * When `true`, `get_recommended_rules` stops after announcing its first download and waits
+     * for {@link __RELEASE_RECOMMENDED_RULES__} — so a spec can read the in-progress step.
+     */
+    __HOLD_RECOMMENDED_RULES__?: boolean;
+    /** Set by the mock while it holds a click; calling it lets the download finish. */
+    __RELEASE_RECOMMENDED_RULES__?: () => void;
+    /** The sources whose next `get_recommended_rules` download fails (a transport error). */
+    __RECOMMENDED_RULES_FAILING_SOURCES__?: ("community" | "steam")[];
   }
 }
 
@@ -3112,6 +3131,242 @@ export function installScenario(): void {
     }
   }
 
+  // ---- "Get the recommended rules" (Dashboard step 1) ----
+  // Mirrors `rim_session::recommended_rules_step` (the derivation, in its order: done, skipped,
+  // then the per-source needs and the network gates) and `GetRecommendedRules` (phase 1 turns the
+  // toggles on and downloads only what is missing, one source per call and in source order;
+  // phase 2 imports what the cache holds and the profile lacks). Never a canned answer: every
+  // outcome is computed from `ruleDatabases`, `appSettings`, `welcomeCompletedAt` and the skip flag.
+  type RecommendedSource = "community" | "steam";
+  const RECOMMENDED_SOURCES: RecommendedSource[] = ["community", "steam"];
+  // The per-profile skip flag lives in `<profile>/notifications.json` in the real backend and so
+  // survives a reload; everything else in this scenario resets with the page. `sessionStorage`
+  // gives the skip alone the same survival, per tab.
+  const SKIP_STORAGE_KEY = "rimmerge.e2e.recommendedRulesSkipped";
+  function readSkipFlag(): boolean {
+    try {
+      return window.sessionStorage.getItem(SKIP_STORAGE_KEY) === "1";
+    } catch {
+      return false;
+    }
+  }
+  function writeSkipFlag(): void {
+    try {
+      window.sessionStorage.setItem(SKIP_STORAGE_KEY, "1");
+    } catch {
+      // A blocked storage only costs the survival across a reload.
+    }
+  }
+  let recommendedRulesSkipped = readSkipFlag();
+  // The interface's in-flight guard (`AppState::recommended_rules_running`).
+  let recommendedRulesRunning = false;
+  // What importing each source does to the suggested order (the real import re-sorts): swaps of
+  // two positions each, applied in place so `list_order`, `get_dashboard.movedMods` and
+  // `fileMatchesSuggested` all see the new order.
+  const RECOMMENDED_IMPORT_SWAPS: Record<RecommendedSource, [number, number][]> = {
+    community: [[5, 8]],
+    steam: [[30, 34]],
+  };
+  const baselineSuggestedOrder = [...suggestedOrder];
+  // The fixture's `movedMods` has always been 3 (its three swaps); an import's own swaps add the
+  // mods it moved on top of that, so the count really follows the order.
+  const BASELINE_MOVED_MODS = 3;
+  function movedModsCount(): number {
+    const movedByImport = suggestedOrder.filter(
+      (id, index) => id !== baselineSuggestedOrder[index],
+    ).length;
+    return BASELINE_MOVED_MODS + movedByImport;
+  }
+
+  function recommendedRulesStepFor(skip: "honor" | "ignore"): RecommendedRulesStepDto {
+    const views = ruleDatabases.filter((view) =>
+      RECOMMENDED_SOURCES.includes(view.database as RecommendedSource),
+    );
+    if (views.every((view) => view.importedSha256 !== null)) {
+      return {
+        kind: "done",
+        importedRulesInUse: settings.useImportedPairs || settings.useImportedPlacements,
+      };
+    }
+    const sources: SourceNeedEntryDto[] = views
+      .filter((view) => view.importedSha256 === null)
+      .map((view): SourceNeedEntryDto => {
+        if (!fetchEnabledFor(view.database)) {
+          return { database: view.database, need: { kind: "turnOn" } };
+        }
+        if (view.cached === null) {
+          return {
+            database: view.database,
+            need: { kind: "download", lastFailure: view.lastFailure },
+          };
+        }
+        return { database: view.database, need: { kind: "import" } };
+      });
+    // Skipped carries the same sources a click would act on (owner decision Q11).
+    if (skip === "honor" && recommendedRulesSkipped) {
+      return { kind: "skipped", sources };
+    }
+    if (sources.some((entry) => entry.need.kind !== "import")) {
+      if (!appSettings.network.allowNetwork) {
+        return { kind: "unavailable", reason: "networkOff" };
+      }
+      if (welcomeCompletedAt === null) {
+        return { kind: "unavailable", reason: "awaitingFirstRun" };
+      }
+    }
+    return { kind: "needsAction", sources };
+  }
+
+  async function emitRecommendedRulesProgress(
+    progress: RecommendedRulesProgressEventDto,
+  ): Promise<void> {
+    window.__RECOMMENDED_RULES_PROGRESS__?.push(progress);
+    await window.__TAURI_INTERNALS__.invoke("plugin:event|emit", {
+      event: "rules://recommended-progress",
+      payload: progress,
+    });
+  }
+
+  async function getRecommendedRulesMock(): Promise<RecommendedRulesReportDto> {
+    window.__GET_RECOMMENDED_RULES_CALLS__ = (window.__GET_RECOMMENDED_RULES_CALLS__ ?? 0) + 1;
+    if (recommendedRulesRunning) {
+      throw {
+        code: "already_running",
+        message: "the recommended rules are already being downloaded",
+      };
+    }
+    recommendedRulesRunning = true;
+    try {
+      // A click from the Skipped row is the user acting: the skip flag never blocks it.
+      const step = recommendedRulesStepFor("ignore");
+      if (step.kind === "done") {
+        return { downloads: [], import: { kind: "notNeeded" } };
+      }
+      if (step.kind === "unavailable") {
+        throw {
+          code: "recommended_rules_unavailable",
+          message: "a network gate is closed",
+          detail: { kind: "recommendedRulesUnavailable", reason: step.reason },
+        };
+      }
+      if (step.kind !== "needsAction") {
+        throw new Error(`getRecommendedRulesMock: unexpected step ${step.kind}`);
+      }
+      const missingImport = new Set(step.sources.map((entry) => entry.database));
+      if (step.sources.some((entry) => entry.need.kind === "turnOn")) {
+        appSettings = {
+          ...appSettings,
+          network: {
+            ...appSettings.network,
+            fetchCommunityRules: true,
+            fetchSteamWorkshop: true,
+            fetchRimmergeRules: true,
+          },
+        };
+      }
+      const downloads: RuleDatabaseRefreshResultDto[] = [];
+      for (const entry of step.sources) {
+        if (entry.need.kind === "import") {
+          continue;
+        }
+        await emitRecommendedRulesProgress({ kind: "downloading", database: entry.database });
+        if (window.__HOLD_RECOMMENDED_RULES__ === true) {
+          await new Promise<void>((resolve) => {
+            window.__RELEASE_RECOMMENDED_RULES__ = resolve;
+          });
+        }
+        const isFailing = (window.__RECOMMENDED_RULES_FAILING_SOURCES__ ?? []).includes(
+          entry.database as RecommendedSource,
+        );
+        const result: RuleDatabaseRefreshResultDto = isFailing
+          ? {
+              database: entry.database,
+              outcome: {
+                kind: "failed",
+                failure: { cause: { kind: "transport" }, detail: "connection timed out" },
+              },
+            }
+          : {
+              database: entry.database,
+              outcome: {
+                kind: "updated",
+                sha256: `${entry.database}-recommended-sha256`,
+                bytes: mockRefreshedBytes(entry.database),
+              },
+            };
+        downloads.push(result);
+        ruleDatabases = ruleDatabases.map((view) => {
+          if (view.database !== entry.database) {
+            return view;
+          }
+          if (result.outcome.kind === "updated") {
+            return {
+              ...view,
+              cached: {
+                sha256: result.outcome.sha256,
+                bytes: result.outcome.bytes,
+                fetchedAt: new Date().toISOString(),
+              },
+              lastFailure: null,
+            };
+          }
+          // Like the real fetcher: a failure is recorded and whatever was cached stays.
+          return result.outcome.kind === "failed"
+            ? { ...view, lastFailure: result.outcome.failure }
+            : view;
+        });
+      }
+      // Phase 2: whatever was missing an import record and is cached now, whatever phase 1 did.
+      const toImport = RECOMMENDED_SOURCES.filter((database) => {
+        const view = ruleDatabases.find((candidate) => candidate.database === database);
+        return missingImport.has(database) && view !== undefined && view.cached !== null;
+      });
+      if (toImport.length === 0) {
+        return { downloads, import: { kind: "notNeeded" } };
+      }
+      await emitRecommendedRulesProgress({ kind: "importing", databases: toImport });
+      for (const database of toImport) {
+        for (const [first, second] of RECOMMENDED_IMPORT_SWAPS[database]) {
+          const a = suggestedOrder[first];
+          const b = suggestedOrder[second];
+          if (a !== undefined && b !== undefined) {
+            suggestedOrder[first] = b;
+            suggestedOrder[second] = a;
+          }
+        }
+      }
+      ruleDatabases = ruleDatabases.map((view) =>
+        toImport.includes(view.database as RecommendedSource)
+          ? { ...view, importedSha256: view.cached?.sha256 ?? null }
+          : view,
+      );
+      // The real command clears its in-flight guard before it emits, so the refetch the event
+      // triggers never reads `inProgress`.
+      recommendedRulesRunning = false;
+      // The real command emits this after a successful import, which refetches every query.
+      await window.__TAURI_INTERNALS__.invoke("plugin:event|emit", {
+        event: "session://changed",
+        payload: { reason: "imported" },
+      });
+      return {
+        downloads,
+        import: {
+          kind: "imported",
+          databases: toImport,
+          report: {
+            userRules: null,
+            communityRules: toImport.includes("community") ? 1 : null,
+            steamDependencies: toImport.includes("steam") ? 3 : null,
+            skippedInactiveRules: 0,
+            skippedInactiveSteam: 0,
+          },
+        },
+      };
+    } finally {
+      recommendedRulesRunning = false;
+    }
+  }
+
   function sameOrderIgnoringMergeMod(a: string[], b: string[]): boolean {
     const strip = (ids: string[]): string[] => ids.filter((id) => id !== MERGE_MOD_PACKAGE_ID);
     const left = strip(a);
@@ -5167,6 +5422,9 @@ export function installScenario(): void {
   window.__CHECK_FOR_UPDATE_CALLS__ = 0;
   window.__RUN_LAUNCH_NETWORK_CHECKS_CALLS__ = 0;
   window.__UPDATE_APP_SETTINGS_CALLS__ = [];
+  window.__GET_RECOMMENDED_RULES_CALLS__ = 0;
+  window.__SKIP_RECOMMENDED_RULES_CALLS__ = 0;
+  window.__RECOMMENDED_RULES_PROGRESS__ = [];
 
   // Notification state — mirrors `rim_session::ports::NotificationState`
   // (app-global `<base>/notifications.json`) closely enough to exercise
@@ -5243,12 +5501,23 @@ export function installScenario(): void {
       });
     }
 
+    // While the Dashboard's "Get the recommended rules" step offers a source (NeedsAction, not
+    // skipped), the two rule-database notices below leave that source to the step — mirrors
+    // `evaluate`'s `sources_offered_by_step`.
+    const offeredStep = recommendedRulesStepFor("honor");
+    const offeredBySteps = new Set<string>(
+      offeredStep.kind === "needsAction" ? offeredStep.sources.map((entry) => entry.database) : [],
+    );
+
     // `ImportedRulesOutdated` is derived live from `ruleDatabases`, the
     // exact same "cache holds bytes this profile hasn't imported" rule
     // `get_rule_databases` itself computes — never a separately tracked
     // flag that could drift from it.
     const outdated = ruleDatabases.filter(
-      (view) => view.cached !== null && view.cached.sha256 !== view.importedSha256,
+      (view) =>
+        view.cached !== null &&
+        view.cached.sha256 !== view.importedSha256 &&
+        !offeredBySteps.has(view.database),
     );
     if (outdated.length > 0) {
       // Mirrors the real backend's own fingerprint
@@ -5327,6 +5596,9 @@ export function installScenario(): void {
       } as const;
       const setups: [RuleDatabaseViewDto["database"], "off" | "notDownloaded"][] = [];
       for (const view of ruleDatabases) {
+        if (offeredBySteps.has(view.database)) {
+          continue;
+        }
         if (!fetchEnabledFor(view.database)) {
           setups.push([view.database, "off"]);
           continue;
@@ -5470,7 +5742,7 @@ export function installScenario(): void {
         },
         ledgerStats: { current: currentStats, suggested: currentStats },
         needsInputByKind,
-        movedMods: 3,
+        movedMods: movedModsCount(),
         selected,
         // Mirrors `Session::file_matches`: same sequence, with the
         // generated merge mod's package id ignored on both sides.
@@ -5897,6 +6169,20 @@ export function installScenario(): void {
       };
     },
     list_orphaned_decisions: () => [],
+    // The Dashboard's "Get the recommended rules" step: see `recommendedRulesStepFor`.
+    get_recommended_rules_step: (): RecommendedRulesStepDto =>
+      recommendedRulesRunning ? { kind: "inProgress" } : recommendedRulesStepFor("honor"),
+    get_recommended_rules: () => getRecommendedRulesMock(),
+    skip_recommended_rules_step: async () => {
+      window.__SKIP_RECOMMENDED_RULES_CALLS__ = (window.__SKIP_RECOMMENDED_RULES_CALLS__ ?? 0) + 1;
+      recommendedRulesSkipped = true;
+      writeSkipFlag();
+      // The real command emits this: the bell's notice list depends on the skip flag.
+      await window.__TAURI_INTERNALS__.invoke("plugin:event|emit", {
+        event: "session://changed",
+        payload: { reason: "notificationsChanged" },
+      });
+    },
     // `enabled`/`needsReimport` are computed fresh from the live
     // `settings` toggles and the cached-vs-imported sha comparison on
     // every call — matching the real backend

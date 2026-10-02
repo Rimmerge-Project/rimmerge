@@ -319,12 +319,48 @@
     },
     "guide": {
       "heading": "시작하기",
-      "intro": "세 단계면 제안된 로드 순서가 게임에 반영됩니다. 더 세밀하게 제어하려면 '발견 사항'과 '규칙' 페이지를 사용하세요.",
+      "intro": "네 단계면 제안된 로드 순서가 게임에 반영됩니다. 더 세밀하게 제어하려면 '발견 사항'과 '규칙' 페이지를 사용하세요.",
       "listLabel": "시작하기 단계",
       "status": {
         "done": "완료",
         "current": "현재 단계",
-        "upcoming": "예정"
+        "upcoming": "예정",
+        "skipped": "건너뜀",
+        "unavailable": "사용할 수 없음"
+      },
+      "getRules": {
+        "title": "권장 규칙 받기",
+        "pending": "권장 규칙 데이터베이스(커뮤니티 로드 순서 규칙과 스팀 창작마당 데이터베이스)를 내려받아 이 프로필로 가져옵니다. 그러면 다음 단계에서 검토할 제안된 순서에 이 규칙이 이미 반영됩니다.",
+        "sourceTurnOn": "{source}: 꺼져 있습니다. 켠 다음 내려받습니다.",
+        "sourceDownload": "{source}: 아직 내려받지 않았습니다.",
+        "sourceRetry": "{source}: 마지막 내려받기에 실패했습니다. 사유: {reason}",
+        "sourceImport": "{source}: 내려받았지만 아직 가져오지 않았습니다.",
+        "downloadButton": "내려받아 가져오기",
+        "downloadButtonWithSteam": "내려받아 가져오기 (약 49MB)",
+        "retryButton": "다시 시도",
+        "retryButtonWithSteam": "다시 시도 (약 49MB)",
+        "importButton": "가져오기",
+        "skip": "건너뛰기",
+        "skippedText": "건너뛰었습니다. '규칙' 페이지에서 언제든 받을 수 있습니다.",
+        "getNowButton": "지금 받기",
+        "getNowButtonWithSteam": "지금 받기 (약 49MB)",
+        "doneText": "가져왔습니다. 제안된 순서가 이 규칙을 사용합니다.",
+        "doneNotInUseText": "가져왔지만 설정에서 가져온 규칙이 꺼져 있으므로, 제안된 순서는 이 규칙을 사용하지 않습니다.",
+        "networkOff": "인터넷 접속이 꺼져 있어 아무것도 내려받을 수 없습니다.",
+        "openSettings": "설정 열기",
+        "awaitingFirstRun": "먼저 위의 환영 알림에 응답하세요.",
+        "loadFailed": "권장 규칙이 설정되어 있는지 확인하지 못했습니다.",
+        "downloading": "{source} 데이터베이스 내려받는 중…",
+        "importing": "가져오는 중…",
+        "slowNote": "연결이 느리면 스팀 창작마당 데이터베이스를 내려받는 데 몇 분 걸릴 수 있습니다.",
+        "resultDone": "권장 규칙을 가져왔습니다.",
+        "resultPartial": "일부 규칙 데이터베이스를 내려받지 못했습니다. 내려받은 것은 가져왔습니다. 나중에 다시 시도하세요.",
+        "resultDownloadFailed": "규칙 데이터베이스를 내려받지 못했습니다. 연결을 확인하고 나중에 다시 시도하세요.",
+        "resultNothingToDo": "권장 규칙을 이미 가져왔습니다. 내려받을 것이 없었습니다.",
+        "resultImportFailedReadingFile": "규칙을 내려받았지만 파일을 읽지 못해 가져오지 못했습니다.",
+        "resultImportFailedSaving": "규칙을 내려받았지만 이 프로필에 저장하지 못했습니다. 아무것도 변경되지 않았습니다.",
+        "resultManifestNotRecorded": "규칙을 가져왔지만 가져오기 기록을 저장하지 못했습니다. 완료하려면 다시 클릭하세요.",
+        "resultProfileChanged": "규칙을 내려받았습니다. 그 사이에 다른 프로필이 열렸으므로 아무것도 가져오지 않았습니다."
       },
       "chooseSuggested": {
         "title": "제안된 순서 사용",
@@ -498,6 +534,20 @@
       "stale_active_set": {
         "title": "활성 모드 목록이 최신이 아님",
         "detail": "ModsConfig.xml에 기록하기 전에 다시 스캔하세요."
+      },
+      "already_running": {
+        "title": "이미 진행 중",
+        "detail": "Rimmerge가 이미 이 작업을 진행하고 있습니다. 끝날 때까지 기다리세요."
+      },
+      "recommended_rules_unavailable": {
+        "title": "지금은 권장 규칙을 받을 수 없음",
+        "detail": "지금은 내려받기를 사용할 수 없습니다.",
+        "networkOff": "인터넷 접속이 꺼져 있습니다. 설정에서 켠 다음 다시 시도하세요.",
+        "awaitingFirstRun": "먼저 대시보드에서 환영 알림에 응답한 다음 다시 시도하세요."
+      },
+      "app_settings_damaged": {
+        "title": "앱 설정 파일이 손상됨",
+        "detail": "Rimmerge는 이 파일을 건드리지 않았습니다. 복구하려면 '설정' 페이지에서 설정을 저장한 다음 다시 시도하세요."
       },
       "texture_unsupported_format": {
         "title": "표시할 수 없는 텍스처 형식",

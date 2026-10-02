@@ -239,6 +239,11 @@ test.describe("notifications", () => {
     await expect(steamSwitch).not.toBeChecked();
     await page.getByTestId("welcome-card-keep").click();
 
+    // While the Dashboard's "Get the recommended rules" step offers Steam, this notice steps aside
+    // (one call to action); skipping that step is what brings it back, which is what's under test.
+    await page.getByTestId("guide-rules-skip").click();
+    await expect(page.getByTestId("guide-step-rules")).toHaveAttribute("data-status", "skipped");
+
     await page.getByTestId("notification-bell").click();
     const item = page.getByTestId("notification-item-recommendedSourcesIncomplete");
     await expect(item).toBeVisible();
@@ -265,6 +270,11 @@ test.describe("notifications", () => {
   }) => {
     await loadScenario(page);
     await page.getByTestId("welcome-card-keep").click();
+
+    // While the Dashboard's "Get the recommended rules" step offers Steam, this notice steps aside
+    // (one call to action); skipping that step is what brings it back, which is what's under test.
+    await page.getByTestId("guide-rules-skip").click();
+    await expect(page.getByTestId("guide-step-rules")).toHaveAttribute("data-status", "skipped");
 
     await page.getByTestId("notification-bell").click();
     await expect(page.getByTestId("notification-sources-recommendedSourcesIncomplete")).toHaveText(

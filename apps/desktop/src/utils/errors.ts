@@ -2,6 +2,7 @@ import type { MessageDescriptor } from "@/i18n/messageDescriptor";
 import { descriptor } from "@/i18n/messageDescriptor";
 import { RimmergeError } from "@/services/ipc";
 import type { CommandErrorCode } from "@/types/generated/CommandErrorCode";
+import { assertNever } from "@/utils/assertNever";
 
 /**
  * Renders a failed mutation/command call as user-facing text: a
@@ -127,7 +128,48 @@ const ERROR_CODE_KEYS = {
     title: "error.code.texture_unsupported_format.title",
     detail: "error.code.texture_unsupported_format.detail",
   },
+  already_running: {
+    title: "error.code.already_running.title",
+    detail: "error.code.already_running.detail",
+  },
+  // `detail` is the fallback only: the sentence naming the closed gate is chosen from the
+  // error's own `detail.reason` by {@link recommendedRulesUnavailableDetailKey}.
+  recommended_rules_unavailable: {
+    title: "error.code.recommended_rules_unavailable.title",
+    detail: "error.code.recommended_rules_unavailable.detail",
+  },
+  app_settings_damaged: {
+    title: "error.code.app_settings_damaged.title",
+    detail: "error.code.app_settings_damaged.detail",
+  },
 } satisfies Record<CommandErrorCode, { title: string; detail: string }>;
+
+/**
+ * The sentence for a refused "Get the recommended rules" click, by which network gate was
+ * closed (`CommandErrorDetail`'s `recommendedRulesUnavailable.reason`). A refusal that
+ * arrives without that detail keeps the code's generic sentence.
+ */
+function recommendedRulesUnavailableDetailKey(error: RimmergeError): string {
+  const detail = error.detail;
+  if (detail === null || detail.kind !== "recommendedRulesUnavailable") {
+    return ERROR_CODE_KEYS.recommended_rules_unavailable.detail;
+  }
+  switch (detail.reason) {
+    case "networkOff":
+      return "error.code.recommended_rules_unavailable.networkOff";
+    case "awaitingFirstRun":
+      return "error.code.recommended_rules_unavailable.awaitingFirstRun";
+    default:
+      return assertNever(detail.reason);
+  }
+}
+
+/** The detail key for `error`: its code's own, or the structured-detail variant where one exists. */
+function detailKeyFor(error: RimmergeError): string {
+  return error.code === "recommended_rules_unavailable"
+    ? recommendedRulesUnavailableDetailKey(error)
+    : ERROR_CODE_KEYS[error.code].detail;
+}
 
 /**
  * Renders a failed mutation/command call by its `CommandErrorCode` — the
@@ -141,7 +183,7 @@ export function describeCommandError(error: unknown): CommandErrorDescriptor {
     const keys = ERROR_CODE_KEYS[error.code];
     return {
       title: descriptor(keys.title),
-      detail: descriptor(keys.detail),
+      detail: descriptor(detailKeyFor(error)),
       technicalDetail: error.message,
     };
   }

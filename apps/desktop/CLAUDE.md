@@ -46,6 +46,14 @@ of that command surface — no direct filesystem or process access outside
   value without a `Result`, and `get_app_version` is not even `async`.
   `load_project`/`rescan_project` are the other shape: they hold
   `state.load_lock` and swap the session in with `replace_session`.
+  `get_recommended_rules_step`, `get_recommended_rules` and
+  `skip_recommended_rules_step` (`commands/recommended_rules.rs`) are
+  **session commands**: each needs a loaded project (the step reads the
+  profile's import records and skip flag, the skip writes
+  `<profile>/notifications.json`, the click imports into the session).
+  The one exception inside them is the click's download phase, a bare
+  `spawn_blocking` that never holds the session lock across the network;
+  its import phase and the other two run in `with_session`.
   `with_session` catches a panic with `catch_unwind`: a caught panic or
   a poisoned lock clears the session and returns `session_lost`.
   `no_project_loaded` is checked before any probe read, so it always
@@ -117,10 +125,58 @@ of that command surface — no direct filesystem or process access outside
   information only (a count and an Inbox link); the old `applyAnyway` /
   `canSubmit` checkboxes in the dialog and on the Dashboard are gone.
 - **The Dashboard strip is derived, never stored.** `GuidedFlowStrip.vue`
-  reads `utils/guidedFlow.ts`'s `guidedStep()` over four facts (`selected`,
+  reads `utils/guidedFlow.ts`'s `guidedStep()` over five facts (the
+  recommended-rules step's `rules` state, `selected`,
   `DashboardDto.fileMatchesSuggested`, the stale active set, and its own
-  dialog-open flag) and owns the Dashboard's one `ApplyDialog`. Its live
-  region speaks only on a transition into done.
+  dialog-open flag) and owns the Dashboard's one `ApplyDialog`. It has four
+  steps, the first being "Get the recommended rules". `rules` is the
+  `RecommendedRulesStepDto` derived in Rust (`rim_session::recommended_rules_step`;
+  never re-derived in TypeScript) and is `null` until its query answers, so
+  the Dashboard never blocks on it and the strip falls back to the other
+  facts. Precedence: an open Apply dialog and the `done` file match are
+  unchanged, so an open Apply dialog outranks an offered step 1;
+  `needsAction`/`inProgress` hold the flow on step 1 and outrank `done`
+  (importing changes the suggested order); `skipped`/`unavailable` never hold
+  it. `skipped` carries the same `sources` as `needsAction` (owner decision
+  Q11), so its row lists them and its "Get them now" button discloses the size
+  like the offered one; an import failure crosses as a code
+  (`ImportFailureCodeDto`) worded per code, with the backend's English text
+  only as the toast's technical-details line (Q12). Step 1's state, its click, Skip and the progress tick live in
+  `composables/useGuidedRulesStep.ts`, its text in `GuidedRulesBody.vue` and
+  its controls in `GuidedRulesActions.vue`. Its live regions speak on a
+  transition into done and as each phase of a running click begins.
+- **The recommended-rules step's server state.** `queryKeys.recommendedRulesStep()`
+  is `["rules", "ruleDatabases", "recommendedStep"]`, nested under the
+  `ruleDatabases` prefix on purpose: Pinia Colada's `invalidateQueries({ key })`
+  matches a key as a prefix (`isSubsetOf`, verified against 1.4.5), so every
+  `ruleDatabases()` invalidation (refresh, enable) refreshes it too. The mutations
+  that change its inputs without touching that prefix invalidate it explicitly:
+  `useUpdateAppSettingsMutation`, `useResetNetworkPolicyMutation` and the Welcome
+  answer/dismiss mutations. `useGetRecommendedRulesMutation` invalidates in
+  `onSettled` (not only `onSuccess`) and awaits the refetch: a `NotNeeded`/`Failed`/
+  `ProfileChanged` result or a refused run emits no `session://changed`, yet phase 1
+  may already have written the settings, the cache or a last-failure record. A
+  mutation's `isLoading` (not `isPending`, which is true before it ever runs)
+  is its in-flight flag.
+- **A running "Get the recommended rules" click is guarded in the backend and
+  reported by an event.** `AppState::recommended_rules_running` (an RAII guard)
+  makes a second concurrent call fail with `already_running` and makes
+  `get_recommended_rules_step` answer `inProgress`, so a second window or a
+  remount shows the running state. The command emits
+  `rules://recommended-progress` (`RecommendedRulesProgressEventDto`: `downloading`
+  per source, then `importing`); the strip keeps only the latest tick (read through
+  `useTauriEvent`) and shows the slow-connection note while Steam downloads. No
+  Cancel in 1.1.0. `recommended_rules_unavailable` carries
+  `detail.reason` (`networkOff` | `awaitingFirstRun`), which
+  `utils/errors.ts` turns into a different sentence; `app_settings_damaged`
+  points at saving settings in Settings, the repair. The Playwright mock
+  (`recommendedRulesStepFor`/`getRecommendedRulesMock` in `scenario.ts`) derives the
+  step and its outcomes from the scenario's own state, really reorders the
+  suggested order on import, keeps the skip flag across a reload (`sessionStorage`,
+  standing in for the profile file) and drops the two rule-database notices' offered
+  sources, as the backend does; `__GET_RECOMMENDED_RULES_CALLS__`,
+  `__SKIP_RECOMMENDED_RULES_CALLS__` and `__RECOMMENDED_RULES_PROGRESS__` record
+  its calls.
 - **`ApplyDialog.vue` has a positive "Write ModsConfig.xml" checkbox
   (`writeModsConfig`, checked by default; a negative "export only" box was
   misread as the ModsConfig toggle). It forces it off and disables it

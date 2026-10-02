@@ -319,12 +319,48 @@
     },
     "guide": {
       "heading": "Premiers pas",
-      "intro": "Trois étapes suffisent pour mettre l’ordre de chargement suggéré dans le jeu. Les pages Constats et Règles sont là si vous voulez plus de contrôle.",
+      "intro": "Quatre étapes suffisent pour mettre l’ordre de chargement suggéré dans le jeu. Les pages Constats et Règles sont là si vous voulez plus de contrôle.",
       "listLabel": "Étapes pour commencer",
       "status": {
         "done": "Terminé",
         "current": "Étape en cours",
-        "upcoming": "Pas encore"
+        "upcoming": "Pas encore",
+        "skipped": "Ignoré",
+        "unavailable": "Indisponible"
+      },
+      "getRules": {
+        "title": "Obtenir les règles recommandées",
+        "pending": "Récupère les bases de règles recommandées (les règles d’ordre de chargement de la communauté et la base Steam Workshop) et les importe dans ce profil, pour que l’ordre suggéré que vous examinerez ensuite les utilise déjà.",
+        "sourceTurnOn": "{source} : base désactivée. Elle sera activée puis téléchargée.",
+        "sourceDownload": "{source} : base pas encore téléchargée.",
+        "sourceRetry": "{source} : le dernier téléchargement a échoué ({reason}).",
+        "sourceImport": "{source} : base téléchargée, mais pas encore importée.",
+        "downloadButton": "Télécharger et importer",
+        "downloadButtonWithSteam": "Télécharger et importer (environ 49 Mo)",
+        "retryButton": "Réessayer",
+        "retryButtonWithSteam": "Réessayer (environ 49 Mo)",
+        "importButton": "Importer",
+        "skip": "Passer",
+        "skippedText": "Étape ignorée. Vous pouvez toujours les obtenir depuis la page Règles.",
+        "getNowButton": "Les obtenir maintenant",
+        "getNowButtonWithSteam": "Les obtenir maintenant (environ 49 Mo)",
+        "doneText": "Importées. L’ordre suggéré les utilise.",
+        "doneNotInUseText": "Importées, mais les règles importées sont désactivées dans les paramètres : l’ordre suggéré ne les utilise donc pas.",
+        "networkOff": "L’accès à Internet est désactivé : rien ne peut être téléchargé.",
+        "openSettings": "Ouvrir les paramètres",
+        "awaitingFirstRun": "Répondez d’abord à l’avis de bienvenue ci-dessus.",
+        "loadFailed": "Impossible de vérifier si les règles recommandées sont en place.",
+        "downloading": "Téléchargement de la base {source}…",
+        "importing": "Importation…",
+        "slowNote": "Le téléchargement de la base Steam Workshop peut prendre quelques minutes avec une connexion lente.",
+        "resultDone": "Règles recommandées importées.",
+        "resultPartial": "Certaines bases de règles n’ont pas pu être téléchargées. Ce qui a été téléchargé a été importé. Réessayez plus tard.",
+        "resultDownloadFailed": "Les bases de règles n’ont pas pu être téléchargées. Vérifiez votre connexion et réessayez plus tard.",
+        "resultNothingToDo": "Les règles recommandées étaient déjà importées. Il n’y avait rien à télécharger.",
+        "resultImportFailedReadingFile": "Les règles ont été téléchargées, mais n’ont pas pu être lues pour l’importation.",
+        "resultImportFailedSaving": "Les règles ont été téléchargées, mais n’ont pas pu être enregistrées dans ce profil. Rien n’a été modifié.",
+        "resultManifestNotRecorded": "Les règles ont été importées, mais la trace de l’importation n’a pas pu être enregistrée. Cliquez à nouveau pour terminer.",
+        "resultProfileChanged": "Les règles ont été téléchargées. Un autre profil a été ouvert entre-temps : rien n’a été importé."
       },
       "chooseSuggested": {
         "title": "Utiliser l’ordre suggéré",
@@ -397,8 +433,8 @@
       "title": "{count} base de règles recommandée n’est pas configurée | {count} bases de règles recommandées ne sont pas configurées",
       "body": "Rimmerge trie au mieux avec les trois bases de règles. Les activer les télécharge maintenant ; ensuite, les petites s’actualisent automatiquement, et la base Steam Workshop uniquement lorsque vous cliquez sur Actualiser.",
       "bodyWithSteam": "Rimmerge trie au mieux avec les trois bases de règles. Les activer les télécharge maintenant. La base Steam Workshop pèse environ 49 Mo et ne s’actualise ensuite que lorsque vous cliquez sur Actualiser ; les petites s’actualisent automatiquement.",
-      "sourceOff": "{source} : désactivée",
-      "sourceNotDownloaded": "{source} : activée, pas encore téléchargée"
+      "sourceOff": "{source} : base désactivée",
+      "sourceNotDownloaded": "{source} : base activée, mais pas encore téléchargée"
     },
     "actions": {
       "keepNetworkSettings": "Garder ces paramètres",
@@ -498,6 +534,20 @@
       "stale_active_set": {
         "title": "La liste des mods actifs n’est plus à jour",
         "detail": "Réanalysez avant d’écrire ModsConfig.xml."
+      },
+      "already_running": {
+        "title": "Déjà en cours",
+        "detail": "Rimmerge effectue déjà cette opération. Attendez qu’elle se termine."
+      },
+      "recommended_rules_unavailable": {
+        "title": "Impossible d’obtenir les règles recommandées pour l’instant",
+        "detail": "Le téléchargement n’est pas disponible pour le moment.",
+        "networkOff": "L’accès à Internet est désactivé. Activez-le dans les paramètres, puis réessayez.",
+        "awaitingFirstRun": "Répondez d’abord à l’avis de bienvenue du tableau de bord, puis réessayez."
+      },
+      "app_settings_damaged": {
+        "title": "Fichier de paramètres de l’application endommagé",
+        "detail": "Rimmerge n’y a pas touché. Ouvrez les paramètres et enregistrez-les pour le réparer, puis réessayez."
       },
       "texture_unsupported_format": {
         "title": "Format de texture non affichable",

@@ -102,8 +102,9 @@ breakdown, including where new code belongs:
   both automatically, at most once a day, but never before its
   first-run notice is answered, and never before you can turn it off;
   the large Steam Workshop database is on by default but never fetched
-  automatically, only by a manual Refresh click, `rimmerge db refresh`, or
-  the recommended-databases notice's "Turn on and download" button; the CLI
+  automatically, only by a manual Refresh click, `rimmerge db refresh`,
+  the recommended-databases notice's "Turn on and download" button, or the
+  Dashboard's "Get the recommended rules" step; the CLI
   never contacts either on its own. One switch skips every
   request entirely (no URL built, no socket opened), automatic or
   manual. See [docs/privacy-and-network.md](docs/privacy-and-network.md).

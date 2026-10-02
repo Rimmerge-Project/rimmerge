@@ -2,13 +2,16 @@
 //! the active notice list. No IO, `now` is injected — see this crate's
 //! own determinism rule (root `CLAUDE.md`).
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::app_settings::AppSettings;
 use crate::notifications::clock::seconds_since;
 use crate::notifications::model::{Freshness, RefreshMode, SourceSetup, StaleSource};
 use crate::notifications::{AppVersion, GameMajorMinor, Notification};
 use crate::ports::{NotificationState, RuleDatabase};
+use crate::recommended_rules::{
+    FirstRun, RecommendedRulesFacts, RecommendedRulesStep, StepSkip, recommended_rules_step,
+};
 use crate::settings::Settings;
 use crate::use_cases::RuleDatabaseView;
 
@@ -44,6 +47,11 @@ pub struct NotificationInputs {
     /// never fires (nothing to compare against yet, and that use case
     /// seeds it silently on the very next load).
     pub acknowledged_game_version: Option<GameMajorMinor>,
+    /// Whether this profile skipped the Dashboard's "Get the recommended
+    /// rules" step (`ProfileNotificationState::recommended_rules_skipped_at`).
+    /// While that step offers a source, the two rule-database notices leave
+    /// it to the step instead of repeating it.
+    pub recommended_rules_skip: StepSkip,
 }
 
 /// A severity's own sort rank for [`evaluate`]'s own "most severe first"
@@ -164,6 +172,35 @@ fn rule_databases_stale(
     }
 }
 
+/// The sources the Dashboard's "Get the recommended rules" step is
+/// offering right now: non-empty only while the step is `NeedsAction`.
+/// The two rule-database notices leave exactly these to the step (one
+/// call to action); once the step is Done, Skipped or Unavailable they
+/// behave as if the step did not exist. The step's derivation is the one
+/// the status command uses, so the two cannot disagree.
+fn sources_offered_by_step(
+    inputs: &NotificationInputs,
+    welcome_completed_at: Option<jiff::Timestamp>,
+) -> BTreeSet<RuleDatabase> {
+    let first_run = match welcome_completed_at {
+        Some(_) => FirstRun::Answered,
+        None => FirstRun::Pending,
+    };
+    let step = recommended_rules_step(&RecommendedRulesFacts {
+        policy: &inputs.app.network,
+        databases: &inputs.databases,
+        first_run,
+        skip: inputs.recommended_rules_skip,
+        settings: &inputs.profile,
+    });
+    match step {
+        RecommendedRulesStep::NeedsAction { sources } => sources.into_keys().collect(),
+        RecommendedRulesStep::Done { .. }
+        | RecommendedRulesStep::Skipped { .. }
+        | RecommendedRulesStep::Unavailable(_) => BTreeSet::new(),
+    }
+}
+
 /// How one recommended source falls short of being set up, or `None`
 /// when it is fine (or not recommended). `Off` is the stale reminder's
 /// first exclusion (a disabled source is never stale); `NotDownloaded`
@@ -190,6 +227,7 @@ fn source_setup(app: &AppSettings, view: &RuleDatabaseView) -> Option<SourceSetu
 fn recommended_sources_incomplete(
     inputs: &NotificationInputs,
     welcome_completed_at: Option<jiff::Timestamp>,
+    offered_by_step: &BTreeSet<RuleDatabase>,
 ) -> Option<Notification> {
     welcome_completed_at?;
     if !inputs.app.network.allow_network {
@@ -198,6 +236,7 @@ fn recommended_sources_incomplete(
     let sources: BTreeMap<RuleDatabase, SourceSetup> = inputs
         .databases
         .iter()
+        .filter(|view| !offered_by_step.contains(&view.status.database))
         .filter_map(|view| {
             source_setup(&inputs.app, view).map(|setup| (view.status.database, setup))
         })
@@ -230,11 +269,15 @@ fn game_version_changed(inputs: &NotificationInputs) -> Option<Notification> {
 /// `None` when `needs_reimport` is true — that rule already requires a
 /// cached copy to exist), so the notice's own fingerprint tracks the
 /// cached *content*, not merely which sources are currently outdated.
-fn imported_rules_outdated(inputs: &NotificationInputs) -> Option<Notification> {
+fn imported_rules_outdated(
+    inputs: &NotificationInputs,
+    offered_by_step: &BTreeSet<RuleDatabase>,
+) -> Option<Notification> {
     let sources: BTreeMap<RuleDatabase, String> = inputs
         .databases
         .iter()
         .filter(|view| view.needs_reimport)
+        .filter(|view| !offered_by_step.contains(&view.status.database))
         .filter_map(|view| {
             let sha256 = view.status.cached.as_ref()?.sha256.clone();
             Some((view.status.database, sha256))
@@ -259,6 +302,7 @@ pub fn evaluate(
     now: jiff::Timestamp,
 ) -> Vec<Notification> {
     let mut candidates = Vec::new();
+    let offered_by_step = sources_offered_by_step(inputs, state.welcome_completed_at);
 
     if state.welcome_completed_at.is_none() {
         candidates.push(Notification::Welcome {
@@ -286,11 +330,13 @@ pub fn evaluate(
         candidates.push(notice);
     }
 
-    if let Some(notice) = imported_rules_outdated(inputs) {
+    if let Some(notice) = imported_rules_outdated(inputs, &offered_by_step) {
         candidates.push(notice);
     }
 
-    if let Some(notice) = recommended_sources_incomplete(inputs, state.welcome_completed_at) {
+    if let Some(notice) =
+        recommended_sources_incomplete(inputs, state.welcome_completed_at, &offered_by_step)
+    {
         candidates.push(notice);
     }
 
@@ -349,6 +395,7 @@ mod tests {
             running: AppVersion::running("0.1.0").expect("valid version"),
             current_game_version: GameMajorMinor::parse("1.6"),
             acknowledged_game_version: Some(GameMajorMinor::parse("1.6")),
+            recommended_rules_skip: StepSkip::NotSkipped,
         }
     }
 
@@ -704,6 +751,15 @@ mod tests {
         );
     }
 
+    /// Inputs whose recommended-rules step is skipped, so the two notices
+    /// behave exactly as they did before the step existed.
+    fn skipped_step_inputs() -> NotificationInputs {
+        NotificationInputs {
+            recommended_rules_skip: StepSkip::Skipped,
+            ..base_inputs()
+        }
+    }
+
     fn answered_state(answered_at: jiff::Timestamp) -> NotificationState {
         NotificationState {
             welcome_completed_at: Some(answered_at),
@@ -767,9 +823,10 @@ mod tests {
     }
 
     #[test]
-    fn an_enabled_never_downloaded_manual_source_is_reported_not_downloaded() {
+    fn an_enabled_never_downloaded_manual_source_is_reported_not_downloaded_once_the_step_is_skipped()
+     {
         let now = jiff::Timestamp::now();
-        let mut inputs = base_inputs();
+        let mut inputs = skipped_step_inputs();
         inputs.databases = vec![view(RuleDatabase::SteamWorkshop, None)];
 
         let notices = evaluate(&inputs, &answered_state(now), now);
@@ -795,9 +852,10 @@ mod tests {
     }
 
     #[test]
-    fn with_automatic_refresh_off_a_never_downloaded_small_source_is_reported() {
+    fn with_automatic_refresh_off_a_never_downloaded_small_source_is_reported_once_the_step_is_skipped()
+     {
         let now = jiff::Timestamp::now();
-        let mut inputs = base_inputs();
+        let mut inputs = skipped_step_inputs();
         inputs.app.network.auto_refresh_rule_databases = false;
         inputs.databases = vec![view(RuleDatabase::CommunityRules, None)];
 
@@ -824,9 +882,10 @@ mod tests {
     }
 
     #[test]
-    fn dismissing_the_notice_hides_exactly_that_set_and_a_new_set_shows_again() {
+    fn dismissing_the_notice_hides_exactly_that_set_and_a_new_set_shows_again_once_the_step_is_skipped()
+     {
         let now = jiff::Timestamp::now();
-        let mut inputs = base_inputs();
+        let mut inputs = skipped_step_inputs();
         inputs.databases = vec![view(RuleDatabase::SteamWorkshop, None)];
         let mut state = answered_state(now);
         let key = evaluate(&inputs, &state, now)
@@ -847,6 +906,23 @@ mod tests {
         assert!(incomplete_sources(&evaluate(&inputs, &state, now)).is_some());
     }
 
+    /// `swept` plus an import record for every importable source, so the
+    /// recommended-rules step is Done whatever `swept`'s own cache or toggle.
+    fn done_step_databases(swept: RuleDatabaseView) -> Vec<RuleDatabaseView> {
+        let swept_database = swept.status.database;
+        let mut databases: Vec<RuleDatabaseView> = RuleDatabase::ALL
+            .into_iter()
+            .filter(|database| database.is_importable() && *database != swept_database)
+            .map(|database| imported(view(database, None), false))
+            .collect();
+        let mut swept = swept;
+        if swept_database.is_importable() {
+            swept.imported_sha256 = Some("older".to_string());
+        }
+        databases.push(swept);
+        databases
+    }
+
     #[test]
     fn no_source_is_in_both_the_stale_reminder_and_the_recommended_sources_notice() {
         let answered_at = jiff::Timestamp::UNIX_EPOCH;
@@ -854,31 +930,256 @@ mod tests {
         let state = answered_state(answered_at);
         let caches = [None, Some(cached_at(answered_at)), Some(cached_at(now))];
 
-        for database in RuleDatabase::ALL {
-            for is_enabled in [true, false] {
-                for is_auto_refresh_on in [true, false] {
-                    for cached in &caches {
-                        let mut inputs = base_inputs();
-                        inputs.app.network.auto_refresh_rule_databases = is_auto_refresh_on;
-                        let mut database_view = view(database, cached.clone());
-                        database_view.status.enabled = is_enabled;
-                        inputs.databases = vec![database_view];
+        let step_variants = [
+            (StepSkip::NotSkipped, false),
+            (StepSkip::Skipped, false),
+            // Done: every importable source was imported once, so the
+            // not-skipped half is not vacuous for community/steam.
+            (StepSkip::NotSkipped, true),
+        ];
+        for (skip, is_done) in step_variants {
+            for database in RuleDatabase::ALL {
+                for is_enabled in [true, false] {
+                    for is_auto_refresh_on in [true, false] {
+                        for cached in &caches {
+                            let mut inputs = base_inputs();
+                            inputs.recommended_rules_skip = skip;
+                            inputs.app.network.auto_refresh_rule_databases = is_auto_refresh_on;
+                            let mut database_view = view(database, cached.clone());
+                            database_view.status.enabled = is_enabled;
+                            inputs.databases = if is_done {
+                                done_step_databases(database_view)
+                            } else {
+                                vec![database_view]
+                            };
 
-                        let notices = evaluate(&inputs, &state, now);
-                        let stale = notices.iter().any(|notice| {
-                            matches!(notice, Notification::RuleDatabasesStale { sources }
+                            let notices = evaluate(&inputs, &state, now);
+                            let stale = notices.iter().any(|notice| {
+                                matches!(notice, Notification::RuleDatabasesStale { sources }
                                 if sources.contains_key(&database))
-                        });
-                        let incomplete = incomplete_sources(&notices)
-                            .is_some_and(|sources| sources.contains_key(&database));
-                        assert!(
-                            !(stale && incomplete),
-                            "{database:?} enabled={is_enabled} auto={is_auto_refresh_on} \
-                             cached={cached:?} is in both notices"
-                        );
+                            });
+                            let incomplete = incomplete_sources(&notices)
+                                .is_some_and(|sources| sources.contains_key(&database));
+                            assert!(
+                                !(stale && incomplete),
+                                "{database:?} enabled={is_enabled} auto={is_auto_refresh_on} \
+                             cached={cached:?} skip={skip:?} is in both notices"
+                            );
+                        }
                     }
                 }
             }
         }
+    }
+
+    fn outdated_sources(notices: &[Notification]) -> Option<BTreeMap<RuleDatabase, String>> {
+        notices.iter().find_map(|notice| match notice {
+            Notification::ImportedRulesOutdated { sources } => Some(sources.clone()),
+            _ => None,
+        })
+    }
+
+    /// A source this profile imported once; `is_outdated` marks a newer cache.
+    fn imported(mut view: RuleDatabaseView, is_outdated: bool) -> RuleDatabaseView {
+        view.imported_sha256 = Some("older".to_string());
+        view.needs_reimport = is_outdated;
+        view
+    }
+
+    /// A cached source this profile never imported: the production
+    /// re-import rule flags it too.
+    fn cached_never_imported(database: RuleDatabase, now: jiff::Timestamp) -> RuleDatabaseView {
+        let mut never_imported = view(database, Some(cached_at(now)));
+        never_imported.needs_reimport = true;
+        never_imported
+    }
+
+    /// Automatic refresh off, so a never-downloaded small source shows as
+    /// `NotDownloaded`; the caller answers the first-run notice.
+    fn manual_refresh_inputs(skip: StepSkip) -> NotificationInputs {
+        let mut inputs = base_inputs();
+        inputs.app.network.auto_refresh_rule_databases = false;
+        inputs.recommended_rules_skip = skip;
+        inputs
+    }
+
+    #[test]
+    fn recommended_sources_notice_omits_sources_the_step_offers() {
+        let now = jiff::Timestamp::now();
+        let mut inputs = manual_refresh_inputs(StepSkip::NotSkipped);
+        inputs.app.network.fetch_community_rules = false;
+        inputs.databases = vec![
+            disabled(view(RuleDatabase::CommunityRules, None)),
+            view(RuleDatabase::SteamWorkshop, None),
+            disabled(view(RuleDatabase::RimmergeRules, None)),
+        ];
+
+        let notices = evaluate(&inputs, &answered_state(now), now);
+
+        // The fingerprint derives from the map alone, so a reduced map keys
+        // exactly like a notice that listed only the remaining source.
+        assert_eq!(
+            incomplete_sources(&notices),
+            Some(BTreeMap::from([(
+                RuleDatabase::RimmergeRules,
+                SourceSetup::Off
+            )])),
+            "the step offers the turn-on and the download, so the notice lists neither"
+        );
+    }
+
+    #[test]
+    fn recommended_sources_notice_is_not_emitted_when_the_step_offers_everything_it_lists() {
+        let now = jiff::Timestamp::now();
+        let mut inputs = manual_refresh_inputs(StepSkip::NotSkipped);
+        inputs.databases = vec![
+            view(RuleDatabase::CommunityRules, None),
+            view(RuleDatabase::SteamWorkshop, None),
+            view(RuleDatabase::RimmergeRules, Some(cached_at(now))),
+        ];
+
+        let notices = evaluate(&inputs, &answered_state(now), now);
+
+        assert_eq!(incomplete_sources(&notices), None);
+    }
+
+    #[test]
+    fn imported_rules_outdated_omits_never_imported_sources_while_the_step_is_offered() {
+        let now = jiff::Timestamp::now();
+        let mut inputs = base_inputs();
+        inputs.databases = vec![
+            cached_never_imported(RuleDatabase::CommunityRules, now),
+            imported(
+                view(RuleDatabase::SteamWorkshop, Some(cached_at(now))),
+                true,
+            ),
+        ];
+
+        let notices = evaluate(&inputs, &answered_state(now), now);
+
+        assert_eq!(
+            outdated_sources(&notices),
+            Some(BTreeMap::from([(
+                RuleDatabase::SteamWorkshop,
+                "abc123".to_string()
+            )])),
+            "the never-imported source is the step's import; the imported-but-newer one stays"
+        );
+
+        inputs.databases = vec![cached_never_imported(RuleDatabase::CommunityRules, now)];
+        let notices = evaluate(&inputs, &answered_state(now), now);
+        assert_eq!(
+            outdated_sources(&notices),
+            None,
+            "a notice whose map is empty is not emitted"
+        );
+    }
+
+    #[test]
+    fn both_notices_return_unchanged_once_the_step_is_skipped() {
+        let now = jiff::Timestamp::now();
+        let mut inputs = manual_refresh_inputs(StepSkip::Skipped);
+        inputs.databases = vec![
+            cached_never_imported(RuleDatabase::CommunityRules, now),
+            view(RuleDatabase::SteamWorkshop, None),
+            disabled(view(RuleDatabase::RimmergeRules, None)),
+        ];
+
+        let notices = evaluate(&inputs, &answered_state(now), now);
+
+        assert_eq!(
+            outdated_sources(&notices),
+            Some(BTreeMap::from([(
+                RuleDatabase::CommunityRules,
+                "abc123".to_string()
+            )]))
+        );
+        assert_eq!(
+            incomplete_sources(&notices),
+            Some(BTreeMap::from([
+                (RuleDatabase::SteamWorkshop, SourceSetup::NotDownloaded),
+                (RuleDatabase::RimmergeRules, SourceSetup::Off),
+            ]))
+        );
+    }
+
+    #[test]
+    fn both_notices_return_unchanged_once_the_step_is_done() {
+        let now = jiff::Timestamp::now();
+        let mut inputs = manual_refresh_inputs(StepSkip::NotSkipped);
+        inputs.databases = vec![
+            disabled(imported(
+                view(RuleDatabase::CommunityRules, Some(cached_at(now))),
+                false,
+            )),
+            imported(
+                view(RuleDatabase::SteamWorkshop, Some(cached_at(now))),
+                true,
+            ),
+            disabled(view(RuleDatabase::RimmergeRules, None)),
+        ];
+
+        let notices = evaluate(&inputs, &answered_state(now), now);
+
+        assert_eq!(
+            outdated_sources(&notices),
+            Some(BTreeMap::from([(
+                RuleDatabase::SteamWorkshop,
+                "abc123".to_string()
+            )])),
+            "every recommended source was imported once: newer content is this notice's job"
+        );
+        assert_eq!(
+            incomplete_sources(&notices),
+            Some(BTreeMap::from([
+                (RuleDatabase::CommunityRules, SourceSetup::Off),
+                (RuleDatabase::RimmergeRules, SourceSetup::Off),
+            ])),
+            "an imported source switched off is still reported once the step is done"
+        );
+    }
+
+    #[test]
+    fn rimmerge_rules_off_still_shows_the_recommended_notice_while_the_step_is_offered() {
+        let now = jiff::Timestamp::now();
+        let mut inputs = manual_refresh_inputs(StepSkip::NotSkipped);
+        inputs.databases = vec![
+            view(RuleDatabase::CommunityRules, None),
+            view(RuleDatabase::SteamWorkshop, None),
+            disabled(view(RuleDatabase::RimmergeRules, None)),
+        ];
+
+        let notices = evaluate(&inputs, &answered_state(now), now);
+
+        assert_eq!(
+            incomplete_sources(&notices),
+            Some(BTreeMap::from([(
+                RuleDatabase::RimmergeRules,
+                SourceSetup::Off
+            )])),
+            "rimmerge-rules is not imported, so the step never covers it"
+        );
+    }
+
+    #[test]
+    fn imported_rules_outdated_still_lists_a_never_imported_source_while_the_step_is_unavailable() {
+        let now = jiff::Timestamp::now();
+        let mut inputs = base_inputs();
+        inputs.app.network.allow_network = false;
+        inputs.databases = vec![
+            cached_never_imported(RuleDatabase::CommunityRules, now),
+            view(RuleDatabase::SteamWorkshop, None),
+        ];
+
+        let notices = evaluate(&inputs, &answered_state(now), now);
+
+        assert_eq!(
+            outdated_sources(&notices),
+            Some(BTreeMap::from([(
+                RuleDatabase::CommunityRules,
+                "abc123".to_string()
+            )])),
+            "the step is unavailable (Steam needs the network), so it dedupes nothing"
+        );
     }
 }

@@ -827,8 +827,8 @@ async fn remove_assignment_section_refuses_while_referenced_then_succeeds_with_f
 
     let error = result.expect_err("must be refused while referenced");
     assert_eq!(error.code, CommandErrorCode::AssignmentSectionInUse);
-    let referenced_by = match error.detail.expect("structured detail must be present") {
-        CommandErrorDetail::AssignmentSectionInUse { referenced_by } => referenced_by,
+    let Some(CommandErrorDetail::AssignmentSectionInUse { referenced_by }) = error.detail else {
+        panic!("the section-in-use detail must be present");
     };
     assert_eq!(referenced_by.len(), 1);
     assert_eq!(referenced_by[0].def_type, "example.PartAssignmentDef");

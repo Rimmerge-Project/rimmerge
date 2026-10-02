@@ -223,6 +223,10 @@ pub struct AppState {
     /// (see that use case's own doc comment for why this lives on the
     /// interface's own state rather than in `rim-session`).
     pub launch_checks_ran: Arc<std::sync::atomic::AtomicBool>,
+    /// Whether a "Get the recommended rules" run is in progress in this
+    /// process: taken through `commands::recommended_rules::RunningGuard`,
+    /// so a double click or a second window cannot start a second download.
+    pub recommended_rules_running: Arc<std::sync::atomic::AtomicBool>,
 }
 
 impl Default for AppState {
@@ -234,6 +238,7 @@ impl Default for AppState {
             link_opener: Arc::new(SystemLinkOpener),
             load_lock: Arc::new(AsyncMutex::new(())),
             launch_checks_ran: Arc::new(std::sync::atomic::AtomicBool::new(false)),
+            recommended_rules_running: Arc::new(std::sync::atomic::AtomicBool::new(false)),
         }
     }
 }
@@ -250,6 +255,12 @@ impl std::fmt::Debug for AppState {
                 "launch_checks_ran",
                 &self
                     .launch_checks_ran
+                    .load(std::sync::atomic::Ordering::SeqCst),
+            )
+            .field(
+                "recommended_rules_running",
+                &self
+                    .recommended_rules_running
                     .load(std::sync::atomic::Ordering::SeqCst),
             )
             .finish()

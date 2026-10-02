@@ -319,12 +319,48 @@
     },
     "guide": {
       "heading": "Pierwsze kroki",
-      "intro": "Trzy kroki przenoszą sugerowaną kolejność ładowania do gry. Strony „Ustalenia” i „Reguły” są do dyspozycji, gdy chcesz mieć większą kontrolę.",
+      "intro": "Cztery kroki przenoszą sugerowaną kolejność ładowania do gry. Strony „Ustalenia” i „Reguły” są do dyspozycji, gdy chcesz mieć większą kontrolę.",
       "listLabel": "Kroki na start",
       "status": {
         "done": "Gotowe",
         "current": "Bieżący krok",
-        "upcoming": "Jeszcze nie"
+        "upcoming": "Jeszcze nie",
+        "skipped": "Pominięte",
+        "unavailable": "Niedostępne"
+      },
+      "getRules": {
+        "title": "Pobierz zalecane reguły",
+        "pending": "Pobiera zalecane bazy reguł (reguły kolejności ładowania tworzone przez społeczność i bazę Warsztatu Steam) i importuje je do tego profilu, aby sugerowana kolejność, którą przejrzysz w następnym kroku, już z nich korzystała.",
+        "sourceTurnOn": "{source}: baza wyłączona. Zostanie włączona i pobrana.",
+        "sourceDownload": "{source}: jeszcze nie pobrano.",
+        "sourceRetry": "{source}: ostatnie pobieranie nie powiodło się ({reason}).",
+        "sourceImport": "{source}: pobrano, jeszcze nie zaimportowano.",
+        "downloadButton": "Pobierz i zaimportuj",
+        "downloadButtonWithSteam": "Pobierz i zaimportuj (około 49 MB)",
+        "retryButton": "Spróbuj ponownie",
+        "retryButtonWithSteam": "Spróbuj ponownie (około 49 MB)",
+        "importButton": "Importuj",
+        "skip": "Pomiń",
+        "skippedText": "Pominięte. Nadal możesz je pobrać na stronie „Reguły”.",
+        "getNowButton": "Pobierz teraz",
+        "getNowButtonWithSteam": "Pobierz teraz (około 49 MB)",
+        "doneText": "Zaimportowano. Sugerowana kolejność z nich korzysta.",
+        "doneNotInUseText": "Zaimportowano, ale zaimportowane reguły są wyłączone w Ustawieniach, więc sugerowana kolejność z nich nie korzysta.",
+        "networkOff": "Dostęp do internetu jest wyłączony, więc nie można niczego pobrać.",
+        "openSettings": "Otwórz ustawienia",
+        "awaitingFirstRun": "Najpierw odpowiedz na powyższe powiadomienie powitalne.",
+        "loadFailed": "Nie udało się sprawdzić, czy zalecane reguły są skonfigurowane.",
+        "downloading": "Pobieranie bazy „{source}”…",
+        "importing": "Importowanie…",
+        "slowNote": "Przy wolnym połączeniu pobieranie bazy Warsztatu Steam może potrwać kilka minut.",
+        "resultDone": "Zaimportowano zalecane reguły.",
+        "resultPartial": "Nie udało się pobrać niektórych baz reguł. To, co zostało pobrane, zaimportowano. Spróbuj ponownie później.",
+        "resultDownloadFailed": "Nie udało się pobrać baz reguł. Sprawdź połączenie i spróbuj ponownie później.",
+        "resultNothingToDo": "Zalecane reguły były już zaimportowane. Nie było nic do pobrania.",
+        "resultImportFailedReadingFile": "Reguły zostały pobrane, ale nie udało się ich odczytać na potrzeby importu.",
+        "resultImportFailedSaving": "Reguły zostały pobrane, ale nie udało się ich zapisać w tym profilu. Nic nie zostało zmienione.",
+        "resultManifestNotRecorded": "Reguły zostały zaimportowane, ale nie udało się zapisać informacji o imporcie. Kliknij ponownie, aby dokończyć.",
+        "resultProfileChanged": "Reguły zostały pobrane. W międzyczasie otwarto inny profil, więc niczego nie zaimportowano."
       },
       "chooseSuggested": {
         "title": "Użyj sugerowanej kolejności",
@@ -498,6 +534,20 @@
       "stale_active_set": {
         "title": "Lista aktywnych modów jest nieaktualna",
         "detail": "Przeskanuj ponownie przed zapisaniem ModsConfig.xml."
+      },
+      "already_running": {
+        "title": "Operacja już trwa",
+        "detail": "Rimmerge już to wykonuje. Poczekaj, aż skończy."
+      },
+      "recommended_rules_unavailable": {
+        "title": "Nie można teraz pobrać zalecanych reguł",
+        "detail": "Pobieranie jest teraz niedostępne.",
+        "networkOff": "Dostęp do internetu jest wyłączony. Włącz go w Ustawieniach, a potem spróbuj ponownie.",
+        "awaitingFirstRun": "Najpierw odpowiedz na powiadomienie powitalne na Panelu, a potem spróbuj ponownie."
+      },
+      "app_settings_damaged": {
+        "title": "Plik ustawień aplikacji jest uszkodzony",
+        "detail": "Rimmerge pozostawił go bez zmian. Otwórz Ustawienia i zapisz je, aby go naprawić, a potem spróbuj ponownie."
       },
       "texture_unsupported_format": {
         "title": "Nie można wyświetlić tego formatu tekstury",

@@ -25,7 +25,7 @@ sort, only whether/when a network request happens.
 | `network.check_for_updates` | on | No — whether the desktop app checks for a newer Rimmerge release automatically, once a day, at launch. `rimmerge check-update` (a manual, explicit check) ignores this toggle. |
 | `network.auto_refresh_rule_databases` | on | No — whether the desktop app automatically, once a day, at launch, refreshes the enabled, auto-refresh-eligible rule databases (community rules and `rimmerge-rules` — never the Steam Workshop database, which stays manual regardless). A manual `db refresh`/Refresh click ignores this toggle. |
 | `network.fetch_community_rules` | on | No — whether a refresh (automatic or manual) is allowed to fetch the community rules database into the cache at all. Fetching never touches the sort by itself; only `import` (a separate, explicit step) does. |
-| `network.fetch_steam_workshop` | on | No, same reasoning — the source is recommended, so it is on by default, but it is a large download (about 49 MB) that must never happen without you asking: it is never fetched automatically, only by a manual *Refresh* click, `rimmerge db refresh`, or the recommended-databases notice's *Turn on and download* button. Turn it off to keep those from fetching it (`rimmerge network set --steam-workshop off` changes only this switch). |
+| `network.fetch_steam_workshop` | on | No, same reasoning — the source is recommended, so it is on by default, but it is a large download (about 49 MB) that must never happen without you asking: it is never fetched automatically, only by a manual *Refresh* click, `rimmerge db refresh`, the recommended-databases notice's *Turn on and download* button, or the Dashboard's *Get the recommended rules* step. Turn it off to keep those from fetching it (`rimmerge network set --steam-workshop off` changes only this switch). |
 | `network.fetch_rimmerge_rules` | on | No, same reasoning — this project's own small rules database (precedence rules, patch-operation behaviors, def-cache-carrier detection). Turning it off leaves the defaults built into the binary in effect, never nothing. |
 | `reminders.rule_databases_stale_after_days` | 30 (range 1–365) | No — the threshold `rimmerge db status`'s `[stale]` label, the Databases card, and the staleness reminder notice all share. See [concepts/rules-databases.md](concepts/rules-databases.md#reminders). |
 
@@ -84,4 +84,6 @@ already-fetched rule actually *feeds the sorter* is entirely
 matter how the rule reached your profile's `rules.json`
 (fetched-then-imported or hand-typed, the sorter can't tell the
 difference). See [concepts/rules-databases.md](concepts/rules-databases.md)
-for the full fetch → cache → import → sort pipeline.
+for the full fetch → cache → import → sort pipeline. The Dashboard's
+"Get the recommended rules" step does both on one click, still as two
+steps (download, then import), and adds no setting of its own.

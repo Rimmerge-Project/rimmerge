@@ -14,7 +14,7 @@ subdomain, never an address taken from a downloaded file.
 | `api.github.com` | The latest published Rimmerge release (`/repos/Rimmerge-Project/rimmerge/releases/latest`) — to tell you a newer version exists. Draft and pre-release versions are never announced. | tens of KB |
 | `raw.githubusercontent.com` | RimSort's community rules database | about 400 KB |
 | `raw.githubusercontent.com` | This project's own `rimmerge-rules.json` | a few KB |
-| `raw.githubusercontent.com` | RimSort's Steam Workshop database — **only by a manual action** (a Refresh click, `rimmerge db refresh`, or the recommended-databases notice's "Turn on and download" button); recommended and enabled by default, but never fetched automatically | about 49 MB |
+| `raw.githubusercontent.com` | RimSort's Steam Workshop database — **only by a manual action** (a Refresh click, `rimmerge db refresh`, the recommended-databases notice's "Turn on and download" button, or the Dashboard's "Get the recommended rules" step); recommended and enabled by default, but never fetched automatically | about 49 MB |
 
 ## If you use a proxy
 
@@ -63,14 +63,25 @@ anyone else.
     49 MB Steam Workshop database) as one click; it appears only after
     you have answered the first-run notice and never while internet
     access is off.
+  - *Get the recommended rules* (the Dashboard's Get started strip)
+    turns all three recommended sources on (community rules, the Steam
+    Workshop database and `rimmerge-rules`, whose daily automatic fetch
+    then resumes) if community rules or the Steam Workshop database is
+    switched off. It downloads the ones
+    that are switched off or not downloaded yet (including the 49 MB
+    Steam Workshop database when it is one of them; the button shows the
+    size), and imports them. It needs the first-run notice answered
+    and internet access on, unless only an import is left. It never
+    runs without the click, and *Skip* declines it.
 - **The command-line tool never contacts anything on its own.** Only
   `rimmerge db refresh` and `rimmerge check-update` do, when you run
   them.
 - **The Steam Workshop database is never downloaded automatically.** It
   is enabled by default (it is part of the recommended setup), but only
   a manual action downloads it, about 49 MB: the Databases card's
-  Refresh, `rimmerge db refresh`, or the recommended-databases notice's
-  "Turn on and download" button. On a computer that has never saved
+  Refresh, `rimmerge db refresh`, the recommended-databases notice's
+  "Turn on and download" button, or the Dashboard's "Get the recommended
+  rules" step. On a computer that has never saved
   settings, `rimmerge db refresh` with no `--source` therefore downloads
   it too; turn its switch off first (`rimmerge network set
   --steam-workshop off`, which changes that one switch and leaves
@@ -158,7 +169,9 @@ RimWorld install and Workshop content folder are otherwise read only;
 Rimmerge's own profile data lives under your local app-data directory.
 Rimmerge's own app-data folder also holds `app-settings.json` (these
 network settings) and `notifications.json` (which notices you've
-dismissed and the last update-check result).
+dismissed and the last update-check result); each profile's own
+`<profile>/notifications.json` also remembers whether you skipped the
+Dashboard's "Get the recommended rules" step.
 
 This is a tested contract, not only a stated one: the workspace's
 default test suite opens no socket at all. The only tests that talk to

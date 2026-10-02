@@ -95,6 +95,22 @@ pub trait AppSettingsStore {
     fn save_if_missing(&self, base: &Path, settings: &AppSettings) -> Result<(), StoreError>;
 }
 
+/// Lets a use case that owns an `AppStore` lend a borrow of it to another
+/// use case it composes (`GetRecommendedRules` -> `EnableRecommendedSources`).
+impl<T: AppSettingsStore + ?Sized> AppSettingsStore for &T {
+    fn load(&self, base: &Path) -> AppSettingsLoad {
+        (**self).load(base)
+    }
+
+    fn save(&self, base: &Path, settings: &AppSettings) -> Result<(), StoreError> {
+        (**self).save(base, settings)
+    }
+
+    fn save_if_missing(&self, base: &Path, settings: &AppSettings) -> Result<(), StoreError> {
+        (**self).save_if_missing(base, settings)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

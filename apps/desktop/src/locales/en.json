@@ -319,12 +319,48 @@
     },
     "guide": {
       "heading": "Get started",
-      "intro": "Three steps put the suggested load order into the game. The Findings and Rules pages are there when you want more control.",
+      "intro": "Four steps put the suggested load order into the game. The Findings and Rules pages are there when you want more control.",
       "listLabel": "Getting started steps",
       "status": {
         "done": "Done",
         "current": "Current step",
-        "upcoming": "Not yet"
+        "upcoming": "Not yet",
+        "skipped": "Skipped",
+        "unavailable": "Not available"
+      },
+      "getRules": {
+        "title": "Get the recommended rules",
+        "pending": "Gets the recommended rule databases (the community load-order rules and the Steam Workshop database) and imports them into this profile, so the suggested order you review next already uses them.",
+        "sourceTurnOn": "{source}: off. It will be turned on and downloaded.",
+        "sourceDownload": "{source}: not downloaded yet.",
+        "sourceRetry": "{source}: the last download failed ({reason}).",
+        "sourceImport": "{source}: downloaded, not imported yet.",
+        "downloadButton": "Download and import",
+        "downloadButtonWithSteam": "Download and import (about 49 MB)",
+        "retryButton": "Try again",
+        "retryButtonWithSteam": "Try again (about 49 MB)",
+        "importButton": "Import",
+        "skip": "Skip",
+        "skippedText": "Skipped. You can still get them from the Rules page.",
+        "getNowButton": "Get them now",
+        "getNowButtonWithSteam": "Get them now (about 49 MB)",
+        "doneText": "Imported. The suggested order uses them.",
+        "doneNotInUseText": "Imported, but imported rules are turned off in Settings, so the suggested order doesn't use them.",
+        "networkOff": "Internet access is off, so nothing can be downloaded.",
+        "openSettings": "Open settings",
+        "awaitingFirstRun": "Answer the Welcome notice above first.",
+        "loadFailed": "Couldn't check whether the recommended rules are set up.",
+        "downloading": "Downloading the {source} database…",
+        "importing": "Importing…",
+        "slowNote": "Downloading the Steam Workshop database can take a few minutes on a slow connection.",
+        "resultDone": "Recommended rules imported.",
+        "resultPartial": "Some rule databases couldn't be downloaded. What did download was imported. Try again later.",
+        "resultDownloadFailed": "The rule databases couldn't be downloaded. Check your connection and try again later.",
+        "resultNothingToDo": "The recommended rules were already imported. There was nothing to download.",
+        "resultImportFailedReadingFile": "The rules were downloaded but couldn't be read for import.",
+        "resultImportFailedSaving": "The rules were downloaded but couldn't be saved into this profile. Nothing was changed.",
+        "resultManifestNotRecorded": "The rules were imported, but the import record couldn't be saved. Click again to finish.",
+        "resultProfileChanged": "The rules were downloaded. Another profile was opened in the meantime, so nothing was imported."
       },
       "chooseSuggested": {
         "title": "Use the suggested order",
@@ -498,6 +534,20 @@
       "stale_active_set": {
         "title": "Active-mod list is out of date",
         "detail": "Rescan before writing ModsConfig.xml."
+      },
+      "already_running": {
+        "title": "Already in progress",
+        "detail": "Rimmerge is already doing this. Wait for it to finish."
+      },
+      "recommended_rules_unavailable": {
+        "title": "Can't get the recommended rules now",
+        "detail": "Downloading is not available right now.",
+        "networkOff": "Internet access is off. Turn it on in Settings, then try again.",
+        "awaitingFirstRun": "Answer the Welcome notice on the Dashboard first, then try again."
+      },
+      "app_settings_damaged": {
+        "title": "Your app settings file is damaged",
+        "detail": "Rimmerge left it untouched. Open Settings and save your settings to repair it, then try again."
       },
       "texture_unsupported_format": {
         "title": "Texture format can't be shown",

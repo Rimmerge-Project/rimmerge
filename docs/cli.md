@@ -93,7 +93,7 @@ file with no live install or profile involved at all.
   `--steam-workshop on|off`/`--rimmerge-rules on|off` for each source's
   own fetch toggle); `reset` restores every one of those switches to its
   default (all on, including Steam Workshop's own fetch toggle: about
-  49 MB, downloaded only by `db refresh`) while
+  49 MB, downloaded only by `db refresh` from the CLI) while
   leaving the stale-reminder threshold untouched — the way to recover
   from a corrupt `app-settings.json`, which fails closed rather than
   crashing, without hand-editing JSON. A privacy switch shouldn't
@@ -113,6 +113,26 @@ file with no live install or profile involved at all.
   Nothing is printed when there are none. The list is informational: it
   never changes the exit code and adds no flag or prompt, so scripts keep
   working (grep for the header line to refuse on one).
+
+### Getting the recommended rules
+
+The desktop app's Dashboard does this in one click. The CLI has no
+shortcut and runs nothing on its own; the same result is three explicit
+commands:
+
+```sh
+# or `rimmerge network reset`
+rimmerge network set --community-rules on --steam-workshop on --rimmerge-rules on
+# downloads every enabled source, Steam Workshop (about 49 MB) included
+rimmerge db refresh
+# imports what the cache now holds into the current profile
+rimmerge import --from-cache
+```
+
+`network set` only turns a source's fetch switch on; it never changes
+the master internet-access switch (`rimmerge network on` does), so
+`db refresh` still needs internet access to be on. Add `--source
+community` to `db refresh` to skip the large download.
 
 ## Verification
 

@@ -326,6 +326,37 @@ can change what a sort produces.
   recommended toggles on via `with_recommended_sources`, never touches
   `allow_network`, and refuses a `Recovered` file; the download is the
   caller's separate manual refresh.
+- **The Dashboard's "Get the recommended rules" step** is derived, never
+  stored: `recommended_rules::recommended_rules_step` is one pure function
+  over `RecommendedRulesFacts` (the policy, the `RuleDatabaseView`s, the
+  first-run answer, `StepSkip`, the profile settings), shared by the
+  desktop's status command and the notification evaluator. First match
+  wins: Done (every recommended **and** importable source has an import
+  record in this profile: "imported once", a newer cache is
+  `ImportedRulesOutdated`'s job), then Skipped, then the per-source needs
+  (`TurnOn`/`Download`/`Import`); `Unavailable` applies only when some need
+  contacts the network and `allow_network` is off or Welcome is
+  unanswered, so an import-only remainder is always `NeedsAction`. The
+  skip flag is per profile: `ProfileNotificationState::recommended_rules_skipped_at`
+  in `<profile>/notifications.json`, read into `StepSkip`.
+- **`evaluate` dedupes against the step.** `sources_offered_by_step` runs the
+  same derivation and is non-empty only while the step is `NeedsAction`;
+  `ImportedRulesOutdated` and `RecommendedSourcesIncomplete` drop exactly
+  those sources, so one call to action shows at a time. Done, Skipped and
+  Unavailable leave both notices as they were before the step existed.
+- **`GetRecommendedRules` has two phases, never one call.** Phase 1
+  (`fetch`) takes no `Session`, so the network never runs under the session
+  lock; it turns the recommended sources on if any need says `TurnOn`,
+  downloads each source needing the network one call at a time, and
+  returns a `FetchedRecommendedRules` (private fields) that only it can
+  build. Phase 2 (`import`) takes that value and the `Session` and imports
+  only the sources that had **no import record at phase 1** (`missing_import`),
+  whatever the download outcomes, in one `ImportRimSort` call (one save, one
+  resort). A source already imported is never re-imported by the step. It
+  reports `ProfileChanged` instead of importing when another profile was
+  loaded in between. A failed import crosses as `ImportStep::Failed` with
+  an `ImportFailure` (`Import` or `Store` only); a failed import record is
+  `ImportedManifestNotRecorded`, since the rules were saved.
 - **The CLI never runs anything automatically.** `crate::use_cases::RunLaunchNetworkChecks`
   is desktop-only, called once per launch right after a project loads;
   `apps/cli` never constructs or calls it. Every CLI network action

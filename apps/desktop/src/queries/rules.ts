@@ -6,6 +6,8 @@ import {
   deleteRule,
   getDefaultRimSortPaths,
   getFinding,
+  getRecommendedRules,
+  getRecommendedRulesStep,
   getRuleDatabases,
   importRimSort,
   listFindings,
@@ -13,6 +15,7 @@ import {
   listRules,
   promoteImportedRule,
   refreshRuleDatabases,
+  skipRecommendedRulesStep,
   upsertRule,
 } from "@/services/ipc";
 import { asFindingKey } from "@/types/brands";
@@ -60,6 +63,62 @@ export function useRuleDatabasesQuery() {
   return useQuery({
     key: queryKeys.ruleDatabases,
     query: getRuleDatabases,
+  });
+}
+
+/**
+ * The Dashboard's "Get the recommended rules" step, derived in Rust.
+ * Shares the Databases card's key prefix, so a refresh or an enable
+ * invalidates it with no extra call.
+ */
+export function useRecommendedRulesStepQuery() {
+  return useQuery({
+    key: queryKeys.recommendedRulesStep,
+    query: getRecommendedRulesStep,
+  });
+}
+
+/**
+ * Turns on, downloads and imports the recommended rule databases (one
+ * click). Invalidates in `onSettled`, not only `onSuccess`, and waits for
+ * the refetch: a `NotNeeded`/`Failed`/`ProfileChanged` report, or a refused
+ * run, emits no `session://changed`, yet phase 1 may already have written
+ * the app settings, the cache or a last-failure record, and a step query
+ * that read `inProgress` mid-run would otherwise stay stale. Awaiting the
+ * refetch keeps the mutation "loading" until the step shows its real state.
+ * The step's key sits under `ruleDatabases()`, so that invalidation refetches it too
+ * (listing it again would cost a second IPC call).
+ */
+export function useGetRecommendedRulesMutation() {
+  const queryCache = useQueryCache();
+  return useMutation({
+    mutation: () => getRecommendedRules(),
+    onSettled: async () => {
+      await Promise.allSettled([
+        queryCache.invalidateQueries({ key: queryKeys.appSettings() }),
+        queryCache.invalidateQueries({ key: queryKeys.ruleDatabases() }),
+        queryCache.invalidateQueries({ key: queryKeys.notifications() }),
+      ]);
+    },
+  });
+}
+
+/**
+ * Remembers that this profile skipped the step. Invalidates the step and
+ * the notice list (the two recommended-rules notices step aside only while
+ * the step is offered), and waits for the refetch so the caller can move
+ * focus onto the settled state.
+ */
+export function useSkipRecommendedRulesStepMutation() {
+  const queryCache = useQueryCache();
+  return useMutation({
+    mutation: () => skipRecommendedRulesStep(),
+    onSuccess: async () => {
+      await Promise.allSettled([
+        queryCache.invalidateQueries({ key: queryKeys.recommendedRulesStep() }),
+        queryCache.invalidateQueries({ key: queryKeys.notifications() }),
+      ]);
+    },
   });
 }
 
