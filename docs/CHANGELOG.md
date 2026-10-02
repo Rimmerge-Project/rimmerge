@@ -4,7 +4,7 @@ This changelog starts at the first public release. Development history
 before that point is not summarized here — see `.journal/` in a
 maintainer's own checkout for the full record, if you have it.
 
-## [1.0.0] - 2026-09-26
+## [1.0.0] - 2026-10-01
 
 - **Distribution: Rimmerge ships as a portable zip, not an installer.**
   Download `Rimmerge-1.0.0-windows-x64-portable.zip`, extract it anywhere,
