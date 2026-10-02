@@ -5677,7 +5677,7 @@ export function installScenario(): void {
       // the suggested order and says so in its summary.
       selected = "suggested";
       return {
-        modCount: MOD_COUNT,
+        modCount: scannedActiveModList().length,
         gameVersion: "1.6.4871",
         elapsedMs: 900,
         warnings: [],
@@ -5719,7 +5719,7 @@ export function installScenario(): void {
       }
       const currentStats = stats();
       return {
-        modCount: mods.length,
+        modCount: scannedActiveModList().length,
         edgesByStrength: { hard: 40, declared: 60, soft: 12, awareness: 8 },
         edgesViolatedBySource: {
           assemblyRef: 0,

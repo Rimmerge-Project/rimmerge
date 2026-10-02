@@ -19,7 +19,7 @@ shells over the same engine.
 
 ![Dashboard with the Suggested order selected: the Get started steps, and tiles for mods that move and findings needing input in each order](docs/screenshots/dashboard-suggested.png)
 
-*The dashboard on a synthetic mod list: Suggested selected, Apply is the current step, and the tiles compare it with Current.*
+*The dashboard on a synthetic mod list: the recommended rules imported, Suggested selected, Apply is the current step, and the tiles compare it with Current.*
 
 ![Mods page: selecting inactive mods to activate](docs/screenshots/mods-page/inactive-tab-selection.png)
 
