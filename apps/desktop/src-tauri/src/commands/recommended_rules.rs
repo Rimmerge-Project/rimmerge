@@ -7,7 +7,7 @@
 //! `get_recommended_rules` runs in two phases so the network never runs
 //! under the session lock: phase 1 (downloads) is a **bare**
 //! `spawn_blocking`, phase 2 (import) runs inside [`with_session`]. A
-//! process-wide [`RunningGuard`] keeps a double click or a second window
+//! process-wide `RunningGuard` keeps a double click or a second window
 //! from starting a second run.
 
 use std::path::PathBuf;
@@ -162,11 +162,11 @@ where
     .await
 }
 
-/// See [`get_recommended_rules_step_inner`].
+/// See `get_recommended_rules_step_inner`.
 ///
 /// # Errors
 ///
-/// See [`get_recommended_rules_step_inner`].
+/// See `get_recommended_rules_step_inner`.
 #[tauri::command]
 pub async fn get_recommended_rules_step(
     state: tauri::State<'_, AppState>,
@@ -304,13 +304,13 @@ where
     })?
 }
 
-/// See [`get_recommended_rules_inner`]. Emits
+/// See `get_recommended_rules_inner`. Emits
 /// [`EVENT_RECOMMENDED_RULES_PROGRESS`] as it goes, and `session://changed`
 /// when rules were imported.
 ///
 /// # Errors
 ///
-/// See [`get_recommended_rules_inner`].
+/// See `get_recommended_rules_inner`.
 #[tauri::command]
 pub async fn get_recommended_rules(
     state: tauri::State<'_, AppState>,
@@ -346,12 +346,12 @@ pub(crate) async fn skip_recommended_rules_step_inner(
     .await
 }
 
-/// See [`skip_recommended_rules_step_inner`]; also emits `session://changed`
+/// See `skip_recommended_rules_step_inner`; also emits `session://changed`
 /// (`NotificationsChanged`): the bell's notice list depends on the flag.
 ///
 /// # Errors
 ///
-/// See [`skip_recommended_rules_step_inner`].
+/// See `skip_recommended_rules_step_inner`.
 #[tauri::command]
 pub async fn skip_recommended_rules_step(
     state: tauri::State<'_, AppState>,
