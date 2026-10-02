@@ -50,6 +50,7 @@ import type { MergeModEntryDto } from "../../src/types/generated/MergeModEntryDt
 import type { MergeOwnerDto } from "../../src/types/generated/MergeOwnerDto";
 import type { MergePreviewRequestDto } from "../../src/types/generated/MergePreviewRequestDto";
 import type { MergeStateDto } from "../../src/types/generated/MergeStateDto";
+import type { ModCostRowDto } from "../../src/types/generated/ModCostRowDto";
 import type { ModLinkKindDto } from "../../src/types/generated/ModLinkKindDto";
 import type { NotificationDto } from "../../src/types/generated/NotificationDto";
 import type { NotificationKeyDto } from "../../src/types/generated/NotificationKeyDto";
@@ -216,6 +217,13 @@ declare global {
      * logging gaps, read losses) without spelling out a whole summary.
      */
     __IMPORT_GAME_LOG_OVERRIDES__?: Partial<GameLogSummaryDto>;
+    /**
+     * Replaces the `/startup` page's whole cost table for `get_startup_costs`
+     * (the per-mod rows derived from the scenario's own mods are used when
+     * unset) — set before the page's query runs (`page.addInitScript`) to
+     * drive a layout case, such as very long mod ids, the stock rows cannot.
+     */
+    __STARTUP_COSTS_OVERRIDE__?: ModCostRowDto[];
     /**
      * The active mod `get_def_cache_carrier` reports as a def-cache carrier
      * — `null` (no carrier active, the default) unless a spec sets one
@@ -7476,7 +7484,7 @@ export function installScenario(): void {
         : (window.__PICK_FILE_RESULT__ ?? null);
     },
     // The `/startup` page's cost table.
-    get_startup_costs: () => startupCosts,
+    get_startup_costs: () => window.__STARTUP_COSTS_OVERRIDE__ ?? startupCosts,
     // Reads and attributes a `Player.log` — the
     // fixed default unless a spec overrides `window.__IMPORT_GAME_LOG_RESULT__`.
     import_game_log: () =>

@@ -175,9 +175,13 @@ const totals = computed(() => {
  * use (which would pull each `<tr>` out of table layout and break column
  * alignment with the totals row), this renders only the visible slice of
  * real `<tr>` elements bracketed by two height-only spacer rows — the
- * padding-row technique `@tanstack/vue-virtual`'s own table examples use,
- * so `<table>`'s normal row-layout algorithm still sizes every column
- * consistently across the totals row and every rendered body row.
+ * padding-row technique `@tanstack/vue-virtual`'s own table examples use.
+ *
+ * Column widths are declared (`table-fixed` plus a `<colgroup>`), never
+ * measured: an auto-layout table sizes each column from the rows currently
+ * in the DOM, which here is only the visible slice plus overscan, so every
+ * column would change width as different rows scroll in. Declared widths
+ * make the layout a function of the column list alone.
  */
 const scrollElementRef = useTemplateRef<HTMLDivElement>("scrollElement");
 const ROW_HEIGHT_PX = 36;
@@ -216,8 +220,59 @@ const paddingBottom = computed(() => {
   return last === undefined ? 0 : totalSize.value - last.end;
 });
 
-/** Column count the totals row and both spacer rows must span — keep in sync with `<thead>`'s own `<th>` count. */
-const COLUMN_COUNT = 13;
+interface ColumnDefinition {
+  /** `true` for the column whose cells are the row headers — it is sticky and takes the remaining width. */
+  isRowHeader?: true;
+  /** Fixed width in px; `null` for the one column that takes the remaining width. */
+  widthPx: number | null;
+  /** The `startup.*` header message; a literal key so the unused-key check sees it. */
+  headerKey: string;
+  /** What a click on the header sorts by; `null` for a column that is not sortable. */
+  sortKey: SortKey | null;
+}
+
+/** The name column's minimum width — below it the table scrolls horizontally instead of squeezing it. */
+const NAME_COLUMN_MIN_WIDTH_PX = 220;
+
+/**
+ * The single source for the `<colgroup>`, the header cells, the table's
+ * minimum width and the spacer rows' `colspan`. The totals row and the body
+ * rows still spell their cells out by hand, in this order; `StartupPage.test.ts`
+ * checks every body cell shows the value its column's header names, because
+ * the browser would place a swapped pair without complaint. Widths fit the widest realistic value of
+ * each column at `text-sm` plus its 12 px right padding: "1024.00 KiB" for the
+ * byte columns, "at least 99999" for bad-dimension DDS and "at least 999
+ * (99999 ms)" for the observed timers, each in the longest locale wording
+ * (Ukrainian). Headers wrap, so a long header never
+ * sets a width.
+ */
+const COLUMNS: readonly ColumnDefinition[] = [
+  { isRowHeader: true, widthPx: null, headerKey: "startup.modHeader", sortKey: null },
+  { widthPx: 76, headerKey: "startup.patchOpsHeader", sortKey: "patchOps" },
+  { widthPx: 84, headerKey: "startup.slowXpathsHeader", sortKey: "slowXpathOps" },
+  { widthPx: 76, headerKey: "startup.texFilesHeader", sortKey: "textureFiles" },
+  { widthPx: 112, headerKey: "startup.texBytesHeader", sortKey: "textureBytes" },
+  { widthPx: 76, headerKey: "startup.ddsFilesHeader", sortKey: "ddsFiles" },
+  { widthPx: 144, headerKey: "startup.badDimDdsHeader", sortKey: "badDimensionDds" },
+  { widthPx: 68, headerKey: "startup.dllsHeader", sortKey: "assemblyCount" },
+  { widthPx: 112, headerKey: "startup.dllBytesHeader", sortKey: "assemblyBytes" },
+  { widthPx: 68, headerKey: "startup.defsHeader", sortKey: "defCount" },
+  { widthPx: 112, headerKey: "startup.overriddenTexHeader", sortKey: "overriddenTextureBytes" },
+  { widthPx: 208, headerKey: "startup.observedTimersHeader", sortKey: "observedTimers" },
+  { widthPx: 116, headerKey: "startup.contentOnlyHeader", sortKey: null },
+];
+
+const COLUMN_COUNT = COLUMNS.length;
+
+/** Below this the scroller scrolls sideways — a constant, whichever rows are rendered. */
+const TABLE_MIN_WIDTH_PX = COLUMNS.reduce(
+  (sum, column) => sum + (column.widthPx ?? NAME_COLUMN_MIN_WIDTH_PX),
+  0,
+);
+
+function columnStyle(column: ColumnDefinition): { width: string } | undefined {
+  return column.widthPx === null ? undefined : { width: `${column.widthPx}px` };
+}
 </script>
 
 <template>
@@ -304,187 +359,53 @@ const COLUMN_COUNT = 13;
       data-testid="startup-table-scroll"
     >
       <table
-        class="w-full min-w-max border-collapse text-sm whitespace-nowrap"
+        class="w-full table-fixed border-collapse text-sm whitespace-nowrap"
+        :style="{ minWidth: `${TABLE_MIN_WIDTH_PX}px` }"
         data-testid="startup-table"
       >
-        <thead>
+        <colgroup>
+          <col
+            v-for="column in COLUMNS"
+            :key="column.headerKey"
+            :style="columnStyle(column)"
+          >
+        </colgroup>
+        <thead class="whitespace-normal">
           <tr class="table-head text-right">
             <th
+              v-for="column in COLUMNS"
+              :key="column.headerKey"
               scope="col"
-              class="bg-surface-1 sticky left-0 z-10 py-2 pr-3 pl-3 text-left font-medium"
-            >
-              {{ t("startup.modHeader") }}
-            </th>
-            <th
-              scope="col"
-              class="py-2 pr-3 font-medium"
-              :aria-sort="ariaSortFor('patchOps')"
-            >
-              <button
-                type="button"
-                class="hover:text-text cursor-pointer focus-visible:outline"
-                data-testid="startup-sort-patchOps"
-                @click="toggleSort('patchOps')"
-              >
-                {{ t("startup.patchOpsHeader") }}
-              </button>
-            </th>
-            <th
-              scope="col"
-              class="py-2 pr-3 font-medium"
-              :aria-sort="ariaSortFor('slowXpathOps')"
+              :class="
+                column.isRowHeader
+                  ? 'bg-surface-1 sticky left-0 z-10 py-2 pr-3 pl-3 text-left font-medium'
+                  : 'py-2 pr-3 font-medium'
+              "
+              :aria-sort="column.sortKey === null ? undefined : ariaSortFor(column.sortKey)"
             >
               <button
+                v-if="column.sortKey !== null"
                 type="button"
                 class="hover:text-text cursor-pointer focus-visible:outline"
-                data-testid="startup-sort-slowXpathOps"
-                @click="toggleSort('slowXpathOps')"
+                :data-testid="`startup-sort-${column.sortKey}`"
+                @click="toggleSort(column.sortKey)"
               >
-                {{ t("startup.slowXpathsHeader") }}
+                {{ t(column.headerKey) }}
               </button>
-            </th>
-            <th
-              scope="col"
-              class="py-2 pr-3 font-medium"
-              :aria-sort="ariaSortFor('textureFiles')"
-            >
-              <button
-                type="button"
-                class="hover:text-text cursor-pointer focus-visible:outline"
-                data-testid="startup-sort-textureFiles"
-                @click="toggleSort('textureFiles')"
-              >
-                {{ t("startup.texFilesHeader") }}
-              </button>
-            </th>
-            <th
-              scope="col"
-              class="py-2 pr-3 font-medium"
-              :aria-sort="ariaSortFor('textureBytes')"
-            >
-              <button
-                type="button"
-                class="hover:text-text cursor-pointer focus-visible:outline"
-                data-testid="startup-sort-textureBytes"
-                @click="toggleSort('textureBytes')"
-              >
-                {{ t("startup.texBytesHeader") }}
-              </button>
-            </th>
-            <th
-              scope="col"
-              class="py-2 pr-3 font-medium"
-              :aria-sort="ariaSortFor('ddsFiles')"
-            >
-              <button
-                type="button"
-                class="hover:text-text cursor-pointer focus-visible:outline"
-                data-testid="startup-sort-ddsFiles"
-                @click="toggleSort('ddsFiles')"
-              >
-                {{ t("startup.ddsFilesHeader") }}
-              </button>
-            </th>
-            <th
-              scope="col"
-              class="py-2 pr-3 font-medium"
-              :aria-sort="ariaSortFor('badDimensionDds')"
-            >
-              <button
-                type="button"
-                class="hover:text-text cursor-pointer focus-visible:outline"
-                data-testid="startup-sort-badDimensionDds"
-                @click="toggleSort('badDimensionDds')"
-              >
-                {{ t("startup.badDimDdsHeader") }}
-              </button>
-            </th>
-            <th
-              scope="col"
-              class="py-2 pr-3 font-medium"
-              :aria-sort="ariaSortFor('assemblyCount')"
-            >
-              <button
-                type="button"
-                class="hover:text-text cursor-pointer focus-visible:outline"
-                data-testid="startup-sort-assemblyCount"
-                @click="toggleSort('assemblyCount')"
-              >
-                {{ t("startup.dllsHeader") }}
-              </button>
-            </th>
-            <th
-              scope="col"
-              class="py-2 pr-3 font-medium"
-              :aria-sort="ariaSortFor('assemblyBytes')"
-            >
-              <button
-                type="button"
-                class="hover:text-text cursor-pointer focus-visible:outline"
-                data-testid="startup-sort-assemblyBytes"
-                @click="toggleSort('assemblyBytes')"
-              >
-                {{ t("startup.dllBytesHeader") }}
-              </button>
-            </th>
-            <th
-              scope="col"
-              class="py-2 pr-3 font-medium"
-              :aria-sort="ariaSortFor('defCount')"
-            >
-              <button
-                type="button"
-                class="hover:text-text cursor-pointer focus-visible:outline"
-                data-testid="startup-sort-defCount"
-                @click="toggleSort('defCount')"
-              >
-                {{ t("startup.defsHeader") }}
-              </button>
-            </th>
-            <th
-              scope="col"
-              class="py-2 pr-3 font-medium"
-              :aria-sort="ariaSortFor('overriddenTextureBytes')"
-            >
-              <button
-                type="button"
-                class="hover:text-text cursor-pointer focus-visible:outline"
-                data-testid="startup-sort-overriddenTextureBytes"
-                @click="toggleSort('overriddenTextureBytes')"
-              >
-                {{ t("startup.overriddenTexHeader") }}
-              </button>
-            </th>
-            <th
-              scope="col"
-              class="py-2 pr-3 font-medium"
-              :aria-sort="ariaSortFor('observedTimers')"
-            >
-              <button
-                type="button"
-                class="hover:text-text cursor-pointer focus-visible:outline"
-                data-testid="startup-sort-observedTimers"
-                @click="toggleSort('observedTimers')"
-              >
-                {{ t("startup.observedTimersHeader") }}
-              </button>
-            </th>
-            <th
-              scope="col"
-              class="py-2 pr-3 font-medium"
-            >
-              {{ t("startup.contentOnlyHeader") }}
+              <template v-else>
+                {{ t(column.headerKey) }}
+              </template>
             </th>
           </tr>
         </thead>
         <tbody>
           <tr
-            class="border-border-subtle bg-surface-2 border-b text-right font-semibold *:pr-3"
+            class="border-border-subtle bg-surface-2 border-b text-right font-semibold *:overflow-hidden *:pr-3 *:text-ellipsis"
             data-testid="startup-totals-row"
           >
             <th
               scope="row"
-              class="bg-surface-2 sticky left-0 z-10 py-2 pl-3 text-left"
+              class="bg-surface-2 sticky left-0 z-10 overflow-hidden py-2 pl-3 text-left text-ellipsis"
             >
               {{ t("startup.totalRow", { count: displayRows.length }, displayRows.length) }}
             </th>
@@ -517,12 +438,12 @@ const COLUMN_COUNT = 13;
             v-for="{ virtualRow, row } in visibleRows"
             :key="row.cost.modId"
             :data-index="virtualRow.index"
-            class="border-border-subtle hover:bg-surface-2 group border-b text-right *:pr-3"
+            class="border-border-subtle hover:bg-surface-2 group border-b text-right *:overflow-hidden *:pr-3 *:text-ellipsis"
             :data-testid="`startup-row-${row.cost.modId}`"
           >
             <th
               scope="row"
-              class="text-text bg-surface-1 group-hover:bg-surface-2 sticky left-0 z-10 py-1.5 pl-3 text-left font-normal"
+              class="text-text bg-surface-1 group-hover:bg-surface-2 sticky left-0 z-10 overflow-hidden py-1.5 pl-3 text-left font-normal text-ellipsis"
               :title="modLabel.titleFor(row.cost.modId)"
             >
               {{ modLabel.label(row.cost.modId) }}
