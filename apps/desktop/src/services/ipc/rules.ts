@@ -3,6 +3,8 @@
 import type { DeleteRuleRequestDto } from "@/types/generated/DeleteRuleRequestDto";
 import type { ImportReportDto } from "@/types/generated/ImportReportDto";
 import type { OrphanedDecisionDto } from "@/types/generated/OrphanedDecisionDto";
+import type { RecommendedRulesReportDto } from "@/types/generated/RecommendedRulesReportDto";
+import type { RecommendedRulesStepDto } from "@/types/generated/RecommendedRulesStepDto";
 import type { RefreshRuleDatabasesRequestDto } from "@/types/generated/RefreshRuleDatabasesRequestDto";
 import type { RimSortPathsDto } from "@/types/generated/RimSortPathsDto";
 import type { RuleDatabaseRefreshResultDto } from "@/types/generated/RuleDatabaseRefreshResultDto";
@@ -76,6 +78,29 @@ export function refreshRuleDatabases(
   request?: RefreshRuleDatabasesRequestDto,
 ): Promise<RuleDatabaseRefreshResultDto[]> {
   return call("refresh_rule_databases", request === undefined ? undefined : { request });
+}
+
+/**
+ * What the Dashboard's "Get the recommended rules" step shows for the
+ * loaded profile. Derived in Rust; `inProgress` while a click is running.
+ */
+export function getRecommendedRulesStep(): Promise<RecommendedRulesStepDto> {
+  return call("get_recommended_rules_step");
+}
+
+/**
+ * Turns on, downloads (only what is missing) and imports the recommended
+ * rule databases. Emits `rules://recommended-progress` while it runs. A
+ * per-source download failure comes back inside the report; a closed
+ * network gate, a damaged settings file or a second concurrent run rejects.
+ */
+export function getRecommendedRules(): Promise<RecommendedRulesReportDto> {
+  return call("get_recommended_rules");
+}
+
+/** Remembers, for the loaded profile, that the step was skipped. Idempotent. */
+export function skipRecommendedRulesStep(): Promise<void> {
+  return call("skip_recommended_rules_step");
 }
 
 /** The current tag assignments (inference plus manual overrides). */

@@ -575,8 +575,8 @@ fn section_error_section_in_use_carries_structured_detail() {
     .into();
 
     assert_eq!(error.code, CommandErrorCode::AssignmentSectionInUse);
-    let referenced_by = match error.detail.expect("detail must be present") {
-        CommandErrorDetail::AssignmentSectionInUse { referenced_by } => referenced_by,
+    let Some(CommandErrorDetail::AssignmentSectionInUse { referenced_by }) = error.detail else {
+        panic!("the section-in-use detail must be present");
     };
     assert_eq!(referenced_by.len(), 1);
     assert_eq!(referenced_by[0].def_type, "example.PartAssignmentDef");
@@ -618,4 +618,42 @@ fn def_conflict_view_error_not_inspected_and_not_planned_map_to_internal() {
 
     let not_planned: CommandError = rim_session::DefConflictViewError::NotPlanned(key).into();
     assert_eq!(not_planned.code, CommandErrorCode::Internal);
+}
+
+#[test]
+fn recommended_rules_unavailable_carries_the_closed_gate_as_detail() {
+    use rim_session::Unavailable;
+    use rim_session::use_cases::GetRecommendedRulesError;
+
+    let error: CommandError =
+        GetRecommendedRulesError::Unavailable(Unavailable::AwaitingFirstRun).into();
+
+    assert_eq!(error.code, CommandErrorCode::RecommendedRulesUnavailable);
+    assert_eq!(
+        error.detail,
+        Some(CommandErrorDetail::RecommendedRulesUnavailable {
+            reason: crate::dto::recommended_rules::UnavailableReasonDto::AwaitingFirstRun
+        })
+    );
+}
+
+#[test]
+fn a_damaged_settings_file_has_its_own_code_and_a_failed_save_stays_profile_io_failed() {
+    use rim_session::use_cases::GetRecommendedRulesError;
+
+    let damaged: CommandError = GetRecommendedRulesError::SettingsDamaged.into();
+    let unwritable: CommandError =
+        GetRecommendedRulesError::Settings(rim_session::ports::StoreError("boom".to_string()))
+            .into();
+
+    assert_eq!(damaged.code, CommandErrorCode::AppSettingsDamaged);
+    assert_eq!(unwritable.code, CommandErrorCode::ProfileIoFailed);
+}
+
+#[test]
+fn already_running_has_its_own_code() {
+    assert_eq!(
+        CommandError::already_running().code,
+        CommandErrorCode::AlreadyRunning
+    );
 }

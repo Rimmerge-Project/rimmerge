@@ -1108,6 +1108,17 @@ mod tests {
     }
 
     #[test]
+    fn every_importable_source_has_an_import_key_and_no_other_does() {
+        for database in RuleDatabase::ALL {
+            assert_eq!(
+                database.is_importable(),
+                import_source_key(database).is_some(),
+                "{database:?}"
+            );
+        }
+    }
+
+    #[test]
     fn import_source_key_matches_the_manifests_own_string_constants() {
         assert_eq!(
             import_source_key(RuleDatabase::CommunityRules),

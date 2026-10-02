@@ -25,9 +25,11 @@ step:
    fetches anything on its own outside that explicit command.
 2. **Import** stays entirely manual for every source, automatic-fetch
    or not. Nothing is ever imported automatically — you choose when,
-   from the Rules page's Databases card or `rimmerge import`. With
-   fetches now happening on their own, a fresh cached copy can arrive
-   with no user action; the Databases card's own "needs reimport"
+   from the Rules page's Databases card, `rimmerge import`, or the
+   Dashboard's Get started step "Get the recommended rules": one click
+   that downloads what is missing and imports it, still never silently.
+   With fetches now happening on their own, a fresh cached copy can
+   arrive with no user action; the Databases card's own "needs reimport"
    marker is how you learn an import is available.
 3. **Sort** uses whatever rules are in your profile, regardless of
    where they came from — a rule you typed by hand and an imported one
@@ -48,8 +50,9 @@ The three sources:
 - **Steam Workshop database** — a much larger, Workshop-derived
   database (about 49 MB). It is recommended and on by default, but never
   downloaded automatically: only a manual action (the Databases card's
-  Refresh, `rimmerge db refresh`, or the recommended-databases notice's
-  "Turn on and download" button) fetches it, for exactly that reason.
+  Refresh, `rimmerge db refresh`, the recommended-databases notice's
+  "Turn on and download" button, or the Dashboard's "Get the recommended
+  rules" step) fetches it, for exactly that reason.
 - **`rimmerge-rules`** — this project's own small database: verified
   precedence rules for specific def-ownership conflicts, custom
   patch-operation class behaviors `verify` needs to model correctly,
@@ -181,6 +184,11 @@ its 24-hour grace.
   consent for the download, including the Steam Workshop database (about
   49 MB) when it is in the list. It never changes the internet-access
   switch, and it never imports anything: importing stays its own step.
+- **Hand-off to the Dashboard step.** While the loaded profile's "Get the
+  recommended rules" step is offered, this notice and the "New rule
+  content to import" notice leave out the sources that step covers, so
+  one call to action is shown at a time. Once the step is done, skipped
+  or not available, the notices list those sources again.
 
 See [privacy-and-network.md](../privacy-and-network.md) for exactly which
 host any of this is ever allowed to reach.

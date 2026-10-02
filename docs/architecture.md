@@ -102,6 +102,12 @@ interface apps.
   i18n keys, never a Rust sentence — the compiler and the frontend's
   `assertNever` switches point at each place. See `apps/desktop/CLAUDE.md`'s
   localization rules.
+- A new recommended or importable rule-database source → what
+  `RuleDatabase::is_recommended`/`is_importable` answer for it; the
+  Dashboard's "Get the recommended rules" step
+  (`rim_session::recommended_rules`) and the `RecommendedSourcesIncomplete` and
+  `ImportedRulesOutdated` notices
+  derive their source lists from those two, with no list of their own.
 - A new outbound host → an `AllowedHost` variant in
   `crates/rim-io/src/net/allowlist.rs`, reviewed as a security-relevant
   change (root `CLAUDE.md`'s network hard rule), never a setting.

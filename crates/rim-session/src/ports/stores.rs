@@ -328,6 +328,19 @@ pub trait RuleStore {
     fn save(&self, dir: &Path, rules: &StoredRules) -> Result<(), StoreError>;
 }
 
+/// Borrow-lending impl, the same convention as `DefSourceReader for &T`.
+/// Used by tests today (they share one in-memory store with the use case
+/// under test); no production caller needs it yet.
+impl<T: RuleStore + ?Sized> RuleStore for &T {
+    fn load(&self, dir: &Path) -> Result<LoadedRules, StoreError> {
+        (**self).load(dir)
+    }
+
+    fn save(&self, dir: &Path, rules: &StoredRules) -> Result<(), StoreError> {
+        (**self).save(dir, rules)
+    }
+}
+
 /// Loads and saves compat patch projects: `<profile>/patches/<patch-id>.json`,
 /// one file per project, so two
 /// projects never contend for one file and a deleted project is one unlink.

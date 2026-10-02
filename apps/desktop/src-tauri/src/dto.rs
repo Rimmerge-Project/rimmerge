@@ -32,6 +32,7 @@ pub mod order;
 pub mod patch;
 pub mod preflight;
 pub mod project;
+pub mod recommended_rules;
 pub mod rule;
 pub mod rule_databases;
 pub mod settings;

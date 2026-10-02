@@ -104,6 +104,8 @@ export {
 } from "./ipc/project";
 export {
   deleteRule,
+  getRecommendedRules,
+  getRecommendedRulesStep,
   getRuleDatabases,
   importRimSort,
   listOrphanedDecisions,
@@ -112,6 +114,7 @@ export {
   promoteImportedRule,
   refreshRuleDatabases,
   setManualTag,
+  skipRecommendedRulesStep,
   upsertRule,
 } from "./ipc/rules";
 export { verifyOrder } from "./ipc/verify";

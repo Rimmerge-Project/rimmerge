@@ -75,6 +75,21 @@ impl RuleDatabase {
             Self::CommunityRules | Self::SteamWorkshop | Self::RimmergeRules => true,
         }
     }
+
+    /// Whether this source is imported into a profile (an import record
+    /// in `<profile>/imports/manifest.json`, rules merged into
+    /// `rules.json`). `RimmergeRules` is not: its sections are read
+    /// straight from the cache at profile load. The one authoritative
+    /// answer: `import_source_key` and `resolve_from_cache` derive from
+    /// it. Closed `match`, no `_` arm: a fourth source must decide this
+    /// explicitly.
+    #[must_use]
+    pub fn is_importable(self) -> bool {
+        match self {
+            Self::CommunityRules | Self::SteamWorkshop => true,
+            Self::RimmergeRules => false,
+        }
+    }
 }
 
 /// Why a source was not requested by [`RuleDatabaseFetcher::refresh`].
@@ -371,6 +386,21 @@ pub trait ImportManifestStore {
     ) -> Result<(), StoreError>;
 }
 
+/// Borrow-lending impl, the same convention as `DefSourceReader for &T`.
+impl<T: ImportManifestStore + ?Sized> ImportManifestStore for &T {
+    fn load(&self, profile_dir: &Path) -> BTreeMap<String, ImportRecord> {
+        (**self).load(profile_dir)
+    }
+
+    fn save(
+        &self,
+        profile_dir: &Path,
+        records: &BTreeMap<String, ImportRecord>,
+    ) -> Result<(), StoreError> {
+        (**self).save(profile_dir, records)
+    }
+}
+
 /// The rules imported from RimSort's three database files, split by
 /// origin so the caller can report per-file counts.
 ///
@@ -425,6 +455,25 @@ pub struct ImportedRules {
     pub provenance: BTreeMap<String, ImportRecord>,
 }
 
+/// Borrow-lending impl, the same convention as `DefSourceReader for &T`.
+impl<T: RuleDatabaseFetcher + ?Sized> RuleDatabaseFetcher for &T {
+    fn status(
+        &self,
+        cache_dir: &Path,
+        enabled: &BTreeMap<RuleDatabase, bool>,
+    ) -> Vec<DatabaseStatus> {
+        (**self).status(cache_dir, enabled)
+    }
+
+    fn refresh(
+        &self,
+        cache_dir: &Path,
+        databases: &[RuleDatabase],
+    ) -> Vec<(RuleDatabase, RefreshOutcome)> {
+        (**self).refresh(cache_dir, databases)
+    }
+}
+
 /// Imports RimSort's `userRules.json`/`communityRules.json`/`steamDB.json`.
 pub trait RimSortImporter {
     /// Imports every rule naming only mods in `active` — keyed by
@@ -459,4 +508,17 @@ pub trait RimSortImporter {
         paths: &RimSortPaths,
         active: &BTreeMap<ModId, Option<u64>>,
     ) -> Result<ImportedRules, ImportError>;
+}
+
+/// Borrow-lending impl, the same convention as `DefSourceReader for &T`.
+/// Used by tests today (they share one fake importer with the use case
+/// under test); no production caller needs it yet.
+impl<T: RimSortImporter + ?Sized> RimSortImporter for &T {
+    fn import(
+        &self,
+        paths: &RimSortPaths,
+        active: &BTreeMap<ModId, Option<u64>>,
+    ) -> Result<ImportedRules, ImportError> {
+        (**self).import(paths, active)
+    }
 }

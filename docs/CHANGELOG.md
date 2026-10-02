@@ -4,6 +4,16 @@ This changelog starts at the first public release. Development history
 before that point is not summarized here — see `.journal/` in a
 maintainer's own checkout for the full record, if you have it.
 
+## [1.1.0] - 2026-10-02
+
+- **New: the Dashboard's Get started strip begins with Get the recommended
+  rules.** One click turns on, downloads (about 49 MB with the Steam
+  Workshop database), and imports the recommended rule databases, so the
+  suggested order uses them. It is skippable and needs internet access
+  unless only an import is left; nothing happens without the click. While
+  the step is offered, the two rule-database notices leave out the sources
+  it covers.
+
 ## [1.0.0] - 2026-10-01
 
 - **Distribution: Rimmerge ships as a portable zip, not an installer.**

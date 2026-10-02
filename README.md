@@ -19,7 +19,7 @@ shells over the same engine.
 
 ![Dashboard with the Suggested order selected: the Get started steps, and tiles for mods that move and findings needing input in each order](docs/screenshots/dashboard-suggested.png)
 
-*The dashboard on a synthetic mod list: Suggested selected, Apply is the current step, and the tiles compare it with Current.*
+*The dashboard on a synthetic mod list: the recommended rules imported, Suggested selected, Apply is the current step, and the tiles compare it with Current.*
 
 ![Mods page: selecting inactive mods to activate](docs/screenshots/mods-page/inactive-tab-selection.png)
 
@@ -102,8 +102,9 @@ breakdown, including where new code belongs:
   both automatically, at most once a day, but never before its
   first-run notice is answered, and never before you can turn it off;
   the large Steam Workshop database is on by default but never fetched
-  automatically, only by a manual Refresh click, `rimmerge db refresh`, or
-  the recommended-databases notice's "Turn on and download" button; the CLI
+  automatically, only by a manual Refresh click, `rimmerge db refresh`,
+  the recommended-databases notice's "Turn on and download" button, or the
+  Dashboard's "Get the recommended rules" step; the CLI
   never contacts either on its own. One switch skips every
   request entirely (no URL built, no socket opened), automatic or
   manual. See [docs/privacy-and-network.md](docs/privacy-and-network.md).

@@ -57,6 +57,9 @@ describe("describeCommandError", () => {
       "assignment_section_in_use",
       "stale_active_set",
       "texture_unsupported_format",
+      "already_running",
+      "recommended_rules_unavailable",
+      "app_settings_damaged",
     ] as const;
 
     const keys = codes.map((code) => {
@@ -65,6 +68,35 @@ describe("describeCommandError", () => {
     });
 
     expect(new Set(keys).size).toBe(codes.length);
+  });
+
+  it("words a refused recommended-rules click by which network gate was closed", () => {
+    const describeReason = (reason: "networkOff" | "awaitingFirstRun") =>
+      describeCommandError(
+        new RimmergeError({
+          code: "recommended_rules_unavailable",
+          message: "x",
+          detail: { kind: "recommendedRulesUnavailable", reason },
+        }),
+      );
+
+    expect(describeReason("networkOff").detail.key).toBe(
+      "error.code.recommended_rules_unavailable.networkOff",
+    );
+    expect(describeReason("awaitingFirstRun").detail.key).toBe(
+      "error.code.recommended_rules_unavailable.awaitingFirstRun",
+    );
+    expect(describeReason("networkOff").title.key).toBe(
+      "error.code.recommended_rules_unavailable.title",
+    );
+  });
+
+  it("keeps the code's own sentence when a refused click arrives without its detail", () => {
+    const described = describeCommandError(
+      new RimmergeError({ code: "recommended_rules_unavailable", message: "x" }),
+    );
+
+    expect(described.detail.key).toBe("error.code.recommended_rules_unavailable.detail");
   });
 
   it("falls back to the generic pair, with no technical detail, for a rejection that never reached the IPC boundary", () => {

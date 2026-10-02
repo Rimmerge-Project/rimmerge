@@ -319,12 +319,48 @@
     },
     "guide": {
       "heading": "Primeiros passos",
-      "intro": "Três passos levam a ordem de carregamento sugerida ao jogo. As páginas Achados e Regras ficam à disposição quando você quiser mais controle.",
+      "intro": "Quatro passos levam a ordem de carregamento sugerida ao jogo. As páginas Achados e Regras ficam à disposição quando você quiser mais controle.",
       "listLabel": "Passos para começar",
       "status": {
         "done": "Concluído",
         "current": "Passo atual",
-        "upcoming": "Ainda não"
+        "upcoming": "Ainda não",
+        "skipped": "Pulado",
+        "unavailable": "Indisponível"
+      },
+      "getRules": {
+        "title": "Obter as regras recomendadas",
+        "pending": "Obtém os bancos de dados de regras recomendados (as regras de ordem de carregamento da comunidade e o banco de dados da Oficina Steam) e os importa para este perfil, para que a ordem sugerida que você revisará em seguida já os use.",
+        "sourceTurnOn": "{source}: fonte desativada. Será ativada e baixada.",
+        "sourceDownload": "{source}: fonte ainda não baixada.",
+        "sourceRetry": "{source}: o último download falhou ({reason}).",
+        "sourceImport": "{source}: fonte baixada, ainda não importada.",
+        "downloadButton": "Baixar e importar",
+        "downloadButtonWithSteam": "Baixar e importar (cerca de 49 MB)",
+        "retryButton": "Tentar novamente",
+        "retryButtonWithSteam": "Tentar novamente (cerca de 49 MB)",
+        "importButton": "Importar",
+        "skip": "Pular",
+        "skippedText": "Pulado. Você ainda pode obtê-las na página Regras.",
+        "getNowButton": "Obter agora",
+        "getNowButtonWithSteam": "Obter agora (cerca de 49 MB)",
+        "doneText": "Importadas. A ordem sugerida as usa.",
+        "doneNotInUseText": "Importadas, mas as regras importadas estão desativadas em Configurações, então a ordem sugerida não as usa.",
+        "networkOff": "O acesso à internet está desativado, então nada pode ser baixado.",
+        "openSettings": "Abrir configurações",
+        "awaitingFirstRun": "Responda primeiro ao aviso de boas-vindas acima.",
+        "loadFailed": "Não foi possível verificar se as regras recomendadas estão configuradas.",
+        "downloading": "Baixando o banco de dados {source}…",
+        "importing": "Importando…",
+        "slowNote": "Baixar o banco de dados da Oficina Steam pode levar alguns minutos em uma conexão lenta.",
+        "resultDone": "Regras recomendadas importadas.",
+        "resultPartial": "Não foi possível baixar alguns bancos de dados de regras. O que foi baixado foi importado. Tente novamente mais tarde.",
+        "resultDownloadFailed": "Não foi possível baixar os bancos de dados de regras. Verifique sua conexão e tente novamente mais tarde.",
+        "resultNothingToDo": "As regras recomendadas já estavam importadas. Não havia nada para baixar.",
+        "resultImportFailedReadingFile": "As regras foram baixadas, mas não puderam ser lidas para a importação.",
+        "resultImportFailedSaving": "As regras foram baixadas, mas não puderam ser salvas neste perfil. Nada foi alterado.",
+        "resultManifestNotRecorded": "As regras foram importadas, mas o histórico de importação não pôde ser salvo. Clique novamente para concluir.",
+        "resultProfileChanged": "As regras foram baixadas. Outro perfil foi aberto nesse meio-tempo, então nada foi importado."
       },
       "chooseSuggested": {
         "title": "Usar a ordem sugerida",
@@ -397,8 +433,8 @@
       "title": "{count} banco de dados de regras recomendado não está configurado | {count} bancos de dados de regras recomendados não estão configurados",
       "body": "O Rimmerge ordena melhor com os três bancos de dados de regras. Ao ativá-los, eles são baixados na hora; depois, os pequenos são atualizados automaticamente, e o da Oficina Steam só quando você clica em Atualizar.",
       "bodyWithSteam": "O Rimmerge ordena melhor com os três bancos de dados de regras. Ao ativá-los, eles são baixados na hora. O banco de dados da Oficina Steam tem cerca de 49 MB e, depois, só é atualizado quando você clica em Atualizar; os pequenos são atualizados automaticamente.",
-      "sourceOff": "{source}: desativado",
-      "sourceNotDownloaded": "{source}: ativado, ainda não baixado"
+      "sourceOff": "{source}: fonte desativada",
+      "sourceNotDownloaded": "{source}: fonte ativada, ainda não baixada"
     },
     "actions": {
       "keepNetworkSettings": "Manter estas configurações",
@@ -498,6 +534,20 @@
       "stale_active_set": {
         "title": "A lista de mods ativos está desatualizada",
         "detail": "Escaneie novamente antes de escrever o ModsConfig.xml."
+      },
+      "already_running": {
+        "title": "Já em andamento",
+        "detail": "O Rimmerge já está fazendo isso. Aguarde a conclusão."
+      },
+      "recommended_rules_unavailable": {
+        "title": "Não é possível obter as regras recomendadas agora",
+        "detail": "Não é possível baixar nada no momento.",
+        "networkOff": "O acesso à internet está desativado. Ative-o em Configurações e tente novamente.",
+        "awaitingFirstRun": "Responda primeiro ao aviso de boas-vindas no Painel e tente novamente."
+      },
+      "app_settings_damaged": {
+        "title": "O arquivo de configurações do app está danificado",
+        "detail": "O Rimmerge não o alterou. Abra Configurações e salve suas configurações para repará-lo, depois tente novamente."
       },
       "texture_unsupported_format": {
         "title": "Não é possível exibir o formato da textura",

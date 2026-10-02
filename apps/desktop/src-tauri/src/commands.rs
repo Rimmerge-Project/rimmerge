@@ -25,6 +25,7 @@ pub mod notifications;
 pub mod order;
 pub mod patch;
 pub mod project;
+pub mod recommended_rules;
 pub mod rules;
 pub mod rules_databases;
 pub mod settings;
@@ -53,6 +54,10 @@ pub const EVENT_PROJECT_PROGRESS: &str = "project://progress";
 /// The `verify://progress` event name, emitted while [`verify::verify_order`]
 /// runs — see that module's own doc comment.
 pub const EVENT_VERIFY_PROGRESS: &str = "verify://progress";
+
+/// The `rules://recommended-progress` event name, emitted while
+/// [`recommended_rules::get_recommended_rules`] downloads and imports.
+pub const EVENT_RECOMMENDED_RULES_PROGRESS: &str = "rules://recommended-progress";
 
 /// The `session://changed` event name, emitted after any command that
 /// mutates the session.

@@ -319,12 +319,48 @@
     },
     "guide": {
       "heading": "开始使用",
-      "intro": "三个步骤即可将建议的加载顺序写入游戏。需要更多控制时，可以使用检查结果页和规则页。",
+      "intro": "四个步骤即可将建议的加载顺序写入游戏。需要更多控制时，可以使用检查结果页和规则页。",
       "listLabel": "入门步骤",
       "status": {
         "done": "已完成",
         "current": "当前步骤",
-        "upcoming": "尚未开始"
+        "upcoming": "尚未开始",
+        "skipped": "已跳过",
+        "unavailable": "不可用"
+      },
+      "getRules": {
+        "title": "获取推荐的规则",
+        "pending": "获取推荐的规则数据库（社区加载顺序规则和 Steam 创意工坊数据库），并将其导入此配置档案，这样你接下来查看的建议顺序就会用到它们。",
+        "sourceTurnOn": "{source}：已关闭。将开启并下载。",
+        "sourceDownload": "{source}：尚未下载。",
+        "sourceRetry": "{source}：上次下载失败（{reason}）。",
+        "sourceImport": "{source}：已下载，尚未导入。",
+        "downloadButton": "下载并导入",
+        "downloadButtonWithSteam": "下载并导入（约 49 MB）",
+        "retryButton": "重试",
+        "retryButtonWithSteam": "重试（约 49 MB）",
+        "importButton": "导入",
+        "skip": "跳过",
+        "skippedText": "已跳过。你仍可以在规则页获取它们。",
+        "getNowButton": "立即获取",
+        "getNowButtonWithSteam": "立即获取（约 49 MB）",
+        "doneText": "已导入。建议顺序会用到它们。",
+        "doneNotInUseText": "已导入，但导入的规则已在设置中关闭，因此建议顺序不会用到它们。",
+        "networkOff": "互联网访问已关闭，因此无法下载任何内容。",
+        "openSettings": "打开设置",
+        "awaitingFirstRun": "请先回应上方的欢迎通知。",
+        "loadFailed": "无法检查推荐的规则是否已设置好。",
+        "downloading": "正在下载“{source}”数据库…",
+        "importing": "正在导入…",
+        "slowNote": "网速较慢时，下载 Steam 创意工坊数据库可能需要几分钟。",
+        "resultDone": "已导入推荐的规则。",
+        "resultPartial": "部分规则数据库无法下载。已下载的部分已导入。请稍后重试。",
+        "resultDownloadFailed": "无法下载规则数据库。请检查你的网络连接，稍后重试。",
+        "resultNothingToDo": "推荐的规则此前已导入，没有需要下载的内容。",
+        "resultImportFailedReadingFile": "规则已下载，但导入时无法读取。",
+        "resultImportFailedSaving": "规则已下载，但无法保存到此配置档案。未做任何更改。",
+        "resultManifestNotRecorded": "规则已导入，但无法保存导入记录。请再次点击以完成。",
+        "resultProfileChanged": "规则已下载。但在此期间打开了另一个配置档案，因此没有导入任何内容。"
       },
       "chooseSuggested": {
         "title": "使用建议顺序",
@@ -498,6 +534,20 @@
       "stale_active_set": {
         "title": "已启用 Mod 列表已过期",
         "detail": "请在写入 ModsConfig.xml 之前重新扫描。"
+      },
+      "already_running": {
+        "title": "操作已在进行中",
+        "detail": "Rimmerge 已在执行此操作。请等待它完成。"
+      },
+      "recommended_rules_unavailable": {
+        "title": "暂时无法获取推荐的规则",
+        "detail": "当前无法下载。",
+        "networkOff": "互联网访问已关闭。请在设置中开启，然后重试。",
+        "awaitingFirstRun": "请先回应概览页上的欢迎通知，然后重试。"
+      },
+      "app_settings_damaged": {
+        "title": "应用设置文件已损坏",
+        "detail": "Rimmerge 未改动该文件。请打开设置并保存你的设置以修复它，然后重试。"
       },
       "texture_unsupported_format": {
         "title": "无法显示此纹理格式",

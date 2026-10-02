@@ -14,14 +14,14 @@
 
 use std::path::{Path, PathBuf};
 
-use rim_session::NetworkPolicy;
 use rim_session::notifications::{AppVersion, GameMajorMinor, GameMajorMinorParseError};
 use rim_session::ports::{NotificationStateStore as _, ProfileNotificationStateStore as _};
 use rim_session::use_cases::{
     AcknowledgeGameVersion, CheckForUpdate, CompleteWelcome, DismissNotification,
-    GameVersionAcknowledgement, ListNotifications, MuteNotificationKind, RefreshRuleDatabases,
+    ListNotifications, MuteNotificationKind, ProfileNotificationFacts, RefreshRuleDatabases,
     ResetSettings, RunLaunchNetworkChecks, UnmuteNotificationKind, UpdateCheckRequest,
 };
+use rim_session::{NetworkPolicy, StepSkip};
 use tauri::async_runtime::spawn_blocking;
 
 use crate::commands::emit_session_changed;
@@ -105,8 +105,9 @@ async fn list_notifications_with(
         let views = refresh.status(&policy, &cache_dir, &profile_dir);
 
         let current = GameMajorMinor::parse(&session.report().metadata.game_version);
-        let acknowledged = rim_io::JsonProfileNotificationStateStore::new()
-            .load(&profile_dir)
+        let profile_state = rim_io::JsonProfileNotificationStateStore::new().load(&profile_dir);
+        let recommended_rules_skip = StepSkip::from(profile_state.recommended_rules_skipped_at);
+        let acknowledged = profile_state
             .acknowledged_game_version
             .map(|raw| GameMajorMinor::parse(&raw));
 
@@ -119,9 +120,10 @@ async fn list_notifications_with(
             session.settings(),
             views,
             running.clone(),
-            GameVersionAcknowledgement {
+            ProfileNotificationFacts {
                 current,
                 acknowledged,
+                recommended_rules_skip,
             },
             jiff::Timestamp::now(),
         );
@@ -498,7 +500,7 @@ mod tests {
     use crate::dto::notifications::{
         NotificationDataDto, UpdateCheckRunOutcomeDto, UpdateCheckSkipReasonDto,
     };
-    use crate::dto::rule_databases::{RefreshOutcomeDto, SkipReasonDto};
+    use crate::dto::rule_databases::{RefreshOutcomeDto, RuleDatabaseDto, SkipReasonDto};
     use crate::dto::settings::SettingsDto;
     use crate::state::Adapters;
     use crate::test_support::session_fixture_with_temp_paths;
@@ -1037,6 +1039,59 @@ mod tests {
             .expect("a differing acknowledged version must produce the notice");
         assert_eq!(changed.acknowledged, "1.5");
         assert_eq!(changed.current, "1.6");
+    }
+
+    #[tokio::test]
+    async fn list_notifications_with_passes_the_profiles_recorded_skip_to_the_evaluator() {
+        let (_temp_dir, session) = session_fixture_with_temp_paths(&["a"]);
+        let profile_dir = session.paths().profile_dir.clone();
+        let state = AppState::default();
+        *state.session.write().expect("lock") = Some(session);
+        let base = tempfile::tempdir().expect("tempdir");
+        let cache_dir = tempfile::tempdir().expect("tempdir");
+        complete_welcome_at(base.path(), jiff::Timestamp::now()).expect("answer Welcome");
+        let steam_listed = |notices: &[NotificationDto]| {
+            notices.iter().any(|notice| match &notice.data {
+                NotificationDataDto::RecommendedSourcesIncomplete(data) => {
+                    data.sources.contains_key(&RuleDatabaseDto::Steam)
+                }
+                _ => false,
+            })
+        };
+
+        let offered = list_notifications_with(
+            &state,
+            base.path().to_path_buf(),
+            cache_dir.path().to_path_buf(),
+            NetworkPolicy::default(),
+            running(),
+        )
+        .await
+        .expect("list must succeed");
+        assert!(
+            !steam_listed(&offered),
+            "while the step offers Steam, the bell leaves it to the strip"
+        );
+
+        let store = rim_io::JsonProfileNotificationStateStore::new();
+        let mut profile_state = store.load(&profile_dir);
+        profile_state.recommended_rules_skipped_at = Some(jiff::Timestamp::UNIX_EPOCH);
+        store
+            .save(&profile_dir, &profile_state)
+            .expect("seed the skip");
+        let skipped = list_notifications_with(
+            &state,
+            base.path().to_path_buf(),
+            cache_dir.path().to_path_buf(),
+            NetworkPolicy::default(),
+            running(),
+        )
+        .await
+        .expect("list must succeed");
+        assert!(
+            steam_listed(&skipped),
+            "a skipped step hands Steam back to the bell notice"
+        );
     }
 
     #[tokio::test]

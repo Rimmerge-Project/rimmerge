@@ -64,7 +64,8 @@ export function useAppSettingsQuery() {
  * Also invalidates the notice list: `Welcome`'s own `network` field is a
  * snapshot taken at evaluation time, so a card/page reading the new
  * value through that notice (rather than through this same query) would
- * otherwise keep showing whatever was true before this save.
+ * otherwise keep showing whatever was true before this save. The Dashboard
+ * step reads `allow_network` too, so its query is invalidated as well.
  */
 export function useUpdateAppSettingsMutation() {
   const queryCache = useQueryCache();
@@ -73,6 +74,7 @@ export function useUpdateAppSettingsMutation() {
     onSuccess: () => {
       void queryCache.invalidateQueries({ key: queryKeys.appSettings() });
       void queryCache.invalidateQueries({ key: queryKeys.notifications() });
+      void queryCache.invalidateQueries({ key: queryKeys.recommendedRulesStep() });
     },
   });
 }
@@ -81,7 +83,8 @@ export function useUpdateAppSettingsMutation() {
  * Restores just the network half of the app settings to its defaults —
  * every switch back on — leaving the reminder threshold untouched.
  * Also invalidates the notice list, whose `Welcome` snapshot of the
- * network policy is stale after this reset.
+ * network policy is stale after this reset, and the Dashboard step, whose
+ * `unavailable` state follows `allow_network`.
  */
 export function useResetNetworkPolicyMutation() {
   const queryCache = useQueryCache();
@@ -90,6 +93,7 @@ export function useResetNetworkPolicyMutation() {
     onSuccess: () => {
       void queryCache.invalidateQueries({ key: queryKeys.appSettings() });
       void queryCache.invalidateQueries({ key: queryKeys.notifications() });
+      void queryCache.invalidateQueries({ key: queryKeys.recommendedRulesStep() });
     },
   });
 }

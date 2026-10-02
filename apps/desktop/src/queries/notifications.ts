@@ -23,13 +23,17 @@ export function useNotificationsQuery() {
   });
 }
 
-/** Dismisses one notice occurrence. */
+/**
+ * Dismisses one notice occurrence. Also invalidates the Dashboard step: dismissing
+ * `Welcome` answers the first-run notice, which the step's `awaitingFirstRun` state reads.
+ */
 export function useDismissNotificationMutation() {
   const queryCache = useQueryCache();
   return useMutation({
     mutation: (key: NotificationKeyDto) => dismissNotification(key),
     onSuccess: () => {
       void queryCache.invalidateQueries({ key: queryKeys.notifications() });
+      void queryCache.invalidateQueries({ key: queryKeys.recommendedRulesStep() });
     },
   });
 }
@@ -66,13 +70,14 @@ export function useUnmuteNotificationKindMutation() {
   });
 }
 
-/** Answers the first-run (Welcome) notice. */
+/** Answers the first-run (Welcome) notice. Also invalidates the Dashboard step, which waits on it. */
 export function useCompleteWelcomeMutation() {
   const queryCache = useQueryCache();
   return useMutation({
     mutation: () => completeWelcome(),
     onSuccess: () => {
       void queryCache.invalidateQueries({ key: queryKeys.notifications() });
+      void queryCache.invalidateQueries({ key: queryKeys.recommendedRulesStep() });
     },
   });
 }

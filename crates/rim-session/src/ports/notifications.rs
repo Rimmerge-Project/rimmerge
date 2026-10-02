@@ -205,6 +205,12 @@ pub struct ProfileNotificationState {
     /// [`crate::notifications::GameMajorMinor`]'s own `Display` output —
     /// `None` before the first project load has ever recorded one.
     pub acknowledged_game_version: Option<String>,
+    /// When the user skipped the Dashboard's "Get the recommended rules"
+    /// step for this profile — `None` until they do. Guide progress, not a
+    /// setting; it lives here because this file is already the home of
+    /// per-profile remembered UI state (see
+    /// `crate::recommended_rules::StepSkip` for how it is read).
+    pub recommended_rules_skipped_at: Option<jiff::Timestamp>,
 }
 
 /// Reads and writes `<profile>/notifications.json`. Implemented by

@@ -12,17 +12,23 @@ use rim_merge::emit::{FileContent, RenderedMod};
 use rim_resolve::domain::{AssignmentId, AssignmentProject, DecisionSet, PatchId, PatchProject};
 
 use crate::ProjectPaths;
+use crate::app_settings::AppSettings;
 use crate::ports::{
-    AboutImage, AboutReadError, AssetLocator, AssignmentProjectStore, BackReferenceShape,
-    ConfigError, DatabaseStatus, DecisionStore, DefCacheCarrier, DefCacheCarrierProbe,
-    DefSourceError, DefSourceReader, ElementExpectation, GameLogError, GameLogReader, ImportError,
-    ImportManifestStore, ImportRecord, ImportedRules, KindChoice, LoadedModKnowledge, LoadedRules,
-    LogFormats, LogShapes, MergeModError, MergeModWriteReport, MergeModWriter, ModAboutReader,
+    AboutImage, AboutReadError, AppSettingsLoad, AppSettingsStore, AssetLocator,
+    AssignmentProjectStore, BackReferenceShape, CachedDatabase, ConfigError, DatabaseStatus,
+    DecisionStore, DefCacheCarrier, DefCacheCarrierProbe, DefSourceError, DefSourceReader,
+    ElementExpectation, GameLogError, GameLogReader, ImportError, ImportManifestStore,
+    ImportRecord, ImportedRules, KindChoice, LoadedModKnowledge, LoadedRules, LogFormats,
+    LogShapes, MergeModError, MergeModWriteReport, MergeModWriter, ModAboutReader,
     ModKnowledgeStore, ModScanner, ModsConfigFile, ModsConfigStore, ParsedGameLog,
-    PatchProjectStore, PatchStackBlockShape, RefreshOutcome, RimSortImporter, RimSortPaths,
-    RuleDatabase, RuleDatabaseFetcher, RuleStore, RulesLoadWarning, ScanArtifacts, ScanError,
-    ScanProgress, ScanProgressStage, StackBlockSource, StoreError, StoredRules, TextureBytes,
+    PatchProjectStore, PatchStackBlockShape, ProfileNotificationState,
+    ProfileNotificationStateStore, RefreshOutcome, RimSortImporter, RimSortPaths, RuleDatabase,
+    RuleDatabaseFetcher, RuleStore, RulesLoadWarning, ScanArtifacts, ScanError, ScanProgress,
+    ScanProgressStage, StackBlockSource, StoreError, StoredRules, TextureBytes,
     TextureFallbackShape, TextureFallbackSource,
+};
+use crate::ports::{
+    IMPORT_SOURCE_COMMUNITY_RULES, IMPORT_SOURCE_STEAM_DEPENDENCIES, IMPORT_SOURCE_USER_RULES,
 };
 
 /// Always returns the given report/evidence/sources; invokes `progress`
@@ -637,6 +643,7 @@ impl ModKnowledgeStore for FakeModKnowledgeStore {
 pub struct InMemoryRuleStore {
     saved: RefCell<Option<StoredRules>>,
     fail_next_save: Cell<bool>,
+    saves: Cell<usize>,
     warn_on_next_load: RefCell<Vec<RulesLoadWarning>>,
 }
 
@@ -651,6 +658,12 @@ impl InMemoryRuleStore {
     #[must_use]
     pub fn last_saved(&self) -> Option<StoredRules> {
         self.saved.borrow().clone()
+    }
+
+    /// How many saves have succeeded.
+    #[must_use]
+    pub fn save_count(&self) -> usize {
+        self.saves.get()
     }
 
     /// Makes the next [`RuleStore::save`] call fail with a [`StoreError`],
@@ -682,6 +695,7 @@ impl RuleStore for InMemoryRuleStore {
             return Err(StoreError("simulated save failure".to_string()));
         }
         *self.saved.borrow_mut() = Some(rules.clone());
+        self.saves.set(self.saves.get() + 1);
         Ok(())
     }
 }
@@ -977,26 +991,63 @@ pub fn example_log_shapes() -> LogShapes {
     shapes
 }
 
-/// Always returns the given [`ImportedRules`], ignoring the input paths.
+/// Returns the given [`ImportedRules`], masked like the real importer: an
+/// origin whose path is `None` comes back `None` with no provenance record,
+/// and its snapshot is never made. [`Self::requests`] logs every call.
 pub struct FakeRimSortImporter {
     result: ImportedRules,
+    requests: RefCell<Vec<RimSortPaths>>,
+    fail_next_import: Cell<bool>,
 }
 
 impl FakeRimSortImporter {
     /// Builds a fake that always returns `result`.
     #[must_use]
     pub fn new(result: ImportedRules) -> Self {
-        Self { result }
+        Self {
+            result,
+            requests: RefCell::new(Vec::new()),
+            fail_next_import: Cell::new(false),
+        }
+    }
+
+    /// Makes the next [`RimSortImporter::import`] call fail once.
+    pub fn fail_next_import(&self) {
+        self.fail_next_import.set(true);
+    }
+
+    /// Every `paths` argument [`RimSortImporter::import`] was called with,
+    /// in order.
+    #[must_use]
+    pub fn requests(&self) -> Vec<RimSortPaths> {
+        self.requests.borrow().clone()
     }
 }
 
 impl RimSortImporter for FakeRimSortImporter {
     fn import(
         &self,
-        _paths: &RimSortPaths,
+        paths: &RimSortPaths,
         _active: &BTreeMap<ModId, Option<u64>>,
     ) -> Result<ImportedRules, ImportError> {
-        Ok(self.result.clone())
+        self.requests.borrow_mut().push(paths.clone());
+        if self.fail_next_import.replace(false) {
+            return Err(ImportError("injected importer failure".to_string()));
+        }
+        let mut result = self.result.clone();
+        if paths.user_rules.is_none() {
+            result.user_rules = None;
+            result.provenance.remove(IMPORT_SOURCE_USER_RULES);
+        }
+        if paths.community_rules.is_none() {
+            result.community_rules = None;
+            result.provenance.remove(IMPORT_SOURCE_COMMUNITY_RULES);
+        }
+        if paths.steam_db.is_none() {
+            result.steam_dependencies = None;
+            result.provenance.remove(IMPORT_SOURCE_STEAM_DEPENDENCIES);
+        }
+        Ok(result)
     }
 }
 
@@ -1011,6 +1062,7 @@ impl RimSortImporter for FakeRimSortImporter {
 pub struct InMemoryImportManifestStore {
     records: RefCell<BTreeMap<String, ImportRecord>>,
     fail_next_save: Cell<bool>,
+    saves: Cell<usize>,
 }
 
 impl InMemoryImportManifestStore {
@@ -1024,6 +1076,12 @@ impl InMemoryImportManifestStore {
     #[must_use]
     pub fn saved(&self) -> BTreeMap<String, ImportRecord> {
         self.records.borrow().clone()
+    }
+
+    /// How many saves have succeeded.
+    #[must_use]
+    pub fn save_count(&self) -> usize {
+        self.saves.get()
     }
 
     /// Makes the next [`ImportManifestStore::save`] call fail with a
@@ -1047,6 +1105,7 @@ impl ImportManifestStore for InMemoryImportManifestStore {
             return Err(StoreError("simulated save failure".to_string()));
         }
         self.records.borrow_mut().extend(records.clone());
+        self.saves.set(self.saves.get() + 1);
         Ok(())
     }
 }
@@ -1064,7 +1123,8 @@ impl ImportManifestStore for InMemoryImportManifestStore {
 pub struct FakeRuleDatabaseFetcher {
     outcomes: BTreeMap<RuleDatabase, RefreshOutcome>,
     omit: BTreeSet<RuleDatabase>,
-    status: Vec<DatabaseStatus>,
+    status: RefCell<Vec<DatabaseStatus>>,
+    is_tracking_cache: bool,
     refresh_requests: RefCell<Vec<(PathBuf, Vec<RuleDatabase>)>>,
     status_requests: RefCell<Vec<BTreeMap<RuleDatabase, bool>>>,
 }
@@ -1077,7 +1137,8 @@ impl FakeRuleDatabaseFetcher {
         Self {
             outcomes,
             omit: BTreeSet::new(),
-            status: Vec::new(),
+            status: RefCell::new(Vec::new()),
+            is_tracking_cache: false,
             refresh_requests: RefCell::new(Vec::new()),
             status_requests: RefCell::new(Vec::new()),
         }
@@ -1099,8 +1160,26 @@ impl FakeRuleDatabaseFetcher {
     /// Sets what `status` returns (default: empty).
     #[must_use]
     pub fn with_status(mut self, status: Vec<DatabaseStatus>) -> Self {
-        self.status = status;
+        self.status = RefCell::new(status);
         self
+    }
+
+    /// Makes the fake behave like the real adapter's cache: `status`
+    /// reports each row's `enabled` from the caller's map, and `refresh`
+    /// records its outcome into the rows `status` returns (an
+    /// `Updated` outcome caches the source and clears its last failure;
+    /// `Failed` records the failure and leaves any older cached copy).
+    /// Off by default, so a plain scripted `status` stays fixed.
+    #[must_use]
+    pub fn tracking_cache(mut self) -> Self {
+        self.is_tracking_cache = true;
+        self
+    }
+
+    /// The status rows as they stand now (after any tracked refreshes).
+    #[must_use]
+    pub fn status_rows(&self) -> Vec<DatabaseStatus> {
+        self.status.borrow().clone()
     }
 
     /// How many times [`RuleDatabaseFetcher::refresh`] was called.
@@ -1124,6 +1203,30 @@ impl FakeRuleDatabaseFetcher {
     }
 }
 
+impl FakeRuleDatabaseFetcher {
+    fn record_outcomes(&self, results: &[(RuleDatabase, RefreshOutcome)]) {
+        let mut rows = self.status.borrow_mut();
+        for (database, outcome) in results {
+            let Some(row) = rows.iter_mut().find(|row| row.database == *database) else {
+                continue;
+            };
+            match outcome {
+                RefreshOutcome::Updated { sha256, bytes } => {
+                    row.cached = Some(CachedDatabase {
+                        sha256: sha256.clone(),
+                        bytes: *bytes,
+                        fetched_at: jiff::Timestamp::UNIX_EPOCH,
+                    });
+                    row.last_failure = None;
+                }
+                RefreshOutcome::Unchanged { .. } => row.last_failure = None,
+                RefreshOutcome::Failed { failure } => row.last_failure = Some(failure.clone()),
+                RefreshOutcome::Skipped { .. } => {}
+            }
+        }
+    }
+}
+
 impl RuleDatabaseFetcher for FakeRuleDatabaseFetcher {
     fn status(
         &self,
@@ -1131,7 +1234,13 @@ impl RuleDatabaseFetcher for FakeRuleDatabaseFetcher {
         enabled: &BTreeMap<RuleDatabase, bool>,
     ) -> Vec<DatabaseStatus> {
         self.status_requests.borrow_mut().push(enabled.clone());
-        self.status.clone()
+        let mut rows = self.status.borrow().clone();
+        if self.is_tracking_cache {
+            for row in &mut rows {
+                row.enabled = enabled.get(&row.database).copied().unwrap_or(false);
+            }
+        }
+        rows
     }
 
     fn refresh(
@@ -1142,7 +1251,7 @@ impl RuleDatabaseFetcher for FakeRuleDatabaseFetcher {
         self.refresh_requests
             .borrow_mut()
             .push((cache_dir.to_path_buf(), databases.to_vec()));
-        databases
+        let results: Vec<(RuleDatabase, RefreshOutcome)> = databases
             .iter()
             .filter(|database| !self.omit.contains(database))
             .map(|database| {
@@ -1155,6 +1264,171 @@ impl RuleDatabaseFetcher for FakeRuleDatabaseFetcher {
                 });
                 (*database, outcome)
             })
-            .collect()
+            .collect();
+        if self.is_tracking_cache {
+            self.record_outcomes(&results);
+        }
+        results
+    }
+}
+
+/// An in-memory per-profile notification state store: `load` returns
+/// [`ProfileNotificationState::default`] until something has been saved.
+/// [`InMemoryProfileNotificationStateStore::fail_next_save`] injects a
+/// one-shot save failure; [`InMemoryProfileNotificationStateStore::save_count`]
+/// counts successful saves, so a test can assert a call wrote nothing.
+#[derive(Default)]
+pub struct InMemoryProfileNotificationStateStore {
+    state: RefCell<ProfileNotificationState>,
+    should_fail_next_save: Cell<bool>,
+    saves: Cell<usize>,
+}
+
+impl InMemoryProfileNotificationStateStore {
+    /// Builds an empty fake.
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Makes the next [`ProfileNotificationStateStore::save`] fail with a
+    /// [`StoreError`], then resets.
+    pub fn fail_next_save(&self) {
+        self.should_fail_next_save.set(true);
+    }
+
+    /// How many saves have succeeded.
+    #[must_use]
+    pub fn save_count(&self) -> usize {
+        self.saves.get()
+    }
+
+    /// Replaces the stored state without counting as a save.
+    pub fn seed(&self, state: ProfileNotificationState) {
+        *self.state.borrow_mut() = state;
+    }
+}
+
+impl ProfileNotificationStateStore for InMemoryProfileNotificationStateStore {
+    fn load(&self, _profile_dir: &Path) -> ProfileNotificationState {
+        self.state.borrow().clone()
+    }
+
+    fn save(
+        &self,
+        _profile_dir: &Path,
+        state: &ProfileNotificationState,
+    ) -> Result<(), StoreError> {
+        if self.should_fail_next_save.replace(false) {
+            return Err(StoreError("simulated save failure".to_string()));
+        }
+        *self.state.borrow_mut() = state.clone();
+        self.saves.set(self.saves.get() + 1);
+        Ok(())
+    }
+}
+
+/// An in-memory [`AppSettingsStore`]. `load` answers `Missing` until
+/// something is seeded or saved; [`Self::recovered`] makes it answer
+/// `Recovered`. [`Self::fail_next_save`] injects a one-shot save failure
+/// and [`Self::save_count`] counts successful saves.
+#[derive(Default)]
+pub struct InMemoryAppSettingsStore {
+    settings: RefCell<Option<AppSettings>>,
+    is_recovered: bool,
+    should_fail_next_save: Cell<bool>,
+    saves: Cell<usize>,
+    racing_writer: RefCell<Option<AppSettings>>,
+}
+
+impl InMemoryAppSettingsStore {
+    /// A store holding `settings`.
+    #[must_use]
+    pub fn loaded(settings: AppSettings) -> Self {
+        Self {
+            settings: RefCell::new(Some(settings)),
+            ..Self::default()
+        }
+    }
+
+    /// A store whose file is damaged (`load` answers `Recovered`).
+    #[must_use]
+    pub fn recovered() -> Self {
+        Self {
+            is_recovered: true,
+            ..Self::default()
+        }
+    }
+
+    /// A store whose first write finds `winner`'s file already there:
+    /// `load` still answers `Missing`, then `save_if_missing` keeps the
+    /// winner's settings and writes nothing.
+    #[must_use]
+    pub fn losing_a_race_to(winner: AppSettings) -> Self {
+        Self {
+            racing_writer: RefCell::new(Some(winner)),
+            ..Self::default()
+        }
+    }
+
+    /// A store whose first save fails, as [`Self::fail_next_save`] would.
+    #[must_use]
+    pub fn failing_next_save() -> Self {
+        Self {
+            should_fail_next_save: Cell::new(true),
+            ..Self::default()
+        }
+    }
+
+    /// Makes the next save fail with a [`StoreError`], then resets.
+    pub fn fail_next_save(&self) {
+        self.should_fail_next_save.set(true);
+    }
+
+    /// How many saves have succeeded.
+    #[must_use]
+    pub fn save_count(&self) -> usize {
+        self.saves.get()
+    }
+
+    /// The settings last saved or seeded, if any.
+    #[must_use]
+    pub fn saved(&self) -> Option<AppSettings> {
+        *self.settings.borrow()
+    }
+}
+
+impl AppSettingsStore for InMemoryAppSettingsStore {
+    fn load(&self, _base: &Path) -> AppSettingsLoad {
+        if self.is_recovered {
+            return AppSettingsLoad::Recovered {
+                reason: "corrupt".to_string(),
+            };
+        }
+        match *self.settings.borrow() {
+            Some(settings) => AppSettingsLoad::Loaded(settings),
+            None => AppSettingsLoad::Missing,
+        }
+    }
+
+    fn save(&self, _base: &Path, settings: &AppSettings) -> Result<(), StoreError> {
+        if self.should_fail_next_save.replace(false) {
+            return Err(StoreError("simulated save failure".to_string()));
+        }
+        *self.settings.borrow_mut() = Some(*settings);
+        self.saves.set(self.saves.get() + 1);
+        Ok(())
+    }
+
+    fn save_if_missing(&self, base: &Path, settings: &AppSettings) -> Result<(), StoreError> {
+        if let Some(winner) = self.racing_writer.borrow_mut().take() {
+            *self.settings.borrow_mut() = Some(winner);
+            return Ok(());
+        }
+        // A damaged file is never overwritten by a pin.
+        if self.is_recovered || self.settings.borrow().is_some() {
+            return Ok(());
+        }
+        self.save(base, settings)
     }
 }

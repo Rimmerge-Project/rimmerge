@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 // Type-only: pulls in `Window.__E2E_MOCK_IPC__`'s ambient declaration.
 import type {} from "../../src/e2e-mock-bootstrap";
+import { LOCALE_OPTIONS } from "../../src/i18n/locales";
 import { loadScenario } from "./support";
 
 /**
@@ -409,4 +410,168 @@ test.describe("def-cache note", () => {
       "about 8 seconds on your last log",
     );
   });
+});
+
+/**
+ * Column widths must be declared, never measured from whichever rows are
+ * rendered: the table is virtualized, so an auto-layout table re-sizes its
+ * columns as different rows scroll into the DOM.
+ */
+test.describe("startup cost column widths", () => {
+  async function headerWidths(page: Page): Promise<number[]> {
+    return page
+      .getByTestId("startup-table")
+      .locator("thead th")
+      .evaluateAll((cells) => cells.map((cell) => cell.getBoundingClientRect().width));
+  }
+
+  async function scrollToBottomAndSettle(page: Page): Promise<void> {
+    await scrollStartupTableToBottom(page);
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+        }),
+    );
+  }
+
+  test("no column changes width between the top and the bottom of the stock table", async ({
+    page,
+  }) => {
+    await loadScenario(page);
+    await page.getByTestId("nav-startup").click();
+    await expect(page.getByTestId("startup-table")).toBeVisible();
+
+    const atTop = await headerWidths(page);
+    await scrollToBottomAndSettle(page);
+    const atBottom = await headerWidths(page);
+
+    expect(atBottom).toHaveLength(atTop.length);
+    atTop.forEach((width, column) => {
+      expect(Math.abs((atBottom[column] ?? Number.NaN) - width), `column ${column}`).toBeLessThan(
+        0.5,
+      );
+    });
+  });
+
+  test("long mod ids at the bottom change neither the name column nor the horizontal scroll", async ({
+    page,
+  }) => {
+    // Descending texture bytes is the default sort, so the smallest rows (the
+    // long invented ids) are the last ones to scroll into view.
+    await page.addInitScript(() => {
+      const rows = Array.from({ length: 120 }, (_, index) => {
+        const isLongId = index < 4;
+        return {
+          modId: isLongId
+            ? `invented.studio.${"extraordinarily-long-identifier-".repeat(3)}${index}`
+            : `invented.mod.${String(index).padStart(3, "0")}`,
+          patchOps: index % 7,
+          slowXpathOps: index % 3,
+          textureFiles: index * 3,
+          textureBytes: (index + 1) * 8_000_000,
+          ddsFiles: index % 5,
+          assemblyCount: index % 2,
+          assemblyBytes: (index % 2) * 250_000,
+          defCount: index * 2,
+          contentOnly: index % 2 === 0,
+          overriddenTextureBytes: index === 119 ? 1_000_000_000 : 0,
+        };
+      });
+      window.__STARTUP_COSTS_OVERRIDE__ = rows;
+    });
+    await loadScenario(page);
+    await page.getByTestId("nav-startup").click();
+    await expect(page.getByTestId("startup-table")).toBeVisible();
+
+    const scroller = page.getByTestId("startup-table-scroll");
+    const nameWidthAndScrollWidth = async () => ({
+      nameWidth: (await headerWidths(page))[0],
+      scrollWidth: await scroller.evaluate((el) => el.scrollWidth),
+    });
+
+    const atTop = await nameWidthAndScrollWidth();
+    await scrollToBottomAndSettle(page);
+    await expect(
+      page.locator('[data-testid^="startup-row-invented.studio."]').first(),
+    ).toBeVisible();
+    const atBottom = await nameWidthAndScrollWidth();
+
+    expect(atBottom.nameWidth).toBeCloseTo(atTop.nameWidth ?? Number.NaN, 0);
+    expect(atBottom.scrollWidth).toBe(atTop.scrollWidth);
+  });
+
+  // Ukrainian has the longest wording of the two log-derived columns
+  // ("щонайменше 999 (98901 мс)"), so it is the case the widths are sized for.
+  for (const option of LOCALE_OPTIONS.filter(({ locale }) => ["en", "uk"].includes(locale))) {
+    test(`the widest realistic cell values fit their declared columns in ${option.locale}`, async ({
+      page,
+    }) => {
+      // A logging gap makes the log-derived columns lower bounds, which is
+      // their longest wording: "at least 999 (98901 ms)" and "at least 99999".
+      await page.addInitScript(() => {
+        const attribution = { kind: "mod", modId: "mod.000" } as const;
+        window.__IMPORT_GAME_LOG_OVERRIDES__ = {
+          timers: Array.from({ length: 999 }, () => ({
+            attribution,
+            label: "load",
+            milliseconds: 99,
+            pass: 2,
+          })),
+          ddsFailures: Array.from({ length: 99999 }, () => ({
+            attribution,
+            path: "C:/RimWorld/Mods/mod.000/Textures/bad.dds",
+            width: 130,
+            height: 130,
+            format: "BC7",
+          })),
+          loggingGaps: [{ stopLine: 120, end: { kind: "resumed", line: 131 } }],
+        };
+        window.__STARTUP_COSTS_OVERRIDE__ = Array.from({ length: 30 }, (_, index) => ({
+          modId: `mod.${String(index).padStart(3, "0")}`,
+          patchOps: 99999,
+          slowXpathOps: 99999,
+          textureFiles: 99999,
+          textureBytes: 1_048_575 - index,
+          ddsFiles: 99999,
+          assemblyCount: 99999,
+          assemblyBytes: 1_099_500_000_000,
+          defCount: 99999,
+          contentOnly: true,
+          overriddenTextureBytes: 1_048_575,
+        }));
+      });
+      await loadScenario(page);
+      await page.getByTestId("nav-settings").click();
+      await page.getByTestId("language-picker-select").click();
+      const name = option.isPreview ? `${option.nativeName} (preview)` : option.nativeName;
+      await page.getByRole("option", { name, exact: true }).click();
+      await expect(page.locator("html")).toHaveAttribute("lang", option.locale);
+
+      await page.getByTestId("nav-startup").click();
+      await page.evaluate(() => {
+        window.__PICK_FILE_RESULT__ = "C:/RimWorld/Player.log";
+      });
+      await page.getByTestId("import-game-log-button").click();
+      await expect(page.getByTestId("startup-observed-timers-mod.000")).toContainText("999");
+      await expect(page.getByTestId("startup-bad-dds-mod.000")).toContainText("99999");
+
+      const clipped = await page
+        .getByTestId("startup-table")
+        .locator("tbody tr[data-testid]")
+        .evaluateAll((rows) =>
+          rows.flatMap((row) =>
+            // Skip the name cell (index 0): it truncates by design.
+            Array.from(row.children)
+              .slice(1)
+              .map((cell, index) => ({
+                column: index + 1,
+                overflow: cell.scrollWidth - cell.clientWidth,
+              }))
+              .filter((cell) => cell.overflow > 0),
+          ),
+        );
+      expect(clipped).toEqual([]);
+    });
+  }
 });

@@ -306,6 +306,15 @@ struct ProfileNotificationStateFile {
     schema: u32,
     #[serde(default)]
     acknowledged_game_version: Option<String>,
+    /// RFC 3339 timestamp of the user skipping the Dashboard's "Get the
+    /// recommended rules" step for this profile. Lives in the
+    /// notifications file rather than a new one: it is app-remembered
+    /// guide state like `acknowledged_game_version`, loads leniently, and
+    /// one timestamp is not worth a new port and adapter. Additive:
+    /// `#[serde(default)]`, so older files load as not skipped and older
+    /// binaries keep the key through `extra`.
+    #[serde(default)]
+    recommended_rules_skipped_at: Option<String>,
     #[serde(flatten)]
     extra: serde_json::Map<String, serde_json::Value>,
 }
@@ -344,6 +353,7 @@ impl ProfileNotificationStateStore for JsonProfileNotificationStateStore {
         };
         ProfileNotificationState {
             acknowledged_game_version: file.acknowledged_game_version,
+            recommended_rules_skipped_at: parse_timestamp(&file.recommended_rules_skipped_at),
         }
     }
 
@@ -360,6 +370,9 @@ impl ProfileNotificationStateStore for JsonProfileNotificationStateStore {
         let file = ProfileNotificationStateFile {
             schema: SCHEMA_VERSION,
             acknowledged_game_version: state.acknowledged_game_version.clone(),
+            recommended_rules_skipped_at: state
+                .recommended_rules_skipped_at
+                .map(|at| at.to_string()),
             extra,
         };
         let bytes = serde_json::to_vec_pretty(&file)
@@ -566,6 +579,7 @@ mod tests {
         let store = JsonProfileNotificationStateStore::new();
         let state = ProfileNotificationState {
             acknowledged_game_version: Some("1.7".to_string()),
+            recommended_rules_skipped_at: None,
         };
 
         store.save(dir.path(), &state).expect("save must succeed");
@@ -591,5 +605,55 @@ mod tests {
             raw.contains("future_field"),
             "an unknown field must survive a load/save round trip: {raw}"
         );
+    }
+
+    #[test]
+    fn profile_notifications_round_trip_the_skip_timestamp() {
+        let dir = tempdir().expect("tempdir");
+        let store = JsonProfileNotificationStateStore::new();
+        let state = ProfileNotificationState {
+            acknowledged_game_version: None,
+            recommended_rules_skipped_at: Some(
+                "2026-10-01T12:30:00Z".parse().expect("valid timestamp"),
+            ),
+        };
+
+        store.save(dir.path(), &state).expect("save must succeed");
+
+        assert_eq!(store.load(dir.path()), state);
+    }
+
+    #[test]
+    fn an_older_profile_file_without_the_field_loads_not_skipped() {
+        let dir = tempdir().expect("tempdir");
+        std::fs::write(
+            notifications_path(dir.path()),
+            br#"{"schema": 1, "acknowledged_game_version": "1.6"}"#,
+        )
+        .expect("write");
+
+        let state = JsonProfileNotificationStateStore::new().load(dir.path());
+
+        assert_eq!(state.recommended_rules_skipped_at, None);
+        assert_eq!(state.acknowledged_game_version.as_deref(), Some("1.6"));
+    }
+
+    #[test]
+    fn an_unknown_key_survives_a_save_that_sets_the_skip() {
+        let dir = tempdir().expect("tempdir");
+        std::fs::write(
+            notifications_path(dir.path()),
+            br#"{"schema": 1, "future_field": "kept"}"#,
+        )
+        .expect("write");
+        let store = JsonProfileNotificationStateStore::new();
+        let mut state = store.load(dir.path());
+        state.recommended_rules_skipped_at = Some(jiff::Timestamp::UNIX_EPOCH);
+
+        store.save(dir.path(), &state).expect("save must succeed");
+
+        let raw = std::fs::read_to_string(notifications_path(dir.path())).expect("read back");
+        assert!(raw.contains("future_field"), "unknown key lost: {raw}");
+        assert_eq!(store.load(dir.path()), state);
     }
 }

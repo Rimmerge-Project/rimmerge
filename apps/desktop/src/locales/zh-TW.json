@@ -166,7 +166,7 @@
     },
     "network": {
       "heading": "網際網路存取",
-      "recoveredWarning": "無法讀取你的應用程式設定檔，因此在你再次儲存設定之前，網際網路存取為關閉狀態。",
+      "recoveredWarning": "無法讀取你的應用程式設定檔案，因此在你再次儲存設定之前，網際網路存取為關閉狀態。",
       "allowNetwork": {
         "label": "允許網際網路存取",
         "description": "Rimmerge 透過網際網路傳送的一切（無論自動或手動）的總開關。它只會連線到兩個 GitHub 主機：api.github.com 用於檢查更新，raw.githubusercontent.com 用於重新整理規則資料庫，絕不會連線到你的區域網路。關閉時，所有請求都會在組成任何位址或開啟任何連線之前被略過。此設定適用於這台電腦上的整個應用程式，不論你開啟哪個 RimWorld 安裝。"
@@ -319,12 +319,48 @@
     },
     "guide": {
       "heading": "開始使用",
-      "intro": "三個步驟即可將建議的載入順序套用到遊戲中。需要更多控制時，可以使用「檢查結果」和「規則」頁面。",
+      "intro": "透過四個步驟將建議的載入順序套用到遊戲中。需要更多控制時，可以使用「檢查結果」和「規則」頁面。",
       "listLabel": "入門步驟",
       "status": {
         "done": "完成",
         "current": "目前步驟",
-        "upcoming": "尚未開始"
+        "upcoming": "尚未開始",
+        "skipped": "已略過",
+        "unavailable": "無法使用"
+      },
+      "getRules": {
+        "title": "取得建議的規則",
+        "pending": "取得建議的規則資料庫（社群載入順序規則和 Steam 創意工坊資料庫）並匯入此設定檔，這樣你接下來檢閱的建議順序就會採用這些規則。",
+        "sourceTurnOn": "{source}：已關閉。將會開啟並下載。",
+        "sourceDownload": "{source}：尚未下載。",
+        "sourceRetry": "{source}：上次下載失敗（{reason}）。",
+        "sourceImport": "{source}：已下載，尚未匯入。",
+        "downloadButton": "下載並匯入",
+        "downloadButtonWithSteam": "下載並匯入（約 49 MB）",
+        "retryButton": "再試一次",
+        "retryButtonWithSteam": "再試一次（約 49 MB）",
+        "importButton": "匯入",
+        "skip": "略過",
+        "skippedText": "已略過。你仍可以從「規則」頁面取得它們。",
+        "getNowButton": "立即取得",
+        "getNowButtonWithSteam": "立即取得（約 49 MB）",
+        "doneText": "已匯入。建議的順序會使用它們。",
+        "doneNotInUseText": "已匯入，但匯入的規則已在「設定」中關閉，因此建議的順序不會使用它們。",
+        "networkOff": "網際網路存取已關閉，因此無法下載任何內容。",
+        "openSettings": "開啟設定",
+        "awaitingFirstRun": "請先回應上方的歡迎通知。",
+        "loadFailed": "無法確認建議的規則是否已設定好。",
+        "downloading": "{source}資料庫下載中…",
+        "importing": "正在匯入…",
+        "slowNote": "連線速度較慢時，下載 Steam 創意工坊資料庫可能需要幾分鐘。",
+        "resultDone": "已匯入建議的規則。",
+        "resultPartial": "有些規則資料庫無法下載。已下載的部分都已匯入。請稍後再試。",
+        "resultDownloadFailed": "無法下載規則資料庫。請檢查你的網路連線，並稍後再試。",
+        "resultNothingToDo": "建議的規則先前已匯入。沒有需要下載的內容。",
+        "resultImportFailedReadingFile": "規則已下載，但無法讀取以進行匯入。",
+        "resultImportFailedSaving": "規則已下載，但無法儲存到此設定檔。未變更任何內容。",
+        "resultManifestNotRecorded": "規則已匯入，但無法儲存匯入紀錄。請再按一次以完成。",
+        "resultProfileChanged": "規則已下載。在此期間開啟了另一個設定檔，因此未匯入任何內容。"
       },
       "chooseSuggested": {
         "title": "使用建議的順序",
@@ -498,6 +534,20 @@
       "stale_active_set": {
         "title": "已啟用模組清單已過時",
         "detail": "寫入 ModsConfig.xml 前請重新掃描。"
+      },
+      "already_running": {
+        "title": "正在進行中",
+        "detail": "Rimmerge 已在執行這項操作。請等它完成。"
+      },
+      "recommended_rules_unavailable": {
+        "title": "目前無法取得建議的規則",
+        "detail": "目前無法下載。",
+        "networkOff": "網際網路存取已關閉。請在「設定」中開啟，然後再試一次。",
+        "awaitingFirstRun": "請先回應「總覽」上的歡迎通知，然後再試一次。"
+      },
+      "app_settings_damaged": {
+        "title": "應用程式設定檔案已損毀",
+        "detail": "Rimmerge 未更動該檔案。請開啟設定並儲存你的設定以修復它，然後再試一次。"
       },
       "texture_unsupported_format": {
         "title": "無法顯示此紋理格式",

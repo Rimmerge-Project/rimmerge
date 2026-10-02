@@ -9,6 +9,8 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+use crate::dto::recommended_rules::UnavailableReasonDto;
+
 mod assignments;
 mod def_graphics;
 mod findings;
@@ -16,6 +18,7 @@ mod merge;
 mod mods;
 mod patches;
 mod project;
+mod recommended_rules;
 
 // Sibling-file tests; `#[path]` keeps the module named `tests`.
 #[cfg(test)]
@@ -95,6 +98,19 @@ pub enum CommandErrorCode {
     /// `.dds`, for one): a property of the file, not of the request — the
     /// view says so in its own words instead of echoing this message.
     TextureUnsupportedFormat,
+    /// A "Get the recommended rules" run is already in progress in this
+    /// process (a double click, or a second window); the caller waits for
+    /// the first run instead of starting another.
+    AlreadyRunning,
+    /// "Get the recommended rules" was asked to download while a network
+    /// gate is closed (the offline switch, or the first-run notice not yet
+    /// answered): [`CommandErrorDetail::RecommendedRulesUnavailable`] says
+    /// which.
+    RecommendedRulesUnavailable,
+    /// `app-settings.json` is damaged (unreadable or corrupt) and was left
+    /// untouched: the fix is Settings' repair, not a retry, so it is not
+    /// `ProfileIoFailed`.
+    AppSettingsDamaged,
 }
 
 /// Structured detail some [`CommandError`]s carry alongside their plain
@@ -119,6 +135,11 @@ pub enum CommandErrorDetail {
         /// exactly this).
         #[serde(rename = "referencedBy")]
         referenced_by: Vec<SectionReferenceDto>,
+    },
+    /// See [`CommandErrorCode::RecommendedRulesUnavailable`].
+    RecommendedRulesUnavailable {
+        /// Which network gate is closed.
+        reason: UnavailableReasonDto,
     },
 }
 
@@ -287,6 +308,15 @@ impl CommandError {
         Self::new(
             CommandErrorCode::DefNotFound,
             format!("{def_ref} is not indexed as a def or template"),
+        )
+    }
+
+    /// A "Get the recommended rules" run is already in progress.
+    #[must_use]
+    pub fn already_running() -> Self {
+        Self::new(
+            CommandErrorCode::AlreadyRunning,
+            "the recommended rules are already being downloaded",
         )
     }
 

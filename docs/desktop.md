@@ -17,17 +17,62 @@ The landing page once a profile is open: a getting-started strip, then a
 summary of the current report — active mod count, open findings by kind,
 and quick links into the pages below.
 
-The strip has three steps: use the suggested order, Apply, confirm. Each
-step's state is read from what the app already knows (which order is
-selected, whether `ModsConfig.xml` already lists the suggested order, and
-whether the active-mod set has changes no rescan has picked up), so
-nothing about your progress is stored. It does not claim you reviewed the
+The strip has four steps: get the recommended rules, use the suggested
+order, Apply, confirm. Each step's state is read from what the app
+already knows (which order is selected, whether `ModsConfig.xml` already
+lists the suggested order, whether the active-mod set has changes no
+rescan has picked up, and what the recommended-rules step below reports),
+so nothing about your progress is stored, with one exception: Skip on step
+one. It does not claim you reviewed the
 suggestion; it links to the Load order page and leaves that to you.
 "Done" means `ModsConfig.xml` matches the suggested order as of the last
 scan or apply, and no activation change is waiting for a rescan. While the
 working set is stale, step two offers Rescan instead of Apply, even if the
 file matched at the last scan. The number of findings that still need input appears as
 a quiet line with a link to the Inbox; it never blocks Apply.
+
+**Step one, Get the recommended rules,** downloads the two importable
+rule databases (the community load-order rules and the Steam Workshop
+database) and imports them into this profile, so the suggested order you
+review next already uses them. It never runs on its own: nothing happens
+until you click, and the step lists, before you do, what the click will do
+for each source (turn it on and download it, download it, or import the
+copy already downloaded). The button names the size, about 49 MB, only
+when the Steam Workshop database has to be downloaded; it reads **Try
+again** when a download failed last time, and **Import** when only an
+import is left. The click downloads only the sources that are switched off or not downloaded yet, never imports a
+source this profile already imported, and never touches your own RimSort
+`userRules.json`. A progress line names the source being downloaded, with
+a note that the Steam Workshop database can take a few minutes on a slow
+connection, and a message afterwards says what happened: everything
+imported, some downloads failed (what did download was imported), nothing
+could be downloaded, there was nothing to do (an already-finished step
+clicked again), the import failed (one sentence says whether the downloaded
+file could not be read or the rules could not be saved, with the technical
+details underneath), the import record could not be saved (click again),
+or another profile was opened meanwhile.
+
+The step is one of five states. **Offered** holds the strip on step one
+until you act (importing changes the suggested order, so even a matching
+`ModsConfig.xml` does not read as finished while the step is offered).
+**Not available** appears when something has to be downloaded but
+internet access is off (with a link to Settings) or the first-run notice
+on the Dashboard is not answered yet; it never holds the strip, which
+moves on to step two. A step that only needs an import ignores both
+gates, since importing contacts nothing. **Skipped** is what **Skip**
+leaves: remembered for this profile, the strip moves on, and a **Get them
+now** button stays. The skipped row lists what the click would do for each
+source, exactly as the offered row does, and the button names the size
+(about 49 MB) when the Steam Workshop database would be turned on and
+downloaded, so nothing is switched on or downloaded without being said
+beforehand. While internet access is off or the first-run notice is
+unanswered, a click that needs a download is refused with a message
+saying which. **Done** means every importable source has been
+imported into this profile at least once; newer downloaded content is the
+job of the "New rule content to import" notice, not of this step. While a
+click is running the step shows its progress, in every window, and a
+second click is refused. The Rules page's Databases card remains the
+other way to download, then import.
 
 A project opens on the **suggested** order, the one Apply writes by
 default. The Current/Suggested switch in the app shell changes which
@@ -362,6 +407,12 @@ explicitly unmuted from Settings → Internet access.
   Rules page's Import from RimSort button) once a source's cache has
   content this profile hasn't imported yet — nothing imports on its
   own.
+
+  While the Dashboard's **Get the recommended rules** step is offering a
+  source (step one, above), these two notices leave that source to the
+  step, so there is one call to action instead of two. Once the step is
+  done or skipped, or while it is not available, both behave as described.
+  Skipping the step is what brings the quiet reminder back.
 - **Game version changed** (after a RimWorld update) points at the
   Compatibility patches page, since exported patches and patch-maker
   mods still declare the old game version until re-exported; dismissing

@@ -319,12 +319,48 @@
     },
     "guide": {
       "heading": "はじめに",
-      "intro": "3つのステップで、提案されたロード順をゲームに反映できます。さらに細かく制御したいときは、「検出結果」と「ルール」のページを使えます。",
+      "intro": "4つのステップで、提案されたロード順をゲームに反映できます。さらに細かく制御したいときは、「検出結果」と「ルール」のページを使えます。",
       "listLabel": "はじめの手順",
       "status": {
         "done": "完了",
         "current": "現在の手順",
-        "upcoming": "未着手"
+        "upcoming": "未着手",
+        "skipped": "スキップ済み",
+        "unavailable": "利用不可"
+      },
+      "getRules": {
+        "title": "推奨ルールを取得",
+        "pending": "推奨ルールデータベース（コミュニティのロード順ルールとSteamワークショップのデータベース）を取得し、このプロファイルにインポートします。これにより、次に確認する提案された順序で、これらのルールがすでに使われます。",
+        "sourceTurnOn": "{source}：オフ。オンにしてからダウンロードします。",
+        "sourceDownload": "{source}：まだダウンロードされていません。",
+        "sourceRetry": "{source}：前回のダウンロードに失敗しました（{reason}）。",
+        "sourceImport": "{source}：ダウンロード済みですが、まだインポートされていません。",
+        "downloadButton": "ダウンロードしてインポート",
+        "downloadButtonWithSteam": "ダウンロードしてインポート（約49 MB）",
+        "retryButton": "再試行",
+        "retryButtonWithSteam": "再試行（約49 MB）",
+        "importButton": "インポート",
+        "skip": "スキップ",
+        "skippedText": "スキップしました。後から「ルール」ページで取得することもできます。",
+        "getNowButton": "今すぐ取得",
+        "getNowButtonWithSteam": "今すぐ取得（約49 MB）",
+        "doneText": "インポート済みです。提案された順序でこれらのルールが使われています。",
+        "doneNotInUseText": "インポート済みですが、インポートしたルールが設定でオフになっているため、提案された順序ではこれらのルールは使われていません。",
+        "networkOff": "インターネットアクセスがオフのため、何もダウンロードできません。",
+        "openSettings": "設定を開く",
+        "awaitingFirstRun": "先に、上にある「ようこそ」の通知でインターネットアクセスについて回答してください。",
+        "loadFailed": "推奨ルールが設定済みかどうかを確認できませんでした。",
+        "downloading": "{source}のデータベースをダウンロード中…",
+        "importing": "インポート中…",
+        "slowNote": "回線が遅い場合、Steamワークショップのデータベースのダウンロードには数分かかることがあります。",
+        "resultDone": "推奨ルールをインポートしました。",
+        "resultPartial": "一部のルールデータベースをダウンロードできませんでした。ダウンロードできたものはインポートしました。しばらくしてから再度お試しください。",
+        "resultDownloadFailed": "ルールデータベースをダウンロードできませんでした。接続を確認し、しばらくしてから再度お試しください。",
+        "resultNothingToDo": "推奨ルールはすでにインポート済みでした。ダウンロードするものはありませんでした。",
+        "resultImportFailedReadingFile": "ルールはダウンロードされましたが、インポートのために読み込めませんでした。",
+        "resultImportFailedSaving": "ルールはダウンロードされましたが、このプロファイルに保存できませんでした。何も変更されていません。",
+        "resultManifestNotRecorded": "ルールはインポートされましたが、インポートの記録を保存できませんでした。完了するには、もう一度クリックしてください。",
+        "resultProfileChanged": "ルールはダウンロードされました。その間に別のプロファイルが開かれたため、何もインポートされていません。"
       },
       "chooseSuggested": {
         "title": "提案された順序を使う",
@@ -498,6 +534,20 @@
       "stale_active_set": {
         "title": "有効なMODのリストが古くなっています",
         "detail": "ModsConfig.xmlに書き込む前に再スキャンしてください。"
+      },
+      "already_running": {
+        "title": "すでに処理中です",
+        "detail": "Rimmergeはすでにこの処理を実行しています。完了するまでお待ちください。"
+      },
+      "recommended_rules_unavailable": {
+        "title": "現在、推奨ルールを取得できません",
+        "detail": "現在、ダウンロードは利用できません。",
+        "networkOff": "インターネットアクセスがオフです。設定でオンにしてから、再度お試しください。",
+        "awaitingFirstRun": "先にダッシュボードの「ようこそ」の通知でインターネットアクセスについて回答してから、再度お試しください。"
+      },
+      "app_settings_damaged": {
+        "title": "アプリの設定ファイルが破損しています",
+        "detail": "Rimmergeはこのファイルに手を加えていません。「設定」を開いて設定を保存し直すと修復されます。その後、再度お試しください。"
       },
       "texture_unsupported_format": {
         "title": "このテクスチャ形式は表示できません",

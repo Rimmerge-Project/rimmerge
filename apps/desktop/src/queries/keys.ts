@@ -38,6 +38,12 @@ export const queryKeys = {
   orphanedDecisions: () => ["rules", "orphanedDecisions"] as const,
   /** `get_rule_databases`'s result — the Databases card. */
   ruleDatabases: () => ["rules", "ruleDatabases"] as const,
+  /**
+   * `get_recommended_rules_step`'s result. Nested under {@link queryKeys.ruleDatabases}'s
+   * prefix on purpose: Pinia Colada matches an invalidation key as a prefix, so every
+   * `ruleDatabases()` invalidation (refresh, enable) refreshes this too.
+   */
+  recommendedRulesStep: () => ["rules", "ruleDatabases", "recommendedStep"] as const,
   /** `list_tags`'s result. */
   tags: () => ["tags"] as const,
   /** `list_mods`'s result for one filter. */

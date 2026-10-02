@@ -114,6 +114,69 @@ function mountPage(costs: ModCostRowDto[], orderRows: OrderRowDto[] = []) {
 }
 
 describe("StartupPage", () => {
+  it("puts every value in the column its header names", async () => {
+    // Table layout places a cell by its index, so two swapped body cells would
+    // still line up with the declared widths; only the value gives it away.
+    const { wrapper, session } = mountPage([
+      costRow({
+        modId: "a.mod",
+        patchOps: 11,
+        slowXpathOps: 22,
+        textureFiles: 33,
+        textureBytes: 4096,
+        ddsFiles: 55,
+        assemblyCount: 77,
+        assemblyBytes: 2048,
+        defCount: 88,
+        overriddenTextureBytes: 3072,
+        contentOnly: true,
+      }),
+    ]);
+    await flushPromises();
+    const attribution = { kind: "mod", modId: "a.mod" } as const;
+    const ddsFailure = { attribution, path: "x.dds", width: 3, height: 3, format: "BC7" };
+    session.setGameLogSummary(
+      emptySummary({
+        ddsFailures: [ddsFailure, ddsFailure, ddsFailure],
+        timers: [{ attribution, label: "load", milliseconds: 40, pass: 2 }],
+      }),
+    );
+    await flushPromises();
+
+    const expectedBySortKey: Record<string, string> = {
+      patchOps: "11",
+      slowXpathOps: "22",
+      textureFiles: "33",
+      textureBytes: "4.00 KiB",
+      ddsFiles: "55",
+      badDimensionDds: "3",
+      assemblyCount: "77",
+      assemblyBytes: "2.00 KiB",
+      defCount: "88",
+      overriddenTextureBytes: "3.00 KiB",
+      observedTimers: "1 (40 ms)",
+    };
+    const cells = wrapper
+      .get('[data-testid="startup-row-a.mod"]')
+      .findAll("th, td")
+      .map((cell) => cell.text().replace(/\s+/g, " "));
+    const headers = wrapper.findAll("thead th");
+    expect(cells).toHaveLength(headers.length);
+
+    headers.forEach((header, index) => {
+      const sortButton = header.find('[data-testid^="startup-sort-"]');
+      if (!sortButton.exists()) {
+        // The two columns without a sort button: the mod's name and the flag.
+        expect(cells[index], header.text()).toBe(
+          header.text() === "Mod" ? "a.mod" : "content-only",
+        );
+        return;
+      }
+      const sortKey = sortButton.attributes("data-testid")?.replace("startup-sort-", "") ?? "";
+      expect(cells[index], sortKey).toBe(expectedBySortKey[sortKey]);
+    });
+  });
+
   it("shows a totals row summing every mod's own columns", async () => {
     const { wrapper } = mountPage([
       costRow({ modId: "a.mod", textureBytes: 100, patchOps: 2, defCount: 5 }),

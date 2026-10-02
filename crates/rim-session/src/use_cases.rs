@@ -28,6 +28,7 @@ mod export_assignment;
 mod export_folder;
 mod export_patch;
 mod find_def_cache_carrier;
+mod get_recommended_rules;
 mod import_game_log;
 mod import_profile_decisions;
 mod import_rimsort;
@@ -54,6 +55,7 @@ mod run_launch_network_checks;
 mod select_order;
 mod set_assignment_row;
 mod set_manual_tag;
+mod skip_recommended_rules;
 mod update_app_settings;
 mod update_assignment;
 mod update_patch;
@@ -103,6 +105,10 @@ pub use export_assignment::{
 };
 pub use export_patch::{ExportOptions, ExportOutcome, ExportPatch, ExportPatchError};
 pub use find_def_cache_carrier::FindDefCacheCarrier;
+pub use get_recommended_rules::{
+    FetchedRecommendedRules, GetRecommendedRules, GetRecommendedRulesError, ImportFailure,
+    ImportStep, RecommendedRulesContext, RecommendedRulesProgress, RecommendedRulesReport,
+};
 pub use import_game_log::{
     AttributedClass, DdsFailureSummary, DependencyWarningSummary, EnclosingOp, FamilyAttribution,
     GameLogSummary, ImportGameLog, ImportGameLogError, LoadEvent, LogAttribution,
@@ -122,8 +128,8 @@ pub use merge_coverage::{
     PreviewStateTally, SuggestionOutcome, SuggestionOutcomeTally,
 };
 pub use notifications::{
-    AcknowledgeGameVersion, CompleteWelcome, DismissNotification, GameVersionAcknowledgement,
-    ListNotifications, MuteNotificationKind, SyncGameVersionAcknowledgement,
+    AcknowledgeGameVersion, CompleteWelcome, DismissNotification, ListNotifications,
+    MuteNotificationKind, ProfileNotificationFacts, SyncGameVersionAcknowledgement,
     UnmuteNotificationKind,
 };
 pub(crate) use plan_merge::stored_choices;
@@ -150,6 +156,7 @@ pub use run_launch_network_checks::{LaunchNetworkChecksOutcome, RunLaunchNetwork
 pub use select_order::SelectOrder;
 pub use set_assignment_row::{SetAssignmentRow, SetAssignmentRowError};
 pub use set_manual_tag::SetManualTag;
+pub use skip_recommended_rules::SkipRecommendedRules;
 pub use update_app_settings::{EnableRecommendedSources, ResetNetworkPolicy, UpdateAppSettings};
 pub use update_assignment::{
     SchemaChange, UpdateAssignment, UpdateAssignmentError, UpdateAssignmentInput,

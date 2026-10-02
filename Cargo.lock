@@ -3349,7 +3349,7 @@ dependencies = [
 
 [[package]]
 name = "rim-analyzer"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -3368,7 +3368,7 @@ dependencies = [
 
 [[package]]
 name = "rim-io"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "jiff",
  "pretty_assertions",
@@ -3391,7 +3391,7 @@ dependencies = [
 
 [[package]]
 name = "rim-merge"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "insta",
  "pretty_assertions",
@@ -3406,7 +3406,7 @@ dependencies = [
 
 [[package]]
 name = "rim-resolve"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "fixedbitset",
  "insta",
@@ -3424,7 +3424,7 @@ dependencies = [
 
 [[package]]
 name = "rim-session"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "jiff",
  "pretty_assertions",
@@ -3439,7 +3439,7 @@ dependencies = [
 
 [[package]]
 name = "rimmerge-cli"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -3458,7 +3458,7 @@ dependencies = [
 
 [[package]]
 name = "rimmerge-desktop"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "base64 0.23.1",
  "jiff",
