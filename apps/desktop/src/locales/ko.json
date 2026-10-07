@@ -177,7 +177,7 @@
       },
       "checkForUpdates": {
         "label": "업데이트 확인",
-        "description": "하루에 한 번, 실행 시 Rimmerge의 새 버전이 출시되었는지 확인합니다."
+        "description": "실행 시 Rimmerge의 새 버전이 출시되었는지 확인합니다."
       },
       "checkNow": {
         "button": "지금 확인",
@@ -186,7 +186,6 @@
         "alreadyRanThisLaunch": "이번 실행에서 이미 확인했습니다.",
         "networkDisabled": "인터넷 접속이 꺼져 있습니다.",
         "checkDisabled": "자동 확인은 꺼져 있지만 확인했습니다.",
-        "notDue": "최근에 확인했습니다. 나중에 다시 시도하세요.",
         "rateLimited": "GitHub 요청 한도에 도달했습니다. {until} 이후에 다시 시도하세요.",
         "updated": "새 버전이 있습니다: {version}.",
         "unchanged": "최신 버전입니다.",
@@ -401,7 +400,7 @@
     },
     "welcome": {
       "title": "Rimmerge에 오신 것을 환영합니다",
-      "body": "Rimmerge는 시작할 때 하루에 한 번 GitHub에 접속할 수 있습니다.\n- 새 Rimmerge 버전이 출시되었는지 확인하기 위해 (api.github.com)\n- 업데이트된 규칙 데이터베이스, 즉 커뮤니티 로드 순서 규칙과 Rimmerge 자체 규칙 파일을 내려받기 위해 (raw.githubusercontent.com). 업데이트는 로컬에 저장되며, 가져오기를 선택할 때만 로드 순서가 바뀝니다.\n\n사용자, 모드, 설치에 관한 정보는 아무것도 보내지 않습니다. 보내는 것은 단순한 요청뿐이며, GitHub는 이 요청에서 사용자의 IP 주소를 볼 수 있습니다. 용량이 큰 스팀 창작마당 데이터베이스는 자동으로 내려받지 않으며, '새로 고침'을 클릭할 때만 내려받습니다.",
+      "body": "Rimmerge는 시작할 때 GitHub에 접속할 수 있습니다.\n- 시작할 때마다, 새 Rimmerge 버전이 출시되었는지 확인하기 위해 (api.github.com)\n- 최대 하루에 한 번, 업데이트된 규칙 데이터베이스, 즉 커뮤니티 로드 순서 규칙과 Rimmerge 자체 규칙 파일을 내려받기 위해 (raw.githubusercontent.com). 업데이트는 로컬에 저장되며, 가져오기를 선택할 때만 로드 순서가 바뀝니다.\n\n사용자, 모드, 설치에 관한 정보는 아무것도 보내지 않습니다. 보내는 것은 단순한 요청뿐이며, GitHub는 이 요청에서 사용자의 IP 주소를 볼 수 있습니다. 용량이 큰 스팀 창작마당 데이터베이스는 자동으로 내려받지 않으며, '새로 고침'을 클릭할 때만 내려받습니다.",
       "settingsAlreadyRecommended": "설정이 이미 권장 기본값과 일치합니다.",
       "steamWorkshopLabel": "스팀 창작마당 데이터베이스 (약 49MB, '새로 고침'을 클릭할 때만 내려받음)"
     },

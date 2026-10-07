@@ -177,7 +177,7 @@
       },
       "checkForUpdates": {
         "label": "Nach Updates suchen",
-        "description": "Einmal am Tag beim Start prüfen, ob eine neuere Rimmerge-Version veröffentlicht wurde."
+        "description": "Beim Start prüfen, ob eine neuere Rimmerge-Version veröffentlicht wurde."
       },
       "checkNow": {
         "button": "Jetzt prüfen",
@@ -186,7 +186,6 @@
         "alreadyRanThisLaunch": "Bei diesem Start bereits geprüft.",
         "networkDisabled": "Der Internetzugriff ist aus.",
         "checkDisabled": "Trotzdem geprüft – automatische Prüfungen sind aus.",
-        "notDue": "Kürzlich geprüft – versuche es später erneut.",
         "rateLimited": "Das Anfragelimit von GitHub wurde erreicht; versuche es nach {until} erneut.",
         "updated": "Eine neuere Version ist verfügbar: {version}.",
         "unchanged": "Auf dem neuesten Stand.",
@@ -401,7 +400,7 @@
     },
     "welcome": {
       "title": "Willkommen bei Rimmerge",
-      "body": "Rimmerge kann einmal am Tag beim Start GitHub kontaktieren:\n- um zu prüfen, ob eine neuere Rimmerge-Version veröffentlicht wurde (api.github.com);\n- um aktualisierte Regeldatenbanken herunterzuladen – die Ladereihenfolge-Regeln der Community und Rimmerges eigene Regeldatei (raw.githubusercontent.com). Updates werden lokal gespeichert; sie ändern deine Ladereihenfolge erst, wenn du sie importierst.\n\nEs wird nichts über dich, deine Mods oder deine Installation gesendet – nur eine einfache Anfrage, bei der GitHub deine IP-Adresse sieht. Die große Steam-Workshop-Datenbank wird nie automatisch heruntergeladen, sondern nur, wenn du auf „Aktualisieren“ klickst.",
+      "body": "Rimmerge kann beim Start GitHub kontaktieren:\n- um zu prüfen, ob eine neuere Rimmerge-Version veröffentlicht wurde (api.github.com), bei jedem Start;\n- um aktualisierte Regeldatenbanken herunterzuladen – die Ladereihenfolge-Regeln der Community und Rimmerges eigene Regeldatei (raw.githubusercontent.com), höchstens einmal am Tag. Updates werden lokal gespeichert; sie ändern deine Ladereihenfolge erst, wenn du sie importierst.\n\nEs wird nichts über dich, deine Mods oder deine Installation gesendet – nur eine einfache Anfrage, bei der GitHub deine IP-Adresse sieht. Die große Steam-Workshop-Datenbank wird nie automatisch heruntergeladen, sondern nur, wenn du auf „Aktualisieren“ klickst.",
       "settingsAlreadyRecommended": "Deine Einstellungen entsprechen bereits den empfohlenen Standardwerten.",
       "steamWorkshopLabel": "Steam-Workshop-Datenbank (etwa 49 MB, nur heruntergeladen, wenn du auf „Aktualisieren“ klickst)"
     },

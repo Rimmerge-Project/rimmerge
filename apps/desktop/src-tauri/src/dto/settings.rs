@@ -124,7 +124,7 @@ impl TryFrom<SettingsDto> for Settings {
 pub struct NetworkPolicyDto {
     /// The master switch.
     pub allow_network: bool,
-    /// Automatic, at-most-once-a-day, at-launch update check.
+    /// Automatic, once-per-launch update check.
     pub check_for_updates: bool,
     /// Automatic, at-most-once-a-day refresh of the eligible, enabled
     /// rule databases.

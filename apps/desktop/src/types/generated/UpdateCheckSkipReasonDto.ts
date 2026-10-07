@@ -3,7 +3,7 @@
 /**
  * Mirrors [`UpdateCheckSkipReason`].
  */
-export type UpdateCheckSkipReasonDto = "awaitingFirstRun" | "alreadyRanThisLaunch" | "networkDisabled" | "checkDisabled" | "notDue" | { "rateLimitedUntil": { 
+export type UpdateCheckSkipReasonDto = "awaitingFirstRun" | "alreadyRanThisLaunch" | "networkDisabled" | "checkDisabled" | { "rateLimitedUntil": { 
 /**
  * When it is safe to try again.
  */

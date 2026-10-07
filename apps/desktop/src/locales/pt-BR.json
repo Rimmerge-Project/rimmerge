@@ -177,7 +177,7 @@
       },
       "checkForUpdates": {
         "label": "Verificar atualizações",
-        "description": "Uma vez por dia, ao iniciar, verifica se uma versão mais nova do Rimmerge foi lançada."
+        "description": "Ao iniciar, verifica se uma versão mais nova do Rimmerge foi lançada."
       },
       "checkNow": {
         "button": "Verificar agora",
@@ -186,7 +186,6 @@
         "alreadyRanThisLaunch": "Já verificado nesta execução.",
         "networkDisabled": "O acesso à internet está desativado.",
         "checkDisabled": "Verificado mesmo assim — as verificações automáticas estão desativadas.",
-        "notDue": "Verificado recentemente — tente de novo mais tarde.",
         "rateLimited": "O limite de requisições do GitHub foi atingido; tente de novo após {until}.",
         "updated": "Uma versão mais nova está disponível: {version}.",
         "unchanged": "Tudo atualizado.",
@@ -401,7 +400,7 @@
     },
     "welcome": {
       "title": "Boas-vindas ao Rimmerge",
-      "body": "O Rimmerge pode contatar o GitHub uma vez por dia, ao iniciar:\n- para verificar se uma versão mais nova do Rimmerge foi lançada (api.github.com);\n- para baixar bancos de dados de regras atualizados — as regras de ordem de carregamento da comunidade e o próprio arquivo de regras do Rimmerge (raw.githubusercontent.com). As atualizações ficam guardadas localmente; elas só mudam sua ordem de carregamento quando você escolhe importá-las.\n\nNada é enviado sobre você, seus mods ou sua instalação — apenas uma requisição simples, na qual o GitHub vê seu endereço IP. O grande banco de dados da Oficina Steam nunca é baixado automaticamente, só quando você clica em Atualizar.",
+      "body": "O Rimmerge pode contatar o GitHub ao iniciar:\n- para verificar se uma versão mais nova do Rimmerge foi lançada (api.github.com), a cada vez que é iniciado;\n- para baixar bancos de dados de regras atualizados — as regras de ordem de carregamento da comunidade e o próprio arquivo de regras do Rimmerge (raw.githubusercontent.com), no máximo uma vez por dia. As atualizações ficam guardadas localmente; elas só mudam sua ordem de carregamento quando você escolhe importá-las.\n\nNada é enviado sobre você, seus mods ou sua instalação — apenas uma requisição simples, na qual o GitHub vê seu endereço IP. O grande banco de dados da Oficina Steam nunca é baixado automaticamente, só quando você clica em Atualizar.",
       "settingsAlreadyRecommended": "Suas configurações já correspondem aos padrões recomendados.",
       "steamWorkshopLabel": "Banco de dados da Oficina Steam (cerca de 49 MB, baixado só quando você clica em Atualizar)"
     },

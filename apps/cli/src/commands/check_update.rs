@@ -92,7 +92,6 @@ fn format_skip_reason(reason: &UpdateCheckSkipReason) -> String {
         UpdateCheckSkipReason::AlreadyRanThisLaunch => "already checked this launch".to_string(),
         UpdateCheckSkipReason::NetworkDisabled => "internet access is off".to_string(),
         UpdateCheckSkipReason::CheckDisabled => "automatic checks are off".to_string(),
-        UpdateCheckSkipReason::NotDue => "checked recently — try again later".to_string(),
         UpdateCheckSkipReason::RateLimitedUntil(until) => {
             format!("GitHub's rate limit was reached; try again after {until}")
         }

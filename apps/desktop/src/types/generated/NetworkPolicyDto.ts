@@ -11,7 +11,7 @@ export type NetworkPolicyDto = {
  */
 allowNetwork: boolean, 
 /**
- * Automatic, at-most-once-a-day, at-launch update check.
+ * Automatic, once-per-launch update check.
  */
 checkForUpdates: boolean, 
 /**

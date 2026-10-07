@@ -128,8 +128,9 @@ order, as of the last scan or apply. See
   import (see [concepts/rules-databases.md](concepts/rules-databases.md)).
 - Rimmerge contacts exactly two GitHub hosts: a rule-database refresh
   and a check for a newer Rimmerge version. The desktop app runs both
-  automatically, at most once a day, but never before its first-run
-  notice explains this and offers to turn it off; the largest database
+  automatically (the version check at each launch, the rules refresh at
+  most once a day), but never before its first-run notice explains this
+  and offers to turn it off; the largest database
   (the Steam Workshop one, about 49 MB) is on by default but never
   fetched automatically, only by a manual Refresh click, `rimmerge db
   refresh`, the recommended-databases notice's "Turn on and download"

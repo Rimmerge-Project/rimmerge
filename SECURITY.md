@@ -20,8 +20,9 @@ public issue for a security report.
   `api.github.com` (the release check only) — a closed, compiled-in
   list, never a setting, never a subdomain. The desktop app's checks
   (a new-version check, and a refresh of the community rules and
-  `rimmerge-rules` databases) are **on by default, at most once a day,
-  at launch** — but never before the first-run notice has been
+  `rimmerge-rules` databases) are **on by default and run at launch**
+  (the version check each launch, the rule-database refresh at most once
+  a day) — but never before the first-run notice has been
   answered, and never from the command line: the CLI only ever contacts
   either host when you run `rimmerge db refresh` or
   `rimmerge check-update` yourself. The Steam Workshop database is on by

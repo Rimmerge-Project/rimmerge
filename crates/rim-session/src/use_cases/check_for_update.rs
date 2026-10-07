@@ -1,21 +1,17 @@
 //! [`CheckForUpdate`]: queries [`ReleaseFeed`] for a newer stable
 //! Rimmerge release, recording the result in
 //! `<base>/notifications.json`'s own `update_check` state. The cadence
-//! (at most one automatic check a day), rate-limit handling, and ETag
-//! reuse are documented on [`CheckForUpdate::execute`].
+//! (one automatic check per launch, no daily floor), rate-limit handling,
+//! and ETag reuse are documented on [`CheckForUpdate::execute`].
 
 use std::path::Path;
 
 use crate::app_settings::NetworkPolicy;
 use crate::notifications::LatestRelease;
-use crate::notifications::clock::seconds_since;
 use crate::ports::{
     FeedResponse, FetchFailure, NotificationStateStore, ReleaseFeed, ReleaseFeedError,
     UpdateCheckFailure, UpdateCheckSuccess,
 };
-
-/// The once-a-day throttle for an automatic check.
-const DUE_AFTER_SECONDS: i64 = 24 * 60 * 60;
 
 /// How far past `now` a stored `retry_not_before` can honestly lie: the
 /// rate-limit parser clamps `until` to 24 h ahead of the response. A stamp
@@ -37,8 +33,7 @@ pub enum UpdateCheckRequest {
         already_ran_this_launch: bool,
     },
     /// "Check now" (Settings → Updates). Ignores `check_for_updates`
-    /// (the click is its own consent) and the 24 h throttle — a click is
-    /// never "not due yet".
+    /// (the click is its own consent).
     Manual,
 }
 
@@ -57,9 +52,6 @@ pub enum UpdateCheckSkipReason {
     NetworkDisabled,
     /// `Automatic` only: `NetworkPolicy::check_for_updates` is off.
     CheckDisabled,
-    /// `Automatic` only: the last attempt (of any outcome) was under
-    /// 24 h ago.
-    NotDue,
     /// Both request kinds: GitHub's rate limit is still in effect.
     RateLimitedUntil(jiff::Timestamp),
 }
@@ -95,7 +87,7 @@ pub enum CheckForUpdateOutcome {
 }
 
 /// Checks GitHub for a newer stable release, gated by network policy and
-/// the once-a-day cadence, then records the result.
+/// (for the automatic request) once per launch, then records the result.
 pub struct CheckForUpdate<Feed, State> {
     feed: Feed,
     state_store: State,
@@ -109,7 +101,7 @@ impl<Feed: ReleaseFeed, State: NotificationStateStore> CheckForUpdate<Feed, Stat
     }
 
     /// Runs one check, or explains why it skipped one. `welcome_completed_at`
-    /// and the once-a-day cadence are both read off the same
+    /// and the rate-limit back-off are both read off the same
     /// `<base>/notifications.json` this call also writes back to — see
     /// [`UpdateCheckSkipReason`] for the full gate order. A **project
     /// having loaded** is not checked here at all — that precondition
@@ -157,17 +149,11 @@ impl<Feed: ReleaseFeed, State: NotificationStateStore> CheckForUpdate<Feed, Stat
             return CheckForUpdateOutcome::Skipped(UpdateCheckSkipReason::CheckDisabled);
         }
 
-        // A `last_attempt_at` in the future (the clock moved back) has no
-        // elapsed time, so it never blocks: the check is due and the
-        // attempt below overwrites the stale stamp with `now`.
-        if is_automatic
-            && let Some(last_attempt_at) = state.update_check.last_attempt_at
-            && let Some(elapsed) = seconds_since(now, last_attempt_at)
-            && elapsed < DUE_AFTER_SECONDS
-        {
-            return CheckForUpdateOutcome::Skipped(UpdateCheckSkipReason::NotDue);
-        }
-
+        // No daily floor: an automatic check runs on every launch, because a
+        // floor hid a release from anyone who reopened the app within a day
+        // of the previous check. `AlreadyRanThisLaunch` above keeps it to one
+        // per process, the ETag below makes most launches a 304, and the
+        // rate-limit back-off below still holds.
         if let Some(retry_not_before) = state.update_check.retry_not_before
             && now < retry_not_before
             && retry_not_before.as_second() - now.as_second() <= MAX_RETRY_HORIZON_SECONDS
@@ -460,63 +446,63 @@ mod tests {
         );
     }
 
-    #[test]
-    fn automatic_skips_when_attempted_under_24h_ago_but_manual_ignores_that() {
-        let now = jiff::Timestamp::UNIX_EPOCH + jiff::Span::new().hours(100);
-        let recent = now - jiff::Span::new().hours(1);
-        let state = NotificationState {
+    fn state_attempted_an_hour_ago(now: jiff::Timestamp) -> NotificationState {
+        let an_hour_ago = now - jiff::Span::new().hours(1);
+        NotificationState {
             welcome_completed_at: Some(jiff::Timestamp::UNIX_EPOCH),
             update_check: crate::ports::UpdateCheckState {
-                last_attempt_at: Some(recent),
+                last_attempt_at: Some(an_hour_ago),
+                last_success: Some(UpdateCheckSuccess {
+                    checked_at: an_hour_ago,
+                    latest: LatestRelease {
+                        version: AppVersion::published("1.0.0").expect("valid version"),
+                        published_at: jiff::Timestamp::UNIX_EPOCH,
+                    },
+                }),
                 ..crate::ports::UpdateCheckState::default()
             },
             ..NotificationState::default()
-        };
-
-        let use_case = CheckForUpdate::new(
-            FakeReleaseFeed::returning(fresh("0.2.0")),
-            store_with(state.clone()),
-        );
-        let outcome = use_case.execute(
-            UpdateCheckRequest::Automatic {
-                already_ran_this_launch: false,
-            },
-            &NetworkPolicy::default(),
-            &PathBuf::from("base"),
-            now,
-        );
-        assert_eq!(
-            outcome,
-            CheckForUpdateOutcome::Skipped(UpdateCheckSkipReason::NotDue)
-        );
-
-        let use_case = CheckForUpdate::new(
-            FakeReleaseFeed::returning(fresh("0.2.0")),
-            store_with(state),
-        );
-        let outcome = use_case.execute(
-            UpdateCheckRequest::Manual,
-            &NetworkPolicy::default(),
-            &PathBuf::from("base"),
-            now,
-        );
-        assert!(matches!(outcome, CheckForUpdateOutcome::Ran(_)));
+        }
     }
 
     #[test]
-    fn an_attempt_stamped_in_the_future_does_not_block_an_automatic_check() {
+    fn automatic_runs_on_a_new_launch_even_when_attempted_under_24h_ago() {
         let now = jiff::Timestamp::UNIX_EPOCH + jiff::Span::new().hours(100);
-        let state = NotificationState {
-            welcome_completed_at: Some(jiff::Timestamp::UNIX_EPOCH),
-            update_check: crate::ports::UpdateCheckState {
-                last_attempt_at: Some(now + jiff::Span::new().hours(48)),
-                ..crate::ports::UpdateCheckState::default()
+
+        for request in [
+            UpdateCheckRequest::Automatic {
+                already_ran_this_launch: false,
             },
-            ..NotificationState::default()
-        };
+            UpdateCheckRequest::Manual,
+        ] {
+            let use_case = CheckForUpdate::new(
+                FakeReleaseFeed::returning(fresh("0.2.0")),
+                store_with(state_attempted_an_hour_ago(now)),
+            );
+            let outcome = use_case.execute(
+                request,
+                &NetworkPolicy::default(),
+                &PathBuf::from("base"),
+                now,
+            );
+            assert!(
+                matches!(outcome, CheckForUpdateOutcome::Ran(_)),
+                "{request:?}: {outcome:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_launch_an_hour_after_the_last_check_still_surfaces_a_new_release() {
+        use crate::notifications::evaluate::evaluate;
+        use crate::notifications::{GameMajorMinor, NotificationInputs};
+        use crate::recommended_rules::StepSkip;
+
+        let now = jiff::Timestamp::UNIX_EPOCH + jiff::Span::new().hours(100);
+        let base = PathBuf::from("base");
         let use_case = CheckForUpdate::new(
-            FakeReleaseFeed::returning(fresh("0.2.0")),
-            store_with(state),
+            FakeReleaseFeed::returning(fresh("1.1.0")),
+            store_with(state_attempted_an_hour_ago(now)),
         );
 
         let outcome = use_case.execute(
@@ -524,13 +510,29 @@ mod tests {
                 already_ran_this_launch: false,
             },
             &NetworkPolicy::default(),
-            &PathBuf::from("base"),
+            &base,
             now,
         );
 
+        assert!(matches!(
+            outcome,
+            CheckForUpdateOutcome::Ran(UpdateCheckRunOutcome::Updated { .. })
+        ));
+        let inputs = NotificationInputs {
+            app: crate::app_settings::AppSettings::default(),
+            profile: crate::settings::Settings::default(),
+            databases: Vec::new(),
+            running: AppVersion::running("1.0.0").expect("valid version"),
+            current_game_version: GameMajorMinor::parse("1.6"),
+            acknowledged_game_version: Some(GameMajorMinor::parse("1.6")),
+            recommended_rules_skip: StepSkip::NotSkipped,
+        };
+        let notices = evaluate(&inputs, &use_case.state_store.load(&base), now);
         assert!(
-            matches!(outcome, CheckForUpdateOutcome::Ran(_)),
-            "{outcome:?}"
+            notices
+                .iter()
+                .any(|notice| notice.kind() == NotificationKind::UpdateAvailable),
+            "{notices:?}"
         );
     }
 

@@ -177,7 +177,7 @@
       },
       "checkForUpdates": {
         "label": "Check for updates",
-        "description": "Once a day, at launch, check whether a newer Rimmerge has been released."
+        "description": "At launch, check whether a newer Rimmerge has been released."
       },
       "checkNow": {
         "button": "Check now",
@@ -186,7 +186,6 @@
         "alreadyRanThisLaunch": "Already checked this launch.",
         "networkDisabled": "Internet access is off.",
         "checkDisabled": "Checked anyway — automatic checks are off.",
-        "notDue": "Checked recently — try again later.",
         "rateLimited": "GitHub's rate limit was reached; try again after {until}.",
         "updated": "A newer version is available: {version}.",
         "unchanged": "Up to date.",
@@ -401,7 +400,7 @@
     },
     "welcome": {
       "title": "Welcome to Rimmerge",
-      "body": "Rimmerge can contact GitHub once a day, when it starts:\n- to check whether a newer Rimmerge has been released (api.github.com);\n- to download updated rule databases — the community load-order rules and Rimmerge's own rules file (raw.githubusercontent.com). Updates are stored locally; they change your load order only when you choose to import them.\n\nIt sends nothing about you, your mods, or your install — only a plain request that GitHub sees your IP address for. The large Steam Workshop database is never downloaded automatically, only when you click Refresh.",
+      "body": "Rimmerge can contact GitHub when it starts:\n- to check whether a newer Rimmerge has been released (api.github.com), each time it starts;\n- to download updated rule databases — the community load-order rules and Rimmerge's own rules file (raw.githubusercontent.com), at most once a day. Updates are stored locally; they change your load order only when you choose to import them.\n\nIt sends nothing about you, your mods, or your install — only a plain request that GitHub sees your IP address for. The large Steam Workshop database is never downloaded automatically, only when you click Refresh.",
       "settingsAlreadyRecommended": "Your settings already match the recommended defaults.",
       "steamWorkshopLabel": "Steam Workshop database (about 49 MB, downloaded only when you click Refresh)"
     },

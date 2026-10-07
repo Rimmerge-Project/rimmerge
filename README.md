@@ -99,8 +99,9 @@ breakdown, including where new code belongs:
   switch to turn off.** The only outbound connections this tool ever
   makes are to `raw.githubusercontent.com` (the rule databases) and
   `api.github.com` (a release-version check) — the desktop app checks
-  both automatically, at most once a day, but never before its
-  first-run notice is answered, and never before you can turn it off;
+  both automatically (the version check at each launch, the rules refresh
+  at most once a day), but never before its first-run notice is answered,
+  and never before you can turn it off;
   the large Steam Workshop database is on by default but never fetched
   automatically, only by a manual Refresh click, `rimmerge db refresh`,
   the recommended-databases notice's "Turn on and download" button, or the

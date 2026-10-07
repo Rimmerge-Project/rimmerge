@@ -122,8 +122,6 @@ export function describeCheckForUpdateOutcome(
         return descriptor("settings.network.checkNow.networkDisabled");
       case "checkDisabled":
         return descriptor("settings.network.checkNow.checkDisabled");
-      case "notDue":
-        return descriptor("settings.network.checkNow.notDue");
       default:
         return assertNever(reason);
     }
