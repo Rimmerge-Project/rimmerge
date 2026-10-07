@@ -638,6 +638,14 @@ impl Session {
         &self.mod_knowledge
     }
 
+    /// The active-mod list `ModsConfig.xml` held when this session was
+    /// loaded (or last written), by exact ids in file order: what an
+    /// import is diffed against.
+    #[must_use]
+    pub fn file_active_mods(&self) -> &[ModId] {
+        &self.file_active_mods
+    }
+
     /// Overrides `file_active_mods` with `ids` — [`crate::use_cases::Rescan`]'s
     /// own correction, right after construction, for exactly the case
     /// [`Session::new`]'s own default (`ModsConfig.xml`'s own
@@ -668,6 +676,20 @@ impl Session {
     /// session with none simply skips the pass.
     pub fn set_def_source_reader(&mut self, reader: Arc<dyn DefSourceReader + Send + Sync>) {
         self.def_source_reader = Some(reader);
+    }
+
+    /// The package id of this profile's own generated merge mod, derived
+    /// from the profile hash (never stored).
+    #[must_use]
+    pub fn own_merge_mod_id(&self) -> ModId {
+        GeneratedModIdentity::for_profile(self.paths.profile_hash()).package_id
+    }
+
+    /// The installed game's version text, or `None` when the scan found
+    /// none.
+    #[must_use]
+    pub fn game_version(&self) -> Option<String> {
+        Some(self.report.metadata.game_version.clone()).filter(|version| !version.is_empty())
     }
 
     /// This session's filesystem locations.

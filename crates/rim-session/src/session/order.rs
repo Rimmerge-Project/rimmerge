@@ -4,7 +4,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use rim_analyzer::domain::{LoadOrder, ModId};
-use rim_resolve::domain::{BothOrders, GeneratedModIdentity, OrderSource};
+use rim_resolve::domain::{BothOrders, OrderSource};
 use rim_resolve::sort::SortOutcome;
 
 use super::Session;
@@ -240,7 +240,7 @@ impl Session {
     /// after a successful apply.
     #[must_use]
     pub fn file_matches(&self, source: OrderSource) -> bool {
-        let merge_mod = GeneratedModIdentity::for_profile(self.paths.profile_hash()).package_id;
+        let merge_mod = self.own_merge_mod_id();
         let without_merge_mod = |ids: &[ModId]| -> Vec<ModId> {
             ids.iter().filter(|id| **id != merge_mod).cloned().collect()
         };

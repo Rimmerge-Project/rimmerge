@@ -31,6 +31,10 @@ pub struct InventoryEntry {
     pub declared_dependencies: Vec<ModId>,
     /// `false` only for a missing mod.
     pub present_on_disk: bool,
+    /// The Steam Workshop published-file id, when discovery read one
+    /// (`Mod::workshop_id` / `InactiveMod::workshop_id`). `None` for a
+    /// local mod, and always `None` for a missing mod.
+    pub workshop_id: Option<u64>,
 }
 
 fn declared_dependency_ids(declared: &DeclaredOrder) -> Vec<ModId> {
@@ -66,6 +70,7 @@ impl ModInventory {
                     source: Some(m.source),
                     declared_dependencies: declared_dependency_ids(&m.declared),
                     present_on_disk: true,
+                    workshop_id: m.workshop_id,
                 },
             );
         }
@@ -90,6 +95,7 @@ impl ModInventory {
                     source: Some(m.source),
                     declared_dependencies: declared_dependency_ids(&m.declared),
                     present_on_disk: true,
+                    workshop_id: m.workshop_id,
                 });
         }
         for id in &report.missing_mods {
@@ -98,6 +104,7 @@ impl ModInventory {
                 source: None,
                 declared_dependencies: Vec::new(),
                 present_on_disk: false,
+                workshop_id: None,
             });
         }
 
@@ -141,6 +148,7 @@ impl ModInventory {
                     source: Some(m.source),
                     declared_dependencies: declared_dependency_ids(&m.declared),
                     present_on_disk: true,
+                    workshop_id: m.workshop_id,
                 },
             );
         }
@@ -150,6 +158,7 @@ impl ModInventory {
                 source: None,
                 declared_dependencies: Vec::new(),
                 present_on_disk: false,
+                workshop_id: None,
             });
         }
         Self {
@@ -328,6 +337,28 @@ mod tests {
                 .is_empty(),
             "no Report means no Hard-strength edges to report as dependents"
         );
+    }
+
+    #[test]
+    fn workshop_id_is_carried_from_active_inactive_and_discovery_only_mods() {
+        let mut report = rim_resolve::test_support::ReportBuilder::new()
+            .mod_with("active.mod", |m| m.workshop_id = Some(111))
+            .inactive("inactive.mod")
+            .inactive("local.mod")
+            .missing_mod("ghost.mod")
+            .build();
+        report.inactive_mods[0].workshop_id = Some(222);
+
+        let from_report = ModInventory::from_report(&report);
+        let discovery_only = ModInventory::from_inventory_output(&report.inactive_mods, &[]);
+
+        let id = |raw: &str| ModId::new(raw);
+        let workshop = |inv: &ModInventory, raw: &str| inv.entry(&id(raw)).map(|e| e.workshop_id);
+        assert_eq!(workshop(&from_report, "active.mod"), Some(Some(111)));
+        assert_eq!(workshop(&from_report, "inactive.mod"), Some(Some(222)));
+        assert_eq!(workshop(&from_report, "local.mod"), Some(None));
+        assert_eq!(workshop(&from_report, "ghost.mod"), Some(None));
+        assert_eq!(workshop(&discovery_only, "inactive.mod"), Some(Some(222)));
     }
 
     #[test]

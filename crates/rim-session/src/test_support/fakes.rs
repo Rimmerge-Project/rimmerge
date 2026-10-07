@@ -13,6 +13,7 @@ use rim_resolve::domain::{AssignmentId, AssignmentProject, DecisionSet, PatchId,
 
 use crate::ProjectPaths;
 use crate::app_settings::AppSettings;
+use crate::mod_list::{ParsedModList, SharedModList};
 use crate::ports::{
     AboutImage, AboutReadError, AppSettingsLoad, AppSettingsStore, AssetLocator,
     AssignmentProjectStore, BackReferenceShape, CachedDatabase, ConfigError, DatabaseStatus,
@@ -20,12 +21,12 @@ use crate::ports::{
     ElementExpectation, GameLogError, GameLogReader, ImportError, ImportManifestStore,
     ImportRecord, ImportedRules, KindChoice, LoadedModKnowledge, LoadedRules, LogFormats,
     LogShapes, MergeModError, MergeModWriteReport, MergeModWriter, ModAboutReader,
-    ModKnowledgeStore, ModScanner, ModsConfigFile, ModsConfigStore, ParsedGameLog,
-    PatchProjectStore, PatchStackBlockShape, ProfileNotificationState,
-    ProfileNotificationStateStore, RefreshOutcome, RimSortImporter, RimSortPaths, RuleDatabase,
-    RuleDatabaseFetcher, RuleStore, RulesLoadWarning, ScanArtifacts, ScanError, ScanProgress,
-    ScanProgressStage, StackBlockSource, StoreError, StoredRules, TextureBytes,
-    TextureFallbackShape, TextureFallbackSource,
+    ModKnowledgeStore, ModListFileError, ModListFileStore, ModListRead, ModScanner, ModsConfigFile,
+    ModsConfigStore, ParsedGameLog, PatchProjectStore, PatchStackBlockShape,
+    ProfileNotificationState, ProfileNotificationStateStore, RefreshOutcome, RimSortImporter,
+    RimSortPaths, RuleDatabase, RuleDatabaseFetcher, RuleStore, RulesLoadWarning, ScanArtifacts,
+    ScanError, ScanProgress, ScanProgressStage, StackBlockSource, StoreError, StoredRules,
+    TextureBytes, TextureFallbackShape, TextureFallbackSource,
 };
 use crate::ports::{
     IMPORT_SOURCE_COMMUNITY_RULES, IMPORT_SOURCE_STEAM_DEPENDENCIES, IMPORT_SOURCE_USER_RULES,
@@ -541,6 +542,70 @@ impl ModsConfigStore for InMemoryModsConfigStore {
         self.writes.borrow_mut().push(file.clone());
         *self.file.borrow_mut() = Some(file.clone());
         Ok(PathBuf::from(format!("{}.bak-fake", path.display())))
+    }
+}
+
+/// An in-memory mod-list file store keyed by path: `read` returns what was
+/// seeded or last written, and `write` never touches the filesystem.
+#[derive(Default)]
+pub struct InMemoryModListFileStore {
+    files: RefCell<BTreeMap<PathBuf, ModListRead>>,
+    writes: RefCell<Vec<(PathBuf, SharedModList)>>,
+    fail_next_write: Cell<bool>,
+}
+
+impl InMemoryModListFileStore {
+    /// Builds an empty fake: every path is unreadable until seeded.
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Seeds what reading `path` yields.
+    #[must_use]
+    pub fn with_file(self, path: impl Into<PathBuf>, read: ModListRead) -> Self {
+        self.files.borrow_mut().insert(path.into(), read);
+        self
+    }
+
+    /// Makes the next [`ModListFileStore::write`] fail with a
+    /// [`ModListFileError`], then resets: a one-shot failure injection.
+    pub fn fail_next_write(&self) {
+        self.fail_next_write.set(true);
+    }
+
+    /// Every list this fake was asked to write, in order, with its path.
+    #[must_use]
+    pub fn writes(&self) -> Vec<(PathBuf, SharedModList)> {
+        self.writes.borrow().clone()
+    }
+}
+
+impl ModListFileStore for InMemoryModListFileStore {
+    fn read(&self, path: &Path) -> Result<ModListRead, ModListFileError> {
+        self.files
+            .borrow()
+            .get(path)
+            .cloned()
+            .ok_or_else(|| ModListFileError(format!("{}: no such file", path.display())))
+    }
+
+    fn write(&self, path: &Path, list: &SharedModList) -> Result<(), ModListFileError> {
+        if self.fail_next_write.replace(false) {
+            return Err(ModListFileError("simulated write failure".to_string()));
+        }
+        self.writes
+            .borrow_mut()
+            .push((path.to_path_buf(), list.clone()));
+        let parsed = ParsedModList {
+            list: list.clone(),
+            skipped: Vec::new(),
+            omitted_skipped: 0,
+        };
+        self.files
+            .borrow_mut()
+            .insert(path.to_path_buf(), ModListRead::Parsed(parsed));
+        Ok(())
     }
 }
 
