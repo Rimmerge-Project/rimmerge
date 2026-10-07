@@ -14,6 +14,7 @@ use crate::dto::recommended_rules::UnavailableReasonDto;
 mod assignments;
 mod def_graphics;
 mod findings;
+mod game_launch;
 mod merge;
 mod mods;
 mod patches;
@@ -111,6 +112,18 @@ pub enum CommandErrorCode {
     /// untouched: the fix is Settings' repair, not a retry, so it is not
     /// `ProfileIoFailed`.
     AppSettingsDamaged,
+    /// `launch_game` was refused because `ModsConfig.xml` doesn't hold the
+    /// selected order and the caller didn't say to launch anyway: the
+    /// button reacts by asking "Apply first?", the same way
+    /// `StaleActiveSet` gets special handling.
+    OrderNotApplied,
+    /// The install has no `RimWorldWin64.exe` to start (or isn't an
+    /// install at all).
+    GameExecutableMissing,
+    /// Windows refused the `steam://` request that starts RimWorld.
+    SteamLaunchFailed,
+    /// Windows couldn't start `RimWorldWin64.exe` directly.
+    GameStartFailed,
 }
 
 /// Structured detail some [`CommandError`]s carry alongside their plain

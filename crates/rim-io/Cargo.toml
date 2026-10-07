@@ -20,6 +20,8 @@ rim-merge = { workspace = true }
 rim-resolve = { workspace = true }
 rim-session = { workspace = true }
 jiff = { workspace = true }
+# steam://run via ShellExecuteExW; already in the tree (open 5.4.4) through tauri-plugin-opener, so no new package.
+open = { version = "5", features = ["shellexecute-on-windows"] }
 regex = { workspace = true }
 roxmltree = { workspace = true }
 serde = { workspace = true }

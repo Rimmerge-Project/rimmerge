@@ -51,6 +51,27 @@ mod tests {
         files
     }
 
+    /// Whether a permission entry grants an identifier starting with
+    /// `prefix`. Tauri accepts a bare string or, for scoped grants, an
+    /// object `{"identifier": "...", "allow": [...]}`; both are read.
+    fn grants_prefix(permission: &Value, prefix: &str) -> bool {
+        permission
+            .as_str()
+            .or_else(|| permission["identifier"].as_str())
+            .is_some_and(|identifier| identifier.starts_with(prefix))
+    }
+
+    #[test]
+    fn a_scoped_object_entry_is_read_by_its_identifier() {
+        let scoped = serde_json::json!({"identifier": "shell:allow-spawn", "allow": []});
+        let plain = serde_json::json!("shell:allow-open");
+        let unrelated = serde_json::json!({"identifier": "dialog:allow-open"});
+
+        assert!(grants_prefix(&scoped, "shell:"));
+        assert!(grants_prefix(&plain, "shell:"));
+        assert!(!grants_prefix(&unrelated, "shell:"));
+    }
+
     #[test]
     fn every_capability_grants_window_destroy() {
         for (name, capability) in every_capability() {
@@ -88,13 +109,35 @@ mod tests {
                 .unwrap_or_else(|| panic!("{name}: permissions is an array"));
 
             assert!(
-                permissions.iter().all(|permission| !permission
-                    .as_str()
-                    .is_some_and(|p| p.starts_with("opener:"))),
+                permissions
+                    .iter()
+                    .all(|permission| !grants_prefix(permission, "opener:")),
                 "{name} must never grant an opener:* permission — \
                  every link this app opens goes through open_mod_link/open_app_link, \
                  which call tauri_plugin_opener::open_url directly from Rust, never \
                  through the plugin's own JS-callable IPC surface"
+            );
+        }
+    }
+
+    /// Launching RimWorld is the `launch_game` command: Rust derives the
+    /// route, the executable path and the `steam://` URL, and the frontend
+    /// sends one enum. A `shell:*` permission would let the webview start
+    /// any program or open any URL itself, bypassing all of that.
+    #[test]
+    fn every_capability_grants_no_shell_permission() {
+        for (name, capability) in every_capability() {
+            let permissions = capability["permissions"]
+                .as_array()
+                .unwrap_or_else(|| panic!("{name}: permissions is an array"));
+
+            assert!(
+                permissions
+                    .iter()
+                    .all(|permission| !grants_prefix(permission, "shell:")),
+                "{name} must never grant a shell:* permission — \
+                 launching RimWorld goes through launch_game, which derives the \
+                 program and URL in Rust from the install folder"
             );
         }
     }

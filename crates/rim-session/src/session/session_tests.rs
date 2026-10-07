@@ -4,6 +4,7 @@ use rim_resolve::domain::{Action, Placement, PlacementRule, RuleOrigin};
 
 use super::*;
 use crate::finding_index::FindingFilter;
+use crate::game_launch::{OrderOnDisk, UnappliedReason};
 use crate::merge_workspace::MergePreview;
 use crate::test_support::report_fixture;
 use crate::use_cases::MergeContext;
@@ -2135,4 +2136,86 @@ fn file_matches_ignores_the_generated_merge_mod_id() {
     session.set_file_active_mods(vec![ModId::new("a"), ModId::new("b"), merge_mod]);
 
     assert!(session.file_matches(OrderSource::Current));
+}
+
+fn reorder_a_after_b(session: &mut Session) {
+    session
+        .decide(Decision {
+            key: FindingKey::UndeclaredHardDependency {
+                after: ModId::new("a"),
+                before: ModId::new("b"),
+            },
+            action: Action::Reorder {
+                after: ModId::new("a"),
+                before: ModId::new("b"),
+            },
+            note: None,
+            decided_at: jiff::Timestamp::UNIX_EPOCH,
+        })
+        .expect("reorder is always a valid action");
+}
+
+#[test]
+fn order_on_disk_is_applied_when_the_file_holds_the_selected_order() {
+    let session = session(&["a", "b"]);
+
+    assert_eq!(session.order_on_disk(), OrderOnDisk::Applied);
+}
+
+#[test]
+fn order_on_disk_reports_unscanned_activation_changes_before_a_differing_order() {
+    let mut session = session(&["a", "b"]);
+    session.set_file_active_mods(vec![ModId::new("b"), ModId::new("a")]);
+    session.working_mut().deactivate(&[ModId::new("b")]);
+    assert!(
+        !session.file_matches(OrderSource::Current),
+        "sanity: order differs"
+    );
+    assert!(session.is_stale(), "sanity: working set is unscanned");
+
+    assert_eq!(
+        session.order_on_disk(),
+        OrderOnDisk::NotApplied(UnappliedReason::ActivationChangesNotScanned)
+    );
+}
+
+#[test]
+fn order_on_disk_reports_a_differing_order_when_nothing_is_unscanned() {
+    let mut session = session(&["a", "b"]);
+    session.set_file_active_mods(vec![ModId::new("b"), ModId::new("a")]);
+
+    assert_eq!(
+        session.order_on_disk(),
+        OrderOnDisk::NotApplied(UnappliedReason::OrderDiffers)
+    );
+}
+
+#[test]
+fn order_on_disk_follows_the_selected_order_not_suggested() {
+    let mut session = session(&["a", "b"]);
+    reorder_a_after_b(&mut session);
+    assert!(
+        !session.file_matches(OrderSource::Suggested),
+        "sanity: the file holds the current order, not the suggested one"
+    );
+
+    assert_eq!(session.selected(), OrderSource::Current);
+    assert_eq!(session.order_on_disk(), OrderOnDisk::Applied);
+
+    session.select(OrderSource::Suggested);
+    assert_eq!(
+        session.order_on_disk(),
+        OrderOnDisk::NotApplied(UnappliedReason::OrderDiffers)
+    );
+}
+
+#[test]
+fn order_on_disk_ignores_the_generated_merge_mod() {
+    let mut session = session(&["a", "b"]);
+    let merge_mod =
+        rim_resolve::domain::GeneratedModIdentity::for_profile(session.paths().profile_hash())
+            .package_id;
+    session.set_file_active_mods(vec![ModId::new("a"), ModId::new("b"), merge_mod]);
+
+    assert_eq!(session.order_on_disk(), OrderOnDisk::Applied);
 }

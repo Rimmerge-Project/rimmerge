@@ -14,7 +14,9 @@ use rim_io::{
 pub use rim_io::{GameProcessProbe, SysinfoGameProcessProbe};
 use rim_session::Session;
 use rim_session::mod_info::ExternalUrl;
-use rim_session::ports::{AssetLocator, DefSourceReader, ModAboutReader, ReleaseFeed};
+use rim_session::ports::{
+    AssetLocator, DefSourceReader, GameLauncher, ModAboutReader, ReleaseFeed,
+};
 use tauri::async_runtime::spawn_blocking;
 use tokio::sync::Mutex as AsyncMutex;
 
@@ -209,6 +211,11 @@ pub struct AppState {
     pub adapters: Adapters,
     /// Whether RimWorld's own process is currently running.
     pub game_process_probe: Arc<dyn GameProcessProbe>,
+    /// Decides how this install is started and starts it. A `dyn` port for
+    /// the same reason as [`AppState::game_process_probe`]: tests inject
+    /// `test_support::RecordingGameLauncher`, so no default-gate test ever
+    /// starts the real game.
+    pub game_launcher: Arc<dyn GameLauncher + Send + Sync>,
     /// Opens an external link (a mod's workshop/homepage page, or one of
     /// the app's own fixed links) in the system browser.
     pub link_opener: Arc<dyn LinkOpener + Send + Sync>,
@@ -235,6 +242,7 @@ impl Default for AppState {
             session: Arc::new(RwLock::new(None)),
             adapters: Adapters::default(),
             game_process_probe: Arc::new(SysinfoGameProcessProbe),
+            game_launcher: Arc::new(rim_io::SystemGameLauncher::new()),
             link_opener: Arc::new(SystemLinkOpener),
             load_lock: Arc::new(AsyncMutex::new(())),
             launch_checks_ran: Arc::new(std::sync::atomic::AtomicBool::new(false)),
@@ -249,6 +257,7 @@ impl std::fmt::Debug for AppState {
             .field("session", &self.session)
             .field("adapters", &self.adapters)
             .field("game_process_probe", &"<dyn GameProcessProbe>")
+            .field("game_launcher", &"<dyn GameLauncher>")
             .field("link_opener", &"<dyn LinkOpener>")
             .field("load_lock", &"<tokio::sync::Mutex<()>>")
             .field(

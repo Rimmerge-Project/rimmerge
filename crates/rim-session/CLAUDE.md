@@ -547,6 +547,23 @@ the conflict-direction rules themselves). Status is evaluated fresh via
 `rim_resolve::evaluate::edge_status`, never a scan-time-fixed
 `EdgeReport::status`.
 
+## Game launch
+
+`game_launch.rs` is pure: `game_launch_status(game, route, order)` picks the
+Launch RimWorld button's state, first match wins: `GameRunning`, then
+`Unavailable`, then `NeedsApply` (with its `UnappliedReason`), else `Ready`.
+`Session::order_on_disk()` reads the **selected** order (not Suggested) and
+puts unscanned working-set changes (`is_stale`) ahead of
+`!file_matches(selected)`, which ignores the generated merge mod.
+`use_cases::LaunchGame::execute` takes no `Session`: the interface snapshots `game_dir` and `order_on_disk()` under the
+session lock and calls it outside the lock. It re-reads `GameLauncher::route`
+on every call (the button's status may be seconds old) and refuses
+`GameRunning`/`Unavailable` always, `NotApplied` unless `IfNotApplied::
+LaunchAnyway`. Whether the game is running is an input (`GameProcess`): the
+probe trait stays in `rim-io`. `GameExecutable` has a private path and one
+constructor, so a route can only name `<game_dir>/RimWorldWin64.exe`. Tests
+use `test_support::FakeGameLauncher`; nothing here starts a process.
+
 ## Activating and deactivating mods
 
 `Session.working: ActiveSet` is the working, in-memory, unsaved active-mod

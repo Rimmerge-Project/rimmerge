@@ -21,6 +21,7 @@ pub mod def_graphic;
 pub mod defs;
 pub mod fetch_failure;
 pub mod finding;
+pub mod game_launch;
 pub mod game_log;
 pub mod game_log_coverage;
 pub mod links;

@@ -17,6 +17,7 @@ pub mod def_conflict;
 pub mod def_graphics;
 pub mod defs;
 pub mod findings;
+pub mod game_launch;
 pub mod game_log;
 pub mod links;
 pub mod merge;

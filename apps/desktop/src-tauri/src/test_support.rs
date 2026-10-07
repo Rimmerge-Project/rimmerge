@@ -18,8 +18,11 @@
 use rim_analyzer::analysis::SourceIndex;
 use rim_analyzer::domain::{ModId, Report};
 use rim_resolve::domain::DecisionSet;
+use rim_session::LaunchUnavailable;
 use rim_session::mod_info::ExternalUrl;
-use rim_session::ports::{ModsConfigFile, StoredRules};
+use rim_session::ports::{
+    GameExecutable, GameLauncher, LaunchFailure, LaunchRoute, ModsConfigFile, StoredRules,
+};
 use rim_session::{ProjectPaths, Session};
 
 use crate::state::{LinkOpenError, LinkOpener};
@@ -162,4 +165,90 @@ pub(crate) fn scratch_sample_game() -> (tempfile::TempDir, crate::dto::project::
         game_dir: game_dir.display().to_string(),
     };
     (temp_dir, paths)
+}
+
+/// A [`GameLauncher`] that never starts anything: `route` answers a
+/// scripted result and `launch` records the route it was asked to start,
+/// failing instead when a failure was scripted. The seam every
+/// `get_game_launch_status`/`launch_game` test swaps
+/// [`crate::state::AppState::game_launcher`] for, so a default-gate test
+/// never opens `steam://` or spawns `RimWorldWin64.exe`.
+#[derive(Debug)]
+pub(crate) struct RecordingGameLauncher {
+    route: Result<LaunchRoute, LaunchUnavailable>,
+    failure: Option<LaunchFailure>,
+    launched: std::sync::Mutex<Vec<LaunchRoute>>,
+    queried: std::sync::Mutex<Vec<std::path::PathBuf>>,
+}
+
+impl RecordingGameLauncher {
+    fn with_route(route: Result<LaunchRoute, LaunchUnavailable>) -> Self {
+        Self {
+            route,
+            failure: None,
+            launched: std::sync::Mutex::new(Vec::new()),
+            queried: std::sync::Mutex::new(Vec::new()),
+        }
+    }
+
+    /// Reports the Steam route.
+    pub(crate) fn steam() -> Self {
+        Self::with_route(Ok(LaunchRoute::Steam))
+    }
+
+    /// Reports the executable route for an invented install folder.
+    pub(crate) fn executable() -> Self {
+        let install = std::path::Path::new("recording-launcher-install");
+        Self::with_route(Ok(LaunchRoute::Executable(GameExecutable::of_install(
+            install,
+        ))))
+    }
+
+    /// Reports that the install can't be started from here.
+    pub(crate) fn unavailable() -> Self {
+        Self::with_route(Err(LaunchUnavailable::ExecutableMissing))
+    }
+
+    /// Makes every `launch` call fail with `failure`.
+    pub(crate) fn failing_with(mut self, failure: LaunchFailure) -> Self {
+        self.failure = Some(failure);
+        self
+    }
+
+    /// The install folder of every `route` query, in order.
+    pub(crate) fn route_queries(&self) -> Vec<std::path::PathBuf> {
+        self.queried
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .clone()
+    }
+
+    /// The route of every successful `launch` call, in order.
+    pub(crate) fn launched(&self) -> Vec<LaunchRoute> {
+        self.launched
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .clone()
+    }
+}
+
+impl GameLauncher for RecordingGameLauncher {
+    fn route(&self, game_dir: &std::path::Path) -> Result<LaunchRoute, LaunchUnavailable> {
+        self.queried
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .push(game_dir.to_path_buf());
+        self.route.clone()
+    }
+
+    fn launch(&self, route: &LaunchRoute) -> Result<(), LaunchFailure> {
+        if let Some(failure) = &self.failure {
+            return Err(failure.clone());
+        }
+        self.launched
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .push(route.clone());
+        Ok(())
+    }
 }

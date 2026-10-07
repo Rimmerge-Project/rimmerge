@@ -6,7 +6,7 @@
 use sysinfo::{ProcessRefreshKind, ProcessesToUpdate, System};
 
 /// The process name RimWorld's 64-bit Windows build runs under.
-const RIMWORLD_PROCESS_NAME: &str = "rimworldwin64.exe";
+pub(crate) const RIMWORLD_PROCESS_NAME: &str = "rimworldwin64.exe";
 
 /// Probes whether RimWorld's own process is currently running. A trait
 /// (not a bare function) so `apply`'s refusal path is testable with a
