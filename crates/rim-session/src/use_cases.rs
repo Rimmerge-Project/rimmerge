@@ -33,6 +33,7 @@ mod import_game_log;
 mod import_profile_decisions;
 mod import_rimsort;
 mod inspect_def;
+mod launch_game;
 mod list_items;
 mod load_project;
 mod merge_coverage;
@@ -121,6 +122,7 @@ pub use import_rimsort::{ImportRimSort, ImportRimSortError};
 pub use inspect_def::{
     DefInspection, InspectDef, InspectDefError, PatchOpSummary, Patcher, TemplateAmbiguity, Toucher,
 };
+pub use launch_game::{GameLaunchFacts, IfNotApplied, LaunchGame, LaunchGameError};
 pub use list_items::{ListItem, ListItems, ListItemsFilter, ListItemsPage, item_types};
 pub use load_project::{LoadProject, LoadProjectError};
 pub use merge_coverage::{

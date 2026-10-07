@@ -146,6 +146,32 @@ text, never made clickable. A new-version notice's own release link is
 copyable text, not a clickable one — copying it to your clipboard never
 opens anything on its own.
 
+## Starting the game
+
+The desktop app's **Launch RimWorld** button starts the game only when
+you click it (see [Launching RimWorld](desktop.md#launching-rimworld)).
+The request it sends to the backend names no path or URL; the backend
+works out both from the configured install.
+
+- **A Steam copy** is started by handing the fixed link
+  `steam://run/294100` to Windows, which passes it to the Steam client
+  already installed on your computer. Rimmerge opens no connection and
+  contacts no host to do this: it isn't a web request, the two hosts
+  above are still the only ones Rimmerge ever contacts, and the
+  Internet access switch has nothing to block here.
+- **Steam may go online on its own** once it starts the game, as it
+  always does (sign-in, updates, cloud saves). That is Steam's
+  behaviour, outside Rimmerge and its settings.
+- **Any other copy** (GOG, a standalone folder, or a Steam copy whose
+  library isn't listed in a default Steam root's `libraryfolders.vdf`)
+  is started by running `RimWorldWin64.exe` from the install folder,
+  with no arguments and no shell. Rimmerge doesn't wait for the game or
+  read its output.
+
+Launching reads the install folder, Steam's own records of it
+(`appmanifest_294100.acf` and `libraryfolders.vdf`) and the list of
+running programs, and writes nothing.
+
 ## Rate limits and being offline
 
 Being offline is normal: a failed check or refresh is recorded (shown
@@ -157,9 +183,11 @@ GitHub's stated reset time (at most a day) before asking again.
 ## Everything else is local
 
 Every other operation — scanning your install, sorting, building the
-ledger, merging, verifying — reads and writes only your local
-filesystem, and only when you ask for a write. Scanning, sorting, the
-ledger, and `verify` never write anything. `apply` and `mods
+ledger, merging, verifying, starting the game — reads and writes only
+your local filesystem, and only when you ask for a write. Scanning,
+sorting, the ledger, `verify`, and launching RimWorld never write
+anything; launching only reads the install folder and Steam's records
+of it (see [Starting the game](#starting-the-game)). `apply` and `mods
 activate`/`mods deactivate` write `ModsConfig.xml`, with a backup taken
 first. `apply --write-merge-mod`, and exporting a compatibility patch or
 patch-maker mod with `--install`, additionally write a generated mod

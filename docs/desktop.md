@@ -30,6 +30,9 @@ scan or apply, and no activation change is waiting for a rescan. While the
 working set is stale, step two offers Rescan instead of Apply, even if the
 file matched at the last scan. The number of findings that still need input appears as
 a quiet line with a link to the Inbox; it never blocks Apply.
+Once every step is done the strip ends with a **Launch RimWorld** button, the
+same one the sidebar shows under Apply (see
+[Launching RimWorld](#launching-rimworld)).
 
 **Step one, Get the recommended rules,** downloads the two importable
 rule databases (the community load-order rules and the Steam Workshop
@@ -97,6 +100,55 @@ With "Write ModsConfig.xml" unchecked, nothing is written there, so it skips the
 If RimWorld looks like it is running, a separate "Write anyway" prompt
 comes after this one; the two are never one button.
 
+## Launching RimWorld
+
+The **Launch RimWorld** button sits in the sidebar under Apply, and again at
+the end of the Dashboard strip once its steps are done. It starts the game;
+Rimmerge stays open.
+
+**How the game is started.** A Steam copy is started through Steam
+(`steam://run/294100`), so Steam's own launch settings apply. Any other copy
+(GOG, a standalone folder) starts `RimWorldWin64.exe` directly from the
+install folder, with no arguments. A copy counts as a Steam copy only when
+Steam's own record names that folder: the folder sits in a library's
+`steamapps/common`, the library's `appmanifest_294100.acf` names it, and the
+library is listed in a default Steam root's `libraryfolders.vdf`. A folder
+copied out of Steam, or a backed-up library, is not mistaken for the real one
+(Steam would start a different folder). A Steam copy whose Steam is installed
+outside the default Program Files folders is started directly through
+`RimWorldWin64.exe`, since its library cannot be found.
+
+**What the button says.** It reads from the **selected** order and the last
+scan or apply, the same caveat as the strip: an edit made to `ModsConfig.xml`
+by another tool since then is not seen until a rescan. The status refreshes
+every five seconds while the window is visible, and when you come back to it.
+
+- **Launch RimWorld** (enabled): a click starts the game, then the button
+  reads **Starting RimWorld…** until the game shows up in the process list
+  (or 30 seconds pass). The sidebar and strip buttons share that state, so
+  a click on one disables the other and a second click cannot start the game
+  twice.
+- **Apply first?** When `ModsConfig.xml` does not hold the order you are
+  looking at (or activation changes are waiting for a rescan), a click asks
+  first, with **Cancel** (focused), **Launch anyway** and **Apply first**.
+  Apply first opens the ordinary Apply dialog with all its usual
+  confirmations and, once it has written `ModsConfig.xml`, launches. If you
+  uncheck "Write ModsConfig.xml" there, or close the dialog, nothing is
+  launched.
+- **RimWorld is running** (disabled): the game is already up.
+- **Disabled with a note**: the install has no `RimWorldWin64.exe`, or the
+  status check failed (a short line says so). Until the first answer arrives
+  the button is disabled with no note. After that it shows the last answer,
+  and a click first waits for a fresh one, which can wait behind a long
+  command such as Verify; the button stays disabled meanwhile rather than
+  guessing.
+
+Launching writes nothing: no file, no setting. The only write on this path is
+the Apply you may choose in the prompt. If Steam's links are not set up on the
+machine, Windows may show its own prompt instead of Rimmerge reporting an
+error. Rimmerge opens no connection to start the game (see
+[privacy and network](privacy-and-network.md)).
+
 ## Inbox
 
 The ledger, one row per finding. See
@@ -115,9 +167,11 @@ which mod it must follow, why, and how strong that requirement is. See
 ## Mods (`/mods`, `/mods/:modId`, `/mods/:modId/details`)
 
 Lists every discovered mod — active, inactive, or both — and lets you
-activate or deactivate mods directly in `ModsConfig.xml`'s own
-`<activeMods>` list, with a pending-changes banner and a stale-order
-warning once the active set no longer matches the order you last built.
+activate or deactivate mods. A change is staged in the app, not written
+to `ModsConfig.xml`: it reaches the file's `<activeMods>` list only when
+you Rescan and then Apply. Until then a pending-changes banner shows it,
+and a stale-order warning appears once the active set no longer matches
+the order you last built.
 `Activate` can pull in a mod's own declared dependencies first.
 
 Opening a row from either tab (`/mods/:modId` — inactive mods can be
@@ -452,3 +506,6 @@ generated mod to the list). The Mods page's activate/deactivate actions
 only stage a change in the app; it reaches the file when you Apply. Every
 write takes a timestamped backup first, and each refuses to write while
 RimWorld looks like it is running unless you confirm the override.
+
+Launching RimWorld writes nothing; the Apply its prompt may offer is the
+ordinary Apply above.

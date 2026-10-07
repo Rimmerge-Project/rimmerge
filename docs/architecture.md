@@ -48,7 +48,8 @@ interface apps.
   built from.
 - **`rim-io`** — infrastructure: every real filesystem/network/process
   adapter — reading the install, writing `ModsConfig.xml`, the rule
-  database cache and fetcher, profile/patch/assignment persistence. Its
+  database cache and fetcher, profile/patch/assignment persistence,
+  starting the game. Its
   `mod_knowledge.rs` also embeds `rules/rimmerge-rules.json` at compile
   time (`build.rs`) — a snapshot of the sibling
   [`rimmerge-rules`](https://github.com/Rimmerge-Project/rimmerge-rules)

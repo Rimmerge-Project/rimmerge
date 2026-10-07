@@ -657,3 +657,54 @@ fn already_running_has_its_own_code() {
         CommandErrorCode::AlreadyRunning
     );
 }
+
+#[test]
+fn every_launch_game_error_maps_to_its_own_code() {
+    use rim_session::ports::LaunchFailure;
+    use rim_session::use_cases::LaunchGameError;
+    use rim_session::{LaunchUnavailable, UnappliedReason};
+
+    let cases = [
+        (
+            LaunchGameError::GameRunning,
+            CommandErrorCode::RimworldRunning,
+        ),
+        (
+            LaunchGameError::NotApplied(UnappliedReason::OrderDiffers),
+            CommandErrorCode::OrderNotApplied,
+        ),
+        (
+            LaunchGameError::Unavailable(LaunchUnavailable::ExecutableMissing),
+            CommandErrorCode::GameExecutableMissing,
+        ),
+        (
+            LaunchGameError::Failed(LaunchFailure::SteamRefused("no handler".to_string())),
+            CommandErrorCode::SteamLaunchFailed,
+        ),
+        (
+            LaunchGameError::Failed(LaunchFailure::SpawnFailed("denied".to_string())),
+            CommandErrorCode::GameStartFailed,
+        ),
+    ];
+
+    for (error, expected) in cases {
+        let mapped: CommandError = error.clone().into();
+
+        assert_eq!(mapped.code, expected, "{error:?}");
+    }
+}
+
+#[test]
+fn a_launch_failure_keeps_the_os_cause_in_the_message() {
+    use rim_session::ports::LaunchFailure;
+    use rim_session::use_cases::LaunchGameError;
+
+    let mapped: CommandError =
+        LaunchGameError::Failed(LaunchFailure::SpawnFailed("access denied".to_string())).into();
+
+    assert!(
+        mapped.message.contains("access denied"),
+        "{}",
+        mapped.message
+    );
+}

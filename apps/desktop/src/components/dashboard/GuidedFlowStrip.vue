@@ -8,6 +8,7 @@ import { RouterLink } from "vue-router";
 import ApplyDialog from "@/components/apply/ApplyDialog.vue";
 import GuidedRulesActions from "@/components/dashboard/GuidedRulesActions.vue";
 import GuidedRulesBody from "@/components/dashboard/GuidedRulesBody.vue";
+import LaunchGameButton from "@/components/launch/LaunchGameButton.vue";
 import { useGuidedRulesStep } from "@/composables/useGuidedRulesStep";
 import { useOrderSource } from "@/composables/useOrderSource";
 import { useTranslateMessage } from "@/composables/useTranslateMessage";
@@ -325,14 +326,19 @@ watch(
       </li>
     </ol>
 
-    <p
+    <div
       v-if="step.kind === 'done'"
-      class="text-text text-sm"
-      data-testid="guide-done"
+      class="flex flex-col items-start gap-2"
     >
-      {{ t("dashboard.guide.done") }}
-      <span class="text-text-muted">{{ t("dashboard.guide.asOfLastScan") }}</span>
-    </p>
+      <p
+        class="text-text text-sm"
+        data-testid="guide-done"
+      >
+        {{ t("dashboard.guide.done") }}
+        <span class="text-text-muted">{{ t("dashboard.guide.asOfLastScan") }}</span>
+      </p>
+      <LaunchGameButton variant="strip" />
+    </div>
 
     <p
       v-if="needsInputCount > 0"

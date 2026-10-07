@@ -124,6 +124,15 @@ every library. Per-OS candidates are emitted so a non-Windows user gets a
 sane error, but that is not a claim of non-Windows support: `deny.toml`
 pins `x86_64-pc-windows-msvc` and CI is `windows-latest`.
 
+`is_steam_managed_install(game_dir)` decides the Launch RimWorld route
+(Steam or the executable): the folder is in `<library>/steamapps/common/`,
+`appmanifest_294100.acf` names it as `installdir`, **and** `<library>` is a
+default Steam root or listed in that root's `libraryfolders.vdf` (so a
+backed-up copy of a whole library is not "Steam's"). Every read is bounded
+and any failure is `false`. Library paths compare lexically, never through
+`canonicalize`; tests use `is_steam_managed_install_under` with scratch roots,
+never this machine's real Steam.
+
 ## Engine facts this crate encodes
 
 - **Loaded-folder rules follow RimWorld exactly**: `LoadFolders.xml`'s own

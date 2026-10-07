@@ -551,6 +551,22 @@
       "texture_unsupported_format": {
         "title": "このテクスチャ形式は表示できません",
         "detail": "ファイルがPNGまたはJPEG画像ではないため、ここではプレビューできません。DDSテクスチャには対応していません。"
+      },
+      "order_not_applied": {
+        "title": "順序が適用されていません",
+        "detail": "Rimmergeが確認した後に順序または有効なMODが変更されたため、RimWorldを起動しませんでした。再度お試しください。"
+      },
+      "game_executable_missing": {
+        "title": "ここからRimWorldを起動できません",
+        "detail": "インストールフォルダーにRimWorldWin64.exeがありません。"
+      },
+      "steam_launch_failed": {
+        "title": "SteamがRimWorldを起動しませんでした",
+        "detail": "WindowsがSteamに要求を渡せませんでした。Steamがインストールされていないか、正しく設定されていない可能性があります。Steamがインストールされていることを確認してから、SteamからRimWorldを起動してください。"
+      },
+      "game_start_failed": {
+        "title": "RimWorldが起動しませんでした",
+        "detail": "WindowsがRimWorldWin64.exeを起動できませんでした。"
       }
     }
   },
@@ -1674,6 +1690,26 @@
       "missingModKept": "{mod}はインストールされていませんが、有効なMODリストに残ります。ゲームはこのMODをスキップします。",
       "loadRequirementViolated": "{after}は{before}が先にロードされる必要がありますが、この順序では後にロードされます。",
       "anyOfUnsatisfied": "{mod}は{candidates}のいずれかが先にロードされる必要がありますが、どれも先にロードされません。"
+    }
+  },
+  "gameLaunch": {
+    "button": "RimWorldを起動",
+    "starting": "RimWorldを起動しています…",
+    "running": "RimWorld実行中",
+    "alreadyRunning": "RimWorldはすでに実行中です。",
+    "statusFailed": "RimWorldを起動できるかどうか確認できませんでした。",
+    "unavailable": {
+      "executableMissing": "インストールフォルダーにRimWorldWin64.exeがありません。"
+    },
+    "launchedSteam": "SteamにRimWorldの起動を依頼しました。",
+    "launchedExecutable": "RimWorldを起動しています。",
+    "notStartedAfterApply": "ModsConfig.xmlが書き込まれなかったため、RimWorldを起動しませんでした。",
+    "applyFirst": {
+      "header": "先に適用しますか？",
+      "orderDiffers": "前回のスキャンまたは適用の時点では、ModsConfig.xmlに{order}が反映されていません。このまま起動すると、RimWorldはこのファイルに記載されているMODと順序で起動します。",
+      "activationChanges": "保留中の有効化／無効化の変更は、まだModsConfig.xmlに反映されていません。このまま起動すると、RimWorldはそれらの変更なしで起動します。",
+      "applyButton": "先に適用",
+      "launchAnywayButton": "それでも起動"
     }
   },
   "gameLog": {
