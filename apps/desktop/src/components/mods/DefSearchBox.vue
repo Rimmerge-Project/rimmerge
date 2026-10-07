@@ -109,7 +109,7 @@ function handleKeydown(event: KeyboardEvent): void {
 
 <template>
   <div
-    class="relative"
+    class="relative w-64 max-w-full"
     data-testid="def-search-box"
   >
     <input
@@ -122,7 +122,7 @@ function handleKeydown(event: KeyboardEvent): void {
       :aria-controls="listboxId"
       :aria-activedescendant="open && activeIndex >= 0 ? optionId(activeIndex) : undefined"
       :placeholder="t('mods.defSearch.placeholder')"
-      class="border-border-subtle bg-surface-1 rounded border px-2 py-1 text-xs"
+      class="border-border-subtle bg-surface-1 w-full rounded border px-2 py-1 text-xs"
       data-testid="def-search-input"
       @focus="open = true"
       @blur="close"
@@ -132,7 +132,7 @@ function handleKeydown(event: KeyboardEvent): void {
       v-if="open && hits.length > 0"
       :id="listboxId"
       role="listbox"
-      class="border-border-subtle bg-surface-1 absolute z-10 mt-1 flex w-64 flex-col rounded border shadow"
+      class="border-border-subtle bg-surface-1 absolute inset-x-0 z-10 mt-1 flex flex-col rounded border shadow"
       data-testid="def-search-results"
     >
       <li
@@ -144,7 +144,7 @@ function handleKeydown(event: KeyboardEvent): void {
       >
         <RouterLink
           :to="inspectRoute(hit.defRef)"
-          class="text-text hover:bg-surface-2 block px-2 py-1 font-mono text-xs"
+          class="text-text hover:bg-surface-2 block px-2 py-1 font-mono text-xs break-words"
           :class="index === activeIndex ? 'bg-surface-2' : ''"
           :data-testid="`def-search-result-${hit.defRef}`"
           @mousedown.prevent
