@@ -551,6 +551,22 @@
       "texture_unsupported_format": {
         "title": "Texturformat kann nicht angezeigt werden",
         "detail": "Die Datei ist kein PNG- oder JPEG-Bild, daher ist hier keine Vorschau möglich. DDS-Texturen werden nicht unterstützt."
+      },
+      "order_not_applied": {
+        "title": "Die Reihenfolge ist nicht angewendet",
+        "detail": "Die Reihenfolge oder die aktiven Mods haben sich geändert, nachdem Rimmerge sie geprüft hat, daher wurde RimWorld nicht gestartet. Versuche es erneut."
+      },
+      "game_executable_missing": {
+        "title": "RimWorld kann von hier aus nicht gestartet werden",
+        "detail": "RimWorldWin64.exe ist nicht im Installationsverzeichnis."
+      },
+      "steam_launch_failed": {
+        "title": "Steam hat RimWorld nicht gestartet",
+        "detail": "Windows konnte die Anfrage nicht an Steam weitergeben. Steam ist möglicherweise nicht installiert oder nicht richtig eingerichtet. Prüfe, ob Steam installiert ist, und starte RimWorld dann über Steam."
+      },
+      "game_start_failed": {
+        "title": "RimWorld ist nicht gestartet",
+        "detail": "Windows konnte RimWorldWin64.exe nicht starten."
       }
     }
   },
@@ -1674,6 +1690,26 @@
       "missingModKept": "{mod} ist nicht installiert und bleibt in der aktiven Liste; das Spiel überspringt sie.",
       "loadRequirementViolated": "{after} braucht {before}, die zuerst laden muss; diese Reihenfolge lädt sie später.",
       "anyOfUnsatisfied": "{mod} braucht eine von {candidates}, die zuerst laden muss; keine davon tut das."
+    }
+  },
+  "gameLaunch": {
+    "button": "RimWorld starten",
+    "starting": "RimWorld startet…",
+    "running": "RimWorld läuft",
+    "alreadyRunning": "RimWorld läuft bereits.",
+    "statusFailed": "Es konnte nicht geprüft werden, ob RimWorld gestartet werden kann.",
+    "unavailable": {
+      "executableMissing": "RimWorldWin64.exe ist nicht im Installationsverzeichnis."
+    },
+    "launchedSteam": "Steam wurde gebeten, RimWorld zu starten.",
+    "launchedExecutable": "RimWorld startet.",
+    "notStartedAfterApply": "ModsConfig.xml wurde nicht geschrieben, daher wurde RimWorld nicht gestartet.",
+    "applyFirst": {
+      "header": "Zuerst anwenden?",
+      "orderDiffers": "ModsConfig.xml enthält die {order} Reihenfolge nicht (Stand des letzten Scans oder Anwendens). Wenn du jetzt startest, startet RimWorld mit den Mods und der Reihenfolge, die in dieser Datei stehen.",
+      "activationChanges": "Deine ausstehenden Aktivierungsänderungen sind noch nicht in ModsConfig.xml. Wenn du jetzt startest, startet RimWorld ohne sie.",
+      "applyButton": "Zuerst anwenden",
+      "launchAnywayButton": "Trotzdem starten"
     }
   },
   "gameLog": {

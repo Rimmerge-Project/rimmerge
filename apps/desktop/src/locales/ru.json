@@ -551,6 +551,22 @@
       "texture_unsupported_format": {
         "title": "Формат текстуры не поддерживается",
         "detail": "Файл не является изображением PNG или JPEG, поэтому его нельзя здесь просмотреть. Текстуры DDS не поддерживаются."
+      },
+      "order_not_applied": {
+        "title": "Порядок не применён",
+        "detail": "Порядок или активные моды изменились после проверки Rimmerge, поэтому RimWorld не был запущен. Попробуйте снова."
+      },
+      "game_executable_missing": {
+        "title": "RimWorld нельзя запустить отсюда",
+        "detail": "В папке установки нет RimWorldWin64.exe."
+      },
+      "steam_launch_failed": {
+        "title": "Steam не запустил RimWorld",
+        "detail": "Windows не удалось передать запрос в Steam. Возможно, Steam не установлен или настроен неправильно. Убедитесь, что Steam установлен, затем запустите RimWorld из Steam."
+      },
+      "game_start_failed": {
+        "title": "RimWorld не запустился",
+        "detail": "Windows не удалось запустить RimWorldWin64.exe."
       }
     }
   },
@@ -1674,6 +1690,26 @@
       "missingModKept": "{mod} не установлен и остаётся в списке активных; игра его пропускает.",
       "loadRequirementViolated": "{after} требует, чтобы {before} загружался раньше; в этом порядке он загружается позже.",
       "anyOfUnsatisfied": "{mod} требует, чтобы раньше загружался один из модов: {candidates}; ни один из них не загружается раньше."
+    }
+  },
+  "gameLaunch": {
+    "button": "Запустить RimWorld",
+    "starting": "Запуск RimWorld…",
+    "running": "RimWorld запущен",
+    "alreadyRunning": "RimWorld уже запущен.",
+    "statusFailed": "Не удалось проверить, можно ли запустить RimWorld.",
+    "unavailable": {
+      "executableMissing": "В папке установки нет RimWorldWin64.exe."
+    },
+    "launchedSteam": "Запрос на запуск RimWorld отправлен в Steam.",
+    "launchedExecutable": "RimWorld запускается.",
+    "notStartedAfterApply": "ModsConfig.xml не был записан, поэтому RimWorld не был запущен.",
+    "applyFirst": {
+      "header": "Сначала применить?",
+      "orderDiffers": "В ModsConfig.xml нет порядка «{order}» (по состоянию на последнее сканирование или применение). При запуске сейчас RimWorld загрузит моды в том составе и порядке, которые указаны в этом файле.",
+      "activationChanges": "Ожидающие включения и отключения модов ещё не внесены в ModsConfig.xml. При запуске сейчас RimWorld загрузится без них.",
+      "applyButton": "Сначала применить",
+      "launchAnywayButton": "Всё равно запустить"
     }
   },
   "gameLog": {

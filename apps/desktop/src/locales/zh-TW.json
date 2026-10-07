@@ -551,6 +551,22 @@
       "texture_unsupported_format": {
         "title": "無法顯示此紋理格式",
         "detail": "此檔案不是 PNG 或 JPEG 圖片，因此無法在此預覽。不支援 DDS 紋理。"
+      },
+      "order_not_applied": {
+        "title": "順序尚未套用",
+        "detail": "順序或已啟用的模組在 Rimmerge 檢查後有所變更，因此未啟動 RimWorld。請再試一次。"
+      },
+      "game_executable_missing": {
+        "title": "無法從這裡啟動 RimWorld",
+        "detail": "安裝資料夾中沒有 RimWorldWin64.exe。"
+      },
+      "steam_launch_failed": {
+        "title": "Steam 未能啟動 RimWorld",
+        "detail": "Windows 無法將請求傳給 Steam。Steam 可能未安裝或設定不正確。請確認已安裝 Steam，再從 Steam 啟動 RimWorld。"
+      },
+      "game_start_failed": {
+        "title": "RimWorld 未能啟動",
+        "detail": "Windows 無法啟動 RimWorldWin64.exe。"
       }
     }
   },
@@ -1674,6 +1690,26 @@
       "missingModKept": "{mod} 未安裝，但會保留在已啟用清單中；遊戲會略過它。",
       "loadRequirementViolated": "{after} 需要 {before} 先載入；此順序卻讓它較晚載入。",
       "anyOfUnsatisfied": "{mod} 需要 {candidates} 其中之一先載入；但它們都沒有先載入。"
+    }
+  },
+  "gameLaunch": {
+    "button": "啟動 RimWorld",
+    "starting": "正在啟動 RimWorld…",
+    "running": "RimWorld 正在執行",
+    "alreadyRunning": "RimWorld 已在執行中。",
+    "statusFailed": "無法確認 RimWorld 是否可以啟動。",
+    "unavailable": {
+      "executableMissing": "安裝資料夾中沒有 RimWorldWin64.exe。"
+    },
+    "launchedSteam": "已要求 Steam 啟動 RimWorld。",
+    "launchedExecutable": "正在啟動 RimWorld。",
+    "notStartedAfterApply": "未寫入 ModsConfig.xml，因此未啟動 RimWorld。",
+    "applyFirst": {
+      "header": "要先套用嗎？",
+      "orderDiffers": "ModsConfig.xml 尚未採用{order}順序（截至上次掃描或套用時）。若現在啟動，RimWorld 會載入該檔案現有的模組與順序。",
+      "activationChanges": "你在這裡做的啟用／停用變更尚未寫入 ModsConfig.xml。若現在啟動，RimWorld 不會包含這些變更。",
+      "applyButton": "先套用",
+      "launchAnywayButton": "仍要啟動"
     }
   },
   "gameLog": {

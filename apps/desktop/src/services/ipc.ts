@@ -30,6 +30,7 @@ export {
   revertDecision,
   searchDefs,
 } from "./ipc/findings";
+export { getGameLaunchStatus, launchGame } from "./ipc/gameLaunch";
 export {
   getMergeMod,
   getMergePreview,

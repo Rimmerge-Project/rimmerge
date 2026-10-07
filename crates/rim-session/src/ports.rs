@@ -9,6 +9,7 @@
 
 mod app_settings;
 mod fetch_failure;
+mod game_launch;
 mod game_log;
 mod log_coverage;
 mod log_shapes;
@@ -21,6 +22,7 @@ mod stores;
 
 pub use app_settings::*;
 pub use fetch_failure::*;
+pub use game_launch::*;
 pub use game_log::*;
 pub use log_coverage::*;
 pub use log_shapes::*;

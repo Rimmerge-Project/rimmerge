@@ -36,6 +36,11 @@ composition roots with no business logic.
   against the real install only when a human asks for it. Likewise no
   test or manual run writes into the real `ModLists` folder (RimWorld's
   own saved mod lists, where `order export --out` may be pointed).
+- IMPORTANT: agents and tests never start the real game — no call to
+  the real `SystemGameLauncher::launch`, no `steam://` URL opened, no
+  `RimWorldWin64.exe` spawned. Tests inject a fake launcher
+  (`FakeGameLauncher`, `RecordingGameLauncher`); only a manual check a
+  human asks for starts RimWorld.
 - IMPORTANT: the only network access this workspace may make goes to
   the closed host list in `crates/rim-io/src/net/allowlist.rs`
   (`raw.githubusercontent.com` for the three rule databases,

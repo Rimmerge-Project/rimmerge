@@ -13,6 +13,7 @@ pub mod app_settings;
 mod assignment_refs;
 mod changes;
 mod finding_index;
+mod game_launch;
 mod import_sources;
 mod merge_workspace;
 mod mod_index;
@@ -44,6 +45,10 @@ pub use def_conflict_view::{
     InjectedNodeRelation, Preference, Problem, Toucher as DefConflictToucher, ToucherRole,
 };
 pub use finding_index::{FindingFilter, FindingIndex, FindingKind, FindingPage, MAX_PAGE_SIZE};
+pub use game_launch::{
+    GameLaunchStatus, GameProcess, LaunchRouteKind, LaunchUnavailable, OrderOnDisk,
+    UnappliedReason, game_launch_status,
+};
 pub use import_sources::{resolve_from_cache, resolve_from_rimsort_dir, should_import_from_cache};
 pub use merge_workspace::{
     MergeFieldFilter, MergeFieldPage, MergeFieldTotals, MergePreview, PreviewSlot,

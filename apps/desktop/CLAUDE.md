@@ -70,6 +70,59 @@ of that command surface — no direct filesystem or process access outside
   ..AppState::default() }` (or reassigning `state.game_process_probe`
   on an already-built `mut` state). `commands/apply.rs`,
   `commands/patch.rs`, and `commands/assignments.rs` all follow it.
+- **A default-gate test must never call the real launcher's `launch`.**
+  `AppState::game_launcher: Arc<dyn GameLauncher + Send + Sync>` defaults to
+  `rim_io::SystemGameLauncher` (which opens `steam://run/294100` or spawns
+  `RimWorldWin64.exe`); every `get_game_launch_status`/`launch_game` test
+  injects `test_support::RecordingGameLauncher` (scripted route, records
+  launches, optional scripted failure) and a `FixedProbe`. Calling the real
+  `route` against a temp dir is fine; the real `launch` never is.
+- **`get_game_launch_status`/`launch_game` (`commands/game_launch.rs`) are
+  session commands with a documented exception to "real work inside
+  `with_session`".** They snapshot `(game_dir, order_on_disk())` under
+  `with_session`, release the lock, then a bare `spawn_blocking` reads the
+  probe and runs `LaunchGame::status`/`execute`: the lock is held only for the snapshot,
+  never across the process-list scan or a spawn, so a poll or launch never
+  makes another command wait on it (the snapshot itself can still wait for
+  a long command such as `verify`). `no_project_loaded` still wins. `launch_game` takes
+  no `AppHandle` and emits no `session://changed` (nothing changes); the
+  request is one enum (`ifNotApplied`) and never carries a path or URL.
+  `LaunchGame` is generic over its launcher, so the command wraps the shared
+  `Arc<dyn GameLauncher>` in a private newtype rather than widening
+  `rim-session`. `GameRunning` reuses `rimworld_running`; `order_not_applied`,
+  `game_executable_missing`, `steam_launch_failed` and `game_start_failed` are
+  the new codes (every one needs wording in `utils/errors.ts`).
+- **The Launch RimWorld button polls once, shares its in-flight state, and never
+  stacks requests.** `components/launch/LaunchGameButton.vue` (sidebar under Apply,
+  and the strip's done line) owns its Apply-first prompt and its own `ApplyDialog`;
+  `composables/useGameLaunch.ts` holds the logic over the shared
+  `useGameLaunchStatusQuery()` (`["gameLaunch", "status"]`). Only the sidebar
+  instance (`pollsStatus`, always mounted while the strip is) runs
+  `composables/useGameLaunchPolling.ts`: every 5 s (`useIntervalFn`) while
+  `useDocumentVisibility()` is visible, plus on window focus, so two placements cost
+  one poller. The in-flight click and the "Starting RimWorld…" window (until the
+  status reads `gameRunning`, or 30 s) live in `stores/gameLaunch.ts`, shared by
+  every button, so a click on one disables the other and a second `steam://run`
+  cannot be sent. The status snapshot takes the session lock and so can wait
+  behind a long command (`verify`); a tick is **skipped while a request is
+  pending** (Colada's `refetch` aborts the previous call on the frontend only; the
+  backend call would still queue). Until the first answer the button is disabled
+  with no note; an errored query is the view's `unknown` case (disabled, with
+  `gameLaunch.statusFailed`) even when an older answer is held. Colada keeps `data`
+  during a refetch, so after the first answer the button shows the last answer, and
+  a click reads a **fresh** status first (which can wait behind a verify). The button
+  is disabled while that read or `launch_game` is in flight. `launch_game` is called
+  directly, not through a mutation: the app-wide `mutationOptions.onError` would
+  toast every failure with the generic sentence, wrong for `rimworld_running` (own
+  sentence) and `order_not_applied` (reopens the prompt); `useGameLaunch` shows each
+  failure once. `ApplyDialog.vue` has one extra emit, `applied: [{ wroteModsConfig }]`,
+  fired from `useApplyDialog`'s `finishSuccess` (once per successful apply, even
+  when the dialog stays open for the merge-mod summary); the two older hosts ignore
+  it, the launch button's own dialog launches on it only while its
+  `isLaunchPendingApply` flag (set by "Apply first", cleared by `applied` or by the
+  dialog closing) is set. The mock (`gameLaunchStatus`/`launchGameMock` in
+  `scenario.ts`) derives the status from the selected order against `fileOrder`, the
+  unscanned set and `window.__GAME_RUNNING__`, and records `__LAUNCH_GAME_CALLS__`.
 - **A default-gate test must never let the real feed be called.**
   `AppState.adapters.release_feed: Arc<dyn ReleaseFeed + Send + Sync>`
   defaults to the real `GithubReleaseFeed` for production (merely
@@ -244,7 +297,10 @@ of that command surface — no direct filesystem or process access outside
   `allow-destroy`/`allow-close`) — a missing permission fails silently: the
   IPC call is denied, the rejection is easy to swallow, and nothing in the
   UI signals why (see `PendingChangesCloseGuard.vue`'s `destroy()` call and
-  `src-tauri/src/capabilities.rs`'s regression test).
+  `src-tauri/src/capabilities.rs`'s regression test). The same file pins
+  that no capability grants `opener:*` or `shell:*`: every program or URL
+  this app starts (links, RimWorld) is derived in Rust, never named by the
+  webview.
 
 ## Gates
 
@@ -451,7 +507,7 @@ The UI is localized in `en` plus twelve translated locales (`zh-CN`,
   `call` wrapper); `services/ipc.ts` is the named re-export facade every
   caller imports, over
   `services/ipc/{project,findings,rules,verify,merge,patches,
-  assignments}.ts` (active-set calls live in `project.ts` alongside the
+  assignments,gameLaunch}.ts` (active-set calls live in `project.ts` alongside the
   rest of the project lifecycle). `session_lost`/`no_project_loaded` route
   to setup through `setSessionLostHandler`.
 - **A shell component `provide`s its own state through a typed

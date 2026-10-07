@@ -37,12 +37,15 @@ import type { ExportPatchRequestDto } from "../../src/types/generated/ExportPatc
 import type { FaceAvailabilityDto } from "../../src/types/generated/FaceAvailabilityDto";
 import type { FindingDto } from "../../src/types/generated/FindingDto";
 import type { FindingKindDto } from "../../src/types/generated/FindingKindDto";
+import type { GameLaunchedDto } from "../../src/types/generated/GameLaunchedDto";
+import type { GameLaunchStatusDto } from "../../src/types/generated/GameLaunchStatusDto";
 import type { GameLogSummaryDto } from "../../src/types/generated/GameLogSummaryDto";
 import type { GraphicFaceDto } from "../../src/types/generated/GraphicFaceDto";
 import type { GraphicFacesDto } from "../../src/types/generated/GraphicFacesDto";
 import type { GraphicSlotDto } from "../../src/types/generated/GraphicSlotDto";
 import type { GraphicVariantDto } from "../../src/types/generated/GraphicVariantDto";
 import type { InspectDefRequestDto } from "../../src/types/generated/InspectDefRequestDto";
+import type { LaunchGameRequestDto } from "../../src/types/generated/LaunchGameRequestDto";
 import type { LaunchNetworkChecksOutcomeDto } from "../../src/types/generated/LaunchNetworkChecksOutcomeDto";
 import type { MergeChoiceDto } from "../../src/types/generated/MergeChoiceDto";
 import type { MergeFieldDto } from "../../src/types/generated/MergeFieldDto";
@@ -274,6 +277,24 @@ declare global {
     __RUN_LAUNCH_NETWORK_CHECKS_CALLS__?: number;
     /** Every `update_app_settings` payload the mock received, in order. */
     __UPDATE_APP_SETTINGS_CALLS__?: AppSettingsDto[];
+    /** Every `launch_game` payload the mock received, in order, refused ones included. */
+    __LAUNCH_GAME_CALLS__?: LaunchGameRequestDto[];
+    /** How many `get_game_launch_status` calls the mock answered. */
+    __GAME_LAUNCH_STATUS_CALLS__?: number;
+    /**
+     * When `true`, the mock reports RimWorld as running (the process probe's answer); `launch_game`
+     * then refuses with `rimworld_running`. Set before load via `addInitScript`, or flipped later.
+     */
+    __GAME_RUNNING__?: boolean;
+    /** How the mock install can be started: Steam (the default), directly, or not at all. */
+    __LAUNCH_ROUTE__?: "steam" | "executable" | "unavailable";
+    /**
+     * When set, `get_game_launch_status` waits for {@link __RELEASE_GAME_LAUNCH_STATUS__} before it
+     * answers, standing in for a status call queued behind a long command such as verify.
+     */
+    __HOLD_GAME_LAUNCH_STATUS__?: boolean;
+    /** Set by the mock while it holds a status call; calling it lets every held call answer. */
+    __RELEASE_GAME_LAUNCH_STATUS__?: () => void;
     /** How many `get_recommended_rules` calls the mock received, refused ones included. */
     __GET_RECOMMENDED_RULES_CALLS__?: number;
     /** How many `skip_recommended_rules_step` calls the mock received. */
@@ -3401,6 +3422,73 @@ export function installScenario(): void {
   }
 
   /**
+   * Mirrors `rim_session::game_launch_status`'s precedence (first match wins): a running game,
+   * then an install that cannot be started, then an order `ModsConfig.xml` does not hold (the
+   * **selected** order against the file's last-known list, merge mod ignored; unscanned
+   * activation changes first), then ready.
+   */
+  function gameLaunchStatus(): GameLaunchStatusDto {
+    if (window.__GAME_RUNNING__) {
+      return { kind: "gameRunning" };
+    }
+    const route = window.__LAUNCH_ROUTE__ ?? "steam";
+    if (route === "unavailable") {
+      return { kind: "unavailable", reason: "executableMissing" };
+    }
+    const { unscanned } = pendingActiveChanges();
+    if (unscanned.added.length > 0 || unscanned.removed.length > 0) {
+      return { kind: "needsApply", route, reason: "activationChangesNotScanned" };
+    }
+    if (!sameOrderIgnoringMergeMod(orderFor(selected), fileOrder)) {
+      return { kind: "needsApply", route, reason: "orderDiffers" };
+    }
+    return { kind: "ready", route };
+  }
+
+  /**
+   * Mirrors `rim_session::LaunchGame::execute`: re-derives the status, refuses a running game, an
+   * unavailable install and (under `refuse`) an unapplied order, and writes nothing.
+   */
+  function launchGameMock(request: LaunchGameRequestDto): GameLaunchedDto {
+    window.__LAUNCH_GAME_CALLS__?.push(request);
+    const status = gameLaunchStatus();
+    switch (status.kind) {
+      case "gameRunning":
+        throw { code: "rimworld_running", message: "RimWorld is already running" };
+      case "unavailable":
+        throw {
+          code: "game_executable_missing",
+          message: "this install has no RimWorldWin64.exe",
+        };
+      case "needsApply":
+        if (request.ifNotApplied === "refuse") {
+          throw {
+            code: "order_not_applied",
+            message: "ModsConfig.xml does not hold the selected order",
+          };
+        }
+        return { route: status.route };
+      case "ready":
+        return { route: status.route };
+    }
+  }
+
+  /** `get_game_launch_status`, optionally held until a spec releases it (a call queued behind verify). */
+  async function gameLaunchStatusMock(): Promise<GameLaunchStatusDto> {
+    window.__GAME_LAUNCH_STATUS_CALLS__ = (window.__GAME_LAUNCH_STATUS_CALLS__ ?? 0) + 1;
+    if (window.__HOLD_GAME_LAUNCH_STATUS__) {
+      await new Promise<void>((resolve) => {
+        const previous = window.__RELEASE_GAME_LAUNCH_STATUS__;
+        window.__RELEASE_GAME_LAUNCH_STATUS__ = () => {
+          previous?.();
+          resolve();
+        };
+      });
+    }
+    return gameLaunchStatus();
+  }
+
+  /**
    * Mirrors `rim_resolve::preflight::hard_problems` for the finding kinds
    * this scenario models (a missing dependency, an incompatible pair, a
    * missing mod): the same inclusion rules (both sides in the written
@@ -5448,6 +5536,8 @@ export function installScenario(): void {
   window.__CHECK_FOR_UPDATE_CALLS__ = 0;
   window.__RUN_LAUNCH_NETWORK_CHECKS_CALLS__ = 0;
   window.__UPDATE_APP_SETTINGS_CALLS__ = [];
+  window.__LAUNCH_GAME_CALLS__ = [];
+  window.__GAME_LAUNCH_STATUS_CALLS__ = 0;
   window.__GET_RECOMMENDED_RULES_CALLS__ = 0;
   window.__SKIP_RECOMMENDED_RULES_CALLS__ = 0;
   window.__RECOMMENDED_RULES_PROGRESS__ = [];
@@ -6430,6 +6520,9 @@ export function installScenario(): void {
       return pendingActiveChanges();
     },
     get_pending_active_changes: () => pendingActiveChanges(),
+    get_game_launch_status: gameLaunchStatusMock,
+    launch_game: (payload: unknown) =>
+      launchGameMock((payload as { request: LaunchGameRequestDto }).request),
     rescan_project: () => {
       window.__RESCAN_CALLS__ = (window.__RESCAN_CALLS__ ?? 0) + 1;
       scannedActiveIds = new Set(workingActiveIds);

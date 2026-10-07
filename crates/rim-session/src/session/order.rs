@@ -10,6 +10,7 @@ use rim_resolve::sort::SortOutcome;
 use super::Session;
 use super::{compute, mods_by_id};
 use crate::active_set::{ActiveSet, PendingActiveChanges};
+use crate::game_launch::{OrderOnDisk, UnappliedReason};
 use crate::mod_index::{self, ModFilter, ModPage};
 use crate::ports::ModsConfigFile;
 use crate::settings::SortProvenance;
@@ -253,6 +254,24 @@ impl Session {
     #[must_use]
     pub fn is_stale(&self) -> bool {
         !self.pending_changes().unscanned.is_empty()
+    }
+
+    /// Whether `ModsConfig.xml` (as last scanned or written) holds the
+    /// *selected* order, for the Launch RimWorld button.
+    ///
+    /// Unscanned working-set changes come first: they have to be resolved
+    /// before an apply can write anything ([`Self::is_stale`]). Otherwise
+    /// this is [`Self::file_matches`] for [`Self::selected`], so the
+    /// generated merge mod is ignored the same way.
+    #[must_use]
+    pub fn order_on_disk(&self) -> OrderOnDisk {
+        if self.is_stale() {
+            return OrderOnDisk::NotApplied(UnappliedReason::ActivationChangesNotScanned);
+        }
+        if !self.file_matches(self.selected()) {
+            return OrderOnDisk::NotApplied(UnappliedReason::OrderDiffers);
+        }
+        OrderOnDisk::Applied
     }
 
     // -- Compat patches ---------

@@ -13,20 +13,21 @@ use rim_resolve::domain::{AssignmentId, AssignmentProject, DecisionSet, PatchId,
 
 use crate::ProjectPaths;
 use crate::app_settings::AppSettings;
+use crate::game_launch::LaunchUnavailable;
 use crate::mod_list::{ParsedModList, SharedModList};
 use crate::ports::{
     AboutImage, AboutReadError, AppSettingsLoad, AppSettingsStore, AssetLocator,
     AssignmentProjectStore, BackReferenceShape, CachedDatabase, ConfigError, DatabaseStatus,
     DecisionStore, DefCacheCarrier, DefCacheCarrierProbe, DefSourceError, DefSourceReader,
-    ElementExpectation, GameLogError, GameLogReader, ImportError, ImportManifestStore,
-    ImportRecord, ImportedRules, KindChoice, LoadedModKnowledge, LoadedRules, LogFormats,
-    LogShapes, MergeModError, MergeModWriteReport, MergeModWriter, ModAboutReader,
-    ModKnowledgeStore, ModListFileError, ModListFileStore, ModListRead, ModScanner, ModsConfigFile,
-    ModsConfigStore, ParsedGameLog, PatchProjectStore, PatchStackBlockShape,
-    ProfileNotificationState, ProfileNotificationStateStore, RefreshOutcome, RimSortImporter,
-    RimSortPaths, RuleDatabase, RuleDatabaseFetcher, RuleStore, RulesLoadWarning, ScanArtifacts,
-    ScanError, ScanProgress, ScanProgressStage, StackBlockSource, StoreError, StoredRules,
-    TextureBytes, TextureFallbackShape, TextureFallbackSource,
+    ElementExpectation, GameExecutable, GameLauncher, GameLogError, GameLogReader, ImportError,
+    ImportManifestStore, ImportRecord, ImportedRules, KindChoice, LaunchFailure, LaunchRoute,
+    LoadedModKnowledge, LoadedRules, LogFormats, LogShapes, MergeModError, MergeModWriteReport,
+    MergeModWriter, ModAboutReader, ModKnowledgeStore, ModListFileError, ModListFileStore,
+    ModListRead, ModScanner, ModsConfigFile, ModsConfigStore, ParsedGameLog, PatchProjectStore,
+    PatchStackBlockShape, ProfileNotificationState, ProfileNotificationStateStore, RefreshOutcome,
+    RimSortImporter, RimSortPaths, RuleDatabase, RuleDatabaseFetcher, RuleStore, RulesLoadWarning,
+    ScanArtifacts, ScanError, ScanProgress, ScanProgressStage, StackBlockSource, StoreError,
+    StoredRules, TextureBytes, TextureFallbackShape, TextureFallbackSource,
 };
 use crate::ports::{
     IMPORT_SOURCE_COMMUNITY_RULES, IMPORT_SOURCE_STEAM_DEPENDENCIES, IMPORT_SOURCE_USER_RULES,
@@ -1495,5 +1496,90 @@ impl AppSettingsStore for InMemoryAppSettingsStore {
             return Ok(());
         }
         self.save(base, settings)
+    }
+}
+
+/// The install folder [`FakeGameLauncher::executable`] reports.
+pub const FAKE_LAUNCHER_INSTALL: &str = "launcher-install";
+
+/// A [`GameLauncher`] fake: the route it reports is scripted (and can change
+/// between calls), `launch` records the route kind it was asked to start
+/// instead of starting anything, and an optional scripted failure makes
+/// `launch` fail.
+pub struct FakeGameLauncher {
+    route: RefCell<Result<LaunchRoute, LaunchUnavailable>>,
+    failure: Option<LaunchFailure>,
+    launched: RefCell<Vec<LaunchRoute>>,
+    route_queries: Cell<usize>,
+}
+
+impl FakeGameLauncher {
+    fn with_route(route: Result<LaunchRoute, LaunchUnavailable>) -> Self {
+        Self {
+            route: RefCell::new(route),
+            failure: None,
+            launched: RefCell::new(Vec::new()),
+            route_queries: Cell::new(0),
+        }
+    }
+
+    /// Reports the Steam route.
+    #[must_use]
+    pub fn steam() -> Self {
+        Self::with_route(Ok(LaunchRoute::Steam))
+    }
+
+    /// Reports the executable route for the invented install folder
+    /// [`FAKE_LAUNCHER_INSTALL`], which differs from any folder a test passes
+    /// as the game dir, so a launch built from the wrong source shows up.
+    #[must_use]
+    pub fn executable() -> Self {
+        let executable = GameExecutable::of_install(Path::new(FAKE_LAUNCHER_INSTALL));
+        Self::with_route(Ok(LaunchRoute::Executable(executable)))
+    }
+
+    /// Reports that the install can't be started from here.
+    #[must_use]
+    pub fn unavailable() -> Self {
+        Self::with_route(Err(LaunchUnavailable::ExecutableMissing))
+    }
+
+    /// Makes every `launch` call fail with `failure`.
+    #[must_use]
+    pub fn failing_with(mut self, failure: LaunchFailure) -> Self {
+        self.failure = Some(failure);
+        self
+    }
+
+    /// From now on `route` reports the install as unavailable.
+    pub fn become_unavailable(&self) {
+        *self.route.borrow_mut() = Err(LaunchUnavailable::ExecutableMissing);
+    }
+
+    /// The route of every successful `launch` call, in order.
+    #[must_use]
+    pub fn launched(&self) -> Vec<LaunchRoute> {
+        self.launched.borrow().clone()
+    }
+
+    /// How many times `route` was asked.
+    #[must_use]
+    pub fn route_queries(&self) -> usize {
+        self.route_queries.get()
+    }
+}
+
+impl GameLauncher for FakeGameLauncher {
+    fn route(&self, _game_dir: &Path) -> Result<LaunchRoute, LaunchUnavailable> {
+        self.route_queries.set(self.route_queries.get() + 1);
+        self.route.borrow().clone()
+    }
+
+    fn launch(&self, route: &LaunchRoute) -> Result<(), LaunchFailure> {
+        if let Some(failure) = &self.failure {
+            return Err(failure.clone());
+        }
+        self.launched.borrow_mut().push(route.clone());
+        Ok(())
     }
 }

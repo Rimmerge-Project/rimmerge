@@ -18,6 +18,8 @@ import type { RuleOriginDto } from "@/types/generated/RuleOriginDto";
 export const queryKeys = {
   /** `get_dashboard`'s result for the currently selected order. */
   dashboard: () => ["dashboard"] as const,
+  /** `get_game_launch_status`'s result — the Launch RimWorld button. */
+  gameLaunchStatus: () => ["gameLaunch", "status"] as const,
   /** `get_apply_preflight`'s result for one order source. */
   applyPreflight: (source: OrderSourceDto) => ["apply", "preflight", source] as const,
   /** `get_default_paths`'s result, for the setup page. */
