@@ -65,6 +65,7 @@ cargo deny check
 pwsh ./scripts/check-forbidden.ps1
 pwsh ./scripts/check-line-endings.ps1
 pwsh ./scripts/check-doc-links.ps1
+pwsh ./scripts/count-doc-warnings.ps1   # rustdoc warning budget; CI runs the same script
 cd apps/desktop && bun run types:check && bun run typecheck && bun run lint && bun run test && bun run e2e
 ```
 
