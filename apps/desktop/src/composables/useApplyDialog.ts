@@ -37,7 +37,16 @@ import {
 } from "@/utils/gameLogCoverage";
 import { describeSortProvenance } from "@/utils/sortProvenance";
 
-export type ApplyDialogEmit = (event: "update:visible", value: boolean) => void;
+/** What a successful apply did, for a host that reacts to it (the Launch RimWorld button). */
+export type ApplyOutcome = {
+  /** The request's own `writeModsConfig`: whether `ModsConfig.xml` was actually written. */
+  readonly wroteModsConfig: boolean;
+};
+
+export type ApplyDialogEmit = {
+  (event: "update:visible", value: boolean): void;
+  (event: "applied", outcome: ApplyOutcome): void;
+};
 
 export function useApplyDialog(visible: () => boolean, emit: ApplyDialogEmit) {
   const session = useSessionStore();
@@ -652,6 +661,8 @@ export function useApplyDialog(visible: () => boolean, emit: ApplyDialogEmit) {
     const removed =
       wroteMergeMod && report.mergeModPath === null && report.skippedMerges.length === 0;
     announceSuccess(report, removed, wroteModsConfig);
+    // Once per successful apply, before the dialog closes or switches to the merge-mod summary.
+    emit("applied", { wroteModsConfig });
     if (report.mergeModPath !== null || report.skippedMerges.length > 0 || removed) {
       lastReport.value = report;
       mergeModRemoved.value = removed;

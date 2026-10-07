@@ -9,12 +9,18 @@ import ApplyConfirm from "@/components/apply/ApplyConfirm.vue";
 import ApplyPreflight from "@/components/apply/ApplyPreflight.vue";
 import ApplyProgress from "@/components/apply/ApplyProgress.vue";
 import ApplyResult from "@/components/apply/ApplyResult.vue";
-import { APPLY_DIALOG_KEY, useApplyDialog } from "@/composables/useApplyDialog";
+import { APPLY_DIALOG_KEY, type ApplyOutcome, useApplyDialog } from "@/composables/useApplyDialog";
 import { useTranslateMessage } from "@/composables/useTranslateMessage";
 import { applyButtonLabel } from "@/utils/applyButtonLabel";
 
 const { visible } = defineProps<{ visible: boolean }>();
-const emit = defineEmits<{ "update:visible": [value: boolean] }>();
+// `applied` fires once per successful apply (even when the dialog stays open for the merge-mod
+// summary); the Dashboard and sidebar hosts ignore it, the Launch RimWorld button's own
+// dialog launches on it.
+const emit = defineEmits<{
+  "update:visible": [value: boolean];
+  applied: [outcome: ApplyOutcome];
+}>();
 
 const { t } = useI18n();
 const tm = useTranslateMessage();

@@ -5,6 +5,7 @@ import { useI18n } from "vue-i18n";
 
 import ApplyDialog from "@/components/apply/ApplyDialog.vue";
 import BaseProgressBar from "@/components/base/BaseProgressBar.vue";
+import LaunchGameButton from "@/components/launch/LaunchGameButton.vue";
 import PendingChangesBanner from "@/components/mods/PendingChangesBanner.vue";
 import PendingChangesCloseGuard from "@/components/mods/PendingChangesCloseGuard.vue";
 import NotificationBell from "@/components/notifications/NotificationBell.vue";
@@ -303,6 +304,9 @@ const NAV_ITEMS: { to: string; labelKey: string; testId: string; icon: string }[
           data-testid="shell-apply-button"
           @click="applyDialogVisible = true"
         />
+
+        <!-- The only launch-status poller: keep it mounted whenever the strip's button can be. -->
+        <LaunchGameButton variant="sidebar" />
 
         <button
           type="button"

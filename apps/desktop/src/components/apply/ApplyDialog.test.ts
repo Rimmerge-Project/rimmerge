@@ -620,4 +620,91 @@ describe("ApplyDialog", () => {
     expect(wrapper.emitted("update:visible")?.at(-1)).toEqual([false]);
     expect(wrapper.find('[data-testid="apply-dialog-merge-summary"]').exists()).toBe(false);
   });
+
+  describe("applied event", () => {
+    function installApplyThatReturns(mergeModPath: string | null): void {
+      installMockIpc({
+        list_rules: EMPTY_RULE_SET,
+        list_mod_names: {},
+        get_pending_active_changes: EMPTY_PENDING_ACTIVE_CHANGES,
+        get_dashboard: dashboardFixture(0),
+        get_apply_preflight: preflightFixture(),
+        get_merge_mod: emptyMergeModFixture(),
+        get_def_cache_carrier: { carrierModId: null },
+        list_order: [],
+        apply: () => ({
+          modsConfigPath: "C:/RimWorld/ModsConfig.xml",
+          backupPath: null,
+          decisionsPath: "C:/Profile/rimmerge/decisions.json",
+          rulesPath: "C:/Profile/rimmerge/rules.json",
+          mergeModPath,
+          mergeModBackupPath: null,
+          skippedMerges: [],
+        }),
+      });
+    }
+
+    it("is emitted once, with the request's writeModsConfig, after a successful apply", async () => {
+      installApplyThatReturns(null);
+      const { wrapper } = mountDialog();
+      await flush();
+
+      await wrapper.get('[data-testid="apply-dialog-submit"]').trigger("click");
+      await flush();
+
+      expect(wrapper.emitted("applied")).toEqual([[{ wroteModsConfig: true }]]);
+    });
+
+    it("reports wroteModsConfig false when only decisions and rules were saved", async () => {
+      installApplyThatReturns(null);
+      const { wrapper } = mountDialog();
+      await flush();
+      await wrapper
+        .get('[data-testid="apply-dialog-write-modsconfig-checkbox"] input')
+        .setValue(false);
+
+      await wrapper.get('[data-testid="apply-dialog-submit"]').trigger("click");
+      await flush();
+
+      expect(wrapper.emitted("applied")).toEqual([[{ wroteModsConfig: false }]]);
+    });
+
+    it("is emitted once even when the dialog stays open for the merge-mod summary", async () => {
+      installApplyThatReturns("C:/RimWorld/Mods/rimmerge_merge_abc123def456");
+      const { wrapper } = mountDialog();
+      await flush();
+      await wrapper
+        .get('[data-testid="apply-dialog-write-merge-mod-checkbox"] input')
+        .setValue(true);
+
+      await wrapper.get('[data-testid="apply-dialog-submit"]').trigger("click");
+      await flush();
+
+      expect(wrapper.emitted("update:visible")).toBeUndefined();
+      expect(wrapper.emitted("applied")).toEqual([[{ wroteModsConfig: true }]]);
+    });
+
+    it("is not emitted when the apply fails", async () => {
+      installMockIpc({
+        list_rules: EMPTY_RULE_SET,
+        list_mod_names: {},
+        get_pending_active_changes: EMPTY_PENDING_ACTIVE_CHANGES,
+        get_dashboard: dashboardFixture(0),
+        get_apply_preflight: preflightFixture(),
+        get_merge_mod: emptyMergeModFixture(),
+        get_def_cache_carrier: { carrierModId: null },
+        list_order: [],
+        apply: () => {
+          throw { code: "mods_config_io_failed", message: "disk full" };
+        },
+      });
+      const { wrapper } = mountDialog();
+      await flush();
+
+      await wrapper.get('[data-testid="apply-dialog-submit"]').trigger("click");
+      await flush();
+
+      expect(wrapper.emitted("applied")).toBeUndefined();
+    });
+  });
 });

@@ -551,6 +551,22 @@
       "texture_unsupported_format": {
         "title": "Texture format can't be shown",
         "detail": "The file is not a PNG or JPEG image, so it can't be previewed here. DDS textures are not supported."
+      },
+      "order_not_applied": {
+        "title": "The order isn't applied",
+        "detail": "The order or active mods changed after Rimmerge checked them, so RimWorld wasn't started. Try again."
+      },
+      "game_executable_missing": {
+        "title": "RimWorld can't be started from here",
+        "detail": "RimWorldWin64.exe isn't in the install folder."
+      },
+      "steam_launch_failed": {
+        "title": "Steam didn't start RimWorld",
+        "detail": "Windows couldn't pass the request to Steam. Steam may not be installed or set up correctly. Check that Steam is installed, then start RimWorld from Steam."
+      },
+      "game_start_failed": {
+        "title": "RimWorld didn't start",
+        "detail": "Windows couldn't start RimWorldWin64.exe."
       }
     }
   },
@@ -1674,6 +1690,26 @@
       "missingModKept": "{mod} is not installed and stays in the active list; the game skips it.",
       "loadRequirementViolated": "{after} needs {before} to load first; this order loads it later.",
       "anyOfUnsatisfied": "{mod} needs one of {candidates} to load first; none of them does."
+    }
+  },
+  "gameLaunch": {
+    "button": "Launch RimWorld",
+    "starting": "Starting RimWorld…",
+    "running": "RimWorld is running",
+    "alreadyRunning": "RimWorld is already running.",
+    "statusFailed": "Couldn't check whether RimWorld can be launched.",
+    "unavailable": {
+      "executableMissing": "RimWorldWin64.exe isn't in the install folder."
+    },
+    "launchedSteam": "Asked Steam to start RimWorld.",
+    "launchedExecutable": "Starting RimWorld.",
+    "notStartedAfterApply": "ModsConfig.xml wasn't written, so RimWorld wasn't started.",
+    "applyFirst": {
+      "header": "Apply first?",
+      "orderDiffers": "ModsConfig.xml doesn't hold the {order} order (as of the last scan or apply). If you launch now, RimWorld will start with the mods and order that file lists.",
+      "activationChanges": "Your pending activation changes aren't in ModsConfig.xml yet. If you launch now, RimWorld will start without them.",
+      "applyButton": "Apply first",
+      "launchAnywayButton": "Launch anyway"
     }
   },
   "gameLog": {

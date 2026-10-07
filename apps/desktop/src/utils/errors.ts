@@ -142,6 +142,22 @@ const ERROR_CODE_KEYS = {
     title: "error.code.app_settings_damaged.title",
     detail: "error.code.app_settings_damaged.detail",
   },
+  order_not_applied: {
+    title: "error.code.order_not_applied.title",
+    detail: "error.code.order_not_applied.detail",
+  },
+  game_executable_missing: {
+    title: "error.code.game_executable_missing.title",
+    detail: "error.code.game_executable_missing.detail",
+  },
+  steam_launch_failed: {
+    title: "error.code.steam_launch_failed.title",
+    detail: "error.code.steam_launch_failed.detail",
+  },
+  game_start_failed: {
+    title: "error.code.game_start_failed.title",
+    detail: "error.code.game_start_failed.detail",
+  },
 } satisfies Record<CommandErrorCode, { title: string; detail: string }>;
 
 /**
