@@ -31,9 +31,11 @@ composition roots with no business logic.
   run that writes uses a temp copy (`tempfile`, or the scratchpad). This
   is a rule for how *this workspace* is developed, not a claim that the
   product never writes there: the product's own writers are `apply`
-  (including `--write-merge-mod`), `mods activate|deactivate`, and
-  `patch|assign export --install`. Run any of them against the real
-  install only when a human asks for it.
+  (including `--write-merge-mod`), `mods activate|deactivate`,
+  `order import`, and `patch|assign export --install`. Run any of them
+  against the real install only when a human asks for it. Likewise no
+  test or manual run writes into the real `ModLists` folder (RimWorld's
+  own saved mod lists, where `order export --out` may be pointed).
 - IMPORTANT: the only network access this workspace may make goes to
   the closed host list in `crates/rim-io/src/net/allowlist.rs`
   (`raw.githubusercontent.com` for the three rule databases,

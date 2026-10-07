@@ -114,7 +114,8 @@ order, as of the last scan or apply. See
 
 - Scanning, sorting, the ledger, and verify are read-only. Only these
   write, and only when you run them:
-  - `apply` and `mods activate`/`deactivate` (without `--dry-run`) write
+  - `apply`, `mods activate`/`deactivate` and `order import` (without
+    `--dry-run`) write
     your real `ModsConfig.xml`.
   - `apply --write-merge-mod` and `patch export`/`assign export` with
     `--install` write a generated mod folder under your RimWorld

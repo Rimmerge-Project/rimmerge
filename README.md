@@ -82,12 +82,15 @@ breakdown, including where new code belongs:
 
 - **Read-only by default.** Scanning, sorting, building the ledger, and
   `verify` never write anything.
-- **Every write is something you explicitly asked for.** `apply` and
-  `mods activate`/`mods deactivate` write `ModsConfig.xml`.
+- **Every write is something you explicitly asked for.** `apply`,
+  `mods activate`/`mods deactivate` and `order import` write
+  `ModsConfig.xml`.
   `apply --write-merge-mod`, and `patch export`/`assign export` with
   `--install`, additionally write a generated mod folder under
   `<your RimWorld install>/Mods` and add its package id to
-  `ModsConfig.xml`. Nothing writes anywhere else.
+  `ModsConfig.xml`. `order export --out` writes the one `.rml` file you
+  name (it refuses to replace an existing file without `--overwrite`).
+  Nothing writes anywhere else.
 - **A backup first, every time.** Every `ModsConfig.xml` write takes a
   timestamped backup before it touches the file; a merge-mod write keeps
   the previous generation's own folder as a one-deep backup too.

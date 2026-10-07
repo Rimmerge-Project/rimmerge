@@ -22,6 +22,7 @@ pub mod log;
 pub mod merge;
 pub mod mods;
 pub mod network;
+pub mod order;
 pub mod patch;
 pub mod promote;
 pub mod rule;
