@@ -551,6 +551,22 @@
       "texture_unsupported_format": {
         "title": "Doku biçimi gösterilemiyor",
         "detail": "Dosya bir PNG veya JPEG görüntüsü değil; bu yüzden burada önizlenemez. DDS dokuları desteklenmez."
+      },
+      "order_not_applied": {
+        "title": "Sıra uygulanmadı",
+        "detail": "Rimmerge denetledikten sonra sıra ya da etkin modlar değişti, bu yüzden RimWorld başlatılmadı. Yeniden dene."
+      },
+      "game_executable_missing": {
+        "title": "RimWorld buradan başlatılamıyor",
+        "detail": "RimWorldWin64.exe kurulum klasöründe yok."
+      },
+      "steam_launch_failed": {
+        "title": "Steam, RimWorld'ü başlatamadı",
+        "detail": "Windows isteği Steam'e iletemedi. Steam kurulu olmayabilir ya da doğru ayarlanmamış olabilir. Steam'in kurulu olduğunu denetle, sonra RimWorld'ü Steam'den başlat."
+      },
+      "game_start_failed": {
+        "title": "RimWorld başlamadı",
+        "detail": "Windows, RimWorldWin64.exe dosyasını başlatamadı."
       }
     }
   },
@@ -1674,6 +1690,26 @@
       "missingModKept": "{mod} yüklü değil ve etkin listede kalıyor; oyun onu atlar.",
       "loadRequirementViolated": "{after}, {before} modunun önce yüklenmesini gerektiriyor; bu sıra onu daha sonra yüklüyor.",
       "anyOfUnsatisfied": "{mod}, {candidates} içinden birinin önce yüklenmesini gerektiriyor; hiçbiri önce yüklenmiyor."
+    }
+  },
+  "gameLaunch": {
+    "button": "RimWorld'ü başlat",
+    "starting": "RimWorld başlatılıyor…",
+    "running": "RimWorld çalışıyor",
+    "alreadyRunning": "RimWorld zaten çalışıyor.",
+    "statusFailed": "RimWorld'ün başlatılıp başlatılamayacağı denetlenemedi.",
+    "unavailable": {
+      "executableMissing": "RimWorldWin64.exe kurulum klasöründe yok."
+    },
+    "launchedSteam": "Steam'e RimWorld'ü başlatma isteği gönderildi.",
+    "launchedExecutable": "RimWorld başlatılıyor.",
+    "notStartedAfterApply": "ModsConfig.xml dosyası yazılmadı, bu yüzden RimWorld başlatılmadı.",
+    "applyFirst": {
+      "header": "Önce uygulansın mı?",
+      "orderDiffers": "ModsConfig.xml dosyası {order} sırayı içermiyor (son taramaya ya da Uygula işlemine göre). Şimdi başlatılırsa RimWorld, bu dosyanın listelediği modlar ve yükleme sırasıyla açılır.",
+      "activationChanges": "Bekleyen etkinleştirme değişikliklerin henüz ModsConfig.xml dosyasında değil. Şimdi başlatılırsa RimWorld bu değişiklikler olmadan açılır.",
+      "applyButton": "Önce uygula",
+      "launchAnywayButton": "Yine de başlat"
     }
   },
   "gameLog": {
