@@ -98,6 +98,32 @@ test.describe("def inspector", () => {
     await expect(page.getByTestId("def-page-ref")).toHaveText("HediffDef/BionicHeart");
   });
 
+  test("the def search results stay inside the box, so the Mods page does not scroll sideways", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1024, height: 800 });
+    await loadScenario(page);
+    await page.getByTestId("nav-mods").click();
+    await page.getByTestId("def-search-input").fill("Extraordinarily");
+    const results = page.getByTestId("def-search-results");
+    await expect(results).toBeVisible();
+
+    // Measure the shell's `<main>`: it is the scroll container, so the
+    // document's own scroll width stays equal even when the list overhangs.
+    const overflow = await page.locator("main").evaluate((main) => ({
+      scrollWidth: main.scrollWidth,
+      clientWidth: main.clientWidth,
+    }));
+    expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth);
+
+    const box = await page.getByTestId("def-search-box").boundingBox();
+    const list = await results.boundingBox();
+    if (box === null || list === null) {
+      throw new Error("the def search box and its result list must both have a layout box");
+    }
+    expect(list.x + list.width).toBeLessThanOrEqual(box.x + box.width + 0.5);
+  });
+
   test("a def name with a space in it survives the search-box round trip unmangled", async ({
     page,
   }) => {

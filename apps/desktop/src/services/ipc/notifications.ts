@@ -58,8 +58,8 @@ export function resetSettings(): Promise<void> {
 
 /**
  * "Check now" (Settings → Network) — ignores the `checkForUpdates`
- * toggle and the 24h throttle (the click is its own consent), but still
- * honours `allowNetwork` and an active rate limit.
+ * toggle (the click is its own consent), but still honours
+ * `allowNetwork` and an active rate limit.
  */
 export function checkForUpdate(): Promise<CheckForUpdateOutcomeDto> {
   return call("check_for_update");

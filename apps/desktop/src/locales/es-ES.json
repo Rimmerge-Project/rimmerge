@@ -177,7 +177,7 @@
       },
       "checkForUpdates": {
         "label": "Buscar actualizaciones",
-        "description": "Una vez al día, al iniciar, comprueba si se ha publicado una versión más reciente de Rimmerge."
+        "description": "Al iniciar, comprueba si se ha publicado una versión más reciente de Rimmerge."
       },
       "checkNow": {
         "button": "Comprobar ahora",
@@ -186,7 +186,6 @@
         "alreadyRanThisLaunch": "Ya se comprobó en este inicio.",
         "networkDisabled": "El acceso a internet está desactivado.",
         "checkDisabled": "Comprobado de todos modos: las comprobaciones automáticas están desactivadas.",
-        "notDue": "Se comprobó hace poco; vuelve a intentarlo más tarde.",
         "rateLimited": "Se alcanzó el límite de solicitudes de GitHub; vuelve a intentarlo después de {until}.",
         "updated": "Hay una versión más reciente disponible: {version}.",
         "unchanged": "Tienes la versión más reciente.",
@@ -401,7 +400,7 @@
     },
     "welcome": {
       "title": "Te damos la bienvenida a Rimmerge",
-      "body": "Rimmerge puede contactar con GitHub una vez al día, al iniciarse:\n- para comprobar si se ha publicado una versión más reciente de Rimmerge (api.github.com);\n- para descargar bases de datos de reglas actualizadas: las reglas de orden de carga de la comunidad y el archivo de reglas propio de Rimmerge (raw.githubusercontent.com). Las actualizaciones se guardan localmente; solo cambian tu orden de carga cuando decides importarlas.\n\nNo envía nada sobre ti, tus mods ni tu instalación: solo una solicitud sencilla en la que GitHub ve tu dirección IP. La gran base de datos de Steam Workshop nunca se descarga automáticamente, solo cuando haces clic en «Actualizar».",
+      "body": "Rimmerge puede contactar con GitHub al iniciarse:\n- para comprobar si se ha publicado una versión más reciente de Rimmerge (api.github.com), cada vez que se inicia;\n- para descargar bases de datos de reglas actualizadas: las reglas de orden de carga de la comunidad y el archivo de reglas propio de Rimmerge (raw.githubusercontent.com), como máximo una vez al día. Las actualizaciones se guardan localmente; solo cambian tu orden de carga cuando decides importarlas.\n\nNo envía nada sobre ti, tus mods ni tu instalación: solo una solicitud sencilla en la que GitHub ve tu dirección IP. La gran base de datos de Steam Workshop nunca se descarga automáticamente, solo cuando haces clic en «Actualizar».",
       "settingsAlreadyRecommended": "Tus ajustes ya coinciden con los valores recomendados.",
       "steamWorkshopLabel": "Base de datos de Steam Workshop (unos 49 MB, solo se descarga cuando haces clic en «Actualizar»)"
     },

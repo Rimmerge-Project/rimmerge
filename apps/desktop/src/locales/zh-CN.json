@@ -177,7 +177,7 @@
       },
       "checkForUpdates": {
         "label": "检查更新",
-        "description": "每天一次，在启动时检查是否发布了更新版本的 Rimmerge。"
+        "description": "在启动时检查是否发布了更新版本的 Rimmerge。"
       },
       "checkNow": {
         "button": "立即检查",
@@ -186,7 +186,6 @@
         "alreadyRanThisLaunch": "本次启动已检查过。",
         "networkDisabled": "互联网访问已关闭。",
         "checkDisabled": "已检查（自动检查处于关闭状态）。",
-        "notDue": "最近已检查过——请稍后再试。",
         "rateLimited": "已达到 GitHub 的速率限制；请在 {until} 之后重试。",
         "updated": "有新版本可用：{version}。",
         "unchanged": "已是最新版本。",
@@ -401,7 +400,7 @@
     },
     "welcome": {
       "title": "欢迎使用 Rimmerge",
-      "body": "Rimmerge 可以在每天启动时联系 GitHub 一次：\n- 检查是否发布了更新版本的 Rimmerge（api.github.com）；\n- 下载更新后的规则数据库——社区加载顺序规则和 Rimmerge 自己的规则文件（raw.githubusercontent.com）。更新内容保存在本地；只有当你选择导入时，它们才会改变你的加载顺序。\n\n它不会发送任何关于你、你的 Mod 或你的安装的信息——只是一个普通请求，GitHub 能从中看到你的 IP 地址。大型的 Steam 创意工坊数据库从不自动下载，只会在你点击“刷新”时下载。",
+      "body": "Rimmerge 可以在启动时联系 GitHub：\n- 检查是否发布了更新版本的 Rimmerge（api.github.com），每次启动时都会检查；\n- 下载更新后的规则数据库——社区加载顺序规则和 Rimmerge 自己的规则文件（raw.githubusercontent.com），每天最多一次。更新内容保存在本地；只有当你选择导入时，它们才会改变你的加载顺序。\n\n它不会发送任何关于你、你的 Mod 或你的安装的信息——只是一个普通请求，GitHub 能从中看到你的 IP 地址。大型的 Steam 创意工坊数据库从不自动下载，只会在你点击“刷新”时下载。",
       "settingsAlreadyRecommended": "你的设置已经符合推荐的默认值。",
       "steamWorkshopLabel": "Steam 创意工坊数据库（约 49 MB，只在你点击“刷新”时下载）"
     },

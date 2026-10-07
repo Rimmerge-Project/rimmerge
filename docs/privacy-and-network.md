@@ -40,11 +40,13 @@ anyone else.
 
 ## When it happens
 
-- **On by default, once a day, at launch.** After the desktop app has
-  loaded a profile, it checks for a new Rimmerge version and refreshes
-  the community rules and `rimmerge-rules.json` — each at most once per
-  launch, and not again within 24 hours of its last attempt, successful
-  or not. Both run in the background; the app never waits for them.
+- **On by default, at launch.** After the desktop app has loaded a
+  profile, it checks for a new Rimmerge version once per launch, every
+  launch (a repeat check costs one small request, and most answer "not
+  modified"), and refreshes the community rules and `rimmerge-rules.json`
+  once per launch too, but not again within 24 hours of each source's
+  last attempt, successful or not. Neither runs again while the app stays
+  open; both run in the background, and the app never waits for them.
 - **Never before you've seen this explained.** On first launch the app
   shows what it would contact and offers to turn it off. Until you
   answer, it makes no automatic request.

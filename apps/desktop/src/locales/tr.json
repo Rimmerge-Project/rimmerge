@@ -177,7 +177,7 @@
       },
       "checkForUpdates": {
         "label": "Güncellemeleri denetle",
-        "description": "Günde bir kez, açılışta, Rimmerge için daha yeni bir sürüm yayımlanıp yayımlanmadığını denetler."
+        "description": "Açılışta, Rimmerge için daha yeni bir sürüm yayımlanıp yayımlanmadığını denetler."
       },
       "checkNow": {
         "button": "Şimdi denetle",
@@ -186,7 +186,6 @@
         "alreadyRanThisLaunch": "Bu açılışta zaten denetlendi.",
         "networkDisabled": "İnternet erişimi kapalı.",
         "checkDisabled": "Yine de denetlendi — otomatik denetimler kapalı.",
-        "notDue": "Kısa süre önce denetlendi — daha sonra yeniden dene.",
         "rateLimited": "GitHub istek sınırına ulaşıldı; şu zamandan sonra yeniden dene: {until}.",
         "updated": "Daha yeni bir sürüm var: {version}.",
         "unchanged": "Güncel.",
@@ -401,7 +400,7 @@
     },
     "welcome": {
       "title": "Rimmerge'e hoş geldin",
-      "body": "Rimmerge, açılışta günde bir kez GitHub ile iletişim kurabilir:\n- daha yeni bir Rimmerge sürümünün yayımlanıp yayımlanmadığını denetlemek için (api.github.com);\n- güncel kural veritabanlarını indirmek için — topluluğun yükleme sırası kuralları ve Rimmerge kural dosyası (raw.githubusercontent.com). Güncellemeler yerel olarak saklanır; yükleme sıranı yalnızca sen içe aktarmayı seçtiğinde değiştirirler.\n\nSenin, modlarının veya kurulumunun hakkında hiçbir şey göndermez — yalnızca GitHub'ın IP adresini gördüğü sade bir istek. Büyük Steam Atölyesi veritabanı asla otomatik olarak indirilmez; yalnızca Yenile'ye tıkladığında indirilir.",
+      "body": "Rimmerge, açıldığında GitHub ile iletişim kurabilir:\n- daha yeni bir Rimmerge sürümünün yayımlanıp yayımlanmadığını denetlemek için (api.github.com), her açılışta;\n- güncel kural veritabanlarını indirmek için — topluluğun yükleme sırası kuralları ve Rimmerge kural dosyası (raw.githubusercontent.com), en fazla günde bir kez. Güncellemeler yerel olarak saklanır; yükleme sıranı yalnızca sen içe aktarmayı seçtiğinde değiştirirler.\n\nSenin, modlarının veya kurulumunun hakkında hiçbir şey göndermez — yalnızca GitHub'ın IP adresini gördüğü sade bir istek. Büyük Steam Atölyesi veritabanı asla otomatik olarak indirilmez; yalnızca Yenile'ye tıkladığında indirilir.",
       "settingsAlreadyRecommended": "Ayarların zaten önerilen varsayılanlarla eşleşiyor.",
       "steamWorkshopLabel": "Steam Atölyesi veritabanı (yaklaşık 49 MB, yalnızca Yenile'ye tıkladığında indirilir)"
     },

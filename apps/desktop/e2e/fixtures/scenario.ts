@@ -1643,6 +1643,24 @@ export function installScenario(): void {
     ],
   });
 
+  // A def whose ref is one long, space-free word (invented). Backs
+  // `defs.spec.ts`'s overflow test: unwrapped it is wider than the 240 px
+  // result list, so only the list's own wrapping keeps the Mods page from
+  // scrolling sideways.
+  registerMergeFixture({
+    key: "def_override:ThingDef/AnExtraordinarilyLongInventedDefNameWithoutSpaces:[raidcore.mod,raidexpanded.mod]",
+    defKey: { defType: "ThingDef", defName: "AnExtraordinarilyLongInventedDefNameWithoutSpaces" },
+    kind: "defOverride",
+    owners: [
+      { modId: "raidcore.mod", name: "Raid Core", position: 0 },
+      { modId: "raidexpanded.mod", name: "Raid Expanded", position: 1 },
+    ],
+    base: "raidcore.mod",
+    winner: "raidexpanded.mod",
+    caveats: [],
+    fields: [],
+  });
+
   // Two more hand-picked `patchCollision` fixtures, backing
   // `get_def_conflict_view`'s own mock beyond what deriving generically
   // from the fixtures above already covers — see that command's own

@@ -363,7 +363,9 @@ can change what a sort produces.
   (`db refresh`, `check-update`) is an explicit, user-typed command — a
   click/keystroke is its own consent, so `CheckForUpdate::execute`'s
   `Manual` request kind and `RefreshRuleDatabases::execute` both ignore
-  the once-a-day cadence entirely (never `NotDue`).
+  the rule-database cadence entirely (never `NotDue`); the automatic update
+  check has no cadence of its own beyond once per launch, and no `NotDue`
+  reason.
 
 ## Compat patches and the patch maker — two independent project kinds
 

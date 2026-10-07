@@ -117,10 +117,11 @@ pub struct UpdateCheckFailure {
 
 /// The update-check half of [`NotificationState`] — modelled on the rule-
 /// database cache manifest (`rim_io::databases::manifest::Manifest`):
-/// `last_attempt_at` advances on every attempt (success *or* failure),
-/// so the once-a-day cadence never retries more than once a day even
-/// while offline; `last_success`/`last_failure` are independent and both
-/// persist across restarts.
+/// `last_attempt_at` advances on every attempt (success *or* failure) and
+/// is a record only: the automatic check runs once per launch and no
+/// longer reads it, and `retry_not_before` alone holds back a rate-limited
+/// retry. `last_success`/`last_failure` are independent and both persist
+/// across restarts.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct UpdateCheckState {
     /// When the last check (of any outcome) ran.

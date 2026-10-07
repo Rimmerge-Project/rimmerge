@@ -4,6 +4,29 @@ This changelog starts at the first public release. Development history
 before that point is not summarized here — see `.journal/` in a
 maintainer's own checkout for the full record, if you have it.
 
+## [1.1.1] - 2026-10-06
+
+- **Change: the automatic update check now runs every time the app
+  starts**, so a new release shows up on your next launch instead of
+  waiting for a 24-hour interval to pass. Everything else about it is
+  unchanged: it still waits for the first-run notice, honours the internet
+  and update switches and GitHub's rate limit, runs once per launch, and
+  usually costs one small request that answers "nothing new". The rule
+  database refresh stays at most once a day, and the Welcome notice's
+  wording now says so.
+  If you answered the first-run notice before 1.1.1, you agreed to wording
+  that said once a day; the release check now runs each launch, with the
+  same host, the same data, and the same "Check for updates" switch in
+  Settings to turn it off.
+- **Fix: the def search box on the Mods page no longer makes the page
+  scroll sideways.** Its result list was wider than the box and hung past
+  the window's right edge while open, so the page gained a horizontal
+  scrollbar. The list now matches the box's width, and long def names wrap
+  inside it.
+- **Fix: the Startup cost table's columns no longer change width while you
+  scroll.** This was already fixed in 1.1.0 but was missing from that
+  release's notes.
+
 ## [1.1.0] - 2026-10-02
 
 - **New: the Dashboard's Get started strip begins with Get the recommended

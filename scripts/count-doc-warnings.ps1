@@ -28,7 +28,9 @@
 # otherwise.
 
 param(
-    [int]$Budget = 270,
+    # The one authoritative budget: CI and the local gate list both call
+    # this script without -Budget. Lower it whenever the count drops.
+    [int]$Budget = 266,
     [string]$InputFile
 )
 

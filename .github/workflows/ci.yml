@@ -98,10 +98,11 @@ jobs:
       # counts individual `warning:` lines (excluding each crate's own
       # trailing "generated N warnings" summary line, which also starts
       # with `warning:` but isn't a distinct diagnostic) and fails only
-      # once that count exceeds a fixed budget — high enough not to
-      # block unrelated work, low enough that a PR adding a broken
-      # intra-doc link or a new bare warning still fails CI. Raise the
-      # budget only in a change that also explains why the baseline
+      # once that count exceeds a budget. The budget is a ratchet at
+      # the current count, held as the script's own default (CI passes
+      # no `-Budget`) and lowered whenever the count drops, so a PR
+      # adding a broken intra-doc link or a new bare warning fails CI.
+      # Raising it needs a change that explains why the baseline
       # grew. The counting logic lives in that script, not inline here,
       # so it's testable locally against captured output without a real
       # `cargo doc` run — see the script's own header for why it forces
@@ -111,7 +112,7 @@ jobs:
       # regex never matches, so the check silently passed at any count).
       - name: cargo doc --workspace --no-deps (warning budget)
         shell: pwsh
-        run: ./scripts/count-doc-warnings.ps1 -Budget 270
+        run: ./scripts/count-doc-warnings.ps1
 
   bun:
     name: bun (types, typecheck, lint, vitest, playwright mock tier)

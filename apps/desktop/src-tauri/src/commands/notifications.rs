@@ -373,8 +373,8 @@ pub async fn reset_settings(
 }
 
 /// "Check now" (Settings → Updates) — ignores the `check_for_updates`
-/// toggle and the 24 h throttle (the click is its own consent), but
-/// still honours `allow_network` and an active rate limit. Runs on a
+/// toggle (the click is its own consent), but still honours
+/// `allow_network` and an active rate limit. Runs on a
 /// bare background thread; touches no session state.
 ///
 /// # Errors

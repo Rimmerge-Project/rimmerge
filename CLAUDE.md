@@ -38,8 +38,9 @@ composition roots with no business logic.
   the closed host list in `crates/rim-io/src/net/allowlist.rs`
   (`raw.githubusercontent.com` for the three rule databases,
   `api.github.com` for the release check only) — see
-  `docs/privacy-and-network.md`. The desktop app's once-a-day
-  automatic checks are on by default but never run before the
+  `docs/privacy-and-network.md`. The desktop app's automatic
+  checks (the release check once per launch, the rule-database refresh
+  at most once a day) are on by default but never run before the
   first-run notice is answered, never from the CLI, and never when
   `AppSettings::network.allow_network` is `false`; the URLs are
   constants, not settings. Every default gate stays hermetic:
@@ -65,6 +66,7 @@ cargo deny check
 pwsh ./scripts/check-forbidden.ps1
 pwsh ./scripts/check-line-endings.ps1
 pwsh ./scripts/check-doc-links.ps1
+pwsh ./scripts/count-doc-warnings.ps1   # rustdoc warning budget; CI runs the same script
 cd apps/desktop && bun run types:check && bun run typecheck && bun run lint && bun run test && bun run e2e
 ```
 

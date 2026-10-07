@@ -36,7 +36,7 @@ pub struct NetworkPolicy {
     /// automatic ever runs until the first-run notice has been answered
     /// — see `crate::use_cases::RunLaunchNetworkChecks`.
     pub allow_network: bool,
-    /// Automatic, at-most-once-a-day, at-launch check for a newer
+    /// Automatic, once-per-launch check for a newer
     /// Rimmerge release (`api.github.com`). Default `true`. "Check now"
     /// ignores this toggle — a click is its own consent.
     pub check_for_updates: bool,

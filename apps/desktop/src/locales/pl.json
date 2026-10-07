@@ -177,7 +177,7 @@
       },
       "checkForUpdates": {
         "label": "Sprawdzaj aktualizacje",
-        "description": "Raz dziennie, przy uruchomieniu, sprawdza, czy wydano nowszą wersję Rimmerge."
+        "description": "Przy uruchomieniu sprawdza, czy wydano nowszą wersję Rimmerge."
       },
       "checkNow": {
         "button": "Sprawdź teraz",
@@ -186,7 +186,6 @@
         "alreadyRanThisLaunch": "Już sprawdzono podczas tego uruchomienia.",
         "networkDisabled": "Dostęp do internetu jest wyłączony.",
         "checkDisabled": "Sprawdzono mimo to — automatyczne sprawdzanie jest wyłączone.",
-        "notDue": "Sprawdzano niedawno — spróbuj ponownie później.",
         "rateLimited": "Osiągnięto limit zapytań GitHub; spróbuj ponownie po {until}.",
         "updated": "Dostępna jest nowsza wersja: {version}.",
         "unchanged": "Wersja jest aktualna.",
@@ -401,7 +400,7 @@
     },
     "welcome": {
       "title": "Witaj w Rimmerge",
-      "body": "Rimmerge może łączyć się z serwisem GitHub raz dziennie, przy uruchomieniu:\n- aby sprawdzić, czy wydano nowszą wersję Rimmerge (api.github.com);\n- aby pobrać zaktualizowane bazy reguł — reguły kolejności ładowania tworzone przez społeczność i własny plik reguł Rimmerge (raw.githubusercontent.com). Aktualizacje są przechowywane lokalnie; zmieniają kolejność ładowania tylko wtedy, gdy zdecydujesz się je zaimportować.\n\nNie wysyła niczego o tobie, twoich modach ani twojej instalacji — tylko zwykłe żądanie, przy którym GitHub widzi twój adres IP. Duża baza Warsztatu Steam nigdy nie jest pobierana automatycznie, tylko po kliknięciu „Odśwież”.",
+      "body": "Rimmerge może łączyć się z serwisem GitHub przy uruchomieniu:\n- aby sprawdzić, czy wydano nowszą wersję Rimmerge (api.github.com), przy każdym uruchomieniu;\n- aby pobrać zaktualizowane bazy reguł — reguły kolejności ładowania tworzone przez społeczność i własny plik reguł Rimmerge (raw.githubusercontent.com), najwyżej raz dziennie. Aktualizacje są przechowywane lokalnie; zmieniają kolejność ładowania tylko wtedy, gdy zdecydujesz się je zaimportować.\n\nNie wysyła niczego o tobie, twoich modach ani twojej instalacji — tylko zwykłe żądanie, przy którym GitHub widzi twój adres IP. Duża baza Warsztatu Steam nigdy nie jest pobierana automatycznie, tylko po kliknięciu „Odśwież”.",
       "settingsAlreadyRecommended": "Twoje ustawienia już odpowiadają zalecanym wartościom domyślnym.",
       "steamWorkshopLabel": "Baza Warsztatu Steam (około 49 MB, pobierana tylko po kliknięciu „Odśwież”)"
     },

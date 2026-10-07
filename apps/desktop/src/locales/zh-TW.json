@@ -177,7 +177,7 @@
       },
       "checkForUpdates": {
         "label": "檢查更新",
-        "description": "每天一次，在啟動時檢查是否已發布較新版本的 Rimmerge。"
+        "description": "在啟動時檢查是否已發布較新版本的 Rimmerge。"
       },
       "checkNow": {
         "button": "立即檢查",
@@ -186,7 +186,6 @@
         "alreadyRanThisLaunch": "本次啟動已檢查過。",
         "networkDisabled": "網際網路存取已關閉。",
         "checkDisabled": "已照常檢查（自動檢查為關閉狀態）。",
-        "notDue": "最近已檢查過，請稍後再試。",
         "rateLimited": "已達 GitHub 的速率限制；請在 {until} 之後再試。",
         "updated": "有較新的版本可用：{version}。",
         "unchanged": "已是最新版本。",
@@ -401,7 +400,7 @@
     },
     "welcome": {
       "title": "歡迎使用 Rimmerge",
-      "body": "Rimmerge 可以在啟動時每天連線到 GitHub 一次：\n- 檢查是否已發布較新版本的 Rimmerge（api.github.com）；\n- 下載更新後的規則資料庫：社群載入順序規則和 Rimmerge 自己的規則檔（raw.githubusercontent.com）。更新會儲存在本機；只有在你選擇匯入時，才會變更你的載入順序。\n\n它不會傳送任何關於你、你的模組或你的安裝的資訊，只會送出一個一般請求，GitHub 會因此看到你的 IP 位址。大型的 Steam 創意工坊資料庫絕不會自動下載，只有在你按下「重新整理」時才會下載。",
+      "body": "Rimmerge 可以在啟動時連線到 GitHub：\n- 檢查是否已發布較新版本的 Rimmerge（api.github.com），每次啟動時都會檢查；\n- 下載更新後的規則資料庫：社群載入順序規則和 Rimmerge 自己的規則檔（raw.githubusercontent.com），每天最多一次。更新會儲存在本機；只有在你選擇匯入時，才會變更你的載入順序。\n\n它不會傳送任何關於你、你的模組或你的安裝的資訊，只會送出一個一般請求，GitHub 會因此看到你的 IP 位址。大型的 Steam 創意工坊資料庫絕不會自動下載，只有在你按下「重新整理」時才會下載。",
       "settingsAlreadyRecommended": "你的設定已與建議的預設值一致。",
       "steamWorkshopLabel": "Steam 創意工坊資料庫（約 49 MB，僅在你按下「重新整理」時下載）"
     },

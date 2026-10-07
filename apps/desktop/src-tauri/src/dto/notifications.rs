@@ -464,8 +464,6 @@ pub enum UpdateCheckSkipReasonDto {
     NetworkDisabled,
     /// See [`UpdateCheckSkipReason::CheckDisabled`].
     CheckDisabled,
-    /// See [`UpdateCheckSkipReason::NotDue`].
-    NotDue,
     /// See [`UpdateCheckSkipReason::RateLimitedUntil`]. RFC 3339 UTC.
     RateLimitedUntil {
         /// When it is safe to try again.
@@ -480,7 +478,6 @@ impl From<UpdateCheckSkipReason> for UpdateCheckSkipReasonDto {
             UpdateCheckSkipReason::AlreadyRanThisLaunch => Self::AlreadyRanThisLaunch,
             UpdateCheckSkipReason::NetworkDisabled => Self::NetworkDisabled,
             UpdateCheckSkipReason::CheckDisabled => Self::CheckDisabled,
-            UpdateCheckSkipReason::NotDue => Self::NotDue,
             UpdateCheckSkipReason::RateLimitedUntil(until) => Self::RateLimitedUntil {
                 until: until.to_string(),
             },

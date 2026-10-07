@@ -1,6 +1,6 @@
 [package]
 name = "rimmerge-desktop"
-version = "1.1.0"
+version = "1.1.1"
 description = "Rimmerge desktop app"
 authors = ["rimmerge"]
 license = "MIT OR Apache-2.0"
