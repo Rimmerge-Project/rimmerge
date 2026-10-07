@@ -203,7 +203,8 @@ of that command surface — no direct filesystem or process access outside
   `SetupPage.vue` passes it to `session.setLoaded(paths, selected)`, and
   `useRescanMutation` adopts the rescan's `selected` the same way, so the
   Pinia store never holds a second default of its own.
-  `rescan_project_inner` reads the live session's selection at the swap
+  `rescan_project_inner` (`rescan_with` with `SelectionAfter::Keep`)
+  reads the live session's selection at the swap
   (not a snapshot taken before the scan, which a `select_order` made
   mid-scan would outrun) and puts it on the new session.
   `ApplyRequestDto.source` is required: `useApplyDialog` sends
