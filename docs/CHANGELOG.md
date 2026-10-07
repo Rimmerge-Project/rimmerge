@@ -4,6 +4,18 @@ This changelog starts at the first public release. Development history
 before that point is not summarized here — see `.journal/` in a
 maintainer's own checkout for the full record, if you have it.
 
+## [Unreleased]
+
+- **New: Launch RimWorld.** A button in the sidebar, under Apply, and at
+  the end of the Dashboard's Get started strip once its steps are done
+  starts RimWorld: through Steam for a Steam copy, or by running
+  `RimWorldWin64.exe` from the install folder for any other copy. If
+  `ModsConfig.xml` doesn't hold the selected order, or activation changes
+  are waiting for a rescan, it offers to apply first (Apply first, Launch
+  anyway, or Cancel). It says when the game is
+  already running and won't start a second copy. Launching writes
+  nothing on its own; Rimmerge stays open.
+
 ## [1.1.1] - 2026-10-06
 
 - **Change: the automatic update check now runs every time the app

@@ -34,6 +34,11 @@ composition roots with no business logic.
   (including `--write-merge-mod`), `mods activate|deactivate`, and
   `patch|assign export --install`. Run any of them against the real
   install only when a human asks for it.
+- IMPORTANT: agents and tests never start the real game — no call to
+  the real `SystemGameLauncher::launch`, no `steam://` URL opened, no
+  `RimWorldWin64.exe` spawned. Tests inject a fake launcher
+  (`FakeGameLauncher`, `RecordingGameLauncher`); only a manual check a
+  human asks for starts RimWorld.
 - IMPORTANT: the only network access this workspace may make goes to
   the closed host list in `crates/rim-io/src/net/allowlist.rs`
   (`raw.githubusercontent.com` for the three rule databases,
