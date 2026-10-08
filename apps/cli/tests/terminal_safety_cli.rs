@@ -193,6 +193,41 @@ fn mods_deactivate_dry_run_prints_a_clean_plan() {
 }
 
 #[test]
+fn order_export_and_import_strip_control_characters_from_names() {
+    let temp = tempdir().expect("tempdir");
+    let game = hostile_game(temp.path());
+
+    let exported = run_clean(&game, &["order", "export"]);
+    let core_about = game.game_dir.join("Data").join("Core").join("About");
+    fs::create_dir_all(&core_about).expect("create Core");
+    fs::write(
+        core_about.join("About.xml"),
+        "<ModMetaData><packageId>Ludeon.RimWorld</packageId></ModMetaData>",
+    )
+    .expect("write Core About.xml");
+    let mut import = common::rimmerge();
+    import.args(["order", "import", "-", "--dry-run", "--yes"]);
+    path_args(&mut import, &game);
+    import.write_stdin(format!(
+        "1. Evil{CSI}[2JName [fixture.modb]
+2. Gone{CSI}[1mMissing [fixture.missing]
+"
+    ));
+    let output = import.output().expect("spawn rimmerge");
+    let plan = String::from_utf8_lossy(&output.stdout).into_owned();
+    assert_no_control_characters(&["order", "import"], &plan);
+    assert_no_control_characters(
+        &["order", "import"],
+        &String::from_utf8_lossy(&output.stderr),
+    );
+
+    assert!(output.status.success(), "{plan}");
+    assert!(exported.contains("Mod(31mA"), "{exported}");
+    assert!(plan.contains("Mod[31mA"), "{plan}");
+    assert!(plan.contains("Gone[1mMissing"), "{plan}");
+}
+
+#[test]
 fn verify_text_strips_control_characters_from_the_operation_and_the_mod_name() {
     let temp = tempdir().expect("tempdir");
     let game = hostile_game(temp.path());

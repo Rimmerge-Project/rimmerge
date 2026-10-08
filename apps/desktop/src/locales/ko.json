@@ -567,6 +567,14 @@
       "game_start_failed": {
         "title": "RimWorld가 시작되지 않음",
         "detail": "Windows가 RimWorldWin64.exe 파일을 시작하지 못했습니다."
+      },
+      "mod_list_io_failed": {
+        "title": "모드 목록을 읽거나 쓸 수 없음",
+        "detail": "모드 목록 파일을 읽거나 쓸 수 없습니다. 파일(저장할 때는 저장할 폴더)이 있는지, 그리고 그 위치에서 파일을 열거나 저장할 권한이 있는지 확인하세요."
+      },
+      "nothing_to_export": {
+        "title": "내보낼 것이 없음",
+        "detail": "목록에 넣을 수 있는 활성 모드가 없습니다. ModsConfig.xml의 활성 모드를 확인하세요."
       }
     }
   },
@@ -1575,6 +1583,92 @@
       "promotedBy": "{before} → {after}에 의해 승격됨",
       "body": "출처나 배치 신호 없음"
     }
+  },
+  "orderShare": {
+    "export": {
+      "button": "내보내기",
+      "hint": "ModsConfig.xml에 있는 순서, 즉 RimWorld가 로드하는 순서를 내보냅니다.",
+      "saveFile": "RimWorld 모드 목록(.rml)으로 저장…",
+      "copyText": "텍스트로 복사",
+      "fileFilter": "RimWorld 모드 목록",
+      "saved": "모드 {count}개를 {file}에 저장했습니다.",
+      "copied": "모드 {count}개를 복사했습니다.",
+      "copyFailed": "클립보드에 복사하지 못했습니다.",
+      "saveFailed": "모드 목록을 저장하지 못했습니다.",
+      "leftOut": "모드 {count}개는 목록에 넣을 수 없어 제외했습니다."
+    },
+    "import": {
+      "button": "가져오기",
+      "openFile": "모드 목록 파일 열기…",
+      "paste": "목록 붙여넣기…",
+      "fileFilter": "모드 목록(.rml, .xml, .txt)",
+      "allFiles": "모든 파일",
+      "pasteTitle": "로드 순서 붙여넣기",
+      "pasteHint": "한 줄에 모드 하나씩 넣습니다. '텍스트로 복사'로 복사한 텍스트를 붙여넣거나, 한 줄에 패키지 ID를 하나씩 입력하세요.",
+      "pasteLabel": "로드 순서 텍스트",
+      "preview": "미리 보기"
+    },
+    "preview": {
+      "title": "로드 순서 가져오기",
+      "summary": "목록에 있는 모드 {count}개",
+      "versionDiffers": "RimWorld {listed} 버전으로 만든 목록입니다. 설치된 버전은 {game}입니다.",
+      "replacesPending": "아직 다시 스캔하지 않은 활성화 변경 사항은 이 목록으로 대체됩니다.",
+      "replacesUnwritten": "이 가져오기는 아직 ModsConfig.xml에 반영되지 않은 '현재' 순서를 대체합니다.",
+      "moved": "모드 {count}개의 위치가 바뀝니다.",
+      "sameOrder": "설치된 모드는 현재 순서를 그대로 유지합니다.",
+      "coreAdded": "목록에 코어가 없었습니다. 코어는 맨 앞에 그대로 둡니다.",
+      "activatedHeading": "활성화될 모드 ({count})",
+      "deactivatedHeading": "비활성화될 모드 ({count})",
+      "missingHeading": "설치되지 않은 모드 ({count})",
+      "missingExplanation": "Rimmerge는 모드를 내려받지 않습니다. 이 모드들을 직접 구독한 다음 다시 가져오세요.",
+      "openWorkshop": "스팀 창작마당에서 열기",
+      "openWorkshopLabel": "스팀 창작마당에서 {name} 열기",
+      "missingKind": {
+        "dlc": "설치되어 있지 않은 확장팩입니다.",
+        "rimmergeMergeMod": "보낸 사람의 컴퓨터에서 Rimmerge가 만든 병합 모드입니다. 이 모드는 필요하지 않습니다.",
+        "noLink": "목록에 이 모드의 창작마당 링크가 없습니다."
+      },
+      "copyMissing": "설치되지 않은 모드 목록 복사",
+      "missingCopied": "설치되지 않은 모드 목록을 복사했습니다.",
+      "duplicatesHeading": "두 번 이상 나열됨 ({count})",
+      "duplicateRow": "{id} — 첫 번째 위치(#{position})를 사용합니다.",
+      "otherCopyHeading": "다른 사본과 일치함 ({count})",
+      "otherCopyRow": "{listed} → 내 사본 {installed}",
+      "skippedHeading": "인식하지 못한 줄 ({count})",
+      "skipped": {
+        "notAnEntry": "{line}번째 줄: 모드 항목이 아닙니다.",
+        "malformedId": "{position}번째 항목: “{text}” — 올바른 패키지 ID가 아닙니다."
+      },
+      "skippedOmitted": "표시되지 않은 항목이 {count}개 더 있습니다.",
+      "blocked": {
+        "coreMissing": "코어가 설치되어 있지 않아 이 목록을 가져올 수 없습니다.",
+        "nothingInstalled": "목록에 있는 모드가 하나도 설치되어 있지 않아 가져올 것이 없습니다.",
+        "tooMany": "이 순서에 들어갈 모드가 너무 많습니다. 한 번에 가져올 수 있는 모드는 최대 {limit}개입니다.",
+        "unknown": "{id} 모드는 설치되어 있지 않습니다.",
+        "duplicate": "{id} 모드가 순서에 두 번 이상 나옵니다."
+      },
+      "close": "닫기",
+      "importing": "가져오는 중…",
+      "whatHappens": "Rimmerge가 이 순서로 다시 스캔하고 '현재' 순서로 표시합니다. 적용하기 전에는 아무것도 기록되지 않습니다.",
+      "confirm": "이 순서 사용"
+    },
+    "imported": "가져온 순서가 준비되었습니다. 검토한 다음 적용하여 ModsConfig.xml에 기록하세요.",
+    "notInFile": "이 순서는 아직 ModsConfig.xml에 반영되지 않았습니다.",
+    "notInFileApply": "적용",
+    "previewOutdated": "미리 본 뒤 설치된 모드가 바뀌었습니다. 목록을 다시 미리 보세요.",
+    "rejected": {
+      "title": "이 목록을 가져올 수 없음",
+      "tooLarge": "파일이 {limit}보다 큽니다.",
+      "tooManyEntries": "목록의 항목이 {limit}개를 넘습니다.",
+      "malformedXml": "올바른 XML 파일이 아닙니다.",
+      "dtdNotAllowed": "파일에 DTD 선언이 있습니다. 모드 목록에는 DTD 선언이 없습니다.",
+      "tooDeep": "파일의 중첩이 너무 깊어 모드 목록일 수 없습니다.",
+      "unrecognizedFormat": "RimWorld 모드 목록(.rml), ModsConfig.xml, 텍스트 목록 중 어느 것도 아닙니다.",
+      "missingModList": "파일에 모드 목록이 없습니다.",
+      "noEntries": "패키지 ID를 찾지 못했습니다."
+    },
+    "importedWithWarnings": "스캔에서 경고 {count}개가 보고되었습니다.",
+    "importedRuleWarnings": "가져왔지만 불러오지 못한 규칙이 있음"
   },
   "apply": {
     "dialog": {

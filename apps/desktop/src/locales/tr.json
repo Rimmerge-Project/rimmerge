@@ -567,6 +567,14 @@
       "game_start_failed": {
         "title": "RimWorld başlamadı",
         "detail": "Windows, RimWorldWin64.exe dosyasını başlatamadı."
+      },
+      "mod_list_io_failed": {
+        "title": "Mod listesi okunamadı ya da yazılamadı",
+        "detail": "Mod listesi dosyası okunamadı ya da yazılamadı. Dosyanın (kaydederken klasörünün) var olduğunu ve onu orada açma ya da kaydetme iznin olduğunu denetle."
+      },
+      "nothing_to_export": {
+        "title": "Dışa aktarılacak bir şey yok",
+        "detail": "Hiçbir etkin mod listelenemedi. ModsConfig.xml dosyasındaki etkin modları denetle."
       }
     }
   },
@@ -1575,6 +1583,92 @@
       "promotedBy": "taşıyan: {before} → {after}",
       "body": "kaynak veya konum sinyali yok"
     }
+  },
+  "orderShare": {
+    "export": {
+      "button": "Dışa aktar",
+      "hint": "ModsConfig.xml dosyasındaki sırayı, yani RimWorld'ün yüklediği sırayı dışa aktarır.",
+      "saveFile": "RimWorld mod listesi olarak kaydet (.rml)…",
+      "copyText": "Metin olarak kopyala",
+      "fileFilter": "RimWorld mod listesi",
+      "saved": "{count} mod {file} dosyasına kaydedildi. | {count} mod {file} dosyasına kaydedildi.",
+      "copied": "{count} mod kopyalandı. | {count} mod kopyalandı.",
+      "copyFailed": "Panoya kopyalanamadı.",
+      "saveFailed": "Mod listesi kaydedilemedi.",
+      "leftOut": "{count} mod listelenemedi ve dışarıda bırakıldı. | {count} mod listelenemedi ve dışarıda bırakıldı."
+    },
+    "import": {
+      "button": "İçe aktar",
+      "openFile": "Mod listesi dosyası aç…",
+      "paste": "Liste yapıştır…",
+      "fileFilter": "Mod listeleri (.rml, .xml, .txt)",
+      "allFiles": "Tüm dosyalar",
+      "pasteTitle": "Yükleme sırasını yapıştır",
+      "pasteHint": "Her satıra bir mod: \"Metin olarak kopyala\" ile alınan metin ya da her satıra bir paket ID'si.",
+      "pasteLabel": "Yükleme sırası metni",
+      "preview": "Önizle"
+    },
+    "preview": {
+      "title": "Yükleme sırasını içe aktar",
+      "summary": "Listede {count} mod | Listede {count} mod",
+      "versionDiffers": "RimWorld {listed} ile hazırlanmış; sende {game} var.",
+      "replacesPending": "Henüz yeniden taramadığın etkinleştirme değişikliklerinin yerini bu içe aktarma alacak.",
+      "replacesUnwritten": "Bu içe aktarma, henüz ModsConfig.xml dosyasında olmayan Mevcut sıranın yerini alır.",
+      "moved": "{count} modun konumu değişiyor. | {count} modun konumu değişiyor.",
+      "sameOrder": "Kurulu modlar mevcut sıralarını korur.",
+      "coreAdded": "Ana İçerik listede yoktu; ilk sırada kalır.",
+      "activatedHeading": "Etkinleştirilecek ({count})",
+      "deactivatedHeading": "Devre dışı bırakılacak ({count})",
+      "missingHeading": "Kurulu değil ({count})",
+      "missingExplanation": "Rimmerge hiçbir zaman mod indirmez. Bunlara kendin abone ol, sonra yeniden içe aktar.",
+      "openWorkshop": "Steam Atölyesi'nde aç",
+      "openWorkshopLabel": "{name} modunu Steam Atölyesi'nde aç",
+      "missingKind": {
+        "dlc": "Sende kurulu olmayan bir DLC.",
+        "rimmergeMergeMod": "Gönderenin birleştirme modu; Rimmerge onun bilgisayarında oluşturdu. Sana gerekmez.",
+        "noLink": "Listede bu mod için Atölye bağlantısı yok."
+      },
+      "copyMissing": "Eksik mod listesini kopyala",
+      "missingCopied": "Eksik mod listesi kopyalandı.",
+      "duplicatesHeading": "Birden çok kez listelenmiş ({count})",
+      "duplicateRow": "{id} — ilk konum (#{position}) kullanılır.",
+      "otherCopyHeading": "Başka bir kopyayla eşleşti ({count})",
+      "otherCopyRow": "{listed} → sendeki kopya: {installed}",
+      "skippedHeading": "Anlaşılamayan satırlar ({count})",
+      "skipped": {
+        "notAnEntry": "Satır {line}: mod girdisi değil.",
+        "malformedId": "Girdi {position}: “{text}” geçerli bir paket ID'si değil."
+      },
+      "skippedOmitted": "{count} girdi daha gösterilmiyor. | {count} girdi daha gösterilmiyor.",
+      "blocked": {
+        "coreMissing": "Ana İçerik kurulu değil, bu yüzden bu liste içe aktarılamaz.",
+        "nothingInstalled": "Listelenen modların hiçbiri kurulu değil; içe aktarılacak bir şey yok.",
+        "tooMany": "Bu sıra çok fazla mod içerirdi; bir içe aktarma en fazla {limit} mod içerebilir.",
+        "unknown": "{id} kurulu bir mod değil.",
+        "duplicate": "{id} sırada birden çok kez geçiyor."
+      },
+      "close": "Kapat",
+      "importing": "İçe aktarılıyor…",
+      "whatHappens": "Rimmerge bu sırayla yeniden tarar ve onu Mevcut sıra olarak gösterir. Uygula'ya basana kadar hiçbir şey yazılmaz.",
+      "confirm": "Bu sırayı kullan"
+    },
+    "imported": "İçe aktarılan sıra hazır. Gözden geçir, sonra ModsConfig.xml dosyasına yazmak için Uygula'ya bas.",
+    "notInFile": "Bu sıra henüz ModsConfig.xml dosyasında değil.",
+    "notInFileApply": "Uygula",
+    "previewOutdated": "Önizlemeden bu yana kurulu modların değişti. Listeyi yeniden önizle.",
+    "rejected": {
+      "title": "Bu liste içe aktarılamaz",
+      "tooLarge": "Dosya {limit} boyutundan büyük.",
+      "tooManyEntries": "Listedeki girdi sayısı {limit} sınırını aşıyor.",
+      "malformedXml": "Dosya geçerli bir XML değil.",
+      "dtdNotAllowed": "Dosya bir DTD bildiriyor; mod listeleri bunu asla yapmaz.",
+      "tooDeep": "Dosya, mod listesi olamayacak kadar çok iç içe geçmiş.",
+      "unrecognizedFormat": "Bu bir RimWorld mod listesi (.rml), ModsConfig.xml ya da metin listesi değil.",
+      "missingModList": "Dosyada mod listesi yok.",
+      "noEntries": "Hiç paket ID'si bulunamadı."
+    },
+    "importedWithWarnings": "Tarama {count} uyarı bildirdi. | Tarama {count} uyarı bildirdi.",
+    "importedRuleWarnings": "İçe aktarıldı, ancak bazı kurallar yüklenemedi"
   },
   "apply": {
     "dialog": {

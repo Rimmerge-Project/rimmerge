@@ -370,7 +370,7 @@ test.describe("apply summary counts", () => {
     // it enters the merge mod without any `m`/decide at all.
     await page.getByTestId("shell-apply-button").click();
     await expect(page.getByTestId("apply-dialog")).toBeVisible();
-    await expect(page.getByTestId("apply-dialog-merge-mod-groups")).toHaveText(
+    await expect(page.getByTestId("apply-dialog-merge-mod-status")).toHaveText(
       "Will write 1 patch-collision merge (auto-suggested where undecided) and " +
         "1 def-override merge (explicitly decided).",
     );

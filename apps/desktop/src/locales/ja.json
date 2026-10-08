@@ -567,6 +567,14 @@
       "game_start_failed": {
         "title": "RimWorldが起動しませんでした",
         "detail": "WindowsがRimWorldWin64.exeを起動できませんでした。"
+      },
+      "mod_list_io_failed": {
+        "title": "MODリストを読み書きできませんでした",
+        "detail": "MODリストのファイルを読み取りまたは書き込みできませんでした。ファイル（保存時はその保存先フォルダー）が存在し、そこでファイルを開く、または保存する権限があるか確認してください。"
+      },
+      "nothing_to_export": {
+        "title": "エクスポートするものがありません",
+        "detail": "リストに含められる有効なMODがありませんでした。ModsConfig.xmlの有効なMODを確認してください。"
       }
     }
   },
@@ -1575,6 +1583,92 @@
       "promotedBy": "{before} → {after}により引き上げ",
       "body": "入手元や配置のシグナルなし"
     }
+  },
+  "orderShare": {
+    "export": {
+      "button": "エクスポート",
+      "hint": "ModsConfig.xmlにある順序（RimWorldがロードする順序）をエクスポートします。",
+      "saveFile": "RimWorldのMODリスト（.rml）として保存…",
+      "copyText": "テキストとしてコピー",
+      "fileFilter": "RimWorldのMODリスト",
+      "saved": "{count}個のMODを{file}に保存しました。",
+      "copied": "{count}個のMODをコピーしました。",
+      "copyFailed": "クリップボードにコピーできませんでした。",
+      "saveFailed": "MODリストを保存できませんでした。",
+      "leftOut": "{count}個のMODはリストに含められなかったため、除外されました。"
+    },
+    "import": {
+      "button": "インポート",
+      "openFile": "MODリストのファイルを開く…",
+      "paste": "リストを貼り付け…",
+      "fileFilter": "MODリスト（.rml、.xml、.txt）",
+      "allFiles": "すべてのファイル",
+      "pasteTitle": "ロード順を貼り付け",
+      "pasteHint": "1行に1つのMOD：「テキストとしてコピー」で得たテキスト、または1行に1つのパッケージID。",
+      "pasteLabel": "ロード順のテキスト",
+      "preview": "プレビュー"
+    },
+    "preview": {
+      "title": "ロード順をインポート",
+      "summary": "リスト内のMOD：{count}個",
+      "versionDiffers": "RimWorld {listed}で作成されたリストです。お使いのバージョンは{game}です。",
+      "replacesPending": "まだ再スキャンしていない保留中の有効化／無効化の変更は置き換えられます。",
+      "replacesUnwritten": "このインポートで、まだModsConfig.xmlに反映されていない「現在」の順序が置き換えられます。",
+      "moved": "{count}個のMODの位置が変わります。",
+      "sameOrder": "インストール済みのMODの順序は変わりません。",
+      "coreAdded": "リストにCoreがありませんでした。Coreは引き続き先頭に置かれます。",
+      "activatedHeading": "有効化されるMOD（{count}）",
+      "deactivatedHeading": "無効化されるMOD（{count}）",
+      "missingHeading": "未インストール（{count}）",
+      "missingExplanation": "RimmergeがMODをダウンロードすることはありません。これらのMODをご自身でサブスクライブしてから、再度インポートしてください。",
+      "openWorkshop": "Steamワークショップで開く",
+      "openWorkshopLabel": "{name}をSteamワークショップで開く",
+      "missingKind": {
+        "dlc": "インストールされていないDLCです。",
+        "rimmergeMergeMod": "共有元のコンピューターでRimmergeが作成したマージMODです。このMODは必要ありません。",
+        "noLink": "リストにこのMODのワークショップリンクがありません。"
+      },
+      "copyMissing": "未インストールのMODの一覧をコピー",
+      "missingCopied": "未インストールのMODの一覧をコピーしました。",
+      "duplicatesHeading": "複数回記載されたMOD（{count}）",
+      "duplicateRow": "{id} — 最初の位置（#{position}）を使用します。",
+      "otherCopyHeading": "別のコピーと一致（{count}）",
+      "otherCopyRow": "{listed} → お使いのコピー：{installed}",
+      "skippedHeading": "解釈できなかった行（{count}）",
+      "skipped": {
+        "notAnEntry": "{line}行目：MODのエントリではありません。",
+        "malformedId": "エントリ{position}：「{text}」は有効なパッケージIDではありません。"
+      },
+      "skippedOmitted": "ほかに{count}件のエントリは表示されていません。",
+      "blocked": {
+        "coreMissing": "Coreがインストールされていないため、このリストはインポートできません。",
+        "nothingInstalled": "リスト内のMODがどれもインストールされていないため、インポートするものがありません。",
+        "tooMany": "この順序に含まれるMODが多すぎます。インポートできるMODは最大{limit}個です。",
+        "unknown": "{id}はインストールされているMODではありません。",
+        "duplicate": "{id}が順序内に複数回含まれています。"
+      },
+      "close": "閉じる",
+      "importing": "インポート中…",
+      "whatHappens": "Rimmergeはこの順序で再スキャンし、「現在」の順序として表示します。適用するまで何も書き込まれません。",
+      "confirm": "この順序を使用"
+    },
+    "imported": "インポートした順序の準備ができました。内容を確認してから適用し、ModsConfig.xmlに書き込んでください。",
+    "notInFile": "この順序はまだModsConfig.xmlに反映されていません。",
+    "notInFileApply": "適用",
+    "previewOutdated": "プレビューの後にインストール済みのMODが変更されました。もう一度リストをプレビューしてください。",
+    "rejected": {
+      "title": "このリストはインポートできません",
+      "tooLarge": "ファイルのサイズが{limit}を超えています。",
+      "tooManyEntries": "リストのエントリが{limit}件を超えています。",
+      "malformedXml": "ファイルが有効なXMLではありません。",
+      "dtdNotAllowed": "ファイルでDTDが宣言されています。MODリストでDTDが宣言されることはありません。",
+      "tooDeep": "ファイルの入れ子が深すぎるため、MODリストとは見なせません。",
+      "unrecognizedFormat": "RimWorldのMODリスト（.rml）、ModsConfig.xml、テキストのリストのいずれでもありません。",
+      "missingModList": "ファイルにMODリストが含まれていません。",
+      "noEntries": "パッケージIDが見つかりませんでした。"
+    },
+    "importedWithWarnings": "スキャンで{count}件の警告が報告されました。",
+    "importedRuleWarnings": "インポートしましたが、読み込めなかったルールがあります"
   },
   "apply": {
     "dialog": {

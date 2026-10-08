@@ -26,6 +26,7 @@ pub mod game_log;
 pub mod merge_mod;
 pub mod mod_about;
 pub mod mod_knowledge;
+pub mod mod_list_file;
 pub mod mods_config;
 pub(crate) mod net;
 pub mod notifications;
@@ -37,6 +38,7 @@ pub mod release_feed;
 pub mod rimsort;
 pub mod rules;
 pub mod scanner;
+pub(crate) mod xml_text;
 
 pub use app_config::{AppConfig, app_config_path, pinned_path};
 pub use app_settings::{JsonAppSettingsStore, app_settings_path};
@@ -51,6 +53,9 @@ pub use game_log::FileGameLogReader;
 pub use merge_mod::MergeModFolderWriter;
 pub use mod_about::FileModAboutReader;
 pub use mod_knowledge::{FsModKnowledgeStore, embedded_bundle_sha256, vendored_knowledge};
+pub use mod_list_file::{
+    RmlFileStore, parse_mod_list_bytes, read_bounded as read_mod_list_bounded,
+};
 pub use mods_config::ModsConfigFileStore;
 pub use notifications::{
     JsonNotificationStateStore, JsonProfileNotificationStateStore, notifications_path,

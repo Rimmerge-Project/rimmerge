@@ -158,6 +158,14 @@ const ERROR_CODE_KEYS = {
     title: "error.code.game_start_failed.title",
     detail: "error.code.game_start_failed.detail",
   },
+  mod_list_io_failed: {
+    title: "error.code.mod_list_io_failed.title",
+    detail: "error.code.mod_list_io_failed.detail",
+  },
+  nothing_to_export: {
+    title: "error.code.nothing_to_export.title",
+    detail: "error.code.nothing_to_export.detail",
+  },
 } satisfies Record<CommandErrorCode, { title: string; detail: string }>;
 
 /**

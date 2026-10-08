@@ -76,6 +76,13 @@ enum Command {
         #[command(subcommand)]
         command: commands::mods::ModsCommand,
     },
+    /// Shares a load order: `export` writes the order in `ModsConfig.xml`
+    /// as text or a RimWorld mod list (`.rml`), `import` previews a shared
+    /// list and writes it as the active order.
+    Order {
+        #[command(subcommand)]
+        command: commands::order::OrderCommand,
+    },
     /// Merge editor diagnostics: `plan` prints one finding's diff and
     /// plan, `coverage` tallies xpath-grammar support over contested
     /// patch collisions.
@@ -157,6 +164,7 @@ fn run() -> anyhow::Result<()> {
         Command::Import(args) => commands::import::run(args),
         Command::Apply(args) => commands::apply::run(args),
         Command::Mods { command } => commands::mods::run(command),
+        Command::Order { command } => commands::order::run(command),
         Command::Merge { command } => commands::merge::run(command),
         Command::Patch { command } => commands::patch::run(command),
         Command::Promote(args) => commands::promote::run(args),

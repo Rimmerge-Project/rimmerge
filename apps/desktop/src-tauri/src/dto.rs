@@ -30,6 +30,7 @@ pub mod mod_info;
 pub mod mods;
 pub mod notifications;
 pub mod order;
+pub mod order_share;
 pub mod patch;
 pub mod preflight;
 pub mod project;

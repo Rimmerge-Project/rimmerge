@@ -25,9 +25,9 @@ use crate::mod_inventory::ModInventory;
 /// workspace's existing sort/import code already names it literally
 /// (`crates/rim-resolve/src/sort/tiers.rs`, `crates/rim-io/src/mods_config.rs`'s
 /// own tests).
-const CORE_MOD_ID: &str = "ludeon.rimworld";
+pub(crate) const CORE_MOD_ID: &str = "ludeon.rimworld";
 
-fn is_core(id: &ModId) -> bool {
+pub(crate) fn is_core(id: &ModId) -> bool {
     id.base().as_str() == CORE_MOD_ID
 }
 

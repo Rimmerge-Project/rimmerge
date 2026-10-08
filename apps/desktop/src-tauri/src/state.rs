@@ -9,7 +9,7 @@ use rim_io::{
     AnalyzerScanner, FileAssetLocator, FileDefSourceReader, FileGameLogReader, FileModAboutReader,
     FsDefCacheCarrierProbe, FsModKnowledgeStore, GithubReleaseFeed, JsonAssignmentProjectStore,
     JsonDecisionStore, JsonNotificationStateStore, JsonPatchProjectStore, JsonRuleStore,
-    MergeModFolderWriter, ModsConfigFileStore,
+    MergeModFolderWriter, ModsConfigFileStore, RmlFileStore,
 };
 pub use rim_io::{GameProcessProbe, SysinfoGameProcessProbe};
 use rim_session::Session;
@@ -102,6 +102,10 @@ pub struct Adapters {
     /// for the same reason [`Adapters::def_reader`] is boxed: a test
     /// injects a fake feed instead of one that opens a real socket.
     pub release_feed: Arc<dyn ReleaseFeed + Send + Sync>,
+    /// Reads and writes shared mod-list files (`.rml`, a
+    /// `ModsConfig.xml`-shaped list, or text) for the load-order export
+    /// and import commands. Stateless.
+    pub mod_list_store: RmlFileStore,
 }
 
 impl Default for Adapters {
@@ -125,6 +129,7 @@ impl Default for Adapters {
             ),
             notification_state_store: JsonNotificationStateStore::new(),
             release_feed: Arc::new(GithubReleaseFeed::new()),
+            mod_list_store: RmlFileStore::new(),
         }
     }
 }
@@ -147,6 +152,7 @@ impl std::fmt::Debug for Adapters {
             .field("mod_knowledge_store", &self.mod_knowledge_store)
             .field("notification_state_store", &self.notification_state_store)
             .field("release_feed", &"<dyn ReleaseFeed>")
+            .field("mod_list_store", &self.mod_list_store)
             .finish()
     }
 }

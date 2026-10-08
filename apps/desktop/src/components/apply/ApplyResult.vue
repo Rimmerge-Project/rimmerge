@@ -1,14 +1,35 @@
 <script setup lang="ts">
 // What apply left behind: the force warning, the error, and the merge-mod summary.
 import Message from "primevue/message";
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useApplyDialogState } from "@/composables/useApplyDialog";
 import { useTranslateMessage } from "@/composables/useTranslateMessage";
+import { useMergeModQuery } from "@/queries/merge";
+import { describeSkippedMergeReason } from "@/utils/format";
 
 const { t } = useI18n();
-const { awaitingForceConfirm, errorMessage, lastReport, mergeModRemoved, skippedMergeEntries } =
-  useApplyDialogState();
+const { awaitingForceConfirm, errorMessage, lastReport, mergeModRemoved } = useApplyDialogState();
 const tm = useTranslateMessage();
+// This component is mounted only while the dialog is open (see `ApplyMergeModSection`), which is
+// what keeps the slow `get_merge_mod` render off every other page.
+const { data: mergeMod, status: mergeModStatus } = useMergeModQuery();
+
+/**
+ * `lastReport.skippedMerges` paired with its own reason, read off `get_merge_mod`'s entries: the
+ * same query, and the same session state, `apply`'s own render step just built the report from,
+ * so no second command is needed to explain *why* a key was skipped. An entry that is not found
+ * (the query not answered, or failed) falls back to the plain wording rather than guessing.
+ * Entries are read only on `status === "success"`: after a failed refetch Colada keeps the
+ * replaced session's `data`, whose entries must not explain this session's skips.
+ */
+const skippedMergeEntries = computed(() => {
+  const entries = mergeModStatus.value === "success" ? (mergeMod.value?.entries ?? []) : [];
+  return (lastReport.value?.skippedMerges ?? []).map((key) => {
+    const entry = entries.find((candidate) => candidate.key === key);
+    return { key, reason: describeSkippedMergeReason(entry) };
+  });
+});
 
 /**
  * {@link describeSkippedMergeReason} returns a raw, untranslated string

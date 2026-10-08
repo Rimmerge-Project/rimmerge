@@ -2,7 +2,7 @@
 //! tag-evidence collection, and `rim_analyzer::analysis::build_ref` behind
 //! the [`ModScanner`] port.
 
-use rim_analyzer::domain::{FolderPolicy, ModId, ScanStage};
+use rim_analyzer::domain::{FolderPolicy, ModId, ScanProgress as AnalyzerProgress, ScanStage};
 use rim_analyzer::{analysis, infra};
 use rim_resolve::tags;
 use rim_session::ModInventory;
@@ -35,11 +35,29 @@ fn port_stage(stage: ScanStage) -> ScanProgressStage {
     }
 }
 
+/// The port tick for one of the analyzer's own, or `None` for the one this adapter holds back.
+///
+/// The analyzer closes its `Analyzing` unit (the small vanilla index) with a 1-of-1 tick. This
+/// adapter keeps that bracket open instead and closes it itself after the slow analysis, so the
+/// stage never reads as finished while work remains.
+fn forwarded(tick: AnalyzerProgress) -> Option<ScanProgress> {
+    if tick.stage == ScanStage::Analyzing && tick.done >= tick.total {
+        return None;
+    }
+    Some(ScanProgress {
+        stage: port_stage(tick.stage),
+        done: tick.done,
+        total: tick.total,
+    })
+}
+
 impl ModScanner for AnalyzerScanner {
     /// Forwards `rim_analyzer::infra::scan_with_progress`'s real
     /// discover/scan/analyze stages — including a tick per mod scanned — plus
-    /// two stages of this adapter's own (`CollectingTagEvidence`, `Done`)
-    /// that happen after the analyzer's own work is complete. Builds the
+    /// one `Analyzing` bracket (0 of 1, closed only after the slow
+    /// `build_ref`/dangling-reference/source-index stretch), and two stages
+    /// of this adapter's own (`CollectingTagEvidence`, `Done`) that happen
+    /// after the analyzer's own work is complete. Builds the
     /// [`analysis::SourceIndex`] right after `build_ref`, before
     /// `scan_output` is dropped — nothing downstream can find a def's XML
     /// again otherwise.
@@ -48,6 +66,22 @@ impl ModScanner for AnalyzerScanner {
         paths: &ProjectPaths,
         active_override: Option<&[ModId]>,
         progress: &mut dyn FnMut(ScanProgress),
+    ) -> Result<ScanArtifacts, ScanError> {
+        self.scan_and_analyze_observed(paths, active_override, progress, &mut || {})
+    }
+}
+
+impl AnalyzerScanner {
+    /// [`ModScanner::scan_and_analyze`] with a recording seam for tests: `analysis_finished` runs
+    /// once the slow analysis is done and before its closing `Analyzing` tick, so a test can
+    /// pin *where* that tick falls relative to the work, which the tick values alone cannot show.
+    /// Production passes a no-op.
+    fn scan_and_analyze_observed(
+        &self,
+        paths: &ProjectPaths,
+        active_override: Option<&[ModId]>,
+        progress: &mut dyn FnMut(ScanProgress),
+        analysis_finished: &mut dyn FnMut(),
     ) -> Result<ScanArtifacts, ScanError> {
         // `{:#}` (anyhow's alternate `Display`) renders the full
         // `cause: cause: cause` chain in one line — more useful in a
@@ -65,11 +99,9 @@ impl ModScanner for AnalyzerScanner {
         };
 
         let scan_output = infra::scan_with_progress(&scan_config, &mut |scan_progress| {
-            progress(ScanProgress {
-                stage: port_stage(scan_progress.stage),
-                done: scan_progress.done,
-                total: scan_progress.total,
-            });
+            if let Some(tick) = forwarded(scan_progress) {
+                progress(tick);
+            }
         })
         .map_err(|e| ScanError(format!("{e:#}")))?;
 
@@ -83,12 +115,24 @@ impl ModScanner for AnalyzerScanner {
         // reads the same scan `collect_evidence` needs without a clone,
         // and `source_index::build` (also borrow-only) still has
         // `scan_output` to read afterward.
+        //
+        // The analysis below is the slowest stretch of the whole scan (tens of
+        // seconds on a large install) and has no per-unit ticks of its own. It runs
+        // inside the one `Analyzing` unit the analyzer opened (0 of 1) and the tick
+        // after it closes, so a consumer sees "working" instead of a bar frozen at
+        // its last scanning tick.
         let mut report = analysis::build_ref(&scan_output, &context);
         // The lazy IO half of the dangling-reference explanation — see
         // `infra::explain_dangling_references`'s own doc comment; needs `scan_output` still alive, which
         // `build_ref` (unlike `build`) leaves it.
         infra::explain_dangling_references(&mut report.conflicts, &scan_output);
         let sources = analysis::source_index::build(&scan_output);
+        analysis_finished();
+        progress(ScanProgress {
+            stage: ScanProgressStage::Analyzing,
+            done: 1,
+            total: 1,
+        });
 
         progress(ScanProgress {
             stage: ScanProgressStage::CollectingTagEvidence,
@@ -156,4 +200,99 @@ pub fn discover_inventory(
     let output = infra::inventory(&scan_config).map_err(|e| ScanError(format!("{e:#}")))?;
     let inventory = ModInventory::from_inventory_output(&output.discovered, &output.missing);
     Ok((inventory, output.active))
+}
+
+#[cfg(test)]
+#[path = "../tests/support/scratch.rs"]
+mod scratch;
+
+#[cfg(test)]
+mod tests {
+    use std::cell::RefCell;
+
+    use tempfile::tempdir;
+
+    use super::scratch;
+    use super::*;
+
+    fn analyzer_tick(stage: ScanStage, done: usize, total: usize) -> AnalyzerProgress {
+        AnalyzerProgress { stage, done, total }
+    }
+
+    #[test]
+    fn forwarded_holds_back_the_analyzers_closing_analyzing_tick() {
+        let closing = analyzer_tick(ScanStage::Analyzing, 1, 1);
+
+        assert_eq!(forwarded(closing), None);
+    }
+
+    #[test]
+    fn forwarded_passes_the_analyzers_opening_analyzing_tick() {
+        let opening = analyzer_tick(ScanStage::Analyzing, 0, 1);
+
+        assert_eq!(
+            forwarded(opening),
+            Some(ScanProgress {
+                stage: ScanProgressStage::Analyzing,
+                done: 0,
+                total: 1,
+            })
+        );
+    }
+
+    #[test]
+    fn forwarded_passes_scanning_ticks_even_when_the_stage_is_complete() {
+        let last_mod = analyzer_tick(ScanStage::Scanning, 3, 3);
+
+        assert_eq!(
+            forwarded(last_mod),
+            Some(ScanProgress {
+                stage: ScanProgressStage::Scanning,
+                done: 3,
+                total: 3,
+            })
+        );
+    }
+
+    #[derive(Debug, PartialEq, Eq)]
+    enum Event {
+        Tick(ScanProgressStage, usize, usize),
+        AnalysisFinished,
+    }
+
+    #[test]
+    fn the_analyzing_bracket_closes_only_after_the_analysis_has_finished()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let scratch_dir = tempdir()?;
+        let paths = scratch::scratch_paths(scratch_dir.path())?;
+        let events = RefCell::new(Vec::new());
+
+        AnalyzerScanner::new().scan_and_analyze_observed(
+            &paths,
+            None,
+            &mut |tick| {
+                events
+                    .borrow_mut()
+                    .push(Event::Tick(tick.stage, tick.done, tick.total));
+            },
+            &mut || events.borrow_mut().push(Event::AnalysisFinished),
+        )?;
+
+        let events = events.into_inner();
+        let opened = events
+            .iter()
+            .position(|event| *event == Event::Tick(ScanProgressStage::Analyzing, 0, 1))
+            .ok_or("the Analyzing bracket never opened")?;
+        assert_eq!(
+            events[opened..],
+            [
+                Event::Tick(ScanProgressStage::Analyzing, 0, 1),
+                Event::AnalysisFinished,
+                Event::Tick(ScanProgressStage::Analyzing, 1, 1),
+                Event::Tick(ScanProgressStage::CollectingTagEvidence, 0, 1),
+                Event::Tick(ScanProgressStage::Done, 1, 1),
+            ]
+        );
+        Ok(())
+    }
 }

@@ -83,11 +83,25 @@ export function useSetMergeChoicesMutation() {
   });
 }
 
-/** Describes the generated merge mod. Renders in memory only. */
+/**
+ * Describes the generated merge mod. Renders in memory only.
+ *
+ * The render replays every ledger entry on a freshly swapped session (seconds on a large
+ * install) while holding the session lock, so call this only from components that are mounted
+ * while the answer is wanted (the Merge mod page, the Apply dialog's body). Do not add an
+ * `enabled` option: observers share one cache entry and `invalidateQueries` honours only the
+ * last observer's options, so one caller's gate would switch off another's refresh. An entry
+ * with no mounted observer is simply skipped by an invalidation.
+ *
+ * `staleTime: Infinity`, as `useDefGraphicQuery`: the answer changes only with the session, and
+ * every change to it invalidates this entry (a swap, a decision, `session://changed`). Reopening
+ * the dialog or refocusing the window therefore does not re-render under the session lock.
+ */
 export function useMergeModQuery() {
   return useQuery({
     key: queryKeys.merge.mod,
     query: getMergeMod,
+    staleTime: Number.POSITIVE_INFINITY,
   });
 }
 

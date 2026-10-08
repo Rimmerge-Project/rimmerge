@@ -131,7 +131,7 @@ pub struct DeactivateArgs {
 /// snapshot and then writing `version`/`knownExpansions` from a
 /// *different* one. [`rim_io::discover_inventory`]'s `active_override`
 /// takes this same read's own `active_mods` instead of re-reading.
-fn discover(
+pub(crate) fn discover(
     paths_args: &PathsArgs,
 ) -> anyhow::Result<(ProjectPaths, ModsConfigFile, ModInventory)> {
     let project_paths = resolve_paths(paths_args)?;
@@ -150,7 +150,7 @@ fn discover(
 /// own `version`/`knownExpansions` — `file` is the exact read
 /// [`discover`] already did, never a fresh one. Returns the backup path
 /// `write_with_backup` created.
-fn write_active_set(
+pub(crate) fn write_active_set(
     project_paths: &ProjectPaths,
     file: &ModsConfigFile,
     active: &ActiveSet,
@@ -165,7 +165,10 @@ fn write_active_set(
         .context("writing ModsConfig.xml")
 }
 
-fn refuse_while_running(force: bool, probe: &dyn GameProcessProbe) -> anyhow::Result<()> {
+pub(crate) fn refuse_while_running(
+    force: bool,
+    probe: &dyn GameProcessProbe,
+) -> anyhow::Result<()> {
     if !force && probe.is_running() {
         bail!(
             "RimWorldWin64.exe is running; close the game or retry with --force (RimWorld \

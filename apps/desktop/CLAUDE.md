@@ -46,6 +46,10 @@ of that command surface — no direct filesystem or process access outside
   value without a `Result`, and `get_app_version` is not even `async`.
   `load_project`/`rescan_project` are the other shape: they hold
   `state.load_lock` and swap the session in with `replace_session`.
+  `import_order` (`commands/order_share.rs`) is the rescan shape too: it is
+  `rescan_with(ScanRequest::Import(order))`, so the order is validated
+  (`ImportOrder::validate`, including its size bound), scanned and swapped in
+  all under the one `load_lock`, never staged in the working set.
   `get_recommended_rules_step`, `get_recommended_rules` and
   `skip_recommended_rules_step` (`commands/recommended_rules.rs`) are
   **session commands**: each needs a loaded project (the step reads the
@@ -123,6 +127,62 @@ of that command surface — no direct filesystem or process access outside
   dialog closing) is set. The mock (`gameLaunchStatus`/`launchGameMock` in
   `scenario.ts`) derives the status from the selected order against `fileOrder`, the
   unscanned set and `window.__GAME_RUNNING__`, and records `__LAUNCH_GAME_CALLS__`.
+- **Sharing a load order lives on the Load order page, and the backend decides
+  everything it shows.** `components/order/OrderShareMenus.vue` (the header's
+  Export and Import menus, which own `PasteOrderDialog` and `ImportPreviewDialog`)
+  runs `composables/useOrderShare.ts`. Export, preview, import and Workshop calls go
+  straight to the services, not through mutations: the app-wide mutation
+  `onError` would word an export failure with the generic sentence, while
+  here it is "couldn't save/copy" plus the code's own sentence, shown once.
+  Its toasts go to their own group (`ORDER_SHARE_TOAST_GROUP`, a second `<Toast>`
+  in `App.vue` at the bottom right) because the default top-right toasts sit over
+  the page header's Export and Import buttons for their whole lifetime; a clipboard
+  failure is worded the same way for both copies.
+  The import is not a mutation either (`importOrder` is called directly): the
+  app-wide `onError` would add a second, default-group toast on top of the one
+  shown here. Its success path is `useAdoptImportedSession` (`queries/orderShare.ts`):
+  adopt the returned `selected` and invalidate every query **without awaiting it**, as
+  `useRescanMutation` does: Colada's `invalidateQueries` resolves only when every active
+  query has refetched, and a slow one would hold the preview's spinner long after the swap
+  landed (the dialog closes when the swap does). A failure posts exactly
+  one order-share toast (the code's title and sentence) and keeps the preview open,
+  except `invalid_input` (the install changed since the preview, so the same order
+  would be refused again): that closes it and toasts "preview again" with the
+  code's sentence. `isBusy` makes every entry point a no-op while a dialog,
+  export or preview is in flight. The save dialog starts at
+  `suggested_mod_list_path` (null when RimWorld's `ModLists` folder is absent)
+  and offers `.rml` only; `dialog:allow-save` is the capability it needs. The
+  preview's "Use this order" is enabled exactly when `importBlocked` is `null`
+  (never re-derived from the entries). `importBlocked` is the backend's reason
+  (`ImportBlockedDto`, from `ImportOrder::import_blocker`, the one rule behind
+  `validate_order`: `coreMissing`, `nothingInstalled` (no mod besides Core and
+  generated ones, the common "Core plus only missing mods" case), `tooMany`,
+  `unknown`, `duplicate`), worded by `importBlockedMessage`; `scanDidNotMatch`
+  cannot arise from a preview and has no variant. `order` is sent back unchanged, and a Workshop
+  button sends the id as digits, never a URL. Every `ImportedEntryDto`,
+  `MissingKindDto`, `SkippedEntryDto`, `VersionCheckDto`, `CorePlacementDto` and
+  `ImportRejectionDto` is worded by an `assertNever` switch in
+  `utils/orderShare.ts`; a sender's name and a skipped excerpt are untrusted
+  and render as text only. The two replace warnings are separate facts:
+  `replacesPendingChanges` (from the preview: unrescanned activation edits) and
+  `DashboardDto.fileMatchesCurrent === false` (the Current order is not in the
+  file yet, e.g. an earlier import not applied), which the page passes down as
+  `replacesUnwritten`. The "not in ModsConfig.xml yet" note
+  (`OrderNotInFileNote.vue`) shows only while Current is selected and
+  `fileMatchesCurrent` is false, with its own `ApplyDialog`. The mock
+  (`planOrderImport`/`importOrderMock` in `scenario.ts`) computes the diff
+  against `fileOrder`, the `import_blocker` rule and the rejections, accepts a `.rml`
+  export path only, swaps Current on import and leaves `fileOrder` alone. It mirrors
+  the planner's details: the first active on-disk copy per base id wins, the list's
+  `# RimWorld X` header is parsed and compared by numeric major.minor (`unknown` when
+  unparsable), and the profile's own merge mod is kept at the end when the file has it
+  (`__PUT_MERGE_MOD_IN_FILE__` puts it there);
+  `__EXPORT_ORDER_FILE_CALLS__`, `__PREVIEW_ORDER_IMPORT_*_CALLS__`,
+  `__IMPORT_ORDER_CALLS__`, `__OPEN_WORKSHOP_PAGE_CALLS__` and
+  `__SAVE_DIALOG_OPTIONS__` record the calls. Biome rewrites a value import used
+  only as a type in a `.vue` script to `import type`, which silently drops the
+  component from the template: type a template ref with `MenuMethods`, never
+  `InstanceType<typeof Menu>`.
 - **A default-gate test must never let the real feed be called.**
   `AppState.adapters.release_feed: Arc<dyn ReleaseFeed + Send + Sync>`
   defaults to the real `GithubReleaseFeed` for production (merely
@@ -162,6 +222,30 @@ of that command surface — no direct filesystem or process access outside
   scan was running, and it refuses rather than silently discarding that
   change: `"the working active-mod set changed during the rescan;
   rescan again"`.
+- **The Apply dialog reads the merge mod only while it is open, gated by mounting.** Every page
+  mounts an `ApplyDialog`, and on a freshly swapped session the `get_merge_mod` render replays
+  every ledger entry (seconds) under the session lock. The query lives in children of the
+  dialog's body (`ApplyMergeModSection.vue`: the checkbox, the loading line and the summary;
+  `ApplyResult.vue`: the skipped-merge reasons), which PrimeVue mounts only while the dialog is
+  open; `useApplyDialog` holds no merge-mod query. `useMergeModQuery` has **no `enabled`
+  option**: observers share one Colada entry and `invalidateQueries` honours only the last
+  observer's options, so one hidden dialog's gate would stop an open dialog or `MergeModPage`
+  from refreshing. An entry with no mounted observer is skipped by an invalidation (it is marked
+  stale and refetches when next observed). The query has `staleTime: Infinity`, as
+  `useDefGraphicQuery`: reopening the dialog or refocusing the window does not re-render under the
+  session lock; only an invalidation (a swap, a decision, `session://changed`) does. The cost: a
+  merge-mod folder added or removed on disk outside the app is not noticed until the next
+  invalidation. The section treats "no answer yet **or** a fetch in flight" as unknown
+  (`status === "pending" || isLoading`, an exception to the `isPending` rule above: after a
+  session swap the entry keeps the replaced session's answer with `status: "success"`; only that
+  line and the checkbox wait, nothing unmounts). One always-mounted `role="status"` element
+  carries the text (`common.loading`, then the summary, then nothing) so a screen reader
+  announces it reliably; the checkbox's `aria-describedby` points at it while unknown, and the box
+  cannot be toggled meanwhile (a tick made before a swap stays ticked). Data is read **only on
+  `status === "success"`** (here and in `ApplyResult.vue`): Colada keeps the previous `data` on a
+  failed refetch (`status: "error"`), which is the replaced session's answer. A *failed*
+  `get_merge_mod` therefore reads as no entries (no summary, box enabled, plain skipped-merge
+  wording); there is no error UI for it.
 - **The Apply dialog confirms hard problems; it has no needs-input gate.**
   `useApplyPreflightQuery(source)` (enabled while the dialog is visible)
   holds `get_apply_preflight`; `submit()` asks `requiresConfirmation` (computed
@@ -256,9 +340,12 @@ of that command surface — no direct filesystem or process access outside
   `SetupPage.vue` passes it to `session.setLoaded(paths, selected)`, and
   `useRescanMutation` adopts the rescan's `selected` the same way, so the
   Pinia store never holds a second default of its own.
-  `rescan_project_inner` reads the live session's selection at the swap
+  `rescan_project_inner` (`rescan_with` with `ScanRequest::Rescan`)
+  reads the live session's selection at the swap
   (not a snapshot taken before the scan, which a `select_order` made
   mid-scan would outrun) and puts it on the new session.
+  `import_order` selects Current instead, through `ImportOrder::finish`, which
+  also checks that the scan produced the validated order.
   `ApplyRequestDto.source` is required: `useApplyDialog` sends
   `session.selected`, and `apply` writes that order.
 - **A finding's winner is computed in Rust for the selected order.**
@@ -299,7 +386,13 @@ of that command surface — no direct filesystem or process access outside
   `src-tauri/src/capabilities.rs`'s regression test). The same file pins
   that no capability grants `opener:*` or `shell:*`: every program or URL
   this app starts (links, RimWorld) is derived in Rust, never named by the
-  webview.
+  webview. Exporting a load order needs `dialog:allow-save` (the native save
+  dialog; `dialog:allow-open` does not cover it), and no capability may grant
+  an `fs:*` permission: `export_order_file` writes the chosen path from Rust.
+  That command takes only a `.rml` target (ASCII case-insensitive; `.xml`, no
+  extension and `.rml.xml` are refused as `invalid_input`), an allowlist because
+  `canonicalize` cannot see every alias of `ModsConfig.xml` (a `\\localhost\C$`
+  share, a mapped drive); the same-file check stays as a second guard.
 
 ## Gates
 
@@ -506,7 +599,7 @@ The UI is localized in `en` plus twelve translated locales (`zh-CN`,
   `call` wrapper); `services/ipc.ts` is the named re-export facade every
   caller imports, over
   `services/ipc/{project,findings,rules,verify,merge,patches,
-  assignments,gameLaunch}.ts` (active-set calls live in `project.ts` alongside the
+  assignments,gameLaunch,orderShare}.ts` (active-set calls live in `project.ts` alongside the
   rest of the project lifecycle). `session_lost`/`no_project_loaded` route
   to setup through `setSessionLostHandler`.
 - **A shell component `provide`s its own state through a typed
@@ -592,7 +685,9 @@ The UI is localized in `en` plus twelve translated locales (`zh-CN`,
   discriminated union so the two shapes can't be mixed), a required
   `label` (its only accessible name), floors rather than rounds the
   percentage (so 99.96% never claims "100%"), and overrides the
-  transition to 120ms via an inline style.
+  transition to 120ms via an inline style. A `{done, total}` of exactly `0` of `1` (a stage
+  that has begun but cannot count, such as the scan's `Analyzing` bracket around the analysis)
+  renders indeterminate, never as an empty or full bar; `percent` is always determinate.
 - **A list page fills the shell, it does not pick a fixed height.**
   `TheShell`'s root is `h-screen`; a list page's root is `flex h-full
   min-h-0 flex-col`, its header/filters are `shrink-0`, its scroll

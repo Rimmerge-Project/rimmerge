@@ -567,6 +567,14 @@
       "game_start_failed": {
         "title": "RimWorld ist nicht gestartet",
         "detail": "Windows konnte RimWorldWin64.exe nicht starten."
+      },
+      "mod_list_io_failed": {
+        "title": "Mod-Liste konnte nicht gelesen oder geschrieben werden",
+        "detail": "Die Datei mit der Mod-Liste konnte nicht gelesen oder geschrieben werden. Prüfe, ob die Datei (beim Speichern ihr Ordner) existiert und ob du die Berechtigung hast, sie dort zu öffnen oder zu speichern."
+      },
+      "nothing_to_export": {
+        "title": "Nichts zu exportieren",
+        "detail": "Keine aktive Mod konnte aufgelistet werden. Prüfe die aktiven Mods in ModsConfig.xml."
       }
     }
   },
@@ -1575,6 +1583,92 @@
       "promotedBy": "angehoben durch {before} → {after}",
       "body": "kein Quellen- oder Platzierungssignal"
     }
+  },
+  "orderShare": {
+    "export": {
+      "button": "Exportieren",
+      "hint": "Exportiert die Reihenfolge aus ModsConfig.xml – also das, was RimWorld lädt.",
+      "saveFile": "Als RimWorld-Mod-Liste speichern (.rml)…",
+      "copyText": "Als Text kopieren",
+      "fileFilter": "RimWorld-Mod-Liste",
+      "saved": "{count} Mod in {file} gespeichert. | {count} Mods in {file} gespeichert.",
+      "copied": "{count} Mod kopiert. | {count} Mods kopiert.",
+      "copyFailed": "Das Kopieren in die Zwischenablage ist fehlgeschlagen.",
+      "saveFailed": "Die Mod-Liste konnte nicht gespeichert werden.",
+      "leftOut": "{count} Mod konnte nicht aufgelistet werden und wurde ausgelassen. | {count} Mods konnten nicht aufgelistet werden und wurden ausgelassen."
+    },
+    "import": {
+      "button": "Importieren",
+      "openFile": "Mod-Liste aus Datei öffnen…",
+      "paste": "Liste einfügen…",
+      "fileFilter": "Mod-Listen (.rml, .xml, .txt)",
+      "allFiles": "Alle Dateien",
+      "pasteTitle": "Ladereihenfolge einfügen",
+      "pasteHint": "Eine Mod pro Zeile: der Text aus „Als Text kopieren“ oder eine Package-ID pro Zeile.",
+      "pasteLabel": "Text der Ladereihenfolge",
+      "preview": "Vorschau"
+    },
+    "preview": {
+      "title": "Ladereihenfolge importieren",
+      "summary": "{count} Mod in der Liste | {count} Mods in der Liste",
+      "versionDiffers": "Erstellt mit RimWorld {listed}; du hast {game}.",
+      "replacesPending": "Aktivierungsänderungen, die du noch nicht erneut gescannt hast, werden ersetzt.",
+      "replacesUnwritten": "Dieser Import ersetzt deine aktuelle Reihenfolge, die noch nicht in ModsConfig.xml steht.",
+      "moved": "{count} Mod ändert ihre Position. | {count} Mods ändern ihre Position.",
+      "sameOrder": "Die installierten Mods behalten ihre aktuelle Reihenfolge.",
+      "coreAdded": "Core stand nicht in der Liste und bleibt an erster Stelle.",
+      "activatedHeading": "Wird aktiviert ({count})",
+      "deactivatedHeading": "Wird deaktiviert ({count})",
+      "missingHeading": "Nicht installiert ({count})",
+      "missingExplanation": "Rimmerge lädt nie Mods herunter. Abonniere sie selbst und importiere dann erneut.",
+      "openWorkshop": "Im Steam Workshop öffnen",
+      "openWorkshopLabel": "{name} im Steam Workshop öffnen",
+      "missingKind": {
+        "dlc": "Ein DLC, das du nicht installiert hast.",
+        "rimmergeMergeMod": "Die Merge-Mod des Absenders, von Rimmerge auf dessen Computer erstellt; du brauchst sie nicht.",
+        "noLink": "Die Liste enthält keinen Workshop-Link für diese Mod."
+      },
+      "copyMissing": "Fehlende Mods kopieren",
+      "missingCopied": "Liste der fehlenden Mods kopiert.",
+      "duplicatesHeading": "Mehrfach aufgeführt ({count})",
+      "duplicateRow": "{id} – die erste Position (#{position}) wird verwendet.",
+      "otherCopyHeading": "Andere Kopie zugeordnet ({count})",
+      "otherCopyRow": "{listed} → deine Kopie {installed}",
+      "skippedHeading": "Nicht erkannte Zeilen ({count})",
+      "skipped": {
+        "notAnEntry": "Zeile {line}: kein Mod-Eintrag.",
+        "malformedId": "Eintrag {position}: „{text}“ ist keine gültige Package-ID."
+      },
+      "skippedOmitted": "{count} weiterer Eintrag nicht angezeigt. | {count} weitere Einträge nicht angezeigt.",
+      "blocked": {
+        "coreMissing": "Core ist nicht installiert, daher kann diese Liste nicht importiert werden.",
+        "nothingInstalled": "Keine der aufgeführten Mods ist installiert, daher gibt es nichts zu importieren.",
+        "tooMany": "Diese Reihenfolge würde zu viele Mods enthalten; ein Import kann höchstens {limit} enthalten.",
+        "unknown": "{id} ist keine installierte Mod.",
+        "duplicate": "{id} kommt mehr als einmal in der Reihenfolge vor."
+      },
+      "close": "Schließen",
+      "importing": "Wird importiert…",
+      "whatHappens": "Rimmerge scannt mit dieser Reihenfolge erneut und zeigt sie als aktuelle Reihenfolge an. Bis du sie anwendest, wird nichts geschrieben.",
+      "confirm": "Diese Reihenfolge verwenden"
+    },
+    "imported": "Importierte Reihenfolge bereit. Sieh sie durch und wende sie dann an, um ModsConfig.xml zu schreiben.",
+    "notInFile": "Diese Reihenfolge ist noch nicht in ModsConfig.xml.",
+    "notInFileApply": "Anwenden",
+    "previewOutdated": "Deine installierten Mods haben sich seit der Vorschau geändert. Rufe die Vorschau der Liste erneut auf.",
+    "rejected": {
+      "title": "Diese Liste kann nicht importiert werden",
+      "tooLarge": "Die Datei ist größer als {limit}.",
+      "tooManyEntries": "Die Liste hat mehr als {limit} Einträge.",
+      "malformedXml": "Die Datei ist kein gültiges XML.",
+      "dtdNotAllowed": "Die Datei deklariert eine DTD, was Mod-Listen nie tun.",
+      "tooDeep": "Die Datei ist zu tief verschachtelt, um eine Mod-Liste zu sein.",
+      "unrecognizedFormat": "Das ist weder eine RimWorld-Mod-Liste (.rml) noch eine ModsConfig.xml noch eine Textliste.",
+      "missingModList": "Die Datei enthält keine Mod-Liste.",
+      "noEntries": "Es wurden keine Package-IDs gefunden."
+    },
+    "importedWithWarnings": "Der Scan hat {count} Warnung gemeldet. | Der Scan hat {count} Warnungen gemeldet.",
+    "importedRuleWarnings": "Importiert; manche Regeln konnten nicht geladen werden"
   },
   "apply": {
     "dialog": {

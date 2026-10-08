@@ -6,6 +6,14 @@ maintainer's own checkout for the full record, if you have it.
 
 ## [Unreleased]
 
+- **Fix: importing a load order no longer keeps spinning after the progress
+  bar finishes, and progress no longer stops early.** "Use this order" now
+  closes the preview as soon as the rescan lands instead of waiting for
+  every page to refresh. The Apply dialog now works out its merge mod when
+  it opens rather than on every page, with a "Loading…" line and the
+  *Write merge mod* box disabled until it answers. The progress bar now
+  covers the whole analysis after the per-mod scan, and shows as
+  indeterminate (instead of a full or empty bar) while that single step runs.
 - **New: Launch RimWorld.** A button in the sidebar, under Apply, and at
   the end of the Dashboard's Get started strip once its steps are done
   starts RimWorld: through Steam for a Steam copy, or by running
@@ -15,6 +23,21 @@ maintainer's own checkout for the full record, if you have it.
   anyway, or Cancel). It says when the game is
   already running and won't start a second copy. Launching writes
   nothing on its own; Rimmerge stays open.
+- **New: share a load order.** The Load order page's **Export** menu saves
+  the order in `ModsConfig.xml` as a RimWorld mod list (`.rml`), which
+  opens in RimWorld's own mod manager when saved in its `ModLists` folder
+  (the save dialog starts there), or copies it as a numbered text list
+  for a chat message. **Import** takes a `.rml`, a `ModsConfig.xml`-shaped
+  list or a text list, from a file or a paste, and previews what would
+  change first: the mods activated and deactivated, the ones you don't
+  have installed (with an *Open on Steam Workshop* button where the list
+  has a Workshop link; Rimmerge never downloads mods), and lines it
+  couldn't read. *Use this order* rescans with the list and shows it as
+  Current; nothing is written to `ModsConfig.xml` until you Apply. The CLI
+  gains `rimmerge order export` (text on stdout, or `--out` for a `.rml`)
+  and `rimmerge order import <file | ->`, which prints the same preview
+  and then writes `ModsConfig.xml` with a backup first (`--dry-run` writes
+  nothing).
 
 ## [1.1.1] - 2026-10-06
 

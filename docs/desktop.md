@@ -164,6 +164,42 @@ The suggested load order, with a why-panel: click any mod (or open
 which mod it must follow, why, and how strong that requirement is. See
 [concepts/sorting.md](concepts/sorting.md).
 
+### Sharing a load order
+
+The page header has two menus. **Export** writes the order that is in
+`ModsConfig.xml` now, which is what RimWorld loads, and not the order the
+page is showing (the app opens on Suggested, which you may never have run).
+*Save as RimWorld mod list (.rml)…* opens the save dialog in RimWorld's own
+`ModLists` folder when it exists, so the game's "Load list" finds the
+file; only a `.rml` name is accepted. *Copy as text* puts a numbered list
+on the clipboard for a chat message. A mod Rimmerge cannot list is left out
+and the toast says how many.
+
+**Import** takes a `.rml`, a `ModsConfig.xml`-shaped file or a text list,
+from a file or a paste, and always shows a preview first. The preview names
+what will be activated and deactivated (the list is the whole active set;
+Core is never deactivated), the mods that aren't installed (with an *Open on
+Steam Workshop* button where the list knows the item; Rimmerge never
+downloads anything, and *Copy the missing list* gives you the text to ask a
+friend), mods listed twice, mods matched to another copy of themselves, and
+lines that were not understood. A file that can't be read as a list shows its
+reason and offers no import. *Use this order* is enabled only when the
+backend says the order can be imported; when it is disabled the preview
+says why (Core isn't installed, none of the listed mods is installed, the
+order would be too long, or it names a mod that isn't installed or names
+one twice). A list that leaves Core out is not refused: Core is kept first. If your installed mods change between the preview and the
+click, the import is refused, the preview closes and a notice asks you to
+preview the list again.
+
+Importing rescans with the previewed order and selects **Current**: the page
+then shows the imported order with a note that it isn't in `ModsConfig.xml`
+yet, and an Apply button. The preview closes as soon as the scan lands; pages
+then refresh in the background. Nothing is written until you Apply, and the normal
+Apply dialog (hard-problem confirmation, running-game check, backup) is the
+only writer. An import replaces activation changes you haven't rescanned and,
+if the Current order is not in the file yet, that order; the preview warns
+about each.
+
 ## Mods (`/mods`, `/mods/:modId`, `/mods/:modId/details`)
 
 Lists every discovered mod — active, inactive, or both — and lets you
@@ -256,7 +292,14 @@ or asset decision remains). Your choice holds until you close the dialog,
 and the dialog starts unchecked again the next time it opens. An apply
 without it still saves your decisions and writes `ModsConfig.xml`, but
 leaves any merge mod already in `Mods/` as it was, so it can lag behind
-decisions made since.
+decisions made since. The dialog works out what the merge mod would contain
+when it first opens and again after the session changes (a swap, a decision,
+a rescan), which takes a few seconds on a large install; reopening it with
+nothing changed reuses the last answer, so a merge-mod folder added or removed
+on disk outside the app is picked up at the next such change. Until the
+answer arrives, the section reads "Loading…" and the checkbox is disabled, so it never shows a
+previous session's answer. If that lookup fails, the section simply shows
+no summary, never a previous session's.
 
 ## Compatibility patches (`/patches`, `/patches/:patchId`, `/patches/:patchId/merge/:key`)
 
@@ -508,4 +551,6 @@ write takes a timestamped backup first, and each refuses to write while
 RimWorld looks like it is running unless you confirm the override.
 
 Launching RimWorld writes nothing; the Apply its prompt may offer is the
-ordinary Apply above.
+ordinary Apply above. Exporting a load order writes one `.rml` file where you
+chose in the save dialog and never touches `ModsConfig.xml`; importing one
+only previews, then rescans, until you Apply.

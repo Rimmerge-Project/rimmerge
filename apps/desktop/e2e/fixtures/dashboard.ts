@@ -113,6 +113,7 @@ export const dashboardFixture: DashboardDto = {
   movedMods: 17,
   selected: "current",
   fileMatchesSuggested: false,
+  fileMatchesCurrent: true,
   sortProvenance: { tieBreak: "rebuild", useImportedPairs: false, useImportedPlacements: true },
 };
 

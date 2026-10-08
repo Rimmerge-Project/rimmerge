@@ -40,8 +40,14 @@ public issue for a security report.
 - **Filesystem writes.** Rimmerge writes only what you explicitly ask
   for — never on scan, sort, ledger build, or `verify`, and never on a
   dry run:
-  - `ModsConfig.xml`, only through `apply`, `mods activate`, or `mods
-    deactivate`, always after taking a timestamped backup first.
+  - `ModsConfig.xml`, only through `apply`, `mods activate`, `mods
+    deactivate`, or `order import`, always after taking a timestamped
+    backup first.
+  - A RimWorld mod list (`.rml`) at the path you name, only through
+    `order export --out`, which refuses to replace an existing file unless
+    you pass `--overwrite`, or the desktop app's Export → *Save as RimWorld
+    mod list*, which writes only the `.rml` path you chose in the save
+    dialog and refuses to write over `ModsConfig.xml`.
   - A generated mod folder under `<your RimWorld install>/Mods`, only
     through `apply --write-merge-mod` or `patch export`/`assign export`
     with `--install` (each also adds the generated mod's package id to

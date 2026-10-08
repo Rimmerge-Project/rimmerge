@@ -91,6 +91,35 @@ mod tests {
         }
     }
 
+    /// Exporting a load order opens the native save dialog
+    /// (`@tauri-apps/plugin-dialog`'s `save()`), which the webview may only
+    /// call with `dialog:allow-save`; `dialog:allow-open` does not cover it,
+    /// and a denied call is silently swallowed. The command that then
+    /// writes the file is Rust's: the webview gets no filesystem plugin.
+    #[test]
+    fn every_capability_grants_the_save_dialog_and_no_filesystem_permission() {
+        for (name, capability) in every_capability() {
+            let permissions = capability["permissions"]
+                .as_array()
+                .unwrap_or_else(|| panic!("{name}: permissions is an array"));
+
+            assert!(
+                permissions
+                    .iter()
+                    .any(|permission| permission == "dialog:allow-save"),
+                "{name} must grant dialog:allow-save — the Export menu's save dialog \
+                 is denied without it"
+            );
+            assert!(
+                permissions
+                    .iter()
+                    .all(|permission| !grants_prefix(permission, "fs:")),
+                "{name} must never grant an fs:* permission — export_order_file \
+                 writes the chosen path from Rust"
+            );
+        }
+    }
+
     /// The mod info panel's workshop/homepage links and the app's own
     /// fixed external links (About section, sidebar support link) all go
     /// through `open_mod_link`/`open_app_link` — Rust-only commands that

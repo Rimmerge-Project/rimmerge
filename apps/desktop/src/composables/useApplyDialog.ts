@@ -12,7 +12,6 @@ import { usePendingActiveChangesQuery, useRescanMutation } from "@/queries/activ
 import { useApplyMutation, useApplyPreflightQuery } from "@/queries/apply";
 import { useDashboardQuery } from "@/queries/dashboard";
 import { useDefCacheCarrierQuery } from "@/queries/defCache";
-import { useMergeModQuery } from "@/queries/merge";
 import { useRulesQuery, useUpsertRuleMutation } from "@/queries/rules";
 import { useVerifyOrderMutation } from "@/queries/verify";
 import { RimmergeError } from "@/services/ipc";
@@ -24,11 +23,7 @@ import type { VerifyReorderDto } from "@/types/generated/VerifyReorderDto";
 import type { VerifyReportDto } from "@/types/generated/VerifyReportDto";
 import { defCacheBuildSeconds } from "@/utils/defCache";
 import { type CommandErrorDescriptor, describeCommandError } from "@/utils/errors";
-import {
-  describeMergeModGroups,
-  describeSkippedMergeReason,
-  profileFilePath,
-} from "@/utils/format";
+import { profileFilePath } from "@/utils/format";
 import { joinPredictedVsObserved } from "@/utils/gameLog";
 import {
   hasLoggingGaps,
@@ -52,7 +47,6 @@ export function useApplyDialog(visible: () => boolean, emit: ApplyDialogEmit) {
   const session = useSessionStore();
   const modLabel = useModLabel();
   const { data: dashboard } = useDashboardQuery();
-  const { data: mergeMod } = useMergeModQuery();
   const { data: defCacheCarrier } = useDefCacheCarrierQuery();
   const loggedOrder = useLoggedOrderCheck();
   const { mutateAsync: runApply, isLoading } = useApplyMutation();
@@ -167,16 +161,6 @@ export function useApplyDialog(visible: () => boolean, emit: ApplyDialogEmit) {
     { immediate: true },
   );
   /**
-   * The apply dialog's summary line counts the two groups separately —
-   * auto-suggested `patchCollision` merges versus explicitly decided
-   * `defOverride` merges (an undecided `defOverride` never reaches this
-   * list at all, so that group is always exactly "explicitly decided").
-   * `null` (nothing rendered) when the merge mod has nothing to write yet.
-   */
-  const mergeModGroupsSummary = computed(() =>
-    describeMergeModGroups(mergeMod.value?.entries ?? [], t, locale.value),
-  );
-  /**
    * Renders the generated merge mod into `Mods/` (or removes it when no
    * `Merge`/`ShipAsset` decision remains) as part of this apply.
    * **Starts unchecked**, even when a complete merge entry exists: writing
@@ -206,24 +190,6 @@ export function useApplyDialog(visible: () => boolean, emit: ApplyDialogEmit) {
    * derived from it since `ApplyReportDto` carries no flag for "removed".
    */
   const mergeModRemoved = ref(false);
-  /**
-   * `lastReport.skippedMerges` paired with its own reason
-   * ({@link describeSkippedMergeReason}), read off `mergeMod`'s own
-   * `get_merge_mod` entries — the same query, and the same session state,
-   * `apply`'s own render step just built the report from (a plain `Merge`/
-   * `ShipAsset` decision, unaffected by the write itself), so no second
-   * command is needed just to explain *why* a key was skipped. `undefined`
-   * when no matching entry is found (`mergeMod` not yet loaded, say) falls
-   * back to the plain wording rather than guessing.
-   */
-  const skippedMergeEntries = computed(() => {
-    const entries = mergeMod.value?.entries ?? [];
-    return (lastReport.value?.skippedMerges ?? []).map((key) => {
-      const entry = entries.find((candidate) => candidate.key === key);
-      return { key, reason: describeSkippedMergeReason(entry) };
-    });
-  });
-
   /**
    * The "Verify order" summary. `verifyReport` is
    * `null` until the first (or a fresh) run resolves; `verifyProgress`
@@ -764,7 +730,6 @@ export function useApplyDialog(visible: () => boolean, emit: ApplyDialogEmit) {
     session,
     modLabel,
     dashboard,
-    mergeMod,
     defCacheCarrier,
     loggedOrder,
     runApply,
@@ -787,13 +752,11 @@ export function useApplyDialog(visible: () => boolean, emit: ApplyDialogEmit) {
     rescanning,
     rescanError,
     rescanFromApplyDialog,
-    mergeModGroupsSummary,
     writeMergeMod,
     awaitingForceConfirm,
     errorMessage,
     lastReport,
     mergeModRemoved,
-    skippedMergeEntries,
     verifyReport,
     verifyProgress,
     verifyErrorMessage,

@@ -10,6 +10,7 @@ use rim_analyzer::extract::mods_config::parse_mods_config;
 use rim_session::ports::{ConfigError, ModsConfigFile, ModsConfigStore};
 
 use crate::atomic::write_atomically;
+use crate::xml_text::xml_escape;
 
 /// Reads and writes `ModsConfig.xml`.
 #[derive(Debug, Default, Clone, Copy)]
@@ -64,20 +65,6 @@ fn eol_of(bytes: &[u8]) -> &'static str {
     } else {
         "\n"
     }
-}
-
-/// Escapes the five XML predefined entities. `version` comes from
-/// whatever RimWorld itself last wrote (normally plain digits/dots/text,
-/// but not contractually so), and mod ids/expansion ids are attacker- or
-/// at least author-controlled strings from `About.xml`/community
-/// databases — both are escaped defensively so a stray `&`/`<`/`>`/`"`/
-/// `'` can never corrupt the document.
-fn xml_escape(text: &str) -> String {
-    text.replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
-        .replace('\'', "&apos;")
 }
 
 /// Renders `file` in RimWorld's exact `ModsConfigData` element shape,

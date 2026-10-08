@@ -435,7 +435,7 @@ describe("ApplyDialog", () => {
     await flush();
     await wrapper.vm.$nextTick();
 
-    expect(wrapper.get('[data-testid="apply-dialog-merge-mod-groups"]').text()).toBe(
+    expect(wrapper.get('[data-testid="apply-dialog-merge-mod-status"]').text()).toBe(
       "Will write 1 patch-collision merge (auto-suggested where undecided) and " +
         "1 def-override merge (explicitly decided).",
     );
@@ -456,7 +456,7 @@ describe("ApplyDialog", () => {
     await flush();
     await wrapper.vm.$nextTick();
 
-    expect(wrapper.find('[data-testid="apply-dialog-merge-mod-groups"]').exists()).toBe(false);
+    expect(wrapper.get('[data-testid="apply-dialog-merge-mod-status"]').text()).toBe("");
   });
 
   // A structurally guarded skip must read

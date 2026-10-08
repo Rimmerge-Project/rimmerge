@@ -62,6 +62,36 @@ file with no live install or profile involved at all.
 - **`promote`** — promotes an imported pair or placement rule (from a
   RimSort database) to a user-owned copy that survives both import
   toggles and a re-import.
+- **`order export`** — shares the order in `ModsConfig.xml` (what
+  RimWorld loads now, not the Suggested order), without a scan. With no
+  `--out` it prints a numbered text list on stdout, ready to paste
+  (`1. Name [package.id] <workshop link>`); with `--out <file.rml>` it
+  writes a RimWorld mod list instead, and refuses to replace an existing
+  file unless you pass `--overwrite`. Package ids are exported without
+  `_steam`, your own generated merge mod is left out, and an id that
+  cannot go in a list is named on stderr. It never touches
+  `ModsConfig.xml`.
+- **`order import <file | ->`** — reads a `.rml`, a `ModsConfig.xml`-shaped
+  file, or the text list (`-` reads text from stdin; input over 4 MiB is
+  rejected), prints what it would change — mods activated and
+  deactivated, how many move, mods that are not installed (with their
+  Steam Workshop link when the list has one), duplicates and lines it
+  could not read — and then writes the list as `<activeMods>` in
+  `ModsConfig.xml`, taking a backup first. Rimmerge never downloads a
+  missing mod. Core is kept in the order, and put first when the list omits
+  it (an install with no Core on disk refuses the import, and so does a
+  list in which no mod besides Core is installed, since it would only
+  deactivate your mods); your own
+  generated merge mod is never deactivated. A `.rml` can be piped on
+  stdin as well as text. If the import deactivates any active mod, or
+  names a mod you do not have installed, it refuses until you pass
+  `--yes`. `--dry-run` prints the plan and writes nothing; `--force`
+  writes even if `RimWorldWin64.exe` looks like it is running. It does
+  not scan, so it does not list hard problems: afterwards run
+  `rimmerge apply --dry-run --source current` to check the order. When the
+  list already matches the file's order, nothing is written. Exit code 0
+  on success or a dry run whose order is valid, 1 on a refusal or error (a
+  dry run included), 2 on a usage error.
 - **`import`** — imports RimSort's rule databases into the current
   profile. See [concepts/rules-databases.md](concepts/rules-databases.md).
 - **`db status` / `db refresh`** — rule-database cache maintenance:

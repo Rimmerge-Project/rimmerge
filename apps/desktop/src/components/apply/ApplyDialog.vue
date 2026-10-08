@@ -6,6 +6,7 @@ import Message from "primevue/message";
 import { computed, nextTick, provide, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
 import ApplyConfirm from "@/components/apply/ApplyConfirm.vue";
+import ApplyMergeModSection from "@/components/apply/ApplyMergeModSection.vue";
 import ApplyPreflight from "@/components/apply/ApplyPreflight.vue";
 import ApplyProgress from "@/components/apply/ApplyProgress.vue";
 import ApplyResult from "@/components/apply/ApplyResult.vue";
@@ -35,7 +36,6 @@ const {
   rescanning,
   rescanError,
   rescanFromApplyDialog,
-  mergeModGroupsSummary,
   writeMergeMod,
   awaitingForceConfirm,
   lastReport,
@@ -134,22 +134,7 @@ async function focusSubmitAfterGoBack(): Promise<void> {
         </div>
       </Message>
 
-      <label class="flex items-center gap-2 text-sm">
-        <Checkbox
-          v-model="writeMergeMod"
-          class="shrink-0"
-          binary
-          data-testid="apply-dialog-write-merge-mod-checkbox"
-        />
-        {{ t("apply.dialog.writeMergeModLabel") }}
-      </label>
-      <p
-        v-if="mergeModGroupsSummary"
-        class="text-text-faint pl-6 text-xs"
-        data-testid="apply-dialog-merge-mod-groups"
-      >
-        {{ mergeModGroupsSummary }}
-      </p>
+      <ApplyMergeModSection />
 
       <ApplyProgress />
 

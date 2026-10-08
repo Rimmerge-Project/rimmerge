@@ -24,6 +24,7 @@ pub mod merge;
 pub mod mods;
 pub mod notifications;
 pub mod order;
+pub mod order_share;
 pub mod patch;
 pub mod project;
 pub mod recommended_rules;

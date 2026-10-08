@@ -26,10 +26,12 @@ mod delete_patch;
 mod delete_rule;
 mod export_assignment;
 mod export_folder;
+mod export_order;
 mod export_patch;
 mod find_def_cache_carrier;
 mod get_recommended_rules;
 mod import_game_log;
+mod import_order;
 mod import_profile_decisions;
 mod import_rimsort;
 mod inspect_def;
@@ -40,6 +42,7 @@ mod merge_coverage;
 mod notifications;
 mod plan_merge;
 mod preflight_apply;
+mod preview_order_import;
 mod promote_imported_rule;
 mod prune_patch_decisions;
 mod read_mod_about;
@@ -104,6 +107,7 @@ pub use export_assignment::{
     AssignmentExportOptions, AssignmentExportOutcome, AssignmentSkip, ExportAssignment,
     ExportAssignmentError,
 };
+pub use export_order::{ExportOrder, ExportOrderError, ExportSource};
 pub use export_patch::{ExportOptions, ExportOutcome, ExportPatch, ExportPatchError};
 pub use find_def_cache_carrier::FindDefCacheCarrier;
 pub use get_recommended_rules::{
@@ -115,6 +119,7 @@ pub use import_game_log::{
     GameLogSummary, ImportGameLog, ImportGameLogError, LoadEvent, LogAttribution,
     PatchFailureSummary, StackTraceDetail, TimerSummary, UnpairedStackTrace,
 };
+pub use import_order::{ImportBlocker, ImportLoss, ImportOrder, ImportOrderError, ValidatedImport};
 pub use import_profile_decisions::{
     ImportProfileDecisions, ImportProfileDecisionsError, ImportReport,
 };
@@ -137,6 +142,9 @@ pub use notifications::{
 pub(crate) use plan_merge::stored_choices;
 pub use plan_merge::{MergeContext, PlanMerge, PlanMergeError};
 pub use preflight_apply::{ApplyPreflight, PreflightApply};
+pub use preview_order_import::{
+    ImportPreview, ImportTarget, PreviewImportError, PreviewOrderImport, ReadyImport,
+};
 pub use promote_imported_rule::PromoteImportedRule;
 pub use prune_patch_decisions::{PrunePatchDecisions, PrunePatchDecisionsError};
 pub use read_mod_about::{

@@ -88,13 +88,14 @@ output, so it doubles as this generator's own regression test.
   `apps/cli/tests/*.rs` integration test spawns the compiled binary via
   `assert_cmd` and has no seam to inject anything into. Every such test
   that performs a real, non-`--dry-run` write (`mods activate`/
-  `deactivate`, `apply`, `patch`/`assign export --install`) passes
+  `deactivate`, `order import`, `apply`, `patch`/`assign export
+  --install`) passes
   `--force` instead — always safe there, since every one of those tests
   writes to a tempdir/scratch copy, never the game's own file (`--force`
   bypasses only the running-game probe, never any other safety check).
 - **The real writers against a live install are `apply` (including
   `--write-merge-mod`, which writes the generated merge mod into
-  `<game>/Mods`), `mods activate|deactivate`, and `patch export
+  `<game>/Mods`), `mods activate|deactivate`, `order import`, and `patch export
   --install` / `assign export --install` (each copies a mod folder into
   `<game>/Mods` and appends it to `ModsConfig.xml`)** — every one of
   them only on an explicit, non-`--dry-run` invocation. For a manual run
@@ -128,6 +129,41 @@ output, so it doubles as this generator's own regression test.
   runtime-patching library or an early-loading hook ahead of Core (such a
   hook hooks the game's own assembly-loading process, which must run
   first), so nothing here enforces load position, only presence.
+- **`order export|import` carry zero business logic either**
+  (`commands/order.rs`). `export` reads `ModsConfig.xml` and
+  `discover_inventory` (no scan), builds an `ExportSource` itself (the CLI
+  has no `Session`), and runs `rim_session::use_cases::ExportOrder`: no
+  `--out` prints the text format on stdout, `--out` writes an `.rml`
+  through `RmlFileStore` and refuses an existing file unless
+  `--overwrite` (never touches `ModsConfig.xml`). Ids that cannot be
+  written into a list go to stderr as warnings, so stdout stays pasteable.
+  `import <file|->` previews through `PreviewOrderImport`/
+  `ImportPreview::from_read` (`-` reads stdin through
+  `rim_io::read_mod_list_bounded` and parses it with
+  `rim_io::parse_mod_list_bytes`, so it gets the same bound, lossy
+  decoding and format detection as a file: text or a piped `.rml`) and
+  prints the plan, then writes `<activeMods>` = the planned
+  order through the same `mods::write_active_set` (backup, file's
+  `version`/`knownExpansions` kept) and `mods::refuse_while_running`
+  probe as `mods activate`. It is deliberately **not** routed through
+  `apply` (no scan, no hard-problem list; it prints the `apply --dry-run
+  --source current` hint instead). `--yes` is required exactly when
+  `ImportLoss::of(&plan)` is `Some` (it deactivates something, or a
+  listed mod other than the sender's merge mod is not installed); the
+  plan prints first and the refusal after, as `mods deactivate` does.
+  `has_pending_changes` is always `false` here. A plan whose order
+  equals the file's writes nothing and takes no backup. A rejected input
+  (`Rejection`) is an error exit with a reason; `--dry-run` writes
+  nothing. The planned order goes through
+  `ImportOrder::validate_order`, the same rule the desktop applies
+  (every id installed, none repeated, Core present, and at least one mod
+  besides Core and generated mods), after the plan
+  prints and before the dry-run exit, `--yes` and the probe: an install
+  with no Core on disk refuses the import (error exit, nothing written)
+  rather than writing an order without Core. A list that omits Core gets
+  it first (`core: not in the list; kept first`). The game version is
+  `Option`al in the list; discovery itself still needs `Version.txt`, so
+  a missing one fails here exactly as it does for `mods list`.
 - **`db_cli.rs`'s disabled-sources seed is load-bearing for the whole
   workspace's hermetic-network gate.** It writes `<base>/app-settings.json`
   as a raw JSON string (`NetworkPolicy`'s own fetch toggles, not

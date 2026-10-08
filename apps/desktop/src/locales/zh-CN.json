@@ -567,6 +567,14 @@
       "game_start_failed": {
         "title": "RimWorld 未能启动",
         "detail": "Windows 无法启动 RimWorldWin64.exe。"
+      },
+      "mod_list_io_failed": {
+        "title": "无法读取或写入 Mod 列表",
+        "detail": "无法读取或写入该 Mod 列表文件。请确认该文件（保存时则为其所在文件夹）存在，并且你有权限在该位置打开或保存它。"
+      },
+      "nothing_to_export": {
+        "title": "没有可导出的内容",
+        "detail": "没有可列出的已启用 Mod。请检查 ModsConfig.xml 中的已启用 Mod。"
       }
     }
   },
@@ -1575,6 +1583,92 @@
       "promotedBy": "由 {before} → {after} 提升",
       "body": "没有来源或位置信号"
     }
+  },
+  "orderShare": {
+    "export": {
+      "button": "导出",
+      "hint": "导出 ModsConfig.xml 中的顺序，即 RimWorld 加载的顺序。",
+      "saveFile": "另存为 RimWorld Mod 列表（.rml）…",
+      "copyText": "复制为文本",
+      "fileFilter": "RimWorld Mod 列表",
+      "saved": "已将 {count} 个 Mod 保存到 {file}。",
+      "copied": "已复制 {count} 个 Mod。",
+      "copyFailed": "无法复制到剪贴板。",
+      "saveFailed": "无法保存 Mod 列表。",
+      "leftOut": "有 {count} 个 Mod 无法列入列表，已被省略。"
+    },
+    "import": {
+      "button": "导入",
+      "openFile": "打开 Mod 列表文件…",
+      "paste": "粘贴列表…",
+      "fileFilter": "Mod 列表（.rml、.xml、.txt）",
+      "allFiles": "所有文件",
+      "pasteTitle": "粘贴加载顺序",
+      "pasteHint": "每行一个 Mod：粘贴“复制为文本”得到的文本，或每行一个 ID。",
+      "pasteLabel": "加载顺序文本",
+      "preview": "预览"
+    },
+    "preview": {
+      "title": "导入加载顺序",
+      "summary": "列表中有 {count} 个 Mod",
+      "versionDiffers": "此列表由 RimWorld {listed} 制作；你的版本是 {game}。",
+      "replacesPending": "你尚未重新扫描的启用状态更改将被替换。",
+      "replacesUnwritten": "此次导入会替换你的当前顺序，而该顺序尚未写入 ModsConfig.xml。",
+      "moved": "{count} 个 Mod 的位置会改变。",
+      "sameOrder": "已安装的 Mod 保持当前顺序。",
+      "coreAdded": "列表中没有 Core；Core 仍排在第一位。",
+      "activatedHeading": "将被启用（{count}）",
+      "deactivatedHeading": "将被禁用（{count}）",
+      "missingHeading": "未安装（{count}）",
+      "missingExplanation": "Rimmerge 从不下载 Mod。请自行订阅这些 Mod，然后重新导入。",
+      "openWorkshop": "在 Steam 创意工坊中打开",
+      "openWorkshopLabel": "在 Steam 创意工坊中打开 {name}",
+      "missingKind": {
+        "dlc": "你未安装的 DLC。",
+        "rimmergeMergeMod": "发送者的合并 Mod，由 Rimmerge 在其电脑上生成；你不需要它。",
+        "noLink": "列表中没有此 Mod 的创意工坊链接。"
+      },
+      "copyMissing": "复制缺失列表",
+      "missingCopied": "已复制缺失列表。",
+      "duplicatesHeading": "重复列出（{count}）",
+      "duplicateRow": "{id}——以第一次出现的位置（#{position}）为准。",
+      "otherCopyHeading": "匹配到另一个副本（{count}）",
+      "otherCopyRow": "{listed} → 你的副本 {installed}",
+      "skippedHeading": "无法识别的行（{count}）",
+      "skipped": {
+        "notAnEntry": "第 {line} 行：不是 Mod 条目。",
+        "malformedId": "第 {position} 个条目：“{text}”不是有效的 ID。"
+      },
+      "skippedOmitted": "另有 {count} 个条目未显示。",
+      "blocked": {
+        "coreMissing": "未安装 Core，因此无法导入此列表。",
+        "nothingInstalled": "列表中的 Mod 均未安装，因此没有可导入的内容。",
+        "tooMany": "此顺序包含的 Mod 过多；一次导入最多只能包含 {limit} 个 Mod。",
+        "unknown": "{id} 不是已安装的 Mod。",
+        "duplicate": "{id} 在该顺序中出现了不止一次。"
+      },
+      "close": "关闭",
+      "importing": "正在导入…",
+      "whatHappens": "Rimmerge 会用此顺序重新扫描，并将其显示为当前顺序。在你应用之前，不会写入任何内容。",
+      "confirm": "使用此顺序"
+    },
+    "imported": "导入的顺序已就绪。请检查后点击应用，以写入 ModsConfig.xml。",
+    "notInFile": "此顺序尚未写入 ModsConfig.xml。",
+    "notInFileApply": "应用",
+    "previewOutdated": "自预览以来，你已安装的 Mod 发生了变化。请重新预览该列表。",
+    "rejected": {
+      "title": "无法导入此列表",
+      "tooLarge": "文件超过 {limit}。",
+      "tooManyEntries": "列表中的条目超过 {limit} 个。",
+      "malformedXml": "该文件不是有效的 XML。",
+      "dtdNotAllowed": "该文件声明了 DTD，而 Mod 列表从不这样做。",
+      "tooDeep": "该文件嵌套层级过深，不可能是 Mod 列表。",
+      "unrecognizedFormat": "这不是 RimWorld Mod 列表（.rml）、ModsConfig.xml 或文本列表。",
+      "missingModList": "该文件中没有 Mod 列表。",
+      "noEntries": "未找到任何 ID。"
+    },
+    "importedWithWarnings": "扫描报告了 {count} 条警告。",
+    "importedRuleWarnings": "已导入，但有规则无法载入"
   },
   "apply": {
     "dialog": {

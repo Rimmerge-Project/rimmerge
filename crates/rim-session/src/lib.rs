@@ -20,6 +20,7 @@ mod mod_index;
 pub mod mod_info;
 mod mod_inventory;
 mod mod_knowledge;
+pub mod mod_list;
 mod paths;
 mod recommended_rules;
 mod session;

@@ -27,7 +27,7 @@ const INITIAL_ORDER_SOURCE: OrderSource = OrderSource::Suggested;
 
 /// Builds a [`ProjectSummaryDto`] from a freshly (re)scanned `session` and
 /// wires in its `DefSourceReader` — the shared tail [`load_project_inner`]
-/// and `commands::active_set::rescan_project_inner` both need, so a real
+/// and `commands::active_set::rescan_with` both need, so a real
 /// load and a rescan
 /// report identically shaped summaries from one place instead of two
 /// hand-copied bodies drifting apart. Takes `def_reader` directly rather

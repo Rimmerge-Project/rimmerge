@@ -186,13 +186,13 @@ where
             }
             let mut order = session.orders().get(options.source).as_slice().to_vec();
             if options.write_merge_mod {
-                let identity = GeneratedModIdentity::for_profile(session.paths().profile_hash());
+                let own_merge_mod = session.own_merge_mod_id();
                 if merge_mod_path.is_some() {
-                    if !order.contains(&identity.package_id) {
-                        order.push(identity.package_id);
+                    if !order.contains(&own_merge_mod) {
+                        order.push(own_merge_mod);
                     }
                 } else {
-                    order.retain(|id| *id != identity.package_id);
+                    order.retain(|id| *id != own_merge_mod);
                 }
             }
             let load_order = rim_analyzer::domain::LoadOrder::new(order);

@@ -108,6 +108,7 @@ export function dashboardFixture(needsInput: number): DashboardDto {
     movedMods: 4,
     selected: "current",
     fileMatchesSuggested: false,
+    fileMatchesCurrent: true,
     sortProvenance: { tieBreak: "rebuild", useImportedPairs: false, useImportedPlacements: true },
   };
 }
@@ -200,7 +201,12 @@ export function mergeModFixtureWithEntry(
 }
 
 export function mountDialog(
-  options: { attachToBody?: boolean; errorHandler?: (error: unknown) => void } = {},
+  options: {
+    attachToBody?: boolean;
+    errorHandler?: (error: unknown) => void;
+    /** Whether the dialog starts open; defaults to open. */
+    visible?: boolean;
+  } = {},
 ) {
   const pinia = createPinia();
   setActivePinia(pinia);
@@ -226,7 +232,7 @@ export function mountDialog(
   });
 
   const wrapper = mount(ApplyDialog, {
-    props: { visible: true },
+    props: { visible: options.visible ?? true },
     ...(options.attachToBody ? { attachTo: document.body } : {}),
     global: {
       plugins: [pinia, router, PiniaColada, [PrimeVue, { theme: { preset: Aura } }], ToastService],
