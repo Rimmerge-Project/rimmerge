@@ -6,6 +6,10 @@ maintainer's own checkout for the full record, if you have it.
 
 ## [Unreleased]
 
+- **Faster loading, Rescan and load-order import on large installs.** The
+  analysis that runs after the per-mod scan is about four times faster: on a
+  test install of about 1,000 active mods it went from about 27 s to about
+  6 s (release build). Its results are unchanged.
 - **Fix: a change no longer reports failure when it succeeded.** Applying,
   activating or deactivating mods, deciding a finding, or changing merge
   choices could show an error toast (and keep a dialog open) after the change
