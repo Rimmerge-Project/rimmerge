@@ -156,7 +156,8 @@ output, so it doubles as this generator's own regression test.
   (`Rejection`) is an error exit with a reason; `--dry-run` writes
   nothing. The planned order goes through
   `ImportOrder::validate_order`, the same rule the desktop applies
-  (every id installed, none repeated, Core present), after the plan
+  (every id installed, none repeated, Core present, and at least one mod
+  besides Core and generated mods), after the plan
   prints and before the dry-run exit, `--yes` and the probe: an install
   with no Core on disk refuses the import (error exit, nothing written)
   rather than writing an order without Core. A list that omits Core gets

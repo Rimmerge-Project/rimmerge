@@ -120,6 +120,8 @@ order, as of the last scan or apply. See
   - `apply --write-merge-mod` and `patch export`/`assign export` with
     `--install` write a generated mod folder under your RimWorld
     install's `Mods` folder and add it to `ModsConfig.xml`.
+  - `order export --out` (and the desktop app's Export menu) writes the
+    one `.rml` file you name, and never touches `ModsConfig.xml`.
 
   Every `ModsConfig.xml` write takes a timestamped backup first, and
   none of these run while RimWorld looks like it is running unless you

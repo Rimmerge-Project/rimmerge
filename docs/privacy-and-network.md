@@ -146,6 +146,17 @@ text, never made clickable. A new-version notice's own release link is
 copyable text, not a clickable one — copying it to your clipboard never
 opens anything on its own.
 
+An imported load order's preview adds one more kind: *Open on Steam
+Workshop* beside a listed mod you don't have installed. The list you
+imported supplies only that mod's Workshop item id. The frontend sends the
+id as digits, never a URL. The backend accepts it only as digits that
+make a non-zero 64-bit number, builds the fixed
+`https://steamcommunity.com/sharedfiles/filedetails/?id=<id>` address
+itself, and hands it to the same opener. A link written in a shared text
+list is read for its id and nothing else, so a list can't make Rimmerge
+open an address of its choosing. *Copy the missing list* only puts text on
+your clipboard.
+
 ## Starting the game
 
 The desktop app's **Launch RimWorld** button starts the game only when
@@ -172,6 +183,32 @@ Launching reads the install folder, Steam's own records of it
 (`appmanifest_294100.acf` and `libraryfolders.vdf`) and the list of
 running programs, and writes nothing.
 
+## Sharing a load order
+
+Exporting and importing a load order (see
+[Sharing a load order](desktop.md#sharing-a-load-order) and the CLI's
+[`order export`/`order import`](cli.md)) opens no connection. It is not a
+web request, the two hosts above are still the only ones Rimmerge ever
+contacts, and the Internet access switch has nothing to block here.
+
+- **Export** reads `ModsConfig.xml` and your installed mods' names and
+  Workshop ids. *Save as RimWorld mod list* writes one `.rml` file, at
+  the path you choose in the save dialog (the app accepts only a `.rml`
+  name and refuses to write over `ModsConfig.xml`); `order export --out`
+  writes the one file you name. *Copy as text*, and `order export` without
+  `--out`, write no file at all. The exported list holds package ids, mod
+  names, Workshop ids and the game's major.minor version, nothing else:
+  no path, profile, or account.
+- **Import** reads only the file you pick, or the text you paste (or pipe
+  to `order import -`), at most 4 MiB. The preview writes nothing. In the
+  desktop app, *Use this order* rescans your install with the list, and
+  still writes nothing until you Apply. `order import` writes
+  `ModsConfig.xml` after printing the same preview, with a backup first,
+  unless you pass `--dry-run`.
+- **Rimmerge never downloads a mod.** A listed mod you don't have is shown
+  with its Workshop link when the list has one (see
+  [Links you click](#links-you-click)); installing it is up to you.
+
 ## Rate limits and being offline
 
 Being offline is normal: a failed check or refresh is recorded (shown
@@ -183,13 +220,16 @@ GitHub's stated reset time (at most a day) before asking again.
 ## Everything else is local
 
 Every other operation — scanning your install, sorting, building the
-ledger, merging, verifying, starting the game — reads and writes only
-your local filesystem, and only when you ask for a write. Scanning,
-sorting, the ledger, `verify`, and launching RimWorld never write
-anything; launching only reads the install folder and Steam's records
-of it (see [Starting the game](#starting-the-game)). `apply` and `mods
-activate`/`mods deactivate` write `ModsConfig.xml`, with a backup taken
-first. `apply --write-merge-mod`, and exporting a compatibility patch or
+ledger, merging, verifying, sharing a load order, starting the game —
+reads and writes only your local filesystem, and only when you ask for a
+write. Scanning, sorting, the ledger, `verify`, previewing an imported
+load order, and launching RimWorld never write anything; launching only
+reads the install folder and Steam's records of it (see
+[Starting the game](#starting-the-game)). `apply`, `mods
+activate`/`mods deactivate` and `order import` write `ModsConfig.xml`,
+with a backup taken first. Exporting a load order writes only the `.rml`
+file you chose (see [Sharing a load order](#sharing-a-load-order)).
+`apply --write-merge-mod`, and exporting a compatibility patch or
 patch-maker mod with `--install`, additionally write a generated mod
 folder into your RimWorld install's own `Mods/` folder and add its
 package id to `ModsConfig.xml` — the only writes this tool ever makes

@@ -597,3 +597,70 @@ searchable through the same path as everything else —
 `ModSummary.source` is `None` only for a missing row (there's no
 `About.xml` to have read a source from; a fabricated one would be a
 lie), and it only ever matches an unrestricted source filter.
+
+## Sharing a load order (`mod_list`, `ExportOrder`, `PreviewOrderImport`, `ImportOrder`)
+
+- **`mod_list` is pure**: value objects, the "Copy as text" codec
+  (`render_text`/`parse_text`), the export builder
+  (`SharedModList::from_active`) and the diff (`plan_import`). No file, no
+  XML: the `.rml` and `ModsConfig.xml`-shaped readers and the `.rml` writer
+  live in `rim-io` behind `ports::ModListFileStore` (fake:
+  `test_support::InMemoryModListFileStore`). Input is untrusted, so every
+  value object is correct by construction (`WorkshopId` is never `0`,
+  `ListedPackageId` passes the lenient id grammar, names are bounded and
+  stripped of control characters), and every bound is a
+  `ModListLimits` constant that `rim-io`, the CLI's stdin reader and the
+  desktop paste all read. A malformed entry is a `SkippedEntry` (at most
+  `MAX_SKIPPED_REPORTED`, the rest only counted); only a whole-document
+  failure is a `Rejection`, and a rejection is a preview **outcome**
+  (`ImportPreview::Rejected`), not an error.
+- **Export reads the file, not the selection.** `ExportOrder` re-reads
+  `ModsConfig.xml` through `ModsConfigStore::read` on every call (the
+  desktop opens on Suggested, an order the player may never have run),
+  exports base ids once each, leaves the profile's own merge mod out, and
+  returns ids that fail the grammar as `ExportedModList::unrepresentable`
+  for the caller to report, never dropped silently.
+  `ExportSource::from_session` takes `Session::game_version()`, the
+  scanned major.minor.
+- **`plan_import` resolves an entry in a fixed order**: a sender's
+  generated id is `MissingKind::RimmergeMergeMod` and never activated;
+  then a copy of the same base id that is already active in the file wins
+  (`AlreadyActive`, or `MatchedOtherCopy` with `Activation::AlreadyActive`),
+  so re-importing your own export is an empty diff and never swaps a
+  `_steam` copy for a local one; then the exact id on disk (`Activated`);
+  then `find_by_base` on disk (`MatchedOtherCopy`, `Activated`); else
+  `NotInstalled`. A repeat by base id is `Duplicate`, first position wins.
+  Core goes first when the list lacks it (`CorePlacement::AddedFirst`) and
+  is never in `deactivated`. The profile's own merge mod is appended at the
+  end when the file has it, after `moved` is counted, so it is neither
+  deactivated nor counted as moved. `VersionCheck` compares major.minor.
+- **`check_order` is the one import rule.** `ImportOrder::validate`
+  (desktop, against the live session), `validate_order` (the CLI, against a
+  discovered inventory) and `import_blocker` (why the preview's "Use this
+  order" is disabled) all call it: at most `MAX_ENTRIES + 2` ids (Core and
+  the own merge mod on top of a full list), every id installed and on disk,
+  none repeated, Core present, and at least one mod besides Core and
+  generated mods (`NothingInstalled`). `ImportBlocker` is
+  `ImportOrderError` without `ScanDidNotMatch`, which only a scanned
+  session can raise. Never re-derive the rule in an interface.
+- **An import is validate → scan → finish, never a `working` edit.**
+  `ImportOrder::validate` returns a `ValidatedImport` (only it can build
+  one); the composition root scans with `ValidatedImport::order` through
+  `LoadProject::execute_with_active_set`, which makes that order the new
+  session's `orders.current` and its `working`; `ImportOrder::finish`
+  checks the scanned Current equals the validated order
+  (`ScanDidNotMatch` otherwise, selection untouched) and then selects
+  `OrderSource::Current`. Staging a same-set reorder in `working` and
+  rescanning separately would be wrong: `is_stale` is set-based, so a
+  failed or cancelled rescan would leave `Apply` free to write the old
+  order with no warning. Nothing here writes `ModsConfig.xml`; the
+  ordinary `Apply` with `source: Current` does.
+- **`ImportLoss::of(plan)`** is the CLI's `--yes` rule (something
+  deactivated, or a listed mod other than the sender's merge mod not
+  installed), derived from the plan and never stored.
+- **The text format has a client-side twin.** The desktop's "Copy the
+  missing list" (`missingListText` in `apps/desktop/src/utils/orderShare.ts`)
+  writes the same line format with its own copy of the name escaper.
+  `tests/fixtures/client_text_parity.json` is asserted by both
+  `render_text`'s Rust test and that function's vitest: change the
+  escaping in both places and the fixture together, or one suite fails.

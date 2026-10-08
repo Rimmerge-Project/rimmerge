@@ -15,6 +15,21 @@ maintainer's own checkout for the full record, if you have it.
   anyway, or Cancel). It says when the game is
   already running and won't start a second copy. Launching writes
   nothing on its own; Rimmerge stays open.
+- **New: share a load order.** The Load order page's **Export** menu saves
+  the order in `ModsConfig.xml` as a RimWorld mod list (`.rml`), which
+  opens in RimWorld's own mod manager when saved in its `ModLists` folder
+  (the save dialog starts there), or copies it as a numbered text list
+  for a chat message. **Import** takes a `.rml`, a `ModsConfig.xml`-shaped
+  list or a text list, from a file or a paste, and previews what would
+  change first: the mods activated and deactivated, the ones you don't
+  have installed (with an *Open on Steam Workshop* button where the list
+  has a Workshop link; Rimmerge never downloads mods), and lines it
+  couldn't read. *Use this order* rescans with the list and shows it as
+  Current; nothing is written to `ModsConfig.xml` until you Apply. The CLI
+  gains `rimmerge order export` (text on stdout, or `--out` for a `.rml`)
+  and `rimmerge order import <file | ->`, which prints the same preview
+  and then writes `ModsConfig.xml` with a backup first (`--dry-run` writes
+  nothing).
 
 ## [1.1.1] - 2026-10-06
 

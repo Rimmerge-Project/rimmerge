@@ -79,7 +79,9 @@ file with no live install or profile involved at all.
   could not read — and then writes the list as `<activeMods>` in
   `ModsConfig.xml`, taking a backup first. Rimmerge never downloads a
   missing mod. Core is kept in the order, and put first when the list omits
-  it (an install with no Core on disk refuses the import); your own
+  it (an install with no Core on disk refuses the import, and so does a
+  list in which no mod besides Core is installed, since it would only
+  deactivate your mods); your own
   generated merge mod is never deactivated. A `.rml` can be piped on
   stdin as well as text. If the import deactivates any active mod, or
   names a mod you do not have installed, it refuses until you pass

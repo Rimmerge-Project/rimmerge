@@ -45,7 +45,9 @@ public issue for a security report.
     backup first.
   - A RimWorld mod list (`.rml`) at the path you name, only through
     `order export --out`, which refuses to replace an existing file unless
-    you pass `--overwrite`.
+    you pass `--overwrite`, or the desktop app's Export → *Save as RimWorld
+    mod list*, which writes only the `.rml` path you chose in the save
+    dialog and refuses to write over `ModsConfig.xml`.
   - A generated mod folder under `<your RimWorld install>/Mods`, only
     through `apply --write-merge-mod` or `patch export`/`assign export`
     with `--install` (each also adds the generated mod's package id to

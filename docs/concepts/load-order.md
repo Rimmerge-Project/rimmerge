@@ -192,3 +192,58 @@ order `ModsConfig.xml` gives it and fails loudly (or silently drops
 content) when that order is wrong. Rimmerge's own job, described in
 [sorting.md](sorting.md), is turning every fact above into a suggested
 order, ranked by how sure each fact actually is.
+
+## Sharing a load order
+
+RimWorld's own mod manager can save the active list to a file and load it
+back: "Save list" writes a `.rml` file (a `<savedModList>` holding the
+package ids, the mods' names, their Steam ids, and the game version) into a
+`ModLists` folder beside the `Config` folder that holds `ModsConfig.xml`,
+and "Load list" reads from there. Rimmerge reads and writes that same
+format, so a list exported into `ModLists` shows up in the game, and a list
+saved in the game can be imported. It also reads a `ModsConfig.xml`-shaped
+list and a plain text list (see
+[Sharing a load order](../desktop.md#sharing-a-load-order) for the
+buttons, and [`order export`/`order import`](../cli.md) for the CLI).
+
+**Export shares the order in `ModsConfig.xml`**, re-read at export time —
+what RimWorld loads now, not the Suggested order. Package ids are written
+without `_steam`, and your own generated merge mod is left out, since only
+your machine has it.
+
+**An imported list is the whole active set.** In the desktop app, *Use this
+order* turns it into the **Current** order like this:
+
+- **It rescans with the list.** The listed mods you have installed, in the
+  list's order, become the active set of a fresh scan, so newly activated
+  mods have their defs, patches and ordering edges in the report before
+  the ledger, the preflight, or the Suggested order say anything about
+  them. The scan's result is selected as Current. If the scan fails,
+  nothing changes.
+- **A mod you already have active is kept as is.** When the list names a
+  package (with or without `_steam`) whose copy is already active here,
+  that copy stays, so re-importing your own export changes nothing.
+  Otherwise the exact id is activated, or another installed copy of the
+  same package when the exact one isn't installed.
+- **Your own merge mod stays at the end.** A list never carries it, and
+  the import doesn't drop it when `ModsConfig.xml` has it. A merge mod
+  named by the sender's list was made on their machine and is never
+  activated.
+- **Core comes first if the list lacks it.** Core is never deactivated.
+  A list that names Core keeps Core where the list puts it.
+- **Everything else active is deactivated**, and a listed mod you don't
+  have stays out of the order. Rimmerge never downloads a mod; the preview
+  names each missing one, with its Workshop link when the list has one.
+- **Nothing reaches `ModsConfig.xml` until you Apply.** The page shows a
+  note that the order isn't in the file yet, and the ordinary Apply
+  (hard-problem confirmation, running-game check, backup) writes it. The
+  CLI's `order import` has no scan or Current to stage: it writes the
+  planned order to `ModsConfig.xml` itself, with a backup first.
+
+An import is refused, with the reason shown in the preview, when:
+
+- **no Core is installed**, so the order would have none;
+- **nothing is installed**: no listed mod besides Core and Rimmerge's
+  generated mods is installed, so the import would only deactivate your
+  mods;
+- **the list is too long**: more than 5,000 entries.

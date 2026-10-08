@@ -89,7 +89,8 @@ breakdown, including where new code belongs:
   `--install`, additionally write a generated mod folder under
   `<your RimWorld install>/Mods` and add its package id to
   `ModsConfig.xml`. `order export --out` writes the one `.rml` file you
-  name (it refuses to replace an existing file without `--overwrite`).
+  name (it refuses to replace an existing file without `--overwrite`), and
+  the desktop app's Export menu writes the one `.rml` file you choose.
   Nothing writes anywhere else.
 - **A backup first, every time.** Every `ModsConfig.xml` write takes a
   timestamped backup before it touches the file; a merge-mod write keeps

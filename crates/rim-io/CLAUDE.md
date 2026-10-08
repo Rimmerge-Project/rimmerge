@@ -501,3 +501,47 @@ gate block in the root `CLAUDE.md`.
   (`new()` uses the real one) so route tests never read this machine's
   Steam; **no test calls `launch`**: the `open::that_detached` and `.spawn()`
   lines are covered only by the manual check.
+- **`mod_list_file.rs` + `mod_list_file/{read,write}.rs`**: `RmlFileStore`
+  implements `rim_session::ports::ModListFileStore`. The input is
+  untrusted and every bound is a `rim_session::mod_list::ModListLimits`
+  constant, never a local number: `read_bounded` (re-exported as
+  `read_mod_list_bounded`, which the CLI's stdin uses) takes at most
+  `MAX_INPUT_BYTES + 1` bytes and returns `None` past the limit, so an
+  oversized input is never held whole (`Rejection::TooLarge`); decoding is
+  lossy UTF-8 with the BOM stripped, and past the byte limit every U+FFFD
+  becomes `?` so decoding can't grow the text. **The format is detected by
+  content, never by extension**: after the BOM and leading whitespace, a
+  start of `<?xml`, `<!`, `<savedModList` or `<ModsConfigData` (ASCII
+  case-insensitive) is XML, anything else (a hand-typed line starting with
+  `<` included) goes to `rim_session::mod_list::parse_text`; an XML root
+  other than those two is `UnrecognizedFormat`. XML safety: any
+  `<!DOCTYPE` is `DtdNotAllowed` before parsing (roxmltree allows an empty
+  DTD on its own), `raw_element_nesting_exceeds(MAX_RAW_ELEMENT_DEPTH)` is
+  `TooDeep`, and roxmltree runs with `allow_dtd: false`, no entity
+  resolver and `nodes_limit = MAX_XML_NODES` (16 nodes per entry, since
+  roxmltree counts indentation text nodes; hitting it reads as
+  `TooManyEntries`). A list's `<li>` count is checked before its texts are
+  collected. A `.rml` reads `modList/ids` (else `MissingModList`) and
+  `modList/names` only when it has one name per id; `meta/modIds` and
+  `meta/modSteamIds` give Workshop ids only when their lengths agree, a
+  `0` or non-numeric value gives none, and **official content (Core, any
+  `ludeon.rimworld.*`) never gets a Workshop id**: the number a DLC row
+  carries is its Steam app id. A `ModsConfigData` document reads
+  `activeMods` and carries no names or links.
+- **The `.rml` writer is game-exact** (`write.rs`, checked byte for byte by
+  its golden test against the shape the game's own "Save list" writes):
+  UTF-8 BOM, the `<?xml version="1.0" encoding="utf-8"?>` declaration,
+  CRLF, tab indentation, `<meta>` (`gameVersion`, `modIds`,
+  `modSteamIds`, `modNames`) then `<modList>` (`ids`, `names`) with the
+  lists duplicated, and no line ending after `</savedModList>`. Text is
+  escaped with `xml_text::xml_escape_text` (`&`, `<`, `>` only, as the
+  game writes `'` and `"` raw in a text node), not the five-entity
+  `xml_escape` `ModsConfigFileStore` uses. `modSteamIds` is the DLC's app
+  id from the constant `DLC_APP_IDS` table (vanilla facts), else the
+  entry's Workshop id, else `0`; a missing name is written as the id so
+  the lists stay aligned. `gameVersion` is whatever the list carries,
+  which an export fills with the scanned major.minor (`1.6`), not the raw
+  `Version.txt` text, and is omitted when unknown. Writes go through
+  `write_atomically`; which paths are allowed is the interface's call (the
+  desktop accepts only a `.rml` that isn't `ModsConfig.xml`, the CLI
+  refuses an existing file without `--overwrite`).
