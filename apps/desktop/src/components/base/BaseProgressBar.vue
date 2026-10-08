@@ -3,6 +3,10 @@
  * How far along a job is. The two arms are exclusive by construction, so
  * a caller can't hand over a half-filled `done`-without-`total` pair, or
  * a `percent` that a `done`/`total` pair would silently override.
+ *
+ * A `done`/`total` pair of exactly `0` of `1` is a stage that has begun but
+ * cannot report progress (the scan's analysis is one such unit): the bar
+ * renders indeterminate instead of an empty bar that looks stalled.
  */
 export type Progress = { done: number; total: number } | { percent: number };
 </script>
@@ -43,6 +47,10 @@ const PASS_THROUGH = { value: { style: { transition: "width 120ms linear" } } } 
  * (`total: 0`), and any non-finite arithmetic behind it, read as 0
  * rather than reaching `aria-valuenow` and the fill width as `NaN`.
  */
+const isIndeterminate = computed(
+  () => "done" in progress && progress.done === 0 && progress.total === 1,
+);
+
 const percent = computed(() => {
   const raw = "percent" in progress ? progress.percent : ratioPercent(progress);
   if (!Number.isFinite(raw)) {
@@ -61,6 +69,13 @@ function ratioPercent({ done, total }: { done: number; total: number }): number 
 <template>
   <div class="flex shrink-0 flex-col gap-1">
     <ProgressBar
+      v-if="isIndeterminate"
+      v-bind="$attrs"
+      mode="indeterminate"
+      :aria-label="label"
+    />
+    <ProgressBar
+      v-else
       v-bind="$attrs"
       :value="percent"
       :pt="PASS_THROUGH"

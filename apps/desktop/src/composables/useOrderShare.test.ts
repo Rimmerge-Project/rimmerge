@@ -10,6 +10,7 @@ import { defineComponent } from "vue";
 import { flush } from "@/components/apply/ApplyDialog.test-support";
 import { useOrderShare } from "@/composables/useOrderShare";
 import { createAppI18n, registerAppI18n } from "@/i18n/i18n";
+import { useMergeModQuery } from "@/queries/merge";
 import { installMockIpc } from "@/services/ipc.mock";
 import { useSessionStore } from "@/stores/session";
 import type { OrderImportOutcomeDto } from "@/types/generated/OrderImportOutcomeDto";
@@ -49,7 +50,11 @@ type Calls = {
   workshop: unknown[];
 };
 
-function mountComposable(handlers: Record<string, unknown> = {}, colada: PiniaColadaOptions = {}) {
+function mountComposable(
+  handlers: Record<string, unknown> = {},
+  colada: PiniaColadaOptions = {},
+  { withActiveMergeModQuery = false }: { withActiveMergeModQuery?: boolean } = {},
+) {
   const calls: Calls = { exportFile: [], importOrder: [], workshop: [] };
   installMockIpc({
     suggested_mod_list_path: "C:/Saves/ModLists/rimmerge-load-order.rml",
@@ -83,6 +88,10 @@ function mountComposable(handlers: Record<string, unknown> = {}, colada: PiniaCo
     defineComponent({
       setup() {
         share = useOrderShare();
+        if (withActiveMergeModQuery) {
+          // Stands in for any long-lived observer of a slow query (the Merge mod page's, say).
+          useMergeModQuery();
+        }
         return () => null;
       },
     }),
@@ -213,6 +222,28 @@ describe("useOrderShare", () => {
     expect(toastAdd.mock.calls.at(-1)?.[0].summary).toBe(
       "Imported order ready. Review it, then Apply to write ModsConfig.xml.",
     );
+  });
+
+  it("finishes the import without waiting for the refetch of an active slow query", async () => {
+    // Some query is always active (the Merge mod page's `get_merge_mod`, an open Apply dialog's)
+    // and its render is slow on a freshly swapped session; the import's spinner must not wait.
+    const { share } = mountComposable(
+      { get_merge_mod: () => new Promise(() => {}) },
+      {},
+      { withActiveMergeModQuery: true },
+    );
+    await share.previewPasted("ludeon.rimworld");
+
+    const running = share.confirmImport(["ludeon.rimworld", "example.a"]);
+    await flush();
+    await flush();
+
+    expect(share.isImporting.value).toBe(false);
+    expect(share.isPreviewOpen.value).toBe(false);
+    expect(toastAdd.mock.calls.at(-1)?.[0].summary).toBe(
+      "Imported order ready. Review it, then Apply to write ModsConfig.xml.",
+    );
+    await running;
   });
 
   it("shows the scan's notes and rules warnings after an import, in their own words", async () => {

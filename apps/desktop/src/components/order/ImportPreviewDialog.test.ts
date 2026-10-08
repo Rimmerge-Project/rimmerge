@@ -1,5 +1,6 @@
 import { PiniaColada } from "@pinia/colada";
 import Aura from "@primevue/themes/aura";
+import { emit } from "@tauri-apps/api/event";
 import { clearMocks } from "@tauri-apps/api/mocks";
 import { mount } from "@vue/test-utils";
 import { createPinia } from "pinia";
@@ -307,6 +308,31 @@ describe("ImportPreviewDialog", () => {
       wrapper.get('[data-testid="import-preview-confirm"]').attributes("disabled"),
     ).toBeDefined();
     expect(wrapper.find(".p-dialog-close-button").exists()).toBe(false);
+  });
+
+  describe("progress while the import runs", () => {
+    const BAR = '[data-testid="import-preview-progress"]';
+
+    it("shows a determinate bar while the scan counts mods", async () => {
+      const wrapper = mountDialog(ready(), { isImporting: true });
+      await flush();
+
+      await emit("project://progress", { stage: "scanning", done: 50, total: 100 });
+      await flush();
+
+      expect(wrapper.get(BAR).attributes("aria-valuenow")).toBe("50");
+    });
+
+    it("shows an indeterminate bar, not a full or empty one, while the analysis runs at 0 of 1", async () => {
+      const wrapper = mountDialog(ready(), { isImporting: true });
+      await flush();
+
+      await emit("project://progress", { stage: "analyzing", done: 0, total: 1 });
+      await flush();
+
+      expect(wrapper.get(BAR).classes()).toContain("p-progressbar-indeterminate");
+      expect(wrapper.get(BAR).attributes("aria-valuenow")).toBeUndefined();
+    });
   });
 
   it.each([

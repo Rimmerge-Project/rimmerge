@@ -141,7 +141,10 @@ of that command surface — no direct filesystem or process access outside
   The import is not a mutation either (`importOrder` is called directly): the
   app-wide `onError` would add a second, default-group toast on top of the one
   shown here. Its success path is `useAdoptImportedSession` (`queries/orderShare.ts`):
-  adopt the returned `selected` and invalidate every query. A failure posts exactly
+  adopt the returned `selected` and invalidate every query **without awaiting it**, as
+  `useRescanMutation` does: Colada's `invalidateQueries` resolves only when every active
+  query has refetched, and a slow one would hold the preview's spinner long after the swap
+  landed (the dialog closes when the swap does). A failure posts exactly
   one order-share toast (the code's title and sentence) and keeps the preview open,
   except `invalid_input` (the install changed since the preview, so the same order
   would be refused again): that closes it and toasts "preview again" with the
@@ -219,6 +222,30 @@ of that command surface — no direct filesystem or process access outside
   scan was running, and it refuses rather than silently discarding that
   change: `"the working active-mod set changed during the rescan;
   rescan again"`.
+- **The Apply dialog reads the merge mod only while it is open, gated by mounting.** Every page
+  mounts an `ApplyDialog`, and on a freshly swapped session the `get_merge_mod` render replays
+  every ledger entry (seconds) under the session lock. The query lives in children of the
+  dialog's body (`ApplyMergeModSection.vue`: the checkbox, the loading line and the summary;
+  `ApplyResult.vue`: the skipped-merge reasons), which PrimeVue mounts only while the dialog is
+  open; `useApplyDialog` holds no merge-mod query. `useMergeModQuery` has **no `enabled`
+  option**: observers share one Colada entry and `invalidateQueries` honours only the last
+  observer's options, so one hidden dialog's gate would stop an open dialog or `MergeModPage`
+  from refreshing. An entry with no mounted observer is skipped by an invalidation (it is marked
+  stale and refetches when next observed). The query has `staleTime: Infinity`, as
+  `useDefGraphicQuery`: reopening the dialog or refocusing the window does not re-render under the
+  session lock; only an invalidation (a swap, a decision, `session://changed`) does. The cost: a
+  merge-mod folder added or removed on disk outside the app is not noticed until the next
+  invalidation. The section treats "no answer yet **or** a fetch in flight" as unknown
+  (`status === "pending" || isLoading`, an exception to the `isPending` rule above: after a
+  session swap the entry keeps the replaced session's answer with `status: "success"`; only that
+  line and the checkbox wait, nothing unmounts). One always-mounted `role="status"` element
+  carries the text (`common.loading`, then the summary, then nothing) so a screen reader
+  announces it reliably; the checkbox's `aria-describedby` points at it while unknown, and the box
+  cannot be toggled meanwhile (a tick made before a swap stays ticked). Data is read **only on
+  `status === "success"`** (here and in `ApplyResult.vue`): Colada keeps the previous `data` on a
+  failed refetch (`status: "error"`), which is the replaced session's answer. A *failed*
+  `get_merge_mod` therefore reads as no entries (no summary, box enabled, plain skipped-merge
+  wording); there is no error UI for it.
 - **The Apply dialog confirms hard problems; it has no needs-input gate.**
   `useApplyPreflightQuery(source)` (enabled while the dialog is visible)
   holds `get_apply_preflight`; `submit()` asks `requiresConfirmation` (computed
@@ -658,7 +685,9 @@ The UI is localized in `en` plus twelve translated locales (`zh-CN`,
   discriminated union so the two shapes can't be mixed), a required
   `label` (its only accessible name), floors rather than rounds the
   percentage (so 99.96% never claims "100%"), and overrides the
-  transition to 120ms via an inline style.
+  transition to 120ms via an inline style. A `{done, total}` of exactly `0` of `1` (a stage
+  that has begun but cannot count, such as the scan's `Analyzing` bracket around the analysis)
+  renders indeterminate, never as an empty or full bar; `percent` is always determinate.
 - **A list page fills the shell, it does not pick a fixed height.**
   `TheShell`'s root is `h-screen`; a list page's root is `flex h-full
   min-h-0 flex-col`, its header/filters are `shrink-0`, its scroll

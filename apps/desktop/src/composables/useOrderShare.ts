@@ -232,7 +232,7 @@ export function useOrderShare() {
     isImporting.value = true;
     try {
       const summary = await importOrder({ order: [...order] });
-      await adoptImportedSession(summary);
+      adoptImportedSession(summary);
       isPreviewOpen.value = false;
       toast.add({
         group: ORDER_SHARE_TOAST_GROUP,

@@ -193,7 +193,8 @@ preview the list again.
 
 Importing rescans with the previewed order and selects **Current**: the page
 then shows the imported order with a note that it isn't in `ModsConfig.xml`
-yet, and an Apply button. Nothing is written until you Apply, and the normal
+yet, and an Apply button. The preview closes as soon as the scan lands; pages
+then refresh in the background. Nothing is written until you Apply, and the normal
 Apply dialog (hard-problem confirmation, running-game check, backup) is the
 only writer. An import replaces activation changes you haven't rescanned and,
 if the Current order is not in the file yet, that order; the preview warns
@@ -291,7 +292,14 @@ or asset decision remains). Your choice holds until you close the dialog,
 and the dialog starts unchecked again the next time it opens. An apply
 without it still saves your decisions and writes `ModsConfig.xml`, but
 leaves any merge mod already in `Mods/` as it was, so it can lag behind
-decisions made since.
+decisions made since. The dialog works out what the merge mod would contain
+when it first opens and again after the session changes (a swap, a decision,
+a rescan), which takes a few seconds on a large install; reopening it with
+nothing changed reuses the last answer, so a merge-mod folder added or removed
+on disk outside the app is picked up at the next such change. Until the
+answer arrives, the section reads "Loading…" and the checkbox is disabled, so it never shows a
+previous session's answer. If that lookup fails, the section simply shows
+no summary, never a previous session's.
 
 ## Compatibility patches (`/patches`, `/patches/:patchId`, `/patches/:patchId/merge/:key`)
 

@@ -66,6 +66,44 @@ describe("BaseProgressBar", () => {
     });
   });
 
+  describe("indeterminate", () => {
+    it("renders a stage at 0 of 1 as indeterminate, with no percentage", () => {
+      const wrapper = mountBar({ done: 0, total: 1 });
+      const bar = wrapper.get('[role="progressbar"]');
+
+      expect(bar.classes()).toContain("p-progressbar-indeterminate");
+      expect(bar.attributes("aria-valuenow")).toBeUndefined();
+      expect(bar.text()).toBe("");
+      expect(bar.attributes("aria-label")).toBe("Scanning mods");
+    });
+
+    it("keeps the test id on the indeterminate bar itself", () => {
+      const wrapper = mountBar({ done: 0, total: 1 }, { "data-testid": "setup-progress" });
+
+      expect(wrapper.get('[data-testid="setup-progress"]').attributes("role")).toBe("progressbar");
+    });
+
+    it("renders a finished 1 of 1 as a full determinate bar", () => {
+      const bar = mountBar({ done: 1, total: 1 }).get('[role="progressbar"]');
+
+      expect(bar.classes()).not.toContain("p-progressbar-indeterminate");
+      expect(bar.attributes("aria-valuenow")).toBe("100");
+    });
+
+    it("keeps 0 of a larger total determinate", () => {
+      const bar = mountBar({ done: 0, total: 2 }).get('[role="progressbar"]');
+
+      expect(bar.classes()).not.toContain("p-progressbar-indeterminate");
+      expect(bar.attributes("aria-valuenow")).toBe("0");
+    });
+
+    it("keeps an explicit percentage determinate", () => {
+      const bar = mountBar({ percent: 0 }).get('[role="progressbar"]');
+
+      expect(bar.classes()).not.toContain("p-progressbar-indeterminate");
+    });
+  });
+
   describe("fill", () => {
     it("moves the fill with the label instead of trailing it by a second", () => {
       // PrimeVue's own stylesheet sets `transition: width 1s ease-in-out`

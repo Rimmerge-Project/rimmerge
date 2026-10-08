@@ -9,12 +9,18 @@ import type { ProjectSummaryDto } from "@/types/generated/ProjectSummaryDto";
  * invalidated directly. The whole session was replaced, so nothing cached is trustworthy, and
  * the caller need not wait for the `session://changed` round trip. The import itself is not a
  * mutation (see `useOrderShare`), so this is the success path's one shared step.
+ *
+ * The invalidation is **not awaited**, as in `useRescanMutation`: Pinia Colada's
+ * `invalidateQueries` resolves only once every active query has refetched, and some of those
+ * refetches are slow on a freshly swapped session (the merge-mod render behind the Merge mod
+ * page or an open Apply dialog, for one). Waiting for them would hold the preview's spinner long after the swap
+ * landed; pages keep their current data until their refetch lands.
  */
-export function useAdoptImportedSession(): (summary: ProjectSummaryDto) => Promise<void> {
+export function useAdoptImportedSession(): (summary: ProjectSummaryDto) => void {
   const queryCache = useQueryCache();
   const session = useSessionStore();
-  return async (summary) => {
+  return (summary) => {
     session.setSelected(summary.selected);
-    await queryCache.invalidateQueries();
+    void queryCache.invalidateQueries();
   };
 }

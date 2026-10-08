@@ -6,6 +6,14 @@ maintainer's own checkout for the full record, if you have it.
 
 ## [Unreleased]
 
+- **Fix: importing a load order no longer keeps spinning after the progress
+  bar finishes, and progress no longer stops early.** "Use this order" now
+  closes the preview as soon as the rescan lands instead of waiting for
+  every page to refresh. The Apply dialog now works out its merge mod when
+  it opens rather than on every page, with a "Loading…" line and the
+  *Write merge mod* box disabled until it answers. The progress bar now
+  covers the whole analysis after the per-mod scan, and shows as
+  indeterminate (instead of a full or empty bar) while that single step runs.
 - **New: Launch RimWorld.** A button in the sidebar, under Apply, and at
   the end of the Dashboard's Get started strip once its steps are done
   starts RimWorld: through Steam for a Steam copy, or by running
