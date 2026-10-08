@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryCache } from "@pinia/colada";
 
+import { startInvalidation } from "@/queries/invalidation";
 import { queryKeys } from "@/queries/keys";
 import {
   enableRecommendedRuleDatabases,
@@ -30,7 +31,7 @@ export function useSetSettingsMutation() {
       // Re-computes every status derivation and every advisory-edge
       // satisfaction check downstream of the threshold/enforcement
       // toggles — cheapest correct answer is to refetch everything.
-      void queryCache.invalidateQueries();
+      startInvalidation(queryCache);
     },
   });
 }
@@ -72,9 +73,9 @@ export function useUpdateAppSettingsMutation() {
   return useMutation({
     mutation: (settings: AppSettingsDto) => updateAppSettings(settings),
     onSuccess: () => {
-      void queryCache.invalidateQueries({ key: queryKeys.appSettings() });
-      void queryCache.invalidateQueries({ key: queryKeys.notifications() });
-      void queryCache.invalidateQueries({ key: queryKeys.recommendedRulesStep() });
+      startInvalidation(queryCache, { key: queryKeys.appSettings() });
+      startInvalidation(queryCache, { key: queryKeys.notifications() });
+      startInvalidation(queryCache, { key: queryKeys.recommendedRulesStep() });
     },
   });
 }
@@ -91,9 +92,9 @@ export function useResetNetworkPolicyMutation() {
   return useMutation({
     mutation: () => resetNetworkPolicy(),
     onSuccess: () => {
-      void queryCache.invalidateQueries({ key: queryKeys.appSettings() });
-      void queryCache.invalidateQueries({ key: queryKeys.notifications() });
-      void queryCache.invalidateQueries({ key: queryKeys.recommendedRulesStep() });
+      startInvalidation(queryCache, { key: queryKeys.appSettings() });
+      startInvalidation(queryCache, { key: queryKeys.notifications() });
+      startInvalidation(queryCache, { key: queryKeys.recommendedRulesStep() });
     },
   });
 }
@@ -108,9 +109,9 @@ export function useEnableRecommendedSourcesMutation() {
   return useMutation({
     mutation: () => enableRecommendedRuleDatabases(),
     onSuccess: () => {
-      void queryCache.invalidateQueries({ key: queryKeys.appSettings() });
-      void queryCache.invalidateQueries({ key: queryKeys.ruleDatabases() });
-      void queryCache.invalidateQueries({ key: queryKeys.notifications() });
+      startInvalidation(queryCache, { key: queryKeys.appSettings() });
+      startInvalidation(queryCache, { key: queryKeys.ruleDatabases() });
+      startInvalidation(queryCache, { key: queryKeys.notifications() });
     },
   });
 }

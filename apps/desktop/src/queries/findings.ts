@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryCache } from "@pinia/colada";
 import { type MaybeRefOrGetter, toValue } from "vue";
 
+import { awaitInvalidation } from "@/queries/invalidation";
 import { queryKeys } from "@/queries/keys";
 import { decide, getFinding, listFindings, revertDecision } from "@/services/ipc";
 import type { FindingKey } from "@/types/brands";
@@ -48,8 +49,8 @@ export function useFindingQuery(key: MaybeRefOrGetter<FindingKey | null>) {
  * cursor once the refiltered list actually lands — can await the refetch
  * settling, not just the invalidation being requested.
  */
-function invalidateAfterDecision(queryCache: ReturnType<typeof useQueryCache>): Promise<unknown> {
-  return queryCache.invalidateQueries();
+function invalidateAfterDecision(queryCache: ReturnType<typeof useQueryCache>): Promise<void> {
+  return awaitInvalidation(queryCache);
 }
 
 /** Records a decision on a finding, persisting it before returning. */

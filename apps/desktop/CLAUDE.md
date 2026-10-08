@@ -141,15 +141,15 @@ of that command surface — no direct filesystem or process access outside
   The import is not a mutation either (`importOrder` is called directly): the
   app-wide `onError` would add a second, default-group toast on top of the one
   shown here. Its success path is `useAdoptImportedSession` (`queries/orderShare.ts`):
-  adopt the returned `selected` and invalidate every query **without awaiting it**, as
-  `useRescanMutation` does: Colada's `invalidateQueries` resolves only when every active
-  query has refetched, and a slow one would hold the preview's spinner long after the swap
-  landed (the dialog closes when the swap does). A failure posts exactly
-  one order-share toast (the code's title and sentence) and keeps the preview open,
-  except `invalid_input` (the install changed since the preview, so the same order
-  would be refused again): that closes it and toasts "preview again" with the
-  code's sentence. `isBusy` makes every entry point a no-op while a dialog,
-  export or preview is in flight. The save dialog starts at
+  adopt the returned `selected` and invalidate every query **without awaiting it**
+  (through `startInvalidation`, `queries/invalidation.ts`), as `useRescanMutation` does:
+  Colada's `invalidateQueries` resolves only when every active query has refetched, and a
+  slow one would hold the preview's spinner long after the swap landed (the dialog closes
+  when the swap does). A failure posts exactly one order-share toast (the code's title and
+  sentence) and keeps the preview open, except `invalid_input` (the install changed
+  since the preview, so the same order would be refused again): that closes it and
+  toasts "preview again" with the code's sentence. `isBusy` makes every entry point a
+  no-op while a dialog, export or preview is in flight. The save dialog starts at
   `suggested_mod_list_path` (null when RimWorld's `ModLists` folder is absent)
   and offers `.rml` only; `dialog:allow-save` is the capability it needs. The
   preview's "Use this order" is enabled exactly when `importBlocked` is `null`
@@ -357,6 +357,18 @@ of that command surface — no direct filesystem or process access outside
   from the analyzer's scan order (not yet order-aware).
 - **`session://changed` fires after any mutating command and invalidates
   every query by default.** `useSessionEvents`'s
+- **A background invalidation goes through `startInvalidation(queryCache, filters?)`
+  (`queries/invalidation.ts`), never `void queryCache.invalidateQueries(...)`.** Colada's
+  `invalidateQueries` is a `Promise.all` over the refetches and each refetch rethrows its
+  query's error (1.4.5 `fetch`), so a failing query under a bare `void` is an unhandled
+  rejection. The helper swallows it on purpose: the failed query already carries the error
+  in its own state. A caller that needs the refetch to land first (a mutation's `onSuccess`)
+  uses `awaitInvalidation(queryCache, ...filters)` from the same module, which resolves when
+  every refetch has settled and never rejects (no filters means every query). Never return or
+  await a raw `invalidateQueries` from `onSuccess`/`onSettled`: Colada awaits those inside
+  `mutate`, so one unrelated query's failed refetch would fail a mutation whose write already
+  committed (status `error`, the app-wide `onError` toast for the wrong operation, a rejected
+  `mutateAsync`).
   `HANDLED_BY_MERGE_MUTATION` is a skip-list of reasons already handled
   by a mutation's own targeted invalidation (`mergeChanged`,
   `patchDecided` — `useSetMergeChoicesMutation`'s own `onSuccess`), not

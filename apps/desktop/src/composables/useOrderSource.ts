@@ -1,6 +1,7 @@
 import { useMutation, useQueryCache } from "@pinia/colada";
 import { computed } from "vue";
 
+import { startInvalidation } from "@/queries/invalidation";
 import { selectOrder } from "@/services/ipc";
 import { useSessionStore } from "@/stores/session";
 import type { OrderSourceDto } from "@/types/generated/OrderSourceDto";
@@ -23,7 +24,7 @@ export function useOrderSource() {
       // Every order-dependent query (dashboard's `selected`/`movedMods`,
       // findings, mod detail) is stale the moment the backend's own
       // selection moves.
-      void queryCache.invalidateQueries();
+      startInvalidation(queryCache);
     },
   });
 

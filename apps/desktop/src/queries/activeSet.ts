@@ -3,6 +3,7 @@ import { useToast } from "primevue/usetoast";
 import { type MaybeRefOrGetter, toValue } from "vue";
 import { useI18n } from "vue-i18n";
 
+import { awaitInvalidation, startInvalidation } from "@/queries/invalidation";
 import { queryKeys } from "@/queries/keys";
 import {
   activateMods,
@@ -69,7 +70,7 @@ export function useActivateModsMutation() {
   const queryCache = useQueryCache();
   return useMutation({
     mutation: (request: ActivateRequestDto) => activateMods(request),
-    onSuccess: () => queryCache.invalidateQueries(),
+    onSuccess: () => awaitInvalidation(queryCache),
   });
 }
 
@@ -85,7 +86,7 @@ export function useDeactivateModsMutation() {
   const queryCache = useQueryCache();
   return useMutation({
     mutation: (request: DeactivateRequestDto) => deactivateMods(request),
-    onSuccess: () => queryCache.invalidateQueries(),
+    onSuccess: () => awaitInvalidation(queryCache),
   });
 }
 
@@ -117,7 +118,7 @@ export function useRescanMutation() {
       // answer (rather than trusting the store to still agree) keeps the
       // two from drifting if they ever disagree.
       session.setSelected(summary.selected);
-      queryCache.invalidateQueries();
+      startInvalidation(queryCache);
       if (summary.warnings.length > 0) {
         toast.add({
           severity: "info",

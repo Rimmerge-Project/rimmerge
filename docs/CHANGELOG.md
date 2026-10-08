@@ -4,6 +4,14 @@ This changelog starts at the first public release. Development history
 before that point is not summarized here — see `.journal/` in a
 maintainer's own checkout for the full record, if you have it.
 
+## [Unreleased]
+
+- **Fix: a change no longer reports failure when it succeeded.** Applying,
+  activating or deactivating mods, deciding a finding, or changing merge
+  choices could show an error toast (and keep a dialog open) after the change
+  had been saved, when an unrelated page's data failed to refresh. The change
+  now finishes as a success, and the page that failed shows its own error.
+
 ## [1.2.0] - 2026-10-08
 
 - **Fix: importing a load order no longer keeps spinning after the progress

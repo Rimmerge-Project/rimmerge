@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryCache } from "@pinia/colada";
 import { type MaybeRefOrGetter, toValue } from "vue";
 
+import { awaitInvalidation } from "@/queries/invalidation";
 import { queryKeys } from "@/queries/keys";
 import {
   getMergeMod,
@@ -75,11 +76,12 @@ export function useSetMergeChoicesMutation() {
       patchId?: string;
     }) => setMergeChoices(key, choices, patchId),
     onSuccess: () =>
-      Promise.all([
-        queryCache.invalidateQueries({ key: ["merge"] }),
-        queryCache.invalidateQueries({ key: ["findings"] }),
-        queryCache.invalidateQueries({ key: ["defs", "conflictView"] }),
-      ]),
+      awaitInvalidation(
+        queryCache,
+        { key: ["merge"] },
+        { key: ["findings"] },
+        { key: ["defs", "conflictView"] },
+      ),
   });
 }
 

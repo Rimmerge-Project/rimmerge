@@ -1,6 +1,7 @@
 import { useQueryCache } from "@pinia/colada";
 
 import { useTauriEvent } from "@/composables/useTauriEvent";
+import { startInvalidation } from "@/queries/invalidation";
 import type { SessionChangedEventDto } from "@/types/generated/SessionChangedEventDto";
 import type { SessionChangeReasonDto } from "@/types/generated/SessionChangeReasonDto";
 
@@ -21,8 +22,8 @@ export const HANDLED_BY_MERGE_MUTATION = new Set<SessionChangeReasonDto>([
 /**
  * The actual per-`reason` decision, factored out of {@link useSessionEvents}
  * so it's directly unit-testable without simulating a real Tauri event
- * round trip — `invalidateAll` is `queryCache.invalidateQueries` (bare, no
- * key: the existing "invalidate everything" blast radius) in production,
+ * round trip — `invalidateAll` is `startInvalidation(queryCache)` (no
+ * filter: the existing "invalidate everything" blast radius) in production,
  * a spy in a test.
  */
 export function handleSessionChanged(
@@ -52,6 +53,6 @@ export function useSessionEvents(): void {
   const queryCache = useQueryCache();
 
   useTauriEvent<SessionChangedEventDto>("session://changed", (event) => {
-    handleSessionChanged(event, () => void queryCache.invalidateQueries());
+    handleSessionChanged(event, () => startInvalidation(queryCache));
   });
 }

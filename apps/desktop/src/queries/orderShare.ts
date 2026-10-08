@@ -1,5 +1,6 @@
 import { useQueryCache } from "@pinia/colada";
 
+import { startInvalidation } from "@/queries/invalidation";
 import { useSessionStore } from "@/stores/session";
 import type { ProjectSummaryDto } from "@/types/generated/ProjectSummaryDto";
 
@@ -21,6 +22,6 @@ export function useAdoptImportedSession(): (summary: ProjectSummaryDto) => void 
   const session = useSessionStore();
   return (summary) => {
     session.setSelected(summary.selected);
-    void queryCache.invalidateQueries();
+    startInvalidation(queryCache);
   };
 }

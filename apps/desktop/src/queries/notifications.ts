@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryCache } from "@pinia/colada";
 
+import { startInvalidation } from "@/queries/invalidation";
 import { queryKeys } from "@/queries/keys";
 import {
   checkForUpdate,
@@ -32,8 +33,8 @@ export function useDismissNotificationMutation() {
   return useMutation({
     mutation: (key: NotificationKeyDto) => dismissNotification(key),
     onSuccess: () => {
-      void queryCache.invalidateQueries({ key: queryKeys.notifications() });
-      void queryCache.invalidateQueries({ key: queryKeys.recommendedRulesStep() });
+      startInvalidation(queryCache, { key: queryKeys.notifications() });
+      startInvalidation(queryCache, { key: queryKeys.recommendedRulesStep() });
     },
   });
 }
@@ -52,8 +53,8 @@ export function useMuteNotificationKindMutation() {
   return useMutation({
     mutation: (kind: NotificationKindDto) => muteNotificationKind(kind),
     onSuccess: () => {
-      void queryCache.invalidateQueries({ key: queryKeys.notifications() });
-      void queryCache.invalidateQueries({ key: queryKeys.mutedNotificationKinds() });
+      startInvalidation(queryCache, { key: queryKeys.notifications() });
+      startInvalidation(queryCache, { key: queryKeys.mutedNotificationKinds() });
     },
   });
 }
@@ -64,8 +65,8 @@ export function useUnmuteNotificationKindMutation() {
   return useMutation({
     mutation: (kind: NotificationKindDto) => unmuteNotificationKind(kind),
     onSuccess: () => {
-      void queryCache.invalidateQueries({ key: queryKeys.notifications() });
-      void queryCache.invalidateQueries({ key: queryKeys.mutedNotificationKinds() });
+      startInvalidation(queryCache, { key: queryKeys.notifications() });
+      startInvalidation(queryCache, { key: queryKeys.mutedNotificationKinds() });
     },
   });
 }
@@ -76,8 +77,8 @@ export function useCompleteWelcomeMutation() {
   return useMutation({
     mutation: () => completeWelcome(),
     onSuccess: () => {
-      void queryCache.invalidateQueries({ key: queryKeys.notifications() });
-      void queryCache.invalidateQueries({ key: queryKeys.recommendedRulesStep() });
+      startInvalidation(queryCache, { key: queryKeys.notifications() });
+      startInvalidation(queryCache, { key: queryKeys.recommendedRulesStep() });
     },
   });
 }
@@ -95,8 +96,8 @@ export function useResetSettingsMutation() {
     onSuccess: () => {
       // Also affects the Welcome notice's own `settingsMatchRecommended`
       // field, so notifications refetch alongside settings.
-      void queryCache.invalidateQueries({ key: queryKeys.settings() });
-      void queryCache.invalidateQueries({ key: queryKeys.notifications() });
+      startInvalidation(queryCache, { key: queryKeys.settings() });
+      startInvalidation(queryCache, { key: queryKeys.notifications() });
     },
   });
 }
@@ -112,7 +113,7 @@ export function useCheckForUpdateMutation() {
   return useMutation({
     mutation: () => checkForUpdate(),
     onSuccess: () => {
-      void queryCache.invalidateQueries({ key: queryKeys.notifications() });
+      startInvalidation(queryCache, { key: queryKeys.notifications() });
     },
   });
 }
@@ -127,8 +128,8 @@ export function useRunLaunchNetworkChecksMutation() {
   return useMutation({
     mutation: () => runLaunchNetworkChecks(),
     onSuccess: () => {
-      void queryCache.invalidateQueries({ key: queryKeys.notifications() });
-      void queryCache.invalidateQueries({ key: queryKeys.ruleDatabases() });
+      startInvalidation(queryCache, { key: queryKeys.notifications() });
+      startInvalidation(queryCache, { key: queryKeys.ruleDatabases() });
     },
   });
 }
