@@ -11,6 +11,10 @@ maintainer's own checkout for the full record, if you have it.
   choices could show an error toast (and keep a dialog open) after the change
   had been saved, when an unrelated page's data failed to refresh. The change
   now finishes as a success, and the page that failed shows its own error.
+- **Fix: Launch RimWorld acts on the latest game status.** A click that
+  overlapped a background refresh could act on the status from before it: an
+  extra "not applied" error, a click that did nothing, or the Apply-first
+  prompt giving the wrong reason.
 
 ## [1.2.0] - 2026-10-08
 

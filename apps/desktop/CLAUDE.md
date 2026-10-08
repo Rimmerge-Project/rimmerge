@@ -114,18 +114,20 @@ of that command surface — no direct filesystem or process access outside
   with no note; an errored query is the view's `unknown` case (disabled, with
   `gameLaunch.statusFailed`) even when an older answer is held. Colada keeps `data`
   during a refetch, so after the first answer the button shows the last answer, and
-  a click reads a **fresh** status first (which can wait behind a verify). The button
-  is disabled while that read or `launch_game` is in flight. `launch_game` is called
-  directly, not through a mutation: the app-wide `mutationOptions.onError` would
-  toast every failure with the generic sentence, wrong for `rimworld_running` (own
-  sentence) and `order_not_applied` (reopens the prompt); `useGameLaunch` shows each
-  failure once. `ApplyDialog.vue` has one extra emit, `applied: [{ wroteModsConfig }]`,
-  fired from `useApplyDialog`'s `finishSuccess` (once per successful apply, even
-  when the dialog stays open for the merge-mod summary); the two older hosts ignore
-  it, the launch button's own dialog launches on it only while its
-  `isLaunchPendingApply` flag (set by "Apply first", cleared by `applied` or by the
-  dialog closing) is set. The mock (`gameLaunchStatus`/`launchGameMock` in
-  `scenario.ts`) derives the status from the selected order against `fileOrder`, the
+  a click reads a **fresh** status first (which can wait behind a verify), and when an
+  invalidation starts a newer fetch meanwhile (Colada aborts the click's and resolves it
+  with the old state) it waits for the newest call and reads the entry, so the click never
+  acts on a superseded answer. The button is disabled while that read or `launch_game`
+  is in flight. `launch_game` is called directly, not through a mutation: the app-wide
+  `mutationOptions.onError` would toast every failure with the generic sentence, wrong
+  for `rimworld_running` (own sentence) and `order_not_applied` (reopens the prompt);
+  `useGameLaunch` shows each failure once. `ApplyDialog.vue` has one extra emit,
+  `applied: [{ wroteModsConfig }]`, fired from `useApplyDialog`'s `finishSuccess`
+  (once per successful apply, even when the dialog stays open for the merge-mod
+  summary); the two older hosts ignore it, the launch button's own dialog launches
+  on it only while its `isLaunchPendingApply` flag (set by "Apply first", cleared by
+  `applied` or by the dialog closing) is set. The mock (`gameLaunchStatus`/`launchGameMock`
+  in `scenario.ts`) derives the status from the selected order against `fileOrder`, the
   unscanned set and `window.__GAME_RUNNING__`, and records `__LAUNCH_GAME_CALLS__`.
 - **Sharing a load order lives on the Load order page, and the backend decides
   everything it shows.** `components/order/OrderShareMenus.vue` (the header's
@@ -355,6 +357,18 @@ of that command surface — no direct filesystem or process access outside
   The mock's `findingFor` recomputes it from the selected order, mirroring
   `ledger::findings::conflicts::last_loaded`. `DefOverride.winner` still comes
   from the analyzer's scan order (not yet order-aware).
+- **A background invalidation goes through `startInvalidation(queryCache, filters?)`
+  (`queries/invalidation.ts`), never `void queryCache.invalidateQueries(...)`.** Colada's
+  `invalidateQueries` is a `Promise.all` over the refetches and each refetch rethrows its
+  query's error (1.4.5 `fetch`), so a failing query under a bare `void` is an unhandled
+  rejection. The helper swallows it on purpose: the failed query already carries the error
+  in its own state. A caller that needs the refetch to land first (a mutation's `onSuccess`)
+  uses `awaitInvalidation(queryCache, ...filters)` from the same module, which resolves when
+  every refetch has settled and never rejects (no filters means every query). Never return or
+  await a raw `invalidateQueries` from `onSuccess`/`onSettled`: Colada awaits those inside
+  `mutate`, so one unrelated query's failed refetch would fail a mutation whose write already
+  committed (status `error`, the app-wide `onError` toast for the wrong operation, a rejected
+  `mutateAsync`).
 - **`session://changed` fires after any mutating command and invalidates
   every query by default.** `useSessionEvents`'s
 - **A background invalidation goes through `startInvalidation(queryCache, filters?)`

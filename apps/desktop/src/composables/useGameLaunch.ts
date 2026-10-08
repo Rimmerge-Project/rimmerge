@@ -1,3 +1,4 @@
+import { useQueryCache } from "@pinia/colada";
 import { useToast } from "primevue/usetoast";
 import { computed, nextTick, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
@@ -5,7 +6,7 @@ import type { ApplyOutcome } from "@/composables/useApplyDialog";
 import { useGameLaunchPolling } from "@/composables/useGameLaunchPolling";
 import { useTranslateMessage } from "@/composables/useTranslateMessage";
 import { descriptor } from "@/i18n/messageDescriptor";
-import { useGameLaunchStatusQuery } from "@/queries/gameLaunch";
+import { pendingGameLaunchStatusCall, useGameLaunchStatusQuery } from "@/queries/gameLaunch";
 import { launchGame, RimmergeError } from "@/services/ipc";
 import { useGameLaunchStore } from "@/stores/gameLaunch";
 import { useSessionStore } from "@/stores/session";
@@ -29,8 +30,8 @@ const TOAST_LIFE_MS = 6000;
 
 /**
  * The Launch RimWorld button's state and actions: the polled status, the click (always
- * against a fresh status), the Apply-first prompt, the Apply-then-launch hand-off and the
- * "Starting…" window.
+ * against a fresh status, the newest one when an invalidation supersedes the click's own
+ * read), the Apply-first prompt, the Apply-then-launch hand-off and the "Starting…" window.
  *
  * Launch errors are handled here, not through a mutation: the app-wide mutation handler
  * toasts every failure with its generic sentence, which is wrong for `rimworld_running`
@@ -47,6 +48,7 @@ export function useGameLaunch(options: { readonly pollsStatus: boolean }) {
   const toast = useToast();
   const session = useSessionStore();
   const query = useGameLaunchStatusQuery();
+  const queryCache = useQueryCache();
   const launchState = useGameLaunchStore();
   if (options.pollsStatus) {
     useGameLaunchPolling(query);
@@ -93,8 +95,23 @@ export function useGameLaunch(options: { readonly pollsStatus: boolean }) {
     },
   });
 
+  /**
+   * Colada (1.4.5) aborts a fetch when a newer one starts on the same entry (an invalidation from a
+   * mutation or `session://changed`) and resolves the aborted `refetch()` with the entry's OLD
+   * state, because the aborted IPC call's answer is dropped. So after our own read, wait for
+   * every call still pending on the entry and read the entry itself, never `refetch()`'s result.
+   * Errors stay in the query state: a failed newest read yields `null`, as a failed own read does.
+   */
   async function readFreshStatus(): Promise<GameLaunchStatusDto | null> {
-    const state = await query.refetch();
+    await query.refetch();
+    for (
+      let newer = pendingGameLaunchStatusCall(queryCache);
+      newer;
+      newer = pendingGameLaunchStatusCall(queryCache)
+    ) {
+      await newer.refreshCall.catch(() => undefined);
+    }
+    const state = query.state.value;
     return state.error === null ? (state.data ?? null) : null;
   }
 
