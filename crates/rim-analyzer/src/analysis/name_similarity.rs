@@ -4,6 +4,9 @@
 //! dependency on any domain type beyond [`crate::domain::NearMissRule`]
 //! itself, so this is unit-tested against plain strings.
 
+use std::collections::BTreeMap;
+use std::ops::Range;
+
 use crate::domain::NearMissRule;
 
 /// The **longer** of the two normalized forms must clear this length
@@ -200,15 +203,23 @@ fn segments(s: &str) -> Vec<String> {
 /// that differing segment, the same edit distance reads as the weak
 /// signal it actually is. Returns the two full, unscoped strings
 /// unchanged when either side tokenizes to fewer than two segments (a
-/// single-word name has nothing to trim). Both come back [`normalize`]d:
+/// single-word name has nothing to trim). Both read back [`normalize`]d:
 /// normalizing the scoped segments joined by a space is the same as
 /// concatenating each segment's own normalized form, which
 /// [`PreparedName`] computes once per name.
-fn near_miss_scope(written: &PreparedName, candidate: &PreparedName) -> (String, String) {
+///
+/// Returned as borrowed [`ScopedSide`]s rather than built strings: a
+/// caller checks cheap lower bounds on the two scopes first, which almost
+/// every pair fails, so the text is only built for the few pairs that
+/// reach the edit-distance computation.
+fn near_miss_scope<'a>(
+    written: &'a PreparedName,
+    candidate: &'a PreparedName,
+) -> (ScopedSide<'a>, ScopedSide<'a>) {
     let w = &written.segments;
     let c = &candidate.segments;
     if w.len() < 2 || c.len() < 2 {
-        return (written.normalized.clone(), candidate.normalized.clone());
+        return (ScopedSide::whole(written), ScopedSide::whole(candidate));
     }
     let prefix = w.iter().zip(c).take_while(|(a, b)| a == b).count();
     let max_suffix = w.len().min(c.len()) - prefix;
@@ -220,9 +231,61 @@ fn near_miss_scope(written: &PreparedName, candidate: &PreparedName) -> (String,
         .count()
         .min(max_suffix);
     (
-        written.normalized_segments[prefix..w.len() - suffix].concat(),
-        candidate.normalized_segments[prefix..c.len() - suffix].concat(),
+        ScopedSide::segments(written, prefix..w.len() - suffix),
+        ScopedSide::segments(candidate, prefix..c.len() - suffix),
     )
+}
+
+/// One side of a [`near_miss_scope`]: either the whole normalized name or
+/// a run of its normalized segments, read without building the text
+/// until a caller actually needs it.
+struct ScopedSide<'a> {
+    name: &'a PreparedName,
+    /// `None` is the whole normalized name.
+    segments: Option<Range<usize>>,
+}
+
+impl<'a> ScopedSide<'a> {
+    fn whole(name: &'a PreparedName) -> Self {
+        Self {
+            name,
+            segments: None,
+        }
+    }
+
+    fn segments(name: &'a PreparedName, range: Range<usize>) -> Self {
+        Self {
+            name,
+            segments: Some(range),
+        }
+    }
+
+    /// The scope's length in characters, without building it.
+    fn char_len(&self) -> usize {
+        match &self.segments {
+            None => self.name.normalized_len,
+            Some(range) => self.name.normalized_segment_lens[range.clone()]
+                .iter()
+                .sum(),
+        }
+    }
+
+    /// The scope's characters, in order.
+    fn chars(&self) -> impl Iterator<Item = char> + 'a {
+        let pieces: &'a [String] = match &self.segments {
+            None => std::slice::from_ref(&self.name.normalized),
+            Some(range) => &self.name.normalized_segments[range.clone()],
+        };
+        pieces.iter().flat_map(|piece| piece.chars())
+    }
+
+    /// The scope's own normalized text.
+    fn text(&self) -> String {
+        match &self.segments {
+            None => self.name.normalized.clone(),
+            Some(range) => self.name.normalized_segments[range.clone()].concat(),
+        }
+    }
 }
 
 /// One token list is the other plus exactly one recognized fork-marker
@@ -287,6 +350,8 @@ pub struct PreparedName {
     /// Each of [`Self::segments`] passed through [`normalize`] once more
     /// — the pieces [`near_miss_scope`] concatenates.
     normalized_segments: Vec<String>,
+    /// Each of [`Self::normalized_segments`]' length in characters.
+    normalized_segment_lens: Vec<usize>,
 }
 
 impl PreparedName {
@@ -295,6 +360,8 @@ impl PreparedName {
     pub fn new(raw: &str) -> Self {
         let normalized = normalize(raw);
         let segments = segments(raw);
+        let normalized_segments: Vec<String> =
+            segments.iter().map(|segment| normalize(segment)).collect();
         Self {
             raw: raw.to_string(),
             lowercase: raw.to_lowercase(),
@@ -302,7 +369,11 @@ impl PreparedName {
             normalized,
             tokens: tokens(raw),
             brackets: bracket_content(raw),
-            normalized_segments: segments.iter().map(|segment| normalize(segment)).collect(),
+            normalized_segment_lens: normalized_segments
+                .iter()
+                .map(|segment| segment.chars().count())
+                .collect(),
+            normalized_segments,
             segments,
         }
     }
@@ -369,17 +440,22 @@ pub fn classify(
         // `"royalty"`, 7 characters each, inside a 21-character id) still
         // reaches this distance check; only the ratio itself is scoped.
         let (written_scope, candidate_scope) = near_miss_scope(written, candidate);
-        let written_scope_len = written_scope.chars().count();
-        let candidate_scope_len = candidate_scope.chars().count();
+        let written_scope_len = written_scope.char_len();
+        let candidate_scope_len = candidate_scope.char_len();
         let max_len = written_scope_len.max(candidate_scope_len);
-        // The length difference is a lower bound on the edit distance, so
-        // a pair that misses the threshold even at that bound skips the
-        // quadratic distance computation — most of the active-mod list,
-        // for every written value.
-        let best_possible =
-            scope_similarity(written_scope_len.abs_diff(candidate_scope_len), max_len);
-        if max_len > 0 && best_possible >= NEAR_MISS_THRESHOLD {
-            let distance = strsim::damerau_levenshtein(&written_scope, &candidate_scope);
+        // The length difference, then the character-count difference
+        // ([`char_bag_distance`]), are lower bounds on the edit distance,
+        // so a pair that misses the threshold even at those bounds skips
+        // the quadratic distance computation — most of the active-mod
+        // list, for every written value.
+        let could_reach = |lower_bound: usize| {
+            max_len > 0 && scope_similarity(lower_bound, max_len) >= NEAR_MISS_THRESHOLD
+        };
+        if could_reach(written_scope_len.abs_diff(candidate_scope_len))
+            && could_reach(char_bag_distance(&written_scope, &candidate_scope))
+        {
+            let distance =
+                strsim::damerau_levenshtein(&written_scope.text(), &candidate_scope.text());
             let similarity = scope_similarity(distance, max_len);
             if similarity >= NEAR_MISS_THRESHOLD {
                 return Some(Match {
@@ -413,6 +489,35 @@ fn scope_similarity(distance: usize, max_len: usize) -> f64 {
     1.0 - (distance as f64 / max_len as f64)
 }
 
+/// The bag distance between two scopes: how many characters one has
+/// that the other lacks, counted with multiplicity, whichever side has
+/// more. A lower bound on their Damerau-Levenshtein distance — an
+/// insertion, deletion or substitution changes each side's surplus by at
+/// most one, and a transposition changes neither — and far cheaper to
+/// compute: one pass, and no allocation for the ASCII text normalized
+/// names almost always are.
+fn char_bag_distance(a: &ScopedSide<'_>, b: &ScopedSide<'_>) -> usize {
+    let mut ascii_surplus = [0_isize; 128];
+    let mut other_surplus: BTreeMap<char, isize> = BTreeMap::new();
+    let mut tally = |c: char, delta: isize| match ascii_surplus.get_mut(c as usize) {
+        Some(count) => *count += delta,
+        None => *other_surplus.entry(c).or_default() += delta,
+    };
+    a.chars().for_each(|c| tally(c, 1));
+    b.chars().for_each(|c| tally(c, -1));
+    let (only_in_a, only_in_b) =
+        ascii_surplus
+            .iter()
+            .chain(other_surplus.values())
+            .fold((0, 0), |(more, fewer), &count| {
+                (
+                    more + count.max(0).unsigned_abs(),
+                    fewer + count.min(0).unsigned_abs(),
+                )
+            });
+    only_in_a.max(only_in_b)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -440,8 +545,19 @@ mod tests {
         for (written, candidate) in pairs {
             let written_segments = segments(written);
             let candidate_segments = segments(candidate);
-            let (written_scope, candidate_scope) =
-                near_miss_scope(&PreparedName::new(written), &PreparedName::new(candidate));
+            let (written_prepared, candidate_prepared) =
+                (PreparedName::new(written), PreparedName::new(candidate));
+            let (written_side, candidate_side) =
+                near_miss_scope(&written_prepared, &candidate_prepared);
+            let (written_scope, candidate_scope) = (written_side.text(), candidate_side.text());
+            assert_eq!(
+                (written_side.char_len(), candidate_side.char_len()),
+                (
+                    written_scope.chars().count(),
+                    candidate_scope.chars().count()
+                ),
+                "scope lengths of {written:?} vs {candidate:?}"
+            );
 
             let (expected_written, expected_candidate) = if written_segments.len() < 2
                 || candidate_segments.len() < 2
@@ -730,5 +846,45 @@ mod tests {
             false,
         );
         assert_eq!(result.map(|m| m.rule), Some(NearMissRule::NearMiss));
+    }
+
+    /// The bag distance of two whole single-segment names.
+    fn bag_distance(a: &str, b: &str) -> usize {
+        let (a, b) = (PreparedName::new(a), PreparedName::new(b));
+        char_bag_distance(&ScopedSide::whole(&a), &ScopedSide::whole(&b))
+    }
+
+    #[test]
+    fn bag_distance_counts_the_larger_surplus_with_multiplicity() {
+        // "aab" vs "bcc": `a` twice only on the left, `c` twice only on
+        // the right — two substitutions, and the bound says two.
+        assert_eq!(bag_distance("aab", "bcc"), 2);
+        // A transposition changes no character counts at all.
+        assert_eq!(bag_distance("abcd", "abdc"), 0);
+        // Pure insertions: the surplus is entirely on one side.
+        assert_eq!(bag_distance("abc", "abcxyz"), 3);
+    }
+
+    #[test]
+    fn bag_distance_counts_non_ascii_characters_too() {
+        assert_eq!(bag_distance("ünï", "uni"), 2);
+        assert_eq!(bag_distance("ünï", "ïün"), 0);
+    }
+
+    proptest::proptest! {
+        /// The prefilter in `classify` is only sound if the bag distance
+        /// never exceeds the real Damerau-Levenshtein distance — otherwise
+        /// it would skip a pair that is really a near miss.
+        #[test]
+        fn bag_distance_never_exceeds_the_edit_distance(
+            a in "[a-dü0-2]{0,12}",
+            b in "[a-dü0-2]{0,12}",
+        ) {
+            let (prepared_a, prepared_b) = (PreparedName::new(&a), PreparedName::new(&b));
+            let (side_a, side_b) = (ScopedSide::whole(&prepared_a), ScopedSide::whole(&prepared_b));
+            let bound = char_bag_distance(&side_a, &side_b);
+            let distance = strsim::damerau_levenshtein(&side_a.text(), &side_b.text());
+            proptest::prop_assert!(bound <= distance, "{a:?} vs {b:?}: {bound} > {distance}");
+        }
     }
 }

@@ -1,5 +1,5 @@
 //! [`AnalyzerScanner`]: wraps `rim_analyzer::infra::scan_with_progress`,
-//! tag-evidence collection, and `rim_analyzer::analysis::build_ref` behind
+//! tag-evidence collection, and `rim_analyzer::infra::build_explained_report` behind
 //! the [`ModScanner`] port.
 
 use rim_analyzer::domain::{FolderPolicy, ModId, ScanProgress as AnalyzerProgress, ScanStage};
@@ -58,7 +58,7 @@ impl ModScanner for AnalyzerScanner {
     /// `build_ref`/dangling-reference/source-index stretch), and two stages
     /// of this adapter's own (`CollectingTagEvidence`, `Done`) that happen
     /// after the analyzer's own work is complete. Builds the
-    /// [`analysis::SourceIndex`] right after `build_ref`, before
+    /// [`analysis::SourceIndex`] alongside the report, before
     /// `scan_output` is dropped — nothing downstream can find a def's XML
     /// again otherwise.
     fn scan_and_analyze(
@@ -111,22 +111,29 @@ impl AnalyzerScanner {
             mods_config_path: paths.mods_config.clone(),
             game_version,
         };
-        // `build_ref` only borrows `scan_output`, so `scanned_mods` below
-        // reads the same scan `collect_evidence` needs without a clone,
-        // and `source_index::build` (also borrow-only) still has
-        // `scan_output` to read afterward.
+        // The report and the source index each only borrow `scan_output`, so
+        // `scanned_mods` below reads the same scan `collect_evidence` needs
+        // without a clone, and the two are built side by side: the source
+        // index on a scoped thread, the report (with its own dangling-
+        // reference explanation, see `infra::build_explained_report`) on
+        // this one. Both are pure functions of the scan, so running them
+        // concurrently changes nothing about either result.
         //
-        // The analysis below is the slowest stretch of the whole scan (tens of
-        // seconds on a large install) and has no per-unit ticks of its own. It runs
+        // The analysis below is the slowest stretch of the whole scan (seconds
+        // on a large install) and has no per-unit ticks of its own. It runs
         // inside the one `Analyzing` unit the analyzer opened (0 of 1) and the tick
         // after it closes, so a consumer sees "working" instead of a bar frozen at
         // its last scanning tick.
-        let mut report = analysis::build_ref(&scan_output, &context);
-        // The lazy IO half of the dangling-reference explanation — see
-        // `infra::explain_dangling_references`'s own doc comment; needs `scan_output` still alive, which
-        // `build_ref` (unlike `build`) leaves it.
-        infra::explain_dangling_references(&mut report.conflicts, &scan_output);
-        let sources = analysis::source_index::build(&scan_output);
+        let (report, sources) = std::thread::scope(|scope| {
+            let sources = scope.spawn(|| analysis::source_index::build(&scan_output));
+            let report = infra::build_explained_report(&scan_output, &context);
+            // A panic while building the index is a bug, not a scan error:
+            // re-raise it here exactly as it would have surfaced inline.
+            let sources = sources
+                .join()
+                .unwrap_or_else(|panic| std::panic::resume_unwind(panic));
+            (report, sources)
+        });
         analysis_finished();
         progress(ScanProgress {
             stage: ScanProgressStage::Analyzing,

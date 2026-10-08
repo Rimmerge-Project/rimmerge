@@ -116,11 +116,7 @@ fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
         mods_config_path,
         game_version,
     };
-    let mut report = analysis::build_ref(&scan_output, &context);
-    // The dangling-def-reference check's lazy IO half — needs
-    // `scan_output` still alive, which `build_ref` (unlike `build`) leaves
-    // it; see that function's own doc comment.
-    infra::explain_dangling_references(&mut report.conflicts, &scan_output);
+    let report = infra::build_explained_report(&scan_output, &context);
     let elapsed = start.elapsed();
 
     if let Some(json_path) = &args.json {
