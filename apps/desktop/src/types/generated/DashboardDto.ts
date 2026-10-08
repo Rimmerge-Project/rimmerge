@@ -51,6 +51,12 @@ selected: OrderSourceDto,
  */
 fileMatchesSuggested: boolean, 
 /**
+ * Whether `ModsConfig.xml` already lists the current order —
+ * [`rim_session::Session::file_matches`]. False right after an import,
+ * whose order is Current but not yet written.
+ */
+fileMatchesCurrent: boolean, 
+/**
  * Which settings produced the suggested order — see
  * [`SortProvenanceDto`].
  */

@@ -223,6 +223,13 @@ fn describe_invalid_order(error: ImportOrderError) -> anyhow::Error {
             "refusing: {} appears more than once in the planned order, so nothing was written",
             TerminalSafe::line(id)
         ),
+        ImportOrderError::NothingInstalled => anyhow::anyhow!(
+            "refusing: none of the listed mods is installed, so the import would only \
+             deactivate your mods; nothing was written"
+        ),
+        ImportOrderError::TooMany { limit } => anyhow::anyhow!(
+            "refusing: the planned order holds more than {limit} mods, so nothing was written"
+        ),
         ImportOrderError::ScanDidNotMatch => {
             anyhow::anyhow!("refusing: the planned order does not match what was validated")
         }

@@ -271,6 +271,10 @@ pub struct DashboardDto {
     /// Whether `ModsConfig.xml` (as last scanned or written) already lists
     /// the suggested order — [`rim_session::Session::file_matches`].
     pub file_matches_suggested: bool,
+    /// Whether `ModsConfig.xml` already lists the current order —
+    /// [`rim_session::Session::file_matches`]. False right after an import,
+    /// whose order is Current but not yet written.
+    pub file_matches_current: bool,
     /// Which settings produced the suggested order — see
     /// [`SortProvenanceDto`].
     pub sort_provenance: SortProvenanceDto,

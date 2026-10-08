@@ -17,6 +17,7 @@ mod findings;
 mod game_launch;
 mod merge;
 mod mods;
+mod order_share;
 mod patches;
 mod project;
 mod recommended_rules;
@@ -124,6 +125,14 @@ pub enum CommandErrorCode {
     SteamLaunchFailed,
     /// Windows couldn't start `RimWorldWin64.exe` directly.
     GameStartFailed,
+    /// A shared mod-list file could not be read or written (an I/O failure:
+    /// the file is missing, locked, or the folder is read-only). A file
+    /// that was read but is not an importable list is not this: that is an
+    /// outcome of the preview, not an error.
+    ModListIoFailed,
+    /// An export found no active mod it could put in a list (an empty
+    /// `ModsConfig.xml` list, or only ids a mod list cannot hold).
+    NothingToExport,
 }
 
 /// Structured detail some [`CommandError`]s carry alongside their plain

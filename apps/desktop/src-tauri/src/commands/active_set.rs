@@ -11,7 +11,9 @@
 use std::time::Instant;
 
 use rim_analyzer::domain::ModId;
-use rim_session::use_cases::{ActivateMods, DeactivateMods, LoadProject};
+use rim_session::use_cases::{
+    ActivateMods, DeactivateMods, ImportOrder, LoadProject, ValidatedImport,
+};
 use rim_session::{ProjectPaths, Session};
 use tauri::async_runtime::spawn_blocking;
 
@@ -227,27 +229,72 @@ pub async fn get_pending_active_changes(
     get_pending_active_changes_inner(&state).await
 }
 
-/// Which active-mod list [`rescan_with`] scans.
+/// What [`rescan_with`] scans, and so what the swapped-in session selects.
+///
+/// One enum rather than a list choice and a selection choice: the two only
+/// make sense in these pairs (a rescan keeps the user's selection, an
+/// import selects the imported order as Current), and two independent
+/// enums would allow the mixed pairs that mean nothing.
 #[derive(Debug)]
-pub(crate) enum ScanList {
-    /// The live session's own working set, snapshotted when the rescan
-    /// starts — what `rescan_project` scans.
-    Working,
+pub(crate) enum ScanRequest {
+    /// Scans the live session's own working set and keeps the user's
+    /// selection — what `rescan_project` does.
+    Rescan,
+    /// Scans an imported order, unvalidated until [`rescan_with`] checks
+    /// it inside the lock, and selects Current — what `import_order` does.
+    Import(Vec<ModId>),
 }
 
-/// Which order the swapped-in session selects once [`rescan_with`]
-/// succeeds.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum SelectionAfter {
-    /// Carries the live session's selection over. A fresh `Session`
-    /// starts on the current order, but the user's selection is not a
-    /// scan result; it is read at the swap, not snapshotted before the
-    /// scan, so a `select_order` made mid-scan survives.
-    Keep,
+/// A [`ScanRequest`] after phase 1: an import's order has passed
+/// [`ImportOrder::validate`], so the swap can prove the scan matched it.
+#[derive(Debug)]
+enum ValidatedScan {
+    Rescan,
+    Import(ValidatedImport),
+}
+
+impl ValidatedScan {
+    /// Validates `request` against the live `session`.
+    fn prepare(request: ScanRequest, session: &Session) -> Result<Self, CommandError> {
+        match request {
+            ScanRequest::Rescan => Ok(Self::Rescan),
+            ScanRequest::Import(order) => Ok(Self::Import(ImportOrder::validate(session, order)?)),
+        }
+    }
+
+    /// The active list to scan: the working set, or the validated order.
+    fn scan_ids(&self, working: &[ModId]) -> Vec<ModId> {
+        match self {
+            Self::Rescan => working.to_vec(),
+            Self::Import(validated) => validated.order().to_vec(),
+        }
+    }
+
+    /// The refusal for a working set that changed while the scan ran.
+    fn working_changed_error(&self) -> CommandError {
+        CommandError::invalid_input(match self {
+            Self::Rescan => "the working active-mod set changed during the rescan; rescan again",
+            Self::Import(_) => "the working active-mod set changed during the import; import again",
+        })
+    }
+
+    /// Sets the selection of `new_session`, the scan's result, before it
+    /// replaces `live`. A rescan carries `live`'s selection over: it is
+    /// read here, at the swap, not snapshotted before the scan, so a
+    /// `select_order` made mid-scan survives. An import selects Current
+    /// through [`ImportOrder::finish`], which also checks that the scan
+    /// really produced the validated order.
+    fn select_on(self, new_session: &mut Session, live: &Session) -> Result<(), CommandError> {
+        match self {
+            Self::Rescan => new_session.select(live.selected()),
+            Self::Import(validated) => ImportOrder::finish(new_session, &validated)?,
+        }
+        Ok(())
+    }
 }
 
 /// Re-scans the session's own working set: [`rescan_with`] over
-/// [`ScanList::Working`], keeping the user's selection.
+/// [`ScanRequest::Rescan`], keeping the user's selection.
 ///
 /// # Errors
 ///
@@ -256,11 +303,11 @@ pub(crate) async fn rescan_project_inner(
     state: &AppState,
     on_progress: impl FnMut(ProgressEventDto) + Send + 'static,
 ) -> Result<ProjectSummaryDto, CommandError> {
-    rescan_with(state, ScanList::Working, SelectionAfter::Keep, on_progress).await
+    rescan_with(state, ScanRequest::Rescan, on_progress).await
 }
 
-/// Scans `list` and swaps the result in as the live session:
-/// [`LoadProject::execute_with_active_set`] over the list's ids, which
+/// Scans `request` and swaps the result in as the live session:
+/// [`LoadProject::execute_with_active_set`] over the request's ids, which
 /// re-reads decisions/rules/patches/assignments from disk exactly like an
 /// ordinary [`LoadProject::execute`] would (safe, because the working set
 /// is this crate's only in-memory-only state).
@@ -276,54 +323,58 @@ pub(crate) async fn rescan_project_inner(
 /// `load_project`) the way
 /// [`AppState::load_lock`][crate::state::AppState::load_lock] already
 /// does for an ordinary load. Instead: (1) a short `with_session` call
-/// snapshots `(paths, working ids)` and releases the lock immediately;
-/// (2) the real scan runs in a bare [`spawn_blocking`], under
-/// `load_lock`, touching no live `Session` at all — a panic there can
-/// only fail this call, never poison anything already loaded; (3) a
-/// second short `with_session` call swaps the new session in, but only
-/// if `session.working().ids()` still matches the phase-1 snapshot —
-/// otherwise something else (`activate_mods`/`deactivate_mods`) changed
-/// the working set while the scan was running, and swapping in a
-/// session scanned against the *old* set would silently discard that
-/// change, so this refuses instead and asks for a retry.
+/// validates the request, snapshots `(paths, working ids)` and releases
+/// the lock immediately; (2) the real scan runs in a bare
+/// [`spawn_blocking`], under `load_lock`, touching no live `Session` at
+/// all — a panic there can only fail this call, never poison anything
+/// already loaded; (3) a second short `with_session` call swaps the new
+/// session in, but only if `session.working().ids()` still matches the
+/// phase-1 snapshot — otherwise something else
+/// (`activate_mods`/`deactivate_mods`) changed the working set while the
+/// scan was running, and swapping in a session scanned against the *old*
+/// set would silently discard that change, so this refuses instead and
+/// asks for a retry.
+///
+/// An import's validation happens in phase 1, with `load_lock` already
+/// held, so validate, scan and swap all happen under one `load_lock`: no
+/// other load or rescan can change the inventory the order was checked
+/// against. A validation error returns before any scan.
 ///
 /// # Errors
 ///
 /// Returns [`CommandError::no_project_loaded`] when no project is loaded,
-/// [`CommandError::invalid_input`] when the working set changed while the
-/// scan was running, or [`CommandError`] when the re-scan itself fails
-/// (see [`rim_session::use_cases::LoadProjectError`]).
+/// [`CommandError::invalid_input`] when an imported order fails validation
+/// or the working set changed while the scan was running, or
+/// [`CommandError`] when the scan itself fails (see
+/// [`rim_session::use_cases::LoadProjectError`]).
 pub(crate) async fn rescan_with(
     state: &AppState,
-    list: ScanList,
-    selection: SelectionAfter,
+    request: ScanRequest,
     on_progress: impl FnMut(ProgressEventDto) + Send + 'static,
 ) -> Result<ProjectSummaryDto, CommandError> {
     let _permit = state.load_lock.lock().await;
 
-    let (paths, working_ids) = with_session(state, |session| {
-        Ok((session.paths().clone(), session.working().ids().to_vec()))
+    let (paths, working_ids, scan) = with_session(state, move |session| {
+        let scan = ValidatedScan::prepare(request, session)?;
+        Ok((
+            session.paths().clone(),
+            session.working().ids().to_vec(),
+            scan,
+        ))
     })
     .await?;
-    let working_ids_snapshot = working_ids.clone();
-    let scan_ids = match list {
-        ScanList::Working => working_ids,
-    };
+    let scan_ids = scan.scan_ids(&working_ids);
 
     let (new_session, mut summary) =
         scan_detached(state.adapters.clone(), paths, scan_ids, on_progress).await?;
 
     let selected = with_session(state, move |session| {
-        if session.working().ids() != working_ids_snapshot.as_slice() {
-            return Err(CommandError::invalid_input(
-                "the working active-mod set changed during the rescan; rescan again",
-            ));
+        if session.working().ids() != working_ids.as_slice() {
+            return Err(scan.working_changed_error());
         }
-        let selected = match selection {
-            SelectionAfter::Keep => session.selected(),
-        };
         let mut new_session = new_session;
-        new_session.select(selected);
+        scan.select_on(&mut new_session, session)?;
+        let selected = new_session.selected();
         *session = new_session;
         Ok(selected)
     })
@@ -369,7 +420,7 @@ async fn scan_detached(
     })
     .await
     .unwrap_or_else(|join_error| {
-        tracing::warn!(error = %join_error, "rescan_project scan task panicked");
+        tracing::warn!(error = %join_error, "session scan task panicked");
         Err(CommandError::internal("background task panicked"))
     })
 }

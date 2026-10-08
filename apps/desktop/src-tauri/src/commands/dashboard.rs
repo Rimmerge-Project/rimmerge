@@ -52,6 +52,7 @@ pub(crate) async fn get_dashboard_inner(state: &AppState) -> Result<DashboardDto
             moved_mods,
             selected: selected.into(),
             file_matches_suggested: session.file_matches(OrderSource::Suggested),
+            file_matches_current: session.file_matches(OrderSource::Current),
             sort_provenance,
         })
     })

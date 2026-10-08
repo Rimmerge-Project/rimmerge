@@ -364,6 +364,23 @@ fn a_list_that_names_core_keeps_its_position_and_prints_no_core_note() {
 }
 
 #[test]
+fn a_list_with_nothing_installed_is_refused_and_the_file_is_unchanged() {
+    let scratch = scratch();
+    let before = scratch.read_mods_config();
+    let mut cmd = scratch.cmd(&["import", "-", "--force", "--yes"]);
+    cmd.write_stdin("1. Ghost [ghost.not.installed]\n");
+
+    let message = stderr_of_failure(cmd);
+
+    assert!(
+        message.contains("none of the listed mods is installed"),
+        "got:\n{message}"
+    );
+    assert_eq!(scratch.read_mods_config(), before);
+    assert_eq!(scratch.backup_count(), 0);
+}
+
+#[test]
 fn an_import_that_would_leave_no_core_is_refused_and_the_file_is_unchanged() {
     let scratch = scratch();
     fs::remove_dir_all(scratch.game_dir.join("Data").join("Core"))

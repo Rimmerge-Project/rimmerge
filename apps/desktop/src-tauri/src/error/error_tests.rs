@@ -708,3 +708,52 @@ fn a_launch_failure_keeps_the_os_cause_in_the_message() {
         mapped.message
     );
 }
+
+#[test]
+fn mod_list_file_error_maps_to_mod_list_io_failed() {
+    let error: CommandError = rim_session::ports::ModListFileError("boom".to_string()).into();
+    assert_eq!(error.code, CommandErrorCode::ModListIoFailed);
+}
+
+#[test]
+fn export_nothing_active_maps_to_nothing_to_export() {
+    let error: CommandError = rim_session::use_cases::ExportOrderError::List(
+        rim_session::mod_list::ExportListError::NothingActive,
+    )
+    .into();
+    assert_eq!(error.code, CommandErrorCode::NothingToExport);
+}
+
+#[test]
+fn export_config_failure_keeps_the_mods_config_code() {
+    let error: CommandError = rim_session::use_cases::ExportOrderError::Config(
+        rim_session::ports::ConfigError("boom".to_string()),
+    )
+    .into();
+    assert_eq!(error.code, CommandErrorCode::ModsConfigIoFailed);
+}
+
+#[test]
+fn import_order_validation_errors_are_invalid_input_and_a_scan_mismatch_is_internal() {
+    use rim_analyzer::domain::ModId;
+    use rim_session::use_cases::ImportOrderError;
+
+    let invalid = [
+        ImportOrderError::Unknown(ModId::new("example.gone")),
+        ImportOrderError::Duplicate(ModId::new("example.base")),
+        ImportOrderError::CoreMissing,
+        ImportOrderError::NothingInstalled,
+        ImportOrderError::TooMany { limit: 5_002 },
+    ];
+
+    for error in invalid {
+        assert_eq!(
+            CommandError::from(error).code,
+            CommandErrorCode::InvalidInput
+        );
+    }
+    assert_eq!(
+        CommandError::from(ImportOrderError::ScanDidNotMatch).code,
+        CommandErrorCode::Internal
+    );
+}
