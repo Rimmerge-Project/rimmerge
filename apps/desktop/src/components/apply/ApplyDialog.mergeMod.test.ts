@@ -129,8 +129,8 @@ async function sessionChanged(): Promise<void> {
 
 /**
  * What `useSessionEvents` does on `session://changed`, for a refetch that is expected to fail:
- * the shell's own `void invalidateQueries()` leaves that rejection unhandled (a console error in
- * the app), which Vitest reports as a failure, so the test awaits it and swallows it instead.
+ * the shell's own `startInvalidation` swallows that rejection; this helper awaits the raw
+ * invalidation so the test knows when the refetch settled, swallowing the rejection itself.
  */
 async function invalidateAllExpectingFailure(pinia: Pinia): Promise<void> {
   await useQueryCache(pinia)

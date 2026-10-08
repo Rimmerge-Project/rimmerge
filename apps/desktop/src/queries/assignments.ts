@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryCache } from "@pinia/colada";
 import { type MaybeRefOrGetter, toValue } from "vue";
 
+import { startInvalidation } from "@/queries/invalidation";
 import { queryKeys } from "@/queries/keys";
 import {
   addAssignmentSection,
@@ -101,7 +102,7 @@ export function useAssignmentItemsQuery(
  * use.
  */
 function invalidateAssignments(queryCache: ReturnType<typeof useQueryCache>): void {
-  void queryCache.invalidateQueries();
+  startInvalidation(queryCache);
 }
 
 /**

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryCache } from "@pinia/colada";
 
+import { startInvalidation } from "@/queries/invalidation";
 import { queryKeys } from "@/queries/keys";
 import { listTags, setManualTag } from "@/services/ipc";
 import type { SetManualTagRequestDto } from "@/types/generated/SetManualTagRequestDto";
@@ -23,7 +24,7 @@ export function useSetManualTagMutation() {
     // refetch the Vitest/Playwright mock tier gets, since the mock never
     // emits that event.
     onSuccess: () => {
-      void queryCache.invalidateQueries();
+      startInvalidation(queryCache);
     },
   });
 }

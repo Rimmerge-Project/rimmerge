@@ -43,7 +43,9 @@ every cross-mod assertion vacuously.
 
 Never run the two real-install tier commands concurrently against the
 same install — several of these tests assert against a timing budget
-(a sort finishing under 500 ms, a handful of commands under 2 s), and
+(a sort finishing under 500 ms, a handful of commands under 2 s, the
+post-scan analysis in `rim-analyzer`'s
+`real_install_post_scan_analysis.rs` under 20 s), and
 two release-profile test binaries competing for the same CPU pushes
 those budgets into spurious failures that have nothing to do with a
 real regression. Run one tier to completion before starting the other.

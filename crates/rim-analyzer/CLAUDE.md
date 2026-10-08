@@ -39,7 +39,7 @@ cargo nextest run -p rim-analyzer --all-features
 ```
 Ground-truth PE-metadata tests compare against real DLLs and are
 `#[ignore]`d (`--run-ignored ignored-only`); the real-install tier
-(`tests/common/mod.rs`, all six `real_install_*.rs` files plus
+(`tests/common/mod.rs`, all seven `real_install_*.rs` files plus
 `pe_metadata_ground_truth.rs`) is described in the root `CLAUDE.md` and
 `docs/testing.md`. Before reporting done, run the full gate block in the
 root `CLAUDE.md`.

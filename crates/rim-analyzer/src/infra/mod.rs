@@ -34,7 +34,7 @@ pub use crate::domain::{ScanOutput, ScanProgress, ScanStage};
 // function's own doc comment for why).
 pub use mod_scan::{ReadError, engine_enumeration_order, read_bounded_with_limit};
 
-pub use explain_dangling::explain_dangling_references;
+pub use explain_dangling::{build_explained_report, explain_dangling_references};
 
 /// Where to scan and which game version to resolve `ByVersion`/
 /// `LoadFolders.xml` entries against.

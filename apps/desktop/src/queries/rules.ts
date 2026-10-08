@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryCache } from "@pinia/colada";
 import { type MaybeRefOrGetter, toValue } from "vue";
 
+import { awaitInvalidation, startInvalidation } from "@/queries/invalidation";
 import { queryKeys } from "@/queries/keys";
 import {
   deleteRule,
@@ -94,11 +95,12 @@ export function useGetRecommendedRulesMutation() {
   return useMutation({
     mutation: () => getRecommendedRules(),
     onSettled: async () => {
-      await Promise.allSettled([
-        queryCache.invalidateQueries({ key: queryKeys.appSettings() }),
-        queryCache.invalidateQueries({ key: queryKeys.ruleDatabases() }),
-        queryCache.invalidateQueries({ key: queryKeys.notifications() }),
-      ]);
+      await awaitInvalidation(
+        queryCache,
+        { key: queryKeys.appSettings() },
+        { key: queryKeys.ruleDatabases() },
+        { key: queryKeys.notifications() },
+      );
     },
   });
 }
@@ -114,10 +116,11 @@ export function useSkipRecommendedRulesStepMutation() {
   return useMutation({
     mutation: () => skipRecommendedRulesStep(),
     onSuccess: async () => {
-      await Promise.allSettled([
-        queryCache.invalidateQueries({ key: queryKeys.recommendedRulesStep() }),
-        queryCache.invalidateQueries({ key: queryKeys.notifications() }),
-      ]);
+      await awaitInvalidation(
+        queryCache,
+        { key: queryKeys.recommendedRulesStep() },
+        { key: queryKeys.notifications() },
+      );
     },
   });
 }
@@ -140,8 +143,8 @@ export function useRefreshRuleDatabasesMutation() {
     mutation: (request: RefreshRuleDatabasesRequestDto | null) =>
       refreshRuleDatabases(request ?? undefined),
     onSuccess: () => {
-      void queryCache.invalidateQueries({ key: queryKeys.ruleDatabases() });
-      void queryCache.invalidateQueries({ key: queryKeys.notifications() });
+      startInvalidation(queryCache, { key: queryKeys.ruleDatabases() });
+      startInvalidation(queryCache, { key: queryKeys.notifications() });
     },
   });
 }
@@ -156,7 +159,7 @@ export function useRefreshRuleDatabasesMutation() {
  * and dashboard).
  */
 function invalidateRules(queryCache: ReturnType<typeof useQueryCache>): void {
-  void queryCache.invalidateQueries();
+  startInvalidation(queryCache);
 }
 
 /** Adds or replaces a rule, persisting the change. */

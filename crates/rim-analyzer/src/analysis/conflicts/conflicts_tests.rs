@@ -1276,6 +1276,31 @@ fn likely_duplicate_not_flagged_below_the_minimum_shared_def_count() {
     assert!(likely_duplicate_mods(&scanned, &indices).is_empty());
 }
 
+/// Three mods sharing defs pairwise: `a`/`b` and `a`/`c` overlap enough,
+/// `b`/`c` share too few. Every qualifying pair is reported once, with
+/// its own shared count, in ascending `(a, b)` id order.
+#[test]
+fn likely_duplicate_reports_every_qualifying_pair_once_in_id_order() {
+    let names: Vec<String> = (0..30).map(|i| format!("Def{i}")).collect();
+    let name_refs: Vec<&str> = names.iter().map(String::as_str).collect();
+    let a = mod_with("a", "Alice", def_entries(&name_refs[..30]), vec![]);
+    let b = mod_with("b", "Bob", def_entries(&name_refs[..12]), vec![]);
+    let c = mod_with("c", "Carol", def_entries(&name_refs[10..30]), vec![]);
+    let scanned = vec![c, a, b];
+    let indices = build_indices(&scanned);
+
+    let conflicts = likely_duplicate_mods(&scanned, &indices);
+
+    let pairs: Vec<(&str, &str, usize)> = conflicts
+        .iter()
+        .map(|conflict| match conflict {
+            Conflict::LikelyDuplicateMod(c) => (c.a.as_str(), c.b.as_str(), c.shared_defs),
+            other => panic!("expected LikelyDuplicateMod, got {other:?}"),
+        })
+        .collect();
+    assert_eq!(pairs, vec![("a", "b", 12), ("a", "c", 20)]);
+}
+
 fn template(name: &str) -> crate::domain::TemplateEntry {
     crate::domain::TemplateEntry {
         graphic_class: None,

@@ -1,6 +1,7 @@
 // LaunchGameButton: the click against a fresh status, the Apply-first prompt, the hand-off to
 // Apply, the in-flight guards, and the unknown (pending or failed) status.
 
+import { useQueryCache } from "@pinia/colada";
 import { clearMocks } from "@tauri-apps/api/mocks";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { flush } from "@/components/apply/ApplyDialog.test-support";
@@ -276,6 +277,98 @@ describe("LaunchGameButton", () => {
       release();
       await flush();
       expect(backend.launchCalls).toEqual([{ ifNotApplied: "refuse" }]);
+    });
+  });
+
+  describe("a click superseded by an invalidation", () => {
+    const UNSCANNED = {
+      kind: "needsApply",
+      route: "steam",
+      reason: "activationChangesNotScanned",
+    } as const;
+    const SENTENCE = '[data-testid="launch-apply-first-sentence"]';
+
+    function newGate(): { gate: Promise<void>; release: () => void } {
+      let release: () => void = () => undefined;
+      const gate = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      return { gate, release };
+    }
+
+    it("decides from the newest status when an invalidation supersedes the click's read", async () => {
+      const backend = newBackend(READY);
+      const wrapper = await mountWith(backend);
+      backend.status = UNSCANNED;
+      const held = newGate();
+      backend.statusGate = held.gate;
+
+      await wrapper.get(BUTTON).trigger("click");
+      useQueryCache()
+        .invalidateQueries()
+        .catch(() => undefined);
+      held.release();
+      await flush();
+
+      expect(backend.launchCalls).toEqual([]);
+      expect(wrapper.get(SENTENCE).text()).toContain("Your pending activation changes");
+    });
+
+    it("waits for a superseding read that is still pending", async () => {
+      const backend = newBackend(READY);
+      const wrapper = await mountWith(backend);
+      backend.status = UNSCANNED;
+      const first = newGate();
+      backend.statusGate = first.gate;
+
+      await wrapper.get(BUTTON).trigger("click");
+      const second = newGate();
+      backend.statusGate = second.gate;
+      useQueryCache()
+        .invalidateQueries()
+        .catch(() => undefined);
+      first.release();
+      await flush();
+      expect(backend.launchCalls).toEqual([]);
+      expect(wrapper.find(SENTENCE).exists()).toBe(false);
+
+      second.release();
+      await flush();
+
+      expect(backend.launchCalls).toEqual([]);
+      expect(wrapper.get(SENTENCE).text()).toContain("Your pending activation changes");
+    });
+
+    it("keeps waiting when a second invalidation supersedes the newer read", async () => {
+      const backend = newBackend(READY);
+      const wrapper = await mountWith(backend);
+      backend.status = UNSCANNED;
+      const first = newGate();
+      backend.statusGate = first.gate;
+
+      await wrapper.get(BUTTON).trigger("click");
+      const second = newGate();
+      backend.statusGate = second.gate;
+      useQueryCache()
+        .invalidateQueries()
+        .catch(() => undefined);
+      first.release();
+      await flush();
+      const third = newGate();
+      backend.statusGate = third.gate;
+      useQueryCache()
+        .invalidateQueries()
+        .catch(() => undefined);
+      second.release();
+      await flush();
+      expect(backend.launchCalls).toEqual([]);
+      expect(wrapper.find(SENTENCE).exists()).toBe(false);
+
+      third.release();
+      await flush();
+
+      expect(backend.launchCalls).toEqual([]);
+      expect(wrapper.get(SENTENCE).text()).toContain("Your pending activation changes");
     });
   });
 

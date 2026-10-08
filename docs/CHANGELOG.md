@@ -4,6 +4,22 @@ This changelog starts at the first public release. Development history
 before that point is not summarized here — see `.journal/` in a
 maintainer's own checkout for the full record, if you have it.
 
+## [Unreleased]
+
+- **Faster loading, Rescan and load-order import on large installs.** The
+  analysis that runs after the per-mod scan is about four times faster: on a
+  test install of about 1,000 active mods it went from about 27 s to about
+  6 s (release build). Its results are unchanged.
+- **Fix: a change no longer reports failure when it succeeded.** Applying,
+  activating or deactivating mods, deciding a finding, or changing merge
+  choices could show an error toast (and keep a dialog open) after the change
+  had been saved, when an unrelated page's data failed to refresh. The change
+  now finishes as a success, and the page that failed shows its own error.
+- **Fix: Launch RimWorld acts on the latest game status.** A click that
+  overlapped a background refresh could act on the status from before it: an
+  extra "not applied" error, a click that did nothing, or the Apply-first
+  prompt giving the wrong reason.
+
 ## [1.2.0] - 2026-10-08
 
 - **Fix: importing a load order no longer keeps spinning after the progress

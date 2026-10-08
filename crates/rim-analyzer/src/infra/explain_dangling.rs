@@ -27,7 +27,8 @@ use std::path::{Path, PathBuf};
 use rayon::prelude::*;
 use walkdir::WalkDir;
 
-use crate::domain::{Conflict, DanglingCause, ScanOutput, ScannedMod};
+use crate::analysis::{self, RunContext};
+use crate::domain::{Conflict, DanglingCause, Report, ScanOutput, ScannedMod};
 use crate::extract::defs;
 
 use super::mod_scan;
@@ -37,10 +38,12 @@ use super::mod_scan;
 const MAX_EXPLAIN_BYTES: u64 = 512 * 1024 * 1024;
 
 /// How many candidate files one parallel read-ahead batch holds at most,
-/// and how many bytes (a larger file still gets a batch of its own). Only
-/// the reads overlap: the search itself stays sequential, in candidate
-/// order, so which source explains a name never depends on read timing.
-const READ_AHEAD_FILES: usize = 64;
+/// and how many bytes (a larger file still gets a batch of its own). The
+/// files of one batch are read and searched in parallel, but their
+/// outcomes are applied sequentially, in candidate order, so which source
+/// explains a name never depends on timing; the bounds also cap how much
+/// work past an exhausted budget or an emptied pending set a batch does.
+const READ_AHEAD_FILES: usize = 1024;
 const READ_AHEAD_BYTES: u64 = 32 * 1024 * 1024;
 
 /// Mutates every [`Conflict::DanglingDefReference`] in `conflicts` whose
@@ -49,24 +52,61 @@ const READ_AHEAD_BYTES: u64 = 32 * 1024 * 1024;
 /// comment. `scan` must be the same [`ScanOutput`] the report was built
 /// from (`analysis::build_ref`'s own borrow, still alive afterward —
 /// never `analysis::build`, which consumes it).
+///
+/// The standalone entry point, for tests and callers that already hold a
+/// built report; production goes through [`build_explained_report`], which
+/// overlaps the candidate walk with the report build.
 pub fn explain_dangling_references(conflicts: &mut [Conflict], scan: &ScanOutput) {
-    explain_within_budget(conflicts, scan, MAX_EXPLAIN_BYTES);
+    // Deliberate duplicate of the pending-name collection inside
+    // `explain_within_budget`: it lets the common nothing-to-explain case
+    // return before `CandidateFiles::collect` walks every active mod's tree.
+    if PendingNames::collect(conflicts).is_empty() {
+        return;
+    }
+    explain_within_budget(conflicts, &CandidateFiles::collect(scan), MAX_EXPLAIN_BYTES);
 }
 
-/// [`explain_dangling_references`] with an explicit byte budget.
-fn explain_within_budget(conflicts: &mut [Conflict], scan: &ScanOutput, mut budget: u64) {
+/// [`analysis::build_ref`] followed by [`explain_dangling_references`],
+/// the report every composition root builds from a finished scan.
+///
+/// The explanation's candidate-folder walk (every active mod's whole tree,
+/// over a second on a real install) needs only `scan`, so it runs on the
+/// rayon pool while `build_ref` runs on the calling thread; only the
+/// search itself waits for the report's dangling names. The trade-off
+/// against calling the two in sequence: the walk happens even when the
+/// report turns out to have no unexplained name, which on an install
+/// small enough for that to be likely is also a cheap walk.
+#[must_use]
+pub fn build_explained_report(scan: &ScanOutput, context: &RunContext) -> Report {
+    let (mut report, candidates) = rayon::join(
+        || analysis::build_ref(scan, context),
+        || CandidateFiles::collect(scan),
+    );
+    explain_within_budget(&mut report.conflicts, &candidates, MAX_EXPLAIN_BYTES);
+    report
+}
+
+/// The search behind [`explain_dangling_references`], over already
+/// collected `candidates` and with an explicit byte budget.
+fn explain_within_budget(conflicts: &mut [Conflict], candidates: &CandidateFiles, mut budget: u64) {
     let mut pending = PendingNames::collect(conflicts);
     if pending.is_empty() {
         return;
     }
 
-    let candidates = CandidateFiles::collect(scan);
     for batch in read_ahead_batches(&candidates.files) {
-        let contents: Vec<Option<Vec<u8>>> = batch
+        // Each file of the batch is read, byte-searched and parsed on its
+        // own worker, against the names still pending when the batch
+        // starts. The outcomes are then applied one file at a time, in
+        // candidate order, exactly as a sequential search would: a name
+        // explained by an earlier file is no longer pending when a later
+        // file's outcome is applied, so which source explains a name never
+        // depends on timing.
+        let outcomes: Vec<Option<Vec<String>>> = batch
             .par_iter()
-            .map(|file| mod_scan::read_bounded(&file.path).ok())
+            .map(|file| defined_pending_names(&file.path, &pending.by_name))
             .collect();
-        for (file, bytes) in batch.iter().zip(contents) {
+        for (file, defined) in batch.iter().zip(outcomes) {
             if pending.is_empty() {
                 return;
             }
@@ -75,7 +115,7 @@ fn explain_within_budget(conflicts: &mut [Conflict], scan: &ScanOutput, mut budg
                 // `Unexplained` — not proven either way.
                 return;
             }
-            let Some(bytes) = bytes else {
+            let Some(defined) = defined else {
                 // A read failure (permission error, the file vanishing
                 // mid-scan, or it exceeding the bounded-read limit) means
                 // the search never actually examined this file's own
@@ -89,13 +129,34 @@ fn explain_within_budget(conflicts: &mut [Conflict], scan: &ScanOutput, mut budg
                 return;
             };
             budget -= file.len;
-            pending.confirm_in_file(&file.path, &bytes, &candidates.causes[file.cause]);
+            pending.explain(defined, &candidates.causes[file.cause]);
         }
     }
 
     // The search completed in full for every remaining name without
     // finding it anywhere — proven absent, not merely unproven.
     pending.mark_defined_nowhere();
+}
+
+/// Which of `pending`'s names the file at `path` really defines: a
+/// byte search for `>NAME<` for every name first, then a real `defName`
+/// parse to confirm the hits. `None` when the file can't be read; an
+/// empty list when nothing matches or the file doesn't parse.
+fn defined_pending_names(path: &Path, pending: &BTreeMap<String, usize>) -> Option<Vec<String>> {
+    let bytes = mod_scan::read_bounded(path).ok()?;
+    let hits = names_in_tag_text(&bytes, pending);
+    if hits.is_empty() {
+        return Some(Vec::new());
+    }
+    let file: std::sync::Arc<Path> = std::sync::Arc::from(path);
+    let Ok(defs_file) = defs::index(&bytes, &file) else {
+        return Some(Vec::new());
+    };
+    Some(
+        hits.into_iter()
+            .filter(|name| defs_file.defs.iter().any(|d| d.def_name == *name))
+            .collect(),
+    )
 }
 
 /// Every still-unexplained dangling name, mapped to its own conflict slot.
@@ -121,21 +182,12 @@ impl<'a> PendingNames<'a> {
         self.by_name.is_empty()
     }
 
-    /// Byte-searches one file's `bytes` for `>NAME<` for every pending
-    /// name before parsing, and confirms a hit with a real `defName`
-    /// parse. A confirmed name stops pending and gets `cause`.
-    fn confirm_in_file(&mut self, path: &Path, bytes: &[u8], cause: &DanglingCause) {
-        let hits = names_in_tag_text(bytes, &self.by_name);
-        if hits.is_empty() {
-            return;
-        }
-        let file: std::sync::Arc<Path> = std::sync::Arc::from(path);
-        let Ok(defs_file) = defs::index(bytes, &file) else {
-            return;
-        };
-        for name in hits {
-            if defs_file.defs.iter().any(|d| d.def_name == name)
-                && let Some(index) = self.by_name.remove(&name)
+    /// Gives every name in `defined` that is still pending `cause`, and
+    /// stops it pending. A name an earlier file already explained is no
+    /// longer pending and keeps that earlier cause.
+    fn explain(&mut self, defined: Vec<String>, cause: &DanglingCause) {
+        for name in defined {
+            if let Some(index) = self.by_name.remove(&name)
                 && let Conflict::DanglingDefReference(d) = &mut self.conflicts[index]
             {
                 d.cause = cause.clone();
@@ -167,116 +219,155 @@ struct CandidateFile {
     cause: usize,
 }
 
-/// How many directory levels deep [`CandidateFiles::add_unloaded_defs_for_mod`]'s
-/// search for an unloaded `Defs` folder descends under one mod's own root
-/// — generous over any real compat-framework nesting convention (e.g.
+/// How many directory levels deep [`unloaded_defs_folders`]'s search for
+/// an unloaded `Defs` folder descends under one mod's own root — generous
+/// over any real compat-framework nesting convention (e.g.
 /// `1.6/Mods/X/Defs`), while still bounding the walk against a
 /// pathological directory tree.
 const MAX_UNLOADED_DEFS_SEARCH_DEPTH: usize = 12;
 
+/// One searched `Defs` folder: every `**/*.xml` file under it (path and
+/// size, sorted), all explained by the same `cause`.
+struct DefsFolder {
+    cause: DanglingCause,
+    files: Vec<(PathBuf, u64)>,
+}
+
 impl CandidateFiles {
+    /// Walking every active mod's whole tree for unloaded `Defs` folders is
+    /// the costly part of this pass (a thousand mods' worth of `Textures/`
+    /// entries), so each mod (and each inactive mod) is walked on its own
+    /// rayon worker. `collect` on an indexed parallel iterator keeps input
+    /// order, and every walk is itself sorted, so the search order — and
+    /// with it which source explains a name — is identical to a
+    /// sequential walk.
     fn collect(scan: &ScanOutput) -> Self {
+        let unloaded: Vec<Vec<DefsFolder>> = scan
+            .scanned_mods
+            .par_iter()
+            .map(unloaded_defs_folders)
+            .collect();
+        let inactive: Vec<Option<DefsFolder>> = scan
+            .inactive_mods
+            .par_iter()
+            .map(|inactive| {
+                inactive_defs_folder(
+                    &inactive.path,
+                    DanglingCause::OnlyInInactiveMod {
+                        mod_id: inactive.id.clone(),
+                    },
+                )
+            })
+            .collect();
+
         let mut candidates = Self {
             files: Vec::new(),
             causes: Vec::new(),
         };
-        for scanned_mod in &scan.scanned_mods {
-            candidates.add_unloaded_defs_for_mod(scanned_mod);
-        }
-        for inactive in &scan.inactive_mods {
-            let cause = DanglingCause::OnlyInInactiveMod {
-                mod_id: inactive.id.clone(),
-            };
-            candidates.add_defs_under(&inactive.path, cause);
+        let folders = unloaded
+            .into_iter()
+            .flatten()
+            .chain(inactive.into_iter().flatten());
+        for folder in folders {
+            candidates.push_folder(folder);
         }
         candidates
     }
 
-    /// Every `Defs` directory anywhere under `scanned_mod`'s own root whose
-    /// direct parent is **not** one of its own
-    /// [`Mod::loaded_folders`](crate::domain::Mod::loaded_folders) — at
-    /// any depth, not only the mod's immediate subdirectories: a compat
-    /// framework can gate content behind an extra nesting level
-    /// (`1.6/Mods/X/Defs`), and the mod's own root `Defs/` counts too when
-    /// `LoadFolders.xml` doesn't include `/` for the running version (the
-    /// old shallow, one-level scan could only ever find a `Defs` folder
-    /// nested *inside* an unloaded top-level entry, never the mod's own
-    /// root, and never anything nested two or more levels deep).
-    fn add_unloaded_defs_for_mod(&mut self, scanned_mod: &ScannedMod) {
-        let mod_root = &scanned_mod.info.path;
-        let unloaded_defs_dirs = WalkDir::new(mod_root)
-            .max_depth(MAX_UNLOADED_DEFS_SEARCH_DEPTH)
-            .sort_by_file_name()
-            .into_iter()
-            .filter_map(Result::ok)
-            .filter(|e| e.file_type().is_dir() && e.file_name().eq_ignore_ascii_case("Defs"));
-        for entry in unloaded_defs_dirs {
-            let defs_dir = entry.path();
-            let Some(parent) = defs_dir.parent() else {
-                continue;
-            };
-            if scanned_mod
-                .info
-                .loaded_folders
-                .iter()
-                .any(|folder| folder == parent)
-            {
-                continue;
-            }
-            let folder = parent
-                .strip_prefix(mod_root)
-                .ok()
-                .map(|rel| rel.to_string_lossy().replace('\\', "/"))
-                .filter(|rel| !rel.is_empty())
-                .unwrap_or_else(|| ".".to_string());
-            let cause = DanglingCause::OnlyInUnloadedFolder {
+    fn push_folder(&mut self, folder: DefsFolder) {
+        let cause_index = self.causes.len();
+        self.causes.push(folder.cause);
+        self.files
+            .extend(folder.files.into_iter().map(|(path, len)| CandidateFile {
+                path,
+                len,
+                cause: cause_index,
+            }));
+    }
+}
+
+/// Every `Defs` directory anywhere under `scanned_mod`'s own root whose
+/// direct parent is **not** one of its own
+/// [`Mod::loaded_folders`](crate::domain::Mod::loaded_folders) — at any
+/// depth, not only the mod's immediate subdirectories: a compat framework
+/// can gate content behind an extra nesting level (`1.6/Mods/X/Defs`), and
+/// the mod's own root `Defs/` counts too when `LoadFolders.xml` doesn't
+/// include `/` for the running version (the old shallow, one-level scan
+/// could only ever find a `Defs` folder nested *inside* an unloaded
+/// top-level entry, never the mod's own root, and never anything nested
+/// two or more levels deep).
+fn unloaded_defs_folders(scanned_mod: &ScannedMod) -> Vec<DefsFolder> {
+    let mod_root = &scanned_mod.info.path;
+    let unloaded_defs_dirs = WalkDir::new(mod_root)
+        .max_depth(MAX_UNLOADED_DEFS_SEARCH_DEPTH)
+        .sort_by_file_name()
+        .into_iter()
+        .filter_map(Result::ok)
+        .filter(|e| e.file_type().is_dir() && e.file_name().eq_ignore_ascii_case("Defs"));
+    let mut folders = Vec::new();
+    for entry in unloaded_defs_dirs {
+        let defs_dir = entry.path();
+        let Some(parent) = defs_dir.parent() else {
+            continue;
+        };
+        if scanned_mod
+            .info
+            .loaded_folders
+            .iter()
+            .any(|folder| folder == parent)
+        {
+            continue;
+        }
+        let folder = parent
+            .strip_prefix(mod_root)
+            .ok()
+            .map(|rel| rel.to_string_lossy().replace('\\', "/"))
+            .filter(|rel| !rel.is_empty())
+            .unwrap_or_else(|| ".".to_string());
+        folders.push(DefsFolder {
+            cause: DanglingCause::OnlyInUnloadedFolder {
                 mod_id: scanned_mod.info.id.clone(),
                 folder,
-            };
-            self.add_files_in_defs_dir(defs_dir, cause);
-        }
+            },
+            files: xml_files_in_defs_dir(defs_dir),
+        });
     }
+    folders
+}
 
-    /// Every `Defs/**/*.xml` file directly under `mod_root/Defs`, explained
-    /// by `cause` — used for an inactive mod, whose own `Defs` is always
-    /// exactly one level below its root (an inactive mod is never scanned
-    /// for `LoadFolders.xml`, so it has no notion of "unloaded" nested
-    /// folders of its own to search).
-    fn add_defs_under(&mut self, mod_root: &Path, cause: DanglingCause) {
-        let defs_dir = mod_root.join("Defs");
-        if !defs_dir.is_dir() {
-            return;
-        }
-        self.add_files_in_defs_dir(&defs_dir, cause);
+/// The `Defs` folder directly under `mod_root`, explained by `cause` — used
+/// for an inactive mod, whose own `Defs` is always exactly one level below
+/// its root (an inactive mod is never scanned for `LoadFolders.xml`, so it
+/// has no notion of "unloaded" nested folders of its own to search).
+fn inactive_defs_folder(mod_root: &Path, cause: DanglingCause) -> Option<DefsFolder> {
+    let defs_dir = mod_root.join("Defs");
+    if !defs_dir.is_dir() {
+        return None;
     }
+    Some(DefsFolder {
+        cause,
+        files: xml_files_in_defs_dir(&defs_dir),
+    })
+}
 
-    /// Registers every `**/*.xml` file under an already-located `Defs`
-    /// directory, all explained by the same `cause`, in a deterministic
-    /// (sorted) order.
-    fn add_files_in_defs_dir(&mut self, defs_dir: &Path, cause: DanglingCause) {
-        let cause_index = self.causes.len();
-        self.causes.push(cause);
-        let xml_files = WalkDir::new(defs_dir)
-            .sort_by_file_name()
-            .into_iter()
-            .filter_map(Result::ok)
-            .filter(|e| e.file_type().is_file())
-            .filter(|e| {
-                e.path()
-                    .extension()
-                    .is_some_and(|ext| ext.eq_ignore_ascii_case("xml"))
-            });
-        for entry in xml_files {
-            let Ok(metadata) = entry.metadata() else {
-                continue;
-            };
-            self.files.push(CandidateFile {
-                path: entry.into_path(),
-                len: metadata.len(),
-                cause: cause_index,
-            });
-        }
-    }
+/// Every `**/*.xml` file under an already-located `Defs` directory, with
+/// its size, in a deterministic (sorted) order.
+fn xml_files_in_defs_dir(defs_dir: &Path) -> Vec<(PathBuf, u64)> {
+    WalkDir::new(defs_dir)
+        .sort_by_file_name()
+        .into_iter()
+        .filter_map(Result::ok)
+        .filter(|e| e.file_type().is_file())
+        .filter(|e| {
+            e.path()
+                .extension()
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("xml"))
+        })
+        .filter_map(|entry| {
+            let len = entry.metadata().ok()?.len();
+            Some((entry.into_path(), len))
+        })
+        .collect()
 }
 
 /// `files` split into consecutive read-ahead batches — see
@@ -359,7 +450,8 @@ mod tests {
     use std::path::PathBuf;
 
     use crate::domain::{
-        DanglingDefReference, DeclaredOrder, LoadOrder, Mod, ModId, ScanCost, ScannedMod, Source,
+        DanglingDefReference, DeclaredOrder, InactiveMod, LoadOrder, Mod, ModId, ScanCost,
+        ScannedMod, Source,
     };
 
     use super::*;
@@ -523,7 +615,7 @@ mod tests {
     /// unloaded top-level entry for its own `Defs` subfolder, so a mod's
     /// own **root** `Defs/` being itself unloaded (`LoadFolders.xml`
     /// selects only a version folder, omitting `/`) was never found at
-    /// all — `add_defs_under` would have looked for a nonexistent
+    /// all — `inactive_defs_folder`'s one-level lookup would have looked for a nonexistent
     /// `Defs/Defs` one level too deep.
     #[test]
     fn name_defined_only_in_the_mod_root_when_root_itself_is_unloaded_is_explained() {
@@ -587,6 +679,117 @@ mod tests {
         ));
 
         fs::remove_dir_all(inactive_dir).ok();
+    }
+
+    fn inactive_mod_defining(root: &Path, id: &str, def_names: &[&str]) -> InactiveMod {
+        let path = root.join(id);
+        fs::create_dir_all(path.join("Defs")).unwrap();
+        let defs: String = def_names
+            .iter()
+            .map(|name| format!("<ThingDef><defName>{name}</defName></ThingDef>"))
+            .collect();
+        fs::write(
+            path.join("Defs").join("Things.xml"),
+            format!("<Defs>{defs}</Defs>"),
+        )
+        .unwrap();
+        InactiveMod {
+            id: ModId::new(id),
+            name: id.to_string(),
+            authors: Vec::new(),
+            path,
+            source: Source::Local,
+            supported_versions: Vec::new(),
+            workshop_id: None,
+            generated: None,
+            declared: DeclaredOrder::default(),
+        }
+    }
+
+    /// Candidate files are searched in parallel but applied in candidate
+    /// order: a name two candidates define takes the earlier one's cause,
+    /// and a later candidate still explains what the earlier ones lack.
+    #[test]
+    fn a_name_defined_by_several_candidates_takes_the_earliest_ones_cause() {
+        let root = tempdir("earliest-candidate");
+        let inactive = vec![
+            inactive_mod_defining(&root, "alpha", &["SharedDef"]),
+            inactive_mod_defining(&root, "beta", &["SharedDef", "BetaOnlyDef"]),
+        ];
+        let scan = empty_scan(Vec::new(), inactive);
+        let mut conflicts = vec![
+            unexplained_conflict("BetaOnlyDef"),
+            unexplained_conflict("SharedDef"),
+        ];
+
+        explain_dangling_references(&mut conflicts, &scan);
+
+        assert_eq!(
+            cause_of(&conflicts, "SharedDef"),
+            DanglingCause::OnlyInInactiveMod {
+                mod_id: ModId::new("alpha")
+            }
+        );
+        assert_eq!(
+            cause_of(&conflicts, "BetaOnlyDef"),
+            DanglingCause::OnlyInInactiveMod {
+                mod_id: ModId::new("beta")
+            }
+        );
+
+        fs::remove_dir_all(root).ok();
+    }
+
+    /// `build_explained_report` is `build_ref` followed by the explanation:
+    /// a hyperlink to a def only an inactive mod defines comes out
+    /// explained, and the whole report equals the two steps run in turn.
+    #[test]
+    fn build_explained_report_equals_build_ref_followed_by_the_explanation() {
+        let root = tempdir("explained-report");
+        let referrer_dir = root.join("referrer");
+        fs::create_dir_all(&referrer_dir).unwrap();
+        let file: std::sync::Arc<Path> = std::sync::Arc::from(referrer_dir.join("Things.xml"));
+        let defs_file = defs::index(
+            br#"<Defs>
+                  <ThingDef>
+                    <defName>Spawner</defName>
+                    <descriptionHyperlinks><ThingDef>GhostDef4</ThingDef></descriptionHyperlinks>
+                  </ThingDef>
+                </Defs>"#,
+            &file,
+        )
+        .unwrap();
+        let mut referrer = base_mod("referrer", referrer_dir);
+        referrer.defs = defs_file.defs;
+        let mut scan = empty_scan(
+            vec![referrer],
+            vec![inactive_mod_defining(&root, "dormant", &["GhostDef4"])],
+        );
+        scan.ref_sites_by_mod
+            .insert(ModId::new("referrer"), defs_file.ref_sites);
+        let context = RunContext {
+            game_dir: root.clone(),
+            workshop_dir: root.clone(),
+            mods_config_path: root.join("ModsConfig.xml"),
+            game_version: crate::domain::GameVersion::new(1, 6),
+        };
+
+        let report = build_explained_report(&scan, &context);
+        let mut sequential = analysis::build_ref(&scan, &context);
+        explain_dangling_references(&mut sequential.conflicts, &scan);
+
+        assert_eq!(
+            cause_of(&report.conflicts, "GhostDef4"),
+            DanglingCause::OnlyInInactiveMod {
+                mod_id: ModId::new("dormant")
+            }
+        );
+        assert_eq!(
+            serde_json::to_value(&report.conflicts).unwrap(),
+            serde_json::to_value(&sequential.conflicts).unwrap()
+        );
+
+        fs::remove_dir_all(root).ok();
     }
 
     #[test]
@@ -658,7 +861,7 @@ mod tests {
         let scan = empty_scan(Vec::new(), vec![inactive_mod]);
         let mut conflicts = vec![unexplained_conflict("Anything")];
 
-        explain_within_budget(&mut conflicts, &scan, 10);
+        explain_within_budget(&mut conflicts, &CandidateFiles::collect(&scan), 10);
 
         // Never panics, and the name stays `Unexplained` — neither found
         // nor proven absent.

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryCache } from "@pinia/colada";
 import { type MaybeRefOrGetter, toValue } from "vue";
 
+import { awaitInvalidation } from "@/queries/invalidation";
 import { queryKeys } from "@/queries/keys";
 import { apply, getApplyPreflight } from "@/services/ipc";
 import type { ApplyRequestDto } from "@/types/generated/ApplyRequestDto";
@@ -34,6 +35,6 @@ export function useApplyMutation() {
   const queryCache = useQueryCache();
   return useMutation({
     mutation: (request: ApplyRequestDto) => apply(request),
-    onSuccess: () => queryCache.invalidateQueries(),
+    onSuccess: () => awaitInvalidation(queryCache),
   });
 }

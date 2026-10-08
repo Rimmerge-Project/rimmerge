@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryCache } from "@pinia/colada";
 import { type MaybeRefOrGetter, toValue } from "vue";
 
+import { startInvalidation } from "@/queries/invalidation";
 import { queryKeys } from "@/queries/keys";
 import {
   createPatch,
@@ -130,7 +131,7 @@ export function usePatchFileQuery(
  * emits that event.
  */
 function invalidatePatches(queryCache: ReturnType<typeof useQueryCache>): void {
-  void queryCache.invalidateQueries();
+  startInvalidation(queryCache);
 }
 
 /** Validates and creates a new compat patch project, persisting it. */

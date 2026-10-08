@@ -38,7 +38,8 @@
 //! it can; this module stays pure, per the `extract`/`analysis` layering
 //! contract (`crates/rim-analyzer/CLAUDE.md`).
 
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::sync::Arc;
 
 use crate::domain::{
     Conflict, DanglingCause, DanglingDefReference, MIN_RESOLVED_DISTINCT, ModId, RefSite,
@@ -72,10 +73,13 @@ struct Occurrence<'a> {
     site: &'a RefSite,
 }
 
+/// `seen`/`resolved` are only ever counted and probed, never iterated
+/// into output, so they are hashed: the vote loop probes `seen` once per
+/// site, millions of times on a real install.
 #[derive(Default)]
 struct FieldVote<'a> {
-    seen: BTreeSet<&'a str>,
-    resolved: BTreeSet<&'a str>,
+    seen: HashSet<&'a str>,
+    resolved: HashSet<&'a str>,
     occurrences: Vec<Occurrence<'a>>,
 }
 
@@ -119,12 +123,16 @@ pub fn dangling_def_references(
         children_index,
         op_locators: op_locator_index(scanned, active, name_map),
         template_has_descendant: HashMap::new(),
+        last_owner: None,
     };
 
     // Every eligible occurrence, split into the ones that need a vote
     // (`ListItem`/`Scalar`/`KeyedElement`) and the ones that don't
     // (`Hyperlink` — always a reference).
-    let mut votes: BTreeMap<VoteKey<'_>, FieldVote<'_>> = BTreeMap::new();
+    //
+    // Hashed for the per-site loop below; drained in sorted key order
+    // afterward, so nothing downstream ever sees hash order.
+    let mut votes: HashMap<VoteKey<'_>, FieldVote<'_>> = HashMap::new();
     let mut hyperlink_occurrences: Vec<Occurrence<'_>> = Vec::new();
 
     for (mod_id, sites) in ref_sites_by_mod {
@@ -172,6 +180,8 @@ pub fn dangling_def_references(
         }
     }
 
+    let mut votes: Vec<(VoteKey<'_>, FieldVote<'_>)> = votes.into_iter().collect();
+    votes.sort_unstable_by_key(|(key, _)| *key);
     for (key, vote) in votes {
         let (def_type, field_path, shape) = &key;
         if !is_reference_field(def_type, field_path, *shape, &vote) {
@@ -280,8 +290,17 @@ struct Eligibility<'a> {
     active: &'a ActiveMods,
     scanned_by_id: BTreeMap<&'a ModId, &'a ScannedMod>,
     children_index: &'a ChildrenIndex,
-    op_locators: BTreeMap<XmlLocator, (&'a ModId, bool)>,
+    op_locators: HashMap<&'a XmlLocator, (&'a ModId, bool)>,
     template_has_descendant: HashMap<(&'a str, &'a str, &'a ModId), bool>,
+    /// The owner the previous site was checked against, with its verdict.
+    /// A def's, template's or patch op's sites are consecutive and share
+    /// one `Arc`'d owner, so the owner half of the check (a locator lookup
+    /// keyed on a path, or a template memo probe) runs once per owner
+    /// instead of once per site — millions of times on a real install.
+    /// Keyed on the owning mod as well as the `Arc`: the verdict reads the
+    /// mod's activity, so a verdict is never reused across mods even if an
+    /// owner `Arc` were ever shared by two of them.
+    last_owner: Option<(&'a Arc<RefSiteOwner>, &'a ModId, bool)>,
 }
 
 impl<'a> Eligibility<'a> {
@@ -290,10 +309,24 @@ impl<'a> Eligibility<'a> {
     /// case (i) of the dangling rule), and the site's own `MayRequire`/
     /// `MayRequireAnyOf` gate (case (c)) is open.
     fn site_is_eligible(&mut self, site: &'a RefSite, owner: &SiteMod<'a>) -> bool {
-        let active = self.active;
-        if !may_require_satisfied(&site.may_require, &site.may_require_any_of, active) {
+        if !may_require_satisfied(&site.may_require, &site.may_require_any_of, self.active) {
             return false;
         }
+        if let Some((last, last_mod, verdict)) = self.last_owner
+            && Arc::ptr_eq(last, &site.owner)
+            && last_mod == owner.id
+        {
+            return verdict;
+        }
+        let verdict = self.owner_is_eligible(site, owner);
+        self.last_owner = Some((&site.owner, owner.id, verdict));
+        verdict
+    }
+
+    /// The owner half of [`Self::site_is_eligible`]; its verdict depends on
+    /// the site's owner, its `def_type` and `owner` (the mod).
+    fn owner_is_eligible(&mut self, site: &'a RefSite, owner: &SiteMod<'a>) -> bool {
+        let active = self.active;
         match &*site.owner {
             RefSiteOwner::Def {
                 may_require,
@@ -367,17 +400,19 @@ fn has_active_concrete_descendant(
 /// Every patch op's own [`XmlLocator`] mapped to its owning mod and
 /// whether [`patch_op_active`] holds for it — built once so
 /// [`Eligibility::site_is_eligible`] can check a [`RefSiteOwner::Patch`] site's own op
-/// without a linear scan per site.
+/// without a linear scan per site. Lookup-only (never iterated), so it is
+/// hashed and borrows each locator: an ordered map compares file paths
+/// component by component on every probe.
 fn op_locator_index<'a>(
     scanned: &'a [ScannedMod],
     active: &ActiveMods,
     name_map: &DisplayNameIndex,
-) -> BTreeMap<XmlLocator, (&'a ModId, bool)> {
-    let mut out = BTreeMap::new();
+) -> HashMap<&'a XmlLocator, (&'a ModId, bool)> {
+    let mut out = HashMap::new();
     for scanned_mod in scanned {
         for op in &scanned_mod.patch_ops {
             out.insert(
-                op.locator.clone(),
+                &op.locator,
                 (&scanned_mod.info.id, patch_op_active(op, active, name_map)),
             );
         }
@@ -397,8 +432,8 @@ fn post_patch_active_def_names(
     indices: &Indices,
     injected_owners: &BTreeMap<DefKey, Vec<ModId>>,
     removed: &BTreeMap<String, (ModId, XmlLocator)>,
-) -> BTreeSet<String> {
-    let mut names: BTreeSet<String> = BTreeSet::new();
+) -> HashSet<String> {
+    let mut names: HashSet<String> = HashSet::new();
     for (_def_type, def_name) in indices.def_owners.keys() {
         if removed.contains_key(def_name) {
             continue;
@@ -496,8 +531,13 @@ fn resolves(name: &str, active_def_names: &ActiveNames) -> bool {
 /// names of the few def types whose members the engine combines into
 /// generated defs (a name is only a gene or a carpet when its first half
 /// has the generating type).
+///
+/// `all` is membership-only (never iterated) and probed for every distinct
+/// value of every field, so it is hashed. The three small typed sets are
+/// walked whole by [`is_generated_gene_name`]/[`is_generated_carpet_name`]
+/// rather than probed per split point of a value.
 struct ActiveNames {
-    all: BTreeSet<String>,
+    all: HashSet<String>,
     gene_templates: BTreeSet<String>,
     terrain_templates: BTreeSet<String>,
     colors: BTreeSet<String>,
@@ -559,30 +599,39 @@ fn is_implied_name(name: &str, active_def_names: &ActiveNames) -> bool {
 
 /// A gene the engine generates from a gene template: `<template>_<def>`,
 /// the template's defName (a `GeneTemplateDef`), an underscore, then the
-/// defName of a def the template is applied to. The template may itself
-/// contain `_`, so every `_` position is tried. Requiring the first half
+/// defName of a def the template is applied to. Requiring the first half
 /// to be a `GeneTemplateDef` keeps two unrelated defs that happen to share
 /// a prefix from reading as a generated name.
+///
+/// Walks the (few) active templates rather than every `_` position of
+/// `name`: a template may itself contain `_`, and probing every split
+/// point of every candidate value cost about a second on a real install,
+/// where most values are labels and descriptions.
 fn is_generated_gene_name(name: &str, active_def_names: &ActiveNames) -> bool {
-    name.match_indices('_').any(|(index, _)| {
-        let (template, rest) = name.split_at(index);
-        let applied = &rest[1..];
+    active_def_names.gene_templates.iter().any(|template| {
         !template.is_empty()
-            && !applied.is_empty()
-            && active_def_names.gene_templates.contains(template)
-            && active_def_names.all.contains(applied)
+            && name
+                .strip_prefix(template.as_str())
+                .and_then(|rest| rest.strip_prefix('_'))
+                .is_some_and(|applied| {
+                    !applied.is_empty() && active_def_names.all.contains(applied)
+                })
     })
 }
 
 /// A carpet the engine generates from a terrain template: the template's
 /// defName directly followed by a colour's defName, with no separator
 /// (`Carpet` + `Sandstone`; vanilla data references `CarpetSandstone`,
-/// `CarpetGreyDark`). Both halves must have the generating types.
+/// `CarpetGreyDark`). Both halves must be non-empty and have the
+/// generating types. Walks the (few) active terrain templates rather than
+/// every character position of `name`, for the same reason as
+/// [`is_generated_gene_name`].
 fn is_generated_carpet_name(name: &str, active_def_names: &ActiveNames) -> bool {
-    name.char_indices().skip(1).any(|(index, _)| {
-        let (template, colour) = name.split_at(index);
-        active_def_names.terrain_templates.contains(template)
-            && active_def_names.colors.contains(colour)
+    active_def_names.terrain_templates.iter().any(|template| {
+        !template.is_empty()
+            && name.strip_prefix(template.as_str()).is_some_and(|colour| {
+                !colour.is_empty() && active_def_names.colors.contains(colour)
+            })
     })
 }
 
@@ -803,6 +852,56 @@ mod tests {
             &children_index,
             &ref_sites_by_mod,
         )
+    }
+
+    // -- eligibility cache ----------------------------------------------
+
+    #[test]
+    fn a_shared_owner_gets_each_mods_own_eligibility_verdict() {
+        let shared_owner = Arc::new(RefSiteOwner::Def {
+            def_name: "Shared".to_string(),
+            may_require: Vec::new(),
+            may_require_any_of: Vec::new(),
+        });
+        let site = RefSite {
+            def_type: Arc::from("ThingDef"),
+            field_path: Arc::from("li"),
+            shape: RefSiteShape::ListItem,
+            value: "Anything".to_string(),
+            owner: Arc::clone(&shared_owner),
+            may_require: Box::default(),
+            may_require_any_of: Box::default(),
+        };
+        let scanned: Vec<ScannedMod> = Vec::new();
+        let active = ActiveMods::build(&scanned);
+        let children_index = ChildrenIndex::default();
+        let mut eligibility = Eligibility {
+            active: &active,
+            scanned_by_id: BTreeMap::new(),
+            children_index: &children_index,
+            op_locators: HashMap::new(),
+            template_has_descendant: HashMap::new(),
+            last_owner: None,
+        };
+        let active_mod_id = ModId::new("active.mod");
+        let inactive_mod_id = ModId::new("inactive.mod");
+        let active_mod = SiteMod {
+            id: &active_mod_id,
+            is_active: true,
+        };
+        let inactive_mod = SiteMod {
+            id: &inactive_mod_id,
+            is_active: false,
+        };
+
+        let first = eligibility.site_is_eligible(&site, &active_mod);
+        let second = eligibility.site_is_eligible(&site, &inactive_mod);
+
+        assert!(first, "the active mod's site is evidence");
+        assert!(
+            !second,
+            "the inactive mod's site must not inherit the previous mod's cached verdict"
+        );
     }
 
     // -- vote ------------------------------------------------------------
@@ -1187,6 +1286,39 @@ mod tests {
         assert!(find_dangling(&conflicts, "ExampleCarpetSand").is_none());
     }
 
+    /// One active template's name is a prefix of another's: the split
+    /// after the shorter one names no def, the split after the longer one
+    /// does — the name is generated through the longer template.
+    #[test]
+    fn a_gene_from_a_template_whose_name_extends_another_templates_is_generated() {
+        let (base, _) = defs_mod(
+            "base",
+            r#"<Defs>
+                  <GeneTemplateDef><defName>Example</defName></GeneTemplateDef>
+                  <GeneTemplateDef><defName>Example_Template</defName></GeneTemplateDef>
+                  <SkillDef><defName>ExampleSkill</defName></SkillDef>
+                </Defs>"#,
+        );
+        let (referrer, sites) = referrer_of_name("Example_Template_ExampleSkill");
+        let conflicts = run(vec![(base, Vec::new()), (referrer, sites)]);
+        assert!(find_dangling(&conflicts, "Example_Template_ExampleSkill").is_none());
+    }
+
+    #[test]
+    fn a_carpet_from_a_template_whose_name_extends_another_templates_is_generated() {
+        let (base, _) = defs_mod(
+            "base",
+            r#"<Defs>
+                  <TerrainTemplateDef><defName>ExampleCarpet</defName></TerrainTemplateDef>
+                  <TerrainTemplateDef><defName>ExampleCarpetFine</defName></TerrainTemplateDef>
+                  <ColorDef><defName>Sand</defName></ColorDef>
+                </Defs>"#,
+        );
+        let (referrer, sites) = referrer_of_name("ExampleCarpetFineSand");
+        let conflicts = run(vec![(base, Vec::new()), (referrer, sites)]);
+        assert!(find_dangling(&conflicts, "ExampleCarpetFineSand").is_none());
+    }
+
     #[test]
     fn a_mods_subclass_of_the_terrain_template_type_also_generates_carpets() {
         let (base, _) = defs_mod(
@@ -1387,6 +1519,57 @@ mod tests {
         );
         let conflicts = run(vec![(referrer, referrer_sites)]);
         assert!(find_dangling(&conflicts, "GhostDef").is_none());
+    }
+
+    /// Eligibility is decided once per owner and reused for that owner's
+    /// following sites: a gate-closed def between two open ones must not
+    /// lend its verdict to either neighbour, nor borrow theirs.
+    #[test]
+    fn a_gate_closed_def_between_open_defs_excludes_only_its_own_references() {
+        let (referrer, referrer_sites) = defs_mod(
+            "referrer",
+            r#"<Defs>
+                  <ThingDef>
+                    <defName>OpenBefore</defName>
+                    <descriptionHyperlinks>
+                      <ThingDef>GhostBeforeOne</ThingDef>
+                      <ThingDef>GhostBeforeTwo</ThingDef>
+                    </descriptionHyperlinks>
+                  </ThingDef>
+                  <ThingDef MayRequire="nonexistent.mod">
+                    <defName>Gated</defName>
+                    <descriptionHyperlinks>
+                      <ThingDef>GhostGatedOne</ThingDef>
+                      <ThingDef>GhostGatedTwo</ThingDef>
+                    </descriptionHyperlinks>
+                  </ThingDef>
+                  <ThingDef>
+                    <defName>OpenAfter</defName>
+                    <descriptionHyperlinks>
+                      <ThingDef>GhostAfterOne</ThingDef>
+                      <ThingDef>GhostAfterTwo</ThingDef>
+                    </descriptionHyperlinks>
+                  </ThingDef>
+                </Defs>"#,
+        );
+        let conflicts = run(vec![(referrer, referrer_sites)]);
+        for open in [
+            "GhostBeforeOne",
+            "GhostBeforeTwo",
+            "GhostAfterOne",
+            "GhostAfterTwo",
+        ] {
+            assert!(
+                find_dangling(&conflicts, open).is_some(),
+                "{open} must be reported"
+            );
+        }
+        for gated in ["GhostGatedOne", "GhostGatedTwo"] {
+            assert!(
+                find_dangling(&conflicts, gated).is_none(),
+                "{gated} must not be reported"
+            );
+        }
     }
 
     #[test]
