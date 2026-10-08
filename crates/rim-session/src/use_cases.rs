@@ -119,7 +119,7 @@ pub use import_game_log::{
     GameLogSummary, ImportGameLog, ImportGameLogError, LoadEvent, LogAttribution,
     PatchFailureSummary, StackTraceDetail, TimerSummary, UnpairedStackTrace,
 };
-pub use import_order::{ImportLoss, ImportOrder, ImportOrderError, ValidatedImport};
+pub use import_order::{ImportBlocker, ImportLoss, ImportOrder, ImportOrderError, ValidatedImport};
 pub use import_profile_decisions::{
     ImportProfileDecisions, ImportProfileDecisionsError, ImportReport,
 };

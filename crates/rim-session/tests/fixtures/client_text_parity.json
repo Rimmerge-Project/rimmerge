@@ -1,0 +1,25 @@
+{
+  "entries": [
+    {
+      "id": "example.escapes",
+      "name": "Star*Under_Tilde~Tick`Pipe|Back\\Slash",
+      "workshopId": 1234567890
+    },
+    {
+      "id": "example.mentions",
+      "name": "Ping @everyone @here [a] <b>",
+      "workshopId": null
+    },
+    {
+      "id": "example.bare",
+      "name": null,
+      "workshopId": 987654321
+    },
+    {
+      "id": "example.local",
+      "name": null,
+      "workshopId": null
+    }
+  ],
+  "expected": "1. Star\\*Under\\_Tilde\\~Tick\\`Pipe\\|Back\\\\Slash [example.escapes] <https://steamcommunity.com/sharedfiles/filedetails/?id=1234567890>\n2. Ping @\u2060everyone @\u2060here (a) (b) [example.mentions]\n3. [example.bare] <https://steamcommunity.com/sharedfiles/filedetails/?id=987654321>\n4. [example.local]\n"
+}

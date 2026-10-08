@@ -35,3 +35,4 @@ rim-session = { path = ".", features = ["test-support"] }
 rim-resolve = { workspace = true, features = ["test-support"] }
 pretty_assertions = { workspace = true }
 tempfile = { workspace = true }
+serde_json = { workspace = true }

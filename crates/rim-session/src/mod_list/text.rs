@@ -344,6 +344,33 @@ mod tests {
         );
     }
 
+    /// The desktop's "Copy the missing list" is built client-side in
+    /// `apps/desktop/src/utils/orderShare.ts` (`missingListText`). Its vitest reads this same
+    /// fixture file and asserts the same text, so changing either escaper without the other
+    /// (and the fixture) fails one of the two suites.
+    #[test]
+    fn render_matches_the_desktop_client_parity_fixture() {
+        let fixture: serde_json::Value =
+            serde_json::from_str(include_str!("../../tests/fixtures/client_text_parity.json"))
+                .expect("fixture is valid JSON");
+        let entries = fixture["entries"]
+            .as_array()
+            .expect("entries array")
+            .iter()
+            .map(|row| SharedModEntry {
+                id: ListedPackageId::try_from(row["id"].as_str().expect("id")).expect("valid id"),
+                name: row["name"].as_str().and_then(ListedName::new),
+                workshop_id: row["workshopId"].as_u64().and_then(WorkshopId::new),
+            })
+            .collect();
+        let list = SharedModList::new(None, entries).expect("list");
+
+        assert_eq!(
+            render_text(&list),
+            fixture["expected"].as_str().expect("expected text")
+        );
+    }
+
     #[test]
     fn round_trip_keeps_ids_workshop_ids_order_and_version() {
         let list = SharedModList::new(

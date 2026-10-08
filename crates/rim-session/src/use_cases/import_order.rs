@@ -19,12 +19,12 @@
 //! no warning.
 
 use rim_analyzer::domain::ModId;
-use rim_resolve::domain::OrderSource;
+use rim_resolve::domain::{GeneratedModIdentity, OrderSource};
 
 use crate::Session;
 use crate::active_set::{ActiveSet, ActiveSetError, is_core};
 use crate::mod_inventory::ModInventory;
-use crate::mod_list::{ImportPlan, ImportedEntry, MissingKind};
+use crate::mod_list::{ImportPlan, ImportedEntry, MissingKind, ModListLimits};
 
 /// An order that passed [`ImportOrder::validate`]: every id is an
 /// installed mod of the session it was checked against, none repeats, and
@@ -42,6 +42,40 @@ impl ValidatedImport {
     }
 }
 
+/// Why an order cannot be imported by any means: the reasons
+/// [`ImportOrder::validate_order`] can refuse, without
+/// [`ImportOrderError::ScanDidNotMatch`], which only a scanned session can
+/// raise. An interface that explains a disabled "Use this order" matches on
+/// this and so never has to handle a case that cannot occur there.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ImportBlocker {
+    /// See [`ImportOrderError::Unknown`]. Also an id known but not on disk.
+    Unknown(ModId),
+    /// See [`ImportOrderError::Duplicate`].
+    Duplicate(ModId),
+    /// See [`ImportOrderError::CoreMissing`].
+    CoreMissing,
+    /// See [`ImportOrderError::NothingInstalled`].
+    NothingInstalled,
+    /// See [`ImportOrderError::TooMany`].
+    TooMany {
+        /// The most ids an order may hold.
+        limit: usize,
+    },
+}
+
+impl From<ImportBlocker> for ImportOrderError {
+    fn from(blocker: ImportBlocker) -> Self {
+        match blocker {
+            ImportBlocker::Unknown(id) => Self::Unknown(id),
+            ImportBlocker::Duplicate(id) => Self::Duplicate(id),
+            ImportBlocker::CoreMissing => Self::CoreMissing,
+            ImportBlocker::NothingInstalled => Self::NothingInstalled,
+            ImportBlocker::TooMany { limit } => Self::TooMany { limit },
+        }
+    }
+}
+
 /// Why an order cannot be imported. It can only happen when the inventory
 /// changed between preview and import, or the caller is buggy.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
@@ -56,6 +90,20 @@ pub enum ImportOrderError {
     /// installed (`CorePlacement::Missing`) or the caller dropped it.
     #[error("the order does not include Core")]
     CoreMissing,
+    /// The order holds nothing but Core and/or a Rimmerge-generated mod (this
+    /// profile's own merge mod): no other installed mod. Importing it would
+    /// only deactivate every other active mod.
+    #[error("none of the listed mods is installed")]
+    NothingInstalled,
+    /// The order holds more than `limit` ids. `limit` is the most a plan
+    /// can emit: a list may hold [`ModListLimits::MAX_ENTRIES`] entries,
+    /// and the plan adds Core at the front and the profile's own merge
+    /// mod at the end.
+    #[error("an imported order holds at most {limit} mods")]
+    TooMany {
+        /// The most ids an order may hold.
+        limit: usize,
+    },
     /// The scanned session's Current is not the validated order: the scan
     /// ran over something else, or the session was swapped in between.
     #[error("the scanned session does not hold the validated order")]
@@ -67,6 +115,11 @@ pub enum ImportOrderError {
 pub struct ImportOrder;
 
 impl ImportOrder {
+    /// The most ids a plan's order can hold: [`ModListLimits::MAX_ENTRIES`]
+    /// listed mods, plus Core placed first and the profile's own merge mod
+    /// placed last when the list carries neither.
+    const MAX_ORDER_LEN: usize = ModListLimits::MAX_ENTRIES + 2;
+
     /// Checks `order` against `session`'s inventory.
     ///
     /// The result is only as fresh as `session`: the composition root must
@@ -88,32 +141,67 @@ impl ImportOrder {
 
     /// [`Self::validate`] against an inventory alone, for an interface with
     /// no loaded session (the CLI's discovery-only import). One rule for
-    /// both: every id installed, none repeated, Core present.
+    /// both: within the size bound, every id installed, none repeated,
+    /// Core present.
     ///
     /// # Errors
     ///
     /// See [`ImportOrderError`]; never [`ImportOrderError::ScanDidNotMatch`].
+    /// "Nothing but Core and generated mods" is recognised from the ids alone
+    /// ([`GeneratedModIdentity::is_generated`]), so the signature needs no
+    /// profile hash; any generated mod counts as not being a listed mod.
     pub fn validate_order(
         inventory: &ModInventory,
         order: Vec<ModId>,
     ) -> Result<ValidatedImport, ImportOrderError> {
+        Self::check_order(inventory, order).map_err(ImportOrderError::from)
+    }
+
+    /// The one rule behind [`Self::validate_order`] and
+    /// [`Self::import_blocker`].
+    fn check_order(
+        inventory: &ModInventory,
+        order: Vec<ModId>,
+    ) -> Result<ValidatedImport, ImportBlocker> {
+        if order.len() > Self::MAX_ORDER_LEN {
+            return Err(ImportBlocker::TooMany {
+                limit: Self::MAX_ORDER_LEN,
+            });
+        }
         let set = ActiveSet::new(order, inventory).map_err(|error| match error {
-            ActiveSetError::Unknown(id) => ImportOrderError::Unknown(id),
-            ActiveSetError::Duplicate(id) => ImportOrderError::Duplicate(id),
+            ActiveSetError::Unknown(id) => ImportBlocker::Unknown(id),
+            ActiveSetError::Duplicate(id) => ImportBlocker::Duplicate(id),
         })?;
         if let Some(absent) = set.ids().iter().find(|id| {
             inventory
                 .entry(id)
                 .is_none_or(|entry| !entry.present_on_disk)
         }) {
-            return Err(ImportOrderError::Unknown(absent.clone()));
+            return Err(ImportBlocker::Unknown(absent.clone()));
         }
         if !set.ids().iter().any(is_core) {
-            return Err(ImportOrderError::CoreMissing);
+            return Err(ImportBlocker::CoreMissing);
+        }
+        let has_other_mod = set
+            .ids()
+            .iter()
+            .any(|id| !is_core(id) && !GeneratedModIdentity::is_generated(id));
+        if !has_other_mod {
+            return Err(ImportBlocker::NothingInstalled);
         }
         Ok(ValidatedImport {
             order: set.ids().to_vec(),
         })
+    }
+
+    /// Why importing `plan` cannot proceed, or `None` when it can: exactly
+    /// when its order fails [`Self::validate_order`] against `inventory`
+    /// (over the size bound, an id not installed, a repeat, no Core, or no
+    /// mod besides Core and generated mods). Computed here so an interface
+    /// words the reason without recomputing the rule.
+    #[must_use]
+    pub fn import_blocker(inventory: &ModInventory, plan: &ImportPlan) -> Option<ImportBlocker> {
+        Self::check_order(inventory, plan.order.clone()).err()
     }
 
     /// Selects `Current` on the session the scan returned: the imported
@@ -375,6 +463,134 @@ mod tests {
         assert_eq!(scanned.selected(), OrderSource::Current);
     }
 
+    fn plan_of(text: &str, report: &rim_analyzer::domain::Report) -> (ModInventory, ImportPlan) {
+        let inventory = ModInventory::from_report(report);
+        let list = parse_text(text).expect("parses").list;
+        let plan = plan_import(
+            &list,
+            &inventory,
+            &ids(&["ludeon.rimworld"]),
+            ImportContext {
+                own_merge_mod: ModId::new("rimmerge.merge.3f9a1c2b7d5e"),
+                game_version: None,
+                has_pending_changes: false,
+            },
+        );
+        (inventory, plan)
+    }
+
+    #[test]
+    fn import_blocker_names_why_a_plan_cannot_be_imported() {
+        let with_core = ReportBuilder::new()
+            .core("ludeon.rimworld")
+            .mod_("example.base")
+            .build();
+        let without_core = ReportBuilder::new().mod_("example.base").build();
+        let cases = [
+            (
+                "example.base
+",
+                &with_core,
+                None,
+            ),
+            (
+                "ludeon.rimworld
+",
+                &with_core,
+                Some(ImportBlocker::NothingInstalled),
+            ),
+            (
+                "ludeon.rimworld
+example.ghost
+",
+                &with_core,
+                Some(ImportBlocker::NothingInstalled),
+            ),
+            (
+                "example.ghost
+",
+                &with_core,
+                Some(ImportBlocker::NothingInstalled),
+            ),
+            (
+                "example.base
+",
+                &without_core,
+                Some(ImportBlocker::CoreMissing),
+            ),
+        ];
+
+        for (text, report, expected) in cases {
+            let (inventory, plan) = plan_of(text, report);
+
+            assert_eq!(
+                ImportOrder::import_blocker(&inventory, &plan),
+                expected,
+                "{text:?}"
+            );
+        }
+    }
+
+    /// Core plus `count` numbered installed mods, and the ids of the
+    /// numbered ones.
+    fn report_with_numbered_mods(count: usize) -> (rim_analyzer::domain::Report, Vec<String>) {
+        let numbered: Vec<String> = (0..count)
+            .map(|index| format!("example.m{index}"))
+            .collect();
+        let mut builder = ReportBuilder::new().core("ludeon.rimworld");
+        for id in &numbered {
+            builder = builder.mod_(id);
+        }
+        (builder.build(), numbered)
+    }
+
+    /// Core first, then the first `count - 1` of `numbered`: `count` distinct
+    /// installed ids.
+    fn distinct_order(numbered: &[String], count: usize) -> Vec<ModId> {
+        std::iter::once("ludeon.rimworld")
+            .chain(numbered.iter().map(String::as_str))
+            .take(count)
+            .map(ModId::new)
+            .collect()
+    }
+
+    #[test]
+    fn import_blocker_is_too_many_for_a_valid_plan_over_the_order_bound() {
+        let limit = ImportOrder::MAX_ORDER_LEN;
+        let (report, numbered) = report_with_numbered_mods(limit);
+        let (inventory, mut plan) = plan_of("ludeon.rimworld\n", &report);
+        plan.order = distinct_order(&numbered, limit);
+        assert_eq!(
+            ImportOrder::import_blocker(&inventory, &plan),
+            None,
+            "distinct installed ids at the limit are importable"
+        );
+        plan.order = distinct_order(&numbered, limit + 1);
+
+        assert_eq!(
+            ImportOrder::import_blocker(&inventory, &plan),
+            Some(ImportBlocker::TooMany { limit })
+        );
+        assert_eq!(
+            ImportOrder::validate_order(&inventory, plan.order.clone()),
+            Err(ImportOrderError::TooMany { limit })
+        );
+    }
+
+    #[test]
+    fn validate_order_accepts_the_most_a_plan_can_emit_and_refuses_one_more() {
+        let limit = ModListLimits::MAX_ENTRIES + 2;
+        let (report, numbered) = report_with_numbered_mods(limit);
+        let inventory = ModInventory::from_report(&report);
+
+        let at_limit = ImportOrder::validate_order(&inventory, distinct_order(&numbered, limit));
+        let over_limit =
+            ImportOrder::validate_order(&inventory, distinct_order(&numbered, limit + 1));
+
+        assert_eq!(at_limit.expect("at the limit").order().len(), limit);
+        assert_eq!(over_limit, Err(ImportOrderError::TooMany { limit }));
+    }
+
     #[test]
     fn finish_refuses_a_session_whose_current_is_not_the_validated_order() {
         let mut scanned = session();
@@ -407,9 +623,7 @@ mod tests {
         let active = ["ludeon.rimworld", "example.base", own_id.as_str()];
         let session = crate::test_support::session_fixture_with_generated(&active, own_id.as_str());
         let preview = crate::use_cases::ImportPreview::from_text(
-            "ludeon.rimworld
-example.base
-",
+            "ludeon.rimworld\nexample.base\n",
             &crate::use_cases::ImportTarget::from_session(&session),
         );
         let crate::use_cases::ImportPreview::Ready(ready) = preview else {
@@ -498,10 +712,7 @@ example.base
     #[test]
     fn the_senders_merge_mod_alone_is_not_a_loss() {
         let plan = plan_for(
-            "ludeon.rimworld
-example.base
-rimmerge.merge.aaaaaaaaaaaa
-",
+            "ludeon.rimworld\nexample.base\nrimmerge.merge.aaaaaaaaaaaa\n",
             &["example.base"],
             &[],
         );
@@ -519,10 +730,7 @@ rimmerge.merge.aaaaaaaaaaaa
     #[test]
     fn a_missing_dlc_still_counts_as_a_loss() {
         let plan = plan_for(
-            "ludeon.rimworld
-example.base
-ludeon.rimworld.royalty
-",
+            "ludeon.rimworld\nexample.base\nludeon.rimworld.royalty\n",
             &["example.base"],
             &[],
         );
@@ -545,6 +753,43 @@ ludeon.rimworld.royalty
         );
 
         assert_eq!(ImportLoss::of(&plan), None);
+    }
+
+    fn nothing_installed_inventory() -> ModInventory {
+        let report = ReportBuilder::new()
+            .core("ludeon.rimworld")
+            .mod_("rimmerge.merge.3f9a1c2b7d5e")
+            .mod_("example.framework")
+            .build();
+        ModInventory::from_report(&report)
+    }
+
+    #[test]
+    fn validate_order_refuses_core_alone() {
+        let result =
+            ImportOrder::validate_order(&nothing_installed_inventory(), ids(&["ludeon.rimworld"]));
+
+        assert_eq!(result, Err(ImportOrderError::NothingInstalled));
+    }
+
+    #[test]
+    fn validate_order_refuses_core_and_a_generated_mod_only() {
+        let result = ImportOrder::validate_order(
+            &nothing_installed_inventory(),
+            ids(&["ludeon.rimworld", "rimmerge.merge.3f9a1c2b7d5e"]),
+        );
+
+        assert_eq!(result, Err(ImportOrderError::NothingInstalled));
+    }
+
+    #[test]
+    fn validate_order_accepts_core_and_one_other_mod() {
+        let result = ImportOrder::validate_order(
+            &nothing_installed_inventory(),
+            ids(&["ludeon.rimworld", "example.framework"]),
+        );
+
+        assert!(result.is_ok());
     }
 
     #[test]
