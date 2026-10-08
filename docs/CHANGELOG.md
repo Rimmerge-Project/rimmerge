@@ -4,7 +4,7 @@ This changelog starts at the first public release. Development history
 before that point is not summarized here — see `.journal/` in a
 maintainer's own checkout for the full record, if you have it.
 
-## [Unreleased]
+## [1.2.0] - 2026-10-08
 
 - **Fix: importing a load order no longer keeps spinning after the progress
   bar finishes, and progress no longer stops early.** "Use this order" now
