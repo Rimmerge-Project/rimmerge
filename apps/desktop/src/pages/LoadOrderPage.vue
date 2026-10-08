@@ -3,6 +3,8 @@ import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 
+import OrderNotInFileNote from "@/components/order/OrderNotInFileNote.vue";
+import OrderShareMenus from "@/components/order/OrderShareMenus.vue";
 import OrderTable from "@/components/order/OrderTable.vue";
 import WhyPanel from "@/components/order/WhyPanel.vue";
 import { useOrderSource } from "@/composables/useOrderSource";
@@ -34,9 +36,14 @@ function closePanel(): void {
 
 <template>
   <div class="mx-auto flex h-full max-w-6xl min-h-0 flex-col gap-6 p-6">
-    <h1 class="text-text shrink-0 text-xl font-semibold">
-      {{ t("order.heading", { source: tm(orderSourceLabel(selected)) }) }}
-    </h1>
+    <div class="flex shrink-0 flex-wrap items-center justify-between gap-3">
+      <h1 class="text-text text-xl font-semibold">
+        {{ t("order.heading", { source: tm(orderSourceLabel(selected)) }) }}
+      </h1>
+      <OrderShareMenus />
+    </div>
+
+    <OrderNotInFileNote />
 
     <p
       v-if="isPending"

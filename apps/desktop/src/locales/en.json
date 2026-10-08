@@ -567,6 +567,14 @@
       "game_start_failed": {
         "title": "RimWorld didn't start",
         "detail": "Windows couldn't start RimWorldWin64.exe."
+      },
+      "mod_list_io_failed": {
+        "title": "Couldn't read or write the mod list",
+        "detail": "The mod list file couldn't be read or written. Check that the file (or, when saving, its folder) exists and that you have permission to open or save it there."
+      },
+      "nothing_to_export": {
+        "title": "Nothing to export",
+        "detail": "No active mod could be listed. Check the active mods in ModsConfig.xml."
       }
     }
   },
@@ -1575,6 +1583,92 @@
       "promotedBy": "promoted by {before} → {after}",
       "body": "no source or placement signal"
     }
+  },
+  "orderShare": {
+    "export": {
+      "button": "Export",
+      "hint": "Exports the order in ModsConfig.xml — what RimWorld loads.",
+      "saveFile": "Save as RimWorld mod list (.rml)…",
+      "copyText": "Copy as text",
+      "fileFilter": "RimWorld mod list",
+      "saved": "Saved {count} mod to {file}. | Saved {count} mods to {file}.",
+      "copied": "Copied {count} mod. | Copied {count} mods.",
+      "copyFailed": "Couldn't copy to the clipboard.",
+      "saveFailed": "Couldn't save the mod list.",
+      "leftOut": "{count} mod couldn't be listed and was left out. | {count} mods couldn't be listed and were left out."
+    },
+    "import": {
+      "button": "Import",
+      "openFile": "Open a mod list file…",
+      "paste": "Paste a list…",
+      "fileFilter": "Mod lists (.rml, .xml, .txt)",
+      "allFiles": "All files",
+      "pasteTitle": "Paste a load order",
+      "pasteHint": "One mod per line: the text from \"Copy as text\", or one package id per line.",
+      "pasteLabel": "Load order text",
+      "preview": "Preview"
+    },
+    "preview": {
+      "title": "Import load order",
+      "summary": "{count} mod in the list | {count} mods in the list",
+      "versionDiffers": "Made with RimWorld {listed}; you have {game}.",
+      "replacesPending": "Activation changes you haven't rescanned yet will be replaced.",
+      "replacesUnwritten": "This import replaces your Current order, which isn't in ModsConfig.xml yet.",
+      "moved": "{count} mod changes position. | {count} mods change position.",
+      "sameOrder": "The installed mods keep their current order.",
+      "coreAdded": "Core wasn't in the list; it stays first.",
+      "activatedHeading": "Will be activated ({count})",
+      "deactivatedHeading": "Will be deactivated ({count})",
+      "missingHeading": "Not installed ({count})",
+      "missingExplanation": "Rimmerge never downloads mods. Subscribe to these yourself, then import again.",
+      "openWorkshop": "Open on Steam Workshop",
+      "openWorkshopLabel": "Open {name} on Steam Workshop",
+      "missingKind": {
+        "dlc": "A DLC you don't have installed.",
+        "rimmergeMergeMod": "The sender's merge mod, made by Rimmerge on their computer; you don't need it.",
+        "noLink": "The list has no Workshop link for this mod."
+      },
+      "copyMissing": "Copy the missing list",
+      "missingCopied": "Copied the missing list.",
+      "duplicatesHeading": "Listed more than once ({count})",
+      "duplicateRow": "{id} — the first position (#{position}) is used.",
+      "otherCopyHeading": "Matched another copy ({count})",
+      "otherCopyRow": "{listed} → your copy {installed}",
+      "skippedHeading": "Lines not understood ({count})",
+      "skipped": {
+        "notAnEntry": "Line {line}: not a mod entry.",
+        "malformedId": "Entry {position}: “{text}” isn't a valid package id."
+      },
+      "skippedOmitted": "{count} more entry not shown. | {count} more entries not shown.",
+      "blocked": {
+        "coreMissing": "Core isn't installed, so this list can't be imported.",
+        "nothingInstalled": "None of the listed mods are installed, so there is nothing to import.",
+        "tooMany": "This order would hold too many mods; an import can hold at most {limit}.",
+        "unknown": "{id} isn't an installed mod.",
+        "duplicate": "{id} appears more than once in the order."
+      },
+      "close": "Close",
+      "importing": "Importing…",
+      "whatHappens": "Rimmerge rescans with this order and shows it as Current. Nothing is written until you Apply.",
+      "confirm": "Use this order"
+    },
+    "imported": "Imported order ready. Review it, then Apply to write ModsConfig.xml.",
+    "notInFile": "This order isn't in ModsConfig.xml yet.",
+    "notInFileApply": "Apply",
+    "previewOutdated": "Your installed mods changed since the preview. Preview the list again.",
+    "rejected": {
+      "title": "This list can't be imported",
+      "tooLarge": "The file is larger than {limit}.",
+      "tooManyEntries": "The list has more than {limit} entries.",
+      "malformedXml": "The file isn't valid XML.",
+      "dtdNotAllowed": "The file declares a DTD, which mod lists never do.",
+      "tooDeep": "The file is nested too deeply to be a mod list.",
+      "unrecognizedFormat": "This isn't a RimWorld mod list (.rml), a ModsConfig.xml, or a text list.",
+      "missingModList": "The file has no mod list in it.",
+      "noEntries": "No package ids were found."
+    },
+    "importedWithWarnings": "The scan reported {count} warning. | The scan reported {count} warnings.",
+    "importedRuleWarnings": "Imported, with rules that couldn't be loaded"
   },
   "apply": {
     "dialog": {

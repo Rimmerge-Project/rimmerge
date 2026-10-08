@@ -234,6 +234,7 @@ describe("WhyPanel", () => {
       movedMods: 0,
       selected: "suggested",
       fileMatchesSuggested: false,
+      fileMatchesCurrent: true,
       sortProvenance: {
         tieBreak: "preserveCurrent",
         useImportedPairs: true,

@@ -60,6 +60,12 @@ describe("describeCommandError", () => {
       "already_running",
       "recommended_rules_unavailable",
       "app_settings_damaged",
+      "order_not_applied",
+      "game_executable_missing",
+      "steam_launch_failed",
+      "game_start_failed",
+      "mod_list_io_failed",
+      "nothing_to_export",
     ] as const;
 
     const keys = codes.map((code) => {

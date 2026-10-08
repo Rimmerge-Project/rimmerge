@@ -108,6 +108,7 @@ export function dashboardFixture(needsInput: number): DashboardDto {
     movedMods: 4,
     selected: "current",
     fileMatchesSuggested: false,
+    fileMatchesCurrent: true,
     sortProvenance: { tieBreak: "rebuild", useImportedPairs: false, useImportedPlacements: true },
   };
 }

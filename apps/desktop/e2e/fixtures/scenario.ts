@@ -21,6 +21,7 @@ import type { CaveatDto } from "../../src/types/generated/CaveatDto";
 import type { CheckForUpdateOutcomeDto } from "../../src/types/generated/CheckForUpdateOutcomeDto";
 import type { ClearAssignmentRowRequestDto } from "../../src/types/generated/ClearAssignmentRowRequestDto";
 import type { CopyAssignmentRowFromRequestDto } from "../../src/types/generated/CopyAssignmentRowFromRequestDto";
+import type { CorePlacementDto } from "../../src/types/generated/CorePlacementDto";
 import type { CreateAssignmentRequestDto } from "../../src/types/generated/CreateAssignmentRequestDto";
 import type { CreatePatchRequestDto } from "../../src/types/generated/CreatePatchRequestDto";
 import type { DeactivateRequestDto } from "../../src/types/generated/DeactivateRequestDto";
@@ -33,7 +34,10 @@ import type { DeleteRuleRequestDto } from "../../src/types/generated/DeleteRuleR
 import type { DiffClassDto } from "../../src/types/generated/DiffClassDto";
 import type { EntryKindDto } from "../../src/types/generated/EntryKindDto";
 import type { ExportAssignmentRequestDto } from "../../src/types/generated/ExportAssignmentRequestDto";
+import type { ExportOrderFileRequestDto } from "../../src/types/generated/ExportOrderFileRequestDto";
 import type { ExportPatchRequestDto } from "../../src/types/generated/ExportPatchRequestDto";
+import type { ExportResultDto } from "../../src/types/generated/ExportResultDto";
+import type { ExportTextDto } from "../../src/types/generated/ExportTextDto";
 import type { FaceAvailabilityDto } from "../../src/types/generated/FaceAvailabilityDto";
 import type { FindingDto } from "../../src/types/generated/FindingDto";
 import type { FindingKindDto } from "../../src/types/generated/FindingKindDto";
@@ -44,6 +48,10 @@ import type { GraphicFaceDto } from "../../src/types/generated/GraphicFaceDto";
 import type { GraphicFacesDto } from "../../src/types/generated/GraphicFacesDto";
 import type { GraphicSlotDto } from "../../src/types/generated/GraphicSlotDto";
 import type { GraphicVariantDto } from "../../src/types/generated/GraphicVariantDto";
+import type { ImportBlockedDto } from "../../src/types/generated/ImportBlockedDto";
+import type { ImportedEntryDto } from "../../src/types/generated/ImportedEntryDto";
+import type { ImportOrderRequestDto } from "../../src/types/generated/ImportOrderRequestDto";
+import type { ImportRejectionDto } from "../../src/types/generated/ImportRejectionDto";
 import type { InspectDefRequestDto } from "../../src/types/generated/InspectDefRequestDto";
 import type { LaunchGameRequestDto } from "../../src/types/generated/LaunchGameRequestDto";
 import type { LaunchNetworkChecksOutcomeDto } from "../../src/types/generated/LaunchNetworkChecksOutcomeDto";
@@ -53,17 +61,23 @@ import type { MergeModEntryDto } from "../../src/types/generated/MergeModEntryDt
 import type { MergeOwnerDto } from "../../src/types/generated/MergeOwnerDto";
 import type { MergePreviewRequestDto } from "../../src/types/generated/MergePreviewRequestDto";
 import type { MergeStateDto } from "../../src/types/generated/MergeStateDto";
+import type { MissingKindDto } from "../../src/types/generated/MissingKindDto";
 import type { ModCostRowDto } from "../../src/types/generated/ModCostRowDto";
 import type { ModLinkKindDto } from "../../src/types/generated/ModLinkKindDto";
 import type { NotificationDto } from "../../src/types/generated/NotificationDto";
 import type { NotificationKeyDto } from "../../src/types/generated/NotificationKeyDto";
 import type { NotificationKindDto } from "../../src/types/generated/NotificationKindDto";
+import type { OpenWorkshopPageRequestDto } from "../../src/types/generated/OpenWorkshopPageRequestDto";
+import type { OrderImportOutcomeDto } from "../../src/types/generated/OrderImportOutcomeDto";
 import type { OrderSourceDto } from "../../src/types/generated/OrderSourceDto";
 import type { PairRuleDto } from "../../src/types/generated/PairRuleDto";
 import type { PlacementRuleDto } from "../../src/types/generated/PlacementRuleDto";
 import type { PreflightItemDto } from "../../src/types/generated/PreflightItemDto";
 import type { PreviewMergeModFileRequestDto } from "../../src/types/generated/PreviewMergeModFileRequestDto";
+import type { PreviewOrderImportFileRequestDto } from "../../src/types/generated/PreviewOrderImportFileRequestDto";
+import type { PreviewOrderImportTextRequestDto } from "../../src/types/generated/PreviewOrderImportTextRequestDto";
 import type { ProgressEventDto } from "../../src/types/generated/ProgressEventDto";
+import type { ProjectSummaryDto } from "../../src/types/generated/ProjectSummaryDto";
 import type { RationaleDto } from "../../src/types/generated/RationaleDto";
 import type { ReadDefTextureRequestDto } from "../../src/types/generated/ReadDefTextureRequestDto";
 import type { RecommendedRulesProgressEventDto } from "../../src/types/generated/RecommendedRulesProgressEventDto";
@@ -84,6 +98,7 @@ import type { SetAssignmentRowRequestDto } from "../../src/types/generated/SetAs
 import type { SetManualTagRequestDto } from "../../src/types/generated/SetManualTagRequestDto";
 import type { SetMergeChoicesRequestDto } from "../../src/types/generated/SetMergeChoicesRequestDto";
 import type { SettingsDto } from "../../src/types/generated/SettingsDto";
+import type { SkippedEntryDto } from "../../src/types/generated/SkippedEntryDto";
 import type { SkippedImportDto } from "../../src/types/generated/SkippedImportDto";
 import type { SlotSourceDto } from "../../src/types/generated/SlotSourceDto";
 import type { SourceNeedEntryDto } from "../../src/types/generated/SourceNeedEntryDto";
@@ -94,6 +109,7 @@ import type { VariantLabelDto } from "../../src/types/generated/VariantLabelDto"
 import type { VerifyOperationDto } from "../../src/types/generated/VerifyOperationDto";
 import type { VerifyReportDto } from "../../src/types/generated/VerifyReportDto";
 import type { VerifyRequestDto } from "../../src/types/generated/VerifyRequestDto";
+import type { VersionCheckDto } from "../../src/types/generated/VersionCheckDto";
 
 declare global {
   interface Window {
@@ -277,6 +293,44 @@ declare global {
     __RUN_LAUNCH_NETWORK_CHECKS_CALLS__?: number;
     /** Every `update_app_settings` payload the mock received, in order. */
     __UPDATE_APP_SETTINGS_CALLS__?: AppSettingsDto[];
+    /** Every `export_order_file` payload the mock received, in order, refused ones included. */
+    __EXPORT_ORDER_FILE_CALLS__?: ExportOrderFileRequestDto[];
+    /** How many `export_order_text` calls the mock received. */
+    __EXPORT_ORDER_TEXT_CALLS__?: number;
+    /** Every `preview_order_import_file` payload the mock received, in order. */
+    __PREVIEW_ORDER_IMPORT_FILE_CALLS__?: PreviewOrderImportFileRequestDto[];
+    /** Every `preview_order_import_text` payload the mock received, in order. */
+    __PREVIEW_ORDER_IMPORT_TEXT_CALLS__?: PreviewOrderImportTextRequestDto[];
+    /** Every `import_order` payload the mock received, in order, refused ones included. */
+    __IMPORT_ORDER_CALLS__?: ImportOrderRequestDto[];
+    /** Every `open_workshop_page` payload the mock received, in order. */
+    __OPEN_WORKSHOP_PAGE_CALLS__?: OpenWorkshopPageRequestDto[];
+    /** Every options object `plugin:dialog|save` received, in order (the default path, the filters). */
+    __SAVE_DIALOG_OPTIONS__?: unknown[];
+    /**
+     * The path `plugin:dialog|save` returns from the mocked native save dialog — `null` (the
+     * default) mimics the user cancelling. Set from the spec before choosing Save.
+     */
+    __SAVE_PATH_RESULT__?: string | null;
+    /**
+     * What `suggested_mod_list_path` answers: RimWorld's `ModLists` file, or `null` when that
+     * folder does not exist. Defaults to `null`.
+     */
+    __SUGGESTED_MOD_LIST_PATH__?: string | null;
+    /**
+     * The files `preview_order_import_file` can read, by path. A path not listed here fails
+     * with `mod_list_io_failed`, like a file that is not there.
+     */
+    __ORDER_FILES__?: Record<string, string>;
+    /** When `true`, `import_order` stops mid-scan and waits for {@link __RELEASE_IMPORT_ORDER__}. */
+    __HOLD_IMPORT_ORDER__?: boolean;
+    /** Set by the mock while it holds an import; calling it lets the scan finish. */
+    __RELEASE_IMPORT_ORDER__?: () => void;
+    /**
+     * Puts this profile's own merge mod at the end of the file's order and of Current, as a
+     * profile that applied with a merge mod has it. Call it after the scenario has loaded.
+     */
+    __PUT_MERGE_MOD_IN_FILE__?: () => void;
     /** Every `launch_game` payload the mock received, in order, refused ones included. */
     __LAUNCH_GAME_CALLS__?: LaunchGameRequestDto[];
     /** How many `get_game_launch_status` calls the mock answered. */
@@ -3488,6 +3542,447 @@ export function installScenario(): void {
     return gameLaunchStatus();
   }
 
+  // ---- Sharing a load order ----
+  // Mirrors `rim_session::mod_list` (the text codec, `plan_import`) and `ImportOrder` closely
+  // enough that the diff, the rejections and `importBlocked` are computed, never canned. The mock's
+  // "Core" is `mod.000` (source `core`); its inventory is the active pool, the fixture-derived
+  // owners and the inactive pool.
+  const MAX_ORDER_INPUT_BYTES = 4 * 1024 * 1024;
+  const MAX_ORDER_ENTRIES = 5_000;
+  const MAX_ORDER_SKIPPED_REPORTED = 500;
+  const MOCK_CORE_ID = modId(0);
+  const MOCK_GAME_VERSION = "1.6.4871";
+  const GENERATED_MOD_PREFIX = "rimmerge.merge.";
+
+  function baseOf(id: string): string {
+    return id.endsWith("_steam") ? id.slice(0, -"_steam".length) : id;
+  }
+
+  /** Every installed mod, active or not: what `ModInventory` holds. */
+  function installedInventory(): { modId: string; name: string }[] {
+    const rows = [
+      ...mods,
+      ...extraModsFromFixtures(),
+      ...inactiveMods.map((mod) => inactiveModRow(mod.modId)),
+    ];
+    const inventory = rows.map((row) => ({ modId: row.modId, name: row.name }));
+    // The profile's own merge mod is installed (on disk) once an order holds it.
+    if (fileOrder.includes(MERGE_MOD_PACKAGE_ID) || currentOrder.includes(MERGE_MOD_PACKAGE_ID)) {
+      inventory.push({ modId: MERGE_MOD_PACKAGE_ID, name: "Rimmerge merge patch" });
+    }
+    return inventory;
+  }
+
+  /** `check_version`'s `major_minor`: the leading `major.minor` of a version text, or `null`. */
+  function majorMinorOf(text: string): [number, number] | null {
+    const match = /^(\d+)\.(\d+)/.exec(text.trim());
+    return match ? [Number(match[1]), Number(match[2])] : null;
+  }
+
+  /** Mirrors `check_version`: by major.minor, `unknown` when either side is unparsable. */
+  function versionCheckFor(listed: string | null): VersionCheckDto {
+    if (listed === null) return { kind: "unknown" };
+    const listedPair = majorMinorOf(listed);
+    const gamePair = majorMinorOf(MOCK_GAME_VERSION);
+    if (listedPair === null || gamePair === null) return { kind: "unknown" };
+    return listedPair[0] === gamePair[0] && listedPair[1] === gamePair[1]
+      ? { kind: "same" }
+      : { kind: "differs", listed: listed.trim(), game: MOCK_GAME_VERSION };
+  }
+
+  type ListedEntry = { id: string; name: string | null; workshopId: number | null };
+  type ParsedOrderList =
+    | { kind: "rejected"; reason: ImportRejectionDto }
+    | {
+        kind: "parsed";
+        entries: ListedEntry[];
+        skipped: SkippedEntryDto[];
+        gameVersion: string | null;
+      };
+
+  /** `ListedPackageId`'s grammar: dotted, `[A-Za-z0-9._-]`, at most 80 characters. */
+  function isListedPackageId(text: string): boolean {
+    return (
+      /^[A-Za-z0-9._-]{1,80}$/.test(text) &&
+      text.includes(".") &&
+      !text.startsWith(".") &&
+      !text.endsWith(".") &&
+      !text.includes("..")
+    );
+  }
+
+  /** Mirrors the text codec's line scanner: numbered `Name [id] <url>` lines, or a bare id. */
+  function parseOrderText(text: string): ParsedOrderList {
+    const entries: ListedEntry[] = [];
+    const skipped: SkippedEntryDto[] = [];
+    let gameVersion: string | null = null;
+    const lines = text.split(/\r?\n/);
+    for (const [index, raw] of lines.entries()) {
+      const line = raw.trim();
+      if (line === "") continue;
+      if (line.startsWith("#")) {
+        // The first `# RimWorld <version>` comment is the list's game version; others are ignored.
+        const comment = line.slice(1).trim();
+        const version = comment.startsWith("RimWorld ")
+          ? comment.slice("RimWorld ".length).trim()
+          : "";
+        if (gameVersion === null && version !== "") gameVersion = version;
+        continue;
+      }
+      const bracketed =
+        /^(?:\d+[.)]\s*)?(.*?)\s*\[([^[\]]*)\]\s*(?:<?https:\/\/steamcommunity\.com\/(?:sharedfiles|workshop)\/filedetails\/\?id=(\d+)>?)?$/.exec(
+          line,
+        );
+      const id = bracketed ? bracketed[2] : /^[^\s<>[\]]+$/.test(line) ? line : null;
+      if (id === null || id === undefined) {
+        skipped.push({ kind: "notAnEntry", line: index + 1 });
+        continue;
+      }
+      if (!isListedPackageId(id)) {
+        skipped.push({
+          kind: "malformedId",
+          position: entries.length + skipped.length + 1,
+          text: id.slice(0, 80),
+        });
+        continue;
+      }
+      const workshop = bracketed?.[3] ? Number(bracketed[3]) : null;
+      entries.push({
+        id: id.toLowerCase(),
+        name: bracketed?.[1] ? bracketed[1] : null,
+        workshopId: workshop !== null && workshop > 0 ? workshop : null,
+      });
+    }
+    return { kind: "parsed", entries, skipped, gameVersion };
+  }
+
+  function xmlListItems(xml: string, container: string): string[] | null {
+    const block = new RegExp(`<${container}>([\\s\\S]*?)</${container}>`).exec(xml);
+    if (!block || block[1] === undefined) return null;
+    return [...block[1].matchAll(/<li>([\s\S]*?)<\/li>/g)].map((match) => match[1] ?? "");
+  }
+
+  /** `.rml` (`savedModList`) and ModsConfig-shaped (`ModsConfigData`) documents, detected by content. */
+  function parseOrderXml(xml: string): ParsedOrderList {
+    if (xml.includes("<!DOCTYPE")) return { kind: "rejected", reason: { kind: "dtdNotAllowed" } };
+    const root = /<([A-Za-z][\w]*)[\s>]/.exec(xml.replace(/<\?[\s\S]*?\?>/g, ""))?.[1] ?? "";
+    const rootKey = root.toLowerCase();
+    if (rootKey !== "savedmodlist" && rootKey !== "modsconfigdata") {
+      return { kind: "rejected", reason: { kind: "unrecognizedFormat" } };
+    }
+    if (!xml.includes(`</${root}>`)) return { kind: "rejected", reason: { kind: "malformedXml" } };
+    const isRml = rootKey === "savedmodlist";
+    const ids = xmlListItems(
+      isRml ? xml.slice(xml.indexOf("<modList>")) : xml,
+      isRml ? "ids" : "activeMods",
+    );
+    if (ids === null || (isRml && !xml.includes("<modList>"))) {
+      return { kind: "rejected", reason: { kind: "missingModList" } };
+    }
+    const names = isRml ? xmlListItems(xml.slice(xml.indexOf("<modList>")), "names") : null;
+    const metaIds = isRml ? xmlListItems(xml, "modIds") : null;
+    const steamIds = isRml ? xmlListItems(xml, "modSteamIds") : null;
+    const entries: ListedEntry[] = [];
+    const skipped: SkippedEntryDto[] = [];
+    for (const [index, raw] of ids.entries()) {
+      const id = raw.trim();
+      if (!isListedPackageId(id)) {
+        skipped.push({ kind: "malformedId", position: index + 1, text: id.slice(0, 80) });
+        continue;
+      }
+      // Meta lists are joined to `ids` by package id, only when their lengths agree.
+      const metaIndex =
+        metaIds !== null && steamIds !== null && metaIds.length === steamIds.length
+          ? metaIds.indexOf(raw)
+          : -1;
+      const steam = metaIndex >= 0 ? Number(steamIds?.[metaIndex]) : 0;
+      entries.push({
+        id: id.toLowerCase(),
+        name: names !== null && names.length === ids.length ? (names[index] ?? null) : null,
+        workshopId: steam > 0 ? steam : null,
+      });
+    }
+    const gameVersion = /<gameVersion>([^<]*)<\/gameVersion>/.exec(xml)?.[1] ?? null;
+    return { kind: "parsed", entries, skipped, gameVersion };
+  }
+
+  function parseOrderDocument(text: string): ParsedOrderList {
+    if (new TextEncoder().encode(text).length > MAX_ORDER_INPUT_BYTES) {
+      return { kind: "rejected", reason: { kind: "tooLarge", limitBytes: MAX_ORDER_INPUT_BYTES } };
+    }
+    const body = text.replace(/^﻿/, "").trimStart();
+    const parsed = body.startsWith("<") ? parseOrderXml(body) : parseOrderText(body);
+    if (parsed.kind === "rejected") return parsed;
+    if (parsed.entries.length > MAX_ORDER_ENTRIES) {
+      return { kind: "rejected", reason: { kind: "tooManyEntries", limit: MAX_ORDER_ENTRIES } };
+    }
+    if (parsed.entries.length === 0) return { kind: "rejected", reason: { kind: "noEntries" } };
+    return parsed;
+  }
+
+  function missingKindFor(listed: ListedEntry): MissingKindDto {
+    if (listed.id.startsWith(GENERATED_MOD_PREFIX)) return { kind: "rimmergeMergeMod" };
+    if (baseOf(listed.id).startsWith("ludeon.rimworld.")) return { kind: "dlc" };
+    if (listed.workshopId !== null) return { kind: "workshop", workshopId: listed.workshopId };
+    return { kind: "noLink" };
+  }
+
+  /** The number of kept mods outside the longest common subsequence of the two kept orders. */
+  function movedCount(fileKept: string[], importedKept: string[]): number {
+    const table: number[][] = Array.from({ length: fileKept.length + 1 }, () =>
+      new Array<number>(importedKept.length + 1).fill(0),
+    );
+    for (let row = 1; row <= fileKept.length; row += 1) {
+      for (let col = 1; col <= importedKept.length; col += 1) {
+        const diagonal = table[row - 1]?.[col - 1] ?? 0;
+        const up = table[row - 1]?.[col] ?? 0;
+        const left = table[row]?.[col - 1] ?? 0;
+        const rowCells = table[row];
+        if (rowCells) {
+          rowCells[col] =
+            fileKept[row - 1] === importedKept[col - 1] ? diagonal + 1 : Math.max(up, left);
+        }
+      }
+    }
+    return importedKept.length - (table[fileKept.length]?.[importedKept.length] ?? 0);
+  }
+
+  /**
+   * Mirrors `ImportOrder::import_blocker` (`check_order`): the size bound, then an id that is not
+   * installed, then a repeat, then no Core, then nothing but Core and generated mods.
+   */
+  function importBlockerFor(order: string[]): ImportBlockedDto | null {
+    if (order.length > MAX_ORDER_ENTRIES + 2) {
+      return { kind: "tooMany", limit: MAX_ORDER_ENTRIES + 2 };
+    }
+    const installed = new Set(installedInventory().map((row) => row.modId));
+    const seen = new Set<string>();
+    for (const id of order) {
+      if (!installed.has(id)) return { kind: "unknown", id };
+      if (seen.has(id)) return { kind: "duplicate", id };
+      seen.add(id);
+    }
+    if (!order.some((id) => baseOf(id) === MOCK_CORE_ID)) return { kind: "coreMissing" };
+    const hasOtherMod = order.some(
+      (id) => baseOf(id) !== MOCK_CORE_ID && !id.startsWith(GENERATED_MOD_PREFIX),
+    );
+    return hasOtherMod ? null : { kind: "nothingInstalled" };
+  }
+
+  /** The English refusal `import_order` answers with (`ImportOrderError`'s message). */
+  function importBlockerMessage(blocked: ImportBlockedDto): string {
+    switch (blocked.kind) {
+      case "coreMissing":
+        return "the order does not include Core";
+      case "nothingInstalled":
+        return "none of the listed mods is installed";
+      case "tooMany":
+        return `an imported order holds at most ${blocked.limit} mods`;
+      case "unknown":
+        return `${blocked.id} is not an installed mod`;
+      case "duplicate":
+        return `${blocked.id} appears more than once`;
+      default: {
+        const never: never = blocked;
+        throw new Error(String(never));
+      }
+    }
+  }
+
+  /** Mirrors `plan_import` over the mock inventory, diffing against the file's order. */
+  function planOrderImport(parsed: Extract<ParsedOrderList, { kind: "parsed" }>) {
+    const inventory = installedInventory();
+    const nameOf = (id: string): string => inventory.find((row) => row.modId === id)?.name ?? id;
+    const present = new Set(inventory.map((row) => row.modId));
+    const fileSet = new Set(fileOrder);
+    // `ActiveIndex`: the first active copy that is on disk, per base id, in file order.
+    const activeCopies = new Map<string, string>();
+    for (const id of fileOrder) {
+      if (present.has(id) && !activeCopies.has(baseOf(id))) activeCopies.set(baseOf(id), id);
+    }
+    const order: string[] = [];
+    const firstPositions = new Map<string, number>();
+    const entries: ImportedEntryDto[] = [];
+    for (const [index, listed] of parsed.entries.entries()) {
+      const base = baseOf(listed.id);
+      const first = firstPositions.get(base);
+      if (first !== undefined) {
+        entries.push({ kind: "duplicate", id: base, firstPosition: first });
+        continue;
+      }
+      firstPositions.set(base, index + 1);
+      // The sender's merge mod is never activated, even when this machine has one of that id.
+      if (listed.id.startsWith(GENERATED_MOD_PREFIX)) {
+        entries.push({
+          kind: "notInstalled",
+          listed: listed.id,
+          name: listed.name,
+          missing: missingKindFor(listed),
+        });
+        continue;
+      }
+      // An already-active copy is kept before any exact-then-base lookup, so re-importing your own export is an empty diff.
+      const activeCopy = activeCopies.get(base);
+      if (activeCopy !== undefined) {
+        const listedIsActiveCopy = fileSet.has(listed.id) && present.has(listed.id);
+        order.push(listedIsActiveCopy ? listed.id : activeCopy);
+        entries.push(
+          listedIsActiveCopy
+            ? { kind: "alreadyActive", id: listed.id, name: nameOf(listed.id) }
+            : {
+                kind: "matchedOtherCopy",
+                listed: listed.id,
+                installed: activeCopy,
+                name: nameOf(activeCopy),
+                activation: "alreadyActive",
+              },
+        );
+        continue;
+      }
+      const installed = present.has(listed.id)
+        ? listed.id
+        : inventory.find((row) => baseOf(row.modId) === base)?.modId;
+      if (installed === undefined) {
+        entries.push({
+          kind: "notInstalled",
+          listed: listed.id,
+          name: listed.name,
+          missing: missingKindFor(listed),
+        });
+        continue;
+      }
+      order.push(installed);
+      entries.push(
+        installed === listed.id
+          ? { kind: "activated", id: installed, name: nameOf(installed) }
+          : {
+              kind: "matchedOtherCopy",
+              listed: listed.id,
+              installed,
+              name: nameOf(installed),
+              activation: "activated",
+            },
+      );
+    }
+    let core: CorePlacementDto = "listed";
+    if (!order.some((id) => baseOf(id) === MOCK_CORE_ID)) {
+      const coreId = inventory.find((row) => baseOf(row.modId) === MOCK_CORE_ID)?.modId;
+      if (coreId === undefined) {
+        core = "missing";
+      } else {
+        order.unshift(coreId);
+        core = "addedFirst";
+      }
+    }
+    const kept = new Set(order);
+    const deactivated = [...new Set(fileOrder)]
+      .filter(
+        (id) =>
+          !kept.has(id) &&
+          baseOf(id) !== MOCK_CORE_ID &&
+          baseOf(id) !== baseOf(MERGE_MOD_PACKAGE_ID),
+      )
+      .map((id) => ({ modId: id, name: nameOf(id) }));
+    // Counted before the merge mod is re-added: it is not the list's to place.
+    const moved = movedCount(
+      fileOrder.filter((id) => kept.has(id)),
+      order.filter((id) => fileSet.has(id)),
+    );
+    keepOwnMergeMod(order, inventory);
+    const { unscanned } = pendingActiveChanges();
+    return {
+      listed: parsed.entries.length,
+      order,
+      entries,
+      deactivated,
+      moved,
+      core,
+      version: versionCheckFor(parsed.gameVersion),
+      replacesPendingChanges: unscanned.added.length > 0 || unscanned.removed.length > 0,
+      skipped: parsed.skipped.slice(0, MAX_ORDER_SKIPPED_REPORTED),
+      omittedSkipped: Math.max(0, parsed.skipped.length - MAX_ORDER_SKIPPED_REPORTED),
+      importBlocked: importBlockerFor(order),
+    };
+  }
+
+  /**
+   * `keep_own_merge_mod`: a list never carries this profile's own merge mod, but an import must
+   * not drop it, so it is appended last when the file holds it and it is on disk.
+   */
+  function keepOwnMergeMod(order: string[], inventory: { modId: string }[]): void {
+    const ownBase = baseOf(MERGE_MOD_PACKAGE_ID);
+    if (order.some((id) => baseOf(id) === ownBase)) return;
+    const inFile = fileOrder.find(
+      (id) => baseOf(id) === ownBase && inventory.some((row) => row.modId === id),
+    );
+    if (inFile !== undefined) order.push(inFile);
+  }
+
+  function previewOrderDocument(text: string): OrderImportOutcomeDto {
+    const parsed = parseOrderDocument(text);
+    if (parsed.kind === "rejected") return parsed;
+    return { kind: "ready", preview: planOrderImport(parsed) };
+  }
+
+  /** The names of every listed active mod, in the file's order — what an export holds. */
+  function exportedOrderEntries(): { id: string; name: string }[] {
+    const inventory = installedInventory();
+    return fileOrder
+      .filter((id) => id !== MERGE_MOD_PACKAGE_ID)
+      .map((id) => ({
+        id: baseOf(id),
+        name: inventory.find((row) => row.modId === id)?.name ?? id,
+      }));
+  }
+
+  /** `render_text`: `N. Name [id]`, one per line. */
+  function exportedOrderText(): string {
+    const lines = exportedOrderEntries().map(
+      (entry, index) => `${index + 1}. ${entry.name} [${entry.id}]`,
+    );
+    return [`# RimWorld ${MOCK_GAME_VERSION}`, ...lines].join("\n");
+  }
+
+  /** The backend's `.rml`-only rule: ASCII case-insensitive extension, and no `:` in the name. */
+  function isExportablePath(path: string): boolean {
+    const name = path.split(/[\\/]/).at(-1) ?? "";
+    return /\.rml$/i.test(name) && !name.includes(":");
+  }
+
+  /** `import_order`, optionally held mid-scan so a spec can read the in-flight state. */
+  async function importOrderMock(request: ImportOrderRequestDto): Promise<ProjectSummaryDto> {
+    window.__IMPORT_ORDER_CALLS__?.push(request);
+    const blocked = importBlockerFor(request.order);
+    if (blocked !== null) throw { code: "invalid_input", message: importBlockerMessage(blocked) };
+    const total = request.order.length;
+    await window.__TAURI_INTERNALS__.invoke("plugin:event|emit", {
+      event: "project://progress",
+      payload: { stage: "scanning", done: Math.floor(total / 2), total },
+    });
+    if (window.__HOLD_IMPORT_ORDER__ === true) {
+      await new Promise<void>((resolve) => {
+        window.__RELEASE_IMPORT_ORDER__ = resolve;
+      });
+    }
+    // The whole import lands at once: Current is the order, the working and scanned sets are its
+    // ids, and the mock sorter's Suggested over that set is the same sequence. `fileOrder` is
+    // untouched: nothing is written until Apply.
+    currentOrder.splice(0, currentOrder.length, ...request.order);
+    suggestedOrder.splice(0, suggestedOrder.length, ...request.order);
+    workingActiveIds.clear();
+    for (const id of request.order) workingActiveIds.add(id);
+    scannedActiveIds = new Set(request.order);
+    selected = "current";
+    return {
+      modCount: scannedActiveModList().length,
+      gameVersion: MOCK_GAME_VERSION,
+      elapsedMs: 900,
+      warnings: [],
+      ruleWarnings: [],
+      selected,
+    };
+  }
+
   /**
    * Mirrors `rim_resolve::preflight::hard_problems` for the finding kinds
    * this scenario models (a missing dependency, an incompatible pair, a
@@ -5537,6 +6032,21 @@ export function installScenario(): void {
   window.__RUN_LAUNCH_NETWORK_CHECKS_CALLS__ = 0;
   window.__UPDATE_APP_SETTINGS_CALLS__ = [];
   window.__LAUNCH_GAME_CALLS__ = [];
+  window.__EXPORT_ORDER_FILE_CALLS__ = [];
+  window.__EXPORT_ORDER_TEXT_CALLS__ = 0;
+  window.__PUT_MERGE_MOD_IN_FILE__ = () => {
+    for (const order of [fileOrder, currentOrder, suggestedOrder]) {
+      if (!order.includes(MERGE_MOD_PACKAGE_ID)) order.push(MERGE_MOD_PACKAGE_ID);
+    }
+    for (const ids of [workingActiveIds, scannedActiveIds, fileActiveIds]) {
+      ids.add(MERGE_MOD_PACKAGE_ID);
+    }
+  };
+  window.__PREVIEW_ORDER_IMPORT_FILE_CALLS__ = [];
+  window.__PREVIEW_ORDER_IMPORT_TEXT_CALLS__ = [];
+  window.__IMPORT_ORDER_CALLS__ = [];
+  window.__OPEN_WORKSHOP_PAGE_CALLS__ = [];
+  window.__SAVE_DIALOG_OPTIONS__ = [];
   window.__GAME_LAUNCH_STATUS_CALLS__ = 0;
   window.__GET_RECOMMENDED_RULES_CALLS__ = 0;
   window.__SKIP_RECOMMENDED_RULES_CALLS__ = 0;
@@ -5863,6 +6373,7 @@ export function installScenario(): void {
         // Mirrors `Session::file_matches`: same sequence, with the
         // generated merge mod's package id ignored on both sides.
         fileMatchesSuggested: sameOrderIgnoringMergeMod(suggestedOrder, fileOrder),
+        fileMatchesCurrent: sameOrderIgnoringMergeMod(currentOrder, fileOrder),
         sortProvenance: {
           tieBreak: settings.tieBreak,
           useImportedPairs: settings.useImportedPairs,
@@ -5892,7 +6403,7 @@ export function installScenario(): void {
         const previousPosition = source === "current" ? null : (currentIndex.get(id) ?? null);
         return {
           modId: id,
-          name: mod?.name ?? id,
+          name: mod?.name ?? installedInventory().find((row) => row.modId === id)?.name ?? id,
           position,
           previousPosition: previousPosition === position ? null : previousPosition,
           tier: position < 2 ? "core" : "body",
@@ -6523,6 +7034,47 @@ export function installScenario(): void {
     get_game_launch_status: gameLaunchStatusMock,
     launch_game: (payload: unknown) =>
       launchGameMock((payload as { request: LaunchGameRequestDto }).request),
+    export_order_file: (payload: unknown): ExportResultDto => {
+      const request = (payload as { request: ExportOrderFileRequestDto }).request;
+      window.__EXPORT_ORDER_FILE_CALLS__?.push(request);
+      if (!isExportablePath(request.path)) {
+        throw { code: "invalid_input", message: "a mod list is saved as a .rml file" };
+      }
+      return { count: exportedOrderEntries().length, unrepresentable: [] };
+    },
+    export_order_text: (): ExportTextDto => {
+      window.__EXPORT_ORDER_TEXT_CALLS__ = (window.__EXPORT_ORDER_TEXT_CALLS__ ?? 0) + 1;
+      return {
+        text: exportedOrderText(),
+        count: exportedOrderEntries().length,
+        unrepresentable: [],
+      };
+    },
+    suggested_mod_list_path: () => window.__SUGGESTED_MOD_LIST_PATH__ ?? null,
+    preview_order_import_file: (payload: unknown): OrderImportOutcomeDto => {
+      const request = (payload as { request: PreviewOrderImportFileRequestDto }).request;
+      window.__PREVIEW_ORDER_IMPORT_FILE_CALLS__?.push(request);
+      const content = window.__ORDER_FILES__?.[request.path];
+      if (content === undefined) {
+        throw { code: "mod_list_io_failed", message: `${request.path}: the file was not found` };
+      }
+      return previewOrderDocument(content);
+    },
+    preview_order_import_text: (payload: unknown): OrderImportOutcomeDto => {
+      const request = (payload as { request: PreviewOrderImportTextRequestDto }).request;
+      window.__PREVIEW_ORDER_IMPORT_TEXT_CALLS__?.push(request);
+      return previewOrderDocument(request.text);
+    },
+    import_order: (payload: unknown) =>
+      importOrderMock((payload as { request: ImportOrderRequestDto }).request),
+    open_workshop_page: (payload: unknown) => {
+      const request = (payload as { request: OpenWorkshopPageRequestDto }).request;
+      window.__OPEN_WORKSHOP_PAGE_CALLS__?.push(request);
+      if (!/^[1-9][0-9]{0,19}$/.test(request.workshopId)) {
+        throw { code: "invalid_input", message: "not a Steam Workshop item id" };
+      }
+      return null;
+    },
     rescan_project: () => {
       window.__RESCAN_CALLS__ = (window.__RESCAN_CALLS__ ?? 0) + 1;
       scannedActiveIds = new Set(workingActiveIds);
@@ -7593,6 +8145,12 @@ export function installScenario(): void {
       return options?.directory
         ? (window.__PICK_FOLDER_RESULT__ ?? null)
         : (window.__PICK_FILE_RESULT__ ?? null);
+    },
+    // `@tauri-apps/plugin-dialog`'s `save()`: the load-order export's file chooser. Records the
+    // options (the default path and the `.rml` filter) and answers whatever the spec set.
+    "plugin:dialog|save": (payload: unknown) => {
+      window.__SAVE_DIALOG_OPTIONS__?.push((payload as { options?: unknown } | undefined)?.options);
+      return window.__SAVE_PATH_RESULT__ ?? null;
     },
     // The `/startup` page's cost table.
     get_startup_costs: () => window.__STARTUP_COSTS_OVERRIDE__ ?? startupCosts,
