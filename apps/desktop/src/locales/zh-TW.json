@@ -567,6 +567,14 @@
       "game_start_failed": {
         "title": "RimWorld 未能啟動",
         "detail": "Windows 無法啟動 RimWorldWin64.exe。"
+      },
+      "mod_list_io_failed": {
+        "title": "無法讀取或寫入模組清單",
+        "detail": "無法讀取或寫入模組清單檔案。請確認該檔案（儲存時則為其所在資料夾）存在，且你有權限在該處開啟或儲存它。"
+      },
+      "nothing_to_export": {
+        "title": "沒有可匯出的內容",
+        "detail": "沒有任何已啟用的模組可以列出。請檢查 ModsConfig.xml 中的已啟用模組。"
       }
     }
   },
@@ -1575,6 +1583,92 @@
       "promotedBy": "由 {before} → {after} 提升",
       "body": "沒有來源或位置訊號"
     }
+  },
+  "orderShare": {
+    "export": {
+      "button": "匯出",
+      "hint": "匯出 ModsConfig.xml 中的順序，也就是 RimWorld 實際載入的內容。",
+      "saveFile": "另存為 RimWorld 模組清單（.rml）…",
+      "copyText": "複製為文字",
+      "fileFilter": "RimWorld 模組清單",
+      "saved": "已將 {count} 個模組儲存至 {file}。",
+      "copied": "已複製 {count} 個模組。",
+      "copyFailed": "無法複製到剪貼簿。",
+      "saveFailed": "無法儲存模組清單。",
+      "leftOut": "有 {count} 個模組無法列入清單，因此已排除。"
+    },
+    "import": {
+      "button": "匯入",
+      "openFile": "開啟模組清單檔案…",
+      "paste": "貼上清單…",
+      "fileFilter": "模組清單（.rml、.xml、.txt）",
+      "allFiles": "所有檔案",
+      "pasteTitle": "貼上載入順序",
+      "pasteHint": "每行一個模組：貼上「複製為文字」產生的文字，或每行一個 Package ID。",
+      "pasteLabel": "載入順序文字",
+      "preview": "預覽"
+    },
+    "preview": {
+      "title": "匯入載入順序",
+      "summary": "清單中有 {count} 個模組",
+      "versionDiffers": "此清單以 RimWorld {listed} 製作；你的版本是 {game}。",
+      "replacesPending": "尚未重新掃描的啟用／停用變更會被此次匯入取代。",
+      "replacesUnwritten": "此次匯入會取代你的「目前」順序，而該順序尚未寫入 ModsConfig.xml。",
+      "moved": "{count} 個模組的位置會改變。",
+      "sameOrder": "已安裝的模組保持原有順序。",
+      "coreAdded": "清單中沒有 Core；它仍會排在第一位。",
+      "activatedHeading": "將會啟用（{count}）",
+      "deactivatedHeading": "將會停用（{count}）",
+      "missingHeading": "未安裝（{count}）",
+      "missingExplanation": "Rimmerge 從不下載模組。請自行訂閱這些模組，然後再匯入一次。",
+      "openWorkshop": "在 Steam 創意工坊開啟",
+      "openWorkshopLabel": "在 Steam 創意工坊開啟 {name}",
+      "missingKind": {
+        "dlc": "你未安裝的 DLC。",
+        "rimmergeMergeMod": "分享者的合併模組，由 Rimmerge 在對方的電腦上產生；你不需要它。",
+        "noLink": "清單中沒有此模組的創意工坊連結。"
+      },
+      "copyMissing": "複製缺少的模組清單",
+      "missingCopied": "已複製缺少的模組清單。",
+      "duplicatesHeading": "重複列出（{count}）",
+      "duplicateRow": "{id}：使用第一次出現的位置（第 {position} 位）。",
+      "otherCopyHeading": "對應到其他副本（{count}）",
+      "otherCopyRow": "{listed} → 你的副本 {installed}",
+      "skippedHeading": "無法辨識的行（{count}）",
+      "skipped": {
+        "notAnEntry": "第 {line} 行：不是模組項目。",
+        "malformedId": "第 {position} 個項目：「{text}」不是有效的 Package ID。"
+      },
+      "skippedOmitted": "另有 {count} 個項目未顯示。",
+      "blocked": {
+        "coreMissing": "未安裝 Core，因此無法匯入此清單。",
+        "nothingInstalled": "清單中的模組都未安裝，因此沒有可匯入的內容。",
+        "tooMany": "此順序包含的模組過多；一次匯入最多只能包含 {limit} 個。",
+        "unknown": "{id} 不是已安裝的模組。",
+        "duplicate": "{id} 在順序中出現了不只一次。"
+      },
+      "close": "關閉",
+      "importing": "正在匯入…",
+      "whatHappens": "Rimmerge 會以此順序重新掃描，並將它顯示為「目前」順序。在你套用之前，不會寫入任何內容。",
+      "confirm": "使用此順序"
+    },
+    "imported": "匯入的順序已就緒。請檢查後再套用，以寫入 ModsConfig.xml。",
+    "notInFile": "此順序尚未寫入 ModsConfig.xml。",
+    "notInFileApply": "套用",
+    "previewOutdated": "預覽之後，你已安裝的模組有所變更。請重新預覽此清單。",
+    "rejected": {
+      "title": "無法匯入此清單",
+      "tooLarge": "檔案大於 {limit}。",
+      "tooManyEntries": "清單的項目超過 {limit} 個。",
+      "malformedXml": "此檔案不是有效的 XML。",
+      "dtdNotAllowed": "此檔案宣告了 DTD，但模組清單從不這樣做。",
+      "tooDeep": "此檔案的巢狀層級過深，不可能是模組清單。",
+      "unrecognizedFormat": "這不是 RimWorld 模組清單（.rml）、ModsConfig.xml 或文字清單。",
+      "missingModList": "檔案中沒有模組清單。",
+      "noEntries": "找不到任何 Package ID。"
+    },
+    "importedWithWarnings": "掃描回報了 {count} 個警告。",
+    "importedRuleWarnings": "已匯入，但有規則無法載入"
   },
   "apply": {
     "dialog": {

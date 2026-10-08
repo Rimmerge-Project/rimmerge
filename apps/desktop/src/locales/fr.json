@@ -567,6 +567,14 @@
       "game_start_failed": {
         "title": "RimWorld n’a pas démarré",
         "detail": "Windows n’a pas pu démarrer RimWorldWin64.exe."
+      },
+      "mod_list_io_failed": {
+        "title": "Impossible de lire ou d’écrire la liste de mods",
+        "detail": "Le fichier de la liste de mods n’a pas pu être lu ou écrit. Vérifiez que le fichier (ou, lors d’un enregistrement, son dossier) existe et que vous avez le droit de l’ouvrir ou de l’y enregistrer."
+      },
+      "nothing_to_export": {
+        "title": "Rien à exporter",
+        "detail": "Aucun mod actif n’a pu être listé. Vérifiez les mods actifs dans ModsConfig.xml."
       }
     }
   },
@@ -1575,6 +1583,92 @@
       "promotedBy": "remonté par {before} → {after}",
       "body": "aucun signal de source ni de placement"
     }
+  },
+  "orderShare": {
+    "export": {
+      "button": "Exporter",
+      "hint": "Exporte l’ordre de ModsConfig.xml — celui que RimWorld charge.",
+      "saveFile": "Enregistrer comme liste de mods RimWorld (.rml)…",
+      "copyText": "Copier comme texte",
+      "fileFilter": "Liste de mods RimWorld",
+      "saved": "{count} mod enregistré dans {file}. | {count} mods enregistrés dans {file}.",
+      "copied": "{count} mod copié. | {count} mods copiés.",
+      "copyFailed": "Impossible de copier dans le presse-papiers.",
+      "saveFailed": "Impossible d’enregistrer la liste de mods.",
+      "leftOut": "{count} mod n’a pas pu être listé et a été omis. | {count} mods n’ont pas pu être listés et ont été omis."
+    },
+    "import": {
+      "button": "Importer",
+      "openFile": "Ouvrir un fichier de liste de mods…",
+      "paste": "Coller une liste…",
+      "fileFilter": "Listes de mods (.rml, .xml, .txt)",
+      "allFiles": "Tous les fichiers",
+      "pasteTitle": "Coller un ordre de chargement",
+      "pasteHint": "Un mod par ligne : le texte de « Copier comme texte », ou un ID de paquet par ligne.",
+      "pasteLabel": "Texte de l’ordre de chargement",
+      "preview": "Prévisualiser"
+    },
+    "preview": {
+      "title": "Importer un ordre de chargement",
+      "summary": "{count} mod dans la liste | {count} mods dans la liste",
+      "versionDiffers": "Liste créée avec RimWorld {listed} ; vous avez la version {game}.",
+      "replacesPending": "Les modifications d’activation que vous n’avez pas encore réanalysées seront remplacées.",
+      "replacesUnwritten": "Cette importation remplacera votre ordre « Actuel », qui n’est pas encore dans ModsConfig.xml.",
+      "moved": "{count} mod change de position. | {count} mods changent de position.",
+      "sameOrder": "Les mods installés conservent leur ordre actuel.",
+      "coreAdded": "Core ne figurait pas dans la liste ; il reste en premier.",
+      "activatedHeading": "Seront activés ({count})",
+      "deactivatedHeading": "Seront désactivés ({count})",
+      "missingHeading": "Non installés ({count})",
+      "missingExplanation": "Rimmerge ne télécharge jamais de mods. Abonnez-vous vous-même à ces mods, puis importez de nouveau.",
+      "openWorkshop": "Ouvrir sur le Steam Workshop",
+      "openWorkshopLabel": "Ouvrir {name} sur le Steam Workshop",
+      "missingKind": {
+        "dlc": "Un DLC que vous n’avez pas installé.",
+        "rimmergeMergeMod": "Le mod de fusion de l’expéditeur, créé par Rimmerge sur son ordinateur ; vous n’en avez pas besoin.",
+        "noLink": "La liste ne contient aucun lien Workshop pour ce mod."
+      },
+      "copyMissing": "Copier la liste des mods manquants",
+      "missingCopied": "Liste des mods manquants copiée.",
+      "duplicatesHeading": "Listés plusieurs fois ({count})",
+      "duplicateRow": "{id} — la première position (n° {position}) est utilisée.",
+      "otherCopyHeading": "Associés à une autre copie ({count})",
+      "otherCopyRow": "{listed} → votre copie {installed}",
+      "skippedHeading": "Lignes non comprises ({count})",
+      "skipped": {
+        "notAnEntry": "Ligne {line} : pas une entrée de mod.",
+        "malformedId": "Entrée {position} : « {text} » n’est pas un ID de paquet valide."
+      },
+      "skippedOmitted": "{count} autre entrée non affichée. | {count} autres entrées non affichées.",
+      "blocked": {
+        "coreMissing": "Core n’est pas installé, cette liste ne peut donc pas être importée.",
+        "nothingInstalled": "Aucun des mods listés n’est installé, il n’y a donc rien à importer.",
+        "tooMany": "Cet ordre contiendrait trop de mods ; une importation peut en contenir au plus {limit}.",
+        "unknown": "{id} n’est pas un mod installé.",
+        "duplicate": "{id} apparaît plusieurs fois dans l’ordre."
+      },
+      "close": "Fermer",
+      "importing": "Importation…",
+      "whatHappens": "Rimmerge réanalyse avec cet ordre et l’affiche comme ordre « Actuel ». Rien n’est écrit tant que vous ne cliquez pas sur « Appliquer ».",
+      "confirm": "Utiliser cet ordre"
+    },
+    "imported": "L’ordre importé est prêt. Vérifiez-le, puis appliquez-le pour écrire ModsConfig.xml.",
+    "notInFile": "Cet ordre n’est pas encore dans ModsConfig.xml.",
+    "notInFileApply": "Appliquer",
+    "previewOutdated": "Vos mods installés ont changé depuis l’aperçu. Affichez à nouveau l’aperçu de la liste.",
+    "rejected": {
+      "title": "Cette liste ne peut pas être importée",
+      "tooLarge": "Le fichier dépasse {limit}.",
+      "tooManyEntries": "La liste contient plus de {limit} entrées.",
+      "malformedXml": "Le contenu du fichier n’est pas du XML valide.",
+      "dtdNotAllowed": "Le fichier déclare une DTD, ce que les listes de mods ne font jamais.",
+      "tooDeep": "Le fichier est trop profondément imbriqué pour être une liste de mods.",
+      "unrecognizedFormat": "Ce n’est ni une liste de mods RimWorld (.rml), ni un ModsConfig.xml, ni une liste en texte.",
+      "missingModList": "Le fichier ne contient aucune liste de mods.",
+      "noEntries": "Aucun ID de paquet n’a été trouvé."
+    },
+    "importedWithWarnings": "L’analyse a signalé {count} avertissement. | L’analyse a signalé {count} avertissements.",
+    "importedRuleWarnings": "Importé, mais certaines règles n’ont pas pu être chargées"
   },
   "apply": {
     "dialog": {
