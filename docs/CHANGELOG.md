@@ -4,7 +4,7 @@ This changelog starts at the first public release. Development history
 before that point is not summarized here — see `.journal/` in a
 maintainer's own checkout for the full record, if you have it.
 
-## [Unreleased]
+## [1.2.1] - 2026-10-08
 
 - **Faster loading, Rescan and load-order import on large installs.** The
   analysis that runs after the per-mod scan is about four times faster: on a
