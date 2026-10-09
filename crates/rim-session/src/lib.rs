@@ -11,6 +11,7 @@ mod active_set;
 pub mod app_link;
 pub mod app_settings;
 mod assignment_refs;
+mod call_reader;
 mod changes;
 mod finding_index;
 mod game_launch;

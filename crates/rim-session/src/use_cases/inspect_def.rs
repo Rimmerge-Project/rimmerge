@@ -16,6 +16,7 @@ use rim_merge::plan::Caveat;
 use rim_resolve::domain::{DefKey, DefRef, FindingKey, ResolutionStatus};
 
 use crate::Session;
+use crate::call_reader::CallReader;
 use crate::ports::DefSourceReader;
 use crate::use_cases::def_sources::{self, Asking, representative_op};
 use patchers::{caveat_mod_id, patcher_replay_outcome};
@@ -112,7 +113,9 @@ impl<Reader: DefSourceReader> InspectDef<Reader> {
                 .inspection(source, def_ref)
                 .unwrap_or_else(|| unreachable!("just checked Some above")));
         }
-        let inspection = self.build(session, source, def_ref)?;
+        // One call view for the whole build (`DefSourceReader::call_view`).
+        let inspection =
+            InspectDef::new(CallReader::open(&self.reader)).build(session, source, def_ref)?;
         session.cache_inspection(source, def_ref.clone(), inspection);
         Ok(session
             .inspection(source, def_ref)

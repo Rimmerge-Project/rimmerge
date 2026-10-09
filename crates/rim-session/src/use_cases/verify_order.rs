@@ -59,6 +59,7 @@ use rim_analyzer::analysis::indices::ActiveMods;
 use rim_analyzer::domain::{ModId, Selector};
 
 use crate::Session;
+use crate::call_reader::CallReader;
 use crate::ports::DefSourceReader;
 use counterfactual::CounterfactualEnvironment;
 use replay_def::{DefTarget, PassEnvironment, PassTally};
@@ -200,9 +201,20 @@ impl<Reader: DefSourceReader + Sync> VerifyOrder<Reader> {
 
     /// [`Self::execute_with_progress`] with the counterfactual phase
     /// switchable — the one real implementation the three wrappers above
-    /// delegate to.
+    /// delegate to. The whole pass reads through one call view of the
+    /// reader (`DefSourceReader::call_view`).
     #[must_use]
     pub fn execute_with_progress_and_options(
+        &self,
+        session: &Session,
+        source: rim_resolve::domain::OrderSource,
+        options: VerifyOptions,
+        on_progress: &mut dyn FnMut(usize, usize),
+    ) -> VerifyOrderReport {
+        VerifyOrder::new(CallReader::open(&self.reader)).run(session, source, options, on_progress)
+    }
+
+    fn run(
         &self,
         session: &Session,
         source: rim_resolve::domain::OrderSource,

@@ -18,6 +18,7 @@ use rim_resolve::domain::{
 
 use super::plan_merge::{MergeContext, PlanMerge, PlanMergeError, stored_choices};
 use crate::Session;
+use crate::call_reader::CallReader;
 use crate::merge_workspace::PreviewSlot;
 use crate::ports::{AssetLocator, DefSourceError, DefSourceReader};
 
@@ -282,6 +283,10 @@ impl<Reader: DefSourceReader, Assets: AssetLocator> RenderMergeMod<Reader, Asset
         session: &mut Session,
         target: RenderTarget<'_>,
     ) -> Result<MergeModRender, RenderMergeModError> {
+        // One call view for every preview this render plans itself
+        // (`DefSourceReader::call_view`); the clean-merge prefetch below
+        // opens its own on the session's reader.
+        let planner = PlanMerge::new(CallReader::open(self.planner.reader()));
         let profile_hash = session.paths().profile_hash().to_string();
         let source = session.selected();
         let (identity, slot) = match target {
@@ -380,7 +385,7 @@ impl<Reader: DefSourceReader, Assets: AssetLocator> RenderMergeMod<Reader, Asset
                     choices,
                     scope: scope.clone(),
                 };
-                self.planner.execute_in(session, ctx, key)?;
+                planner.execute_in(session, ctx, key)?;
             }
             let preview = session
                 .merge_preview(&slot, key)
@@ -569,8 +574,8 @@ mod tests {
 
     use super::*;
     use crate::test_support::{
-        FakeAssetLocator, InMemoryDefSourceReader, bionic_heart_fixture, bionic_heart_fixture_flat,
-        bionic_heart_fixture_with_conflict, session_with_sources,
+        CallCountingReader, FakeAssetLocator, InMemoryDefSourceReader, bionic_heart_fixture,
+        bionic_heart_fixture_flat, bionic_heart_fixture_with_conflict, session_with_sources,
         whole_def_patch_collision_fixture,
     };
 
@@ -1262,5 +1267,55 @@ mod tests {
             profile_render.entries[0].op_count, 1,
             "the profile's own decision must still render independently of the patch's"
         );
+    }
+
+    /// The previews a render plans itself (here, one explicit `Merge`
+    /// decision) are read through one call view of the use case's reader
+    /// (`DefSourceReader::call_view`).
+    #[test]
+    fn a_render_plans_its_decided_merges_through_one_call_view() {
+        let fixture = bionic_heart_fixture_flat();
+        let mut session = session_with_sources(fixture.sources, fixture.report);
+        let def_key = DefKey {
+            def_type: "HediffDef".to_string(),
+            def_name: "BionicHeart".to_string(),
+        };
+        decide_merge(&mut session, bionic_heart_key(), def_key);
+        // The session keeps its own fixture reader, separate from this counting
+        // one on purpose: the use case's reads must go through its own reader,
+        // and sharing them would hide a read taken from the session's.
+        let reader = CallCountingReader::new(fixture.reader);
+        let use_case = RenderMergeMod::new(&reader, FakeAssetLocator::default());
+
+        let render = use_case.execute(&mut session).expect("render");
+
+        assert!(
+            render.rendered.is_some(),
+            "the merge was planned and rendered"
+        );
+        assert_eq!(reader.views_opened(), 1);
+        assert!(reader.reads_through_views() > 0);
+        assert_eq!(reader.direct_reads(), 0);
+    }
+
+    /// The clean-merge prefetch reads through one call view of the
+    /// session's own reader, shared by every replay thread, and the
+    /// redecisions after it read nothing more.
+    #[test]
+    fn the_clean_merge_prefetch_reads_through_one_call_view_of_the_sessions_reader() {
+        let fixture = bionic_heart_fixture_with_conflict();
+        let mut session = session_with_sources(fixture.sources, fixture.report);
+        let session_reader = std::sync::Arc::new(CallCountingReader::new(fixture.reader.clone()));
+        session.set_def_source_reader(session_reader.clone());
+        let use_case = RenderMergeMod::new(fixture.reader, FakeAssetLocator::default());
+
+        use_case.execute(&mut session).expect("render");
+
+        assert_eq!(session_reader.views_opened(), 1);
+        assert!(
+            session_reader.reads_through_views() > 0,
+            "a preview was prefetched"
+        );
+        assert_eq!(session_reader.direct_reads(), 0);
     }
 }

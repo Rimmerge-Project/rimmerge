@@ -127,9 +127,10 @@ brings IO into a layer that has none. Results from parallel work reach any
 output in a fixed order — an indexed `collect`, a fold in input order, or
 a sort — never in the order threads happen to finish. Work that replays
 defs (`VerifyOrder`, the merge previews) runs on `rim-session`'s own
-4-thread pool rather than one thread per core: it measured no faster past
-that, and every extra thread adds working set while the game may be
-running alongside.
+4-thread pool rather than one thread per core, to leave most cores to the
+game when it is running alongside: more threads verify faster but use more
+processor time and no less memory (the measured figures are in
+`replay_pool.rs`'s module doc).
 
 ## Frontend/backend boundary
 
