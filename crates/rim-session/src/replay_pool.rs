@@ -13,11 +13,16 @@
 //! alongside. The scan and the analyzer, which do keep scaling, stay on the
 //! global pool.
 //!
-//! The 6.6 s is the best case. In the app the install is loaded first on the
-//! 16-thread global pool, and a verify on this 4-thread pool afterwards
-//! measured about 12 s per order; why a prior 16-thread load slows it is not
-//! understood (a suspected cause is the heap state it leaves plus re-parsing
-//! in `FileDefSourceReader::read_element`).
+//! Those figures, and so the 4-thread cap itself, predate
+//! `rim_io::FileDefSourceReader` caching parsed files (it used to parse a
+//! whole file again for every element read); the cap has not been
+//! re-measured since. In the app
+//! the install is loaded first on the 16-thread global pool, and that load
+//! made every later parse about twice as slow (allocation-heavy work only:
+//! the reader's non-allocating nesting scan kept its speed), so a verify on
+//! this pool afterwards measured about 12.5 s per order against 7.7 s after a
+//! 4-thread load. With each file parsed once per pass it measures about
+//! 5.5 s and 4.7 s.
 
 use std::sync::OnceLock;
 

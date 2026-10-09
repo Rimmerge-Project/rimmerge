@@ -16,6 +16,13 @@ maintainer's own checkout for the full record, if you have it.
   scan is about a quarter faster (about 4.4 s to about 3.2 s). Both use a
   little more memory while they run (about 100 MB at most). Results are
   unchanged.
+- **Verify and the merge mod no longer re-parse the same files.** Reading a
+  def or patch operation back from its mod's file parsed the whole file again
+  for every read; each file is now parsed once and kept in a cache of at most
+  16 MiB, which still notices a file edited on disk. On the same test install,
+  verifying one load order after the install was loaded went from about
+  12.5 s to about 5.5 s, and working out the merge mod from about 1.2 s to
+  about 0.6 s (release build). Peak memory and results are unchanged.
 
 ## [1.2.1] - 2026-10-08
 
