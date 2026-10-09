@@ -4,7 +4,7 @@ This changelog starts at the first public release. Development history
 before that point is not summarized here — see `.journal/` in a
 maintainer's own checkout for the full record, if you have it.
 
-## [Unreleased]
+## [1.2.2] - 2026-10-09
 
 - **Faster Verify, merge mod and loading on large installs.** Verify (in the
   Apply dialog, and `rimmerge verify`) no longer rebuilds the same list of
