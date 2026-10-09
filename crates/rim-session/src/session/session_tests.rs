@@ -2219,3 +2219,173 @@ fn order_on_disk_ignores_the_generated_merge_mod() {
 
     assert_eq!(session.order_on_disk(), OrderOnDisk::Applied);
 }
+
+#[test]
+fn def_exists_answers_from_the_scanned_defs_and_is_unknown_for_an_unindexed_type() {
+    let ids = ["ludeon.rimworld", "some.mod"];
+    let mut sources = rim_analyzer::analysis::SourceIndex::default();
+    sources.defs.insert(
+        (
+            ModId::new("some.mod"),
+            ("ThingDef".to_string(), "Wall".to_string()),
+        ),
+        Vec::new(),
+    );
+    let session = Session::new(
+        ProjectPaths {
+            game_dir: "game".into(),
+            workshop_dir: "workshop".into(),
+            mods_config: "ModsConfig.xml".into(),
+            profile_dir: "profile".into(),
+        },
+        report_fixture(&ids),
+        Vec::new(),
+        sources,
+        StoredRules::default(),
+        DecisionSet::new(),
+        mods_config(&ids),
+        Vec::new(),
+        Vec::new(),
+    );
+
+    let answers = [
+        session.def_exists("ThingDef", "Wall"),
+        session.def_exists("ThingDef", "Door"),
+        session.def_exists("ShaderDef", "Wall"),
+        // Asked again once the index is built: the cached answer.
+        session.def_exists("ThingDef", "Wall"),
+    ];
+
+    assert_eq!(answers, [Some(true), Some(false), None, Some(true)]);
+}
+
+/// The clean-override fixture's session, its live `DefOverride` key, and
+/// that key's profile preview slot under `Current`.
+fn clean_override_session() -> (Session, FindingKey, PreviewSlot) {
+    use crate::test_support::clean_override_fixture;
+
+    let fixture = clean_override_fixture("Wall", "contributor.mod", "winner.mod");
+    let key = FindingKey::DefOverride {
+        key: rim_resolve::domain::DefKey {
+            def_type: "ThingDef".to_string(),
+            def_name: "Wall".to_string(),
+        },
+        owners: [
+            ModId::new("core.mod"),
+            ModId::new("contributor.mod"),
+            ModId::new("winner.mod"),
+        ]
+        .into_iter()
+        .collect(),
+    };
+    let mut session = crate::test_support::session_with_sources_and_mods(
+        fixture.sources,
+        fixture.report,
+        &["core.mod", "contributor.mod", "winner.mod"],
+    );
+    session.set_def_source_reader(Arc::new(fixture.reader));
+    (session, key, PreviewSlot::profile(OrderSource::Current))
+}
+
+fn redecide_every_entry(session: &mut Session) {
+    let keys: Vec<FindingKey> = session
+        .ledger(OrderSource::Current)
+        .entries
+        .iter()
+        .map(|entry| entry.key.clone())
+        .collect();
+    for key in &keys {
+        session.redecide_clean_merge_at(OrderSource::Current, key);
+    }
+}
+
+#[test]
+fn prefetching_clean_merge_previews_caches_them_and_leaves_the_ledger_a_lazy_pass_builds() {
+    let (mut lazy, _, _) = clean_override_session();
+    let (mut prefetched, key, slot) = clean_override_session();
+    redecide_every_entry(&mut lazy);
+    prefetched.ledger(OrderSource::Current);
+
+    prefetched.prefetch_clean_merge_previews(OrderSource::Current);
+    let cached_before_redeciding = prefetched.merge_preview(&slot, &key).is_some();
+    redecide_every_entry(&mut prefetched);
+
+    assert!(
+        cached_before_redeciding,
+        "the candidate's preview is built up front"
+    );
+    assert_eq!(
+        prefetched.ledger(OrderSource::Current),
+        lazy.ledger(OrderSource::Current)
+    );
+    assert_eq!(
+        prefetched.merge_preview(&slot, &key).map(|p| &p.state),
+        lazy.merge_preview(&slot, &key).map(|p| &p.state)
+    );
+}
+
+#[test]
+fn prefetching_clean_merge_previews_does_nothing_when_the_setting_is_off() {
+    let (mut session, key, slot) = clean_override_session();
+    let mut settings = session.settings();
+    settings.suggest_merge_when_clean = false;
+    session.update_settings(settings);
+    session.ledger(OrderSource::Current);
+
+    session.prefetch_clean_merge_previews(OrderSource::Current);
+
+    assert!(session.merge_preview(&slot, &key).is_none());
+}
+
+#[test]
+fn prefetching_clean_merge_previews_skips_a_decided_finding() {
+    let (mut session, key, slot) = clean_override_session();
+    session
+        .decide(Decision {
+            key: key.clone(),
+            action: Action::Accept,
+            note: None,
+            decided_at: jiff::Timestamp::UNIX_EPOCH,
+        })
+        .unwrap_or_else(|error| unreachable!("Accept always validates: {error:?}"));
+    session.ledger(OrderSource::Current);
+
+    session.prefetch_clean_merge_previews(OrderSource::Current);
+
+    assert!(session.merge_preview(&slot, &key).is_none());
+}
+
+/// `redecide_clean_merge_at` reuses a preview already cached for its
+/// finding, whatever choices that preview was built from, so the prefetch
+/// must not replace one either: replacing it would change which preview
+/// the redecision reads.
+#[test]
+fn prefetching_clean_merge_previews_keeps_a_preview_cached_under_other_choices() {
+    use rim_resolve::domain::{FieldPath, MergeChoice, PathSegment};
+
+    let (mut session, key, slot) = clean_override_session();
+    session.ledger(OrderSource::Current);
+    session.prefetch_clean_merge_previews(OrderSource::Current);
+    let preview = session
+        .merge_preview(&slot, &key)
+        .cloned()
+        .unwrap_or_else(|| unreachable!("the clean candidate's preview is prefetched"));
+    let earlier = MergeContext {
+        slot: slot.clone(),
+        choices: BTreeMap::from([(
+            FieldPath::new(vec![PathSegment::Child("label".to_string())]),
+            MergeChoice::From {
+                mod_id: ModId::new("winner.mod"),
+            },
+        )]),
+        scope: None,
+    };
+    session.cache_merge_preview(earlier.clone(), preview);
+
+    session.prefetch_clean_merge_previews(OrderSource::Current);
+
+    assert!(
+        session.merge_preview_matches(&earlier, &key),
+        "the preview cached under the earlier choices is still the one cached"
+    );
+}

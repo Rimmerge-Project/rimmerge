@@ -41,6 +41,8 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync::Arc;
 
+use rayon::prelude::*;
+
 use crate::domain::{
     Conflict, DanglingCause, DanglingDefReference, MIN_RESOLVED_DISTINCT, ModId, RefSite,
     RefSiteOwner, RefSiteReferrer, RefSiteShape, RefSiteSummary, ScannedMod, XmlLocator,
@@ -83,6 +85,38 @@ struct FieldVote<'a> {
     occurrences: Vec<Occurrence<'a>>,
 }
 
+impl<'a> FieldVote<'a> {
+    /// Folds in `later`, the same field's vote from mods after every mod
+    /// already counted here: the value sets are unioned and `later`'s
+    /// occurrences follow this vote's own, as one sequential pass over
+    /// the mods would have recorded them.
+    fn absorb(&mut self, later: FieldVote<'a>) {
+        self.seen.extend(later.seen);
+        self.resolved.extend(later.resolved);
+        self.occurrences.extend(later.occurrences);
+    }
+}
+
+/// One mod's eligible occurrences: its votes per field, and its
+/// `Hyperlink` occurrences (always a reference, so never voted on).
+#[derive(Default)]
+struct ModVotes<'a> {
+    votes: HashMap<VoteKey<'a>, FieldVote<'a>>,
+    hyperlink_occurrences: Vec<Occurrence<'a>>,
+}
+
+impl<'a> ModVotes<'a> {
+    /// Folds in `later`, the votes of a mod after every mod already
+    /// counted here — see [`FieldVote::absorb`].
+    fn absorb(&mut self, later: ModVotes<'a>) {
+        for (key, vote) in later.votes {
+            self.votes.entry(key).or_default().absorb(vote);
+        }
+        self.hyperlink_occurrences
+            .extend(later.hyperlink_occurrences);
+    }
+}
+
 /// The whole dangling-def-reference pass — see this module's own doc
 /// comment. `indices.def_owners`/`injected_owners` give the post-patch
 /// active def-name set (case (a) of the dangling rule); `children_index`
@@ -114,7 +148,7 @@ pub fn dangling_def_references(
     };
     let sound_names = active_names_of_type(indices, "SoundDef");
 
-    let mut eligibility = Eligibility {
+    let eligibility = EligibilityIndex {
         active,
         scanned_by_id: scanned
             .iter()
@@ -122,48 +156,28 @@ pub fn dangling_def_references(
             .collect(),
         children_index,
         op_locators: op_locator_index(scanned, active, name_map),
-        template_has_descendant: HashMap::new(),
-        last_owner: None,
     };
 
     // Every eligible occurrence, split into the ones that need a vote
     // (`ListItem`/`Scalar`/`KeyedElement`) and the ones that don't
-    // (`Hyperlink` — always a reference).
+    // (`Hyperlink` — always a reference). Each mod's sites are grouped on
+    // the rayon pool, then folded in mod order, so the votes are exactly
+    // what one pass over the mods in order would build.
     //
-    // Hashed for the per-site loop below; drained in sorted key order
-    // afterward, so nothing downstream ever sees hash order.
-    let mut votes: HashMap<VoteKey<'_>, FieldVote<'_>> = HashMap::new();
-    let mut hyperlink_occurrences: Vec<Occurrence<'_>> = Vec::new();
-
-    for (mod_id, sites) in ref_sites_by_mod {
-        let owner = SiteMod {
-            id: mod_id,
-            is_active: active.contains(mod_id),
-        };
-        for site in sites {
-            if !eligibility.site_is_eligible(site, &owner) {
-                continue;
-            }
-            if site.value.is_empty() {
-                continue;
-            }
-            match site.shape {
-                RefSiteShape::Hyperlink => {
-                    hyperlink_occurrences.push(Occurrence { mod_id, site });
-                }
-                _ => {
-                    let key = (&*site.def_type, &*site.field_path, site.shape);
-                    let vote = votes.entry(key).or_default();
-                    // A value already seen in this vote was already
-                    // resolved (or not) the first time.
-                    if vote.seen.insert(&site.value) && resolves(&site.value, &active_def_names) {
-                        vote.resolved.insert(&site.value);
-                    }
-                    vote.occurrences.push(Occurrence { mod_id, site });
-                }
-            }
-        }
-    }
+    // Hashed for the folds; drained in sorted key order afterward, so
+    // nothing downstream ever sees hash order.
+    let ModVotes {
+        votes,
+        hyperlink_occurrences,
+    } = ref_sites_by_mod
+        .par_iter()
+        .map(|(mod_id, sites)| mod_votes(mod_id, sites, &eligibility, &active_def_names))
+        .collect::<Vec<_>>()
+        .into_iter()
+        .fold(ModVotes::default(), |mut earlier, later| {
+            earlier.absorb(later);
+            earlier
+        });
 
     // Per-name aggregation: which fields/sites contribute a dangling
     // occurrence of each name, and whether any contributing field's own
@@ -214,6 +228,46 @@ pub fn dangling_def_references(
             )
         })
         .collect()
+}
+
+/// One mod's eligible sites, grouped for the vote — see
+/// [`dangling_def_references`].
+fn mod_votes<'a>(
+    mod_id: &'a ModId,
+    sites: &'a [RefSite],
+    index: &EligibilityIndex<'a>,
+    active_def_names: &ActiveNames,
+) -> ModVotes<'a> {
+    let owner = SiteMod {
+        id: mod_id,
+        is_active: index.active.contains(mod_id),
+    };
+    let mut eligibility = Eligibility::new(index);
+    let mut out = ModVotes::default();
+    for site in sites {
+        if !eligibility.site_is_eligible(site, &owner) {
+            continue;
+        }
+        if site.value.is_empty() {
+            continue;
+        }
+        match site.shape {
+            RefSiteShape::Hyperlink => {
+                out.hyperlink_occurrences.push(Occurrence { mod_id, site });
+            }
+            _ => {
+                let key = (&*site.def_type, &*site.field_path, site.shape);
+                let vote = out.votes.entry(key).or_default();
+                // A value already seen in this vote was already
+                // resolved (or not) the first time.
+                if vote.seen.insert(&site.value) && resolves(&site.value, active_def_names) {
+                    vote.resolved.insert(&site.value);
+                }
+                vote.occurrences.push(Occurrence { mod_id, site });
+            }
+        }
+    }
+    out
 }
 
 fn build_conflict(
@@ -281,16 +335,23 @@ struct SiteMod<'a> {
     is_active: bool,
 }
 
-/// Everything [`Eligibility::site_is_eligible`] reads, plus a memo of
-/// [`has_active_concrete_descendant`] per template: that walk depends only
-/// on the template and its mod, never on which of the template's own
-/// (often hundreds of) sites asks, and re-walking it per site cost
-/// seconds on a real install.
-struct Eligibility<'a> {
+/// The read-only lookups [`Eligibility::site_is_eligible`] needs, built
+/// once per pass and shared by every mod's [`Eligibility`].
+struct EligibilityIndex<'a> {
     active: &'a ActiveMods,
     scanned_by_id: BTreeMap<&'a ModId, &'a ScannedMod>,
     children_index: &'a ChildrenIndex,
     op_locators: HashMap<&'a XmlLocator, (&'a ModId, bool)>,
+}
+
+/// Everything [`Eligibility::site_is_eligible`] reads, plus a memo of
+/// [`has_active_concrete_descendant`] per template: that walk depends only
+/// on the template and its mod, never on which of the template's own
+/// (often hundreds of) sites asks, and re-walking it per site cost
+/// seconds on a real install. The memo is keyed on the site's own mod, so
+/// one `Eligibility` per mod loses nothing to another mod's.
+struct Eligibility<'a, 'i> {
+    index: &'i EligibilityIndex<'a>,
     template_has_descendant: HashMap<(&'a str, &'a str, &'a ModId), bool>,
     /// The owner the previous site was checked against, with its verdict.
     /// A def's, template's or patch op's sites are consecutive and share
@@ -303,13 +364,25 @@ struct Eligibility<'a> {
     last_owner: Option<(&'a Arc<RefSiteOwner>, &'a ModId, bool)>,
 }
 
-impl<'a> Eligibility<'a> {
+impl<'a, 'i> Eligibility<'a, 'i> {
+    fn new(index: &'i EligibilityIndex<'a>) -> Self {
+        Self {
+            index,
+            template_has_descendant: HashMap::new(),
+            last_owner: None,
+        }
+    }
+
     /// Whether `site` counts as evidence at all: its owner is active and
     /// gate-open (a template also needs an active concrete descendant —
     /// case (i) of the dangling rule), and the site's own `MayRequire`/
     /// `MayRequireAnyOf` gate (case (c)) is open.
     fn site_is_eligible(&mut self, site: &'a RefSite, owner: &SiteMod<'a>) -> bool {
-        if !may_require_satisfied(&site.may_require, &site.may_require_any_of, self.active) {
+        if !may_require_satisfied(
+            &site.may_require,
+            &site.may_require_any_of,
+            self.index.active,
+        ) {
             return false;
         }
         if let Some((last, last_mod, verdict)) = self.last_owner
@@ -326,7 +399,7 @@ impl<'a> Eligibility<'a> {
     /// The owner half of [`Self::site_is_eligible`]; its verdict depends on
     /// the site's owner, its `def_type` and `owner` (the mod).
     fn owner_is_eligible(&mut self, site: &'a RefSite, owner: &SiteMod<'a>) -> bool {
-        let active = self.active;
+        let active = self.index.active;
         match &*site.owner {
             RefSiteOwner::Def {
                 may_require,
@@ -340,7 +413,7 @@ impl<'a> Eligibility<'a> {
                     && may_require_satisfied(may_require, &[], active)
                     && self.template_has_descendant(&site.def_type, name, owner.id)
             }
-            RefSiteOwner::Patch { locator, .. } => match self.op_locators.get(locator) {
+            RefSiteOwner::Patch { locator, .. } => match self.index.op_locators.get(locator) {
                 Some((op_owner, op_active)) => *op_owner == owner.id && *op_active,
                 None => false,
             },
@@ -360,9 +433,9 @@ impl<'a> Eligibility<'a> {
         let has_descendant = has_active_concrete_descendant(
             &(def_type.to_string(), name.to_string()),
             owner,
-            &self.scanned_by_id,
-            self.children_index,
-            self.active,
+            &self.index.scanned_by_id,
+            self.index.children_index,
+            self.index.active,
         );
         self.template_has_descendant
             .insert((def_type, name, owner), has_descendant);
@@ -875,14 +948,13 @@ mod tests {
         let scanned: Vec<ScannedMod> = Vec::new();
         let active = ActiveMods::build(&scanned);
         let children_index = ChildrenIndex::default();
-        let mut eligibility = Eligibility {
+        let index = EligibilityIndex {
             active: &active,
             scanned_by_id: BTreeMap::new(),
             children_index: &children_index,
             op_locators: HashMap::new(),
-            template_has_descendant: HashMap::new(),
-            last_owner: None,
         };
+        let mut eligibility = Eligibility::new(&index);
         let active_mod_id = ModId::new("active.mod");
         let inactive_mod_id = ModId::new("inactive.mod");
         let active_mod = SiteMod {
@@ -901,6 +973,101 @@ mod tests {
         assert!(
             !second,
             "the inactive mod's site must not inherit the previous mod's cached verdict"
+        );
+    }
+
+    // -- per-mod votes, folded in mod order -------------------------------
+
+    fn list_item_site(value: &str) -> RefSite {
+        RefSite {
+            def_type: Arc::from("ThingDef"),
+            field_path: Arc::from("li"),
+            shape: RefSiteShape::ListItem,
+            value: value.to_string(),
+            owner: Arc::new(RefSiteOwner::Def {
+                def_name: "Owner".to_string(),
+                may_require: Vec::new(),
+                may_require_any_of: Vec::new(),
+            }),
+            may_require: Box::default(),
+            may_require_any_of: Box::default(),
+        }
+    }
+
+    /// One mod's votes: every `values` site under one list field, the
+    /// ones named in `resolved` counted as resolving, plus one hyperlink.
+    fn one_mod_votes<'a>(
+        mod_id: &'a ModId,
+        sites: &'a [RefSite],
+        resolved: &[&str],
+        hyperlink: &'a RefSite,
+    ) -> ModVotes<'a> {
+        let mut vote = FieldVote::default();
+        for site in sites {
+            vote.seen.insert(&site.value);
+            if resolved.contains(&site.value.as_str()) {
+                vote.resolved.insert(&site.value);
+            }
+            vote.occurrences.push(Occurrence { mod_id, site });
+        }
+        ModVotes {
+            votes: HashMap::from([(("ThingDef", "li", RefSiteShape::ListItem), vote)]),
+            hyperlink_occurrences: vec![Occurrence {
+                mod_id,
+                site: hyperlink,
+            }],
+        }
+    }
+
+    fn occurrence_trail(occurrences: &[Occurrence<'_>]) -> Vec<(String, String)> {
+        occurrences
+            .iter()
+            .map(|o| (o.mod_id.as_str().to_string(), o.site.value.clone()))
+            .collect()
+    }
+
+    #[test]
+    fn folding_per_mod_votes_in_mod_order_unions_the_values_and_keeps_occurrence_order() {
+        let (first_id, second_id) = (ModId::new("first.mod"), ModId::new("second.mod"));
+        let first_sites = [list_item_site("Alpha"), list_item_site("Ghost")];
+        let second_sites = [list_item_site("Alpha"), list_item_site("Beta")];
+        let (first_link, second_link) = (list_item_site("LinkA"), list_item_site("LinkB"));
+        let mut folded = ModVotes::default();
+
+        folded.absorb(one_mod_votes(
+            &first_id,
+            &first_sites,
+            &["Alpha"],
+            &first_link,
+        ));
+        folded.absorb(one_mod_votes(
+            &second_id,
+            &second_sites,
+            &["Alpha", "Beta"],
+            &second_link,
+        ));
+
+        let vote = &folded.votes[&("ThingDef", "li", RefSiteShape::ListItem)];
+        assert_eq!(vote.seen, HashSet::from(["Alpha", "Ghost", "Beta"]));
+        assert_eq!(vote.resolved, HashSet::from(["Alpha", "Beta"]));
+        let owned = |pairs: &[(&str, &str)]| -> Vec<(String, String)> {
+            pairs
+                .iter()
+                .map(|(m, v)| ((*m).to_string(), (*v).to_string()))
+                .collect()
+        };
+        assert_eq!(
+            occurrence_trail(&vote.occurrences),
+            owned(&[
+                ("first.mod", "Alpha"),
+                ("first.mod", "Ghost"),
+                ("second.mod", "Alpha"),
+                ("second.mod", "Beta"),
+            ])
+        );
+        assert_eq!(
+            occurrence_trail(&folded.hyperlink_occurrences),
+            owned(&[("first.mod", "LinkA"), ("second.mod", "LinkB")])
         );
     }
 

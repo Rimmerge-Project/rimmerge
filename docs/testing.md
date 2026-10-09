@@ -45,7 +45,10 @@ Never run the two real-install tier commands concurrently against the
 same install — several of these tests assert against a timing budget
 (a sort finishing under 500 ms, a handful of commands under 2 s, the
 post-scan analysis in `rim-analyzer`'s
-`real_install_post_scan_analysis.rs` under 20 s), and
+`real_install_post_scan_analysis.rs` under 20 s, each `VerifyOrder` pass
+in the desktop's `real_install_timing.rs` under 60 s; that test also runs
+each order's pass twice and requires identical reports, since the def keys
+are replayed on several threads), and
 two release-profile test binaries competing for the same CPU pushes
 those budgets into spurious failures that have nothing to do with a
 real regression. Run one tier to completion before starting the other.

@@ -4,6 +4,19 @@ This changelog starts at the first public release. Development history
 before that point is not summarized here — see `.journal/` in a
 maintainer's own checkout for the full record, if you have it.
 
+## [Unreleased]
+
+- **Faster Verify, merge mod and loading on large installs.** Verify (in the
+  Apply dialog, and `rimmerge verify`) no longer rebuilds the same list of
+  defs for each def it checks, and checks defs on four threads: on a test
+  install of about 1,000 active mods, verifying one load order (including
+  the check for orders that would fix a failure) went from about 78 s to about
+  12 s (release build). Working out the merge mod is about three times
+  faster (about 3.4 s to about 1.2 s), and the analysis after the per-mod
+  scan is about a quarter faster (about 4.4 s to about 3.2 s). Both use a
+  little more memory while they run (about 100 MB at most). Results are
+  unchanged.
+
 ## [1.2.1] - 2026-10-08
 
 - **Faster loading, Rescan and load-order import on large installs.** The

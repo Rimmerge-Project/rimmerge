@@ -9,8 +9,7 @@
 //! Both use cases share this one implementation instead of two drifting
 //! copies.
 
-use std::cell::OnceCell;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use rim_analyzer::analysis::IndexedPatchOp;
 use rim_analyzer::domain::{LoadOrder, ModId, PatchOp, Selector, XmlLocator};
@@ -56,72 +55,6 @@ pub(crate) fn operation_expectation() -> ElementExpectation {
         tag: "Operation".to_string(),
         def_name: None,
         name_attr: None,
-    }
-}
-
-/// Every concrete def key the scan indexed, plus every def *type* it
-/// saw — see [`LazyDefExists`]'s own doc comment for why both halves are
-/// needed. Lives here so `InspectDef` can share the identical,
-/// lazily-built index rather than folding the same ~200k keys into its
-/// own eagerly-built copy on every cache miss.
-struct DefIndex {
-    keys: BTreeSet<(String, String)>,
-    types: BTreeSet<String>,
-}
-
-impl DefIndex {
-    fn build(session: &Session) -> Self {
-        let mut keys = BTreeSet::new();
-        let mut types = BTreeSet::new();
-        for (_, (def_type, def_name)) in session.sources().defs.keys() {
-            types.insert(def_type.clone());
-            keys.insert((def_type.clone(), def_name.clone()));
-        }
-        Self { keys, types }
-    }
-
-    fn contains(&self, def_type: &str, def_name: &str) -> Option<bool> {
-        if self
-            .keys
-            .contains(&(def_type.to_string(), def_name.to_string()))
-        {
-            return Some(true);
-        }
-        // "Absent" is only a real answer for a def type the scan actually
-        // indexed: one it never saw at all could be registered from C# at
-        // runtime, so the honest answer there is "unknown" (which keeps
-        // the op `Unsupported`).
-        self.types.contains(def_type).then_some(false)
-    }
-}
-
-/// Answers a `PatchOperationConditional`/`Test` whose xpath is a bare
-/// existence test on another def, out of the scan's own def index —
-/// built lazily (and at most once per instance) via [`DefIndex::build`],
-/// since most replays never ask and folding ~200k keys into a set costs
-/// real time when they don't. Shared by [`super::plan_merge::PlanMerge`]
-/// and [`super::inspect_def::InspectDef`] so both build the identical
-/// `ReplayContext::def_exists` closure over one implementation
-///
-pub(crate) struct LazyDefExists<'s> {
-    session: &'s Session,
-    index: OnceCell<DefIndex>,
-}
-
-impl<'s> LazyDefExists<'s> {
-    pub(crate) fn new(session: &'s Session) -> Self {
-        Self {
-            session,
-            index: OnceCell::new(),
-        }
-    }
-
-    /// `Some(true)`/`Some(false)` when the scan can answer for certain,
-    /// `None` when `def_type` itself was never indexed at all (see
-    /// [`DefIndex::contains`]).
-    pub(crate) fn get(&self, def_type: &str, def_name: &str) -> Option<bool> {
-        let index = self.index.get_or_init(|| DefIndex::build(self.session));
-        index.contains(def_type, def_name)
     }
 }
 

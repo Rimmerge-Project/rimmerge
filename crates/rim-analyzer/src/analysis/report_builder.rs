@@ -4,8 +4,8 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use crate::domain::{
-    Conflict, Edge, GameVersion, ModId, Report, ReportMetadata, ScanOutput, ScannedMod,
-    UnresolvedFindMod, Warning,
+    Conflict, Constraint, Edge, EdgeReport, GameVersion, ModId, Report, ReportMetadata, ScanOutput,
+    ScannedMod, UnresolvedFindMod, Warning,
 };
 
 use super::{
@@ -13,7 +13,7 @@ use super::{
     indices::{ActiveMods, DefKey, DisplayNameIndex, Indices},
     inheritance::{TemplateRegistrations, broken_inheritance},
     mod_cost, order_check, references,
-    source_index::build_children_index,
+    source_index::{ChildrenIndex, build_children_index},
 };
 
 /// The paths and version used for a run, echoed into
@@ -73,45 +73,34 @@ pub fn build_ref(scan: &ScanOutput, context: &RunContext) -> Report {
     // so the two can never disagree about what "registered" means.
     let registrations = TemplateRegistrations::build(scanned, &active, &name_map);
 
-    let (
-        mut all_edges,
+    // The edge side and the conflict side read the same shared inputs and
+    // never each other's results, so they run on the rayon pool side by
+    // side; each side assembles its own results in a fixed order, so the
+    // report never depends on which finishes first.
+    let inputs = SharedInputs {
+        scan,
+        indices: &indices,
+        active: &active,
+        name_map: &name_map,
+        injected_owners: &injected_owners,
+        registrations: &registrations,
+    };
+    let (edge_side, (mut all_conflicts, conflict_warnings)) =
+        rayon::join(|| build_edge_side(&inputs), || collect_conflicts(&inputs));
+    let EdgeSide {
+        edge_reports,
         unresolved_find_mod_names,
         find_mod_names_using_package_id,
         manifest_warnings,
-    ) = collect_edges(
-        scanned,
-        &indices,
-        &active,
-        &name_map,
-        &injected_owners,
-        &registrations,
-    );
+        replace_discards_conflicts,
+        constraints,
+    } = edge_side;
     warnings.extend(manifest_warnings);
-    // Discarded additions: a later `Replace` discarding an earlier active mod's own
-    // addition. Shares its own edges/conflicts pair from one pass, since
-    // the owner-declared-override rule (rule 3) decides per candidate
-    // pair whether the fact surfaces as an edge or only as a finding —
-    // computed here, not inside `collect_edges`/`collect_conflicts`,
-    // specifically so both halves come from that single pass.
-    let (replace_discards_edges, replace_discards_conflicts) =
-        edges::replace_discards_addition(scanned, &indices, &active, &name_map);
-    all_edges.extend(replace_discards_edges);
-    let edge_reports = order_check::evaluate(all_edges, &scan.load_order);
     let undeclared_hard_dependencies = order_check::undeclared_hard_dependencies(&edge_reports);
 
     let mut mods: Vec<_> = scanned.iter().map(|sm| sm.info.clone()).collect();
     framework_score::apply(&mut mods, &edge_reports);
 
-    let constraints = edges::assembly_ref_constraints(scanned, &indices, &scan.load_order);
-
-    let (mut all_conflicts, conflict_warnings) = collect_conflicts(
-        scan,
-        &indices,
-        &active,
-        &name_map,
-        &injected_owners,
-        &registrations,
-    );
     warnings.extend(conflict_warnings);
     all_conflicts.extend(replace_discards_conflicts);
 
@@ -140,6 +129,74 @@ pub fn build_ref(scan: &ScanOutput, context: &RunContext) -> Report {
         warnings,
         mod_costs,
         inactive_mods: scan.inactive_mods.clone(),
+    }
+}
+
+/// What [`build_ref`]'s edge side produces: every evaluated edge, the
+/// `PatchOperationFindMod` name-resolution byproducts, the manifest's own
+/// warnings, the discarded-addition conflicts (one pass yields both its
+/// edges and those), and the assembly-reference constraints.
+struct EdgeSide {
+    edge_reports: Vec<EdgeReport>,
+    unresolved_find_mod_names: Vec<UnresolvedFindMod>,
+    find_mod_names_using_package_id: Vec<UnresolvedFindMod>,
+    manifest_warnings: Vec<Warning>,
+    replace_discards_conflicts: Vec<Conflict>,
+    constraints: Vec<Constraint>,
+}
+
+/// Everything [`build_ref`]'s edge and conflict sides both read, built
+/// once before either starts.
+struct SharedInputs<'a> {
+    scan: &'a ScanOutput,
+    indices: &'a Indices,
+    active: &'a ActiveMods,
+    name_map: &'a DisplayNameIndex,
+    injected_owners: &'a BTreeMap<DefKey, Vec<ModId>>,
+    registrations: &'a TemplateRegistrations,
+}
+
+/// The edge half of [`build_ref`], sequential within itself: the manifest
+/// and def-override producers read the edges built before them.
+fn build_edge_side(inputs: &SharedInputs<'_>) -> EdgeSide {
+    let SharedInputs {
+        scan,
+        indices,
+        active,
+        name_map,
+        injected_owners,
+        registrations,
+    } = *inputs;
+    let scanned = &scan.scanned_mods;
+    let (
+        mut all_edges,
+        unresolved_find_mod_names,
+        find_mod_names_using_package_id,
+        manifest_warnings,
+    ) = collect_edges(
+        scanned,
+        indices,
+        active,
+        name_map,
+        injected_owners,
+        registrations,
+    );
+    // Discarded additions: a later `Replace` discarding an earlier active mod's own
+    // addition. Shares its own edges/conflicts pair from one pass, since
+    // the owner-declared-override rule (rule 3) decides per candidate
+    // pair whether the fact surfaces as an edge or only as a finding —
+    // computed here, not inside `collect_edges`/`collect_conflicts`,
+    // specifically so both halves come from that single pass.
+    let (replace_discards_edges, replace_discards_conflicts) =
+        edges::replace_discards_addition(scanned, indices, active, name_map);
+    all_edges.extend(replace_discards_edges);
+    EdgeSide {
+        edge_reports: order_check::evaluate(all_edges, &scan.load_order),
+        unresolved_find_mod_names,
+        find_mod_names_using_package_id,
+        manifest_warnings,
+        replace_discards_conflicts,
+        constraints: edges::assembly_ref_constraints(scanned, indices, &scan.load_order),
     }
 }
 
@@ -214,17 +271,62 @@ fn collect_edges(
 }
 
 /// Every [`Conflict`] between active mods. `registrations` is the same
-/// [`TemplateRegistrations`] `collect_edges` already built, shared here
+/// [`TemplateRegistrations`] the edge side already uses, shared here
 /// (never rebuilt) so `broken_inheritance` and `parent_template_edges`
 /// can never disagree about what "registered" means.
-fn collect_conflicts(
-    scan: &ScanOutput,
-    indices: &Indices,
-    active: &ActiveMods,
-    name_map: &DisplayNameIndex,
-    injected_owners: &BTreeMap<DefKey, Vec<ModId>>,
-    registrations: &TemplateRegistrations,
-) -> (Vec<Conflict>, Vec<Warning>) {
+///
+/// The two checks that need the children index (broken inheritance and
+/// the dangling-reference vote, the slowest producer) run beside every
+/// other producer; the results are appended in one fixed order.
+fn collect_conflicts(inputs: &SharedInputs<'_>) -> (Vec<Conflict>, Vec<Warning>) {
+    let SharedInputs {
+        scan,
+        active,
+        registrations,
+        ..
+    } = *inputs;
+    let scanned = &scan.scanned_mods;
+    let ((mut all_conflicts, near_miss), (broken_inheritance_side, dangling)) = rayon::join(
+        || {
+            (
+                independent_conflicts(inputs),
+                checks::near_miss_mod_references(scanned, active, &scan.inactive_mods),
+            )
+        },
+        || {
+            let children_index = build_children_index(scan);
+            rayon::join(
+                || {
+                    broken_inheritance(
+                        scanned,
+                        active,
+                        registrations,
+                        &children_index,
+                        &scan.vanilla_type_hierarchy,
+                    )
+                },
+                || dangling_def_references(inputs, &children_index),
+            )
+        },
+    );
+    let (broken_inheritance_conflicts, broken_inheritance_warnings) = broken_inheritance_side;
+    all_conflicts.extend(broken_inheritance_conflicts);
+    all_conflicts.extend(near_miss);
+    all_conflicts.extend(dangling);
+    (all_conflicts, broken_inheritance_warnings)
+}
+
+/// Every conflict producer that needs nothing but the shared inputs, in
+/// report order.
+fn independent_conflicts(inputs: &SharedInputs<'_>) -> Vec<Conflict> {
+    let SharedInputs {
+        scan,
+        indices,
+        active,
+        name_map,
+        injected_owners,
+        ..
+    } = *inputs;
     let scanned = &scan.scanned_mods;
     let load_order = &scan.load_order;
     let mut all_conflicts = Vec::new();
@@ -246,36 +348,28 @@ fn collect_conflicts(
     all_conflicts.extend(conflicts::transpiler_collisions(indices, load_order));
     all_conflicts.extend(conflicts::missing_texture_paths(scanned, indices, active));
     all_conflicts.extend(conflicts::undecodable_textures(scanned));
-    let children_index = build_children_index(scan);
-    let (broken_inheritance_conflicts, broken_inheritance_warnings) = broken_inheritance(
-        scanned,
-        active,
-        registrations,
-        &children_index,
-        &scan.vanilla_type_hierarchy,
-    );
-    all_conflicts.extend(broken_inheritance_conflicts);
-    all_conflicts.extend(checks::near_miss_mod_references(
-        scanned,
-        active,
-        &scan.inactive_mods,
-    ));
-    // The `RemovedBy` cause is decided here, from data
-    // this pure pass already has; every other dangling name comes out
-    // `DanglingCause::Unexplained` — `infra::explain_dangling_references`
-    // is the lazy IO pass a composition root runs afterward to fill in
-    // the rest (see `analysis::references`'s own doc comment for why the
-    // split exists).
-    all_conflicts.extend(references::dangling_def_references(
-        scanned,
-        active,
-        name_map,
-        indices,
-        injected_owners,
-        &children_index,
-        &scan.ref_sites_by_mod,
-    ));
-    (all_conflicts, broken_inheritance_warnings)
+    all_conflicts
+}
+
+/// The dangling-def-reference vote. The `RemovedBy` cause is decided
+/// here, from data this pure pass already has; every other dangling name
+/// comes out `DanglingCause::Unexplained` —
+/// `infra::explain_dangling_references` is the lazy IO pass a composition
+/// root runs afterward to fill in the rest (see `analysis::references`'s
+/// own doc comment for why the split exists).
+fn dangling_def_references(
+    inputs: &SharedInputs<'_>,
+    children_index: &ChildrenIndex,
+) -> Vec<Conflict> {
+    references::dangling_def_references(
+        &inputs.scan.scanned_mods,
+        inputs.active,
+        inputs.name_map,
+        inputs.indices,
+        inputs.injected_owners,
+        children_index,
+        &inputs.scan.ref_sites_by_mod,
+    )
 }
 
 fn build_metadata(
@@ -316,7 +410,8 @@ mod tests {
     use super::*;
     use crate::domain::{
         AssemblyInfo, DeclaredOrder, DefEntry, DefTarget, InactiveMod, LoadOrder, Mod, ModId,
-        PatchOp, ScannedMod, Selector, Source, TemplateEntry, XmlLocator,
+        PatchOp, RefSite, RefSiteOwner, RefSiteShape, ScannedMod, Selector, Source, TemplateEntry,
+        XmlLocator,
     };
     use std::collections::{BTreeSet, HashSet};
     use std::path::PathBuf;
@@ -907,6 +1002,67 @@ mod tests {
         let via_value = build(scan, &context);
 
         assert_eq!(normalized_json(&via_ref), normalized_json(&via_value));
+    }
+
+    /// `collect_conflicts` runs its producers on two sides in parallel and
+    /// then appends their results; `Report.conflicts` is never re-sorted,
+    /// so that append order *is* the report's order. This pins it: every
+    /// sequential producer's conflicts first, then broken inheritance, then
+    /// the near-miss mod references, then the dangling def references.
+    #[test]
+    fn conflicts_keep_their_producer_order_across_the_parallel_sides() {
+        let mut scan = hand_made_scan();
+        let first = &mut scan.scanned_mods[0];
+        first
+            .defs
+            .push(def_entry_with_parent("ThingDef", "Orphan", "NoSuchBase"));
+        first.defs.push(DefEntry {
+            may_require: vec!["mod.epsilno".to_string()],
+            ..def_entry("ThingDef", "Gated")
+        });
+        // A hyperlink site needs no vote, so one site is enough for a
+        // dangling reference from an active mod's own def.
+        scan.ref_sites_by_mod.insert(
+            ModId::new("mod.a"),
+            vec![RefSite {
+                def_type: std::sync::Arc::from("ThingDef"),
+                field_path: std::sync::Arc::from("descriptionHyperlinks"),
+                shape: RefSiteShape::Hyperlink,
+                value: "GhostThing".to_string(),
+                owner: std::sync::Arc::new(RefSiteOwner::Def {
+                    def_name: "Wall".to_string(),
+                    may_require: Vec::new(),
+                    may_require_any_of: Vec::new(),
+                }),
+                may_require: Box::default(),
+                may_require_any_of: Box::default(),
+            }],
+        );
+
+        let report = build(scan, &context());
+
+        let kinds: Vec<String> = report
+            .conflicts
+            .iter()
+            .map(|conflict| {
+                serde_json::to_value(conflict).expect("a conflict serializes")["kind"]
+                    .as_str()
+                    .expect("every conflict is tagged with its kind")
+                    .to_string()
+            })
+            .collect();
+        let rank = |kind: &str| match kind {
+            "broken_inheritance" => 1,
+            "near_miss_mod_reference" => 2,
+            "dangling_def_reference" => 3,
+            _ => 0,
+        };
+        let ranks: Vec<u8> = kinds.iter().map(|kind| rank(kind)).collect();
+        assert!(
+            [1, 2, 3].iter().all(|wanted| ranks.contains(wanted)),
+            "{kinds:?}"
+        );
+        assert!(ranks.is_sorted(), "out of producer order: {kinds:?}");
     }
 
     /// `Report` (and every type reachable from it) now derives

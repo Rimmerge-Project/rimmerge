@@ -71,7 +71,10 @@ Before reporting done, run the full gate block in the root `CLAUDE.md`.
 
 Every cache in `Session` falls into exactly one of two families, and
 mixing them up is the most common way to introduce a stale-read bug
-here.
+here. The one exception is `Session.def_index` (`Session::def_exists`, the
+def index a replay's existence test reads): it is built from `sources`
+alone, which never changes after construction, so it is built once on
+first use and never invalidated.
 
 - **The ledger family** (`Session.ledgers`, `MergeWorkspace`'s per-slot
   previews, `Session.scoped` patch ledgers): any decision, rule, tag,
@@ -493,7 +496,21 @@ against a chosen `OrderSource` (`rimmerge verify` is the only caller —
 never wired into the cached `sort`/`ledger` path). Every failed
 `TopLevelOutcome` becomes a `Finding::PatchWillFail`; this **never
 reaches `FindingIndex`**/the ordinary inbox — it exists only for
-`VerifyOrderReport`. Every def with an active patcher is replayed, including one only its own
+`VerifyOrderReport`. The def keys are examined on the replay pool
+(`replay_pool::install`, a 4-thread rayon pool, not the global one: past
+about 4 threads a real-install verify got slower and its working set kept
+growing) in chunks of `DEF_KEYS_PER_CHUNK`, each key into its own
+`PassTally`, folded back in key order (`PassTally::absorb`), so the report
+never depends on thread timing; `on_progress` fires once per key, all of a
+chunk's calls before any key in it runs (so `checked` can lead the finished
+work by up to one chunk). This needs `Reader: Sync`, which every reader passed in
+already is. `RenderMergeMod`'s eager clean-merge pass first calls
+`Session::prefetch_clean_merge_previews` on the same pool: it builds
+exactly the previews `redecide_clean_merge_at` would (an undecided
+candidate with **no** cached preview, whatever choices a cached one was
+built from) and caches them in ledger order, so it changes timing only,
+never which preview a redecision reads.
+Every def with an active patcher is replayed, including one only its own
 winner patches: an OR-ed head is one query that succeeds when any named def
 matches, and a self-patched alternative is often the one that matches.
 The per-def replay lives in `verify_order/replay_def.rs`. A def whose every

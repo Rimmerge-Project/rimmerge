@@ -120,6 +120,17 @@ byte-identical across runs given the same input. Every collection that
 reaches either uses an ordered container (`BTreeMap`/`BTreeSet`), never
 hash-iteration order.
 
+Parallel code (`rayon`) is allowed in any crate where a measurement shows
+it makes the project faster, the pure layers included (`rim-analyzer`'s
+`analysis`, `rim-session`'s `VerifyOrder` and merge previews); it never
+brings IO into a layer that has none. Results from parallel work reach any
+output in a fixed order — an indexed `collect`, a fold in input order, or
+a sort — never in the order threads happen to finish. Work that replays
+defs (`VerifyOrder`, the merge previews) runs on `rim-session`'s own
+4-thread pool rather than one thread per core: it measured no faster past
+that, and every extra thread adds working set while the game may be
+running alongside.
+
 ## Frontend/backend boundary
 
 DTOs crossing the Tauri boundary are generated from the Rust types that

@@ -11,7 +11,7 @@
 //! methods concurrently.
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use rim_analyzer::analysis::SourceIndex;
 use rim_analyzer::domain::{Conflict, LoadOrder, Mod, ModId, Report};
@@ -33,6 +33,7 @@ use crate::ports::{DefSourceReader, ModsConfigFile, RulesLoadWarning, StoredRule
 use crate::settings::{Settings, filter_imported_rules};
 
 mod assignments;
+mod def_index;
 mod findings;
 mod merge;
 mod mod_info;
@@ -476,6 +477,10 @@ pub struct Session {
     /// whole, like `inspections`): a refetch stays cheap even after the
     /// smaller inspection cache has been thrashed by a long queue.
     def_graphics: HashMap<(OrderSource, DefRef), crate::use_cases::DefGraphic>,
+    /// The scan's def index behind [`Session::def_exists`], built on first
+    /// use. A `OnceLock` rather than a `OnceCell` so a `&Session` stays
+    /// `Sync` for a pass that replays defs on several threads.
+    def_index: OnceLock<def_index::DefIndex>,
 }
 
 impl std::fmt::Debug for Session {
@@ -515,6 +520,7 @@ impl std::fmt::Debug for Session {
             .field("assignment_instances", &self.assignment_instances)
             .field("assignment_coverage", &self.assignment_coverage)
             .field("def_graphics", &self.def_graphics.len())
+            .field("def_index", &self.def_index.get().is_some())
             .finish()
     }
 }
@@ -610,6 +616,7 @@ impl Session {
             assignment_instances: HashMap::new(),
             assignment_coverage: HashMap::new(),
             def_graphics: HashMap::new(),
+            def_index: OnceLock::new(),
         }
     }
 

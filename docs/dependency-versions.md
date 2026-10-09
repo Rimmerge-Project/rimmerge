@@ -37,6 +37,7 @@ advisories/licenses in non-Windows branches of Tauri's dependency tree
 | petgraph | 0.8.3 | manifest range `0.8` |
 | proptest | 1.11.0 | |
 | pretty_assertions | 1.4.1 | |
+| rayon | 1.12.0 | |
 | regex | 1.13.1 | |
 | roxmltree | 0.21.1 | |
 | serde (derive) | 1.0.229 | |
@@ -58,7 +59,6 @@ advisories/licenses in non-Windows branches of Tauri's dependency tree
 
 | Crate | Version | Used by | Notes |
 | --- | --- | --- | --- |
-| rayon | 1.12.0 | rim-analyzer | |
 | walkdir | 2.5.0 | rim-analyzer, rim-io | |
 | predicates | 3.1.4 | apps/cli (dev) | |
 | base64 | 0.23.1 | apps/desktop/src-tauri | encodes `read_texture`'s response as a `data:` URL; the `Engine`/`general_purpose::STANDARD` API this crate uses is stable across the 0.22–0.23 line |

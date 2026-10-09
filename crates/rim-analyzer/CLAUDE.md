@@ -8,8 +8,15 @@ consumed by `rim-resolve`, the golden fixtures, and the desktop app.
 Base of the crate graph — nothing in this workspace is below it.
 `rim-resolve` depends on `rim-analyzer::domain` only; `rim-session`,
 `rim-merge`, and every interface sit above that. `extract/` and
-`analysis/` are pure (bytes in, domain types out); filesystem walking and
-`rayon` live only in `infra/`. Do not add IO to `extract/` or `analysis/`.
+`analysis/` are pure (bytes in, domain types out); filesystem walking
+lives only in `infra/`. Do not add IO to `extract/` or `analysis/`.
+`rayon` is allowed in both `infra/` and `analysis/` where a measurement
+shows a gain: `build_ref` runs its edge and conflict sides with
+`rayon::join`, and the dangling-reference vote groups each mod's sites in
+parallel. Parallel results must reach the report in a fixed order (an
+indexed `collect`, a fold in input order, or a sort), never in completion
+order, and a worker's panic propagates (rayon re-raises it) rather than
+being caught.
 
 ## Invariants
 
