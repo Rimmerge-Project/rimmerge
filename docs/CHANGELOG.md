@@ -4,7 +4,7 @@ This changelog starts at the first public release. Development history
 before that point is not summarized here — see `.journal/` in a
 maintainer's own checkout for the full record, if you have it.
 
-## [1.2.1] - 2026-10-08
+## [Unreleased]
 
 - **Faster Verify, merge mod and loading on large installs.** Verify (in the
   Apply dialog, and `rimmerge verify`) no longer rebuilds the same list of
@@ -16,6 +16,9 @@ maintainer's own checkout for the full record, if you have it.
   scan is about a quarter faster (about 4.4 s to about 3.2 s). Both use a
   little more memory while they run (about 100 MB at most). Results are
   unchanged.
+
+## [1.2.1] - 2026-10-08
+
 - **Faster loading, Rescan and load-order import on large installs.** The
   analysis that runs after the per-mod scan is about four times faster: on a
   test install of about 1,000 active mods it went from about 27 s to about
