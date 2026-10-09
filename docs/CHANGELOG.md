@@ -4,6 +4,23 @@ This changelog starts at the first public release. Development history
 before that point is not summarized here — see `.journal/` in a
 maintainer's own checkout for the full record, if you have it.
 
+## [Unreleased]
+
+- **Verify checks each mod file for changes once per run.** Reading a def or
+  patch operation back from its mod's file checked the file's size and
+  modification time on disk before every read, about 46,500 checks per verify
+  on a test install of about 1,000 active mods. Each file is now checked the
+  first time a verify or a def inspection reads it (and at most twice while
+  building the merge mod), and that check holds until the run ends: a file
+  edited on disk while one of these runs may be seen only by the next run, and
+  a later run that reads the file again sees an edit made in between. On that
+  install, verifying one load order after it was loaded went from about 6.0 s
+  to about 5.1 s and used about 3 s less processor time (release build,
+  median of six base and new runs taken alternately in one session). Those
+  figures are not comparable with the 5.5 s of 1.2.2, which was measured in an
+  earlier session. Merge mod and def inspection times, peak memory and results
+  are unchanged.
+
 ## [1.2.2] - 2026-10-09
 
 - **Faster Verify, merge mod and loading on large installs.** Verify (in the

@@ -14,6 +14,7 @@ use rim_resolve::ledger::{self};
 
 use super::Session;
 use super::{UnknownPatch, adjust_stat, mods_by_id};
+use crate::call_reader::CallReader;
 use crate::merge_workspace::{MergeFieldFilter, MergeFieldPage, MergePreview, PreviewSlot};
 use crate::use_cases::{MergeContext, PlanMerge, read_owner_def_raw, stored_choices};
 
@@ -217,7 +218,9 @@ impl Session {
                 Some((ctx, &entry.key))
             })
             .collect();
-        let planner = PlanMerge::new(reader);
+        // One call view of the session's reader for the whole prefetch
+        // (`DefSourceReader::call_view`), shared by every replay thread.
+        let planner = PlanMerge::new(CallReader::open(&reader));
         let session: &Session = self;
         let built: Vec<(MergeContext, MergePreview)> = crate::replay_pool::install(|| {
             pending

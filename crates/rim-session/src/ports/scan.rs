@@ -169,6 +169,10 @@ pub enum DefSourceError {
     },
 }
 
+/// One use-case call's view of a [`DefSourceReader`]: see
+/// [`DefSourceReader::call_view`].
+pub type DefSourceCallView<'a> = Box<dyn DefSourceReader + Send + Sync + 'a>;
+
 /// Reads one element's XML text back by locator. Sync: run under
 /// `spawn_blocking` by the interface layer, like every other port.
 pub trait DefSourceReader {
@@ -186,6 +190,22 @@ pub trait DefSourceReader {
         locator: &XmlLocator,
         expected: &ElementExpectation,
     ) -> Result<String, DefSourceError>;
+
+    /// Opens a view of this reader for one use-case call, or `None` when
+    /// the reader has nothing to gain from one (the default) and the call
+    /// reads through the reader itself.
+    ///
+    /// A view may check whether a file changed on disk only the first time
+    /// it reads that file and trust that check for as long as it lives, so
+    /// an edit made while the call runs may be seen only by the next call;
+    /// an edit made before a view is opened is always seen through it. The
+    /// use cases that read many elements (`VerifyOrder`, `RenderMergeMod`
+    /// and its clean-merge prefetch, `InspectDef`) open one view per call
+    /// and drop it when the call returns; a reader used without a view
+    /// keeps its own rule.
+    fn call_view(&self) -> Option<DefSourceCallView<'_>> {
+        None
+    }
 }
 
 /// Forwards to `T`'s own impl — lets a shared, cache-carrying reader (e.g.
@@ -199,6 +219,10 @@ impl<T: DefSourceReader + ?Sized> DefSourceReader for std::sync::Arc<T> {
         expected: &ElementExpectation,
     ) -> Result<String, DefSourceError> {
         (**self).read_element(locator, expected)
+    }
+
+    fn call_view(&self) -> Option<DefSourceCallView<'_>> {
+        (**self).call_view()
     }
 }
 
@@ -215,6 +239,10 @@ impl<T: DefSourceReader + ?Sized> DefSourceReader for &T {
         expected: &ElementExpectation,
     ) -> Result<String, DefSourceError> {
         (**self).read_element(locator, expected)
+    }
+
+    fn call_view(&self) -> Option<DefSourceCallView<'_>> {
+        (**self).call_view()
     }
 }
 

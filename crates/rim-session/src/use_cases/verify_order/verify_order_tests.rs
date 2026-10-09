@@ -15,7 +15,9 @@ use std::collections::BTreeSet;
 use super::counterfactual::MAX_COUNTERFACTUAL_SUBJECTS_PER_DEF;
 use super::report::classify_cause;
 use super::*;
-use crate::test_support::{InMemoryDefSourceReader, locator, session_with_sources_and_mods};
+use crate::test_support::{
+    CallCountingReader, InMemoryDefSourceReader, locator, session_with_sources_and_mods,
+};
 use rim_analyzer::domain::{LoadOrder, Selector};
 
 fn make_op(mod_id: &ModId, class: &str, xpath: &str, op_locator: XmlLocator) -> IndexedPatchOp {
@@ -3070,4 +3072,50 @@ fn an_op_failing_on_several_def_keys_reports_them_in_def_key_order() {
         })
         .collect();
     assert_eq!(reported, def_names.map(str::to_string));
+}
+
+/// Each verify opens one call view of its reader and reads only through
+/// it, the replay and the counterfactual phase alike, so a file reader
+/// checks each file on disk once per verify (`DefSourceReader::call_view`).
+#[test]
+fn each_verify_reads_through_one_call_view_of_its_reader() {
+    let (sources, elements) = counterfactual_fixture(
+        "<ThingDef><defName>Wall</defName><container></container></ThingDef>",
+        &[
+            (
+                "b.mod",
+                "PatchOperationAdd",
+                "container/injected",
+                r#"<Operation Class="PatchOperationAdd">
+                         <xpath>Defs/ThingDef[defName="Wall"]/container/injected</xpath>
+                         <value><deep>2</deep></value>
+                       </Operation>"#
+                    .to_string(),
+            ),
+            (
+                "c.mod",
+                "PatchOperationAdd",
+                "container",
+                r#"<Operation Class="PatchOperationAdd">
+                         <xpath>Defs/ThingDef[defName="Wall"]/container</xpath>
+                         <value><injected><inner>1</inner></injected></value>
+                       </Operation>"#
+                    .to_string(),
+            ),
+        ],
+    );
+    let session = counterfactual_session(sources, &["core.mod", "b.mod", "c.mod"]);
+    let reader = CallCountingReader::new(InMemoryDefSourceReader::new(elements));
+    let verify = VerifyOrder::new(&reader);
+
+    let first = verify.execute(&session, OrderSource::Current);
+    let reads_in_first = reader.reads_through_views();
+    let second = verify.execute(&session, OrderSource::Current);
+
+    assert_eq!(first.counterfactual.jobs, 1, "both phases ran");
+    assert_eq!(first.findings, second.findings);
+    assert!(reads_in_first > 0);
+    assert_eq!(reader.views_opened(), 2, "one view per verify");
+    assert_eq!(reader.reads_through_views(), 2 * reads_in_first);
+    assert_eq!(reader.direct_reads(), 0);
 }

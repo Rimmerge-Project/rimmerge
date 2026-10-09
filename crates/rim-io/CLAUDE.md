@@ -289,11 +289,23 @@ gate block in the root `CLAUDE.md`.
   under `<Defs>`, and patch operations at their top-level `<Operation>`
   via `top_level_operations`; a deeper or empty path, which the analyzer
   does emit for nested operations, re-parses the text) and keeps the
-  parses in a byte-bounded LRU (`CACHE_BUDGET_BYTES`, 16 MiB). Every read still runs `fs::metadata`
-  first, and a length or mtime change drops the entry, so an edit on disk
-  is always seen. The cache lock is held for map operations only, never
-  across a read or a parse: the replay pool reads through one reader from
-  four threads.
+  parses in a byte-bounded LRU (`CACHE_BUDGET_BYTES`, 16 MiB). Whether a
+  cached parse is still good is the file's length and mtime (`stamp_of`,
+  the one `fs::metadata` call); a change drops the entry. **When an edit on
+  disk is noticed depends on how the reader is read.** A read on the
+  reader itself checks the file every time. A read through a call view
+  (`DefSourceReader::call_view`, `FileCallView`, which `rim-session` opens
+  once per `VerifyOrder`, `RenderMergeMod` (one for its own planner, one on
+  the session's reader for the clean-merge prefetch) and `InspectDef`
+  call) checks each file the first time that view reads it and trusts that
+  stamp until the view is dropped, so an edit made during a call is seen
+  by the next call and an edit made between calls always is. A view's
+  stamps are its own (never shared between views or readers); a file
+  whose parse was evicted or replaced mid-call (a newer-stamp parse from another reader or view counts) is checked again, and a failed check is
+  not remembered. The tests count checks through the `#[cfg(test)]`
+  `stamp_checks` counter, never by timing. The cache lock is held for map
+  operations only, never across a read or a parse: the replay pool reads
+  through one reader (or one view) from four threads.
 - **`ModsConfigFileStore`** backs up first
   (`ModsConfig.xml.bak-<timestamp>`), refuses to proceed on any read
   error other than NotFound, and preserves `version`, `knownExpansions`,

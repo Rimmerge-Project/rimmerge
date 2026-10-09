@@ -3,15 +3,16 @@
 //! port's production adapter.
 
 use std::borrow::Cow;
+use std::collections::HashMap;
 use std::fs;
 use std::ops::Range;
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::time::SystemTime;
 
 use rim_analyzer::domain::XmlLocator;
 use rim_analyzer::extract::{MAX_RAW_ELEMENT_DEPTH, raw_element_nesting_exceeds};
-use rim_session::ports::{DefSourceError, DefSourceReader, ElementExpectation};
+use rim_session::ports::{DefSourceCallView, DefSourceError, DefSourceReader, ElementExpectation};
 use roxmltree::Node;
 
 use file_cache::FileCache;
@@ -188,11 +189,15 @@ fn outline_of(text: &str) -> Result<Box<[ElementSummary]>, OutlineFailure> {
 /// Parsed files are kept in a bounded least-recently-used cache
 /// (16 MiB of text and outlines, `file_cache::CACHE_BUDGET_BYTES`), so a file
 /// many reads land in is read, decoded and parsed once rather than once
-/// per read. Every read first checks the file's current length and
-/// modification time against what was cached, so an edit made after the
+/// per read. Whether a cached parse is still good is decided by the
+/// file's current length and modification time, so an edit made after the
 /// scan (the case `DefSourceError::Stale`'s "reload the project" remedy
-/// exists for) is always seen on the next read rather than served stale
-/// forever.
+/// exists for) is never served stale forever. A read on the reader itself
+/// checks the file on every read; a read through a call view
+/// ([`DefSourceReader::call_view`], opened once per use-case call by the
+/// `rim-session` use cases that read many elements) checks each file the
+/// first time that view reads it, so an edit made during a call is seen by
+/// the next call.
 ///
 /// The cache sits behind a `Mutex`, not a `RefCell`: this reader is held
 /// behind an `Arc` in the desktop composition root's `AppState` (shared
@@ -203,6 +208,10 @@ fn outline_of(text: &str) -> Result<Box<[ElementSummary]>, OutlineFailure> {
 #[derive(Debug, Default)]
 pub struct FileDefSourceReader {
     cache: FileCache,
+    /// How many times a file's stamp was read from disk, so a test can
+    /// count the checks instead of timing them.
+    #[cfg(test)]
+    stamp_checks: std::sync::atomic::AtomicUsize,
 }
 
 impl FileDefSourceReader {
@@ -217,37 +226,139 @@ impl FileDefSourceReader {
     fn with_cache_budget(budget_bytes: usize) -> Self {
         Self {
             cache: FileCache::with_budget(budget_bytes),
+            stamp_checks: std::sync::atomic::AtomicUsize::new(0),
         }
     }
 
+    /// The parse of `file` as it is on disk now: checks its stamp, then
+    /// answers from the cache or reads and parses it.
     fn parsed_file(&self, file: &Arc<Path>) -> Result<Arc<ParsedFile>, DefSourceError> {
-        let io_error = |message: String| DefSourceError::Io {
-            file: file.to_path_buf(),
-            message,
-        };
-        // `fs::metadata` first, on every read: only its length/mtime say
-        // whether a previously cached parse is still good, so there is
-        // no way to answer that question without touching the
-        // filesystem first even when the cache turns out to hit.
-        let metadata = fs::metadata(file.as_ref()).map_err(|error| io_error(error.to_string()))?;
-        let stamp = FileStamp {
+        let stamp = self.stamp_of(file)?;
+        self.parsed_at(file, stamp)
+    }
+
+    /// `file`'s current length and modification time: the one place this
+    /// reader asks the filesystem whether a file changed. Only the stamp
+    /// says whether a cached parse is still good, so a cache hit cannot be
+    /// trusted without it.
+    fn stamp_of(&self, file: &Path) -> Result<FileStamp, DefSourceError> {
+        #[cfg(test)]
+        self.stamp_checks
+            .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        let metadata = fs::metadata(file).map_err(|error| io_error(file, error.to_string()))?;
+        Ok(FileStamp {
             len: metadata.len(),
             modified: metadata.modified().ok(),
-        };
+        })
+    }
+
+    /// The parse of `file` made from a file with exactly `stamp`: the
+    /// cached one, else a fresh read and parse that replaces it.
+    fn parsed_at(
+        &self,
+        file: &Arc<Path>,
+        stamp: FileStamp,
+    ) -> Result<Arc<ParsedFile>, DefSourceError> {
         if let Some(cached) = self.cache.get(file, stamp) {
             return Ok(cached);
         }
-
         if stamp.len > MAX_READ_BYTES {
-            return Err(io_error(format!(
-                "{} bytes exceeds the {MAX_READ_BYTES}-byte read limit",
-                stamp.len
-            )));
+            return Err(io_error(
+                file,
+                format!(
+                    "{} bytes exceeds the {MAX_READ_BYTES}-byte read limit",
+                    stamp.len
+                ),
+            ));
         }
-        let bytes = fs::read(file.as_ref()).map_err(|error| io_error(error.to_string()))?;
+        let bytes = fs::read(file.as_ref()).map_err(|error| io_error(file, error.to_string()))?;
         let parsed = Arc::new(ParsedFile::new(stamp, decode_lossy(&bytes)));
         self.cache.insert(Arc::clone(file), Arc::clone(&parsed));
         Ok(parsed)
+    }
+}
+
+fn io_error(file: &Path, message: String) -> DefSourceError {
+    DefSourceError::Io {
+        file: file.to_path_buf(),
+        message,
+    }
+}
+
+/// The element `locator` names in `parsed`, as its own source text, when
+/// it matches `expected`.
+fn element_text(
+    parsed: &ParsedFile,
+    locator: &XmlLocator,
+    expected: &ElementExpectation,
+) -> Result<String, DefSourceError> {
+    let element = parsed
+        .element_at(&locator.element_path)
+        .map_err(|message| DefSourceError::Xml {
+            file: locator.file.to_path_buf(),
+            message,
+        })?;
+    match element {
+        Some(element) if element.matches(expected) => {
+            Ok(parsed.text[element.range.clone()].to_string())
+        }
+        _ => Err(stale(locator, expected)),
+    }
+}
+
+/// One use-case call's view of a [`FileDefSourceReader`]
+/// ([`DefSourceReader::call_view`]): checks a file's stamp on disk the
+/// first time the view reads it and trusts that stamp for the rest of the
+/// view's life, so a verify that makes about 46,500 reads into about 6,900
+/// files checks each file once rather than once per read. Shares the
+/// reader's parse cache.
+///
+/// An edit made on disk while the view lives is therefore seen only by
+/// the next call's view, with one exception: a file whose parse the cache
+/// evicted mid-call is checked and read again, so the view then sees it as
+/// it is on disk (a parse evicted or replaced mid-call; a newer-stamp parse
+/// put in the cache by another reader or view triggers the same re-check). A failed stamp check is not remembered (the next read of
+/// that file checks again and fails the same way, as the reader would).
+/// Two replay threads reading a file for the first time at the same moment
+/// may both check it; the lock never covers the check.
+struct FileCallView<'a> {
+    reader: &'a FileDefSourceReader,
+    /// The stamp each file had when this view first checked it. A point
+    /// lookup, never iterated.
+    stamps: Mutex<HashMap<Arc<Path>, FileStamp>>,
+}
+
+impl FileCallView<'_> {
+    fn checked_stamp(&self, file: &Path) -> Option<FileStamp> {
+        self.lock().get(file).copied()
+    }
+
+    fn lock(&self) -> MutexGuard<'_, HashMap<Arc<Path>, FileStamp>> {
+        self.stamps.lock().unwrap_or_else(PoisonError::into_inner)
+    }
+
+    /// The parse this view reads `file` from: the cached parse for the
+    /// stamp it already checked, else a fresh check (first read, or the
+    /// parse was evicted) whose stamp it keeps from then on.
+    fn parsed_file(&self, file: &Arc<Path>) -> Result<Arc<ParsedFile>, DefSourceError> {
+        if let Some(stamp) = self.checked_stamp(file)
+            && let Some(cached) = self.reader.cache.get(file, stamp)
+        {
+            return Ok(cached);
+        }
+        let stamp = self.reader.stamp_of(file)?;
+        self.lock().insert(Arc::clone(file), stamp);
+        self.reader.parsed_at(file, stamp)
+    }
+}
+
+impl DefSourceReader for FileCallView<'_> {
+    fn read_element(
+        &self,
+        locator: &XmlLocator,
+        expected: &ElementExpectation,
+    ) -> Result<String, DefSourceError> {
+        element_text(&*self.parsed_file(&locator.file)?, locator, expected)
     }
 }
 
@@ -272,19 +383,14 @@ impl DefSourceReader for FileDefSourceReader {
         locator: &XmlLocator,
         expected: &ElementExpectation,
     ) -> Result<String, DefSourceError> {
-        let parsed = self.parsed_file(&locator.file)?;
-        let element = parsed
-            .element_at(&locator.element_path)
-            .map_err(|message| DefSourceError::Xml {
-                file: locator.file.to_path_buf(),
-                message,
-            })?;
-        match element {
-            Some(element) if element.matches(expected) => {
-                Ok(parsed.text[element.range.clone()].to_string())
-            }
-            _ => Err(stale(locator, expected)),
-        }
+        element_text(&*self.parsed_file(&locator.file)?, locator, expected)
+    }
+
+    fn call_view(&self) -> Option<DefSourceCallView<'_>> {
+        Some(Box::new(FileCallView {
+            reader: self,
+            stamps: Mutex::default(),
+        }))
     }
 }
 
@@ -759,5 +865,236 @@ mod tests {
         for texts in per_thread {
             assert_eq!(texts, sequential);
         }
+    }
+
+    fn stamp_checks(reader: &FileDefSourceReader) -> usize {
+        reader
+            .stamp_checks
+            .load(std::sync::atomic::Ordering::SeqCst)
+    }
+
+    fn open_view(reader: &FileDefSourceReader) -> DefSourceCallView<'_> {
+        reader
+            .call_view()
+            .expect("the file reader offers a call view")
+    }
+
+    #[test]
+    fn a_call_view_checks_each_file_on_disk_once_however_often_it_reads_it() {
+        let dir = tempdir().expect("tempdir");
+        let a = write_and_locate(dir.path(), "a.xml", TWO_DEFS, 0);
+        let a_second = XmlLocator::new(a.file.clone(), vec![1]);
+        let b = write_and_locate(dir.path(), "b.xml", TWO_DEFS, 0);
+        let reader = FileDefSourceReader::new();
+        let view = open_view(&reader);
+
+        for _ in 0..3 {
+            view.read_element(&a, &expectation("ThingDef", "A"))
+                .expect("a");
+            view.read_element(&a_second, &expectation("ThingDef", "B"))
+                .expect("a, second def");
+            view.read_element(&b, &expectation("ThingDef", "A"))
+                .expect("b");
+        }
+
+        assert_eq!(stamp_checks(&reader), 2, "one check per file");
+    }
+
+    #[test]
+    fn threads_reading_one_file_through_one_view_agree_and_check_it_at_most_once_each() {
+        const THREADS: usize = 8;
+        let dir = tempdir().expect("tempdir");
+        let locator = write_and_locate(dir.path(), "a.xml", TWO_DEFS, 0);
+        let reader = FileDefSourceReader::new();
+        let view = open_view(&reader);
+
+        let texts: Vec<String> = std::thread::scope(|scope| {
+            let handles: Vec<_> = (0..THREADS)
+                .map(|_| {
+                    let (view, locator) = (&view, &locator);
+                    scope.spawn(move || {
+                        view.read_element(locator, &expectation("ThingDef", "A"))
+                            .expect("read")
+                    })
+                })
+                .collect();
+            handles
+                .into_iter()
+                .map(|handle| handle.join().expect("reader thread"))
+                .collect()
+        });
+
+        let checks = stamp_checks(&reader);
+        assert!(
+            (1..=THREADS).contains(&checks),
+            "one check per racing thread at most, got {checks}"
+        );
+        assert!(texts.iter().all(|text| *text == texts[0]));
+    }
+
+    #[test]
+    fn a_read_on_the_reader_itself_still_checks_the_file_every_time() {
+        let dir = tempdir().expect("tempdir");
+        let a = write_and_locate(dir.path(), "a.xml", TWO_DEFS, 0);
+        let reader = FileDefSourceReader::new();
+
+        for _ in 0..3 {
+            reader
+                .read_element(&a, &expectation("ThingDef", "A"))
+                .expect("a");
+        }
+
+        assert_eq!(stamp_checks(&reader), 3);
+    }
+
+    #[test]
+    fn each_call_view_checks_the_file_again() {
+        let dir = tempdir().expect("tempdir");
+        let a = write_and_locate(dir.path(), "a.xml", TWO_DEFS, 0);
+        let reader = FileDefSourceReader::new();
+
+        for _ in 0..2 {
+            open_view(&reader)
+                .read_element(&a, &expectation("ThingDef", "A"))
+                .expect("a");
+        }
+
+        assert_eq!(stamp_checks(&reader), 2, "one check per view");
+    }
+
+    #[test]
+    fn an_edit_made_between_two_call_views_is_seen_by_the_second() {
+        let dir = tempdir().expect("tempdir");
+        let locator = write_and_locate(
+            dir.path(),
+            "defs.xml",
+            b"<Defs><ThingDef><defName>A</defName></ThingDef></Defs>",
+            0,
+        );
+        let reader = FileDefSourceReader::new();
+        open_view(&reader)
+            .read_element(&locator, &expectation("ThingDef", "A"))
+            .expect("first call");
+
+        // A length change, as in `an_on_disk_overwrite_is_seen_on_the_next_read`.
+        fs::write(
+            locator.file.as_ref(),
+            b"<Defs><ThingDef><defName>Changed</defName></ThingDef></Defs>",
+        )
+        .expect("overwrite");
+        let next_call =
+            open_view(&reader).read_element(&locator, &expectation("ThingDef", "Changed"));
+
+        assert!(next_call.is_ok(), "{next_call:?}");
+    }
+
+    #[test]
+    fn an_edit_made_during_a_call_view_is_not_seen_by_that_view() {
+        let dir = tempdir().expect("tempdir");
+        let locator = write_and_locate(
+            dir.path(),
+            "defs.xml",
+            b"<Defs><ThingDef><defName>A</defName></ThingDef></Defs>",
+            0,
+        );
+        let reader = FileDefSourceReader::new();
+        let view = open_view(&reader);
+        view.read_element(&locator, &expectation("ThingDef", "A"))
+            .expect("first read");
+
+        fs::write(
+            locator.file.as_ref(),
+            b"<Defs><ThingDef><defName>Changed</defName></ThingDef></Defs>",
+        )
+        .expect("overwrite");
+        let same_call = view.read_element(&locator, &expectation("ThingDef", "A"));
+
+        assert_eq!(
+            same_call.expect("the view keeps the parse it checked"),
+            "<ThingDef><defName>A</defName></ThingDef>"
+        );
+    }
+
+    #[test]
+    fn a_call_view_reports_stale_xml_and_io_errors_as_the_reader_does() {
+        let dir = tempdir().expect("tempdir");
+        let renamed = write_and_locate(
+            dir.path(),
+            "renamed.xml",
+            b"<Defs><ThingDef><defName>Changed</defName></ThingDef></Defs>",
+            0,
+        );
+        let malformed = write_and_locate(dir.path(), "bad.xml", b"<Defs><ThingDef></Defs>", 0);
+        let missing = XmlLocator::new(StdArc::from(dir.path().join("missing.xml")), vec![0]);
+        let reader = FileDefSourceReader::new();
+        let view = open_view(&reader);
+
+        for locator in [&renamed, &malformed, &missing] {
+            let expected = expectation("ThingDef", "Original");
+            let through_view = view.read_element(locator, &expected);
+            let on_reader = reader.read_element(locator, &expected);
+
+            assert_eq!(format!("{through_view:?}"), format!("{on_reader:?}"));
+        }
+        assert!(matches!(
+            view.read_element(&renamed, &expectation("ThingDef", "Original")),
+            Err(DefSourceError::Stale { .. })
+        ));
+        assert!(matches!(
+            view.read_element(&malformed, &expectation("ThingDef", "A")),
+            Err(DefSourceError::Xml { .. })
+        ));
+        assert!(matches!(
+            view.read_element(&missing, &expectation("ThingDef", "A")),
+            Err(DefSourceError::Io { .. })
+        ));
+    }
+
+    #[test]
+    fn a_file_missing_at_a_call_views_first_read_is_read_once_it_appears() {
+        let dir = tempdir().expect("tempdir");
+        let path = dir.path().join("late.xml");
+        let locator = XmlLocator::new(StdArc::from(path.clone()), vec![0]);
+        let reader = FileDefSourceReader::new();
+        let view = open_view(&reader);
+        let before = view.read_element(&locator, &expectation("ThingDef", "A"));
+
+        fs::write(
+            &path,
+            b"<Defs><ThingDef><defName>A</defName></ThingDef></Defs>",
+        )
+        .expect("create");
+        let after = view.read_element(&locator, &expectation("ThingDef", "A"));
+
+        assert!(
+            matches!(before, Err(DefSourceError::Io { .. })),
+            "{before:?}"
+        );
+        assert!(after.is_ok(), "a failed check is not remembered: {after:?}");
+    }
+
+    #[test]
+    fn a_call_view_checks_a_file_again_once_its_parse_was_evicted() {
+        let dir = tempdir().expect("tempdir");
+        let a = write_and_locate(dir.path(), "a.xml", TWO_DEFS, 0);
+        let b = write_and_locate(dir.path(), "b.xml", TWO_DEFS, 0);
+        let one_file_budget = FileDefSourceReader::new()
+            .parsed_file(&a.file)
+            .expect("measure")
+            .footprint_bytes()
+            + file_cache::entry_overhead(&a.file);
+        let reader = FileDefSourceReader::with_cache_budget(one_file_budget);
+        let view = open_view(&reader);
+
+        view.read_element(&a, &expectation("ThingDef", "A"))
+            .expect("a");
+        view.read_element(&a, &expectation("ThingDef", "A"))
+            .expect("a again, cached");
+        view.read_element(&b, &expectation("ThingDef", "A"))
+            .expect("b evicts a");
+        view.read_element(&a, &expectation("ThingDef", "A"))
+            .expect("a after eviction");
+
+        assert_eq!(stamp_checks(&reader), 3, "a, b, then a once more");
     }
 }

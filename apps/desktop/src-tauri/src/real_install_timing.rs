@@ -46,10 +46,9 @@ const REPEATS: usize = 5;
 
 /// The budget for one [`rim_session::use_cases::VerifyOrder::execute`]
 /// (counterfactual phase included) over a real install of about 1,000
-/// active mods, in a release build. Measured at about 12 s per order on the
+/// active mods, in a release build. Measured at about 5 s per order on the
 /// reference install when run after the install was loaded on the global
-/// pool (about 6.6 s run alone on the 4-thread replay pool, about 21 s on
-/// one thread); a pass that went back to
+/// pool (it was about 12 s before each file's parse was cached); a pass that went back to
 /// rebuilding the def index for every def took 74 to 108 s and fails here.
 /// The margin absorbs the other tests in this tier running beside it, so
 /// this guards the index, not the thread count.

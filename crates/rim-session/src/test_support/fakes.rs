@@ -3,6 +3,8 @@
 use std::cell::{Cell, RefCell};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use rim_analyzer::analysis::SourceIndex;
 use rim_analyzer::domain::{GameVersion, GeneratedMarker, ModId, Report, Source, XmlLocator};
@@ -18,16 +20,17 @@ use crate::mod_list::{ParsedModList, SharedModList};
 use crate::ports::{
     AboutImage, AboutReadError, AppSettingsLoad, AppSettingsStore, AssetLocator,
     AssignmentProjectStore, BackReferenceShape, CachedDatabase, ConfigError, DatabaseStatus,
-    DecisionStore, DefCacheCarrier, DefCacheCarrierProbe, DefSourceError, DefSourceReader,
-    ElementExpectation, GameExecutable, GameLauncher, GameLogError, GameLogReader, ImportError,
-    ImportManifestStore, ImportRecord, ImportedRules, KindChoice, LaunchFailure, LaunchRoute,
-    LoadedModKnowledge, LoadedRules, LogFormats, LogShapes, MergeModError, MergeModWriteReport,
-    MergeModWriter, ModAboutReader, ModKnowledgeStore, ModListFileError, ModListFileStore,
-    ModListRead, ModScanner, ModsConfigFile, ModsConfigStore, ParsedGameLog, PatchProjectStore,
-    PatchStackBlockShape, ProfileNotificationState, ProfileNotificationStateStore, RefreshOutcome,
-    RimSortImporter, RimSortPaths, RuleDatabase, RuleDatabaseFetcher, RuleStore, RulesLoadWarning,
-    ScanArtifacts, ScanError, ScanProgress, ScanProgressStage, StackBlockSource, StoreError,
-    StoredRules, TextureBytes, TextureFallbackShape, TextureFallbackSource,
+    DecisionStore, DefCacheCarrier, DefCacheCarrierProbe, DefSourceCallView, DefSourceError,
+    DefSourceReader, ElementExpectation, GameExecutable, GameLauncher, GameLogError, GameLogReader,
+    ImportError, ImportManifestStore, ImportRecord, ImportedRules, KindChoice, LaunchFailure,
+    LaunchRoute, LoadedModKnowledge, LoadedRules, LogFormats, LogShapes, MergeModError,
+    MergeModWriteReport, MergeModWriter, ModAboutReader, ModKnowledgeStore, ModListFileError,
+    ModListFileStore, ModListRead, ModScanner, ModsConfigFile, ModsConfigStore, ParsedGameLog,
+    PatchProjectStore, PatchStackBlockShape, ProfileNotificationState,
+    ProfileNotificationStateStore, RefreshOutcome, RimSortImporter, RimSortPaths, RuleDatabase,
+    RuleDatabaseFetcher, RuleStore, RulesLoadWarning, ScanArtifacts, ScanError, ScanProgress,
+    ScanProgressStage, StackBlockSource, StoreError, StoredRules, TextureBytes,
+    TextureFallbackShape, TextureFallbackSource,
 };
 use crate::ports::{
     IMPORT_SOURCE_COMMUNITY_RULES, IMPORT_SOURCE_STEAM_DEPENDENCIES, IMPORT_SOURCE_USER_RULES,
@@ -159,6 +162,93 @@ impl DefSourceReader for InMemoryDefSourceReader {
                 message: format!("no element indexed at {:?}", locator.element_path),
             })
         })
+    }
+}
+
+/// How many call views a [`CallCountingReader`] opened and how its reads
+/// arrived; shared with every view it hands out.
+#[derive(Debug, Default)]
+struct CallCounts {
+    views_opened: AtomicUsize,
+    reads_through_views: AtomicUsize,
+    direct_reads: AtomicUsize,
+}
+
+/// A `DefSourceReader` that offers a call view
+/// ([`DefSourceReader::call_view`]) and counts how it is used: views
+/// opened, reads through a view, and reads made on the reader itself.
+/// Reads are answered by the wrapped reader. Lets a use-case test check it
+/// opens one view per call and reads only through it.
+#[derive(Debug, Default)]
+pub struct CallCountingReader<R> {
+    inner: R,
+    counts: Arc<CallCounts>,
+}
+
+impl<R> CallCountingReader<R> {
+    /// Wraps `inner`, with every count at zero.
+    #[must_use]
+    pub fn new(inner: R) -> Self {
+        Self {
+            inner,
+            counts: Arc::default(),
+        }
+    }
+
+    /// How many call views were opened.
+    #[must_use]
+    pub fn views_opened(&self) -> usize {
+        self.counts.views_opened.load(Ordering::SeqCst)
+    }
+
+    /// How many reads went through a call view.
+    #[must_use]
+    pub fn reads_through_views(&self) -> usize {
+        self.counts.reads_through_views.load(Ordering::SeqCst)
+    }
+
+    /// How many reads were made on the reader itself, outside any view.
+    #[must_use]
+    pub fn direct_reads(&self) -> usize {
+        self.counts.direct_reads.load(Ordering::SeqCst)
+    }
+}
+
+/// One view of a [`CallCountingReader`].
+struct CountedView<'a, R> {
+    inner: &'a R,
+    counts: &'a CallCounts,
+}
+
+impl<R: DefSourceReader> DefSourceReader for CountedView<'_, R> {
+    fn read_element(
+        &self,
+        locator: &XmlLocator,
+        expected: &ElementExpectation,
+    ) -> Result<String, DefSourceError> {
+        self.counts
+            .reads_through_views
+            .fetch_add(1, Ordering::SeqCst);
+        self.inner.read_element(locator, expected)
+    }
+}
+
+impl<R: DefSourceReader + Sync> DefSourceReader for CallCountingReader<R> {
+    fn read_element(
+        &self,
+        locator: &XmlLocator,
+        expected: &ElementExpectation,
+    ) -> Result<String, DefSourceError> {
+        self.counts.direct_reads.fetch_add(1, Ordering::SeqCst);
+        self.inner.read_element(locator, expected)
+    }
+
+    fn call_view(&self) -> Option<DefSourceCallView<'_>> {
+        self.counts.views_opened.fetch_add(1, Ordering::SeqCst);
+        Some(Box::new(CountedView {
+            inner: &self.inner,
+            counts: &self.counts,
+        }))
     }
 }
 

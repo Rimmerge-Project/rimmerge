@@ -9,8 +9,9 @@ use rim_resolve::domain::{Action, Decision, OrderSource, PairRule, Rule, RuleOri
 use super::*;
 use crate::ports::DefSourceError;
 use crate::test_support::{
-    InMemoryDefSourceReader, bionic_heart_fixture, bionic_heart_fixture_with_conflict, locator,
-    session_with_sources, session_with_sources_and_mods,
+    CallCountingReader, InMemoryDefSourceReader, bionic_heart_fixture,
+    bionic_heart_fixture_with_conflict, locator, session_with_sources,
+    session_with_sources_and_mods,
 };
 use rim_analyzer::domain::{FindModGate, PatchOp};
 use rim_merge::effective::EffectiveDef;
@@ -2155,4 +2156,27 @@ fn the_inspections_cache_clears_itself_once_it_would_exceed_its_cap() {
             .is_some(),
         "the entry that triggered the clear must still end up cached"
     );
+}
+
+/// A def inspection reads its owner, templates and patchers through one
+/// call view of its reader (`DefSourceReader::call_view`); a cached
+/// inspection reads nothing.
+#[test]
+fn an_inspection_reads_through_one_call_view_and_a_cached_one_reads_nothing() {
+    let (sources, report, reader) = two_patcher_wall_fixture();
+    let mut session =
+        session_with_sources_and_mods(sources, report, &["core.mod", "b.mod", "c.mod"]);
+    let reader = CallCountingReader::new(reader);
+    let use_case = InspectDef::new(&reader);
+
+    use_case
+        .execute(&mut session, &wall_ref())
+        .expect("must resolve");
+    let reads_in_first = reader.reads_through_views();
+    use_case.execute(&mut session, &wall_ref()).expect("cached");
+
+    assert!(reads_in_first >= 3, "the owner and both patchers");
+    assert_eq!(reader.views_opened(), 1);
+    assert_eq!(reader.reads_through_views(), reads_in_first);
+    assert_eq!(reader.direct_reads(), 0);
 }

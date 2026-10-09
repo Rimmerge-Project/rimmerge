@@ -36,6 +36,21 @@ the other way around.
   `OrderSource::Current`, which the CLI's `ledger`/`defs`/`patch` rely
   on). A composition root that rebuilds a session some other way does the
   same.
+- **A use case that reads many def sources reads them through one call
+  view.** `DefSourceReader::call_view` (default `None`) lets a reader hand
+  out a view for one use-case call; `call_reader::CallReader::open` takes
+  that view or falls back to the reader itself. `VerifyOrder` (the whole
+  pass, counterfactual included), `InspectDef` (a build on a cache miss),
+  `RenderMergeMod` (its own planner) and `Session::prefetch_clean_merge_previews`
+  (on the session's reader) each open one per call and drop it on return;
+  the `Arc<T>`/`&T` forwarding impls must forward `call_view` too, or the
+  desktop's `Arc<dyn DefSourceReader>` silently loses it. What a view may
+  trust is the adapter's business (`rim-io`'s view checks each file on disk
+  once per view, see `crates/rim-io/CLAUDE.md`): an edit made during a call
+  may be seen only by the next call. Every other read (the lazy
+  `redecide_*` passes behind `Session::resolution`, `PlanMerge::execute`,
+  the assignment use cases) reads the reader directly and keeps its rule.
+  `test_support::CallCountingReader` counts views and reads for tests.
 - `PreflightApply` is read-only (no ports): it lists
   `rim_resolve::preflight` problems for the order named by `source`, through
   `Session::hard_problems` (the ledger cache is built lazily, hence `&mut`).
