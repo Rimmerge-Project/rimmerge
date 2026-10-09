@@ -512,9 +512,9 @@ never wired into the cached `sort`/`ledger` path). Every failed
 `TopLevelOutcome` becomes a `Finding::PatchWillFail`; this **never
 reaches `FindingIndex`**/the ordinary inbox — it exists only for
 `VerifyOrderReport`. The def keys are examined on the replay pool
-(`replay_pool::install`, a 4-thread rayon pool, not the global one: past
-about 4 threads a real-install verify got slower and its working set kept
-growing) in chunks of `DEF_KEYS_PER_CHUNK`, each key into its own
+(`replay_pool::install`, a 4-thread rayon pool, not the global one: it
+leaves most cores to a running game; more threads now verify faster but at
+no lower peak memory, see that module's measured figures) in chunks of `DEF_KEYS_PER_CHUNK`, each key into its own
 `PassTally`, folded back in key order (`PassTally::absorb`), so the report
 never depends on thread timing; `on_progress` fires once per key, all of a
 chunk's calls before any key in it runs (so `checked` can lead the finished

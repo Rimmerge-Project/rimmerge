@@ -1,28 +1,35 @@
 //! The small rayon pool the def-replaying passes run on: `VerifyOrder`'s
 //! def keys and `Session::prefetch_clean_merge_previews`' merge previews.
 //!
-//! Capped rather than the global pool (one thread per logical CPU), for two
-//! measured reasons on a real install of about 1,000 active mods (8 cores,
-//! 16 threads, release build): these passes stop getting faster past about 4
-//! threads and get *slower* at 16 (the verify phase alone, run on a pool of
-//! that size in a fresh process, took about 21 s on 1 thread, 6.6 s on 4 and
-//! 10 to 12 s on 16, counterfactual included), and their extra working set
-//! grows with every thread replaying a def at once (about 50 MB on 4
-//! threads, 150 MB on 16). A fixed cap keeps both bounded on a machine with
-//! more cores, and leaves the rest of the CPU to the game when it is running
-//! alongside. The scan and the analyzer, which do keep scaling, stay on the
-//! global pool.
+//! Capped rather than the global pool (one thread per logical CPU) so these
+//! passes leave most of the CPU to the game when it is running alongside,
+//! and so their cost stays bounded on a machine with more cores. The scan
+//! and the analyzer stay on the global pool.
 //!
-//! Those figures, and so the 4-thread cap itself, predate
-//! `rim_io::FileDefSourceReader` caching parsed files (it used to parse a
-//! whole file again for every element read); the cap has not been
-//! re-measured since. In the app
-//! the install is loaded first on the 16-thread global pool, and that load
-//! made every later parse about twice as slow (allocation-heavy work only:
-//! the reader's non-allocating nesting scan kept its speed), so a verify on
-//! this pool afterwards measured about 12.5 s per order against 7.7 s after a
-//! 4-thread load. With each file parsed once per pass it measures about
-//! 5.5 s and 4.7 s.
+//! The cap was re-measured once each def file was parsed once per pass
+//! (`rim_io::FileDefSourceReader`) and checked on disk once per call, on a
+//! real install of about 1,000 active mods (8 cores, 16 threads, release
+//! build, the install loaded first on the global pool as in the app, one
+//! reader shared by every call, median of 3 interleaved runs of an
+//! in-process sweep of the pool size). Verifying one load order,
+//! counterfactual included, took about 7.2 s on 2 threads, 4.4 s on 4,
+//! 4.0 s on 6, 3.7 s on 8 and 3.7 s on the 16-thread global pool. Compare
+//! these only with each other: the sweep ran in its own session, on a
+//! quieter machine than the base-versus-new comparison in the changelog,
+//! whose verify of the same code on 4 threads took about 5.1 s; the
+//! processor time it used grew with the thread count (about 13 s
+//! on 2 and 4 threads, 15 s on 6, 16 to 18 s on 8, 19 s on 16). Peak working
+//! set during a verify was about 800 MB on 2 to 8 threads and about 830 to
+//! 860 MB on 16, rising with each verify. Building the merge mod took about
+//! 0.8 s on 2 threads and about 0.6 s on 4 or more. More threads are faster
+//! but not at a lower peak memory: 6 saves about 0.4 s per verify for about
+//! 10% more processor time, and 8 would take half of this machine's logical
+//! CPUs away from a running game, so the cap stays at 4.
+//!
+//! Before files were parsed once per pass, these passes got slower past
+//! about 4 threads (a verify took about 6.6 s on 4 threads and 10 to 12 s on
+//! 16) and their working set grew by about 50 MB on 4 threads and 150 MB on
+//! 16; that is why the cap was first set at 4.
 
 use std::sync::OnceLock;
 
