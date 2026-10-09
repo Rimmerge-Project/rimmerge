@@ -30,7 +30,7 @@ use crate::error::CommandError;
 /// its adapters from here rather than constructing `rim_io::*` types
 /// inline.
 ///
-/// `def_reader` carries a small file-text cache
+/// `def_reader` carries a bounded cache of parsed files
 /// (`FileDefSourceReader`'s own doc comment), so it isn't `Copy` — kept
 /// behind an `Arc` (shared, cheap to clone) rather than rebuilt per
 /// command, which would throw the cache away on every call. That's also

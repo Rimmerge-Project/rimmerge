@@ -283,6 +283,17 @@ gate block in the root `CLAUDE.md`.
   database missing from the map reads as disabled) — whether a source is
   fetched is a `rim-session` `NetworkPolicy` fact this adapter has no
   other way to see.
+- **`def_source.rs` + `def_source/file_cache.rs`**: `FileDefSourceReader`
+  parses each file once into an outline of its root element's element
+  children (every locator `rim-session` reads names one of them: defs
+  under `<Defs>`, and patch operations at their top-level `<Operation>`
+  via `top_level_operations`; a deeper or empty path, which the analyzer
+  does emit for nested operations, re-parses the text) and keeps the
+  parses in a byte-bounded LRU (`CACHE_BUDGET_BYTES`, 16 MiB). Every read still runs `fs::metadata`
+  first, and a length or mtime change drops the entry, so an edit on disk
+  is always seen. The cache lock is held for map operations only, never
+  across a read or a parse: the replay pool reads through one reader from
+  four threads.
 - **`ModsConfigFileStore`** backs up first
   (`ModsConfig.xml.bak-<timestamp>`), refuses to proceed on any read
   error other than NotFound, and preserves `version`, `knownExpansions`,
