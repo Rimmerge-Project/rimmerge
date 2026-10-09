@@ -3,10 +3,12 @@
 
 use std::collections::BTreeSet;
 
+use rayon::prelude::*;
 use rim_analyzer::domain::ModId;
 use rim_resolve::domain::{
-    Action, DefRef, Finding, FindingKey, GeneratedModIdentity, MergeFindingKind, OrderSource,
-    PatchId, ResolutionStatus, redecide_for_clean_merge, redecide_for_identical_copies,
+    Action, DefKey, DefRef, Finding, FindingKey, GeneratedModIdentity, MergeFindingKind,
+    OrderSource, PatchId, Resolution, ResolutionStatus, redecide_for_clean_merge,
+    redecide_for_identical_copies,
 };
 use rim_resolve::ledger::{self};
 
@@ -14,6 +16,25 @@ use super::Session;
 use super::{UnknownPatch, adjust_stat, mods_by_id};
 use crate::merge_workspace::{MergeFieldFilter, MergeFieldPage, MergePreview, PreviewSlot};
 use crate::use_cases::{MergeContext, PlanMerge, read_owner_def_raw, stored_choices};
+
+/// The def and kind of merge [`Session::redecide_clean_merge_at`] plans
+/// for `entry`: an undecided `DefOverride`/`PatchCollision` finding whose
+/// suggestion already offers `Merge` as an alternative. `None` for every
+/// other entry.
+fn clean_merge_target(entry: &Resolution) -> Option<(DefKey, MergeFindingKind)> {
+    if entry.decision.is_some() {
+        return None;
+    }
+    let (def_key, finding_kind) = match &entry.key {
+        FindingKey::DefOverride { key, .. } => (key.clone(), MergeFindingKind::DefOverride),
+        FindingKey::PatchCollision { key, .. } => (key.clone(), MergeFindingKind::PatchCollision),
+        _ => return None,
+    };
+    let offers_merge = entry.suggestion.alternatives.iter().any(
+        |alt| matches!(&alt.action, Action::Merge { key: alt_key, .. } if *alt_key == def_key),
+    );
+    offers_merge.then_some((def_key, finding_kind))
+}
 
 impl Session {
     /// Merge-first suggestions for clean previews: re-derives `source`'s cached
@@ -78,23 +99,10 @@ impl Session {
         else {
             return false;
         };
-        let Some((def_key, finding_kind)) = self.ledgers[slot].as_ref().and_then(|ledger| {
-            let entry = &ledger.entries[entry_index];
-            if entry.decision.is_some() {
-                return None;
-            }
-            let (def_key, finding_kind) = match &entry.key {
-                FindingKey::DefOverride { key, .. } => (key.clone(), MergeFindingKind::DefOverride),
-                FindingKey::PatchCollision { key, .. } => {
-                    (key.clone(), MergeFindingKind::PatchCollision)
-                }
-                _ => return None,
-            };
-            let offers_merge = entry.suggestion.alternatives.iter().any(|alt| {
-                matches!(&alt.action, Action::Merge { key: alt_key, .. } if *alt_key == def_key)
-            });
-            offers_merge.then_some((def_key, finding_kind))
-        }) else {
+        let Some((def_key, finding_kind)) = self.ledgers[slot]
+            .as_ref()
+            .and_then(|ledger| clean_merge_target(&ledger.entries[entry_index]))
+        else {
             return false;
         };
 
@@ -170,6 +178,59 @@ impl Session {
             adjust_stat(&mut ledger.stats, new_status, 1);
         }
         true
+    }
+
+    /// Builds, on the replay pool (`crate::replay_pool`), every merge preview
+    /// [`Self::redecide_clean_merge_at`] would build for `source`'s
+    /// cached ledger, and caches each one in ledger order — so a caller
+    /// about to redecide every entry (`RenderMergeMod`) pays for the
+    /// previews in parallel instead of one at a time. The same previews
+    /// end up cached either way: each is a pure function of the session
+    /// and its finding, and only the entries that call would plan for are
+    /// planned here. A preview that fails to build is not cached, so the
+    /// redecision skips it exactly as before: such a build is attempted twice
+    /// (here in parallel, then again by the sequential pass) with the same
+    /// outcome both times.
+    pub(crate) fn prefetch_clean_merge_previews(&mut self, source: OrderSource) {
+        if !self.rules.settings.suggest_merge_when_clean {
+            return;
+        }
+        let Some(reader) = self.def_source_reader.clone() else {
+            return;
+        };
+        let Some(ledger) = self.ledgers[Self::slot(source)].as_ref() else {
+            return;
+        };
+        let slot = PreviewSlot::profile(source);
+        // The same build condition `redecide_clean_merge_at` applies (no
+        // preview cached at all, whatever its choices), so a stale preview
+        // it would reuse is never replaced here.
+        let pending: Vec<(MergeContext, &FindingKey)> = ledger
+            .entries
+            .iter()
+            .filter(|entry| {
+                clean_merge_target(entry).is_some()
+                    && self.merge_preview(&slot, &entry.key).is_none()
+            })
+            .filter_map(|entry| {
+                let ctx = self.merge_context(slot.clone(), &entry.key).ok()?;
+                Some((ctx, &entry.key))
+            })
+            .collect();
+        let planner = PlanMerge::new(reader);
+        let session: &Session = self;
+        let built: Vec<(MergeContext, MergePreview)> = crate::replay_pool::install(|| {
+            pending
+                .into_par_iter()
+                .filter_map(|(ctx, key)| {
+                    let preview = planner.build_preview(session, &ctx, key).ok()?;
+                    Some((ctx, preview))
+                })
+                .collect()
+        });
+        for (ctx, preview) in built {
+            self.cache_merge_preview(ctx, preview);
+        }
     }
 
     /// Compares the copies before calling a def override contested:

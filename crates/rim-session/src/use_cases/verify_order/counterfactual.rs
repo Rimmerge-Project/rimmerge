@@ -411,8 +411,7 @@ impl<Reader: DefSourceReader> VerifyOrder<Reader> {
                 continue;
             }
 
-            let def_index = def_sources::LazyDefExists::new(session);
-            let def_exists = |dt: &str, dn: &str| def_index.get(dt, dn);
+            let def_exists = |dt: &str, dn: &str| session.def_exists(dt, dn);
             let input = EffectiveInput {
                 winner: &winner_id,
                 raw,

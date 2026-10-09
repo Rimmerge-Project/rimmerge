@@ -29,6 +29,11 @@ rim-merge = { workspace = true }
 thiserror = { workspace = true }
 jiff = { workspace = true }
 semver = { workspace = true }
+# `VerifyOrder` and the merge-preview prefetch replay thousands of independent
+# defs on a capped pool (`src/replay_pool.rs`); their outcomes are
+# folded back in key order, so the report is identical to a sequential pass.
+# Same pin as `rim-analyzer`'s own.
+rayon = { workspace = true }
 
 [dev-dependencies]
 rim-session = { path = ".", features = ["test-support"] }

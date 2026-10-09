@@ -9,6 +9,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use rim_analyzer::analysis::IndexedPatchOp;
+use rim_analyzer::analysis::indices::{ActiveMods, DisplayNameIndex};
 use rim_analyzer::domain::{LoadOrder, ModId, Selector, XmlLocator};
 use rim_merge::effective::{self, Completeness, EffectiveInput};
 use rim_merge::patch_eval::{PatchContribution, ReplayContext};
@@ -46,6 +47,12 @@ pub(super) struct PassEnvironment<'a> {
     pub(super) order: &'a LoadOrder,
     pub(super) edge_evidence: &'a EdgeEvidence,
     pub(super) replay: ReplayEnvironment<'a>,
+    /// The active-mod gate a top-level operation must pass to run at all —
+    /// see `active_top_level_operations`.
+    pub(super) active_gate: &'a ActiveMods,
+    /// The lowercased display-name map that gate reads — see
+    /// `build_gate_name_map`.
+    pub(super) name_map: &'a DisplayNameIndex,
 }
 
 /// What a pass accumulates across def keys.
@@ -59,6 +66,21 @@ pub(super) struct PassTally {
     pub(super) skipped: Vec<(DefKey, Selector, String)>,
     pub(super) defs_checked: usize,
     pub(super) suppressed_filter_head_ops: usize,
+}
+
+impl PassTally {
+    /// Folds `later` — the tally of def keys examined after every key
+    /// already in `self` — into `self`, leaving it exactly as if one
+    /// tally had examined them all in that order: each buffered outcome
+    /// list keeps its own order, and `later`'s outcomes go after `self`'s.
+    pub(super) fn absorb(&mut self, later: PassTally) {
+        for (key, outcomes) in later.pending {
+            self.pending.entry(key).or_default().extend(outcomes);
+        }
+        self.skipped.extend(later.skipped);
+        self.defs_checked += later.defs_checked;
+        self.suppressed_filter_head_ops += later.suppressed_filter_head_ops;
+    }
 }
 
 impl<Reader: DefSourceReader> VerifyOrder<Reader> {
@@ -127,8 +149,7 @@ impl<Reader: DefSourceReader> VerifyOrder<Reader> {
             })
             .collect();
 
-        let def_index = def_sources::LazyDefExists::new(env.session);
-        let def_exists = |dt: &str, dn: &str| def_index.get(dt, dn);
+        let def_exists = |dt: &str, dn: &str| env.session.def_exists(dt, dn);
         let context = ReplayContext {
             active_mods: env.replay.active_mods,
             mod_names_by_display: env.replay.mod_names_by_display,

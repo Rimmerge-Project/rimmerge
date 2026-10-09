@@ -53,8 +53,10 @@
 
 use std::collections::BTreeMap;
 
+use rayon::prelude::*;
+use rim_analyzer::analysis::IndexedPatchOp;
 use rim_analyzer::analysis::indices::ActiveMods;
-use rim_analyzer::domain::ModId;
+use rim_analyzer::domain::{ModId, Selector};
 
 use crate::Session;
 use crate::ports::DefSourceReader;
@@ -73,6 +75,15 @@ pub(super) use predict::{
     has_raw_owner, zero_owner_outcomes,
 };
 pub use report::{ReorderConflict, ReorderConflictDirection, VerifyOrderReport, reorder_conflicts};
+
+/// How many def keys one parallel chunk of [`VerifyOrder`]'s main loop
+/// holds: large enough to keep every worker busy, small enough that
+/// progress still moves in steps of a few percent on a real install.
+const DEF_KEYS_PER_CHUNK: usize = 512;
+
+/// One `SourceIndex::patch_ops_by_def` entry: the def key and the patch
+/// operations indexed under it.
+type DefKeyEntry<'a> = (&'a (String, String, Selector), &'a Vec<IndexedPatchOp>);
 
 // Sibling-file tests; `#[path]` keeps the module named `tests`.
 #[cfg(test)]
@@ -105,7 +116,7 @@ pub struct VerifyOrder<Reader> {
     reader: Reader,
 }
 
-impl<Reader: DefSourceReader> VerifyOrder<Reader> {
+impl<Reader: DefSourceReader + Sync> VerifyOrder<Reader> {
     /// Builds the use case from its port.
     #[must_use]
     pub fn new(reader: Reader) -> Self {
@@ -142,7 +153,7 @@ impl<Reader: DefSourceReader> VerifyOrder<Reader> {
     }
 
     /// Same as [`Self::execute`], but calls `on_progress(checked, total)`
-    /// as work starts on each unit of work. `apps/desktop`'s own
+    /// as each unit of work is announced. `apps/desktop`'s own
     /// `verify_order` command is the one real
     /// caller: a real-install pass runs for about a minute on a large
     /// install with no feedback at all, which reads as a frozen dialog —
@@ -151,15 +162,18 @@ impl<Reader: DefSourceReader> VerifyOrder<Reader> {
     ///
     /// **Two phases, and `total` grows once, mid-stream**:
     ///
-    /// 1. **Candidate keys.** One call per candidate key as it starts
-    ///    being examined, reported as `(index, defs)` where `defs` is the
-    ///    full candidate-key count (every key this pass will visit,
+    /// 1. **Candidate keys.** One call per candidate key, reported as
+    ///    `(index, defs)` where `defs` is the full candidate-key count (every key this pass will visit,
     ///    including the ones the gating/zero-owner/injected-only branches
     ///    skip trivially without incrementing
     ///    [`VerifyOrderReport::defs_checked`]).
+    ///    Keys are examined in chunks of `DEF_KEYS_PER_CHUNK` on several
+    ///    threads, and a chunk's calls all fire before any key in it runs, so
+    ///    `checked` can run up to one chunk ahead of the keys actually
+    ///    finished.
     /// 2. **Counterfactual jobs.** Once the surviving rows have been
-    ///    reconciled and the job count `J` is known, one call per job as
-    ///    it starts, reported as `(defs + done, defs + J)`.
+    ///    reconciled and the job count `J` is known, one call per job,
+    ///    reported as `(defs + done, defs + J)`.
     ///
     /// So `checked` is still strictly non-decreasing across the whole
     /// pass and the last call is still exactly `(total, total)` — but
@@ -237,61 +251,32 @@ impl<Reader: DefSourceReader> VerifyOrder<Reader> {
                 active_mods: &active_mods,
                 mod_names_by_display: &mod_names_by_display,
             },
+            active_gate: &active_mods_gate,
+            name_map: &name_map,
         };
         let mut tally = PassTally::default();
-        // Iterates `patch_ops_by_def` directly rather than collecting
-        // every key into an owned `Vec` and re-looking each one up by a
-        // freshly cloned tuple: `indexed` comes straight from the
-        // iterator, so there is no lookup to fail, no panic path in
-        // non-test code, and no redundant `String` clones per pass.
-        let total_keys = session.sources().patch_ops_by_def.len();
-        for (index, ((def_type, def_name, selector), indexed)) in
-            session.sources().patch_ops_by_def.iter().enumerate()
-        {
-            on_progress(index, total_keys);
-            let top_level =
-                active_top_level_operations(indexed, &order, &active_mods_gate, &name_map);
-            // Every op on this def sits under a gate that is closed in this
-            // order (an unsatisfied `FindMod`/`MayRequire`): nothing runs, so
-            // nothing can fail, and reading and folding the def's sources
-            // would only cost time and count a def as "checked" that no
-            // operation was checked against.
-            if top_level.is_empty() {
-                continue;
+        let def_keys: Vec<DefKeyEntry<'_>> = session.sources().patch_ops_by_def.iter().collect();
+        let total_keys = def_keys.len();
+        // Every def key is examined on its own (reading only the session and
+        // its own sources), so a chunk of keys runs on the replay pool (see
+        // `crate::replay_pool`) and each key's tally is then folded in key
+        // order: the report is exactly what one sequential pass would
+        // build, whatever the threads' timing. Chunked rather than one
+        // parallel pass so `on_progress` still advances while the pass runs.
+        for (chunk_index, chunk) in def_keys.chunks(DEF_KEYS_PER_CHUNK).enumerate() {
+            let first_index = chunk_index * DEF_KEYS_PER_CHUNK;
+            for index in first_index..first_index + chunk.len() {
+                on_progress(index, total_keys);
             }
-            let target = DefTarget {
-                def_type,
-                def_name,
-                selector: *selector,
-                indexed,
-                top_level: &top_level,
-            };
-
-            if !has_any_owner(session, def_type, def_name, *selector) {
-                self.replay_zero_owner(&pass, &target, &mut tally);
-                continue;
+            let tallies: Vec<PassTally> = crate::replay_pool::install(|| {
+                chunk
+                    .par_iter()
+                    .map(|entry| self.examine_def_key(&pass, *entry))
+                    .collect()
+            });
+            for key_tally in tallies {
+                tally.absorb(key_tally);
             }
-
-            if !has_raw_owner(session, def_type, def_name, *selector) {
-                // Real, but injected-only: the def genuinely exists
-                // (`has_any_owner` said so, via `injected_def_owners`), so
-                // it must not be predicted `DeadTarget` — but it also has
-                // no raw `Defs/**/*.xml` source anywhere `def_owner_and_raw`
-                // could read, since RimWorld synthesizes it dynamically
-                // from the injecting mod's own `<value>` content. Replaying
-                // a foreign patcher's op against content this pass can't
-                // even read would be guessing, not predicting — honestly
-                // skipped instead, same as any other candidate this pass
-                // can't check (`VerifyOrderReport::skipped`'s doc comment).
-                tally.skipped.push((
-                    target.def_key(),
-                    *selector,
-                    format!("{def_type}/{def_name}: owned only by a patch injection (no raw Defs/ source) — not replayable this pass"),
-                ));
-                continue;
-            }
-
-            self.replay_owned_def(&pass, &target, &mut tally);
         }
 
         // Reconciled after every def key has been examined. An operation
@@ -350,5 +335,57 @@ impl<Reader: DefSourceReader> VerifyOrder<Reader> {
             counterfactual,
             suppressed_filter_head_ops: tally.suppressed_filter_head_ops,
         }
+    }
+
+    /// Examines one def key against `pass`'s order and returns what it
+    /// adds to the pass's tally; see the main loop for how the keys'
+    /// tallies are combined.
+    fn examine_def_key(&self, pass: &PassEnvironment<'_>, entry: DefKeyEntry<'_>) -> PassTally {
+        let ((def_type, def_name, selector), indexed) = entry;
+        let mut tally = PassTally::default();
+        let top_level =
+            active_top_level_operations(indexed, pass.order, pass.active_gate, pass.name_map);
+        // Every op on this def sits under a gate that is closed in this
+        // order (an unsatisfied `FindMod`/`MayRequire`): nothing runs, so
+        // nothing can fail, and reading and folding the def's sources
+        // would only cost time and count a def as "checked" that no
+        // operation was checked against.
+        if top_level.is_empty() {
+            return tally;
+        }
+        let target = DefTarget {
+            def_type,
+            def_name,
+            selector: *selector,
+            indexed,
+            top_level: &top_level,
+        };
+
+        if !has_any_owner(pass.session, def_type, def_name, *selector) {
+            self.replay_zero_owner(pass, &target, &mut tally);
+            return tally;
+        }
+
+        if !has_raw_owner(pass.session, def_type, def_name, *selector) {
+            // Real, but injected-only: the def genuinely exists
+            // (`has_any_owner` said so, via `injected_def_owners`), so
+            // it must not be predicted `DeadTarget` — but it also has
+            // no raw `Defs/**/*.xml` source anywhere `def_owner_and_raw`
+            // could read, since RimWorld synthesizes it dynamically
+            // from the injecting mod's own `<value>` content. Replaying
+            // a foreign patcher's op against content this pass can't
+            // even read would be guessing, not predicting — honestly
+            // skipped instead, same as any other candidate this pass
+            // can't check (`VerifyOrderReport::skipped`'s doc comment).
+            tally.skipped.push((
+                target.def_key(),
+                *selector,
+                format!("{def_type}/{def_name}: owned only by a patch injection (no raw Defs/ source) — not replayable this pass"),
+            ));
+            return tally;
+        }
+
+        self.replay_owned_def(pass, &target, &mut tally);
+        tally
     }
 }

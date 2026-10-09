@@ -181,8 +181,7 @@ pub(crate) fn zero_owner_outcomes<Reader: DefSourceReader>(
             operation_xml: text.as_str(),
         })
         .collect();
-    let def_index = def_sources::LazyDefExists::new(session);
-    let def_exists = |dt: &str, dn: &str| def_index.get(dt, dn);
+    let def_exists = |dt: &str, dn: &str| session.def_exists(dt, dn);
     let context = ReplayContext {
         active_mods: env.active_mods,
         mod_names_by_display: env.mod_names_by_display,

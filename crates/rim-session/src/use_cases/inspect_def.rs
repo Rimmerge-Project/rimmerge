@@ -260,12 +260,9 @@ impl<Reader: DefSourceReader> InspectDef<Reader> {
             .iter()
             .map(|m| (m.name.clone(), m.id.clone()))
             .collect();
-        // Lazily built (and shared with `PlanMerge`'s identical need) —
-        // see `def_sources::LazyDefExists`'s own doc comment: most
-        // inspections never ask, and folding ~200k keys into a set costs
-        // real time when they don't.
-        let def_index = def_sources::LazyDefExists::new(session);
-        let def_exists = |dt: &str, dn: &str| def_index.get(dt, dn);
+        // The session's own lazily built def index — see
+        // `Session::def_exists`'s own doc comment.
+        let def_exists = |dt: &str, dn: &str| session.def_exists(dt, dn);
         let context = ReplayContext {
             active_mods: &active_mods,
             mod_names_by_display: &mod_names_by_display,

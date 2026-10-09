@@ -44,6 +44,17 @@ const MAX_CONTRIBUTES_NOTHING: usize = 10;
 
 const REPEATS: usize = 5;
 
+/// The budget for one [`rim_session::use_cases::VerifyOrder::execute`]
+/// (counterfactual phase included) over a real install of about 1,000
+/// active mods, in a release build. Measured at about 12 s per order on the
+/// reference install when run after the install was loaded on the global
+/// pool (about 6.6 s run alone on the 4-thread replay pool, about 21 s on
+/// one thread); a pass that went back to
+/// rebuilding the def index for every def took 74 to 108 s and fails here.
+/// The margin absorbs the other tests in this tier running beside it, so
+/// this guards the index, not the thread count.
+const VERIFY_BUDGET: Duration = Duration::from_secs(60);
+
 /// `<def type>/<def name>` of a real, live `DefOverride` finding this
 /// machine's install carries that the identical-copy pass must promote
 /// to `Accept` 99 — an exact def case has no honest weaker claim to fall
@@ -565,9 +576,11 @@ async fn identical_copies_pass_against_the_real_install() {
 /// Wall-clock cost
 /// of [`rim_session::use_cases::VerifyOrder::execute`] against the real
 /// install, for both `Current` and `Suggested` — this pass is never part
-/// of `Session::compute`/the ledger build, so its own cost is measured and
-/// recorded here rather than budgeted in advance the way every other pass
-/// in this file is (on a large install it runs for minutes, not seconds).
+/// of `Session::compute`/the ledger build, so it gets its own, looser
+/// budget ([`VERIFY_BUDGET`]) rather than the 2s every other pass in this
+/// file meets. A second pass over the same order must produce the same
+/// report: the def keys are replayed on several threads, and their
+/// outcomes must still come out in key order.
 /// Also reports the real cause breakdown (`RemovedBy`/`NotYetInjected`/
 /// `DeadTarget`/`Unknown`), since a high `Unknown` count is itself a
 /// signal the classifier is missing a case
@@ -749,6 +762,14 @@ async fn verify_order_against_the_real_install() {
         );
         assert_eq!(report.defs_checked, without.defs_checked);
         assert_eq!(report.skipped.len(), without.skipped.len());
+        assert!(
+            elapsed < VERIFY_BUDGET,
+            "VerifyOrder {source:?} took {elapsed:?}, over its {VERIFY_BUDGET:?} budget"
+        );
+        assert!(
+            verify.execute(&session, source) == report,
+            "a second VerifyOrder {source:?} pass over the same session produced a different report"
+        );
         let reorder_bearing = |findings: &[rim_resolve::domain::Finding]| {
             findings
                 .iter()

@@ -114,7 +114,7 @@ impl<Reader: DefSourceReader> PlanMerge<Reader> {
         }
     }
 
-    fn build_preview(
+    pub(crate) fn build_preview(
         &self,
         session: &Session,
         ctx: &MergeContext,
@@ -341,9 +341,8 @@ impl<Reader: DefSourceReader> PlanMerge<Reader> {
             .collect();
         // Answers a `PatchOperationConditional`/`Test` whose xpath is a
         // bare existence test on another def, out of the scan's own def
-        // index — see `def_sources::LazyDefExists`'s own doc comment.
-        let def_index = def_sources::LazyDefExists::new(session);
-        let def_exists = |def_type: &str, def_name: &str| def_index.get(def_type, def_name);
+        // index — see `Session::def_exists`'s own doc comment.
+        let def_exists = |def_type: &str, def_name: &str| session.def_exists(def_type, def_name);
 
         let all_mods_in_order = ordered(mods, order);
         let (mods_in_order, out_of_scope_mods) = match scope {

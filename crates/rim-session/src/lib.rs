@@ -23,6 +23,7 @@ mod mod_knowledge;
 pub mod mod_list;
 mod paths;
 mod recommended_rules;
+mod replay_pool;
 mod session;
 mod settings;
 

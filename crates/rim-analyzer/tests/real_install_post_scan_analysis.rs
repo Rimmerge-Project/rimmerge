@@ -31,12 +31,14 @@ const RERUN_COMMAND: &str = "RIMMERGE_GAME_DIR=<your install> \
      --release --run-ignored ignored-only";
 
 /// The budget for one warm `build_explained_report` over a real install of
-/// about 1,000 active mods, in a release build. Measured at about 5 to 6 s
-/// alone on the reference install, and up to 13 s while the rest of this
-/// tier scans the install on the other test threads (down from about 25 s
-/// alone before the step was profiled: the explanation's folder walk by
-/// itself took 15 s). The margin absorbs that contention; the walk or the
-/// vote regressing to its old shape still fails.
+/// about 1,000 active mods, in a release build. Measured at about 3 to 4 s
+/// alone on the reference install since `build_ref`'s two sides and the
+/// dangling-reference vote run in parallel (4 to 5.5 s before that), and
+/// up to 13 s while the rest of this tier scans the install on the other
+/// test threads (down from about 25 s alone before the step was profiled:
+/// the explanation's folder walk by itself took 15 s). The margin absorbs
+/// that contention; the walk or the vote regressing to its old shape still
+/// fails.
 const BUILD_BUDGET: Duration = Duration::from_secs(20);
 
 /// `report` as JSON with the one per-run field, `metadata.generated_at`,

@@ -348,6 +348,7 @@ impl<Reader: DefSourceReader, Assets: AssetLocator> RenderMergeMod<Reader, Asset
                 .iter()
                 .map(|entry| entry.key.clone())
                 .collect();
+            session.prefetch_clean_merge_previews(source);
             for key in &all_keys {
                 session.redecide_clean_merge_at(source, key);
             }

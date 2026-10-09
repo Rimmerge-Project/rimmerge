@@ -504,8 +504,7 @@ fn mod_patch_ops_all_inert<Reader: DefSourceReader>(
             })
             .collect();
 
-        let def_index = def_sources::LazyDefExists::new(session);
-        let def_exists = |dt: &str, dn: &str| def_index.get(dt, dn);
+        let def_exists = |dt: &str, dn: &str| session.def_exists(dt, dn);
         let context = ReplayContext {
             active_mods: gating.env.active_mods,
             mod_names_by_display: gating.env.mod_names_by_display,

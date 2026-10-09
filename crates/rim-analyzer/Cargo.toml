@@ -19,13 +19,14 @@ path = "src/lib.rs"
 anyhow = "1.0.104"
 clap = { version = "4.6.6", features = ["derive"] }
 jiff = "0.2.35"
-rayon = "1.12.0"
-# `{ workspace = true }`, unlike every other dependency in this list:
+# `{ workspace = true }`, unlike every other dependency in this list
+# (`rayon` and `regex`, both shared with a sibling crate):
 # `regex` used to be pinned here independently of `rim-io`'s own
 # identical pin, and two independent
 # pins of the same crate is exactly where version drift starts. Not a
 # broader migration of this crate onto workspace dependencies — see this
 # file's own closing comment for why the rest stay hard-pinned.
+rayon = { workspace = true }
 regex = { workspace = true }
 roxmltree = "0.21.1"
 serde = { version = "1.0.229", features = ["derive"] }

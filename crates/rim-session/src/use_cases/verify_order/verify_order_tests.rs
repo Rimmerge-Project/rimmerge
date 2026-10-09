@@ -2911,3 +2911,163 @@ fn an_opposite_direction_violated_edge_is_a_conflict_with_its_own_status() {
     );
     assert_eq!(conflicts[0].direction, ReorderConflictDirection::Reverses);
 }
+
+fn predicted_failure(operation: &str) -> Finding {
+    Finding::PatchWillFail {
+        mod_id: ModId::new("x.mod"),
+        def_key: rim_resolve::domain::DefKey {
+            def_type: "ThingDef".to_string(),
+            def_name: "Wall".to_string(),
+        },
+        selector: Selector::DefName,
+        operation: operation.to_string(),
+        leaf_xpath: None,
+        cause: PatchFailureCause::DeadTarget,
+        reorder_kind: None,
+    }
+}
+
+fn op_key(file: &str) -> super::counterfactual::TopLevelOpKey {
+    (
+        ModId::new("x.mod"),
+        Arc::from(Path::new(file)),
+        0,
+        String::new(),
+    )
+}
+
+fn skip_row(def_name: &str) -> (rim_resolve::domain::DefKey, Selector, String) {
+    (
+        rim_resolve::domain::DefKey {
+            def_type: "ThingDef".to_string(),
+            def_name: def_name.to_string(),
+        },
+        Selector::DefName,
+        format!("{def_name}: skipped"),
+    )
+}
+
+/// The tally of two def keys, examined one after the other.
+fn tallies_of_two_keys() -> (PassTally, PassTally) {
+    let mut first = PassTally::default();
+    first
+        .pending
+        .insert(op_key("Shared.xml"), vec![Some(predicted_failure("first"))]);
+    first.pending.insert(op_key("OnlyFirst.xml"), vec![None]);
+    first.skipped.push(skip_row("First"));
+    first.defs_checked = 1;
+    first.suppressed_filter_head_ops = 2;
+
+    let mut second = PassTally::default();
+    second.pending.insert(
+        op_key("Shared.xml"),
+        vec![None, Some(predicted_failure("second"))],
+    );
+    second.skipped.push(skip_row("Second"));
+    second.defs_checked = 1;
+    second.suppressed_filter_head_ops = 3;
+    (first, second)
+}
+
+#[test]
+fn absorbing_per_key_tallies_in_key_order_keeps_every_outcome_in_examination_order() {
+    let (first, second) = tallies_of_two_keys();
+    let mut combined = PassTally::default();
+
+    combined.absorb(first);
+    combined.absorb(second);
+
+    assert_eq!(
+        combined.pending,
+        BTreeMap::from([
+            (op_key("OnlyFirst.xml"), vec![None]),
+            (
+                op_key("Shared.xml"),
+                vec![
+                    Some(predicted_failure("first")),
+                    None,
+                    Some(predicted_failure("second")),
+                ],
+            ),
+        ])
+    );
+    assert_eq!(
+        combined.skipped,
+        vec![skip_row("First"), skip_row("Second")]
+    );
+    assert_eq!(combined.defs_checked, 2);
+    assert_eq!(combined.suppressed_filter_head_ops, 5);
+}
+
+#[test]
+fn absorbing_into_a_non_empty_tally_appends_after_what_it_already_holds() {
+    let (first, second) = tallies_of_two_keys();
+    let mut combined = first;
+
+    combined.absorb(second);
+
+    assert_eq!(
+        combined.pending[&op_key("Shared.xml")],
+        vec![
+            Some(predicted_failure("first")),
+            None,
+            Some(predicted_failure("second")),
+        ]
+    );
+    assert_eq!(
+        combined.skipped,
+        vec![skip_row("First"), skip_row("Second")]
+    );
+}
+
+/// The def keys are examined in parallel, so this pins that their outcomes
+/// still come out in def-key order — the order one sequential pass produces.
+#[test]
+fn an_op_failing_on_several_def_keys_reports_them_in_def_key_order() {
+    let def_names = ["WallA", "WallB", "WallC", "WallD", "WallE"];
+    let mut sources = SourceIndex::default();
+    let mut elements = BTreeMap::new();
+    let head = or_head_xpath(&def_names);
+    let op_locator = locator("x_patch.xml", 0);
+    for def_name in def_names {
+        register_owned_def(
+            &mut sources,
+            &mut elements,
+            &ModId::new("core.mod"),
+            def_name,
+            false,
+        );
+        sources.patch_ops_by_def.insert(
+            (
+                "ThingDef".to_string(),
+                def_name.to_string(),
+                Selector::DefName,
+            ),
+            vec![make_or_head_op(
+                &ModId::new("x.mod"),
+                def_name,
+                &head,
+                op_locator.clone(),
+            )],
+        );
+    }
+    elements.insert(op_locator, or_head_op_xml(&def_names));
+    let report = rim_resolve::test_support::ReportBuilder::new()
+        .mod_("core.mod")
+        .mod_("x.mod")
+        .build();
+    let session = session_with_sources_and_mods(sources, report, &["core.mod", "x.mod"]);
+    let verify = VerifyOrder::new(InMemoryDefSourceReader::new(elements));
+
+    let result = verify.execute(&session, OrderSource::Current);
+
+    let reported: Vec<String> = result
+        .findings
+        .iter()
+        .map(|finding| match finding {
+            Finding::PatchWillFail { def_key, .. } => def_key.def_name.clone(),
+            other => panic!("expected PatchWillFail, got {other:?}"),
+        })
+        .collect();
+    assert_eq!(reported, def_names.map(str::to_string));
+}
