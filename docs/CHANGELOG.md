@@ -4,7 +4,7 @@ This changelog starts at the first public release. Development history
 before that point is not summarized here — see `.journal/` in a
 maintainer's own checkout for the full record, if you have it.
 
-## [Unreleased]
+## [1.2.3] - 2026-10-09
 
 - **Verify checks each mod file for changes once per run.** Reading a def or
   patch operation back from its mod's file checked the file's size and
