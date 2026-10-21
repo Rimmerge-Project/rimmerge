@@ -8,22 +8,37 @@ snapshot plus the reasoning behind every deliberate pin.
 ## Toolchain
 
 `rust-toolchain.toml` pins `channel = "stable"` (resolves to whatever
-stable is installed on the host — every contributor and CI runner is a
-fixed Windows/MSVC host, so a triple-suffixed channel buys nothing
-here). The reference toolchain is `rustc 1.98.1`; `rust-version` in
+stable is installed on the host; CI runs on Windows/MSVC and Linux GNU).
+The reference toolchain is `rustc 1.98.1`; `rust-version` in
 `Cargo.toml` floors it at `1.98`.
 
-## Why Windows/MSVC only
+## Release artifacts
 
-Several dependencies here are Windows-specific, not merely
-Windows-first: `sysinfo` is pulled in with its Windows process APIs
-(`rim-io` reads the running-game-process check through it), and the
-desktop app links WebView2 through Tauri's `wry`/`tauri-runtime-wry`.
-`deny.toml`'s `[graph].targets = ["x86_64-pc-windows-msvc"]` reflects
-this: it prunes the dependency graph to the one target this app
-actually ships for, which also keeps `cargo deny check` from flagging
-advisories/licenses in non-Windows branches of Tauri's dependency tree
-(`wry`'s Linux webview backend) that this build never compiles.
+Tagged releases ship the following artifacts, built by `.github/workflows/release.yml`:
+
+| Platform | Artifact | Contents |
+|---|---|---|
+| Windows | `Rimmerge-<ver>-windows-x64-portable.zip` | Desktop (`Rimmerge.exe`) + CLI (`cli\\rimmerge.exe`) + licenses |
+| Windows | `rimmerge-cli-<ver>-x86_64-pc-windows-msvc.zip` | CLI only |
+| Linux | `Rimmerge_<ver>_amd64.deb` | Desktop + `/usr/bin/rimmerge` CLI + MIT/Apache licenses |
+| Linux | `Rimmerge-<ver>-linux-x64-portable.tar.gz` | Desktop + CLI + licenses, portable tarball |
+| Linux | `rimmerge-cli-<ver>-x86_64-unknown-linux-gnu.tar.gz` | CLI only |
+
+Linux release packaging is pinned to `ubuntu-24.04` (x86_64); runtime
+validation and Flatpak/Proton boundaries are documented in [install.md](install.md#linux-support-boundary).
+
+All release artifacts are accompanied by `SHA256SUMS.txt`; verify with
+`sha256sum -c SHA256SUMS.txt` (bash) or
+`(Get-FileHash .<zip>).Hash.ToLower()` (PowerShell).
+
+## Platform dependency split
+
+The backend now supports Windows/MSVC and Linux GNU targets. `sysinfo`
+provides the process-name probe on both platforms, while Tauri selects
+WebView2 on Windows and WebKitGTK/GTK through `wry` on Linux. The Linux
+desktop therefore needs the native packages listed in [docs/install.md](install.md).
+`deny.toml` audits both target graphs; its documented advisory exceptions
+are limited to transitive GTK/WebKit dependencies with no safe upgrade.
 
 ## Rust — workspace dependencies (`[workspace.dependencies]`)
 

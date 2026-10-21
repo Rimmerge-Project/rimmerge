@@ -21,7 +21,7 @@
 //! ([`crate::profile_dir`]), because a profile that didn't match its own
 //! `ModsConfig.xml` would silently load another install's decisions.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use rim_analyzer::infra::paths;
 use rim_session::ProjectPaths;
@@ -86,14 +86,14 @@ pub enum PathResolutionError {
         candidates: Vec<PathBuf>,
     },
     /// No `ModsConfig.xml` was given, pinned, or derivable (the
-    /// derivation needs `%USERPROFILE%`).
+    /// derivation needs a platform-specific configuration context).
     #[error(
         "could not work out where ModsConfig.xml is. Pass --mods-config <path>, set \
          {MODS_CONFIG_VAR}, or run `rimmerge config set --mods-config <path>`. The default \
          location could not be derived: {reason}"
     )]
     ModsConfigNotFound {
-        /// Why the `%USERPROFILE%`-relative derivation failed.
+        /// Why the default configuration could not be resolved.
         reason: String,
     },
 }
@@ -169,9 +169,9 @@ trait Environment {
     fn detect_game_dir(&self) -> Option<PathBuf>;
     /// See [`paths::default_game_dir_candidates`].
     fn game_dir_candidates(&self) -> Vec<PathBuf>;
-    /// See [`paths::default_mods_config_path`]; the error text is carried
+    /// See [`paths::mods_config_path_for_install`]; the error text is carried
     /// into [`PathResolutionError::ModsConfigNotFound`].
-    fn default_mods_config(&self) -> Result<PathBuf, String>;
+    fn default_mods_config(&self, game_dir: &Path) -> Result<PathBuf, String>;
     /// See [`paths::is_game_dir`] — injected so the warning's own tests
     /// don't need a real install tree on disk.
     fn is_game_dir(&self, path: &std::path::Path) -> bool;
@@ -192,8 +192,8 @@ impl Environment for SystemEnvironment {
         paths::default_game_dir_candidates()
     }
 
-    fn default_mods_config(&self) -> Result<PathBuf, String> {
-        paths::default_mods_config_path().map_err(|error| error.to_string())
+    fn default_mods_config(&self, game_dir: &Path) -> Result<PathBuf, String> {
+        paths::mods_config_path_for_install(game_dir).map_err(|error| error.to_string())
     }
 
     fn is_game_dir(&self, path: &std::path::Path) -> bool {
@@ -239,7 +239,7 @@ fn resolve_with(
     ) {
         Some(path) => path,
         None => environment
-            .default_mods_config()
+            .default_mods_config(&game_dir)
             .map_err(|reason| PathResolutionError::ModsConfigNotFound { reason })?,
     };
 
@@ -289,6 +289,7 @@ mod tests {
         detected: Option<PathBuf>,
         candidates: Vec<PathBuf>,
         mods_config: Option<PathBuf>,
+        expected_game_dir: Option<PathBuf>,
         /// Which directories this fake machine considers real installs.
         /// Empty means "none" — so the default fake exercises the
         /// warning path, and a test that cares says so explicitly.
@@ -318,6 +319,45 @@ mod tests {
         }
     }
 
+    #[test]
+    fn default_config_receives_the_selected_game_and_explicit_config_bypasses_discovery() {
+        let base = tempfile::tempdir().expect("base");
+        let game = PathBuf::from("selected-install");
+        let environment = FakeEnvironment {
+            expected_game_dir: Some(game.clone()),
+            mods_config: Some(PathBuf::from("selected-config.xml")),
+            ..FakeEnvironment::default()
+        };
+        let mut overrides = PathOverrides::new(base.path().to_path_buf());
+        overrides.game_dir = Some(game);
+        assert_eq!(
+            resolve_with(&overrides, &environment)
+                .expect("selected context")
+                .paths
+                .mods_config,
+            PathBuf::from("selected-config.xml")
+        );
+        let absent = FakeEnvironment::default();
+        assert!(matches!(
+            resolve_with(&overrides, &absent),
+            Err(PathResolutionError::ModsConfigNotFound { .. })
+        ));
+        assert_eq!(
+            std::fs::read_dir(base.path())
+                .expect("base entries")
+                .count(),
+            0
+        );
+        overrides.mods_config = Some(PathBuf::from("explicit-config.xml"));
+        assert_eq!(
+            resolve_with(&overrides, &absent)
+                .expect("explicit config")
+                .paths
+                .mods_config,
+            PathBuf::from("explicit-config.xml")
+        );
+    }
+
     impl Environment for FakeEnvironment {
         fn path_var(&self, key: &str) -> Option<PathBuf> {
             self.vars
@@ -336,7 +376,10 @@ mod tests {
             self.candidates.clone()
         }
 
-        fn default_mods_config(&self) -> Result<PathBuf, String> {
+        fn default_mods_config(&self, game_dir: &Path) -> Result<PathBuf, String> {
+            if let Some(expected) = &self.expected_game_dir {
+                assert_eq!(game_dir, expected);
+            }
             self.mods_config
                 .clone()
                 .ok_or_else(|| "USERPROFILE environment variable is not set".to_string())

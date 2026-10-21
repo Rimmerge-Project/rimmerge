@@ -13,33 +13,31 @@ use sha2::{Digest, Sha256};
 /// same path hash identically.
 const EXTENDED_PREFIX: &str = r"\\?\";
 
-/// Normalizes `path` into the text [`profile_dir`] hashes: canonicalized
-/// when it exists on disk (resolving `.`/`..` and symlinks), with the
-/// Windows extended-length prefix stripped, backslashes turned to
-/// forward slashes, and lowercased — so two spellings of the same
-/// `ModsConfig.xml` (different case, different slash direction, a
-/// not-yet-canonical relative path) always hash to the same profile.
-/// Falling back to `path` unchanged (still normalized the same way) when
-/// canonicalization fails (the path doesn't exist yet) is a best effort:
-/// it can't undo `.`/`..`/symlinks it can't see, but it does at least
-/// unify case and slash direction.
-fn normalize(path: &Path) -> String {
+/// Canonicalizes an existing config path before hashing. Windows also strips
+/// the extended prefix, normalizes separators and folds case. Unix preserves
+/// the original bytes, case and literal backslashes. UTF-8 path IDs stay unchanged.
+/// If the file does not exist, its original spelling is used.
+fn normalize(path: &Path) -> Vec<u8> {
     let resolved = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
-    let text = resolved.to_string_lossy();
-    let stripped = text.strip_prefix(EXTENDED_PREFIX).unwrap_or(&text);
-    let forward_slashes = stripped.replace('\\', "/");
-    forward_slashes.to_lowercase()
+    #[cfg(windows)]
+    {
+        let text = resolved.to_string_lossy();
+        let stripped = text.strip_prefix(EXTENDED_PREFIX).unwrap_or(&text);
+        stripped.replace('\\', "/").to_lowercase().into_bytes()
+    }
+    #[cfg(not(windows))]
+    {
+        resolved.as_os_str().as_encoded_bytes().to_vec()
+    }
 }
 
-/// `<base>/profiles/<first 12 hex chars of sha256(normalized mods_config
-/// path)>/` — stable for a given `mods_config` path regardless of case,
-/// slash direction, or `\\?\`-prefixed canonical spelling (so re-running
-/// against the same install always finds the same profile), and distinct
-/// across installs.
+/// `<base>/profiles/<first 12 hex chars of sha256(normalized config path)>/`.
+/// Stable for aliases of the same existing file. Case/separator variants are
+/// equivalent only on Windows; Unix paths remain distinct.
 #[must_use]
 pub fn profile_dir(base: &Path, mods_config: &Path) -> PathBuf {
     let mut hasher = Sha256::new();
-    hasher.update(normalize(mods_config).as_bytes());
+    hasher.update(normalize(mods_config));
     let digest = hasher.finalize();
     let hex: String = digest
         .iter()
@@ -72,38 +70,86 @@ fn strip_extended_prefix(path: &Path) -> PathBuf {
     }
 }
 
-/// Resolves a user-supplied directory (a CLI `--out` flag, a Tauri
-/// folder-picker result, or a hand-typed path) to what a writer should
-/// actually use: first absolutized against the process's current
-/// directory ([`std::path::absolute`] — a pure computation, no
-/// filesystem access, so a relative path always has a well-defined
-/// location), then, only when that path already exists on disk,
-/// canonicalized to resolve `.`/`..` segments, symlinks, and junctions,
-/// with Windows' extended-length `\\?\` prefix stripped back off (the
-/// same normalization [`profile_dir`]'s own [`normalize`] applies before
-/// hashing). A folder that doesn't exist yet is returned merely
-/// absolutized — there is nothing on disk yet to canonicalize, and the
-/// caller (an exporter) is the one about to create it.
-///
-/// Both `apps/cli` and `apps/desktop/src-tauri` must call this on every
-/// user-supplied directory before it reaches `rim_session`'s use cases:
-/// those use cases do no filesystem I/O of their own (see
-/// `rim-session`'s `CLAUDE.md`) and so can only check a path
-/// *lexically* — a symlink, junction, or 8.3 short name that lexically
-/// looks clear of the game's `Mods` folder but resolves inside it on
-/// disk would otherwise slip past `ExportPatch`'s own refusal.
+/// Resolves a user-supplied directory to an absolute physical location.
+/// Existing ancestors are canonicalized even when the destination is new;
+/// missing components are appended without creating them. Windows' extended
+/// prefix is stripped. No other filesystem errors are treated as absence.
 ///
 /// # Errors
-///
-/// Returns an error when absolutizing or canonicalizing fails (e.g. an
-/// empty path, or a permissions error reading an existing directory).
+/// Returns filesystem errors, including broken links and inaccessible ancestors.
 pub fn resolve_user_dir(path: &Path) -> io::Result<PathBuf> {
     let absolute = std::path::absolute(path)?;
-    if !absolute.exists() {
-        return Ok(absolute);
+    match std::fs::symlink_metadata(&absolute) {
+        Ok(_) => absolute
+            .canonicalize()
+            .map(|path| strip_extended_prefix(&path)),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => {
+            let parent = absolute.parent().ok_or(error)?;
+            let mut resolved = resolve_user_dir(parent)?;
+            match absolute.components().next_back() {
+                Some(std::path::Component::Normal(name)) => resolved.push(name),
+                Some(std::path::Component::ParentDir) => {
+                    resolved.pop();
+                }
+                _ => return Err(io::Error::other("directory has no final component")),
+            }
+            // A missing segment followed by `..` can lead back to an existing alias.
+            match std::fs::symlink_metadata(&resolved) {
+                Ok(_) => resolved
+                    .canonicalize()
+                    .map(|path| strip_extended_prefix(&path)),
+                Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(resolved),
+                Err(error) => Err(error),
+            }
+        }
+        Err(error) => Err(error),
     }
-    let canonical = absolute.canonicalize()?;
-    Ok(strip_extended_prefix(&canonical))
+}
+
+/// A destination that cannot safely be used for exporting a project.
+#[derive(Debug, thiserror::Error)]
+pub enum ExportDirError {
+    /// Only the explicit install operation may write into Mods.
+    #[error("{0} is inside the game's Mods folder; use install instead")]
+    InsideMods(PathBuf),
+    /// Resolving either location failed before any export writes.
+    #[error(transparent)]
+    Io(#[from] io::Error),
+}
+
+/// Resolves an export destination and refuses the game's Mods directory and
+/// descendants, including symlink/junction aliases and relative game paths.
+///
+/// # Errors
+/// Returns [`ExportDirError::InsideMods`] for protected locations, or an I/O
+/// error when either the destination or Mods cannot be resolved safely.
+pub fn resolve_export_dir(out_dir: &Path, game_dir: &Path) -> Result<PathBuf, ExportDirError> {
+    let resolved = resolve_user_dir(out_dir)?;
+    let mods = std::path::absolute(game_dir.join("Mods"))?;
+    let physical_mods = resolve_user_dir(&mods)?;
+    if path_is_inside(&resolved, &mods) || path_is_inside(&resolved, &physical_mods) {
+        return Err(ExportDirError::InsideMods(resolved));
+    }
+    Ok(resolved)
+}
+
+fn path_is_inside(path: &Path, ancestor: &Path) -> bool {
+    #[cfg(windows)]
+    {
+        let key = |path: &Path| {
+            PathBuf::from(
+                strip_extended_prefix(path)
+                    .to_string_lossy()
+                    .replace('\\', "/")
+                    .to_lowercase(),
+            )
+        };
+        key(path).starts_with(key(ancestor))
+    }
+    #[cfg(not(windows))]
+    {
+        path.starts_with(ancestor)
+    }
 }
 
 #[cfg(test)]
@@ -150,6 +196,7 @@ mod tests {
     /// Case and slash-direction variants of a path that doesn't exist on
     /// disk can't be resolved by `canonicalize`, so this exercises the
     /// fallback normalization (lowercase + forward slashes) on its own.
+    #[cfg(windows)]
     #[test]
     fn case_and_slash_variants_of_a_nonexistent_path_map_to_one_profile() {
         let base = Path::new("base");
@@ -166,6 +213,7 @@ mod tests {
     /// resolves whatever case/slash spelling was given down to one
     /// on-disk form, so a case/slash variant hashes identically even
     /// before the fallback normalization ever runs.
+    #[cfg(windows)]
     #[test]
     fn case_and_slash_variants_of_an_existing_path_map_to_one_profile() {
         let dir = tempdir().expect("tempdir");
@@ -183,6 +231,30 @@ mod tests {
             profile_dir(Path::new("base"), &file),
             profile_dir(Path::new("base"), &variant)
         );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn unix_profiles_distinguish_case_and_literal_backslashes() {
+        let dir = tempdir().expect("scratch");
+        let upper = dir.path().join("ModsConfig.xml");
+        let lower = dir.path().join("modsconfig.xml");
+        for file in [&upper, &lower] {
+            std::fs::write(file, b"<ModsConfigData/>").expect("config");
+        }
+        let base = dir.path().join("profiles-base");
+        assert_ne!(profile_dir(&base, &upper), profile_dir(&base, &lower));
+        assert_ne!(
+            profile_dir(&base, Path::new("Folder/ModsConfig.xml")),
+            profile_dir(&base, Path::new("folder/ModsConfig.xml"))
+        );
+        assert_ne!(
+            profile_dir(&base, Path::new(r"Folder\ModsConfig.xml")),
+            profile_dir(&base, Path::new("Folder/ModsConfig.xml"))
+        );
+        let alias = dir.path().join("config-alias");
+        std::os::unix::fs::symlink(&upper, &alias).expect("alias");
+        assert_eq!(profile_dir(&base, &upper), profile_dir(&base, &alias));
     }
 
     // -- databases_dir --------------------------------------------------
@@ -257,5 +329,164 @@ mod tests {
             !resolved.to_string_lossy().starts_with(EXTENDED_PREFIX),
             "the \\\\?\\ prefix must be stripped: {resolved:?}"
         );
+    }
+    #[cfg(unix)]
+    #[test]
+    fn profiles_preserve_non_utf8_bytes_and_existing_utf8_identifiers() {
+        use std::os::unix::ffi::OsStringExt;
+        let scratch = tempdir().expect("scratch");
+        let base = scratch.path().join("base");
+        let configs: Vec<_> = [0xfe, 0xff]
+            .into_iter()
+            .map(|byte| {
+                let config = scratch
+                    .path()
+                    .join(std::ffi::OsString::from_vec(vec![byte]));
+                std::fs::write(&config, b"<ModsConfigData/>").expect("config");
+                config
+            })
+            .collect();
+        assert_ne!(
+            profile_dir(&base, &configs[0]),
+            profile_dir(&base, &configs[1])
+        );
+        let alias = scratch.path().join("alias");
+        std::os::unix::fs::symlink(&configs[0], &alias).expect("alias");
+        assert_eq!(profile_dir(&base, &configs[0]), profile_dir(&base, &alias));
+        let utf8 = scratch.path().join("ModsConfig.xml");
+        std::fs::write(&utf8, b"<ModsConfigData/>").expect("UTF-8 config");
+        for path in [&utf8, Path::new("profile-utf8-stability/ModsConfig.xml")] {
+            let resolved = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
+            let previous: String = Sha256::digest(resolved.to_string_lossy().as_bytes())
+                .iter()
+                .map(|byte| format!("{byte:02x}"))
+                .collect();
+            assert_eq!(
+                profile_dir(&base, path),
+                base.join("profiles").join(&previous[..12])
+            );
+        }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn new_directory_under_a_symlink_resolves_its_existing_ancestor() {
+        let scratch = tempdir().expect("scratch");
+        let target = scratch.path().join("target");
+        std::fs::create_dir(&target).expect("target");
+        let alias = scratch.path().join("alias");
+        std::os::unix::fs::symlink(&target, &alias).expect("alias");
+        assert_eq!(
+            resolve_user_dir(&alias.join("new/nested")).expect("resolved"),
+            target.join("new/nested")
+        );
+        assert!(!target.join("new").exists());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn broken_links_and_non_directory_ancestors_are_errors() {
+        let scratch = tempdir().expect("scratch");
+        let broken = scratch.path().join("broken");
+        std::os::unix::fs::symlink(scratch.path().join("absent"), &broken).expect("broken link");
+        assert!(resolve_user_dir(&broken).is_err());
+        assert!(resolve_user_dir(&broken.join("new")).is_err());
+        let file = scratch.path().join("file");
+        std::fs::write(&file, b"file").expect("file");
+        assert!(resolve_user_dir(&file.join("new")).is_err());
+    }
+    #[cfg(unix)]
+    #[test]
+    fn export_guard_checks_new_destinations_aliases_and_linked_mods() {
+        use std::os::unix::fs::symlink;
+        let scratch = tempdir().expect("scratch");
+        let game = scratch.path().join("game");
+        let mods = game.join("Mods");
+        std::fs::create_dir_all(&mods).expect("Mods");
+        let alias = scratch.path().join("alias");
+        symlink(&mods, &alias).expect("alias");
+        for out in [
+            mods.clone(),
+            mods.join("new/nested"),
+            alias.join("new/nested"),
+        ] {
+            assert!(matches!(
+                resolve_export_dir(&out, &game),
+                Err(ExportDirError::InsideMods(_))
+            ));
+        }
+        let outside = scratch.path().join("Mods-other/new");
+        assert_eq!(
+            resolve_export_dir(&outside, &game).expect("outside allowed"),
+            outside
+        );
+        let target = scratch.path().join("external-mods");
+        std::fs::rename(&mods, &target).expect("move Mods");
+        symlink(&target, &mods).expect("linked Mods");
+        assert!(matches!(
+            resolve_export_dir(&target.join("new"), &game),
+            Err(ExportDirError::InsideMods(_))
+        ));
+        assert!(!target.join("new").exists());
+        std::fs::remove_file(&mods).expect("remove link");
+        symlink(scratch.path().join("absent"), &mods).expect("broken Mods");
+        assert!(matches!(
+            resolve_export_dir(&outside, &game),
+            Err(ExportDirError::Io(_))
+        ));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn missing_segments_with_parent_traversal_cannot_hide_a_later_alias() {
+        let scratch = tempdir().expect("scratch");
+        let target = scratch.path().join("target");
+        std::fs::create_dir(&target).expect("target");
+        std::os::unix::fs::symlink(&target, scratch.path().join("alias")).expect("alias");
+        let path = scratch.path().join("missing/../alias/new");
+        assert_eq!(
+            resolve_user_dir(&path).expect("resolved traversal"),
+            target.join("new")
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn inaccessible_ancestors_are_not_treated_as_missing() {
+        use std::os::unix::fs::PermissionsExt;
+        let scratch = tempdir().expect("scratch");
+        let denied = scratch.path().join("denied");
+        std::fs::create_dir(&denied).expect("denied directory");
+        std::fs::set_permissions(&denied, std::fs::Permissions::from_mode(0o000))
+            .expect("deny access");
+        let privileged = std::fs::read_dir(&denied).is_ok();
+        let result = resolve_user_dir(&denied.join("new/nested"));
+        std::fs::set_permissions(&denied, std::fs::Permissions::from_mode(0o700))
+            .expect("restore permissions");
+        if privileged {
+            eprintln!("permission denial cannot be exercised by a privileged test process");
+            return;
+        }
+        assert_eq!(
+            result.expect_err("must propagate access failure").kind(),
+            io::ErrorKind::PermissionDenied
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn export_comparison_keeps_windows_case_and_separator_rules() {
+        assert!(path_is_inside(
+            Path::new(r"C:\GAME\mods\new"),
+            Path::new("c:/game/Mods")
+        ));
+        assert!(path_is_inside(
+            Path::new(r"\\?\C:\GAME\Mods"),
+            Path::new("c:/game/Mods")
+        ));
+        assert!(!path_is_inside(
+            Path::new("c:/game/Mods-other"),
+            Path::new("c:/game/Mods")
+        ));
     }
 }

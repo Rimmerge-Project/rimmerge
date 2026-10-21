@@ -47,8 +47,10 @@ pub struct ImportArgs {
     /// of the global cache — a directory containing `userRules.json`
     /// directly, plus `Community-Rules-Database`/`Steam-Workshop-Database`
     /// subfolders holding `communityRules.json`/`steamDB.json`. RimSort's
-    /// own default location is `%LOCALAPPDATA%\RimSort\dbs`. Also
-    /// supplies `userRules.json` unless `--user-rules` overrides it.
+    /// own default location is `%LOCALAPPDATA%\RimSort\dbs` on Windows,
+    /// or `$XDG_DATA_HOME/RimSort/dbs` on Linux, falling back to
+    /// `$HOME/.local/share/RimSort/dbs`. Linux XDG_DATA_HOME and HOME must be
+    /// absolute. Also supplies `userRules.json` unless `--user-rules` overrides it.
     #[arg(long = "rimsort-dir", conflicts_with = "from_cache")]
     rimsort_dir: Option<PathBuf>,
     /// Import community/steam rules from the global cache (`rimmerge db
@@ -78,10 +80,10 @@ pub struct ImportArgs {
 /// [`rim_session::resolve_from_cache`].
 ///
 /// The cache directory (`--cache-dir`, defaulting to
-/// [`crate::common::resolve_cache_dir`]'s own `%LOCALAPPDATA%`-derived
+/// [`crate::common::resolve_cache_dir`]'s own platform data
 /// path) is resolved lazily, only when `--rimsort-dir` was *not* given —
 /// an `import --rimsort-dir <dir>` invocation never needs it and must
-/// not fail just because `LOCALAPPDATA` happens to be unset.
+/// not fail just because the app-global data directory cannot be resolved.
 fn resolve_rimsort_paths(
     args: &ImportArgs,
     policy: &NetworkPolicy,
@@ -273,7 +275,7 @@ mod tests {
     fn no_rimsort_dir_and_no_user_rules_flag_means_user_rules_is_not_part_of_the_import() {
         // A nonexistent directory: `resolve_from_cache` must tolerate this
         // (empty cache, not an error) so this test stays hermetic — no
-        // dependency on `LOCALAPPDATA` or any real cache directory.
+        // dependency on the platform data directory or any real cache.
         let args = args(
             None,
             true,

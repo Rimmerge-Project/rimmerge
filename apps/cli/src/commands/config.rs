@@ -11,9 +11,10 @@
 //!
 //! `--base` exists so these three subcommands are testable against a
 //! scratch directory (`apps/cli/tests/config_cli.rs`) without touching
-//! the real `%LOCALAPPDATA%\rimmerge`. It is not a general-purpose knob:
-//! every other command derives the same base from `%LOCALAPPDATA%`, and a
-//! `config.json` written under some other base would never be read back.
+//! the real app-global data directory. It is not a general-purpose knob:
+//! every other command derives the same platform base (or uses
+//! `RIMMERGE_PROFILE_DIR`), and a `config.json` written under some other
+//! base would never be read back.
 
 use std::path::PathBuf;
 
@@ -38,7 +39,10 @@ pub enum ConfigCommand {
 #[derive(Debug, Args)]
 pub struct BaseArgs {
     /// The directory `config.json`, `profiles/` and `databases/` live
-    /// under. Defaults to `%LOCALAPPDATA%\rimmerge`.
+    /// under. Defaults to `RIMMERGE_PROFILE_DIR` when set; otherwise
+    /// `%LOCALAPPDATA%\rimmerge` on Windows or `$XDG_DATA_HOME/rimmerge`
+    /// on Linux, falling back to `$HOME/.local/share/rimmerge`.
+    /// Linux XDG_DATA_HOME and HOME must be absolute.
     #[arg(long, value_name = "DIR")]
     base: Option<PathBuf>,
 }
@@ -123,12 +127,12 @@ fn set(args: &SetArgs) -> anyhow::Result<()> {
     }
     let base = args.base.resolve()?;
     let mut config = AppConfig::load(&base);
-    // Every pin is absolutized first (`rim_io::pinned_path`): `config.json`
+    // Every pin is absolutized first: `config.json`
     // is read back by a process whose working directory is wherever it
     // was launched, so a stored relative path would resolve somewhere
-    // different every run — see that function's own doc comment.
+    // different every run. Linux game pins retain the Steam library alias.
     if let Some(game_dir) = &args.game_dir {
-        config.game_dir = Some(rim_io::pinned_path(game_dir));
+        config.game_dir = Some(rim_io::pinned_game_path(game_dir));
     }
     if let Some(workshop_dir) = &args.workshop_dir {
         config.workshop_dir = Some(rim_io::pinned_path(workshop_dir));

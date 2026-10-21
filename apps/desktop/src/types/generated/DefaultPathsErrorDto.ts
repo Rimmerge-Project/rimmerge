@@ -7,7 +7,7 @@
  * [`rim_io::PathResolutionError`]'s two ladder-exhaustion variants;
  * [`NoProfileBase`](DefaultPathsErrorDto::NoProfileBase) is this
  * command's own third case (neither `RIMMERGE_PROFILE_DIR` nor
- * `LOCALAPPDATA` is set), which happens before the ladder ever starts.
+ * a platform data directory is available), which happens before the ladder ever starts.
  */
 export type DefaultPathsErrorDto = { "kind": "noProfileBase" } | { "kind": "gameDirNotFound", 
 /**

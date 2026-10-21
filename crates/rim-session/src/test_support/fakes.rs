@@ -1616,7 +1616,9 @@ impl FakeGameLauncher {
     /// Reports the Steam route.
     #[must_use]
     pub fn steam() -> Self {
-        Self::with_route(Ok(LaunchRoute::Steam))
+        Self::with_route(Ok(LaunchRoute::Steam(
+            crate::ports::SteamClient::SystemDefault,
+        )))
     }
 
     /// Reports the executable route for the invented install folder

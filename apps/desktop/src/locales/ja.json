@@ -558,15 +558,15 @@
       },
       "game_executable_missing": {
         "title": "ここからRimWorldを起動できません",
-        "detail": "インストールフォルダーにRimWorldWin64.exeがありません。"
+        "detail": "インストールフォルダーに対応するRimWorldの実行可能ファイルがありません。"
       },
       "steam_launch_failed": {
         "title": "SteamがRimWorldを起動しませんでした",
-        "detail": "WindowsがSteamに要求を渡せませんでした。Steamがインストールされていないか、正しく設定されていない可能性があります。Steamがインストールされていることを確認してから、SteamからRimWorldを起動してください。"
+        "detail": "Steamが要求を受け付けませんでした。Steamがインストールされていないか、正しく設定されていない可能性があります。Steamがインストールされていることを確認してから、SteamからRimWorldを起動してください。"
       },
       "game_start_failed": {
         "title": "RimWorldが起動しませんでした",
-        "detail": "WindowsがRimWorldWin64.exeを起動できませんでした。"
+        "detail": "オペレーティングシステムが選択されたRimWorldの実行可能ファイルを起動できませんでした。"
       },
       "mod_list_io_failed": {
         "title": "MODリストを読み書きできませんでした",
@@ -1179,7 +1179,7 @@
       "chooseButton": "選択…",
       "installCheckboxLabel": "Modsフォルダーにインストールして有効化",
       "staleActiveSetNote": "保留中の有効化の変更は含まれません。このインストールに反映したい場合は、先に再スキャンしてください。",
-      "forceWarning": "RimWorldWin64.exeが実行中のようです。今インストールするとModsConfig.xmlに書き込みますが、ゲームは終了時にこのファイルを上書きするため、変更が失われるおそれがあります。それでもエクスポートしますか？",
+      "forceWarning": "RimWorldが実行中のようです。今インストールするとModsConfig.xmlに書き込みますが、ゲームは終了時にこのファイルを上書きするため、変更が失われるおそれがあります。それでもエクスポートしますか？",
       "exportAnyway": "それでもエクスポート",
       "export": "エクスポート",
       "exportedTo": "エクスポート先：{path}",
@@ -1755,7 +1755,7 @@
       "ruleExists": "ルールはすでに存在します。"
     },
     "result": {
-      "forceWarning": "RimWorldWin64.exeが実行中のようです。ゲームは終了時にModsConfig.xmlを上書きするため、今書き込んだ内容が失われるおそれがあります。それでも書き込みますか？",
+      "forceWarning": "RimWorldが実行中のようです。ゲームは終了時にModsConfig.xmlを上書きするため、今書き込んだ内容が失われるおそれがあります。それでも書き込みますか？",
       "mergeModPath": "マージMOD：{path}",
       "mergeModRemoved": "マージMOD：削除済み（マージ／アセットの決定が残っていません）",
       "mergeModBackupPath": "マージMODのバックアップ：{path}",
@@ -1793,7 +1793,7 @@
     "alreadyRunning": "RimWorldはすでに実行中です。",
     "statusFailed": "RimWorldを起動できるかどうか確認できませんでした。",
     "unavailable": {
-      "executableMissing": "インストールフォルダーにRimWorldWin64.exeがありません。"
+      "executableMissing": "インストールフォルダーに対応するRimWorldの実行可能ファイルがありません。"
     },
     "launchedSteam": "SteamにRimWorldの起動を依頼しました。",
     "launchedExecutable": "RimWorldを起動しています。",
@@ -1942,7 +1942,7 @@
       "chooseButton": "選択…",
       "installCheckboxLabel": "Modsフォルダーにインストールして有効化",
       "staleActiveSetNote": "保留中の有効化の変更は含まれません。このインストールに反映したい場合は、先に再スキャンしてください。",
-      "forceWarning": "RimWorldWin64.exeが実行中のようです。今インストールするとModsConfig.xmlに書き込みますが、ゲームは終了時にこのファイルを上書きするため、変更が失われるおそれがあります。それでもエクスポートしますか？",
+      "forceWarning": "RimWorldが実行中のようです。今インストールするとModsConfig.xmlに書き込みますが、ゲームは終了時にこのファイルを上書きするため、変更が失われるおそれがあります。それでもエクスポートしますか？",
       "exportAnyway": "それでもエクスポート",
       "export": "エクスポート",
       "exportedTo": "エクスポート先：{path}",

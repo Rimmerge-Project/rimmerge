@@ -47,7 +47,7 @@ pub enum LaunchGameError {
     #[error("ModsConfig.xml does not hold the selected order")]
     NotApplied(UnappliedReason),
     /// This install can't be started from here.
-    #[error("this install has no RimWorldWin64.exe")]
+    #[error("this install has no supported RimWorld executable")]
     Unavailable(LaunchUnavailable),
     /// The OS refused the launch request.
     #[error(transparent)]
@@ -150,7 +150,10 @@ mod tests {
             .expect("an applied order launches");
 
         assert_eq!(kind, LaunchRouteKind::Steam);
-        assert_eq!(use_case.launcher.launched(), vec![LaunchRoute::Steam]);
+        assert_eq!(
+            use_case.launcher.launched(),
+            vec![LaunchRoute::Steam(crate::ports::SteamClient::SystemDefault)]
+        );
     }
 
     #[test]

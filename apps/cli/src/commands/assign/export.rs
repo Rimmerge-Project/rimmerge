@@ -2,7 +2,7 @@
 
 use std::path::PathBuf;
 
-use anyhow::{Context, bail};
+use anyhow::bail;
 use clap::Args;
 use rim_io::GameProcessProbe;
 use rim_resolve::domain::RowKey;
@@ -25,7 +25,7 @@ pub struct ExportArgs {
     /// Also copy the rendered folder into `<game>/Mods` and activate it.
     #[arg(long)]
     install: bool,
-    /// Install even if `RimWorldWin64.exe` looks like it's running.
+    /// Install even if RimWorld looks like it's running.
     #[arg(long)]
     force: bool,
 }
@@ -40,16 +40,25 @@ pub(super) fn run_export(args: &ExportArgs) -> anyhow::Result<()> {
 fn run_export_with_probe(args: &ExportArgs, probe: &dyn GameProcessProbe) -> anyhow::Result<()> {
     let id = parse_assignment_id(&args.assignment)?;
     let paths = resolve_paths(&args.paths)?;
+    let out_dir =
+        rim_io::resolve_export_dir(&args.out_dir, &paths.game_dir).map_err(
+            |error| match error {
+                rim_io::ExportDirError::InsideMods(path) => {
+                    let error =
+                        rim_session::use_cases::ExportAssignmentError::OutDirIsModsFolder(path);
+                    anyhow::anyhow!("exporting the assignment: {error:?} ({error})")
+                }
+                rim_io::ExportDirError::Io(error) => anyhow::Error::new(error)
+                    .context(format!("resolving --out {}", args.out_dir.display())),
+            },
+        )?;
     let mut session = build_session(paths)?;
 
     if args.install && !args.force && probe.is_running() {
         bail!(
-            "RimWorldWin64.exe is running; close the game or retry with --force (installing an assignment writes ModsConfig.xml, and RimWorld overwrites it on exit)"
+            "RimWorld is running; close the game or retry with --force (installing an assignment writes ModsConfig.xml, and RimWorld overwrites it on exit)"
         );
     }
-
-    let out_dir = rim_io::resolve_user_dir(&args.out_dir)
-        .with_context(|| format!("resolving --out {}", args.out_dir.display()))?;
 
     let use_case = ExportAssignment::new(
         rim_io::MergeModFolderWriter::new(),

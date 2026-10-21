@@ -558,15 +558,15 @@
       },
       "game_executable_missing": {
         "title": "RimWorld buradan başlatılamıyor",
-        "detail": "RimWorldWin64.exe kurulum klasöründe yok."
+        "detail": "Kurulum klasöründe desteklenen bir RimWorld çalıştırılabilir dosyası yok."
       },
       "steam_launch_failed": {
         "title": "Steam, RimWorld'ü başlatamadı",
-        "detail": "Windows isteği Steam'e iletemedi. Steam kurulu olmayabilir ya da doğru ayarlanmamış olabilir. Steam'in kurulu olduğunu denetle, sonra RimWorld'ü Steam'den başlat."
+        "detail": "Steam isteği kabul etmedi. Steam kurulu olmayabilir ya da doğru ayarlanmamış olabilir. Steam'in kurulu olduğunu denetle, sonra RimWorld'ü Steam'den başlat."
       },
       "game_start_failed": {
         "title": "RimWorld başlamadı",
-        "detail": "Windows, RimWorldWin64.exe dosyasını başlatamadı."
+        "detail": "İşletim sistemi seçilen RimWorld çalıştırılabilir dosyasını başlatamadı."
       },
       "mod_list_io_failed": {
         "title": "Mod listesi okunamadı ya da yazılamadı",
@@ -1179,7 +1179,7 @@
       "chooseButton": "Seç…",
       "installCheckboxLabel": "Mods klasörüne kur ve etkinleştir",
       "staleActiveSetNote": "Bekleyen etkinleştirme değişiklikleri dahil değil — bu kuruluma girmelerini istiyorsan önce yeniden tara.",
-      "forceWarning": "RimWorldWin64.exe çalışıyor görünüyor. Şimdi kurmak ModsConfig.xml dosyasına yazar; oyun kapanırken bu dosyanın üzerine yazdığı için değişiklik kaybolabilir. Yine de dışa aktarılsın mı?",
+      "forceWarning": "RimWorld çalışıyor görünüyor. Şimdi kurmak ModsConfig.xml dosyasına yazar; oyun kapanırken bu dosyanın üzerine yazdığı için değişiklik kaybolabilir. Yine de dışa aktarılsın mı?",
       "exportAnyway": "Yine de dışa aktar",
       "export": "Dışa aktar",
       "exportedTo": "Dışa aktarıldığı yer: {path}",
@@ -1755,7 +1755,7 @@
       "ruleExists": "Kural zaten var."
     },
     "result": {
-      "forceWarning": "RimWorldWin64.exe çalışıyor görünüyor. Oyun kapanırken ModsConfig.xml dosyasının üzerine yazar; bu yüzden şimdi yazdıkların kaybolabilir. Yine de yazılsın mı?",
+      "forceWarning": "RimWorld çalışıyor görünüyor. Oyun kapanırken ModsConfig.xml dosyasının üzerine yazar; bu yüzden şimdi yazdıkların kaybolabilir. Yine de yazılsın mı?",
       "mergeModPath": "Birleştirme modu: {path}",
       "mergeModRemoved": "Birleştirme modu: kaldırıldı (birleştirme veya varlık kararı kalmadı)",
       "mergeModBackupPath": "Birleştirme modu yedeği: {path}",
@@ -1793,7 +1793,7 @@
     "alreadyRunning": "RimWorld zaten çalışıyor.",
     "statusFailed": "RimWorld'ün başlatılıp başlatılamayacağı denetlenemedi.",
     "unavailable": {
-      "executableMissing": "RimWorldWin64.exe kurulum klasöründe yok."
+      "executableMissing": "Kurulum klasöründe desteklenen bir RimWorld çalıştırılabilir dosyası yok."
     },
     "launchedSteam": "Steam'e RimWorld'ü başlatma isteği gönderildi.",
     "launchedExecutable": "RimWorld başlatılıyor.",
@@ -1942,7 +1942,7 @@
       "chooseButton": "Seç…",
       "installCheckboxLabel": "Mods klasörüne kur ve etkinleştir",
       "staleActiveSetNote": "Bekleyen etkinleştirme değişiklikleri dahil değil — bu kuruluma girmelerini istiyorsan önce yeniden tara.",
-      "forceWarning": "RimWorldWin64.exe çalışıyor görünüyor. Şimdi kurmak ModsConfig.xml dosyasına yazar; oyun kapanırken bu dosyanın üzerine yazdığı için değişiklik kaybolabilir. Yine de dışa aktarılsın mı?",
+      "forceWarning": "RimWorld çalışıyor görünüyor. Şimdi kurmak ModsConfig.xml dosyasına yazar; oyun kapanırken bu dosyanın üzerine yazdığı için değişiklik kaybolabilir. Yine de dışa aktarılsın mı?",
       "exportAnyway": "Yine de dışa aktar",
       "export": "Dışa aktar",
       "exportedTo": "Dışa aktarıldığı yer: {path}",

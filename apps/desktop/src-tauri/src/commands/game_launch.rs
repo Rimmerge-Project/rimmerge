@@ -333,7 +333,12 @@ mod tests {
             .expect("launch");
 
         assert_eq!(launched.route, GameLaunchRouteDto::Steam);
-        assert_eq!(launcher.launched(), vec![LaunchRoute::Steam]);
+        assert_eq!(
+            launcher.launched(),
+            vec![LaunchRoute::Steam(
+                rim_session::ports::SteamClient::SystemDefault
+            )]
+        );
         assert_eq!(launcher.route_queries(), vec![PathBuf::from("game")]);
     }
 
@@ -351,7 +356,12 @@ mod tests {
             .await
             .expect("launch anyway");
         assert_eq!(anyway.route, GameLaunchRouteDto::Steam);
-        assert_eq!(launcher.launched(), vec![LaunchRoute::Steam]);
+        assert_eq!(
+            launcher.launched(),
+            vec![LaunchRoute::Steam(
+                rim_session::ports::SteamClient::SystemDefault
+            )]
+        );
     }
 
     #[tokio::test]

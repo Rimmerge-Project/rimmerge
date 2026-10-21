@@ -26,10 +26,11 @@ use crate::ports::{ConfigError, MergeModError, MergeModWriter, ModsConfigStore};
 /// equal — mirrors `rim_io::profile_dir`'s own normalization (duplicated
 /// rather than shared: this crate does no filesystem IO of its own, and
 /// that one lives in the `rim-io` adapter this crate can't depend on).
+#[cfg(windows)]
 const EXTENDED_PREFIX: &str = r"\\?\";
 
 /// Lexically resolves `path`'s `.`/`..` components, strips
-/// [`EXTENDED_PREFIX`], and lowercases with forward slashes throughout —
+/// the Windows extended prefix and normalizes case/separators on Windows —
 /// entirely in memory, so unlike `rim_io::profile_dir`'s own
 /// normalization this never calls `Path::canonicalize` (a filesystem
 /// read this crate's own `CLAUDE.md` forbids) and so never resolves a
@@ -60,8 +61,15 @@ pub(crate) fn normalize_lexically(path: &Path) -> String {
         (false, true) => prefix,
         (false, false) => format!("{prefix}/{joined}"),
     };
-    let stripped = full.strip_prefix(EXTENDED_PREFIX).unwrap_or(&full);
-    stripped.replace('\\', "/").to_lowercase()
+    #[cfg(windows)]
+    {
+        let stripped = full.strip_prefix(EXTENDED_PREFIX).unwrap_or(&full);
+        stripped.replace('\\', "/").to_lowercase()
+    }
+    #[cfg(not(windows))]
+    {
+        full
+    }
 }
 
 /// Whether `path` is `ancestor` or lives under it, comparing each side's
@@ -204,11 +212,12 @@ mod tests {
     #[test]
     fn is_inside_resolves_a_parent_dir_segment_before_comparing() {
         assert!(is_inside(
-            Path::new(r"C:\game\Other\..\Mods\x"),
-            Path::new(r"C:\game\Mods")
+            Path::new("game/Other/../Mods/x"),
+            Path::new("game/Mods")
         ));
     }
 
+    #[cfg(windows)]
     #[test]
     fn is_inside_is_case_and_slash_insensitive() {
         assert!(is_inside(
@@ -217,6 +226,7 @@ mod tests {
         ));
     }
 
+    #[cfg(windows)]
     #[test]
     fn is_inside_treats_a_verbatim_prefixed_path_the_same_as_a_plain_one() {
         assert!(is_inside(
@@ -232,8 +242,22 @@ mod tests {
     #[test]
     fn is_inside_is_false_for_a_sibling_folder() {
         assert!(!is_inside(
-            Path::new(r"C:\game\ModsBackup\x"),
-            Path::new(r"C:\game\Mods")
+            Path::new("game/ModsBackup/x"),
+            Path::new("game/Mods")
+        ));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn unix_paths_preserve_case_and_literal_backslashes() {
+        assert!(!is_inside(Path::new("game/mods/x"), Path::new("game/Mods")));
+        assert!(!is_inside(
+            Path::new(r"game/Mods\x"),
+            Path::new("game/Mods")
+        ));
+        assert!(is_inside(
+            Path::new(r"game/Mods\x/child"),
+            Path::new(r"game/Mods\x")
         ));
     }
 

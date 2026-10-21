@@ -80,7 +80,7 @@ pub struct ImportArgs {
     /// are not installed (without this, that's a refusal).
     #[arg(long)]
     yes: bool,
-    /// Write `ModsConfig.xml` even if `RimWorldWin64.exe` looks like it's
+    /// Write `ModsConfig.xml` even if RimWorld looks like it's
     /// running.
     #[arg(long)]
     force: bool,

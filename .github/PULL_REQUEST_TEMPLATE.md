@@ -27,3 +27,9 @@ like this.
 - [ ] Mod-specific knowledge (a load-order pair, a precedence rule, a patch-operation quirk) went to a rules database, not into this code — see CONTRIBUTING.md's "Proposing a load-order rule"
 - [ ] Layering respected: `apps/* → rim-session → rim-merge → rim-resolve → rim-analyzer::domain`; `rim-io` implements ports; no IO in `rim-resolve`/`rim-merge`/`rim-analyzer::extract`
 - [ ] Docs updated (`docs/…`) if behavior changed, described in present tense
+
+## Platform support changes (if applicable)
+
+- [ ] Linux support matrix, runtime dependencies and package contents documented in `docs/install.md`
+- [ ] Linux packaging regression checks: `pwsh ./scripts/tests/package-linux.Tests.ps1`
+- [ ] Windows and Ubuntu release artifacts verified; missing evidence stated explicitly

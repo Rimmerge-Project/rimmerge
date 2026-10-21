@@ -558,15 +558,15 @@
       },
       "game_executable_missing": {
         "title": "RimWorld can't be started from here",
-        "detail": "RimWorldWin64.exe isn't in the install folder."
+        "detail": "A supported RimWorld executable isn't in the install folder."
       },
       "steam_launch_failed": {
         "title": "Steam didn't start RimWorld",
-        "detail": "Windows couldn't pass the request to Steam. Steam may not be installed or set up correctly. Check that Steam is installed, then start RimWorld from Steam."
+        "detail": "Steam didn't accept the request. Steam may not be installed or set up correctly. Check that Steam is installed, then start RimWorld from Steam."
       },
       "game_start_failed": {
         "title": "RimWorld didn't start",
-        "detail": "Windows couldn't start RimWorldWin64.exe."
+        "detail": "The operating system couldn't start the selected RimWorld executable."
       },
       "mod_list_io_failed": {
         "title": "Couldn't read or write the mod list",
@@ -1179,7 +1179,7 @@
       "chooseButton": "Choose…",
       "installCheckboxLabel": "Install into Mods and activate",
       "staleActiveSetNote": "Pending activation changes are not included — rescan first if you want them in this install.",
-      "forceWarning": "RimWorldWin64.exe looks like it's running. Installing now writes ModsConfig.xml, which the game overwrites when it exits, so the change may be lost. Export anyway?",
+      "forceWarning": "RimWorld looks like it's running. Installing now writes ModsConfig.xml, which the game overwrites when it exits, so the change may be lost. Export anyway?",
       "exportAnyway": "Export anyway",
       "export": "Export",
       "exportedTo": "Exported to: {path}",
@@ -1755,7 +1755,7 @@
       "ruleExists": "Rule already exists."
     },
     "result": {
-      "forceWarning": "RimWorldWin64.exe looks like it's running. The game overwrites ModsConfig.xml when it exits, so what you write now may be lost. Write anyway?",
+      "forceWarning": "RimWorld looks like it's running. The game overwrites ModsConfig.xml when it exits, so what you write now may be lost. Write anyway?",
       "mergeModPath": "Merge mod: {path}",
       "mergeModRemoved": "Merge mod: removed (no merge or asset decision remains)",
       "mergeModBackupPath": "Merge mod backup: {path}",
@@ -1793,7 +1793,7 @@
     "alreadyRunning": "RimWorld is already running.",
     "statusFailed": "Couldn't check whether RimWorld can be launched.",
     "unavailable": {
-      "executableMissing": "RimWorldWin64.exe isn't in the install folder."
+      "executableMissing": "A supported RimWorld executable isn't in the install folder."
     },
     "launchedSteam": "Asked Steam to start RimWorld.",
     "launchedExecutable": "Starting RimWorld.",
@@ -1942,7 +1942,7 @@
       "chooseButton": "Choose…",
       "installCheckboxLabel": "Install into Mods and activate",
       "staleActiveSetNote": "Pending activation changes are not included — rescan first if you want them in this install.",
-      "forceWarning": "RimWorldWin64.exe looks like it's running. Installing now writes ModsConfig.xml, which the game overwrites when it exits, so the change may be lost. Export anyway?",
+      "forceWarning": "RimWorld looks like it's running. Installing now writes ModsConfig.xml, which the game overwrites when it exits, so the change may be lost. Export anyway?",
       "exportAnyway": "Export anyway",
       "export": "Export",
       "exportedTo": "Exported to: {path}",

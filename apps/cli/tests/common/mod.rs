@@ -240,7 +240,7 @@ pub fn real_install_paths(profile_dir: PathBuf, rerun_command: &str) -> ProjectP
             rim_io::GAME_DIR_VAR
         )
     });
-    let mods_config = real_mods_config_path();
+    let mods_config = real_mods_config_path(&game_dir);
     assert_active_mod_floor(&mods_config, rerun_command);
     ProjectPaths {
         workshop_dir: real_workshop_dir(&game_dir),
@@ -250,14 +250,14 @@ pub fn real_install_paths(profile_dir: PathBuf, rerun_command: &str) -> ProjectP
     }
 }
 
-/// `RIMMERGE_MODS_CONFIG`, else the `%USERPROFILE%`-relative default.
+/// `RIMMERGE_MODS_CONFIG`, else the config for the selected install.
 #[allow(
     dead_code,
     reason = "not every test binary that includes this module uses every helper"
 )]
-pub fn real_mods_config_path() -> PathBuf {
+pub fn real_mods_config_path(game_dir: &std::path::Path) -> PathBuf {
     rim_analyzer::infra::paths::path_var(rim_io::MODS_CONFIG_VAR).unwrap_or_else(|| {
-        rim_analyzer::infra::paths::default_mods_config_path()
+        rim_analyzer::infra::paths::mods_config_path_for_install(game_dir)
             .unwrap_or_else(|error| panic!("resolving ModsConfig.xml path: {error}"))
     })
 }

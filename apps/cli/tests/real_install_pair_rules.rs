@@ -8,7 +8,7 @@
 //! `#[ignore]`d: reads `.journal/local/report.json` (skips gracefully when
 //! absent — regenerate it with the analyzer's `analyze --json`) and the
 //! real RimSort database directory, read-only
-//! (`%LOCALAPPDATA%\RimSort\dbs` by default, overridable via
+//! (the platform default from `default_rimsort_dbs_dir`, overridable via
 //! `RIMMERGE_RIMSORT_DIR` — skips gracefully when it isn't there either).
 //! Needs `RIMMERGE_PERF_PROFILE_DIR` for the importer's own
 //! snapshot-copy write (never the real profile) — the same requirement
@@ -48,9 +48,7 @@ fn rimsort_dbs_dir() -> Option<PathBuf> {
     if let Ok(dir) = std::env::var("RIMMERGE_RIMSORT_DIR") {
         return Some(PathBuf::from(dir));
     }
-    std::env::var("LOCALAPPDATA")
-        .ok()
-        .map(|local| PathBuf::from(local).join("RimSort").join("dbs"))
+    rim_analyzer::infra::paths::default_rimsort_dbs_dir()
 }
 
 fn rimsort_paths(dir: &Path) -> RimSortPaths {
@@ -153,7 +151,9 @@ fn imported_pair_rule_classification_rebaseline_and_cycle_check() {
     };
 
     let Some(dbs_dir) = rimsort_dbs_dir() else {
-        eprintln!("skipping: neither RIMMERGE_RIMSORT_DIR nor LOCALAPPDATA is set");
+        eprintln!(
+            "skipping: RIMMERGE_RIMSORT_DIR is unset and no platform RimSort database directory can be resolved"
+        );
         return;
     };
     let paths = rimsort_paths(&dbs_dir);

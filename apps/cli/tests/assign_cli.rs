@@ -1445,3 +1445,67 @@ fn copy_from_refuses_a_free_standing_section() {
         .stderr(predicates::str::contains(MULTI_PART_DEF_TYPE))
         .stderr(predicates::str::contains("free-standing"));
 }
+
+#[cfg(unix)]
+#[test]
+fn export_resolves_aliases_and_refuses_before_writing_or_persisting() {
+    use std::os::unix::fs::symlink;
+    for case in ["parent-link", "relative-game", "mods-link", "broken-link"] {
+        let scratch = tempdir().expect("scratch");
+        let mut game = scratch_game(scratch.path());
+        let id = assign_create(&game);
+        assign_set_row(&game, &id);
+        let mods = game.game_dir.join("Mods");
+        let out = match case {
+            "parent-link" => {
+                let alias = scratch.path().join("export-alias");
+                symlink(&mods, &alias).expect("Mods alias");
+                alias.join("new/nested")
+            }
+            "relative-game" => {
+                game.game_dir = PathBuf::from("game");
+                mods.join("new/nested")
+            }
+            "mods-link" => {
+                let target = scratch.path().join("external-mods");
+                fs::rename(&mods, &target).expect("move Mods");
+                symlink(&target, &mods).expect("linked Mods");
+                target.join("new/nested")
+            }
+            _ => {
+                let broken = scratch.path().join("broken");
+                symlink(scratch.path().join("absent"), &broken).expect("broken link");
+                broken.join("new")
+            }
+        };
+        let profile_before = snapshot_files(&game.profile_dir);
+        let mods_before = snapshot_files(&mods);
+        let config_before = fs::read(&game.mods_config).expect("config before");
+        let mut cmd = common::rimmerge();
+        cmd.current_dir(scratch.path())
+            .args(["assign", "export", "--assignment"])
+            .arg(&id)
+            .arg("--out")
+            .arg(&out);
+        path_args(&mut cmd, &game);
+        let expected = if case == "broken-link" {
+            "resolving --out"
+        } else {
+            "OutDirIsModsFolder"
+        };
+        cmd.assert()
+            .failure()
+            .stderr(predicates::str::contains(expected));
+        assert!(!out.exists(), "{case} must not create the destination");
+        assert_eq!(
+            snapshot_files(&game.profile_dir),
+            profile_before,
+            "{case} persisted a target"
+        );
+        assert_eq!(snapshot_files(&mods), mods_before, "{case} wrote Mods");
+        assert_eq!(
+            fs::read(&game.mods_config).expect("config after"),
+            config_before
+        );
+    }
+}

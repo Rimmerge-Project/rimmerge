@@ -212,7 +212,7 @@ describe("LaunchGameButton", () => {
       expect(wrapper.get(BUTTON).text()).toBe("Launch RimWorld");
       expect(wrapper.get(BUTTON).attributes("disabled")).toBeDefined();
       expect(wrapper.get('[data-testid="launch-game-hint"]').text()).toBe(
-        "RimWorldWin64.exe isn't in the install folder.",
+        "A supported RimWorld executable isn't in the install folder.",
       );
     });
 

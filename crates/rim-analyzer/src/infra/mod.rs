@@ -16,7 +16,8 @@ use anyhow::Context;
 use rayon::prelude::*;
 
 use crate::domain::{
-    FolderPolicy, GameVersion, InactiveMod, LoadOrder, ModId, RefSite, ScannedMod, Warning,
+    FolderPolicy, GamePlatform, GameVersion, InactiveMod, LoadOrder, ModId, RefSite, ScannedMod,
+    Warning,
 };
 use crate::extract::about_xml::{self, AboutDetails, AboutXmlError};
 use crate::extract::mods_config;
@@ -131,6 +132,7 @@ pub fn scan_with_progress(
             config.game_version,
             &active_bases,
             config.folder_policy,
+            paths::game_platform(&config.game_dir),
             on_progress,
         );
     warnings.extend(scan_warnings);
@@ -302,6 +304,7 @@ fn scan_all_with_progress(
     game_version: GameVersion,
     active_bases: &HashSet<ModId>,
     folder_policy: FolderPolicy,
+    platform: GamePlatform,
     on_progress: &mut dyn FnMut(ScanProgress),
 ) -> (
     Vec<ScannedMod>,
@@ -335,6 +338,7 @@ fn scan_all_with_progress(
                                 game_version,
                                 active_bases,
                                 folder_policy,
+                                platform,
                             );
                         let _ = sender.send(());
                         (

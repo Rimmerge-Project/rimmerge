@@ -1019,3 +1019,66 @@ async fn list_assignment_items_lists_the_projects_own_row_first_with_own_true() 
         "every active def must be own: false"
     );
 }
+
+#[cfg(unix)]
+#[tokio::test]
+async fn export_assignment_rejects_linked_destinations_without_install_or_persistence() {
+    use std::os::unix::fs::symlink;
+    for case in ["parent-link", "mods-link", "broken-link"] {
+        let (scratch, state) = state_with_fixture();
+        let created = create_assignment_inner(&state, create_request())
+            .await
+            .expect("project");
+        let mods = scratch.path().join("game/Mods");
+        std::fs::create_dir_all(&mods).expect("Mods");
+        let out = match case {
+            "parent-link" => {
+                let alias = scratch.path().join("alias");
+                symlink(&mods, &alias).expect("Mods alias");
+                alias.join("new/nested")
+            }
+            "mods-link" => {
+                let target = scratch.path().join("external-mods");
+                std::fs::rename(&mods, &target).expect("move Mods");
+                symlink(&target, &mods).expect("linked Mods");
+                target.join("new/nested")
+            }
+            _ => {
+                let broken = scratch.path().join("broken");
+                symlink(scratch.path().join("absent"), &broken).expect("broken link");
+                broken.join("new")
+            }
+        };
+        let result = export_assignment_inner(
+            &state,
+            ExportAssignmentRequestDto {
+                assignment_id: created.id.clone(),
+                out_dir: out.display().to_string(),
+                install: false,
+                force: false,
+            },
+        )
+        .await;
+        let error = result.expect_err("unsafe destination");
+        assert_eq!(error.code, CommandErrorCode::InvalidInput);
+        assert!(error.message.contains(if case == "broken-link" {
+            "resolving out_dir"
+        } else {
+            "Mods folder"
+        }));
+        assert!(!out.exists(), "{case} must not write the destination");
+        assert!(
+            std::fs::read_dir(&mods)
+                .expect("Mods after refusal")
+                .next()
+                .is_none()
+        );
+        assert!(
+            get_assignment_inner(&state, created.id)
+                .await
+                .expect("project after refusal")
+                .export_dir
+                .is_none()
+        );
+    }
+}

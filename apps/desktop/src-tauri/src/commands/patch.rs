@@ -704,19 +704,17 @@ pub(crate) async fn export_patch_inner(
             return Err(CommandError::rimworld_running());
         }
 
-        // Absolutized (`std::path::absolute`) and, when it already
-        // exists, canonicalized (resolving `.`/`..`, symlinks, and
-        // junctions, with the `\\?\` prefix stripped back off) —
-        // `ExportPatch` itself has no filesystem access of its own and
-        // can only compare `out_dir` lexically (see that use case's doc
-        // comment on `is_inside`), so a relative path from a hand-typed
-        // field or a junction pointing into the game's `Mods` folder
-        // must be resolved here, before it ever reaches the use case.
-        // Tauri's own folder picker always returns an absolute path, so
-        // this only ever does real work against a hand-typed `out_dir`.
-        let out_dir = rim_io::resolve_user_dir(Path::new(&request.out_dir)).map_err(|error| {
-            CommandError::invalid_input(format!("resolving out_dir {}: {error}", request.out_dir))
-        })?;
+        let out_dir =
+            rim_io::resolve_export_dir(Path::new(&request.out_dir), &session.paths().game_dir)
+                .map_err(|error| match error {
+                    rim_io::ExportDirError::InsideMods(path) => CommandError::from(
+                        rim_session::use_cases::ExportPatchError::OutDirIsModsFolder(path),
+                    ),
+                    rim_io::ExportDirError::Io(error) => CommandError::invalid_input(format!(
+                        "resolving out_dir {}: {error}",
+                        request.out_dir
+                    )),
+                })?;
 
         let use_case = ExportPatch::new(
             adapters.merge_mod_writer,
@@ -1196,5 +1194,67 @@ mod tests {
     fn parse_patch_id_rejects_a_malformed_id() {
         let result = parse_patch_id("not-a-valid-id");
         assert_eq!(result.unwrap_err().code, CommandErrorCode::InvalidInput);
+    }
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn export_patch_rejects_linked_destinations_without_install_or_persistence() {
+        use std::os::unix::fs::symlink;
+        for case in ["parent-link", "mods-link", "broken-link"] {
+            let (scratch, state) = bionic_heart_state();
+            let created = create_patch_inner(&state, create_request())
+                .await
+                .expect("project");
+            let mods = scratch.path().join("game/Mods");
+            std::fs::create_dir_all(&mods).expect("Mods");
+            let out = match case {
+                "parent-link" => {
+                    let alias = scratch.path().join("alias");
+                    symlink(&mods, &alias).expect("Mods alias");
+                    alias.join("new/nested")
+                }
+                "mods-link" => {
+                    let target = scratch.path().join("external-mods");
+                    std::fs::rename(&mods, &target).expect("move Mods");
+                    symlink(&target, &mods).expect("linked Mods");
+                    target.join("new/nested")
+                }
+                _ => {
+                    let broken = scratch.path().join("broken");
+                    symlink(scratch.path().join("absent"), &broken).expect("broken link");
+                    broken.join("new")
+                }
+            };
+            let result = export_patch_inner(
+                &state,
+                ExportPatchRequestDto {
+                    patch_id: created.id.clone(),
+                    out_dir: out.display().to_string(),
+                    install: false,
+                    force: false,
+                },
+            )
+            .await;
+            let error = result.expect_err("unsafe destination");
+            assert_eq!(error.code, CommandErrorCode::InvalidInput);
+            assert!(error.message.contains(if case == "broken-link" {
+                "resolving out_dir"
+            } else {
+                "Mods folder"
+            }));
+            assert!(!out.exists(), "{case} must not write the destination");
+            assert!(
+                std::fs::read_dir(&mods)
+                    .expect("Mods after refusal")
+                    .next()
+                    .is_none()
+            );
+            assert!(
+                get_patch_inner(&state, created.id)
+                    .await
+                    .expect("project after refusal")
+                    .export_dir
+                    .is_none()
+            );
+        }
     }
 }

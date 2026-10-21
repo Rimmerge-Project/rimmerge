@@ -558,15 +558,15 @@
       },
       "game_executable_missing": {
         "title": "여기에서 RimWorld를 시작할 수 없음",
-        "detail": "설치 폴더에 RimWorldWin64.exe 파일이 없습니다."
+        "detail": "설치 폴더에 지원되는 RimWorld 실행 파일이 없습니다."
       },
       "steam_launch_failed": {
         "title": "Steam으로 RimWorld를 시작하지 못함",
-        "detail": "Windows가 Steam에 요청을 전달하지 못했습니다. Steam이 설치되어 있지 않거나 올바르게 설정되지 않았을 수 있습니다. Steam이 설치되어 있는지 확인한 다음 Steam에서 RimWorld를 시작하세요."
+        "detail": "Steam이 요청을 수락하지 않았습니다. Steam이 설치되어 있지 않거나 올바르게 설정되지 않았을 수 있습니다. Steam이 설치되어 있는지 확인한 다음 Steam에서 RimWorld를 시작하세요."
       },
       "game_start_failed": {
         "title": "RimWorld가 시작되지 않음",
-        "detail": "Windows가 RimWorldWin64.exe 파일을 시작하지 못했습니다."
+        "detail": "운영 체제에서 선택한 RimWorld 실행 파일을 시작하지 못했습니다."
       },
       "mod_list_io_failed": {
         "title": "모드 목록을 읽거나 쓸 수 없음",
@@ -1179,7 +1179,7 @@
       "chooseButton": "선택…",
       "installCheckboxLabel": "Mods 폴더에 설치하고 활성화",
       "staleActiveSetNote": "대기 중인 활성화 변경 사항은 포함되지 않습니다. 이번 설치에 포함하려면 먼저 다시 스캔하세요.",
-      "forceWarning": "RimWorldWin64.exe가 실행 중인 것으로 보입니다. 지금 설치하면 ModsConfig.xml에 기록하게 되며, 게임은 종료할 때 이 파일을 덮어쓰므로 변경 내용이 사라질 수 있습니다. 그래도 내보낼까요?",
+      "forceWarning": "RimWorld가 실행 중인 것으로 보입니다. 지금 설치하면 ModsConfig.xml에 기록하게 되며, 게임은 종료할 때 이 파일을 덮어쓰므로 변경 내용이 사라질 수 있습니다. 그래도 내보낼까요?",
       "exportAnyway": "그래도 내보내기",
       "export": "내보내기",
       "exportedTo": "내보낸 위치: {path}",
@@ -1755,7 +1755,7 @@
       "ruleExists": "규칙이 이미 있습니다."
     },
     "result": {
-      "forceWarning": "RimWorldWin64.exe가 실행 중인 것으로 보입니다. 게임은 종료할 때 ModsConfig.xml을 덮어쓰므로, 지금 기록하는 내용이 사라질 수 있습니다. 그래도 기록할까요?",
+      "forceWarning": "RimWorld가 실행 중인 것으로 보입니다. 게임은 종료할 때 ModsConfig.xml을 덮어쓰므로, 지금 기록하는 내용이 사라질 수 있습니다. 그래도 기록할까요?",
       "mergeModPath": "병합 모드: {path}",
       "mergeModRemoved": "병합 모드: 제거됨 (남은 병합 또는 에셋 결정 없음)",
       "mergeModBackupPath": "병합 모드 백업: {path}",
@@ -1793,7 +1793,7 @@
     "alreadyRunning": "RimWorld가 이미 실행 중입니다.",
     "statusFailed": "RimWorld를 실행할 수 있는지 확인하지 못했습니다.",
     "unavailable": {
-      "executableMissing": "설치 폴더에 RimWorldWin64.exe 파일이 없습니다."
+      "executableMissing": "설치 폴더에 지원되는 RimWorld 실행 파일이 없습니다."
     },
     "launchedSteam": "Steam에 RimWorld 시작을 요청했습니다.",
     "launchedExecutable": "RimWorld를 시작하는 중입니다.",
@@ -1942,7 +1942,7 @@
       "chooseButton": "선택…",
       "installCheckboxLabel": "Mods 폴더에 설치하고 활성화",
       "staleActiveSetNote": "대기 중인 활성화 변경 사항은 포함되지 않습니다. 이번 설치에 포함하려면 먼저 다시 스캔하세요.",
-      "forceWarning": "RimWorldWin64.exe가 실행 중인 것으로 보입니다. 지금 설치하면 ModsConfig.xml에 기록하게 되며, 게임은 종료할 때 이 파일을 덮어쓰므로 변경 내용이 사라질 수 있습니다. 그래도 내보낼까요?",
+      "forceWarning": "RimWorld가 실행 중인 것으로 보입니다. 지금 설치하면 ModsConfig.xml에 기록하게 되며, 게임은 종료할 때 이 파일을 덮어쓰므로 변경 내용이 사라질 수 있습니다. 그래도 내보낼까요?",
       "exportAnyway": "그래도 내보내기",
       "export": "내보내기",
       "exportedTo": "내보낸 위치: {path}",

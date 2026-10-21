@@ -872,7 +872,7 @@ mod tests {
 
     /// Regression: a candidate file that fails to read (here, a genuine
     /// OS-level sharing violation — the file is held open with exclusive
-    /// access for the whole search, on this Windows-only workspace) must
+    /// access on Windows, or removed after discovery on Unix) must
     /// leave the search incomplete, exactly like running out of budget —
     /// never a silently-skipped candidate that lets the search "complete"
     /// and wrongly declare a name `DefinedNowhere` when it might be
@@ -888,7 +888,9 @@ mod tests {
         )
         .unwrap();
 
+        #[cfg(windows)]
         use std::os::windows::fs::OpenOptionsExt;
+        #[cfg(windows)]
         // `share_mode(0)` denies every other handle read/write/delete
         // access for as long as this one stays open — a real, deterministic
         // OS-level read failure, not a simulated one.
@@ -912,14 +914,27 @@ mod tests {
         let scan = empty_scan(Vec::new(), vec![inactive_mod]);
         let mut conflicts = vec![unexplained_conflict("LockedGhostDef")];
 
+        #[cfg(windows)]
         explain_dangling_references(&mut conflicts, &scan);
-
+        #[cfg(not(windows))]
+        {
+            let candidates = CandidateFiles::collect(&scan);
+            assert_eq!(
+                candidates.files.len(),
+                1,
+                "the unreadable file was discovered"
+            );
+            // Removing after discovery also fails deterministically when run as root.
+            fs::remove_file(&unreadable).expect("remove discovered candidate");
+            explain_within_budget(&mut conflicts, &candidates, MAX_EXPLAIN_BYTES);
+        }
         assert_eq!(
             cause_of(&conflicts, "LockedGhostDef"),
             DanglingCause::Unexplained,
             "a read failure must never be silently skipped into a false DefinedNowhere"
         );
 
+        #[cfg(windows)]
         drop(_exclusive_lock);
         fs::remove_dir_all(inactive_dir).ok();
     }

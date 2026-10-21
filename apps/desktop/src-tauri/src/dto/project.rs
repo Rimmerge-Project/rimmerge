@@ -74,12 +74,12 @@ pub enum DefaultPathsWarningDto {
 /// [`rim_io::PathResolutionError`]'s two ladder-exhaustion variants;
 /// [`NoProfileBase`](DefaultPathsErrorDto::NoProfileBase) is this
 /// command's own third case (neither `RIMMERGE_PROFILE_DIR` nor
-/// `LOCALAPPDATA` is set), which happens before the ladder ever starts.
+/// a platform data directory is available), which happens before the ladder ever starts.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[ts(export, export_to = "../../src/types/generated/")]
 pub enum DefaultPathsErrorDto {
-    /// Neither `RIMMERGE_PROFILE_DIR` nor `LOCALAPPDATA` is set, so
+    /// Neither `RIMMERGE_PROFILE_DIR` nor a platform data directory is available, so
     /// Rimmerge has nowhere to keep its own files.
     NoProfileBase,
     /// No RimWorld install directory could be found — see

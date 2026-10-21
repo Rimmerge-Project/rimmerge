@@ -24,7 +24,7 @@ pub enum GameLaunchStatus {
         /// Why `ModsConfig.xml` is behind what the user is looking at.
         reason: UnappliedReason,
     },
-    /// `RimWorldWin64.exe` is in the process list. A click is not offered.
+    /// A supported RimWorld process is in the process list. A click is not offered.
     GameRunning,
     /// This install can't be started from here.
     Unavailable(LaunchUnavailable),
@@ -35,7 +35,7 @@ pub enum GameLaunchStatus {
 pub enum LaunchRouteKind {
     /// Through Steam (`steam://run/<app id>`).
     Steam,
-    /// By running the install's own `RimWorldWin64.exe`.
+    /// By running the install's own executable.
     Executable,
 }
 
@@ -54,14 +54,14 @@ pub enum UnappliedReason {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LaunchUnavailable {
     /// The game folder isn't an install, or has no regular-file
-    /// `RimWorldWin64.exe` (the executable route only).
+    /// supported RimWorld executable (the executable route only).
     ExecutableMissing,
 }
 
 /// Whether the game is already running.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GameProcess {
-    /// `RimWorldWin64.exe` is in the process list.
+    /// A supported RimWorld process is in the process list.
     Running,
     /// It is not.
     NotRunning,

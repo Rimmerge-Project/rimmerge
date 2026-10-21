@@ -65,6 +65,11 @@ interface apps.
   (see [desktop.md](desktop.md)), talking to the backend only through
   generated, typed DTOs (`ts-rs` — see below).
 
+The desktop composition root is platform-neutral. Tauri uses WebView2 on
+Windows and WebKitGTK/GTK on Linux. The executable-name enum is part of the
+`rim-session::ports` contract; platform-specific executable selection,
+launching and process detection live in `rim-io`.
+
 ## Where to add what
 
 - A new ordering fact derived from install content → `rim-analyzer`

@@ -8,7 +8,7 @@
 //! file whose location that answer determines — it is a bootstrap
 //! problem, not a preference. So these three paths get their own file,
 //! one directory up: `<base>/config.json`, a sibling of `profiles/` and
-//! `databases/`, where `base` is the same `%LOCALAPPDATA%\rimmerge` both
+//! `databases/`, where `base` is the same platform data directory both
 //! interfaces already compute (and which the desktop's existing
 //! `RIMMERGE_PROFILE_DIR` override already redirects, so a scratch base
 //! gets a scratch `config.json` for free).
@@ -158,6 +158,20 @@ pub fn pinned_path(raw: &Path) -> PathBuf {
     crate::resolve_user_dir(raw).unwrap_or_else(|_| raw.to_path_buf())
 }
 
+/// Makes a game path independent of the working directory, retaining Linux
+/// Steam-library links so later config discovery can still identify their owner.
+#[must_use]
+pub fn pinned_game_path(raw: &Path) -> PathBuf {
+    #[cfg(target_os = "linux")]
+    {
+        std::path::absolute(raw).unwrap_or_else(|_| raw.to_path_buf())
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        pinned_path(raw)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use tempfile::tempdir;
@@ -292,6 +306,27 @@ mod tests {
             pinned.display()
         );
         assert!(pinned.ends_with("RimWorld"), "{}", pinned.display());
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn saved_game_paths_preserve_the_library_alias_without_changing_other_pins() {
+        let dir = tempdir().expect("scratch");
+        let target = dir.path().join("outside-game");
+        std::fs::create_dir(&target).expect("target");
+        let alias = dir.path().join("library-game");
+        std::os::unix::fs::symlink(&target, &alias).expect("game link");
+        let config = AppConfig {
+            game_dir: Some(pinned_game_path(&alias)),
+            ..AppConfig::default()
+        };
+        config.save(dir.path()).expect("save");
+        assert_eq!(AppConfig::load(dir.path()).game_dir, Some(alias.clone()));
+        assert_eq!(
+            pinned_path(&alias),
+            target.canonicalize().expect("canonical target")
+        );
+        assert!(pinned_game_path(Path::new("relative-game")).is_absolute());
     }
 
     #[test]

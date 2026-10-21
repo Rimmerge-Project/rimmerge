@@ -33,7 +33,7 @@ use std::path::PathBuf;
 use assert_cmd::Command;
 
 /// The maintainer's own real re-baseline (from a real `rimmerge import
-/// --rimsort-dir "%LOCALAPPDATA%\RimSort\dbs"` run against their own
+/// --rimsort-dir <their RimSort database directory>` run against their own
 /// install), named only through
 /// `RIMMERGE_EXPECTED_DB_COUNTS=user:<n>,community:<n>,steam:<n>` so no
 /// install-specific number is hardcoded here — these counts are exactly
@@ -160,11 +160,10 @@ fn scratch_dir() -> PathBuf {
 /// never-copied location RimSort itself keeps it in
 /// and `apps/desktop`'s `get_default_rimsort_paths` prefills from.
 fn real_user_rules_path() -> PathBuf {
-    let local_app_data = std::env::var("LOCALAPPDATA")
-        .unwrap_or_else(|_| panic!("LOCALAPPDATA must be set on this machine"));
-    PathBuf::from(local_app_data)
-        .join("RimSort")
-        .join("dbs")
+    rim_analyzer::infra::paths::default_rimsort_dbs_dir()
+        .unwrap_or_else(|| {
+            panic!("cannot resolve the platform's default RimSort database directory")
+        })
         .join("userRules.json")
 }
 
@@ -201,7 +200,7 @@ fn seed_settings(profile_dir: &std::path::Path) {
 /// `fetch_steam_workshop` to `false`, which would make `db
 /// refresh --all` silently skip the one source this test most needs to
 /// compare (a large share of the baseline's own rules). Never touches the
-/// real `%LOCALAPPDATA%\rimmerge`: `base` is always this test's own
+/// real app-global data directory: `base` is always this test's own
 /// scratch directory, routed into the CLI via `RIMMERGE_PROFILE_DIR` (see
 /// each `Command`'s own `.env(...)` below) — the network policy this file
 /// used to seed on `rules.json` moved to this app-global file.

@@ -193,7 +193,9 @@ impl RecordingGameLauncher {
 
     /// Reports the Steam route.
     pub(crate) fn steam() -> Self {
-        Self::with_route(Ok(LaunchRoute::Steam))
+        Self::with_route(Ok(LaunchRoute::Steam(
+            rim_session::ports::SteamClient::SystemDefault,
+        )))
     }
 
     /// Reports the executable route for an invented install folder.

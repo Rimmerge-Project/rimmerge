@@ -86,7 +86,7 @@ file with no live install or profile involved at all.
   stdin as well as text. If the import deactivates any active mod, or
   names a mod you do not have installed, it refuses until you pass
   `--yes`. `--dry-run` prints the plan and writes nothing; `--force`
-  writes even if `RimWorldWin64.exe` looks like it is running. It does
+  writes even if RimWorld looks like it is running. It does
   not scan, so it does not list hard problems: afterwards run
   `rimmerge apply --dry-run --source current` to check the order. When the
   list already matches the file's order, nothing is written. Exit code 0

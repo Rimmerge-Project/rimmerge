@@ -3512,7 +3512,7 @@ export function installScenario(): void {
       case "unavailable":
         throw {
           code: "game_executable_missing",
-          message: "this install has no RimWorldWin64.exe",
+          message: "this install has no supported RimWorld executable",
         };
       case "needsApply":
         if (request.ifNotApplied === "refuse") {
@@ -7411,7 +7411,7 @@ export function installScenario(): void {
       if (window.__APPLY_FORCE_GAME_RUNNING__ && !request.force) {
         throw {
           code: "rimworld_running",
-          message: "RimWorldWin64.exe is running; close the game or retry with force",
+          message: "RimWorld is running; close the game or retry with force",
         };
       }
       // Mirrors the real backend's

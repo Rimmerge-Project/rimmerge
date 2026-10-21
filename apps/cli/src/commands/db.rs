@@ -70,7 +70,10 @@ pub struct DbStatusArgs {
     #[command(flatten)]
     paths: PathsArgs,
     /// Overrides where the rule-database cache lives (default:
-    /// `%LOCALAPPDATA%\rimmerge\databases`, shared by every profile).
+    /// `<base>/databases`, shared by every profile). Base defaults to
+    /// `RIMMERGE_PROFILE_DIR` when set; otherwise `%LOCALAPPDATA%\rimmerge`
+    /// on Windows or `$XDG_DATA_HOME/rimmerge` on Linux, falling back to
+    /// `$HOME/.local/share/rimmerge`. Linux XDG_DATA_HOME and HOME must be absolute.
     /// Doesn't change what gets fetched or from where, only where the
     /// downloaded bytes are stored/read.
     #[arg(long)]

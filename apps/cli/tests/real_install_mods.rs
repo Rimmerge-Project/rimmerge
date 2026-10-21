@@ -63,7 +63,7 @@ fn deactivate_then_reactivate_round_trips_a_copy_of_the_real_mods_config() {
     let game_dir = common::require_game_dir(RERUN_COMMAND)
         .unwrap_or_else(|| panic!("require_profile_dir already confirmed the install is present"));
     let workshop_dir = common::real_workshop_dir(&game_dir);
-    let real_mods_config = common::real_mods_config_path();
+    let real_mods_config = common::real_mods_config_path(&game_dir);
     common::assert_active_mod_floor(&real_mods_config, RERUN_COMMAND);
 
     fs::create_dir_all(&profile_dir)

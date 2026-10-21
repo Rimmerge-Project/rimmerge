@@ -380,7 +380,9 @@ never this machine's real Steam.
   `ModAssetBundlesHandler`: a bundle
   asset resolves at `Assets/Data/<FolderName>/Textures/<path><ext>`, or
   (non-vanilla only) `Assets/Data/<PackageId>/Textures/<path><ext>`; only
-  extensionless files with no OS suffix or a `_win` suffix are bundles,
+  extensionless files with no OS suffix, `_linux` for native Linux, or
+  `_win` for Windows/Proton are eligible bundles. The platform follows
+  the selected installation, not the analyzer's host OS. Bundles are
   deduplicated across a mod's own loaded folders by the identical
   same-relative-path, highest-priority-folder-wins rule `Defs/`/
   `Patches/`/`Assemblies/` already use. `extract::asset_index::resource_container_paths`

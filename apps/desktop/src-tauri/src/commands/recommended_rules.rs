@@ -85,7 +85,7 @@ struct Environment {
 fn environment(state: &AppState) -> Result<Environment, CommandError> {
     let base = profile_base().ok_or_else(|| {
         CommandError::internal(
-            "neither RIMMERGE_PROFILE_DIR nor LOCALAPPDATA is set, so the app-global base \
+            "neither RIMMERGE_PROFILE_DIR nor the platform data directory is available, so the app-global base \
              can't be resolved",
         )
     })?;

@@ -55,7 +55,7 @@ fn running_version() -> Result<AppVersion, CommandError> {
 fn resolve_base() -> Result<PathBuf, CommandError> {
     profile_base().ok_or_else(|| {
         CommandError::internal(
-            "neither RIMMERGE_PROFILE_DIR nor LOCALAPPDATA is set, so there is nowhere to read \
+            "neither RIMMERGE_PROFILE_DIR nor the platform data directory is available, so there is nowhere to read \
              or write notifications.json",
         )
     })

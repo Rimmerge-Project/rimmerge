@@ -558,15 +558,15 @@
       },
       "game_executable_missing": {
         "title": "RimWorld kann von hier aus nicht gestartet werden",
-        "detail": "RimWorldWin64.exe ist nicht im Installationsverzeichnis."
+        "detail": "Eine unterstützte RimWorld-Programmdatei ist nicht im Installationsverzeichnis."
       },
       "steam_launch_failed": {
         "title": "Steam hat RimWorld nicht gestartet",
-        "detail": "Windows konnte die Anfrage nicht an Steam weitergeben. Steam ist möglicherweise nicht installiert oder nicht richtig eingerichtet. Prüfe, ob Steam installiert ist, und starte RimWorld dann über Steam."
+        "detail": "Steam hat die Anfrage nicht angenommen. Steam ist möglicherweise nicht installiert oder nicht richtig eingerichtet. Prüfe, ob Steam installiert ist, und starte RimWorld dann über Steam."
       },
       "game_start_failed": {
         "title": "RimWorld ist nicht gestartet",
-        "detail": "Windows konnte RimWorldWin64.exe nicht starten."
+        "detail": "Das Betriebssystem konnte die ausgewählte RimWorld-Programmdatei nicht starten."
       },
       "mod_list_io_failed": {
         "title": "Mod-Liste konnte nicht gelesen oder geschrieben werden",
@@ -1179,7 +1179,7 @@
       "chooseButton": "Wählen…",
       "installCheckboxLabel": "In den Mods-Ordner installieren und aktivieren",
       "staleActiveSetNote": "Ausstehende Aktivierungsänderungen sind nicht enthalten – scanne zuerst erneut, wenn sie in diese Installation sollen.",
-      "forceWarning": "RimWorldWin64.exe scheint zu laufen. Eine Installation schreibt jetzt ModsConfig.xml, und das Spiel überschreibt diese Datei beim Beenden, daher kann die Änderung verloren gehen. Trotzdem exportieren?",
+      "forceWarning": "RimWorld scheint zu laufen. Eine Installation schreibt jetzt ModsConfig.xml, und das Spiel überschreibt diese Datei beim Beenden, daher kann die Änderung verloren gehen. Trotzdem exportieren?",
       "exportAnyway": "Trotzdem exportieren",
       "export": "Exportieren",
       "exportedTo": "Exportiert nach: {path}",
@@ -1755,7 +1755,7 @@
       "ruleExists": "Regel existiert bereits."
     },
     "result": {
-      "forceWarning": "RimWorldWin64.exe scheint zu laufen. Das Spiel überschreibt ModsConfig.xml beim Beenden, daher kann verloren gehen, was du jetzt schreibst. Trotzdem schreiben?",
+      "forceWarning": "RimWorld scheint zu laufen. Das Spiel überschreibt ModsConfig.xml beim Beenden, daher kann verloren gehen, was du jetzt schreibst. Trotzdem schreiben?",
       "mergeModPath": "Merge-Mod: {path}",
       "mergeModRemoved": "Merge-Mod: entfernt (keine Merge- oder Asset-Entscheidung mehr übrig)",
       "mergeModBackupPath": "Sicherung der Merge-Mod: {path}",
@@ -1793,7 +1793,7 @@
     "alreadyRunning": "RimWorld läuft bereits.",
     "statusFailed": "Es konnte nicht geprüft werden, ob RimWorld gestartet werden kann.",
     "unavailable": {
-      "executableMissing": "RimWorldWin64.exe ist nicht im Installationsverzeichnis."
+      "executableMissing": "Eine unterstützte RimWorld-Programmdatei ist nicht im Installationsverzeichnis."
     },
     "launchedSteam": "Steam wurde gebeten, RimWorld zu starten.",
     "launchedExecutable": "RimWorld startet.",
@@ -1942,7 +1942,7 @@
       "chooseButton": "Wählen…",
       "installCheckboxLabel": "In den Mods-Ordner installieren und aktivieren",
       "staleActiveSetNote": "Ausstehende Aktivierungsänderungen sind nicht enthalten – scanne zuerst erneut, wenn sie in diese Installation sollen.",
-      "forceWarning": "RimWorldWin64.exe scheint zu laufen. Eine Installation schreibt jetzt ModsConfig.xml, und das Spiel überschreibt diese Datei beim Beenden, daher kann die Änderung verloren gehen. Trotzdem exportieren?",
+      "forceWarning": "RimWorld scheint zu laufen. Eine Installation schreibt jetzt ModsConfig.xml, und das Spiel überschreibt diese Datei beim Beenden, daher kann die Änderung verloren gehen. Trotzdem exportieren?",
       "exportAnyway": "Trotzdem exportieren",
       "export": "Exportieren",
       "exportedTo": "Exportiert nach: {path}",

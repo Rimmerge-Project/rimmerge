@@ -2,12 +2,14 @@
 //! `AssetBundles/` walk and the Core resource scan feed into the
 //! non-loose texture index (`analysis::indices::Indices
 //! ::non_loose_textures`): a Unity `.manifest` sidecar's own `Assets:`
-//! list, and a bounded scan of `RimWorldWin64_Data/globalgamemanagers` for
+//! list, and a bounded scan of the install's `globalgamemanagers` for
 //! `textures/...` container-path strings. Ground-truthed against
 //! `Verse.ContentFinder<T>.TryFindAssetInModBundles`/
 //! `ModAssetBundlesHandler`.
 
 use std::path::Path;
+
+use crate::domain::GamePlatform;
 
 /// Extension-independent, case-insensitive, `/`-separated normalization —
 /// the same convention [`crate::extract::textures::normalize`] applies to a
@@ -57,14 +59,17 @@ pub fn parse_bundle_manifest(text: &str) -> Vec<String> {
 }
 
 /// Whether a bundle file `name` (as read directly out of `AssetBundles/`,
-/// never a `.manifest` sidecar) loads on Windows — `ModAssetBundlesHandler
-/// .GetBundleNameWithoutOsSpecifier`'s own rule: no OS suffix, or `_win`,
-/// loads everywhere/on Windows; `_mac`/`_linux` never does. Case-insensitive,
-/// matching the engine's own comparison.
+/// never a `.manifest` sidecar) loads on the game's platform. Unsuffixed
+/// bundles load everywhere; OS-specific bundles only load on that platform.
+/// Case-insensitive, matching `ModAssetBundlesHandler`'s own comparison.
 #[must_use]
-pub fn is_os_eligible_bundle_name(name: &str) -> bool {
+pub fn is_os_eligible_bundle_name(name: &str, platform: GamePlatform) -> bool {
     let lower = name.to_ascii_lowercase();
-    !(lower.ends_with("_mac") || lower.ends_with("_linux"))
+    !lower.ends_with("_mac")
+        && match platform {
+            GamePlatform::Linux => !lower.ends_with("_win"),
+            GamePlatform::Windows => !lower.ends_with("_linux"),
+        }
 }
 
 /// The normalized, extension-stripped texture key `entry` (one line out of
@@ -236,12 +241,27 @@ mod tests {
     }
 
     #[test]
-    fn os_eligible_accepts_no_suffix_and_win_rejects_mac_and_linux() {
-        assert!(is_os_eligible_bundle_name("things"));
-        assert!(is_os_eligible_bundle_name("things_win"));
-        assert!(!is_os_eligible_bundle_name("things_mac"));
-        assert!(!is_os_eligible_bundle_name("things_linux"));
-        assert!(!is_os_eligible_bundle_name("Things_MAC"));
+    fn os_eligible_bundles_follow_the_game_platform() {
+        for (name, linux, windows) in [
+            ("things", true, true),
+            ("things_win", false, true),
+            ("things_linux", true, false),
+            ("things_mac", false, false),
+            ("Things_WIN", false, true),
+            ("Things_LINUX", true, false),
+            ("Things_MAC", false, false),
+        ] {
+            for (platform, expected) in [
+                (GamePlatform::Linux, linux),
+                (GamePlatform::Windows, windows),
+            ] {
+                assert_eq!(
+                    is_os_eligible_bundle_name(name, platform),
+                    expected,
+                    "{name} on {platform:?}"
+                );
+            }
+        }
     }
 
     #[test]

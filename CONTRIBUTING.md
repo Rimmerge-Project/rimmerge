@@ -5,9 +5,10 @@ test, and submit a change — nothing else.
 
 ## Build
 
-Cargo workspace (Rust 2024, MSVC) plus a Tauri v2 + Vue 3 desktop app.
-Windows/MSVC only — see `docs/architecture.md` and
-`docs/dependency-versions.md` for why.
+Cargo workspace (Rust 2024) plus a Tauri v2 + Vue 3 desktop app.
+Windows uses MSVC/WebView2; Linux uses the GNU target and WebKitGTK 4.1.
+See `docs/install.md` for the Linux packaging baseline and prerequisites,
+and `docs/architecture.md` for the crate graph.
 
 This repository carries [`rimmerge-rules`](https://github.com/Rimmerge-Project/rimmerge-rules)
 as a git submodule at `rules/`, embedded into `rim-io` at compile time
@@ -23,7 +24,7 @@ Desktop app:
 
 ```sh
 cd apps/desktop
-bun install          # bun only — never npm/yarn/pnpm
+bun install --frozen-lockfile  # Bun 1.4.0; never npm/yarn/pnpm
 bun run tauri dev
 ```
 
@@ -210,14 +211,18 @@ files, and all of them must agree before a tag is pushed:
 3. Tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`. The tag
    triggers `.github/workflows/release.yml`, which re-runs
    `check-versions.ps1 -Tag vX.Y.Z` (so a tag that doesn't match the
-   files above fails before anything builds), builds the CLI zip and
-   the portable desktop zip (`scripts/package-portable.ps1`; Tauri
-   bundling is off, so there is no installer), and opens a **draft**
-   GitHub Release with both zips and a `SHA256SUMS.txt` attached.
-4. Review the draft release (release notes, both zips and the checksum file present) and
-   publish it by hand — the workflow never publishes on its own. There
-   is no code signing for either zip; say so in the release notes
-   if the generated ones don't already.
+   files above fails before anything builds), builds the CLI before the
+   desktop, and packages Windows x64 and Ubuntu 24.04 x86_64 artifacts.
+   Windows has two ZIPs (`scripts/package-portable.ps1`); Linux has two
+   tarballs and a `.deb` with desktop/CLI/licenses
+   (`scripts/package-linux.ps1`). The workflow requires all five files
+   before creating a **draft** GitHub Release with `SHA256SUMS.txt`.
+   A manual workflow run validates/uploads all five packages and checksums as
+   the `release-artifacts` Actions artifact, without creating a release.
+4. Review the draft release (release notes, all five artifacts and the
+   checksum file present) and publish it by hand. Binaries are unsigned;
+   state that in the release notes. Linux packaging runs on the pinned
+   Ubuntu baseline, not an arbitrary newer distribution; see `docs/install.md`.
 5. Publishing a release marks it **Set as the latest release** by
    default — leave that ticked for an ordinary release. Publishing a
    **backport** to an older line (a fix released after a newer version

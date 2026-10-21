@@ -280,3 +280,71 @@ fn the_environment_variable_outranks_the_pinned_config() {
         "...while the pinned block still reports what is actually in the file: {stdout}"
     );
 }
+
+#[cfg(target_os = "linux")]
+#[test]
+fn saved_flatpak_game_alias_keeps_config_and_workshop_in_its_library() {
+    use std::os::unix::fs::symlink;
+
+    let scratch = tempdir().expect("scratch");
+    let home = scratch.path().join("home");
+    let base = scratch.path().join("state");
+    let steam = home.join(".var/app/com.valvesoftware.Steam/.local/share/Steam");
+    let library = scratch.path().join("secondary");
+    let external = scratch_install(scratch.path());
+    fs::create_dir_all(external.join("RimWorldLinux_Data")).expect("native runtime");
+    let alias = library.join("steamapps/common/RimWorld");
+    fs::create_dir_all(alias.parent().expect("parent")).expect("library");
+    symlink(&external, &alias).expect("linked install");
+    fs::create_dir_all(steam.join("steamapps")).expect("Steam root");
+    fs::write(
+        steam.join("steamapps/libraryfolders.vdf"),
+        format!(
+            "\"libraryfolders\"\n{{\n\"0\"\n{{\n\"path\" \"{}\"\n}}\n}}",
+            library.display()
+        ),
+    )
+    .expect("library registration");
+    fs::write(
+        library.join("steamapps/appmanifest_294100.acf"),
+        "\"AppState\"\n{\n\"appid\" \"294100\"\n\"installdir\" \"RimWorld\"\n}",
+    )
+    .expect("manifest");
+    let suffix = "unity3d/Ludeon Studios/RimWorld by Ludeon Studios/Config/ModsConfig.xml";
+    let config = home
+        .join(".var/app/com.valvesoftware.Steam/.config")
+        .join(suffix);
+    let decoy = home.join(".config").join(suffix);
+    for path in [&config, &decoy] {
+        fs::create_dir_all(path.parent().expect("config parent")).expect("config directory");
+        fs::write(path, "<ModsConfigData><activeMods/></ModsConfigData>").expect("config");
+    }
+    config_cmd()
+        .args(["set", "--base"])
+        .arg(&base)
+        .arg("--game-dir")
+        .arg(&alias)
+        .assert()
+        .success();
+    assert_eq!(rim_io::AppConfig::load(&base).game_dir, Some(alias.clone()));
+    let output = config_cmd()
+        .args(["show", "--base"])
+        .arg(&base)
+        .env("HOME", &home)
+        .env_remove("XDG_CONFIG_HOME")
+        .output()
+        .expect("reload pinned game");
+    assert!(output.status.success());
+    let stdout = stdout_of(&output);
+    assert!(stdout.contains(&config.display().to_string()), "{stdout}");
+    assert!(!stdout.contains(&decoy.display().to_string()), "{stdout}");
+    assert!(
+        stdout.contains(
+            &library
+                .join("steamapps/workshop/content/294100")
+                .display()
+                .to_string()
+        ),
+        "{stdout}"
+    );
+}

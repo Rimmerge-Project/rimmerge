@@ -1,0 +1,26 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "bundle": {
+    "active": true,
+    "targets": [
+      "deb"
+    ],
+    "shortDescription": "Conflict-aware RimWorld mod manager and load order optimizer",
+    "longDescription": "Rimmerge sorts a RimWorld mod list into a conflict-aware load order and tracks every conflict it finds — dropped dependency edges, def overrides, patch collisions, duplicate assemblies, incompatible pairs, and more — in a resolution ledger whose decisions persist across re-scans.",
+    "category": "Utility",
+    "copyright": "Rimmerge Contributors",
+    "resources": {
+      "../../../LICENSE-MIT": "LICENSE-MIT",
+      "../../../LICENSE-APACHE": "LICENSE-APACHE"
+    },
+    "linux": {
+      "deb": {
+        "files": {
+          "/usr/bin/rimmerge": "../../../target/release/rimmerge",
+          "/usr/share/doc/rimmerge/LICENSE-MIT": "../../../LICENSE-MIT",
+          "/usr/share/doc/rimmerge/LICENSE-APACHE": "../../../LICENSE-APACHE"
+        }
+      }
+    }
+  }
+}

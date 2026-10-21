@@ -10,9 +10,9 @@ use thiserror::Error;
 use walkdir::WalkDir;
 
 use crate::domain::{
-    AssemblyInfo, DefEntry, FolderPolicy, GameVersion, ManifestOrder, Mod, ModId, PatchOp, RefSite,
-    RefSiteOwner, ScanCost, ScannedMod, TemplateEntry, TexturePathCandidate, UndecodableTexture,
-    Warning, XmlLocator,
+    AssemblyInfo, DefEntry, FolderPolicy, GamePlatform, GameVersion, ManifestOrder, Mod, ModId,
+    PatchOp, RefSite, RefSiteOwner, ScanCost, ScannedMod, TemplateEntry, TexturePathCandidate,
+    UndecodableTexture, Warning, XmlLocator,
 };
 use crate::extract::file_order::ntfs_collation_key;
 use crate::extract::ref_sites::TextInterner;
@@ -157,11 +157,9 @@ struct Extracted {
     ref_sites: Vec<RefSite>,
 }
 
-/// [`scan_folder`]'s own `AssetBundles/` walk needs three things beyond
-/// what it already receives for `Defs/`/`Patches/`/`Assemblies/` — grouped
-/// here so its parameter list doesn't grow by three more independent
-/// values.
+/// Context for the platform-specific `AssetBundles/` walk.
 struct BundleScanContext {
+    platform: GamePlatform,
     /// This mod's own installed directory name
     /// (`ModContentPack.FolderName` — the folder RimWorld actually
     /// mounted, not necessarily its `packageId`) — the first of the two
@@ -201,6 +199,7 @@ pub fn scan_one_mod(
     game_version: GameVersion,
     active_bases: &HashSet<ModId>,
     folder_policy: FolderPolicy,
+    platform: GamePlatform,
 ) -> (ScannedMod, HashSet<u64>, Vec<RefSite>, Vec<Warning>) {
     let mut extracted = Extracted::default();
     let (load_folders_bytes, load_folders_version_matched, read_warning) =
@@ -242,6 +241,7 @@ pub fn scan_one_mod(
     // check and the manifest read respect it.
     let shadowed_dds = shadowed_paths(&loaded_folders, "Textures", &["dds"], recursive);
     let bundle_context = BundleScanContext {
+        platform,
         folder_name: discovered
             .path
             .file_name()
@@ -912,7 +912,7 @@ fn scan_folder(
             if file_name.contains('.') {
                 continue;
             }
-            if !asset_index::is_os_eligible_bundle_name(file_name) {
+            if !asset_index::is_os_eligible_bundle_name(file_name, bundle_context.platform) {
                 continue;
             }
             if bundle_context.shadowed_bundles.contains(&path) {
@@ -1537,6 +1537,7 @@ mod tests {
             v16(),
             &HashSet::new(),
             FolderPolicy::LoadFolders,
+            GamePlatform::Windows,
         );
 
         assert_eq!(scanned.info.workshop_id, Some(2_009_463_077));
@@ -1564,6 +1565,7 @@ mod tests {
             v16(),
             &HashSet::new(),
             FolderPolicy::LoadFolders,
+            GamePlatform::Windows,
         );
 
         assert!(
@@ -1732,6 +1734,7 @@ mod tests {
             v16(),
             &HashSet::new(),
             FolderPolicy::LoadFolders,
+            GamePlatform::Windows,
         );
 
         assert!(warnings.is_empty(), "warnings: {warnings:?}");
@@ -1760,6 +1763,7 @@ mod tests {
             v16(),
             &HashSet::new(),
             FolderPolicy::LoadFolders,
+            GamePlatform::Windows,
         );
 
         assert!(warnings.is_empty());
@@ -1785,6 +1789,7 @@ mod tests {
             v16(),
             &HashSet::new(),
             FolderPolicy::LoadFolders,
+            GamePlatform::Windows,
         );
 
         assert_eq!(
@@ -1822,6 +1827,7 @@ mod tests {
             v16(),
             &HashSet::new(),
             FolderPolicy::LoadFolders,
+            GamePlatform::Windows,
         );
 
         assert_eq!(
@@ -1877,6 +1883,7 @@ mod tests {
             v16(),
             &HashSet::new(),
             FolderPolicy::LoadFolders,
+            GamePlatform::Windows,
         );
 
         assert_eq!(scanned.scan_cost.texture_files, 2);
@@ -1912,6 +1919,7 @@ mod tests {
             v16(),
             &HashSet::new(),
             FolderPolicy::LoadFolders,
+            GamePlatform::Windows,
         );
 
         assert_eq!(
@@ -1944,6 +1952,7 @@ mod tests {
             v16(),
             &HashSet::new(),
             FolderPolicy::LoadFolders,
+            GamePlatform::Windows,
         );
 
         assert_eq!(scanned.assemblies.len(), 1);
@@ -2059,6 +2068,7 @@ mod tests {
             v16(),
             &HashSet::new(),
             FolderPolicy::LoadFolders,
+            GamePlatform::Windows,
         );
 
         let xpaths: Vec<_> = scanned
@@ -2103,6 +2113,7 @@ mod tests {
             v16(),
             &active_bases,
             FolderPolicy::LoadFolders,
+            GamePlatform::Windows,
         );
 
         assert_eq!(scanned.patch_ops.len(), 1);
@@ -2149,6 +2160,7 @@ mod tests {
             v16(),
             &HashSet::new(),
             FolderPolicy::LoadFolders,
+            GamePlatform::Windows,
         );
 
         let names: Vec<_> = scanned.defs.iter().map(|d| d.def_name.as_str()).collect();
@@ -2179,6 +2191,7 @@ mod tests {
             v16(),
             &HashSet::new(),
             FolderPolicy::LoadFolders,
+            GamePlatform::Windows,
         );
 
         // Default folder rule: version folder (1.6) is higher priority than
@@ -2221,6 +2234,7 @@ mod tests {
             v16(),
             &active,
             FolderPolicy::LoadFolders,
+            GamePlatform::Windows,
         );
 
         let names: Vec<_> = scanned.defs.iter().map(|d| d.def_name.as_str()).collect();
@@ -2254,6 +2268,7 @@ mod tests {
             v16(),
             &active,
             FolderPolicy::LoadFolders,
+            GamePlatform::Windows,
         );
 
         let names: Vec<_> = scanned.defs.iter().map(|d| d.def_name.as_str()).collect();
@@ -2302,6 +2317,7 @@ mod tests {
             v16(),
             &HashSet::new(),
             FolderPolicy::LoadFolders,
+            GamePlatform::Windows,
         );
 
         assert_eq!(
@@ -2332,6 +2348,7 @@ mod tests {
             v16(),
             &HashSet::new(),
             FolderPolicy::LoadFolders,
+            GamePlatform::Windows,
         );
 
         assert!(scanned.bundle_textures.is_empty());
@@ -2353,6 +2370,7 @@ mod tests {
             v16(),
             &HashSet::new(),
             FolderPolicy::LoadFolders,
+            GamePlatform::Windows,
         );
 
         assert!(scanned.bundle_textures.is_empty());
@@ -2384,6 +2402,7 @@ mod tests {
             v16(),
             &HashSet::new(),
             FolderPolicy::LoadFolders,
+            GamePlatform::Windows,
         );
 
         assert_eq!(
@@ -2427,6 +2446,7 @@ mod tests {
             v16(),
             &HashSet::new(),
             FolderPolicy::LoadFolders,
+            GamePlatform::Windows,
         );
 
         assert!(
@@ -2458,6 +2478,7 @@ mod tests {
             v16(),
             &HashSet::new(),
             FolderPolicy::LoadFolders,
+            GamePlatform::Windows,
         );
 
         assert_eq!(scanned.undecodable_textures.len(), 1);

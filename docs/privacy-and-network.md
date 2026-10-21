@@ -164,9 +164,13 @@ you click it (see [Launching RimWorld](desktop.md#launching-rimworld)).
 The request it sends to the backend names no path or URL; the backend
 works out both from the configured install.
 
-- **A Steam copy** is started by handing the fixed link
-  `steam://run/294100` to Windows, which passes it to the Steam client
-  already installed on your computer. Rimmerge opens no connection and
+- **A Steam copy** uses the fixed link `steam://run/294100` on Windows.
+  On Linux, Rimmerge runs the owning native or Flatpak Steam client with
+  `-applaunch 294100`, using separate arguments and no shell. A missing or
+  ambiguous client produces an error instead of switching clients.
+  Before a Flatpak launch, `flatpak info --show-ref com.valvesoftware.Steam`
+  checks the local installation; this check makes no network request.
+  Rimmerge opens no connection and
   contacts no host to do this: it isn't a web request, the two hosts
   above are still the only ones Rimmerge ever contacts, and the
   Internet access switch has nothing to block here.
@@ -175,9 +179,13 @@ works out both from the configured install.
   behaviour, outside Rimmerge and its settings.
 - **Any other copy** (GOG, a standalone folder, or a Steam copy whose
   library isn't listed in a default Steam root's `libraryfolders.vdf`)
-  is started by running `RimWorldWin64.exe` from the install folder,
-  with no arguments and no shell. Rimmerge doesn't wait for the game or
-  read its output.
+  is started from the install folder, with no arguments and no shell:
+  `RimWorldWin64.exe` on Windows, or `RimWorldLinux.x86_64` (preferred) /
+  `RimWorldLinux` on Linux. Direct launch requires a regular file rather
+  than a symlink, plus execute permission on Linux. Windows `.exe` files
+  on Linux require the verified Steam route instead. Launch returns
+  immediately and never reads game output; on Unix a background waiter
+  collects the child after it exits.
 
 Launching reads the install folder, Steam's own records of it
 (`appmanifest_294100.acf` and `libraryfolders.vdf`) and the list of

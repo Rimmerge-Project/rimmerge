@@ -558,15 +558,15 @@
       },
       "game_executable_missing": {
         "title": "无法从此处启动 RimWorld",
-        "detail": "安装目录中没有 RimWorldWin64.exe。"
+        "detail": "安装目录中没有受支持的 RimWorld 可执行文件。"
       },
       "steam_launch_failed": {
         "title": "Steam 未能启动 RimWorld",
-        "detail": "Windows 无法将请求传递给 Steam。Steam 可能未安装或未正确设置。请确认已安装 Steam，然后从 Steam 启动 RimWorld。"
+        "detail": "Steam 未接受该请求。Steam 可能未安装或未正确设置。请确认已安装 Steam，然后从 Steam 启动 RimWorld。"
       },
       "game_start_failed": {
         "title": "RimWorld 未能启动",
-        "detail": "Windows 无法启动 RimWorldWin64.exe。"
+        "detail": "操作系统无法启动选定的 RimWorld 可执行文件。"
       },
       "mod_list_io_failed": {
         "title": "无法读取或写入 Mod 列表",
@@ -1179,7 +1179,7 @@
       "chooseButton": "选择…",
       "installCheckboxLabel": "安装到 Mods 文件夹并启用",
       "staleActiveSetNote": "未包含待定的启用状态更改——如果希望本次安装包含它们，请先重新扫描。",
-      "forceWarning": "RimWorldWin64.exe 似乎正在运行。现在安装会写入 ModsConfig.xml，而游戏退出时会覆盖该文件，因此这次更改可能会丢失。仍然导出？",
+      "forceWarning": "RimWorld 似乎正在运行。现在安装会写入 ModsConfig.xml，而游戏退出时会覆盖该文件，因此这次更改可能会丢失。仍然导出？",
       "exportAnyway": "仍然导出",
       "export": "导出",
       "exportedTo": "已导出到：{path}",
@@ -1755,7 +1755,7 @@
       "ruleExists": "规则已存在。"
     },
     "result": {
-      "forceWarning": "RimWorldWin64.exe 似乎正在运行。游戏退出时会覆盖 ModsConfig.xml，因此现在写入的内容可能会丢失。仍然写入？",
+      "forceWarning": "RimWorld 似乎正在运行。游戏退出时会覆盖 ModsConfig.xml，因此现在写入的内容可能会丢失。仍然写入？",
       "mergeModPath": "合并 Mod：{path}",
       "mergeModRemoved": "合并 Mod：已删除（已没有任何合并或资源决定）",
       "mergeModBackupPath": "合并 Mod 备份：{path}",
@@ -1793,7 +1793,7 @@
     "alreadyRunning": "RimWorld 已在运行。",
     "statusFailed": "无法检查 RimWorld 是否可以启动。",
     "unavailable": {
-      "executableMissing": "安装目录中没有 RimWorldWin64.exe。"
+      "executableMissing": "安装目录中没有受支持的 RimWorld 可执行文件。"
     },
     "launchedSteam": "已请求 Steam 启动 RimWorld。",
     "launchedExecutable": "正在启动 RimWorld。",
@@ -1942,7 +1942,7 @@
       "chooseButton": "选择…",
       "installCheckboxLabel": "安装到 Mods 文件夹并启用",
       "staleActiveSetNote": "未包含待定的启用状态更改——如果希望本次安装包含它们，请先重新扫描。",
-      "forceWarning": "RimWorldWin64.exe 似乎正在运行。现在安装会写入 ModsConfig.xml，而游戏退出时会覆盖该文件，因此这次更改可能会丢失。仍然导出？",
+      "forceWarning": "RimWorld 似乎正在运行。现在安装会写入 ModsConfig.xml，而游戏退出时会覆盖该文件，因此这次更改可能会丢失。仍然导出？",
       "exportAnyway": "仍然导出",
       "export": "导出",
       "exportedTo": "已导出到：{path}",

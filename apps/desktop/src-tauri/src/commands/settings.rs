@@ -86,13 +86,13 @@ pub async fn set_settings(
 /// # Errors
 ///
 /// Returns [`CommandError::internal`] only when neither
-/// `RIMMERGE_PROFILE_DIR` nor `LOCALAPPDATA` is set, so there is nowhere
+/// `RIMMERGE_PROFILE_DIR` nor the platform data directory is available, so there is nowhere
 /// on this machine to look.
 #[tauri::command]
 pub async fn get_app_settings() -> Result<AppSettingsResponseDto, CommandError> {
     let base = profile_base().ok_or_else(|| {
         CommandError::internal(
-            "neither RIMMERGE_PROFILE_DIR nor LOCALAPPDATA is set, so there is nowhere to read \
+            "neither RIMMERGE_PROFILE_DIR nor the platform data directory is available, so there is nowhere to read \
              app-settings.json from",
         )
     })?;
@@ -119,7 +119,7 @@ fn get_app_settings_inner(base: &std::path::Path) -> AppSettingsResponseDto {
 pub async fn update_app_settings(settings: AppSettingsDto) -> Result<AppSettingsDto, CommandError> {
     let base = profile_base().ok_or_else(|| {
         CommandError::internal(
-            "neither RIMMERGE_PROFILE_DIR nor LOCALAPPDATA is set, so there is nowhere to write \
+            "neither RIMMERGE_PROFILE_DIR nor the platform data directory is available, so there is nowhere to write \
              app-settings.json",
         )
     })?;
@@ -154,7 +154,7 @@ fn update_app_settings_at(
 pub async fn reset_network_policy() -> Result<AppSettingsDto, CommandError> {
     let base = profile_base().ok_or_else(|| {
         CommandError::internal(
-            "neither RIMMERGE_PROFILE_DIR nor LOCALAPPDATA is set, so there is nowhere to write \
+            "neither RIMMERGE_PROFILE_DIR nor the platform data directory is available, so there is nowhere to write \
              app-settings.json",
         )
     })?;
@@ -184,7 +184,7 @@ fn reset_network_policy_at(base: &std::path::Path) -> Result<AppSettingsDto, Com
 pub async fn enable_recommended_rule_databases() -> Result<AppSettingsDto, CommandError> {
     let base = profile_base().ok_or_else(|| {
         CommandError::internal(
-            "neither RIMMERGE_PROFILE_DIR nor LOCALAPPDATA is set, so there is nowhere to write \
+            "neither RIMMERGE_PROFILE_DIR nor the platform data directory is available, so there is nowhere to write \
              app-settings.json",
         )
     })?;

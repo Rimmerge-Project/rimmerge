@@ -1,9 +1,9 @@
 name: CI
 
-# Windows runners throughout: RimWorld and RimSort are Windows-first, and
-# `apps/desktop` links against `sysinfo`'s Windows process APIs and (for
-# a real Tauri build) WebView2 — the same platform every contributor
-# actually develops and runs the app on. The CDP smoke tier
+# Matrix across Windows and Linux:
+# RimWorld and RimSort were Windows-first, and apps/desktop links against
+# platform-specific process/runtime APIs (WebView2 on Windows, WebKitGTK/GTK
+# on Linux). Both platforms run the hermetic test tiers. The CDP smoke tier
 # (`bun run e2e:smoke`, apps/desktop/e2e/smoke/) is intentionally NOT run
 # here: it launches a real `tauri dev` build and drives it over the Chrome
 # DevTools Protocol, which needs a real desktop session and takes minutes
@@ -14,6 +14,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -29,17 +30,29 @@ env:
 
 jobs:
   rust:
-    name: Rust (fmt, clippy, nextest, deny)
-    runs-on: windows-latest
+    name: Rust (${{ matrix.os }}) - fmt, clippy, nextest, deny
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-24.04]
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
 
+      - name: Install Linux system dependencies (WebKitGTK, GTK, build tools)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential curl file libayatana-appindicator3-dev             libssl-dev libwebkit2gtk-4.1-dev libxdo-dev librsvg2-dev wget ripgrep
+
       # check-forbidden.ps1 needs ripgrep. install-action has no `@ripgrep`
       # shorthand ref, so take it from Chocolatey, which the Windows runner
-      # image ships with (skipped if the image already has rg).
+      # image ships with (skipped if the image already has rg). On Linux,
+      # ripgrep is installed above via apt-get.
       - name: Install ripgrep
+        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           if (-not (Get-Command rg -ErrorAction SilentlyContinue)) {
@@ -78,14 +91,12 @@ jobs:
         run: cargo nextest run --workspace --all-features
 
       # `EmbarkStudios/cargo-deny-action` is a Docker container action —
-      # container actions only run on Linux runners, and this job is
-      # `windows-latest` (see the header comment for why the whole
-      # workflow is). `taiki-e/install-action` installs a prebuilt
-      # `cargo-deny` binary instead, so the check runs as a plain `cargo`
-      # subcommand here. `deny.toml` is committed at the workspace root
-      # (scopes the check itself), so there's no "does it exist" guard —
-      # a workspace with no `deny.toml` would need this step removed
-      # outright, not skipped silently.
+      # container actions only run on Linux runners, while `taiki-e/install-action`
+      # installs a prebuilt `cargo-deny` binary across both Windows and Linux,
+      # so the check runs as a plain `cargo` subcommand here. `deny.toml` is
+      # committed at the workspace root (scopes the check itself), so there's
+      # no "does it exist" guard — a workspace with no `deny.toml` would need
+      # this step removed outright, not skipped silently.
       - uses: taiki-e/install-action@cargo-deny
 
       - name: cargo deny check (licenses, bans, advisories, sources)
@@ -115,8 +126,12 @@ jobs:
         run: ./scripts/count-doc-warnings.ps1
 
   bun:
-    name: bun (types, typecheck, lint, vitest, playwright mock tier)
-    runs-on: windows-latest
+    name: bun (${{ matrix.os }}) - types, typecheck, lint, vitest, playwright mock tier
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-24.04]
     defaults:
       run:
         working-directory: apps/desktop
@@ -124,6 +139,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
+
+      - name: Install Linux system dependencies (WebKitGTK, GTK, build tools)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential curl file libayatana-appindicator3-dev             libssl-dev libwebkit2gtk-4.1-dev libxdo-dev librsvg2-dev wget
 
       # `bun run types:check` shells out to `cargo test -p rimmerge-desktop
       # --lib` to regenerate the ts-rs bindings and diff them against what's
@@ -158,10 +179,12 @@ jobs:
       - name: vitest
         run: bun run test
 
-      - name: install Playwright's chromium
-        # `--with-deps` shells out to `apt-get` to install OS-level
-        # browser dependencies — Linux-only, and a no-op-or-error on this
-        # job's `windows-latest` runner.
+      - name: Install Playwright Chromium and Linux dependencies
+        if: runner.os == 'Linux'
+        run: bunx playwright install chromium --with-deps
+
+      - name: Install Playwright Chromium on Windows
+        if: runner.os == 'Windows'
         run: bunx playwright install chromium
 
       - name: Playwright, mock-IPC tier

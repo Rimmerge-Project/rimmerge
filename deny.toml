@@ -4,23 +4,15 @@
 
 [graph]
 all-features = false
-# This app ships on Windows only (RimWorld/RimSort are Windows-first, and
-# `rim-io` links `sysinfo`'s Windows process APIs) — restricting the
-# graph to the one target we actually build for prunes an entire branch
-# of Tauri's dependency tree that's Windows-irrelevant: `wry`'s Linux
-# webview backend (`webkit2gtk`, `gtk`, the `unic-*` crates, `dom_query`/
-# `cssparser`) pulls in several `RUSTSEC` "unmaintained" advisories and an
-# MPL-2.0 license that this build never actually compiles. Without this,
-# `cargo deny check` would fail on advisories/licenses this project has
-# no way to act on (they're not our dependencies to update).
-targets = ["x86_64-pc-windows-msvc"]
+# Keep both shipped backend targets in the dependency graph. The Linux
+# target includes Tauri's GTK/WebKit backend, so its advisories and licenses
+# must be reviewed explicitly instead of being pruned from the audit.
+targets = ["x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"]
 
 [advisories]
 # Explicit policy: a yanked crate version or a RUSTSEC advisory (security
-# or unmaintained) anywhere in the *Windows* dependency graph fails the
-# check. Nothing is ignored — if `[graph].targets` above ever widens back
-# to include a non-Windows target, expect this to need real entries here
-# (or a narrower `[graph].exclude`) rather than silently passing.
+# or unmaintained) anywhere in either shipped target's dependency graph
+# fails the check. Nothing is ignored without a dependency-path reason.
 yanked = "deny"
 ignore = [
     # The `unic-*` Unicode crate family (all of
@@ -34,6 +26,11 @@ ignore = [
     { id = "RUSTSEC-2025-0081", reason = "unic-char-range, transitive via tauri-utils -> urlpattern; not directly depended on" },
     { id = "RUSTSEC-2025-0098", reason = "unic-ucd-version, transitive via tauri-utils -> urlpattern; not directly depended on" },
     { id = "RUSTSEC-2025-0100", reason = "unic-ucd-ident, transitive via tauri-utils -> urlpattern; not directly depended on" },
+    # GTK 0.18's glib-macros transitively uses proc-macro-error through the
+    # Linux Tauri/WebKitGTK backend. cargo-deny reports no safe upgrade for
+    # this advisory; revisit when the GTK/Tauri dependency chain moves away
+    # from proc-macro-error.
+    { id = "RUSTSEC-2024-0370", reason = "proc-macro-error, transitive via glib-macros -> gtk -> webkit2gtk/wry; no safe upgrade is available" },
 ]
 
 [bans]

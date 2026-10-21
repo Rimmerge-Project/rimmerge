@@ -403,12 +403,13 @@ gate block in the root `CLAUDE.md`.
   `schema` key must still load rather than silently coming back empty
   and sending the app off to detection instead; the file is always
   *written* with the current schema, so a hand-written file gains the
-  key on its next save. `app_config::pinned_path` absolutizes (relative
-  to absolute) and canonicalizes (resolving `.`/`..` and the
-  `\\?\`-prefix) any of `game_dir`/`workshop_dir`/`mods_config`
-  **before** it's written into `config.json` (both `apps/cli`'s
-  `config set` and the desktop's own pin command go through it) — never
-  store a path a later lexical comparison could be fooled by.
+  key on its next save. `app_config::pinned_path` absolutizes and resolves
+  existing ancestors for `workshop_dir`/`mods_config` before saving.
+  `pinned_game_path` preserves absolute Linux library aliases so discovery
+  retains Steam ownership; Windows uses the existing canonicalization.
+  Both CLI and desktop share these helpers. Exports must additionally use
+  `resolve_export_dir` to refuse the absolute and physical Mods locations
+  before writing or persisting the target.
 - **`mod_knowledge.rs` + `build.rs`**: `FsModKnowledgeStore`
   implements `rim_session::ports::ModKnowledgeStore` as "the fetched
   `<cache_dir>/rimmergeRules.json` if present and it parses, else the
@@ -487,8 +488,10 @@ gate block in the root `CLAUDE.md`.
   adapter state: they're built once at the composition root, before any
   project exists, while the carrier list is per-project data.
 - Profile dir = `<base>/profiles/<12 hex of sha256(normalized ModsConfig
-  path)>`; normalisation strips `\\?\`, lowercases, and uses forward
-  slashes.
+  path)>`; existing paths are canonicalized. On Windows, normalisation
+  strips `\\?\`, lowercases, and uses forward slashes. Unix preserves
+  original path bytes, case and literal backslashes; valid UTF-8 path IDs
+  are unchanged.
 - **`asset_locator.rs`**: `FileAssetLocator::locate_texture` trusts
   `mod_loaded_folders` to already be in load-priority order (highest
   first — `Mod::loaded_folders`'s own contract) and never re-derives or
@@ -511,19 +514,25 @@ gate block in the root `CLAUDE.md`.
   `rim_session::ports::GameLauncher`. `route` is `Steam` when
   `rim_analyzer::infra::paths::is_steam_managed_install` says so (the rule
   lives there, not here), else `Executable` when `is_game_dir` holds and
-  `RimWorldWin64.exe`'s `symlink_metadata` is a regular file (a symlink or a
-  folder of that name is refused), else `ExecutableMissing`. `launch(Steam)`
+  a platform executable's `symlink_metadata` is a regular file (symlinks and
+  directories are refused): `RimWorldWin64.exe` on Windows, or
+  `RimWorldLinux.x86_64` / `RimWorldLinux` on Linux with execute permission.
+  A Windows `.exe` on Linux requires the Steam route; otherwise it is
+  `ExecutableMissing`. `launch(Steam)`
   hands the constant `steam://run/294100` to `open::that_detached`
   (`open` is a direct dependency, `shellexecute-on-windows`, already in the
   tree through `tauri-plugin-opener`); the URL is never built from input.
   `launch(Executable)` spawns the install's own exe through the private
   `executable_command`: no arguments, no shell, the install folder as the
   working directory, null stdio, `DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP`
-  on Windows (safe `CommandExt`), and the `Child` is dropped, never waited
-  on. It never writes. The Steam check is a `fn(&Path) -> bool` field
+  on Windows (safe `CommandExt`), where the `Child` is still dropped. On
+  Unix a waiter thread is prepared before spawning and reaps the child after
+  exit; the launch call returns without waiting for the game. It never writes.
+  The Steam check is a `fn(&Path) -> bool` field
   (`new()` uses the real one) so route tests never read this machine's
-  Steam; **no test calls `launch`**: the `open::that_detached` and `.spawn()`
-  lines are covered only by the manual check.
+  Steam; **no test calls `launch`**. The private spawn/reap helper is tested
+  with a copied Rust test binary, never the game. The Steam URL route remains
+  covered only by the manual check.
 - **`mod_list_file.rs` + `mod_list_file/{read,write}.rs`**: `RmlFileStore`
   implements `rim_session::ports::ModListFileStore`. The input is
   untrusted and every bound is a `rim_session::mod_list::ModListLimits`

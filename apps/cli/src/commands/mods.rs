@@ -90,7 +90,7 @@ pub struct ActivateArgs {
     /// Print the plan without writing anything.
     #[arg(long)]
     dry_run: bool,
-    /// Write `ModsConfig.xml` even if `RimWorldWin64.exe` looks like it's
+    /// Write `ModsConfig.xml` even if RimWorld looks like it's
     /// running.
     #[arg(long)]
     force: bool,
@@ -113,7 +113,7 @@ pub struct DeactivateArgs {
     /// Print the plan without writing anything.
     #[arg(long)]
     dry_run: bool,
-    /// Write `ModsConfig.xml` even if `RimWorldWin64.exe` looks like it's
+    /// Write `ModsConfig.xml` even if RimWorld looks like it's
     /// running.
     #[arg(long)]
     force: bool,
@@ -171,7 +171,7 @@ pub(crate) fn refuse_while_running(
 ) -> anyhow::Result<()> {
     if !force && probe.is_running() {
         bail!(
-            "RimWorldWin64.exe is running; close the game or retry with --force (RimWorld \
+            "RimWorld is running; close the game or retry with --force (RimWorld \
              overwrites ModsConfig.xml on exit, so a concurrent write is likely to be lost or \
              corrupt the running game's own copy)"
         );

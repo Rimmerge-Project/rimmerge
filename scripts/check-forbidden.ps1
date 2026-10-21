@@ -33,7 +33,8 @@ if ($usingLocalList) {
     $patterns += Get-PatternLines $localTokenFile
 }
 
-$mergedTokenFile = Join-Path $env:TEMP "rimmerge-forbidden-tokens-merged.txt"
+$tempDir = if ($env:TEMP) { $env:TEMP } else { [System.IO.Path]::GetTempPath() }
+$mergedTokenFile = Join-Path $tempDir "rimmerge-forbidden-tokens-merged.txt"
 try {
     Set-Content -Path $mergedTokenFile -Value $patterns -Encoding utf8
 

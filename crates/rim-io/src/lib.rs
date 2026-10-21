@@ -40,7 +40,7 @@ pub mod rules;
 pub mod scanner;
 pub(crate) mod xml_text;
 
-pub use app_config::{AppConfig, app_config_path, pinned_path};
+pub use app_config::{AppConfig, app_config_path, pinned_game_path, pinned_path};
 pub use app_settings::{JsonAppSettingsStore, app_settings_path};
 pub use asset_locator::FileAssetLocator;
 pub use assignment_store::JsonAssignmentProjectStore;
@@ -62,7 +62,9 @@ pub use notifications::{
 };
 pub use patches::JsonPatchProjectStore;
 pub use process::{GameProcessProbe, SysinfoGameProcessProbe};
-pub use profile::{databases_dir, profile_dir, resolve_user_dir};
+pub use profile::{
+    ExportDirError, databases_dir, profile_dir, resolve_export_dir, resolve_user_dir,
+};
 pub use project_paths::{
     GAME_DIR_VAR, MODS_CONFIG_VAR, PathOverrides, PathResolutionError, ResolvedPaths,
     WORKSHOP_DIR_VAR, not_an_install_warning, resolve_project_paths,

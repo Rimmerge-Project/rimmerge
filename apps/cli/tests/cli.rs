@@ -152,7 +152,7 @@ fn fixture_trim_caps_conflicts_per_kind() {
 }
 
 /// The shared command builder must keep every CLI test off the machine's
-/// own app-global state: here an ambient `LOCALAPPDATA` holds a saved
+/// own app-global state: here the platform's ambient data directory holds a saved
 /// `app-settings.json` with the master switch off, and `network status`
 /// through [`common::rimmerge`] must still report the shipped default (on).
 #[test]
@@ -170,7 +170,17 @@ fn the_shared_command_builder_ignores_the_machines_own_app_settings() {
     .expect("seed the ambient settings");
 
     common::rimmerge()
+        .env_remove("RIMMERGE_PROFILE_DIR")
         .env("LOCALAPPDATA", ambient.path())
+        .env("XDG_DATA_HOME", ambient.path())
+        .args(["network", "status"])
+        .assert()
+        .success()
+        .stdout(predicates::str::contains("allow_network: off"));
+
+    common::rimmerge()
+        .env("LOCALAPPDATA", ambient.path())
+        .env("XDG_DATA_HOME", ambient.path())
         .args(["network", "status"])
         .assert()
         .success()

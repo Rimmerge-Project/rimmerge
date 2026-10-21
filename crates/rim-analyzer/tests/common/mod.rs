@@ -116,14 +116,14 @@ pub fn require_scratch_profile_dir_is_set(rerun_command: &str) {
     );
 }
 
-/// `RIMMERGE_MODS_CONFIG`, else the `%USERPROFILE%`-relative default.
+/// `RIMMERGE_MODS_CONFIG`, else the config for the selected install.
 #[allow(
     dead_code,
     reason = "not every test binary that includes this module uses every helper"
 )]
-pub fn real_mods_config_path() -> PathBuf {
+pub fn real_mods_config_path(game_dir: &std::path::Path) -> PathBuf {
     paths::path_var(paths::MODS_CONFIG_VAR).unwrap_or_else(|| {
-        paths::default_mods_config_path()
+        paths::mods_config_path_for_install(game_dir)
             .unwrap_or_else(|error| panic!("resolving ModsConfig.xml path: {error}"))
     })
 }
@@ -155,7 +155,7 @@ pub fn real_workshop_dir(game_dir: &std::path::Path) -> PathBuf {
 pub fn real_scan_config(rerun_command: &str) -> Option<(ScanConfig, GameVersion)> {
     let game_dir = require_game_dir(rerun_command)?;
     require_scratch_profile_dir_is_set(rerun_command);
-    let mods_config_path = real_mods_config_path();
+    let mods_config_path = real_mods_config_path(&game_dir);
     assert_active_mod_floor(&mods_config_path, rerun_command);
     let game_version = paths::default_game_version(&game_dir)
         .unwrap_or_else(|error| panic!("reading the real install's game version: {error}"));

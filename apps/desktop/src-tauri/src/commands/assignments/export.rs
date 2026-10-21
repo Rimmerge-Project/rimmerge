@@ -37,11 +37,17 @@ pub(crate) async fn export_assignment_inner(
             return Err(CommandError::rimworld_running());
         }
 
-        // Absolutized/canonicalized the same way `export_patch_inner`
-        // does — see that command's own doc comment for why.
-        let out_dir = rim_io::resolve_user_dir(Path::new(&request.out_dir)).map_err(|error| {
-            CommandError::invalid_input(format!("resolving out_dir {}: {error}", request.out_dir))
-        })?;
+        let out_dir =
+            rim_io::resolve_export_dir(Path::new(&request.out_dir), &session.paths().game_dir)
+                .map_err(|error| match error {
+                    rim_io::ExportDirError::InsideMods(path) => CommandError::from(
+                        rim_session::use_cases::ExportAssignmentError::OutDirIsModsFolder(path),
+                    ),
+                    rim_io::ExportDirError::Io(error) => CommandError::invalid_input(format!(
+                        "resolving out_dir {}: {error}",
+                        request.out_dir
+                    )),
+                })?;
 
         let use_case = ExportAssignment::new(
             adapters.merge_mod_writer,

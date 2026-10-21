@@ -418,7 +418,11 @@ mod tests {
     /// [`ExportPatchError::OutDirNotAbsolute`] without ever colliding
     /// with a relative `game_dir`-derived `Mods` path.
     fn exports_base() -> &'static Path {
-        Path::new("C:/exports")
+        Path::new(if cfg!(windows) {
+            "C:/exports"
+        } else {
+            "/exports"
+        })
     }
 
     fn options(out_dir: &str) -> ExportOptions {
@@ -511,10 +515,22 @@ mod tests {
 
     fn absolute_test_paths() -> ProjectPaths {
         ProjectPaths {
-            game_dir: PathBuf::from("C:/game"),
-            workshop_dir: PathBuf::from("C:/workshop"),
-            mods_config: PathBuf::from("C:/game/ModsConfig.xml"),
-            profile_dir: PathBuf::from("C:/profile"),
+            game_dir: PathBuf::from(if cfg!(windows) { "C:/game" } else { "/game" }),
+            workshop_dir: PathBuf::from(if cfg!(windows) {
+                "C:/workshop"
+            } else {
+                "/workshop"
+            }),
+            mods_config: PathBuf::from(if cfg!(windows) {
+                "C:/game/ModsConfig.xml"
+            } else {
+                "/game/ModsConfig.xml"
+            }),
+            profile_dir: PathBuf::from(if cfg!(windows) {
+                "C:/profile"
+            } else {
+                "/profile"
+            }),
         }
     }
 

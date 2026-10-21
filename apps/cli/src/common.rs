@@ -49,13 +49,16 @@ pub struct PathsArgs {
     #[arg(long)]
     pub mods_config: Option<PathBuf>,
     /// This project's profile directory. Defaults to
-    /// `%LOCALAPPDATA%\rimmerge\profiles\<hash of the ModsConfig.xml path>`.
+    /// the platform data directory's `rimmerge/profiles/<hash of the
+    /// ModsConfig.xml path>`.
     #[arg(long)]
     pub profile_dir: Option<PathBuf>,
 }
 
 /// Where `config.json`, `profiles/` and `databases/` live:
-/// `RIMMERGE_PROFILE_DIR` when set, else `%LOCALAPPDATA%\rimmerge`.
+/// `RIMMERGE_PROFILE_DIR` when set, else the platform data directory:
+/// `%LOCALAPPDATA%\rimmerge` on Windows,
+/// or `$XDG_DATA_HOME/rimmerge` / `~/.local/share/rimmerge` on Linux.
 ///
 /// The variable is honoured here for the same reason the desktop's own
 /// `profile_base()` honours it (that function's doc comment has the
@@ -66,12 +69,8 @@ pub struct PathsArgs {
 /// to the real one is exactly the asymmetry that produces "it worked
 /// when I ran it the other way".
 pub(crate) fn default_profile_base() -> anyhow::Result<PathBuf> {
-    if let Some(base) = rim_analyzer::infra::paths::path_var("RIMMERGE_PROFILE_DIR") {
-        return Ok(base);
-    }
-    let local_app_data =
-        std::env::var("LOCALAPPDATA").context("LOCALAPPDATA environment variable is not set")?;
-    Ok(PathBuf::from(local_app_data).join("rimmerge"))
+    rim_analyzer::infra::paths::default_profile_base_dir()
+        .context("neither RIMMERGE_PROFILE_DIR nor the user data directory is set")
 }
 
 /// Reads the app-global [`rim_session::NetworkPolicy`] through
@@ -129,7 +128,7 @@ pub(crate) fn print_recovered_notice_if_any(load: &rim_session::ports::AppSettin
 /// given (every `db`/`import` command's own `--cache-dir` override, needed
 /// so tests can seed a temp cache without touching the real profile base or
 /// the network), else `rim_io::databases_dir` under the same
-/// `%LOCALAPPDATA%\rimmerge` base [`resolve_paths`] uses for `profile_dir`.
+/// platform data base [`resolve_paths`] uses for `profile_dir`.
 pub(crate) fn resolve_cache_dir(explicit: Option<PathBuf>) -> anyhow::Result<PathBuf> {
     match explicit {
         Some(dir) => Ok(dir),
@@ -184,7 +183,7 @@ pub fn build_session(paths: ProjectPaths) -> anyhow::Result<Session> {
         // The mod-knowledge store reads the same app-global cache
         // directory `db refresh` writes into. `vendored()` on a machine
         // with no resolvable profile base: the vendored defaults are
-        // always available, so a missing `%LOCALAPPDATA%` degrades to
+        // always available, so a missing platform data directory degrades to
         // "shipped behaviour", never to a failed load.
         resolve_cache_dir(None).map_or_else(
             |_| rim_io::FsModKnowledgeStore::vendored(),

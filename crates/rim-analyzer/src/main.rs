@@ -90,7 +90,7 @@ fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
         .unwrap_or_else(|| infra::paths::default_workshop_dir(&game_dir));
     let mods_config_path = match &args.mods_config {
         Some(path) => path.clone(),
-        None => infra::paths::default_mods_config_path()?,
+        None => infra::paths::mods_config_path_for_install(&game_dir)?,
     };
     let game_version = resolve_game_version(args.game_version.as_deref(), &game_dir)?;
     let folder_policy = if args.all_folders {
