@@ -190,6 +190,9 @@ pub fn index(bytes: &[u8], file: &Arc<Path>) -> Result<DefsFile, DefsError> {
     let mut ref_sites_truncated = false;
     let mut ref_site_budget = 0usize;
     let mut ref_site_text = ref_sites::TextInterner::default();
+    // Reused across every top-level element: the ordinal path
+    // `collect_nested_may_require` extends and cuts back one level at a time.
+    let mut may_require_path: Vec<u32> = Vec::new();
     collect_class_strings(root, &mut inline_types);
 
     for (position, element) in root
@@ -208,7 +211,14 @@ pub fn index(bytes: &[u8], file: &Arc<Path>) -> Result<DefsFile, DefsError> {
         // a def, a template, both, or neither) since a nameless def can
         // still carry real, honoured `MayRequire` gates on its own
         // fields.
-        collect_nested_may_require(element, &[position as u32], file, &mut nested_may_require);
+        may_require_path.clear();
+        may_require_path.push(position as u32);
+        collect_nested_may_require(
+            element,
+            &mut may_require_path,
+            file,
+            &mut nested_may_require,
+        );
 
         if let Some(name) = element.attribute("Name") {
             templates.push(TemplateEntry {
@@ -232,17 +242,12 @@ pub fn index(bytes: &[u8], file: &Arc<Path>) -> Result<DefsFile, DefsError> {
                     name: name.to_string(),
                     may_require: csv_attr(element, "MayRequire"),
                 });
-                let mut raw = Vec::new();
                 ref_sites::collect(
                     element,
                     &def_type,
-                    &mut raw,
+                    &mut |site| ref_sites.push(wrap_ref_site(site, &owner, &mut ref_site_text)),
                     &mut ref_site_budget,
                     &mut ref_sites_truncated,
-                );
-                ref_sites.extend(
-                    raw.into_iter()
-                        .map(|site| wrap_ref_site(site, &owner, &mut ref_site_text)),
                 );
             }
             // Without this, a `[@Name="…"]` target's inline-node lookup always
@@ -264,10 +269,10 @@ pub fn index(bytes: &[u8], file: &Arc<Path>) -> Result<DefsFile, DefsError> {
             // patching, so only a template's own literal inline nodes
             // belong in this index; a node the template only inherits
             // isn't "already there" from the patch's point of view.
-            let template_base_path = format!("{def_type}/@{name}");
+            let mut template_base_path = format!("{def_type}/@{name}");
             collect_inline_node_paths(
                 element,
-                &template_base_path,
+                &mut template_base_path,
                 0,
                 &mut inline_node_path_hashes,
                 &mut child_value_hashes,
@@ -293,10 +298,10 @@ pub fn index(bytes: &[u8], file: &Arc<Path>) -> Result<DefsFile, DefsError> {
             continue;
         };
 
-        let base_path = format!("{def_type}/{def_name}");
+        let mut base_path = format!("{def_type}/{def_name}");
         collect_inline_node_paths(
             element,
-            &base_path,
+            &mut base_path,
             0,
             &mut inline_node_path_hashes,
             &mut child_value_hashes,
@@ -308,17 +313,12 @@ pub fn index(bytes: &[u8], file: &Arc<Path>) -> Result<DefsFile, DefsError> {
                 may_require: csv_attr(element, "MayRequire"),
                 may_require_any_of: csv_attr(element, "MayRequireAnyOf"),
             });
-            let mut raw = Vec::new();
             ref_sites::collect(
                 element,
                 &def_type,
-                &mut raw,
+                &mut |site| ref_sites.push(wrap_ref_site(site, &owner, &mut ref_site_text)),
                 &mut ref_site_budget,
                 &mut ref_sites_truncated,
-            );
-            ref_sites.extend(
-                raw.into_iter()
-                    .map(|site| wrap_ref_site(site, &owner, &mut ref_site_text)),
             );
         }
 
@@ -352,15 +352,15 @@ pub fn index(bytes: &[u8], file: &Arc<Path>) -> Result<DefsFile, DefsError> {
 /// walk itself. Repeated def types and field paths are shared through
 /// `text`, one per file.
 fn wrap_ref_site(
-    site: ref_sites::RawRefSite,
+    site: ref_sites::RawRefSite<'_>,
     owner: &Arc<RefSiteOwner>,
     text: &mut ref_sites::TextInterner,
 ) -> RefSite {
     RefSite {
-        def_type: text.intern(&site.def_type),
-        field_path: text.intern(&site.field_path),
+        def_type: text.intern(site.def_type),
+        field_path: text.intern(site.field_path),
         shape: site.shape,
-        value: site.value,
+        value: site.value.to_string(),
         owner: Arc::clone(owner),
         may_require: site.may_require.into_boxed_slice(),
         may_require_any_of: site.may_require_any_of.into_boxed_slice(),
@@ -377,11 +377,12 @@ const MAX_NESTED_MAY_REQUIRE_DEPTH: usize = 16;
 
 /// See [`DefsFile::nested_may_require`]. `path` is `element`'s own
 /// ordinal path from the `<Defs>` root, extended by one ordinal per
-/// recursion level so every collected id keeps a real [`XmlLocator`]
-/// pointing at the exact attribute it came from.
+/// recursion level (and cut back on return, so one buffer serves the whole
+/// walk) so every collected id keeps a real [`XmlLocator`] pointing at the
+/// exact attribute it came from.
 fn collect_nested_may_require(
     element: roxmltree::Node,
-    path: &[u32],
+    path: &mut Vec<u32>,
     file: &Arc<Path>,
     out: &mut Vec<(String, XmlLocator)>,
 ) {
@@ -393,15 +394,15 @@ fn collect_nested_may_require(
         .filter(roxmltree::Node::is_element)
         .enumerate()
     {
-        let mut child_path = path.to_vec();
-        child_path.push(index as u32);
+        path.push(index as u32);
         for id in csv_attr(child, "MayRequire")
             .into_iter()
             .chain(csv_attr(child, "MayRequireAnyOf"))
         {
-            out.push((id, XmlLocator::new(Arc::clone(file), child_path.clone())));
+            out.push((id, XmlLocator::new(Arc::clone(file), path.clone())));
         }
-        collect_nested_may_require(child, &child_path, file, out);
+        collect_nested_may_require(child, path, file, out);
+        path.pop();
     }
 }
 
@@ -476,7 +477,9 @@ fn declared_graphic_class(element: roxmltree::Node) -> Option<String> {
 /// Records a hash of `"{prefix}/{tag}"` for every descendant element of
 /// `node`, recursing down to [`MAX_INLINE_NODE_PATH_DEPTH`] — `prefix`
 /// starts as `"{def_type}/{def_name}"` (see [`DefsFile::inline_node_path_hashes`]'s
-/// own doc comment) and grows by one tag name per level. Every
+/// own doc comment) and grows by one tag name per level. `prefix` is one
+/// reused buffer: each level appends its segment and cuts it back off
+/// before returning, so `prefix` is unchanged on return. Every
 /// descendant at every depth up to the bound is recorded, not just leaf
 /// elements — a patch-injected path can name an intermediate container
 /// node (e.g. `apparel`) just as often as a leaf one (`apparel/tags`).
@@ -495,7 +498,7 @@ fn declared_graphic_class(element: roxmltree::Node) -> Option<String> {
 /// why only leaves, only this shallow, and why hashed rather than kept as text.
 fn collect_inline_node_paths(
     node: roxmltree::Node,
-    prefix: &str,
+    prefix: &mut String,
     depth: usize,
     out: &mut HashSet<u64>,
     child_values: &mut HashSet<u64>,
@@ -503,26 +506,34 @@ fn collect_inline_node_paths(
     if depth >= MAX_INLINE_NODE_PATH_DEPTH {
         return;
     }
+    let prefix_len = prefix.len();
     for child in node.children().filter(roxmltree::Node::is_element) {
-        let path = format!("{prefix}/{}", child.tag_name().name());
-        out.insert(hash_node_path(&path));
-        if child.tag_name().name() == "li"
+        let tag = child.tag_name().name();
+        if tag == "li"
             && let Some(identity) = li_predicate_identity(child)
         {
             // The patch side keys a predicate-selected list item by this same
             // normalized suffix; without it, a `li[...]` path can never read
             // as already shipping inline.
-            out.insert(hash_node_path(&format!(
-                "{prefix}/{}",
-                li_predicate_suffix(&identity)
-            )));
+            prefix.push('/');
+            prefix.push_str(&li_predicate_suffix(&identity));
+            out.insert(hash_node_path(prefix));
+            prefix.truncate(prefix_len);
         }
+        prefix.push('/');
+        prefix.push_str(tag);
+        out.insert(hash_node_path(prefix));
         if depth < MAX_CHILD_VALUE_DEPTH
             && let Some(text) = leaf_text(child)
         {
-            child_values.insert(hash_node_path(&format!("{path}={text}")));
+            let path_len = prefix.len();
+            prefix.push('=');
+            prefix.push_str(text);
+            child_values.insert(hash_node_path(prefix));
+            prefix.truncate(path_len);
         }
-        collect_inline_node_paths(child, &path, depth + 1, out, child_values);
+        collect_inline_node_paths(child, prefix, depth + 1, out, child_values);
+        prefix.truncate(prefix_len);
     }
 }
 
@@ -550,6 +561,137 @@ mod tests {
 
     fn test_file() -> Arc<Path> {
         Arc::from(Path::new("test.xml"))
+    }
+
+    /// Every reference-site shape a def's field tree produces, in walk order,
+    /// with its field path: siblings at the same level (`Steel`, then
+    /// `WoodLog`) each get their own path, a keyed element is filed under its
+    /// container's path, a `<li>` container's own children sit under `li`,
+    /// and a `descriptionHyperlinks` child is a hyperlink under the
+    /// container's own path. Pins the paths the reference vote groups by.
+    #[test]
+    fn ref_sites_are_recorded_in_walk_order_with_their_field_paths() {
+        let xml = br#"<Defs>
+              <ThingDef>
+                <defName>Wall</defName>
+                <costList><Steel>10</Steel><WoodLog MayRequire="mod.a">5</WoodLog></costList>
+                <comps>
+                  <li><compClass>CompA</compClass></li>
+                  <li MayRequire="mod.b">Plain</li>
+                </comps>
+                <descriptionHyperlinks><ThingDef>Door</ThingDef></descriptionHyperlinks>
+                <stuffCategories><li>Metallic</li></stuffCategories>
+              </ThingDef>
+            </Defs>"#;
+        let result = index(xml, &test_file()).unwrap();
+        let sites: Vec<(crate::domain::RefSiteShape, &str, &str, Vec<&str>)> = result
+            .ref_sites
+            .iter()
+            .map(|site| {
+                assert_eq!(&*site.def_type, "ThingDef");
+                (
+                    site.shape,
+                    &*site.field_path,
+                    site.value.as_str(),
+                    site.may_require.iter().map(String::as_str).collect(),
+                )
+            })
+            .collect();
+        use crate::domain::RefSiteShape::{Hyperlink, KeyedElement, ListItem, Scalar};
+        assert_eq!(
+            sites,
+            vec![
+                (Scalar, "defName", "Wall", vec![]),
+                (KeyedElement, "", "defName", vec![]),
+                (Scalar, "costList/Steel", "10", vec![]),
+                (KeyedElement, "costList", "Steel", vec![]),
+                (Scalar, "costList/WoodLog", "5", vec![]),
+                (KeyedElement, "costList", "WoodLog", vec!["mod.a"]),
+                (Scalar, "comps/li/compClass", "CompA", vec![]),
+                (KeyedElement, "comps/li", "compClass", vec![]),
+                (ListItem, "comps/li", "Plain", vec!["mod.b"]),
+                (Hyperlink, "descriptionHyperlinks", "Door", vec![]),
+                (ListItem, "stuffCategories/li", "Metallic", vec![]),
+            ]
+        );
+    }
+
+    /// Two sibling containers and a second top-level def: each element's
+    /// path is built from its own ancestors only, never from a sibling or
+    /// an earlier def visited before it.
+    #[test]
+    fn inline_node_paths_of_siblings_and_later_defs_do_not_inherit_earlier_segments() {
+        let xml = br#"<Defs>
+              <ThingDef>
+                <defName>A</defName>
+                <first><x>1</x></first>
+                <second><li Class="Example.CompY"/><y>2</y></second>
+              </ThingDef>
+              <ThingDef><defName>B</defName><third>3</third></ThingDef>
+            </Defs>"#;
+        let result = index(xml, &test_file()).unwrap();
+        for path in [
+            "ThingDef/A/first",
+            "ThingDef/A/first/x",
+            "ThingDef/A/second",
+            "ThingDef/A/second/li",
+            "ThingDef/A/second/li[@Class=\"Example.CompY\"]",
+            "ThingDef/A/second/y",
+            "ThingDef/B/third",
+        ] {
+            assert!(
+                result
+                    .inline_node_path_hashes
+                    .contains(&hash_node_path(path)),
+                "missing inline path {path}"
+            );
+        }
+        for value in [
+            "ThingDef/A/first/x=1",
+            "ThingDef/A/second/y=2",
+            "ThingDef/B/third=3",
+        ] {
+            assert!(
+                result.child_value_hashes.contains(&hash_node_path(value)),
+                "missing child value {value}"
+            );
+        }
+        // One hash per distinct path above plus `defName` for each def.
+        assert_eq!(result.inline_node_path_hashes.len(), 9);
+    }
+
+    /// Sibling elements at depth two each get their own ordinal path, and
+    /// a gate on a later top-level def starts again from that def's own
+    /// position.
+    #[test]
+    fn nested_may_require_paths_follow_each_elements_own_ordinals() {
+        let xml = br#"<Defs>
+              <ThingDef><defName>A</defName>
+                <comps>
+                  <li MayRequire="mod.a"/>
+                  <li><inner MayRequire="mod.b"/></li>
+                </comps>
+              </ThingDef>
+              <ThingDef><defName>B</defName><x MayRequire="mod.c"/></ThingDef>
+            </Defs>"#;
+        let result = index(xml, &test_file()).unwrap();
+        assert_eq!(
+            result.nested_may_require,
+            vec![
+                (
+                    "mod.a".to_string(),
+                    XmlLocator::new(test_file(), vec![0, 1, 0])
+                ),
+                (
+                    "mod.b".to_string(),
+                    XmlLocator::new(test_file(), vec![0, 1, 1, 0])
+                ),
+                (
+                    "mod.c".to_string(),
+                    XmlLocator::new(test_file(), vec![1, 1])
+                ),
+            ]
+        );
     }
 
     #[test]

@@ -294,24 +294,24 @@ fn walk_operation(
         && let Some(op_target) = &target
         && let Some((_, value)) = indexed_direct_child(node, "value")
     {
-        let mut raw = Vec::new();
+        let op_locator = XmlLocator::new(Arc::clone(file), path.to_vec());
         ref_sites::collect(
             value,
             &op_target.def_type,
-            &mut raw,
+            &mut |site| {
+                out_ref_sites.push(PatchValueRefSite {
+                    target: op_target.clone(),
+                    field_path: site.field_path.to_string(),
+                    shape: site.shape,
+                    value: site.value.to_string(),
+                    may_require: site.may_require,
+                    may_require_any_of: site.may_require_any_of,
+                    op_locator: op_locator.clone(),
+                });
+            },
             ref_site_budget,
             ref_sites_truncated,
         );
-        let op_locator = XmlLocator::new(Arc::clone(file), path.to_vec());
-        out_ref_sites.extend(raw.into_iter().map(|site| PatchValueRefSite {
-            target: op_target.clone(),
-            field_path: site.field_path,
-            shape: site.shape,
-            value: site.value,
-            may_require: site.may_require,
-            may_require_any_of: site.may_require_any_of,
-            op_locator: op_locator.clone(),
-        }));
     }
 
     if let Some((operations_index, operations)) = indexed_direct_child(node, "operations") {
