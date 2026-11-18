@@ -914,6 +914,7 @@ mod tests {
             discovered_mod_count: scanned.len(),
             core_resource_textures: BTreeSet::new(),
             ref_sites_by_mod: ref_sites_by_mod.clone(),
+            unloaded_defs_dirs_by_mod: BTreeMap::new(),
         };
         let children_index = build_children_index(&scan);
         dangling_def_references(

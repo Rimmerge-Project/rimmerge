@@ -145,8 +145,8 @@ pub fn real_workshop_dir(game_dir: &std::path::Path) -> PathBuf {
 /// A read-only [`ScanConfig`] over the real install, with both hazard
 /// guards applied — `None` only on a machine outside the tier.
 ///
-/// Returns the resolved [`GameVersion`] alongside it: two of this crate's
-/// four real-install tests need it, and re-reading `Version.txt` in each
+/// Returns the resolved [`GameVersion`] alongside it: five of this crate's
+/// eight `real_install_*.rs` tests need it, and re-reading `Version.txt` in each
 /// of them would be a second place for the resolution rule to drift.
 #[allow(
     dead_code,

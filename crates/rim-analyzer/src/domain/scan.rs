@@ -2,6 +2,7 @@
 //! the input the analysis layer builds edges and conflicts from.
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
+use std::path::PathBuf;
 
 use super::assembly::AssemblyInfo;
 use super::conflict::UndecodableTexture;
@@ -296,4 +297,12 @@ pub struct ScanOutput {
     /// this feature has no reason to touch. `analysis::references` is
     /// this field's one real consumer.
     pub ref_sites_by_mod: BTreeMap<ModId, Vec<RefSite>>,
+    /// Per scanned mod, every `Defs` directory under its root whose direct
+    /// parent is not one of its [`Mod::loaded_folders`] — at most twelve
+    /// levels deep, in sorted walk order, found during the scan's one walk
+    /// of each mod root. The dangling-def-reference explanation searches
+    /// these for a name the loaded content never defines
+    /// ([`super::DanglingCause::OnlyInUnloadedFolder`]). Kept off
+    /// [`ScannedMod`] for the same reason [`Self::ref_sites_by_mod`] is.
+    pub unloaded_defs_dirs_by_mod: BTreeMap<ModId, Vec<PathBuf>>,
 }
