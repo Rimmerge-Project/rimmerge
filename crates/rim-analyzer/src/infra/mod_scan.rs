@@ -73,7 +73,11 @@ pub fn read_bounded_with_limit(path: &Path, limit: u64) -> Result<Vec<u8>, ReadE
     // The size above is only a fast refusal with an exact number: the
     // bound that holds is on the read itself, so a file that grows between
     // the stat and the read is still cut off one byte past the limit.
-    let mut bytes = Vec::new();
+    // `Take` gives `read_to_end` no size hint, so without the stat size as
+    // the starting capacity it grows the buffer by doubling from a small
+    // probe — several reallocations and copies per file. Already bounded by
+    // `limit` above.
+    let mut bytes = Vec::with_capacity(usize::try_from(size).unwrap_or(0));
     file.take(limit.saturating_add(1)).read_to_end(&mut bytes)?;
     if bytes.len() as u64 > limit {
         return Err(ReadError::TooLarge {
@@ -1677,6 +1681,34 @@ mod tests {
         let path = root.join("exact.txt");
         fs::write(&path, b"hello").unwrap();
         assert_eq!(read_bounded_with_limit(&path, 5).unwrap(), b"hello");
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    /// A file larger than any single read chunk comes back whole and
+    /// unchanged — the pre-sized buffer is filled, not just the first read.
+    #[test]
+    fn read_bounded_with_limit_returns_a_multi_chunk_file_whole() {
+        let root = tempdir("read-bounded-whole");
+        let path = root.join("big.xml");
+        let contents: Vec<u8> = (0..300_000u32).map(|i| (i % 251) as u8).collect();
+        fs::write(&path, &contents).unwrap();
+
+        let bytes = read_bounded_with_limit(&path, 1_000_000).unwrap();
+
+        assert_eq!(bytes, contents);
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    /// An empty file reads as empty, not as an error.
+    #[test]
+    fn read_bounded_with_limit_reads_an_empty_file() {
+        let root = tempdir("read-bounded-empty");
+        let path = root.join("empty.xml");
+        fs::write(&path, b"").unwrap();
+
+        let bytes = read_bounded_with_limit(&path, 10).unwrap();
+
+        assert!(bytes.is_empty());
         let _ = fs::remove_dir_all(&root);
     }
 
