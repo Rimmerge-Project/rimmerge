@@ -37,6 +37,35 @@ test.describe("mods", () => {
     expect(inactiveIds).toEqual(inactiveIds.toSorted());
   });
 
+  test("every row shows its source as a badge with an accessible name, on both tabs", async ({
+    page,
+  }) => {
+    await loadScenario(page);
+    await page.getByTestId("nav-mods").click();
+    await expect(page.getByTestId("mod-row-mod.000")).toBeVisible();
+
+    const activeBadge = (id: string) =>
+      page.getByTestId(`mod-row-${id}`).getByTestId("source-badge");
+    await expect(activeBadge("mod.000")).toHaveAttribute("data-source", "core");
+    await expect(activeBadge("mod.000")).toHaveAccessibleName("RimWorld Core");
+    await expect(activeBadge("mod.001")).toHaveAccessibleName("RimWorld DLC");
+    await expect(activeBadge("mod.002")).toHaveAccessibleName("Steam Workshop");
+    await expect(activeBadge("mod.003")).toHaveAccessibleName("Local mod");
+    await expect(activeBadge("mod.003")).toHaveAttribute("title", "Local mod");
+    // The raw enum text is gone from the row.
+    // `getByText` with `exact` is case-sensitive: the wire value is lowercase, no label is.
+    await expect(
+      page.getByTestId("mod-row-mod.002").getByText("workshop", { exact: true }),
+    ).toHaveCount(0);
+
+    await page.getByTestId("mods-tab-inactive").click();
+    await expect(page.getByTestId("mod-row-mod.901")).toBeVisible();
+    const inactiveBadge = (id: string) =>
+      page.getByTestId(`mod-row-${id}`).getByTestId("source-badge");
+    await expect(inactiveBadge("mod.901")).toHaveAccessibleName("Local mod");
+    await expect(inactiveBadge("mod.902")).toHaveAccessibleName("Steam Workshop");
+  });
+
   test("searches the mod list and opens a mod's info panel", async ({ page }) => {
     await loadScenario(page);
     await page.getByTestId("nav-mods").click();

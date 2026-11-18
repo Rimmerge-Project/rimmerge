@@ -225,6 +225,16 @@ close button also closes it. The panel's own "all details" link opens
 the same information as a full page (`/mods/:modId/details`) instead,
 for when you want it as the main view rather than a side panel.
 
+Each row has a small source icon after its checkbox: RimWorld Core,
+RimWorld DLC, Local mod (a folder under the game's `Mods/`), or Steam
+Workshop. The icon has a tooltip and screen-reader text with the same
+name, and on wide windows the name also shows beside it, so shape is never
+the only cue. The source is decided by where the scan found the mod's folder, never guessed from its
+name, package id or a Workshop id. A mod listed in `ModsConfig.xml` but not
+installed has no folder, so its icon reads "Origin unknown (not
+installed)" instead of a source. The icon is display only: it changes
+neither selection, sorting, filtering nor the load order.
+
 The CLI's `mods show <id>` prints the same information from the command
 line — see [cli.md](cli.md).
 

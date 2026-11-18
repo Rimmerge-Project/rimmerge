@@ -4,6 +4,7 @@ import Checkbox from "primevue/checkbox";
 import { computed, nextTick, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
 
+import SourceBadge from "@/components/mods/SourceBadge.vue";
 import { useModLabel } from "@/composables/useModLabel";
 import type { ModSummaryDto } from "@/types/generated/ModSummaryDto";
 
@@ -196,6 +197,7 @@ function onRowKeydown(event: KeyboardEvent, modId: string): void {
           @click.stop
           @update:model-value="toggleSelected(mod.modId)"
         />
+        <SourceBadge :source="mod.source" />
         <span
           class="text-text flex-1 truncate font-medium"
           :title="modLabel.titleFor(mod.modId)"
@@ -205,7 +207,6 @@ function onRowKeydown(event: KeyboardEvent, modId: string): void {
           class="bg-status-danger-soft text-status-danger shrink-0 rounded px-1.5 py-0.5 text-xs font-medium"
           data-testid="mod-row-missing-pill"
         >{{ t("mods.table.missing") }}</span>
-        <span class="text-text-muted w-20 text-xs">{{ mod.source ?? "—" }}</span>
         <template v-if="showActiveColumns">
           <span class="flex gap-1">
             <span

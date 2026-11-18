@@ -1233,6 +1233,13 @@
     "table": {
       "regionLabel": "Моди",
       "missing": "відсутній",
+      "sourceUnknown": "Джерело невідоме (не встановлено)",
+      "sourceBadge": {
+        "core": "RimWorld Core",
+        "dlc": "Розширення RimWorld",
+        "local": "Локальний мод",
+        "workshop": "Майстерня Steam"
+      },
       "rovingHint": "Стрілки — переміщення, Enter — відкрити, пробіл — перемкнути"
     },
     "pendingChanges": {

@@ -76,6 +76,32 @@ describe("ModTable", () => {
     expect(wrapper.emitted("selectMod")).toEqual([["fixture.mod"]]);
   });
 
+  it("renders a source badge per row instead of the raw source enum", async () => {
+    const wrapper = mountTable({
+      mods: [
+        mod({ modId: "a", source: "workshop" }),
+        mod({ modId: "b", source: "dlc" }),
+        mod({ modId: "c", source: null, missing: true }),
+      ],
+    });
+    await flushPromises();
+
+    const badgeTexts = wrapper
+      .findAll('[data-testid="source-badge"]')
+      .map((badge) => badge.attributes("aria-label"));
+    expect(badgeTexts).toEqual([
+      "Steam Workshop",
+      "RimWorld DLC",
+      "Origin unknown (not installed)",
+    ]);
+    // No element's text is the bare wire value, in any case.
+    const elementTexts = wrapper
+      .findAll('[role="row"] *')
+      .map((element) => element.text().toLowerCase());
+    expect(elementTexts).not.toContain("workshop");
+    expect(elementTexts).not.toContain("dlc");
+  });
+
   it("renders a checkbox per row when selectable, toggling the selectedIds model", async () => {
     const wrapper = mountTable({
       mods: [mod({ modId: "a" }), mod({ modId: "b" })],

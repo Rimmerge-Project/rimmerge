@@ -1233,6 +1233,13 @@
     "table": {
       "regionLabel": "Моды",
       "missing": "отсутствует",
+      "sourceUnknown": "Источник неизвестен (мод не установлен)",
+      "sourceBadge": {
+        "core": "RimWorld Core",
+        "dlc": "DLC для RimWorld",
+        "local": "Локальный мод",
+        "workshop": "Мастерская Steam"
+      },
       "rovingHint": "Стрелки — перемещение, Enter — открыть, пробел — переключить"
     },
     "pendingChanges": {

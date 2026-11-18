@@ -1233,6 +1233,13 @@
     "table": {
       "regionLabel": "Mod",
       "missing": "缺失",
+      "sourceUnknown": "来源未知（未安装）",
+      "sourceBadge": {
+        "core": "RimWorld 核心",
+        "dlc": "RimWorld 扩展",
+        "local": "本地 Mod",
+        "workshop": "Steam 创意工坊"
+      },
       "rovingHint": "使用方向键移动，Enter 键打开，空格键切换"
     },
     "pendingChanges": {

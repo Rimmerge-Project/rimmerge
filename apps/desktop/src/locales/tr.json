@@ -1233,6 +1233,13 @@
     "table": {
       "regionLabel": "Modlar",
       "missing": "eksik",
+      "sourceUnknown": "Kaynağı bilinmiyor (kurulu değil)",
+      "sourceBadge": {
+        "core": "RimWorld Ana İçeriği",
+        "dlc": "RimWorld DLC'si",
+        "local": "Yerel mod",
+        "workshop": "Steam Atölyesi"
+      },
       "rovingHint": "Gezinmek için ok tuşlarını, açmak için Enter'ı, seçimi değiştirmek için Boşluk'u kullan"
     },
     "pendingChanges": {

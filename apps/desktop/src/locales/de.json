@@ -1233,6 +1233,13 @@
     "table": {
       "regionLabel": "Mods",
       "missing": "fehlt",
+      "sourceUnknown": "Herkunft unbekannt (nicht installiert)",
+      "sourceBadge": {
+        "core": "RimWorld Core",
+        "dlc": "RimWorld-DLC",
+        "local": "Lokale Mod",
+        "workshop": "Steam Workshop"
+      },
       "rovingHint": "Pfeiltasten zum Bewegen, Enter zum Öffnen, Leertaste zum Umschalten"
     },
     "pendingChanges": {

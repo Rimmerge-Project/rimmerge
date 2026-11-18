@@ -1233,6 +1233,13 @@
     "table": {
       "regionLabel": "Mods",
       "missing": "ausente",
+      "sourceUnknown": "Origem desconhecida (não instalado)",
+      "sourceBadge": {
+        "core": "Núcleo do RimWorld",
+        "dlc": "Expansão do RimWorld",
+        "local": "Mod local",
+        "workshop": "Oficina Steam"
+      },
       "rovingHint": "Use as setas para mover, Enter para abrir e Espaço para marcar/desmarcar"
     },
     "pendingChanges": {

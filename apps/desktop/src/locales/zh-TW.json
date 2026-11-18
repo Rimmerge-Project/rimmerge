@@ -1233,6 +1233,13 @@
     "table": {
       "regionLabel": "模組",
       "missing": "缺少",
+      "sourceUnknown": "來源不明（未安裝）",
+      "sourceBadge": {
+        "core": "RimWorld Core",
+        "dlc": "RimWorld 擴充",
+        "local": "本機模組",
+        "workshop": "Steam 創意工坊"
+      },
       "rovingHint": "使用方向鍵移動，Enter 開啟，空白鍵切換"
     },
     "pendingChanges": {

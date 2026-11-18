@@ -1233,6 +1233,13 @@
     "table": {
       "regionLabel": "MOD",
       "missing": "見つからない",
+      "sourceUnknown": "入手元不明（未インストール）",
+      "sourceBadge": {
+        "core": "RimWorld Core",
+        "dlc": "RimWorld DLC",
+        "local": "ローカルMOD",
+        "workshop": "Steamワークショップ"
+      },
       "rovingHint": "矢印キーで移動、Enterで開く、Spaceで切り替え"
     },
     "pendingChanges": {

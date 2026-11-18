@@ -1233,6 +1233,13 @@
     "table": {
       "regionLabel": "Mods",
       "missing": "manquant",
+      "sourceUnknown": "Origine inconnue (non installé)",
+      "sourceBadge": {
+        "core": "RimWorld Core",
+        "dlc": "Extension de RimWorld",
+        "local": "Mod local",
+        "workshop": "Steam Workshop"
+      },
       "rovingHint": "Flèches pour se déplacer, Entrée pour ouvrir, Espace pour cocher ou décocher"
     },
     "pendingChanges": {

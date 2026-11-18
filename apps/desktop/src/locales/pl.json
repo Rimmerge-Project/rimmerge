@@ -1233,6 +1233,13 @@
     "table": {
       "regionLabel": "Mody",
       "missing": "brakujący",
+      "sourceUnknown": "Nieznane źródło (mod niezainstalowany)",
+      "sourceBadge": {
+        "core": "RimWorld Core",
+        "dlc": "DLC RimWorld",
+        "local": "Mod lokalny",
+        "workshop": "Warsztat Steam"
+      },
       "rovingHint": "Strzałki: przechodzenie, Enter: otwieranie, Spacja: przełączanie"
     },
     "pendingChanges": {

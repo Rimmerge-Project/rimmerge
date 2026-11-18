@@ -1233,6 +1233,13 @@
     "table": {
       "regionLabel": "Mods",
       "missing": "missing",
+      "sourceUnknown": "Origin unknown (not installed)",
+      "sourceBadge": {
+        "core": "RimWorld Core",
+        "dlc": "RimWorld DLC",
+        "local": "Local mod",
+        "workshop": "Steam Workshop"
+      },
       "rovingHint": "Use the arrow keys to move, Enter to open, Space to toggle"
     },
     "pendingChanges": {
