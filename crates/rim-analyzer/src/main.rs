@@ -14,6 +14,12 @@ use clap::{Args, Parser, Subcommand};
 use rim_analyzer::domain::{FolderPolicy, GameVersion, Report};
 use rim_analyzer::{analysis, infra, interface};
 
+// The scan and the analysis allocate millions of small strings and vectors
+// across every rayon thread; mimalloc's per-thread heaps serve that faster
+// than the system allocator (see `docs/dependency-versions.md`).
+#[global_allocator]
+static GLOBAL_ALLOCATOR: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 #[derive(Parser)]
 #[command(
     name = "rim-analyzer",
