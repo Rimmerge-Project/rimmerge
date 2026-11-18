@@ -76,7 +76,8 @@ pub fn read_bounded_with_limit(path: &Path, limit: u64) -> Result<Vec<u8>, ReadE
     // `Take` gives `read_to_end` no size hint, so without the stat size as
     // the starting capacity it grows the buffer by doubling from a small
     // probe — several reallocations and copies per file. Already bounded by
-    // `limit` above.
+    // `limit` above, and the `0` fallback (a size that does not fit `usize`)
+    // is only a capacity hint: `read_to_end` still grows the buffer as needed.
     let mut bytes = Vec::with_capacity(usize::try_from(size).unwrap_or(0));
     file.take(limit.saturating_add(1)).read_to_end(&mut bytes)?;
     if bytes.len() as u64 > limit {
@@ -587,8 +588,10 @@ impl ShadowedFiles {
     /// highest). One folder listed by direct children only can shadow
     /// nothing — every path in it is unique — so that common case skips the
     /// work. A recursive (`--all-folders`) listing still computes them: a
-    /// nested `Defs/**/Defs/` directory enumerates the same file twice, and
-    /// the second sighting has always counted as shadowed.
+    /// nested `Defs/**/Defs/` directory enumerates the same file twice, at
+    /// the same absolute path, so both sightings land in the shadowed set and
+    /// `extract_files` skips both — such a file is never read in that mode.
+    /// That behaviour is long-standing and kept on purpose.
     fn of(folders_in_priority_order: &[FolderFiles], recursive: bool) -> Self {
         if folders_in_priority_order.len() < 2 && !recursive {
             return Self::default();
@@ -2439,6 +2442,64 @@ mod tests {
 
         let names: Vec<_> = scanned.defs.iter().map(|d| d.def_name.as_str()).collect();
         assert_eq!(names, vec!["FromSecond", "FromFirst"]);
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    /// The survey's unloaded `Defs` folders reach `ModScan` through
+    /// `scan_one_mod`: `1.6` is the loaded folder, so `1.5/Defs` is the one
+    /// unloaded folder, and the loaded `1.6/Defs` is not listed.
+    #[test]
+    fn scan_one_mod_reports_the_unloaded_defs_folders_of_the_survey() {
+        let root = tempdir("scan-one-mod-unloaded-defs");
+        fs::create_dir_all(root.join("1.6").join("Defs")).unwrap();
+        fs::create_dir_all(root.join("1.5").join("Defs")).unwrap();
+        let discovered = discovered_mod(root.clone());
+
+        let ModScan {
+            unloaded_defs_dirs, ..
+        } = scan_one_mod(
+            &ModId::new("test.mod"),
+            &discovered,
+            v16(),
+            &HashSet::new(),
+            FolderPolicy::LoadFolders,
+        );
+
+        assert_eq!(unloaded_defs_dirs, vec![root.join("1.5").join("Defs")]);
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    /// Characterizes `--all-folders` mode: a `Defs/sub/Defs/` directory
+    /// enumerates its files twice (once under the outer `Defs`, once as a
+    /// `Defs` of its own) at the same absolute path, so both sightings count
+    /// as shadowed and the file is never read, while `Defs/Top.xml` is.
+    #[test]
+    fn scan_one_mod_in_everything_mode_never_reads_a_def_inside_a_nested_defs_folder() {
+        let root = tempdir("everything-nested-defs");
+        let nested = root.join("Defs").join("sub").join("Defs");
+        fs::create_dir_all(&nested).unwrap();
+        fs::write(
+            root.join("Defs").join("Top.xml"),
+            br#"<Defs><ThingDef><defName>Top</defName></ThingDef></Defs>"#,
+        )
+        .unwrap();
+        fs::write(
+            nested.join("X.xml"),
+            br#"<Defs><ThingDef><defName>Nested</defName></ThingDef></Defs>"#,
+        )
+        .unwrap();
+        let discovered = discovered_mod(root.clone());
+
+        let ModScan { scanned, .. } = scan_one_mod(
+            &ModId::new("test.mod"),
+            &discovered,
+            v16(),
+            &HashSet::new(),
+            FolderPolicy::Everything,
+        );
+
+        let names: Vec<_> = scanned.defs.iter().map(|d| d.def_name.as_str()).collect();
+        assert_eq!(names, vec!["Top"]);
         let _ = fs::remove_dir_all(&root);
     }
 
