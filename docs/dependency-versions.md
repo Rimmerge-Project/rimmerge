@@ -60,7 +60,6 @@ advisories/licenses in non-Windows branches of Tauri's dependency tree
 | Crate | Version | Used by | Notes |
 | --- | --- | --- | --- |
 | walkdir | 2.5.0 | rim-analyzer, rim-io | |
-| mimalloc | 0.1.52 | rim-analyzer (binary only) | trial global allocator (issue #27): MIT, pulls in libmimalloc-sys 0.1.49, which builds the C allocator with the MSVC toolchain already required; declared only in the composition root, never in library code |
 | predicates | 3.1.4 | apps/cli (dev) | |
 | base64 | 0.23.1 | apps/desktop/src-tauri | encodes `read_texture`'s response as a `data:` URL; the `Engine`/`general_purpose::STANDARD` API this crate uses is stable across the 0.22–0.23 line |
 

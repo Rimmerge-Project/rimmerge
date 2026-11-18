@@ -19,7 +19,6 @@ path = "src/lib.rs"
 anyhow = "1.0.104"
 clap = { version = "4.6.6", features = ["derive"] }
 jiff = "0.2.35"
-mimalloc = "0.1.52"
 # `{ workspace = true }`, unlike every other dependency in this list
 # (`rayon` and `regex`, both shared with a sibling crate):
 # `regex` used to be pinned here independently of `rim-io`'s own
