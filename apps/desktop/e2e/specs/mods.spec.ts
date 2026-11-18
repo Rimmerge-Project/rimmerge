@@ -10,7 +10,33 @@ async function openModInfo(page: Page, modId: string): Promise<void> {
   await expect(page.getByTestId("mod-description")).toBeVisible();
 }
 
+/** The mod ids of the rendered (virtualized) table rows, in DOM order. */
+async function renderedRowIds(page: Page): Promise<string[]> {
+  return page
+    .getByTestId("mod-table")
+    .locator('[role="row"]')
+    .evaluateAll((rows) =>
+      rows.map((row) => (row.getAttribute("data-testid") ?? "").replace(/^mod-row-/, "")),
+    );
+}
+
 test.describe("mods", () => {
+  test("lists both tabs in mod-id order, as the backend sorts them", async ({ page }) => {
+    await loadScenario(page);
+    await page.getByTestId("nav-mods").click();
+    await expect(page.getByTestId("mod-row-core.gadget.mod")).toBeVisible();
+
+    const activeIds = await renderedRowIds(page);
+    expect(activeIds[0]).toBe("core.gadget.mod");
+    expect(activeIds).toEqual(activeIds.toSorted());
+
+    await page.getByTestId("mods-tab-inactive").click();
+    await expect(page.getByTestId("mod-row-mod.901")).toBeVisible();
+    const inactiveIds = await renderedRowIds(page);
+    expect(inactiveIds[0]).toBe("mod.901");
+    expect(inactiveIds).toEqual(inactiveIds.toSorted());
+  });
+
   test("searches the mod list and opens a mod's info panel", async ({ page }) => {
     await loadScenario(page);
     await page.getByTestId("nav-mods").click();

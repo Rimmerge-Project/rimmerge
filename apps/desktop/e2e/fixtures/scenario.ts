@@ -4370,6 +4370,16 @@ export function installScenario(): void {
     return allRows.filter((mod) => scannedActiveIds.has(mod.modId));
   }
 
+  /**
+   * `list_mods`/`list_inactive_mods` row order: ascending mod id, as
+   * `rim-session`'s `mod_index::query`/`query_inactive` sort. Code-unit
+   * comparison, not `localeCompare`, to match Rust's byte-wise `String`
+   * order on these (lowercase, ASCII) ids.
+   */
+  function compareByModId(a: { modId: string }, b: { modId: string }): number {
+    return a.modId < b.modId ? -1 : a.modId > b.modId ? 1 : 0;
+  }
+
   /** The Inactive tab's own list: every `inactiveMods` entry not currently (scanned-)active. */
   function scannedInactiveModList(): (typeof mods)[number][] {
     return inactiveMods
@@ -6978,6 +6988,7 @@ export function installScenario(): void {
       }
       if (filter.tag) matching = matching.filter((mod) => mod.tags.includes(filter.tag as string));
       if (filter.source) matching = matching.filter((mod) => mod.source === filter.source);
+      matching = matching.toSorted(compareByModId);
       const total = matching.length;
       const items = matching.slice(filter.offset, filter.offset + filter.limit);
       return { total, items };
@@ -7000,6 +7011,7 @@ export function installScenario(): void {
         );
       }
       if (filter.source) matching = matching.filter((mod) => mod.source === filter.source);
+      matching = matching.toSorted(compareByModId);
       const total = matching.length;
       const items = matching.slice(filter.offset, filter.offset + filter.limit);
       return { total, items };

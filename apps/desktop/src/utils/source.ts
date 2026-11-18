@@ -4,7 +4,7 @@ import { assertNever } from "@/utils/assertNever";
 
 /**
  * A human-readable label for one {@link SourceDto} — `ModDetailPage.vue`'s
- * own header and `ModsPage.vue`'s source filter both render this rather
+ * own header and `ModFilterBar.vue`'s source filter both render this rather
  * than the raw wire value. Exhaustive via {@link assertNever}. Returns a
  * {@link MessageDescriptor} — render it through
  * `t()`/`useTranslateMessage()`, never as text.
