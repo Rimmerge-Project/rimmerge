@@ -157,10 +157,9 @@ struct Extracted {
     ref_sites: Vec<RefSite>,
 }
 
-/// [`scan_folder`]'s own `AssetBundles/` walk needs three things beyond
+/// [`scan_folder`]'s own `AssetBundles/` walk needs two things beyond
 /// what it already receives for `Defs/`/`Patches/`/`Assemblies/` — grouped
-/// here so its parameter list doesn't grow by three more independent
-/// values.
+/// here so its parameter list doesn't grow by two more independent values.
 struct BundleScanContext {
     /// This mod's own installed directory name
     /// (`ModContentPack.FolderName` — the folder RimWorld actually
@@ -171,10 +170,6 @@ struct BundleScanContext {
     /// non-vanilla lookup) — `None` for Core and every DLC, which
     /// `bundle_asset_key` must never try.
     package_id: Option<String>,
-    /// Bundle files (by absolute path) a higher-priority loaded folder
-    /// already supplies at the same relative path — the `AssetBundles/`
-    /// analogue of [`shadowed_paths`], computed once per mod the same way.
-    shadowed_bundles: HashSet<PathBuf>,
 }
 
 /// Resolves loaded folders and extracts everything under them for one
@@ -225,21 +220,11 @@ pub fn scan_one_mod(
     let loaded_folders: Vec<PathBuf> = resolved_folders.iter().map(|f| f.path.clone()).collect();
 
     let recursive = folder_policy == FolderPolicy::Everything;
-    let listings: Vec<FolderListing> = loaded_folders
+    let folder_files: Vec<FolderFiles> = loaded_folders
         .iter()
-        .map(|folder| FolderListing::new(folder.clone(), recursive))
+        .map(|folder| FolderFiles::list(FolderListing::new(folder.clone(), recursive)))
         .collect();
-    let shadowed = shadowed_paths(&listings, "Defs", &["xml"])
-        .into_iter()
-        .chain(shadowed_paths(&listings, "Patches", &["xml"]))
-        .collect();
-    let shadowed_assemblies = shadowed_paths(&listings, "Assemblies", &["dll"]);
-    // A `.dds` file's own winning copy, across this mod's loaded folders —
-    // the `AssetBundles/` walk needs the analogous shadow set for bundle
-    // files themselves. Neither set changes `out.textures`/`ScanCost`
-    // accounting (see `scan_folder`'s own doc comment): only the header
-    // check and the manifest read respect it.
-    let shadowed_dds = shadowed_paths(&listings, "Textures", &["dds"]);
+    let shadowed = ShadowedFiles::of(&folder_files, recursive);
     let bundle_context = BundleScanContext {
         folder_name: discovered
             .path
@@ -249,15 +234,12 @@ pub fn scan_one_mod(
             .to_string(),
         package_id: (!discovered.source.is_vanilla())
             .then(|| active_id.base().as_str().to_string()),
-        shadowed_bundles: shadowed_bundle_paths(&listings),
     };
-    for (folder, listing) in resolved_folders.iter().zip(&listings) {
+    for (folder, files) in resolved_folders.iter().zip(folder_files) {
         scan_folder(
-            listing,
+            files,
             active_id,
             &shadowed,
-            &shadowed_assemblies,
-            &shadowed_dds,
             &bundle_context,
             &folder.if_mod_active,
             &mut extracted,
@@ -503,9 +485,116 @@ fn dedup_folders_by_path(folders: Vec<LoadedFolder>) -> Vec<LoadedFolder> {
         .collect()
 }
 
-/// Absolute paths of every `<subdir_name>/**` file matching `extensions`
-/// that a higher-priority folder in `folders_in_priority_order` (index 0
-/// highest) already supplies at the same folder-relative path —
+/// Every file the scan reads under one loaded folder, enumerated once — the
+/// same lists feed both [`ShadowedFiles::of`] and [`scan_folder`], so no
+/// subtree is walked twice. `Sounds/` and `Languages/` are looked up later
+/// from [`Self::listing`] instead: nothing shadows them.
+struct FolderFiles {
+    listing: FolderListing,
+    /// Every `Defs/` directory's `.xml` files, each in
+    /// [`engine_enumeration_order`], directories in listing order.
+    defs: Vec<PathBuf>,
+    /// The same for `Patches/`.
+    patches: Vec<PathBuf>,
+    /// Each `Textures/` directory with its image files and their sizes.
+    textures: Vec<(PathBuf, Vec<(PathBuf, u64)>)>,
+    /// Every file directly inside each `AssetBundles/` directory.
+    bundles: Vec<PathBuf>,
+    /// Every `Assemblies/**/*.dll` file and its size.
+    assemblies: Vec<(PathBuf, u64)>,
+}
+
+impl FolderFiles {
+    fn list(listing: FolderListing) -> Self {
+        let engine_ordered = |name: &str| -> Vec<PathBuf> {
+            listing
+                .named(name)
+                .flat_map(|dir| engine_enumeration_order(dir, &["xml"]))
+                .collect()
+        };
+        let defs = engine_ordered("Defs");
+        let patches = engine_ordered("Patches");
+        let textures = listing
+            .named("Textures")
+            .map(|dir| {
+                let files = walk_files_with_size(dir, &textures::IMAGE_EXTENSIONS);
+                (dir.to_path_buf(), files)
+            })
+            .collect();
+        let bundles = listing
+            .named("AssetBundles")
+            .flat_map(list_dir_files)
+            .collect();
+        let assemblies = listing
+            .named("Assemblies")
+            .flat_map(|dir| walk_files_with_size(dir, &["dll"]))
+            .collect();
+        Self {
+            listing,
+            defs,
+            patches,
+            textures,
+            bundles,
+            assemblies,
+        }
+    }
+
+    fn dds_files(&self) -> impl Iterator<Item = &Path> {
+        self.textures
+            .iter()
+            .flat_map(|(_, files)| files)
+            .map(|(path, _)| path.as_path())
+            .filter(|path| {
+                path.extension()
+                    .is_some_and(|ext| ext.eq_ignore_ascii_case("dds"))
+            })
+    }
+}
+
+/// Files (by absolute path) a higher-priority loaded folder already supplies
+/// at the same folder-relative path, per kind — see [`shadowed_paths`].
+#[derive(Default)]
+struct ShadowedFiles {
+    /// `Defs/` and `Patches/` files: never read.
+    xml: HashSet<PathBuf>,
+    /// `Assemblies/` files: never read or counted.
+    assemblies: HashSet<PathBuf>,
+    /// `Textures/**/*.dds` files: never header-checked.
+    dds: HashSet<PathBuf>,
+    /// `AssetBundles/` files: their manifests are never read.
+    bundles: HashSet<PathBuf>,
+}
+
+impl ShadowedFiles {
+    /// The shadow sets across `folders_in_priority_order` (index 0
+    /// highest). One folder listed by direct children only can shadow
+    /// nothing — every path in it is unique — so that common case skips the
+    /// work. A recursive (`--all-folders`) listing still computes them: a
+    /// nested `Defs/**/Defs/` directory enumerates the same file twice, and
+    /// the second sighting has always counted as shadowed.
+    fn of(folders_in_priority_order: &[FolderFiles], recursive: bool) -> Self {
+        if folders_in_priority_order.len() < 2 && !recursive {
+            return Self::default();
+        }
+        let folders = folders_in_priority_order;
+        let mut xml = shadowed_paths(folders, |f| f.defs.iter().map(PathBuf::as_path));
+        xml.extend(shadowed_paths(folders, |f| {
+            f.patches.iter().map(PathBuf::as_path)
+        }));
+        Self {
+            xml,
+            assemblies: shadowed_paths(folders, |f| {
+                f.assemblies.iter().map(|(path, _)| path.as_path())
+            }),
+            dds: shadowed_paths(folders, FolderFiles::dds_files),
+            bundles: shadowed_paths(folders, |f| f.bundles.iter().map(PathBuf::as_path)),
+        }
+    }
+}
+
+/// Absolute paths of every file `files_of` yields for a folder in
+/// `folders_in_priority_order` (index 0 highest) that a higher-priority
+/// folder already supplies at the same folder-relative path —
 /// ground-truthed against decompiled `Verse.DirectXmlLoader
 /// .XmlAssetsInModFolder`/`ModContentPack.GetAllFilesForMod`, both of which
 /// build a `Dictionary<string, FileInfo>` over exactly this key (a file's
@@ -517,55 +606,38 @@ fn dedup_folders_by_path(folders: Vec<LoadedFolder>) -> Vec<LoadedFolder> {
 /// and doubled assembly references a real game log never shows. `.NET`'s
 /// default `Dictionary<string, _>` key comparer is ordinal (case-sensitive,
 /// no folding) and never normalizes path separators beyond what
-/// `Path.Combine` already wrote — [`PathBuf`]'s own `Eq`/`Hash` are exactly
+/// `Path.Combine` already wrote — [`Path`]'s own `Eq`/`Hash` are exactly
 /// that (byte-exact `OsStr` component comparison), so using it directly as
 /// the key here needs no extra folding to match. Called once for `Defs`,
 /// once for `Patches` (`ModContentPack.LoadPatches`/`LoadDefs` both route
-/// through the identical method, so the rule is the same for both), and
-/// once for `Assemblies` (`GetAllFilesForModPreserveOrder` applies the same
+/// through the identical method, so the rule is the same for both), once
+/// for `Assemblies` (`GetAllFilesForModPreserveOrder` applies the same
 /// per-relative-path first-wins rule, walking lowest-priority-first and
 /// overwriting rather than `TryAdd`ing — the opposite walk direction
 /// produces the identical winner, since either way it's the
-/// highest-priority folder's own copy that survives).
-fn shadowed_paths(
-    folders_in_priority_order: &[FolderListing],
-    subdir_name: &str,
-    extensions: &[&str],
-) -> HashSet<PathBuf> {
+/// highest-priority folder's own copy that survives), and once each for
+/// `.dds` textures and `AssetBundles/` files.
+///
+/// The `Defs`/`Patches` lists leave out dot-prefixed file names (the engine
+/// never reads one); such a file can only ever claim the key of another
+/// dot-prefixed copy, which is never read either, so leaving them out
+/// changes nothing that is read.
+fn shadowed_paths<'a, I>(
+    folders_in_priority_order: &'a [FolderFiles],
+    files_of: impl Fn(&'a FolderFiles) -> I,
+) -> HashSet<PathBuf>
+where
+    I: Iterator<Item = &'a Path>,
+{
     let mut shadowed = HashSet::new();
-    let mut claimed_keys: HashSet<PathBuf> = HashSet::new();
+    let mut claimed_keys: HashSet<&Path> = HashSet::new();
     for folder in folders_in_priority_order {
-        for dir in folder.named(subdir_name) {
-            for path in walk_files(dir, extensions) {
-                let Ok(key) = path.strip_prefix(&folder.path) else {
-                    continue;
-                };
-                if !claimed_keys.insert(key.to_path_buf()) {
-                    shadowed.insert(path);
-                }
-            }
-        }
-    }
-    shadowed
-}
-
-/// The `AssetBundles/` analogue of [`shadowed_paths`]: a bundle file's own
-/// extensionless name has no `extensions` list [`walk_files`] could filter
-/// on, so this walks [`list_dir_files`] directly instead, otherwise
-/// applying the identical same-relative-path, highest-priority-folder-wins
-/// rule.
-fn shadowed_bundle_paths(folders_in_priority_order: &[FolderListing]) -> HashSet<PathBuf> {
-    let mut shadowed = HashSet::new();
-    let mut claimed_keys: HashSet<PathBuf> = HashSet::new();
-    for folder in folders_in_priority_order {
-        for dir in folder.named("AssetBundles") {
-            for path in list_dir_files(dir) {
-                let Ok(key) = path.strip_prefix(&folder.path) else {
-                    continue;
-                };
-                if !claimed_keys.insert(key.to_path_buf()) {
-                    shadowed.insert(path);
-                }
+        for path in files_of(folder) {
+            let Ok(key) = path.strip_prefix(&folder.listing.path) else {
+                continue;
+            };
+            if !claimed_keys.insert(key) {
+                shadowed.insert(path.to_path_buf());
             }
         }
     }
@@ -755,28 +827,20 @@ fn extract_files<T, E: std::fmt::Display>(
 /// folder is the whole mod root, listed recursively, so every subdirectory
 /// with one of these names — at any depth — counts.
 ///
-/// `shadowed`/`shadowed_assemblies` (from [`shadowed_paths`], computed
-/// once per mod across every loaded folder) dedup the `Defs/`/`Patches/`
-/// and `Assemblies/` walks respectively, by relative-path — see that
-/// function's own doc comment. `load_folder_gate` is this one folder's own
+/// `shadowed` (computed once per mod across every loaded folder's own
+/// [`FolderFiles`]) dedups the `Defs/`/`Patches/` and `Assemblies/` walks
+/// by relative path — see [`shadowed_paths`]'s own doc comment. `load_folder_gate` is this one folder's own
 /// `IfModActive`/`IfModActiveAll` gate (empty for the default folder rule),
 /// stamped onto every [`PatchOp`] this call's own `Patches/` walk finds.
-/// `shadowed_dds` is the same rule for `Textures/**/*.dds` specifically —
+/// Its `dds` set is the same rule for `Textures/**/*.dds` specifically —
 /// it gates only the DDS header check, never `out.textures`/`ScanCost`
 /// accounting (which stays whole-mod, summing every folder's own copy, as
 /// it always has). `bundle_context` carries what the new `AssetBundles/`
 /// walk needs (see its own doc comment).
-// Eight parameters: one per independent per-mod fact this private walk
-// needs (`bundle_context` already groups three more independent values
-// rather than adding them separately). A struct wrapping the rest would just move the same count
-// into a second type with no caller but this one.
-#[allow(clippy::too_many_arguments)]
 fn scan_folder(
-    folder: &FolderListing,
+    folder: FolderFiles,
     mod_id: &ModId,
-    shadowed: &HashSet<PathBuf>,
-    shadowed_assemblies: &HashSet<PathBuf>,
-    shadowed_dds: &HashSet<PathBuf>,
+    shadowed: &ShadowedFiles,
     bundle_context: &BundleScanContext,
     load_folder_gate: &[ModId],
     out: &mut Extracted,
@@ -788,31 +852,29 @@ fn scan_folder(
     // borrow a genuinely separate field; reaching into `out.warnings` from
     // inside the closure too would make the two borrows overlap.
     let mut ref_sites_truncated_files = 0u32;
-    for dir in folder.named("Defs") {
-        extract_files(
-            engine_enumeration_order(dir, &["xml"]),
-            mod_id,
-            shadowed,
-            defs::index,
-            |defs_file: defs::DefsFile| {
-                out.defs.extend(defs_file.defs);
-                out.templates.extend(defs_file.templates);
-                out.inline_types.extend(defs_file.inline_types);
-                out.inline_node_path_hashes
-                    .extend(defs_file.inline_node_path_hashes);
-                out.child_value_hashes.extend(defs_file.child_value_hashes);
-                out.texture_path_candidates
-                    .extend(defs_file.texture_path_candidates);
-                out.nameless_def_count += defs_file.nameless_def_count;
-                out.nested_may_require.extend(defs_file.nested_may_require);
-                out.ref_sites.extend(defs_file.ref_sites);
-                if defs_file.ref_sites_truncated {
-                    ref_sites_truncated_files += 1;
-                }
-            },
-            &mut out.warnings,
-        );
-    }
+    extract_files(
+        folder.defs,
+        mod_id,
+        &shadowed.xml,
+        defs::index,
+        |defs_file: defs::DefsFile| {
+            out.defs.extend(defs_file.defs);
+            out.templates.extend(defs_file.templates);
+            out.inline_types.extend(defs_file.inline_types);
+            out.inline_node_path_hashes
+                .extend(defs_file.inline_node_path_hashes);
+            out.child_value_hashes.extend(defs_file.child_value_hashes);
+            out.texture_path_candidates
+                .extend(defs_file.texture_path_candidates);
+            out.nameless_def_count += defs_file.nameless_def_count;
+            out.nested_may_require.extend(defs_file.nested_may_require);
+            out.ref_sites.extend(defs_file.ref_sites);
+            if defs_file.ref_sites_truncated {
+                ref_sites_truncated_files += 1;
+            }
+        },
+        &mut out.warnings,
+    );
     if ref_sites_truncated_files > 0 {
         out.warnings.push(Warning::new(
             Some(mod_id.clone()),
@@ -824,30 +886,28 @@ fn scan_folder(
     }
 
     let mut patch_tree_truncated_files = 0u32;
-    for dir in folder.named("Patches") {
-        extract_files(
-            engine_enumeration_order(dir, &["xml"]),
-            mod_id,
-            shadowed,
-            patches::walk_with_ref_sites,
-            |(ops, value_ref_sites, tree_depth_truncated): (
-                Vec<PatchOp>,
-                Vec<patches::PatchValueRefSite>,
-                bool,
-            )| {
-                out.patch_ops.extend(ops.into_iter().map(|mut op| {
-                    op.load_folder_gate = load_folder_gate.to_vec();
-                    op
-                }));
-                out.ref_sites
-                    .extend(patch_ref_sites(mod_id, value_ref_sites));
-                if tree_depth_truncated {
-                    patch_tree_truncated_files += 1;
-                }
-            },
-            &mut out.warnings,
-        );
-    }
+    extract_files(
+        folder.patches,
+        mod_id,
+        &shadowed.xml,
+        patches::walk_with_ref_sites,
+        |(ops, value_ref_sites, tree_depth_truncated): (
+            Vec<PatchOp>,
+            Vec<patches::PatchValueRefSite>,
+            bool,
+        )| {
+            out.patch_ops.extend(ops.into_iter().map(|mut op| {
+                op.load_folder_gate = load_folder_gate.to_vec();
+                op
+            }));
+            out.ref_sites
+                .extend(patch_ref_sites(mod_id, value_ref_sites));
+            if tree_depth_truncated {
+                patch_tree_truncated_files += 1;
+            }
+        },
+        &mut out.warnings,
+    );
     if patch_tree_truncated_files > 0 {
         out.warnings.push(Warning::new(
             Some(mod_id.clone()),
@@ -859,9 +919,9 @@ fn scan_folder(
         ));
     }
 
-    for dir in folder.named("Textures") {
-        for (path, size) in walk_files_with_size(dir, &textures::IMAGE_EXTENSIONS) {
-            let Ok(relative) = path.strip_prefix(dir) else {
+    for (dir, files) in folder.textures {
+        for (path, size) in files {
+            let Ok(relative) = path.strip_prefix(&dir) else {
                 continue;
             };
             // Raw file count/bytes, not deduplicated by normalized key — a
@@ -883,8 +943,8 @@ fn scan_folder(
                     // contents either (see `shadowed_paths`' own doc
                     // comment). The header read itself happens once, after
                     // every folder has been walked — see [`scan_one_mod`].
-                    if !shadowed_dds.contains(&path) {
-                        out.dds_candidates.push((path.clone(), key));
+                    if !shadowed.dds.contains(&path) {
+                        out.dds_candidates.push((path, key));
                     }
                 } else {
                     out.non_dds_texture_keys.insert(key);
@@ -893,53 +953,51 @@ fn scan_folder(
         }
     }
 
-    for dir in folder.named("AssetBundles") {
-        for path in list_dir_files(dir) {
-            let Some(file_name) = path.file_name().and_then(|n| n.to_str()) else {
-                continue;
-            };
-            // Only extensionless files are bundles (`ModAssetBundlesHandler.IsAcceptableExtension`) — a `.manifest`
-            // sidecar (or a `.manifest.txt`/anything else with a dot) is
-            // never itself walked as a candidate bundle; it's read below,
-            // keyed off its own bundle file's path.
-            if file_name.contains('.') {
-                continue;
-            }
-            if !asset_index::is_os_eligible_bundle_name(file_name) {
-                continue;
-            }
-            if bundle_context.shadowed_bundles.contains(&path) {
-                continue;
-            }
-            let manifest_path = path.with_extension("manifest");
-            match read_bounded(&manifest_path) {
-                Ok(bytes) => {
-                    let text = String::from_utf8_lossy(&bytes);
-                    for entry in asset_index::parse_bundle_manifest(&text) {
-                        if let Some(key) = asset_index::bundle_asset_key(
-                            &entry,
-                            &bundle_context.folder_name,
-                            bundle_context.package_id.as_deref(),
-                        ) {
-                            out.bundle_textures.insert(key);
-                        }
+    for path in folder.bundles {
+        let Some(file_name) = path.file_name().and_then(|n| n.to_str()) else {
+            continue;
+        };
+        // Only extensionless files are bundles (`ModAssetBundlesHandler.IsAcceptableExtension`) — a `.manifest`
+        // sidecar (or a `.manifest.txt`/anything else with a dot) is
+        // never itself walked as a candidate bundle; it's read below,
+        // keyed off its own bundle file's path.
+        if file_name.contains('.') {
+            continue;
+        }
+        if !asset_index::is_os_eligible_bundle_name(file_name) {
+            continue;
+        }
+        if shadowed.bundles.contains(&path) {
+            continue;
+        }
+        let manifest_path = path.with_extension("manifest");
+        match read_bounded(&manifest_path) {
+            Ok(bytes) => {
+                let text = String::from_utf8_lossy(&bytes);
+                for entry in asset_index::parse_bundle_manifest(&text) {
+                    if let Some(key) = asset_index::bundle_asset_key(
+                        &entry,
+                        &bundle_context.folder_name,
+                        bundle_context.package_id.as_deref(),
+                    ) {
+                        out.bundle_textures.insert(key);
                     }
                 }
-                Err(e) if is_missing_file(&e) => {
-                    out.warnings.push(file_warning(
-                        mod_id,
-                        &path,
-                        &"bundle has no manifest; its textures are unknown",
-                    ));
-                }
-                Err(e) => {
-                    out.warnings.push(file_warning(mod_id, &manifest_path, &e));
-                }
+            }
+            Err(e) if is_missing_file(&e) => {
+                out.warnings.push(file_warning(
+                    mod_id,
+                    &path,
+                    &"bundle has no manifest; its textures are unknown",
+                ));
+            }
+            Err(e) => {
+                out.warnings.push(file_warning(mod_id, &manifest_path, &e));
             }
         }
     }
 
-    for dir in folder.named("Sounds") {
+    for dir in folder.listing.named("Sounds") {
         for path in walk_files(dir, &sounds::SOUND_EXTENSIONS) {
             if let Ok(relative) = path.strip_prefix(dir)
                 && let Some(key) = sounds::normalize(relative)
@@ -955,7 +1013,7 @@ fn scan_folder(
     // `recursive` (which governs the *outer* Defs/Patches/Textures/
     // Assemblies/Sounds folders' own depth relative to the version folder,
     // an unrelated concern).
-    for languages_dir in folder.named("Languages") {
+    for languages_dir in folder.listing.named("Languages") {
         for keyed_dir in find_subdirs(languages_dir, "Keyed", true) {
             extract_files(
                 walk_files(&keyed_dir, &["xml"]),
@@ -968,18 +1026,16 @@ fn scan_folder(
         }
     }
 
-    for dir in folder.named("Assemblies") {
-        for (path, size) in walk_files_with_size(dir, &["dll"]) {
-            if shadowed_assemblies.contains(&path) {
-                continue;
-            }
-            out.scan_cost.assembly_bytes += size;
-            let read = read_assembly(&path);
-            if let Some(message) = read.warning {
-                out.warnings.push(file_warning(mod_id, &path, &message));
-            }
-            out.assemblies.push(read.info);
+    for (path, size) in folder.assemblies {
+        if shadowed.assemblies.contains(&path) {
+            continue;
         }
+        out.scan_cost.assembly_bytes += size;
+        let read = read_assembly(&path);
+        if let Some(message) = read.warning {
+            out.warnings.push(file_warning(mod_id, &path, &message));
+        }
+        out.assemblies.push(read.info);
     }
 }
 
