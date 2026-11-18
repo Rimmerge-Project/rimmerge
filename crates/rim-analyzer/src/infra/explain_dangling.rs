@@ -9,9 +9,10 @@
 //! Two candidate sources:
 //! - each active mod's own *unloaded* loaded-folder candidates (any
 //!   `Defs` directory anywhere under its own root whose parent isn't one
-//!   of its [`crate::domain::Mod::loaded_folders`]) — a mod shipping
-//!   content in a version or `IfModActive`-gated folder the running
-//!   install never actually loads;
+//!   of its [`crate::domain::Mod::loaded_folders`], found during the scan:
+//!   [`ScanOutput::unloaded_defs_dirs_by_mod`]) — a mod shipping content in
+//!   a version or `IfModActive`-gated folder the running install never
+//!   actually loads;
 //! - every installed-but-inactive mod's own `Defs/`.
 //!
 //! Bounded by [`MAX_EXPLAIN_BYTES`] across the *whole* pass, not per
@@ -219,13 +220,6 @@ struct CandidateFile {
     cause: usize,
 }
 
-/// How many directory levels deep [`unloaded_defs_folders`]'s search for
-/// an unloaded `Defs` folder descends under one mod's own root — generous
-/// over any real compat-framework nesting convention (e.g.
-/// `1.6/Mods/X/Defs`), while still bounding the walk against a
-/// pathological directory tree.
-const MAX_UNLOADED_DEFS_SEARCH_DEPTH: usize = 12;
-
 /// One searched `Defs` folder: every `**/*.xml` file under it (path and
 /// size, sorted), all explained by the same `cause`.
 struct DefsFolder {
@@ -234,18 +228,23 @@ struct DefsFolder {
 }
 
 impl CandidateFiles {
-    /// Walking every active mod's whole tree for unloaded `Defs` folders is
-    /// the costly part of this pass (a thousand mods' worth of `Textures/`
-    /// entries), so each mod (and each inactive mod) is walked on its own
-    /// rayon worker. `collect` on an indexed parallel iterator keeps input
-    /// order, and every walk is itself sorted, so the search order — and
-    /// with it which source explains a name — is identical to a
-    /// sequential walk.
+    /// Each unloaded `Defs` folder (found during the scan, see
+    /// [`ScanOutput::unloaded_defs_dirs_by_mod`]) and each inactive mod is
+    /// listed on its own rayon worker. `collect` on an indexed parallel
+    /// iterator keeps input order, and every listing is itself sorted, so
+    /// the search order — and with it which source explains a name — is
+    /// identical to a sequential walk.
     fn collect(scan: &ScanOutput) -> Self {
         let unloaded: Vec<Vec<DefsFolder>> = scan
             .scanned_mods
             .par_iter()
-            .map(unloaded_defs_folders)
+            .map(|scanned_mod| {
+                let dirs = scan
+                    .unloaded_defs_dirs_by_mod
+                    .get(&scanned_mod.info.id)
+                    .map_or(&[][..], Vec::as_slice);
+                unloaded_defs_folders(scanned_mod, dirs)
+            })
             .collect();
         let inactive: Vec<Option<DefsFolder>> = scan
             .inactive_mods
@@ -286,38 +285,23 @@ impl CandidateFiles {
     }
 }
 
-/// Every `Defs` directory anywhere under `scanned_mod`'s own root whose
-/// direct parent is **not** one of its own
-/// [`Mod::loaded_folders`](crate::domain::Mod::loaded_folders) — at any
-/// depth, not only the mod's immediate subdirectories: a compat framework
-/// can gate content behind an extra nesting level (`1.6/Mods/X/Defs`), and
-/// the mod's own root `Defs/` counts too when `LoadFolders.xml` doesn't
-/// include `/` for the running version (the old shallow, one-level scan
-/// could only ever find a `Defs` folder nested *inside* an unloaded
-/// top-level entry, never the mod's own root, and never anything nested
-/// two or more levels deep).
-fn unloaded_defs_folders(scanned_mod: &ScannedMod) -> Vec<DefsFolder> {
+/// One searchable folder per `unloaded_defs_dirs` entry — every `Defs`
+/// directory under `scanned_mod`'s own root whose direct parent is **not**
+/// one of its own
+/// [`Mod::loaded_folders`](crate::domain::Mod::loaded_folders), found at
+/// scan time (see [`ScanOutput::unloaded_defs_dirs_by_mod`] for the rule),
+/// in walk order — each explained by its parent's path relative to the mod
+/// root.
+fn unloaded_defs_folders(
+    scanned_mod: &ScannedMod,
+    unloaded_defs_dirs: &[PathBuf],
+) -> Vec<DefsFolder> {
     let mod_root = &scanned_mod.info.path;
-    let unloaded_defs_dirs = WalkDir::new(mod_root)
-        .max_depth(MAX_UNLOADED_DEFS_SEARCH_DEPTH)
-        .sort_by_file_name()
-        .into_iter()
-        .filter_map(Result::ok)
-        .filter(|e| e.file_type().is_dir() && e.file_name().eq_ignore_ascii_case("Defs"));
     let mut folders = Vec::new();
-    for entry in unloaded_defs_dirs {
-        let defs_dir = entry.path();
+    for defs_dir in unloaded_defs_dirs {
         let Some(parent) = defs_dir.parent() else {
             continue;
         };
-        if scanned_mod
-            .info
-            .loaded_folders
-            .iter()
-            .any(|folder| folder == parent)
-        {
-            continue;
-        }
         let folder = parent
             .strip_prefix(mod_root)
             .ok()
@@ -512,6 +496,14 @@ mod tests {
     ) -> ScanOutput {
         let load_order = LoadOrder::new(scanned_mods.iter().map(|m| m.info.id.clone()).collect());
         let discovered_mod_count = scanned_mods.len() + inactive_mods.len();
+        // What the scan's own root walk would have found for each mod.
+        let unloaded_defs_dirs_by_mod = scanned_mods
+            .iter()
+            .map(|m| {
+                let survey = mod_scan::survey_mod_root(&m.info.path, &m.info.loaded_folders);
+                (m.info.id.clone(), survey.unloaded_defs_dirs)
+            })
+            .collect();
         ScanOutput {
             scanned_mods,
             load_order,
@@ -524,6 +516,7 @@ mod tests {
             discovered_mod_count,
             core_resource_textures: BTreeSet::new(),
             ref_sites_by_mod: BTreeMap::new(),
+            unloaded_defs_dirs_by_mod,
         }
     }
 

@@ -189,18 +189,29 @@ struct BundleScanContext {
 /// lets [`LoadOrder`](crate::domain::LoadOrder) position lookups find it
 /// later.
 ///
-/// The third element of the returned tuple is this mod's own
-/// [`Extracted::child_value_hashes`] — see
+/// Everything [`scan_one_mod`] found for one mod. Only [`Self::scanned`] is
+/// a [`ScannedMod`] field; the rest travel beside it into [`ScanOutput`]'s
+/// own per-mod maps — see
 /// [`crate::domain::ScanOutput::child_value_hashes_by_mod`]'s own doc
-/// comment for why it travels separately from [`ScannedMod`] rather than
-/// as one of its fields.
+/// comment for why.
+///
+/// [`ScanOutput`]: crate::domain::ScanOutput
+pub struct ModScan {
+    pub scanned: ScannedMod,
+    pub child_value_hashes: HashSet<u64>,
+    pub ref_sites: Vec<RefSite>,
+    pub warnings: Vec<Warning>,
+    /// See [`crate::domain::ScanOutput::unloaded_defs_dirs_by_mod`].
+    pub unloaded_defs_dirs: Vec<PathBuf>,
+}
+
 pub fn scan_one_mod(
     active_id: &ModId,
     discovered: &DiscoveredMod,
     game_version: GameVersion,
     active_bases: &HashSet<ModId>,
     folder_policy: FolderPolicy,
-) -> (ScannedMod, HashSet<u64>, Vec<RefSite>, Vec<Warning>) {
+) -> ModScan {
     let mut extracted = Extracted::default();
     let (load_folders_bytes, load_folders_version_matched, read_warning) =
         read_load_folders(&discovered.path.join("LoadFolders.xml"), game_version);
@@ -268,7 +279,8 @@ pub fn scan_one_mod(
         }
     }
 
-    if let Some(message) = side_loaded_assembly_note(&discovered.path) {
+    let survey = survey_mod_root(&discovered.path, &loaded_folders);
+    if let Some(message) = survey.side_loaded_note {
         extracted
             .warnings
             .push(Warning::new(Some(active_id.clone()), message));
@@ -304,8 +316,8 @@ pub fn scan_one_mod(
     // over from extending this per file would otherwise be kept as well.
     let mut ref_sites = extracted.ref_sites;
     ref_sites.shrink_to_fit();
-    (
-        ScannedMod {
+    ModScan {
+        scanned: ScannedMod {
             info,
             defs: extracted.defs,
             templates: extracted.templates,
@@ -325,10 +337,11 @@ pub fn scan_one_mod(
             undecodable_textures: extracted.undecodable_textures,
             nested_may_require: extracted.nested_may_require,
         },
-        extracted.child_value_hashes,
+        child_value_hashes: extracted.child_value_hashes,
         ref_sites,
-        extracted.warnings,
-    )
+        warnings: extracted.warnings,
+        unloaded_defs_dirs: survey.unloaded_defs_dirs,
+    }
 }
 
 /// Reads `path` (a mod's own `LoadFolders.xml`) once for both
@@ -1162,22 +1175,23 @@ fn read_assembly(path: &Path) -> AssemblyRead {
     }
 }
 
-/// Media directory names this walk never needs to descend into: none of them
-/// can hold a loadable `.dll` by construction (on a real workshop tree,
-/// pruning these plus every dev/inert name skips about two thirds of all
-/// files and nearly halves a full-tree walk). Every
+/// Media directory names [`survey_mod_root`]'s side-loaded-assembly count
+/// never looks inside: none of them can hold a loadable `.dll` by
+/// construction. (The same walk still descends them, only as deep as an
+/// unloaded `Defs` folder could sit.) Every
 /// `side_loaded_assemblies::is_always_ignored` name is *also* pruned (see
 /// [`is_prunable`]) — safe only because dev/inert wins unconditionally over a
 /// nested `Assemblies/` component
 /// (`a_dev_directory_wins_over_an_assemblies_component_nested_inside_it`):
 /// otherwise a dev directory could contain a real, *rescued* `Loaded` path,
-/// and pruning it from the walk entirely would silently drop a genuinely
-/// `Loaded` count.
+/// and leaving it out of the count would silently drop a genuinely
+/// `Loaded` one.
 const PRUNABLE_MEDIA_DIRS: [&str; 3] = ["textures", "sounds", "languages"];
 
-/// Whether `entry` is a directory this walk can skip descending into
-/// entirely — a media directory, or one `side_loaded_assemblies::
-/// is_always_ignored` already treats as ignored regardless of content.
+/// Whether `entry` is a directory whose `.dll` files never count toward the
+/// side-loaded-assembly note — a media directory, or one
+/// `side_loaded_assemblies::is_always_ignored` already treats as ignored
+/// regardless of content.
 fn is_prunable(entry: &walkdir::DirEntry) -> bool {
     entry.depth() > 0
         && entry.file_type().is_dir()
@@ -1220,39 +1234,82 @@ fn read_manifest(mod_root: &Path) -> (ManifestOrder, Option<String>) {
     }
 }
 
-/// Detects a mod whose real engine side-loads from outside `Assemblies/` at
-/// runtime (see `extract::side_loaded_assemblies`'s module doc) and, if so,
-/// returns the note text to attach as a [`Warning`].
+/// How many directory levels deep [`survey_mod_root`]'s search for an
+/// unloaded `Defs` folder descends under one mod's own root — generous
+/// over any real compat-framework nesting convention (e.g.
+/// `1.6/Mods/X/Defs`), while still bounding the walk against a
+/// pathological directory tree.
+const MAX_UNLOADED_DEFS_SEARCH_DEPTH: usize = 12;
+
+/// What one walk of a mod's whole root finds, beyond its loaded folders.
+pub(super) struct RootSurvey {
+    /// The side-loaded-assembly note, if this mod's shape calls for one —
+    /// see [`side_loaded_assemblies::note`].
+    pub(super) side_loaded_note: Option<String>,
+    /// See [`crate::domain::ScanOutput::unloaded_defs_dirs_by_mod`].
+    pub(super) unloaded_defs_dirs: Vec<PathBuf>,
+}
+
+/// One sorted walk of `mod_root` that answers two questions at once, which
+/// used to take a walk each (one here, one more in the post-scan
+/// dangling-reference explanation):
 ///
-/// Walks `mod_root` as a whole, not the loaded folders `scan_folder` was just
-/// given — a side-loaded engine typically lives in a folder that is a sibling
-/// of the version folder (e.g. `Lunar/Components/`), not something
-/// `LoadFolders.xml`/the default folder rule would ever resolve as loaded, so
-/// it would never be visited by the `Assemblies/` walk above regardless of
-/// `folder_policy`. Uses its own `WalkDir` (not the shared [`walk_files`]) so
-/// [`is_prunable`] can skip whole directories via `filter_entry` —
-/// `walk_files` is shared with the XML/def scan, where `Languages/` genuinely
-/// does hold relevant `.xml` files, so pruning it there would be a real
-/// correctness bug, not a speedup.
-fn side_loaded_assembly_note(mod_root: &Path) -> Option<String> {
+/// - **Side-loaded assemblies.** Detects a mod whose real engine side-loads
+///   from outside `Assemblies/` at runtime (see
+///   `extract::side_loaded_assemblies`'s module doc). The whole root is
+///   walked, not the loaded folders `scan_folder` was given — a side-loaded
+///   engine typically lives in a folder that is a sibling of the version
+///   folder (e.g. `Lunar/Components/`), not something `LoadFolders.xml`/the
+///   default folder rule would ever resolve as loaded. A `.dll` counts only
+///   outside every [`is_prunable`] directory. This is its own walk, never
+///   the shared [`walk_files`]: `walk_files` serves the XML/def scan, where
+///   `Languages/` genuinely does hold relevant `.xml` files, so pruning it
+///   there would be a real correctness bug, not a speedup.
+/// - **Unloaded `Defs` folders.** Every `Defs` directory (case-insensitive)
+///   at most [`MAX_UNLOADED_DEFS_SEARCH_DEPTH`] levels below the root whose
+///   direct parent is **not** one of `loaded_folders` — at any depth, inside
+///   a prunable directory too, not only the mod's immediate subdirectories:
+///   a compat framework can gate content behind an extra nesting level
+///   (`1.6/Mods/X/Defs`), and the mod's own root `Defs/` counts when
+///   `LoadFolders.xml` doesn't include `/` for the running version.
+///
+/// A prunable directory is still descended for the second question, but
+/// only as deep as a `Defs` folder could still be found.
+pub(super) fn survey_mod_root(mod_root: &Path, loaded_folders: &[PathBuf]) -> RootSurvey {
     let mut counts = side_loaded_assemblies::SideLoadCounts::default();
     let mut offending_top_level: BTreeSet<String> = BTreeSet::new();
-    let entries = WalkDir::new(mod_root)
-        .sort_by_file_name()
-        .into_iter()
-        .filter_entry(|entry| !is_prunable(entry))
-        .filter_map(Result::ok)
-        .filter(|entry| entry.file_type().is_file())
-        .filter(|entry| {
-            entry
-                .path()
-                .extension()
-                .and_then(|ext| ext.to_str())
-                .is_some_and(|ext| ext.eq_ignore_ascii_case("dll"))
-        });
-    for entry in entries {
-        let path = entry.into_path();
-        let Ok(relative) = path.strip_prefix(mod_root) else {
+    let mut unloaded_defs_dirs = Vec::new();
+    // The depth of the outermost prunable directory the walk is inside.
+    let mut pruned_at: Option<usize> = None;
+    let mut entries = WalkDir::new(mod_root).sort_by_file_name().into_iter();
+    while let Some(entry) = entries.next() {
+        let Ok(entry) = entry else {
+            continue;
+        };
+        let depth = entry.depth();
+        if pruned_at.is_some_and(|pruned| depth <= pruned) {
+            pruned_at = None;
+        }
+        if entry.file_type().is_dir() {
+            if depth <= MAX_UNLOADED_DEFS_SEARCH_DEPTH
+                && entry.file_name().eq_ignore_ascii_case("Defs")
+                && let Some(parent) = entry.path().parent()
+                && !loaded_folders.iter().any(|folder| folder == parent)
+            {
+                unloaded_defs_dirs.push(entry.path().to_path_buf());
+            }
+            if pruned_at.is_none() && is_prunable(&entry) {
+                pruned_at = Some(depth);
+            }
+            if pruned_at.is_some() && depth >= MAX_UNLOADED_DEFS_SEARCH_DEPTH {
+                entries.skip_current_dir();
+            }
+            continue;
+        }
+        if pruned_at.is_some() || !entry.file_type().is_file() || !is_dll(entry.path()) {
+            continue;
+        }
+        let Ok(relative) = entry.path().strip_prefix(mod_root) else {
             continue;
         };
         match side_loaded_assemblies::classify(relative) {
@@ -1270,7 +1327,16 @@ fn side_loaded_assembly_note(mod_root: &Path) -> Option<String> {
             AssemblyLocation::Ignored => {}
         }
     }
-    side_loaded_assemblies::note(counts, &offending_top_level)
+    RootSurvey {
+        side_loaded_note: side_loaded_assemblies::note(counts, &offending_top_level),
+        unloaded_defs_dirs,
+    }
+}
+
+fn is_dll(path: &Path) -> bool {
+    path.extension()
+        .and_then(|ext| ext.to_str())
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("dll"))
 }
 
 fn file_warning(mod_id: &ModId, path: &Path, error: &dyn std::fmt::Display) -> Warning {
@@ -1622,7 +1688,7 @@ mod tests {
         let mut discovered = discovered_mod(root.clone());
         discovered.workshop_id = Some(2_009_463_077);
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -1636,7 +1702,7 @@ mod tests {
 
     /// The side-loaded-assembly note actually reaches `Report.warnings`
     /// through `scan_one_mod` end to end — other tests call
-    /// `side_loaded_assembly_note` directly; this drives the full function
+    /// `survey_mod_root` directly; this drives the full function
     /// instead.
     #[test]
     fn scan_one_mod_surfaces_the_side_loaded_assembly_note_as_a_warning() {
@@ -1649,7 +1715,7 @@ mod tests {
         }
         let discovered = discovered_mod(root.clone());
 
-        let (_, _, _, warnings) = scan_one_mod(
+        let ModScan { warnings, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -1725,13 +1791,92 @@ mod tests {
     }
 
     /// Writes `count` empty `.dll` files under `dir` (created if needed) —
-    /// content is irrelevant, `side_loaded_assembly_note` only looks at
+    /// content is irrelevant, `survey_mod_root` only looks at
     /// paths.
     fn write_dlls(dir: &Path, names: &[&str]) {
         fs::create_dir_all(dir).unwrap();
         for name in names {
             fs::write(dir.join(name), b"").unwrap();
         }
+    }
+
+    /// `root` joined with `names`, one nesting level per name.
+    fn nested(root: &Path, names: &[&str]) -> PathBuf {
+        names
+            .iter()
+            .fold(root.to_path_buf(), |path, name| path.join(name))
+    }
+
+    /// The survey walks into media and dev folders when looking for unloaded
+    /// `Defs` folders, even though their `.dll` files never count, and skips
+    /// a `Defs` folder whose parent is a loaded folder.
+    #[test]
+    fn survey_finds_unloaded_defs_folders_inside_media_and_dev_folders_too() {
+        let root = tempdir("survey-defs-in-pruned");
+        for dir in [
+            root.join("1.6").join("Defs"),
+            root.join("Defs"),
+            root.join("Source").join("Defs"),
+            root.join("Textures").join("Defs"),
+        ] {
+            fs::create_dir_all(dir).unwrap();
+        }
+
+        let survey = survey_mod_root(&root, &[root.join("1.6")]);
+
+        assert_eq!(
+            survey.unloaded_defs_dirs,
+            vec![
+                root.join("Defs"),
+                root.join("Source").join("Defs"),
+                root.join("Textures").join("Defs"),
+            ]
+        );
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    /// A `Defs` folder twelve levels below the root is found; one thirteen
+    /// levels below is not, inside a media folder or out of it.
+    #[test]
+    fn survey_looks_for_unloaded_defs_folders_twelve_levels_deep() {
+        let root = tempdir("survey-defs-depth");
+        let levels = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"];
+        let at_twelve = nested(&root, &levels[..11]).join("Defs");
+        let at_thirteen = nested(&root, &levels).join("Defs");
+        let pruned_at_thirteen = nested(&root.join("Textures"), &levels[..11]).join("Defs");
+        for dir in [&at_twelve, &at_thirteen, &pruned_at_thirteen] {
+            fs::create_dir_all(dir).unwrap();
+        }
+
+        let survey = survey_mod_root(&root, &[]);
+
+        assert_eq!(survey.unloaded_defs_dirs, vec![at_twelve]);
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    /// A `.dll` any depth below an ordinary folder counts as side-loaded;
+    /// one anywhere inside a media folder never does.
+    #[test]
+    fn survey_counts_a_deep_dll_but_never_one_inside_a_media_folder() {
+        let root = tempdir("survey-dll-depth");
+        let levels = [
+            "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+        ];
+        write_dlls(&nested(&root, &levels), &["Engine.dll"]);
+        write_dlls(&root.join("Textures"), &["Atlas.dll"]);
+        write_dlls(&nested(&root.join("Textures"), &levels), &["Deep.dll"]);
+
+        let note = survey_mod_root(&root, &[]).side_loaded_note;
+
+        assert_eq!(
+            note.as_deref(),
+            Some(
+                "1 assemblies outside `Assemblies/` (a/) were not analyzed \
+                 — runtime patches and assembly references in them are not \
+                 represented in this report."
+            )
+        );
+        let _ = fs::remove_dir_all(&root);
     }
 
     #[test]
@@ -1743,7 +1888,7 @@ mod tests {
             &["Engine.dll", "Patches.dll", "Utils.dll"],
         );
 
-        let note = side_loaded_assembly_note(&root);
+        let note = survey_mod_root(&root, &[]).side_loaded_note;
 
         assert_eq!(
             note.as_deref(),
@@ -1765,7 +1910,7 @@ mod tests {
             &["Mod.dll", "Mod.old.dll", "Mod.older.dll"],
         );
 
-        assert!(side_loaded_assembly_note(&root).is_none());
+        assert!(survey_mod_root(&root, &[]).side_loaded_note.is_none());
         let _ = fs::remove_dir_all(&root);
     }
 
@@ -1778,7 +1923,7 @@ mod tests {
         write_dlls(&root.join("Source").join("obj").join("Debug"), &["Mod.dll"]);
         write_dlls(&root.join("Source").join("bin").join("Debug"), &["Mod.dll"]);
 
-        assert!(side_loaded_assembly_note(&root).is_none());
+        assert!(survey_mod_root(&root, &[]).side_loaded_note.is_none());
         let _ = fs::remove_dir_all(&root);
     }
 
@@ -1788,7 +1933,7 @@ mod tests {
         write_dlls(&root.join("Assemblies"), &["A.dll", "B.dll", "C.dll"]);
         write_dlls(&root.join("Extra"), &["D.dll"]);
 
-        assert!(side_loaded_assembly_note(&root).is_none());
+        assert!(survey_mod_root(&root, &[]).side_loaded_note.is_none());
         let _ = fs::remove_dir_all(&root);
     }
 
@@ -1812,8 +1957,8 @@ mod tests {
         );
         write_dlls(&root.join("Middle"), &["M1.dll"]);
 
-        let first = side_loaded_assembly_note(&root);
-        let second = side_loaded_assembly_note(&root);
+        let first = survey_mod_root(&root, &[]).side_loaded_note;
+        let second = survey_mod_root(&root, &[]).side_loaded_note;
 
         assert_eq!(first, second);
         assert_eq!(
@@ -1845,7 +1990,9 @@ mod tests {
         .unwrap();
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, warnings) = scan_one_mod(
+        let ModScan {
+            scanned, warnings, ..
+        } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -1873,7 +2020,9 @@ mod tests {
         let root = tempdir("manifest-xml-absent");
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, warnings) = scan_one_mod(
+        let ModScan {
+            scanned, warnings, ..
+        } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -1898,7 +2047,9 @@ mod tests {
         fs::write(root.join("About").join("Manifest.xml"), b"<NotManifest/>").unwrap();
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, warnings) = scan_one_mod(
+        let ModScan {
+            scanned, warnings, ..
+        } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -1935,7 +2086,11 @@ mod tests {
         .unwrap();
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, _warnings) = scan_one_mod(
+        let ModScan {
+            scanned,
+            warnings: _warnings,
+            ..
+        } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -1990,7 +2145,11 @@ mod tests {
         .unwrap();
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, _warnings) = scan_one_mod(
+        let ModScan {
+            scanned,
+            warnings: _warnings,
+            ..
+        } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2025,7 +2184,11 @@ mod tests {
         .unwrap();
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, _warnings) = scan_one_mod(
+        let ModScan {
+            scanned,
+            warnings: _warnings,
+            ..
+        } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2057,7 +2220,11 @@ mod tests {
         .unwrap();
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, _warnings) = scan_one_mod(
+        let ModScan {
+            scanned,
+            warnings: _warnings,
+            ..
+        } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2172,7 +2339,7 @@ mod tests {
             </loadFolders>"#;
         fs::write(root.join("LoadFolders.xml"), xml).unwrap();
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2216,7 +2383,7 @@ mod tests {
         let mut active_bases = HashSet::new();
         active_bases.insert(ModId::new("some.framework"));
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2262,7 +2429,7 @@ mod tests {
             </loadFolders>"#;
         fs::write(root.join("LoadFolders.xml"), xml).unwrap();
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2322,7 +2489,7 @@ mod tests {
         fs::create_dir_all(&mod_root).unwrap();
         make_junction(&mod_root.join("Defs"), &real_defs);
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered_mod(mod_root),
             v16(),
@@ -2374,7 +2541,7 @@ mod tests {
         fs::write(root.join("Assemblies").join("Mod.dll"), vec![0u8; 22]).unwrap();
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2416,7 +2583,7 @@ mod tests {
         fs::write(root.join("LoadFolders.xml"), xml).unwrap();
         let active = HashSet::from([ModId::new("mod.a"), ModId::new("mod.b")]);
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2449,7 +2616,7 @@ mod tests {
         fs::write(root.join("LoadFolders.xml"), xml).unwrap();
         let active = HashSet::from([ModId::new("mod.a")]);
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2497,7 +2664,7 @@ mod tests {
         );
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2527,7 +2694,9 @@ mod tests {
         .unwrap();
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, warnings) = scan_one_mod(
+        let ModScan {
+            scanned, warnings, ..
+        } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2548,7 +2717,9 @@ mod tests {
         fs::write(bundles.join("standalone"), vec![0u8; 4]).unwrap();
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, warnings) = scan_one_mod(
+        let ModScan {
+            scanned, warnings, ..
+        } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2579,7 +2750,7 @@ mod tests {
         );
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2622,7 +2793,7 @@ mod tests {
         fs::write(root.join("Textures").join("Wall.dds"), dds_bytes(true)).unwrap();
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2653,7 +2824,7 @@ mod tests {
         .unwrap();
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
