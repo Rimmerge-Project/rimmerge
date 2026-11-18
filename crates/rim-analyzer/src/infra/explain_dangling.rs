@@ -60,7 +60,8 @@ const READ_AHEAD_BYTES: u64 = 32 * 1024 * 1024;
 pub fn explain_dangling_references(conflicts: &mut [Conflict], scan: &ScanOutput) {
     // Deliberate duplicate of the pending-name collection inside
     // `explain_within_budget`: it lets the common nothing-to-explain case
-    // return before `CandidateFiles::collect` walks every active mod's tree.
+    // return before `CandidateFiles::collect` lists the candidate `Defs`
+    // folders (the unloaded ones the scan found, plus each inactive mod's).
     if PendingNames::collect(conflicts).is_empty() {
         return;
     }
@@ -70,13 +71,17 @@ pub fn explain_dangling_references(conflicts: &mut [Conflict], scan: &ScanOutput
 /// [`analysis::build_ref`] followed by [`explain_dangling_references`],
 /// the report every composition root builds from a finished scan.
 ///
-/// The explanation's candidate-folder walk (every active mod's whole tree,
-/// over a second on a real install) needs only `scan`, so it runs on the
-/// rayon pool while `build_ref` runs on the calling thread; only the
-/// search itself waits for the report's dangling names. The trade-off
-/// against calling the two in sequence: the walk happens even when the
-/// report turns out to have no unexplained name, which on an install
-/// small enough for that to be likely is also a cheap walk.
+/// The explanation's candidate listing (the `Defs` folders the scan already
+/// found outside each mod's loaded folders, plus each inactive mod's
+/// `Defs`; no whole-tree walk) needs only `scan`, so it runs on the rayon
+/// pool while `build_ref` runs on the calling thread; only the search
+/// itself waits for the report's dangling names. The trade-off against
+/// calling the two in sequence: the listing happens even when the report
+/// turns out to have no unexplained name. It was last measured (over a
+/// second) when it still walked every active mod's whole tree; since it
+/// shrank to listing those folders it has not been re-timed on a real
+/// install, so the overlap is kept as a cheap hedge rather than a
+/// demonstrated win.
 #[must_use]
 pub fn build_explained_report(scan: &ScanOutput, context: &RunContext) -> Report {
     let (mut report, candidates) = rayon::join(

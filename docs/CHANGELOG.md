@@ -19,8 +19,9 @@ maintainer's own checkout for the full record, if you have it.
   install of about 1,000 active mods (release build, warm file cache,
   median of three old and new runs taken alternately), a full analysis went
   from about 19 s to about 14 s and used about a third less processor time
-  (98 s to 64 s); peak memory and results are unchanged. A cold file cache
-  is still dominated by reading the `.dds` texture headers.
+  (98 s to 64 s); peak memory is about the same (+10 MB) and results are
+  unchanged. A cold file cache is still dominated by reading the `.dds`
+  texture headers.
 
 ## [1.2.3] - 2026-10-09
 
