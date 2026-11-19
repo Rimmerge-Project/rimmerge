@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 // Type-only: pulls in `Window.__E2E_MOCK_IPC__`'s ambient declaration.
 import type {} from "../../src/e2e-mock-bootstrap";
-import { loadScenario } from "./support";
+import { loadScenario, modsPane } from "./support";
 
 test.describe("active mod set", () => {
   test("activate with dependencies, rescan, and apply — the pending-change lifecycle", async ({
@@ -9,7 +9,6 @@ test.describe("active mod set", () => {
   }) => {
     await loadScenario(page);
     await page.getByTestId("nav-mods").click();
-    await page.getByTestId("mods-tab-inactive").click();
 
     // `mod.905` (`e2e/fixtures/scenario.ts`'s own declared-dependency
     // fixture) declares `mod.906` — checking "also activate
@@ -29,7 +28,7 @@ test.describe("active mod set", () => {
     await expect(page.getByTestId("activate-confirm-dialog")).toBeHidden();
 
     const activateCalls = await page.evaluate(() => window.__ACTIVATE_CALLS__ ?? []);
-    expect(activateCalls).toEqual([{ ids: ["mod.905"], withDependencies: true }]);
+    expect(activateCalls).toEqual([{ ids: ["mod.905"], withDependencies: true, anchor: null }]);
 
     await expect(page.getByTestId("pending-changes-banner")).toBeVisible();
     await expect(page.getByTestId("pending-changes-unscanned-text")).toContainText("2");
@@ -71,7 +70,6 @@ test.describe("active mod set", () => {
   }) => {
     await loadScenario(page);
     await page.getByTestId("nav-mods").click();
-    await page.getByTestId("mods-tab-inactive").click();
 
     await page.getByTestId("mod-row-select-mod.905").locator('input[type="checkbox"]').check();
     await page.getByTestId("activate-with-dependencies-checkbox").locator("input").check();
@@ -106,7 +104,6 @@ test.describe("active mod set", () => {
   test("deactivating a mod with dependents names them in the confirm dialog", async ({ page }) => {
     await loadScenario(page);
     await page.getByTestId("nav-mods").click();
-    await page.getByTestId("mods-tab-inactive").click();
 
     await page.getByTestId("mod-row-select-mod.905").locator('input[type="checkbox"]').check();
     await page.getByTestId("activate-with-dependencies-checkbox").locator("input").check();
@@ -116,8 +113,7 @@ test.describe("active mod set", () => {
     await page.getByTestId("pending-changes-rescan-button").click();
     await expect(page.getByTestId("pending-changes-banner")).toBeHidden();
 
-    await page.getByTestId("mods-tab-active").click();
-    await page.getByTestId("mods-search").fill("mod.906");
+    await modsPane(page, "active").getByTestId("mods-search").fill("mod.906");
     await page.getByTestId("mod-row-select-mod.906").locator('input[type="checkbox"]').check();
     await page.getByTestId("deactivate-selected-button").click();
 

@@ -31,7 +31,7 @@ pub(crate) async fn get_dashboard_inner(state: &AppState) -> Result<DashboardDto
                 report.conflicts.as_slice().into(),
             )
         };
-        let moved_mods = session.sort_outcome().stats.positions_changed;
+        let moved_mods = session.moved_mods();
         let sort_provenance = session.sort_provenance().into();
 
         let current_stats = session.ledger(OrderSource::Current).stats;

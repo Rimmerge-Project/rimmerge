@@ -26,7 +26,7 @@ test.describe("guided flow: get the recommended rules", () => {
     await expect(page.getByTestId("guide-rules-button")).toHaveText(
       "Download and import (about 49 MB)",
     );
-    await expect(page.getByTestId("guide-step-choose")).toContainText("moves 3 mods");
+    await expect(page.getByTestId("guide-step-choose")).toContainText("moves 6 mods");
 
     await page.evaluate(() => {
       window.__HOLD_RECOMMENDED_RULES__ = true;
@@ -51,8 +51,8 @@ test.describe("guided flow: get the recommended rules", () => {
     );
     await expect(page.getByText("Recommended rules imported.")).toBeVisible();
     // The import moved two more mods in the suggested order, and the Dashboard refetched it.
-    await expect(page.getByTestId("moved-mods")).toHaveText("5");
-    await expect(page.getByTestId("guide-step-choose")).toContainText("moves 5 mods");
+    await expect(page.getByTestId("moved-mods")).toHaveText("8");
+    await expect(page.getByTestId("guide-step-choose")).toContainText("moves 8 mods");
     await expect(page.getByTestId("guide-choose-button")).toBeFocused();
 
     expect(await page.evaluate(() => window.__GET_RECOMMENDED_RULES_CALLS__)).toBe(1);
@@ -80,7 +80,7 @@ test.describe("guided flow: get the recommended rules", () => {
       "the last download failed",
     );
     // Nothing was imported, so the suggested order did not move.
-    await expect(page.getByTestId("moved-mods")).toHaveText("3");
+    await expect(page.getByTestId("moved-mods")).toHaveText("6");
   });
 
   test("Skip is remembered across a reload, and Get them now still works afterwards", async ({
@@ -145,7 +145,7 @@ test.describe("guided flow: get the recommended rules", () => {
       page.getByText("Answer the Welcome notice on the Dashboard first, then try again."),
     ).toBeVisible();
     await expect(page.getByTestId("guide-step-rules")).toHaveAttribute("data-status", "skipped");
-    await expect(page.getByTestId("moved-mods")).toHaveText("3");
+    await expect(page.getByTestId("moved-mods")).toHaveText("6");
   });
 
   test("with internet access off the step is unavailable: no button, a Settings link, flow moves on", async ({

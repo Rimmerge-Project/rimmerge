@@ -16,8 +16,8 @@ license first.
 
 `src-tauri` is a composition root: every `#[tauri::command]` maps a DTO
 to a `rim-session` call and maps the result back. Filtering, paging,
-and aggregation live in `rim-session` (`FindingIndex`, `Session::mods`/
-`inactive_mods`), never in a command handler or in Vue. The adapters a
+and aggregation live in `rim-session` (`FindingIndex`, `Session::mods`,
+`working_mod_list`/`inactive_mod_list`), never in a command handler or in Vue. The adapters a
 command needs for the loaded project (scanner, decision/rule/patch
 stores, def reader, asset locator, release feed, ...) come from
 `AppState::adapters`, never constructed inline. The narrow exception is
@@ -167,13 +167,21 @@ of that command surface — no direct filesystem or process access outside
   `utils/orderShare.ts`; a sender's name and a skipped excerpt are untrusted
   and render as text only. The two replace warnings are separate facts:
   `replacesPendingChanges` (from the preview: unrescanned activation edits) and
-  `DashboardDto.fileMatchesCurrent === false` (the Current order is not in the
+  `PendingActiveChangesDto.orderUnapplied` (the Current order is not in the
   file yet, e.g. an earlier import not applied), which the page passes down as
-  `replacesUnwritten`. The "not in ModsConfig.xml yet" note
+  `replacesUnwritten`. The "This isn't your active order yet" note
   (`OrderNotInFileNote.vue`) shows only while Current is selected and
-  `fileMatchesCurrent` is false, with its own `ApplyDialog`. The mock
+  `orderUnapplied` is true, with its own `ApplyDialog`. **Own facts vs live
+  facts:** `PendingActiveChangesDto` (`unapplied`, `orderUnapplied`) compares with what
+  Rimmerge last loaded or wrote, never the live file, so an outside edit of
+  `ModsConfig.xml` alone trips none of the close and project-switch guard, the
+  pending banner, this note, the export panels' note or `replacesUnwritten`;
+  `FileChangeNote` is the one place that explains an outside edit. The live
+  comparison (`DashboardDto.fileMatchesCurrent`/`fileMatchesSuggested`, the launch
+  status, the Added/Removed marks) follows the file; no "unsaved work" copy reads it. The mock
   (`planOrderImport`/`importOrderMock` in `scenario.ts`) computes the diff
-  against `fileOrder`, the `import_blocker` rule and the rejections, accepts a `.rml`
+  against the working list (`ImportTarget::from_session` passes `working`, so pending edits
+  show as changes; the CLI keeps the file's list), the `import_blocker` rule and the rejections, accepts a `.rml`
   export path only, swaps Current on import and leaves `fileOrder` alone. It mirrors
   the planner's details: the first active on-disk copy per base id wins, the list's
   `# RimWorld X` header is parsed and compared by numeric major.minor (`unknown` when
@@ -202,11 +210,13 @@ of that command surface — no direct filesystem or process access outside
   (`apps/cli/tests/db_cli.rs`'s `seed_settings_every_source_disabled`
   is the established pattern this mirrors), never by faking the port.
 - **The working active-mod set has three tiers.** `working`
-  (uncommitted activate/deactivate edits), `scanned` (what the last
-  `Rescan`/`load` saw — `list_mods`/`list_inactive_mods` always read
-  this tier, never `working`, so activating a mod does not move it to
-  the Active tab until a rescan), and `file` (what's actually on disk
-  in `ModsConfig.xml` — what a real, non-dry-run `apply` writes).
+  (uncommitted activate/deactivate/move edits), `scanned` (what the last
+  `Rescan`/`load` saw — `list_mods` reads this tier, for patch scopes and
+  rule pickers; the Mods page's `list_working_mods`/`list_inactive_mods`
+  read `working`, so an activated mod is in Active at once as a
+  `pendingScan` row and a deactivated one is in Inactive at once), and `file` (what's actually on disk
+  in `ModsConfig.xml` — what a real, non-dry-run `apply` writes; since 1.2.4 a **live
+  baseline**, re-read by the poller below, not only what the file held at load).
   `activate_mods`/`deactivate_mods` re-plan against the session's
   current report inside the same call rather than trusting whatever
   plan the frontend displayed a moment earlier, so the two can never
@@ -223,7 +233,63 @@ of that command surface — no direct filesystem or process access outside
   (`activate_mods`/`deactivate_mods`) changed the working set while the
   scan was running, and it refuses rather than silently discarding that
   change: `"the working active-mod set changed during the rescan;
-  rescan again"`.
+  rescan again"`. A `move_mods` during a scan changes that sequence, so it
+  makes the rescan refuse too. The tiers settle in two directions
+  (`crates/rim-session/CLAUDE.md`): an Apply (and a revert) makes `working`
+  follow Current, while an edit from the Mods page (`move_mods`,
+  `activate_mods`, `deactivate_mods`) that leaves the same ids makes Current
+  follow `working`, writing nothing; the file tier is untouched, so
+  `orderUnapplied` turns true (and the live `fileMatchesCurrent` false) until an Apply. The commands
+  `move_mods`, `discard_pending_changes` and `revert_order_to_file` all emit
+  `session://changed` with `activeSetChanged`; `move_mods` also returns the
+  selection it left (`MoveModsResultDto`), because the first reorder while
+  Suggested is selected switches to Current, and the caller adopts it and
+  says so. An *anchored* `activate_mods` (an explicit drop position) switches
+  the same way and so returns `ActivateModsResultDto { pending, selected,
+  didSwitchToCurrent }`; an un-anchored one (the button) never switches.
+  `PendingActiveChangesDto.orderUnapplied` is Current differing from the list Rimmerge
+  last loaded or wrote (the acknowledged list), not from the live file: a
+  settled reorder changes no membership, so `unscanned`/`unapplied` are empty
+  for it and only this field (read by the close/project-switch guard, the
+  `OrderNotInFileNote` on the Mods page, and the export panels' install note)
+  shows it. `ModListDto.reorderable` is the backend's answer to "may this
+  list be reordered" (Active in load order, filters allowed); the frontend
+  never restates it from the sort. `ActivateRequestDto.anchor` is `null` for
+  the default placement. The mock (`scenario.ts`) mirrors all of it, except the `PreserveCurrent` re-sort of Suggested and a
+  mid-scan refusal, and is pinned by `e2e/specs/mods-reorder-mock.spec.ts`.
+- **The file tier is live, and one poller keeps it so.** `refresh_mods_config_baseline`
+  (`commands/file_baseline.rs`) has the `game_launch` lock exception: a short
+  `with_session` for `Session::file_probe()`, the read and parse in a bare
+  `spawn_blocking` (generic over the `ModsConfigStore`, so a test can slow it down),
+  then a short `with_session` to `FileObservation::commit`. It only reads, and emits
+  `session://changed` with `fileBaselineChanged` **only when `BaselineChange::Changed`**
+  (the list or the status differs), so a quiet poll invalidates nothing; the reason is
+  deliberately not in `HANDLED_BY_MERGE_MUTATION`, so it invalidates everything like any
+  other change. `get_mods_config_baseline` is the pure read behind
+  `useFileBaselineQuery` (`FileBaselineDto`: `state` fresh or stale with a reason code,
+  and `externalChange`, a `kind`-tagged union: `none`, `membership` with `added`/`removed`
+  counts, or `reordered`). `composables/useFileBaselinePolling.ts`, called once
+  in `TheShell.vue`, polls every 5 s while the document is visible and on window focus
+  (`useVisiblePolling`, shared with the launch poller) and **skips a tick while its call is
+  pending** (the call can wait behind a long command such as verify, and a tick per
+  interval would queue). A failed poll is ignored. Each `ModListRowDto` carries
+  `membership` (`none`/`added`/`removed`, by base id), drawn by `MembershipBadge.vue`
+  after the mod name (icon, word and tooltip, never colour alone). `FileChangeNote.vue`
+  on the Mods page shows two notes: the outside change (plain words, no file name; a
+  membership change is the `(+N, -M)` sentence, a `reordered` change its own; each has a
+  whole-sentence key with and without "Your pending changes are kept.", chosen by
+  `hasOwnPendingChanges`, never concatenated;
+  its action runs `useOrderShare().previewModsConfig`, the existing
+  `preview_order_import_file` preview on the session's own file path, so the existing
+  import confirm and replace warnings apply) and the stale-baseline failure (this one may
+  name ModsConfig.xml, per reason code through `staleBaselineMessage`). The mock mirrors it:
+  `window.__MODS_CONFIG_FILE__` (`{ status: "ok", activeMods }` or a failure status) is what
+  the next refresh, rescan or import reads (a failure status makes the rescan or import fail
+  with `mods_config_io_failed`, as the real load does; an Apply clears it, as the
+  real write replaces the file), `__REFRESH_BASELINE_CALLS__` counts calls,
+  `__REFRESH_BASELINE_DONE__` finished ones and `__BASELINE_CHANGED_EMITS__` the change
+  events it emitted (the end-of-handler signal a "quiet poll" spec waits for), and
+  `e2e/specs/mods-file-baseline.spec.ts` pins the behaviour.
 - **The Apply dialog reads the merge mod only while it is open, gated by mounting.** Every page
   mounts an `ApplyDialog`, and on a freshly swapped session the `get_merge_mod` render replays
   every ledger entry (seconds) under the session lock. The query lives in children of the
@@ -263,6 +329,95 @@ of that command surface — no direct filesystem or process access outside
   later step, never merged into the same button. The needs-input count is
   information only (a count and an Inbox link); the old `applyAnyway` /
   `canSubmit` checkboxes in the dialog and on the Dashboard are gone.
+- **The Mods page's selection is a client-side view of the backend's lists.**
+  `useModSelection` works over the rows of the current `list_working_mods`/
+  `list_inactive_mods` response, which the backend already filtered, so "Select
+  all N shown" never re-implements a filter in Vue. A selected id a later filter
+  hides stays selected and is counted ("N not shown"); Clear removes all. An
+  *unfiltered* response is the whole list, so a selected id missing from it is
+  pruned (`ModListPane`'s watcher); under a filter it is only hidden. The "(N not
+  shown)" brackets are part of the `mods.selection.notShown` message, never the
+  template, but the gap before them is the span's `ms-1` margin, not whitespace:
+  vue-i18n trims whitespace around each plural form, so a leading space in the
+  message would vanish from form 2 on. A CJK locale writes full-width brackets and
+  can ignore the small margin. Selecting
+  writes nothing: the activate/deactivate plan and confirm dialogs are unchanged,
+  and a failed plan opens the dialog with the error and no plan (Confirm
+  disabled). The always-visible "Rescan mods" button (`ModsRescanButton.vue`) is
+  `useRescanMutation`, so the `rescan_project` lock protocol and its refusal
+  ("working set changed during the rescan") are unchanged.
+- **The Mods page is two side-by-side `ModListPane`s, and every position change
+  ends in an anchor.** Inactive left, Active right (`lg:` and up; stacked
+  below), each pane with its own filter (`useModListFilters`, one per list), sort
+  and selection, in a `grid` whose cells are `min-h-0` so each `ModTable` scroller
+  keeps the definite height the virtualizer needs. The list-level `data-testid`s
+  (`mod-table`, `mods-total`, `mods-search`, `mods-sort-<key>`, ...) now exist twice, so
+  tests scope them through the pane's `mods-pane-active|inactive` (`modsPane(page,
+  kind)` in `e2e/specs/support.ts`). The sort bar is one toggle button per criterion (`ModSortBar.vue`): the
+  active one flips its direction, another starts ascending (`nextSort` in
+  `utils/modListSort.ts`). It has no `aria-pressed` (it never un-presses and its
+  name changes); the active state is in its accessible name and title plus an
+  arrow and a thicker border. *Anchors name a neighbour by id, never an index*
+  (`AnchorDto`, `utils/modMove.ts`): a drop gap, a one-step move and a "Move
+  after…" choice are all turned into `before`/`after` a **shown** row that is not
+  itself moving (`anchorForSlot`, `anchorForStep`), so a filtered view stays exact
+  and the backend refuses a stale neighbour (`move_anchor_not_active`: the page
+  toasts it and refreshes the lists). Never send a row index or a sorted-view
+  position. A reorder is gated on `ModListDto.reorderable` alone (the sort is never
+  re-checked in TypeScript): when it is false, drag over Active is refused, the Move
+  menu items are disabled with the reason in the menu, Alt+Arrow announces the
+  reason, and a note above the list says why. A mod dragged in from Inactive
+  still activates, with `anchor: null`.
+- **Drag and drop is native HTML5, with no dependency, and the page owns the
+  drag.** `useModReorder` holds the one `DragState` (source list, moving ids,
+  whether Core is among them) and answers `dropModeFor(list)`: `position` (a line
+  between rows, accepts), `pane` (accepts anywhere), `refused` (no `preventDefault`
+  on `dragover`, so the not-allowed cursor shows, plus the reason over the list) or
+  `off`. `ModTable` only reports `dragStart`/`dragEnd`/`drop(slot)` and draws the line
+  (a gap is `round(offsetY / 40)`, rows being a fixed 40px); it never decides what a
+  drop means. SortableJS-style libraries move DOM nodes the virtualizer owns, which is
+  why none is used. Edge auto-scroll is `useDragAutoScroll` (a frame loop fed by
+  `dragover`, `utils/dragScroll.ts` for the speed). The dragged set is the whole
+  selection when the dragged row is selected (`moveSetFor`), else that row. A drop
+  commits without a dialog only when the plan is exactly the dropped mods with no
+  warning (`isPlainActivation`/`isPlainDeactivation`); otherwise the same
+  Activate/Deactivate dialog opens and its confirm commits the same anchored
+  request (`useModActivation.activateAt`, `useModDeactivation.deactivateDropped`).
+  The buttons always open the dialog. Core is refused for Inactive by `source ===
+  "core"` of a shown dragged row; the backend plan refuses it too.
+- **Every move is announced through one always-mounted `role="status"` region**
+  (`mods-move-status` in `ModsPage.vue`), never a toast: "Moved X to position 14 of
+  312", read from the refreshed Active list after the mutation's invalidation has
+  landed (the position is the row's unfiltered `position`; the total is left out
+  under a filter, where `total` counts only the matches). Edge and
+  reorder-blocked answers use the same region. Keyboard: `Alt+ArrowUp/Down` on an
+  Active row goes through `ModTable.onMoveKey`, which checks `isInert` first
+  (`shortcutTargets.ts`: dialogs and text fields keep their keys) and runs *before* the
+  roving arrow handling, so a plain arrow still moves focus and an Alt+arrow never
+  does; after a keyboard or menu move the page puts focus back on the row
+  (`ModTable.focusRow`, exposed through `ModListPane`). The row's Move button
+  and the position picker (`ModPositionDialog`: "Move after…" and "Activate at…")
+  search the **working** list (`useWorkingModsQuery`), not `useModsQuery`
+  (`ModPicker`'s scanned tier), so a just-activated mod can be picked.
+- **A move adopts the backend's selection, and the page says so.** `useMoveModsMutation`
+  and `useActivateModsMutation` call `session.setSelected(result.selected)` the way
+  `useAdoptImportedSession` does, and `didSwitchToCurrent` raises
+  `OrderSwitchedNote` ("Now using your own order. The suggested order is unchanged.
+  [View suggested]", gone once Suggested is selected again). `OrderNotInFileNote
+  allow-revert` adds "Revert to your saved active order" (ModsConfig.xml named only in its tooltip) on the Mods page (only for a
+  pure reorder: `orderUnapplied` with nothing unscanned or unapplied by
+  membership, and no outside change of the file: `RevertOrderToFile` compares with the live
+  file, so beside an outside edit it would be refused or would adopt the outside order, and
+  `FileChangeNote`'s own action covers that case); `PendingChangesBanner` carries "Discard pending changes". Their
+  refusals go through `utils/errors.ts` like every other command error.
+- **The mod info panel is a drawer unless the window is very wide.**
+  `ModsPage.vue` reads `useMediaQuery("(min-width: 1800px)")`: below it
+  `ModInfoPanel` is `fixed` over the right edge (`isOverlay`; Escape closes it from
+  anywhere except dialogs and text fields) and `followFocus` is off, since an arrow
+  key through a list must not pop a drawer over it; at or above it the panel is a
+  third column and follows focus as before. `SourceBadge`'s visible label is a
+  container query (`@lg:`) on the table, not a viewport breakpoint, because two lists
+  share the window.
 - **The Dashboard strip is derived, never stored.** `GuidedFlowStrip.vue`
   reads `utils/guidedFlow.ts`'s `guidedStep()` over five facts (the
   recommended-rules step's `rules` state, `selected`,
@@ -316,7 +471,7 @@ of that command surface — no direct filesystem or process access outside
   sources, as the backend does; `__GET_RECOMMENDED_RULES_CALLS__`,
   `__SKIP_RECOMMENDED_RULES_CALLS__` and `__RECOMMENDED_RULES_PROGRESS__` record
   its calls.
-- **`ApplyDialog.vue` has a positive "Write ModsConfig.xml" checkbox
+- **`ApplyDialog.vue` has a positive "Write your active mod list" checkbox
   (`writeModsConfig`, checked by default; a negative "export only" box was
   misread as the ModsConfig toggle). It forces it off and disables it
   while the active set is stale** (the backend refuses a real write
@@ -331,10 +486,17 @@ of that command surface — no direct filesystem or process access outside
   `PatchExportPanel.vue`/`AssignmentExportPanel.vue`
   both warn, once `install` is checked and the working set is
   unscanned-stale, that pending activation changes are not included: an
-  install-time export still writes `ModsConfig.xml`'s current order plus
-  the new package id while stale, silently omitting pending activation
-  changes rather than refusing — because install writes the *analysed*
-  order, not the working one.
+  install-time export still writes the session's *Current* order (the
+  analysed one, not the working one) plus the new package id, silently
+  omitting pending activation changes rather than refusing. They also warn,
+  with their own `unappliedOrderNote`, when `PendingActiveChangesDto.orderUnapplied`
+  is true: Current is not in the file yet (a settled move, an import; an outside edit
+  alone does not count), and
+  install writes it, so an unapplied reorder reaches `ModsConfig.xml` with the
+  export. That is kept on purpose, as for an unapplied import; the warning is
+  the mitigation. A third note (`outsideChangeNote`, from `useFileBaselineQuery`'s
+  `externalChange.kind !== "none"`) says install writes Current over an outside change of
+  the list.
 - **The selected order is backend-led.** `load_project_inner` selects
   `INITIAL_ORDER_SOURCE` (Suggested, the desktop's own presentation
   default; `Session::new` stays on Current for the CLI) before the
@@ -371,18 +533,6 @@ of that command surface — no direct filesystem or process access outside
   `mutateAsync`).
 - **`session://changed` fires after any mutating command and invalidates
   every query by default.** `useSessionEvents`'s
-- **A background invalidation goes through `startInvalidation(queryCache, filters?)`
-  (`queries/invalidation.ts`), never `void queryCache.invalidateQueries(...)`.** Colada's
-  `invalidateQueries` is a `Promise.all` over the refetches and each refetch rethrows its
-  query's error (1.4.5 `fetch`), so a failing query under a bare `void` is an unhandled
-  rejection. The helper swallows it on purpose: the failed query already carries the error
-  in its own state. A caller that needs the refetch to land first (a mutation's `onSuccess`)
-  uses `awaitInvalidation(queryCache, ...filters)` from the same module, which resolves when
-  every refetch has settled and never rejects (no filters means every query). Never return or
-  await a raw `invalidateQueries` from `onSuccess`/`onSettled`: Colada awaits those inside
-  `mutate`, so one unrelated query's failed refetch would fail a mutation whose write already
-  committed (status `error`, the app-wide `onError` toast for the wrong operation, a rejected
-  `mutateAsync`).
   `HANDLED_BY_MERGE_MUTATION` is a skip-list of reasons already handled
   by a mutation's own targeted invalidation (`mergeChanged`,
   `patchDecided` — `useSetMergeChoicesMutation`'s own `onSuccess`), not
@@ -498,8 +648,9 @@ The UI is localized in `en` plus twelve translated locales (`zh-CN`,
   "technical details" line (`CommandErrorDescriptor.technicalDetail`).
   `DefaultPathsDto.warningCode`/`.errorCode` (`utils/defaultPaths.ts`)
   are the same pattern for `get_default_paths`'s own prefill
-  warning/error, with the plain-string `warning`/`error` fields kept
-  alongside as that same fallback for one release. The same rule
+  warning/error, with no plain-string companion (the English `warning`/`error`
+  fields were removed; the checked locations cross as paths in `errorCode`).
+  The same rule
   applies to any future DTO field carrying prose built in `src-tauri` —
   add a code/enum, not a translated string field, unless nothing but
   that one hard-coded English sentence exists to send (rare, and a
@@ -507,7 +658,7 @@ The UI is localized in `en` plus twelve translated locales (`zh-CN`,
   (`SuggestionDto`/`AlternativeDto`/`VerifyReorderDto.rationaleCode`,
   rendered by `utils/rationale.ts`) is this same pattern's largest
   instance — but its own plain-string `rationale` field, unlike
-  `DefaultPathsDto`'s warning/error strings, is never a transitional
+  the removed `DefaultPathsDto` warning/error strings, is never a transitional
   fallback due to be dropped: `useApplyDialog.ts`'s "Create pair rule"
   action copies it verbatim into a new rule's own `comment`, which is
   **persisted** in `rules.json` and can be shared or published to a
@@ -746,14 +897,22 @@ The UI is localized in `en` plus twelve translated locales (`zh-CN`,
   database in particular). The mutation's variable is the request or
   `null`; the Playwright mock mirrors all of it and records the requests
   in `__REFRESH_RULE_DATABASES_CALLS__`.
-- **`get_default_paths` delegates to `rim_io::resolve_project_paths`**,
-  the same precedence ladder (explicit field >
-  `RIMMERGE_GAME_DIR` > `<base>/config.json` > detection > a typed
-  error) `apps/cli`'s own `resolve_paths` uses, so the two interfaces
-  can never disagree about where an install is. The command never fails
-  outright — a machine with no install still has to reach the setup
-  form — so the resolution error/warning text comes back on the DTO and
-  `SetupPage.vue` renders it as a persistent `Message`, never a toast.
+- **`get_default_paths` delegates to `rim_io::resolve_each_path`**
+  (`resolve_project_paths` is its all-or-error form), the same precedence
+  ladder (explicit field > `RIMMERGE_GAME_DIR` > `<base>/config.json` >
+  detection > a typed error) `apps/cli`'s own `resolve_paths` uses, so the
+  two interfaces can never disagree about where an install is. It takes an
+  optional `DefaultPathsRequestDto { gameDir }`, the Setup field as rung 1
+  (`get_default_paths_at(base, request)` is the testable half), and each
+  path resolves on its own: `modsConfig`/`profileDir` are filled even with
+  `errorCode: gameDirNotFound`. The command never fails outright — a
+  machine with no install still has to reach the setup form — so the
+  structured `errorCode`/`warningCode` come back on the DTO (no English
+  prose) and `SetupPage.vue` words them in a persistent `Message`, never a
+  toast. The page re-queries (`queryKeys.defaultPaths(gameDir)`) when the
+  game folder is committed (Browse or blur, never per keystroke), refills
+  each other field only when it is empty or still equals the previous
+  default, and ties the banner to the answer for the committed folder.
   `save_app_config` (the desktop half of `rimmerge config set`)
   deliberately never derives or pins `profileDir` from a
   `ModsConfig.xml` path it might not match — that is exactly how two
@@ -892,7 +1051,8 @@ The UI is localized in `en` plus twelve translated locales (`zh-CN`,
   search/owner filtering happens client-side, since nothing else in
   this codebase filters a `Coverage` result server-side either.
 - A missing mod (active per `ModsConfig.xml`, never found on disk) has
-  no `report.mods` row at all; it's recovered by `rim-session`'s own
-  `mod_index::query`, not reconstructed in Vue — `ModSummaryDto.missing`/
-  `.source: SourceDto | null` carry it, and its `source` is always
-  unknowable (shown only under "any source").
+  no `report.mods` row at all; it's recovered by `rim-session` (`mod_index::query`
+  for `list_mods`, `mod_lists` for the Mods page's lists), not reconstructed in
+  Vue — `ModSummaryDto.missing`/`.source: SourceDto | null` (`list_mods`) and a
+  `ModListRowDto` with `state.kind === "missing"` (`list_working_mods`) carry it,
+  and its `source` is always unknowable (shown only under "any source").

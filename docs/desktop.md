@@ -1,32 +1,39 @@
 # Desktop app
 
-A Tauri + Vue desktop shell over the same engine the CLI uses — nothing
+A Tauri + Vue desktop shell over the same engine the CLI uses. Nothing
 in the app calls Rimmerge's own logic differently than the CLI does; it
-just gives it a UI.
+gives that logic a UI.
 
 ## Setup
 
 The first thing you see if no path is pinned yet
-(`config.json` is empty or missing — see [install.md](install.md)).
+(`config.json` is empty or missing; see [install.md](install.md)).
 Lets you point the app at your RimWorld install, workshop folder, and
-`ModsConfig.xml` directly, or confirm what auto-detection found.
+`ModsConfig.xml` directly, or confirm what auto-detection found. When no
+install is found, the page lists every location it checked; enter or
+browse to your game folder (for Steam, `steamapps\common\RimWorld` in the
+library that holds the game) and the remaining fields fill in from it:
+the workshop folder, and the profile folder alongside `ModsConfig.xml`. A
+field you changed yourself is never overwritten. A folder that is not a
+RimWorld install is flagged but does not block Load; choose **Save as
+defaults** to keep your choice.
 
 ## Dashboard
 
 The landing page once a profile is open: a getting-started strip, then a
-summary of the current report — active mod count, open findings by kind,
+summary of the current report (active mod count, open findings by kind)
 and quick links into the pages below.
 
 The strip has four steps: get the recommended rules, use the suggested
 order, Apply, confirm. Each step's state is read from what the app
-already knows (which order is selected, whether `ModsConfig.xml` already
-lists the suggested order, whether the active-mod set has changes no
+already knows (which order is selected, whether your active order is
+already the suggested order, whether the active-mod set has changes no
 rescan has picked up, and what the recommended-rules step below reports),
 so nothing about your progress is stored, with one exception: Skip on step
 one. It does not claim you reviewed the
 suggestion; it links to the Load order page and leaves that to you.
-"Done" means `ModsConfig.xml` matches the suggested order as of the last
-scan or apply, and no activation change is waiting for a rescan. While the
+"Done" means your active order (what RimWorld will load) matches the
+suggested order as of the last scan or apply, and no activation change is waiting for a rescan. While the
 working set is stale, step two offers Rescan instead of Apply, even if the
 file matched at the last scan. The number of findings that still need input appears as
 a quiet line with a link to the Inbox; it never blocks Apply.
@@ -84,6 +91,13 @@ saved, so the next load opens on Suggested again. A rescan keeps the
 order you had selected. Apply writes the order named in the dialog's
 "Order" row, which is sent with the request.
 
+**Mods that move** (on the Dashboard, in the strip and in the Apply dialog)
+is how many mods the suggested order places differently from the current
+one. It is measured against the orders as they are now, not against the
+moment the sorter last ran, so it falls to 0 as soon as an Apply makes the
+current order the suggested one, and it follows any later change to either
+order without a rescan.
+
 The app can also list the **hard problems** in the order Apply would
 write: a required mod that is not active, two active mods declared
 incompatible, a mod in `ModsConfig.xml` that is not on disk, a violated
@@ -96,7 +110,7 @@ Apply while any is still undecided replaces the buttons with an "Apply
 anyway?" panel: the undecided problems, the ones already decided in the
 Inbox (listed apart), a link to the Inbox, and **Go back** (focused) and
 **Apply anyway**. If every problem was already decided, nothing is asked.
-With "Write ModsConfig.xml" unchecked, nothing is written there, so it skips the question.
+With "Write your active mod list" unchecked, `ModsConfig.xml` is not written, so it skips the question.
 If RimWorld looks like it is running, a separate "Write anyway" prompt
 comes after this one; the two are never one button.
 
@@ -112,10 +126,12 @@ Rimmerge stays open.
 install folder, with no arguments. A copy counts as a Steam copy only when
 Steam's own record names that folder: the folder sits in a library's
 `steamapps/common`, the library's `appmanifest_294100.acf` names it, and the
-library is listed in a default Steam root's `libraryfolders.vdf`. A folder
+library is listed in a Steam folder's `libraryfolders.vdf` (the Steam
+folders are the ones Steam records in the registry, then the Program Files
+defaults). A folder
 copied out of Steam, or a backed-up library, is not mistaken for the real one
-(Steam would start a different folder). A Steam copy whose Steam is installed
-outside the default Program Files folders is started directly through
+(Steam would start a different folder). A Steam copy whose Steam folder neither the
+registry nor the Program Files defaults name is started directly through
 `RimWorldWin64.exe`, since its library cannot be found.
 
 **What the button says.** It reads from the **selected** order and the last
@@ -133,8 +149,8 @@ every five seconds while the window is visible, and when you come back to it.
   first, with **Cancel** (focused), **Launch anyway** and **Apply first**.
   Apply first opens the ordinary Apply dialog with all its usual
   confirmations and, once it has written `ModsConfig.xml`, launches. If you
-  uncheck "Write ModsConfig.xml" there, or close the dialog, nothing is
-  launched.
+  uncheck "Write your active mod list" there, or close the dialog, nothing
+  is launched.
 - **RimWorld is running** (disabled): the game is already up.
 - **Disabled with a note**: the install has no `RimWorldWin64.exe`, or the
   status check failed (a short line says so). Until the first answer arrives
@@ -152,15 +168,15 @@ error. Rimmerge opens no connection to start the game (see
 ## Inbox
 
 The ledger, one row per finding. See
-[concepts/ledger.md](concepts/ledger.md) for the model behind it —
-every row here is a `Finding`, carries a suggested `Action` and a
+[concepts/ledger.md](concepts/ledger.md) for the model behind it.
+Every row here is a `Finding`, carries a suggested `Action` and a
 confidence score, and can be filtered/searched. Deciding a finding here
 is what a later sort/apply will honor.
 
 ## Order (`/order`, `/order/:modId`)
 
 The suggested load order, with a why-panel: click any mod (or open
-`/order/:modId` directly) to see the edges that placed it where it is —
+`/order/:modId` directly) to see the edges that placed it where it is:
 which mod it must follow, why, and how strong that requirement is. See
 [concepts/sorting.md](concepts/sorting.md).
 
@@ -177,8 +193,9 @@ and the toast says how many.
 
 **Import** takes a `.rml`, a `ModsConfig.xml`-shaped file or a text list,
 from a file or a paste, and always shows a preview first. The preview names
-what will be activated and deactivated (the list is the whole active set;
-Core is never deactivated), the mods that aren't installed (with an *Open on
+what will be activated and deactivated, measured against the active list you have
+in Rimmerge now (the Mods page's Active list, pending changes included; the list is
+the whole active set; Core is never deactivated), the mods that aren't installed (with an *Open on
 Steam Workshop* button where the list knows the item; Rimmerge never
 downloads anything, and *Copy the missing list* gives you the text to ask a
 friend), mods listed twice, mods matched to another copy of themselves, and
@@ -192,8 +209,8 @@ click, the import is refused, the preview closes and a notice asks you to
 preview the list again.
 
 Importing rescans with the previewed order and selects **Current**: the page
-then shows the imported order with a note that it isn't in `ModsConfig.xml`
-yet, and an Apply button. The preview closes as soon as the scan lands; pages
+then shows the imported order with a note that it isn't your active order
+yet (it is not in `ModsConfig.xml`), and an Apply button. The preview closes as soon as the scan lands; pages
 then refresh in the background. Nothing is written until you Apply, and the normal
 Apply dialog (hard-problem confirmation, running-game check, backup) is the
 only writer. An import replaces activation changes you haven't rescanned and,
@@ -202,37 +219,241 @@ about each.
 
 ## Mods (`/mods`, `/mods/:modId`, `/mods/:modId/details`)
 
-Lists every discovered mod — active, inactive, or both — and lets you
-activate or deactivate mods. A change is staged in the app, not written
-to `ModsConfig.xml`: it reaches the file's `<activeMods>` list only when
-you Rescan and then Apply. Until then a pending-changes banner shows it,
-and a stale-order warning appears once the active set no longer matches
-the order you last built.
-`Activate` can pull in a mod's own declared dependencies first.
+Lists every discovered mod and lets you activate, deactivate and reorder
+them. The **Inactive** list is on the left and the **Active** list on the
+right, side by side on a window about 1,024 pixels wide or more, and stacked
+(Inactive above Active) below that. Each list has its own search, source
+filter (the Active list also a tag filter), sort and selection. A change is
+staged in the app, not written to `ModsConfig.xml`: it reaches the file's
+`<activeMods>` list only when you Apply (after a Rescan, when mods were added
+or removed). Until then a pending-changes banner shows it, and a stale-order
+warning appears once the active set no longer matches the order you last
+built. `Activate` can pull in a mod's own declared dependencies first.
 
-Opening a row from either tab (`/mods/:modId` — inactive mods can be
-opened too, not just active ones) shows a mod info panel beside the
-list: its preview image and icon when the mod ships one, its `About.xml`
-description (rendered as plain text — BBCode and any other markup show
+**The lists show the working set.** Active is the active-mod list as you
+have edited it, in its own order, with every mod in it (there is no page
+limit; a list is bounded at 5,000 rows, with the full count shown and a
+note when it is cut). Inactive is every mod found on disk that is not in
+it, by name by default (see Sorting the lists below). A mod you just activated is in Active at once, marked "not
+scanned yet" until you Rescan (its tags and dependents are scan results);
+a mod you just deactivated is in Inactive at once. An active mod that is
+not installed is in Active with a "missing" mark.
+
+**Sorting the lists.** Above each list, one button per criterion sorts what
+the list shows: Load order (Active only), Name, Package ID and Last updated.
+Clicking a button sorts by it in its first direction (A to Z, oldest first,
+or first to last); clicking the active one again flips the direction. The
+active button has a stronger border and an arrow for the direction, and its tooltip and accessible name say both the
+current direction and what the next click does (for example "Sorted by name,
+A to Z. Click for Z to A."). Active starts at Load order,
+which is the working order itself; Inactive starts at Name, A to Z. Names and
+package ids compare lowercased first, then as written, then by package id, so
+the order never depends on your system language; any tie falls back to the
+package id, A first, in both directions. A sort works together with the
+search, tag and source filters, and it only changes what you see: it never
+changes the load order, a pending edit or `ModsConfig.xml`, and it is not
+saved (it is kept while the page stays open and starts over when another
+project is loaded). While the sort is Last updated, each row also shows its
+date (shortened when a narrow list runs out of room; hover it for the full
+date). While Active is sorted by anything other than Load order, each of its
+rows also shows its load-order position (`#12`), so the sort cannot be
+mistaken for the order.
+
+**What "Last updated" means.** It depends on where the mod comes from. A
+Steam Workshop mod uses when the installed version was published on the
+Workshop, as Steam records it (`timeupdated` in Steam's local
+`appworkshop_294100.acf`, read from disk, no network); it is not the time the
+update was downloaded to your machine. A local mod uses when
+its `About/About.xml` was last modified on disk, which is not necessarily when
+its author released it. RimWorld Core and the DLCs ship with the game and
+have no update time of their own. A mod whose time cannot be read (no Steam
+record, a missing, unreadable or implausible file or time) shows "Update time unknown". Mods
+without a time always sort after the ones with one, in either direction.
+
+**Select all and Clear selection.** Each list has a "Select all N shown"
+checkbox that selects the rows matching the current search and filters,
+and nothing else, and a **Clear selection** button. A row selected before
+a filter hid it stays selected; the list says "(N not shown)", and Clear
+removes those too. A selection is never saved and changes nothing by
+itself: Activate selected and Deactivate selected still open their plan
+and confirmation first, and if the plan cannot be made the dialog opens
+with the reason and no way to confirm.
+
+**Moving mods.** Three ways move a mod, and all of them end in the same
+thing: the mod is placed next to a neighbour mod, named by its package id,
+never by a row number, so a search or filter on the Active list never changes
+which place is meant.
+
+- *Drag and drop.* Pick up a row (or any selected row: the whole selection
+  moves together, in list order, including selected mods a filter hides) and drop it between two rows of the Active
+  list; a line shows the gap. Dropping a mod from the Inactive list there
+  activates it at that place; dropping an Active row on the Inactive list
+  deactivates it. A drop activates or deactivates straight away when the plan
+  is exactly the mods you dragged and has no warning; if it would also pull in
+  a dependency, or a mod still depends on one you dropped, the same
+  confirmation dialog as the buttons opens first (and an activation keeps the
+  place you chose). Core cannot be dropped on the Inactive list: the pointer
+  shows "not allowed" and the list says why. Dragging near the top or bottom
+  edge of a list scrolls it.
+- *The row menu.* Each Active row has a **Move** menu (the ⋮ button): Move up,
+  Move down, Move to top, Move to bottom, and **Move after…**, which opens a
+  search over the Active mods and puts the row right after the one you pick.
+  Each Inactive row has an **Activate at…** button with the same search, plus
+  "At the start of the list" and "At the end of the list". Up and Down move
+  one shown row, so they follow a filtered view.
+- *The keyboard.* **Alt+Up** and **Alt+Down** on a focused Active row move it
+  one row (with the same selection rule); plain arrow keys still move the
+  focus. **Shift+F10** or the **Menu** key on a focused row opens its row menu
+  (the ⋮ button is left out of the Tab order, so each row is one tab stop).
+  Shortcuts stay quiet inside dialogs and text fields.
+
+Every move is announced in a polite live region that screen readers read:
+"Moved *name* to position 14 of 312" (under a filter, without the total,
+since the list then shows only part of the order). A move carries the
+selected mods a filter hides, and the announcement says how many: "Moved 3
+mods (2 not shown), starting at position 14". A move that cannot happen
+says so instead ("Already at the top of this list").
+
+**When a list cannot be reordered.** Moving within Active is offered only
+while the Active list is sorted by load order, first to last (a search or
+filter is fine). Under any other sort the list's position numbers do not mean
+load order, so drag, the Move menu and Alt+Up/Down are all disabled and a
+note above the list says why; a mod dragged in from the Inactive list is still
+activated, at its default place. Inactive has no order of its own, so nothing
+is ever moved there.
+
+**What a move edits.** Moving mods, or activating a mod at a chosen place,
+edits your own (Current) order. A reorder over the same set of active mods
+takes effect at once and shows a note, "This isn't your active order
+yet.", with an Apply button; it is not a pending scan, and Rescan is not
+needed. Nothing is written until you Apply. Closing the window or switching
+projects with such an order asks first. The first move (or the first
+activation at a chosen place) while the suggested order is selected switches
+the selection to your own order, and the page says so: "Now using your own
+order. The suggested order is unchanged.", with a **View suggested** button.
+While the suggested order is selected and nothing has been moved, the Active
+list says that Apply will write the suggested order. Activating with the
+button, with no place chosen, never switches. A move whose neighbour has left
+the list in the meantime is refused with a message, changes nothing and
+refreshes the lists.
+
+**Undoing.** In the pending-changes banner, **Discard pending changes** drops
+the activations and deactivations that no rescan has picked up (no scan is
+needed; a reorder that already took effect stays). In the "This isn't your
+active order yet." note, **Revert to your saved active order** puts your order
+back to the sequence saved in `ModsConfig.xml`; it is offered only when the file lists the same
+mods as your order, nothing waits for a rescan, and the file was not changed
+outside Rimmerge (the outside-change note's own action covers that case). See
+[load-order.md](concepts/load-order.md).
+
+**Added and Removed marks.** A row that differs from the active mod list saved
+on your computer carries a small mark. An Active row the saved list does not
+have is **Added** (Apply will add it), and an Inactive row the saved list still
+has is **Removed** (Apply will remove it). The mark has an icon and a word, and
+its tooltip says what Apply does, so it is never colour alone; it sits after
+the mod name. A mod counts as the same mod with or without its `_steam`
+suffix, and a reorder alone never makes a mark. "Removed" means a mod that is
+installed and still in the saved list: it stays easy to find in Inactive until
+you Apply or activate it again. A mod that is in the saved list but not
+installed has no row in either list, so it has no mark. Undoing a change, or
+Apply, clears its mark.
+
+**The saved list stays current.** The marks are measured against the file as it
+is now, not as it was when you opened the project. While the window is visible
+the app re-reads the file every 5 seconds, and once when you switch back to the
+window (the usual case: you changed the list in the game or another mod
+manager and came back). The read only looks: it never writes the file, and it
+never touches your pending changes or your order. When nothing changed it does
+nothing visible. If the list was changed outside Rimmerge, a note above the
+lists says so: "Your active mod list was changed outside Rimmerge (+2, -1).
+Applying would overwrite those outside changes." (When you have pending
+changes of your own, it adds "Your pending changes are kept.") An outside edit
+is explained by this note alone. It is never counted as your own unsaved work:
+the warning when you close the window or switch project, the pending-changes
+banner, the "This isn't your active order yet." note and the import
+preview's "replaces your Current order" warning only look at what you changed
+since Rimmerge last loaded or wrote the list. Its **Use the list from the file** button opens the same import
+preview as the Load order page's Import menu, with the file's list; nothing is
+replaced until you confirm there. A change that only reorders the file's mods
+raises its own note without a count: "Your active order was changed outside
+Rimmerge. Applying would overwrite that order." (with the same "Your pending
+changes are kept." sentence when you have some). If the file is missing, cannot be read, or is only
+partly written, a note says which, and the marks keep using the last list that
+could be read; the next good read clears the note. Rescan and an import read the file fresh as well, and after an Apply the
+saved list is what Rimmerge wrote.
+
+**Rescan mods** (top right of the page, always available) re-scans the
+mods in the active list in their current order, exactly as the pending
+changes banner's Rescan does. Use it after changing files on disk.
+Everything that depends on the order, such as Mods that move, is
+recalculated whenever either order changes (an Apply, an import).
+Activating or deactivating mods only changes the pending list, so those
+changes reach it after a rescan.
+
+Opening a row from either list (`/mods/:modId`; inactive mods can be
+opened too, not only active ones) shows a mod info panel: on a very wide
+window (1,800 pixels or more) in a column beside the lists, and on narrower
+ones as a drawer over the right edge, so the two lists keep the width. It
+shows its preview image and icon when the mod ships one, its `About.xml`
+description (rendered as plain text: BBCode and any other markup show
 up literally, exactly as RimWorld itself displays an unrecognized tag),
 workshop and homepage links (opened in your system browser, never
-inside the app), and — for an active mod — its placement, tier, tags,
+inside the app), and, for an active mod, its placement, tier, tags,
 dependents, and live findings, with a link into the def inspector for
-what it changes. The panel follows your keyboard focus as you move
-through the list (debounced, so arrowing quickly through rows doesn't
-fire a load per row) and closes when you navigate away. `Esc` or the
-close button also closes it. The panel's own "all details" link opens
+what it changes. In the column layout the panel follows your keyboard
+focus as you move through a list (debounced, so arrowing quickly through rows
+doesn't fire a load per row); the drawer opens only when you click or press
+Enter on a row, since it would otherwise cover the list you are arrowing
+through. When the drawer opens, keyboard focus moves into it; closing it
+with `Esc` or the close button puts focus back on the row that opened it.
+It closes when you navigate away. `Esc` or the close button also
+closes it. The panel's own "all details" link opens
 the same information as a full page (`/mods/:modId/details`) instead,
 for when you want it as the main view rather than a side panel.
 
-The CLI's `mods show <id>` prints the same information from the command
-line — see [cli.md](cli.md).
+Each row has a small source icon after its checkbox: RimWorld Core,
+RimWorld DLC, Local mod (a folder under the game's `Mods/`), or Steam
+Workshop. The icon has a tooltip and screen-reader text with the same
+name, and when the list is wide enough the name also shows beside it, so
+shape is never the only cue. The source is decided by where the scan found the mod's folder, never guessed from its
+name, package id or a Workshop id. An active mod that is not
+installed has no folder, so its icon reads "Origin unknown (not
+installed)" instead of a source. The icon is display only: it changes
+neither selection, sorting, filtering nor the load order.
 
-![Mods page, active tab](screenshots/mods-page/active-tab.png)
+The CLI's `mods show <id>` prints the same information from the command
+line; see [cli.md](cli.md).
+
+![Mods page: Inactive and Active side by side](screenshots/mods-page/lists.png)
 
 Selecting inactive mods to activate:
 
-![Selecting inactive mods](screenshots/mods-page/inactive-tab-selection.png)
+![Selecting inactive mods](screenshots/mods-page/inactive-selection.png)
+
+A move leaves an order to apply, and says the page now uses your own order:
+
+![After moving a mod](screenshots/mods-page/moved-order.png)
+
+The two notes a move raises, up close: the order is not your active order yet
+(with Apply and Revert to your saved active order), and the page now uses your
+own order (with View suggested):
+
+![The notes after a move: This isn't your active order yet, and Now using your own order](screenshots/mods-page/order-not-applied-note.png)
+
+One button per criterion sorts a list; the active one shows its direction:
+
+![The sort buttons above the Active list, Name sorted A to Z](screenshots/mods-page/sort-toggle.png)
+
+Rows that differ from the saved active mod list carry an Added or Removed mark
+after their name (each list is narrowed to its marked row here):
+
+![An Added row in Active and a Removed row in Inactive](screenshots/mods-page/membership-marks.png)
+
+When the saved list is changed outside Rimmerge, a note says so and offers the
+file's list; the marks follow the file, so the mod the file adds shows as
+Removed in Inactive and the mod it lacks as Added in Active:
+
+![The note: Your active mod list was changed outside Rimmerge](screenshots/mods-page/outside-change-note.png)
 
 Activating pulls in dependencies on request:
 
@@ -262,8 +483,8 @@ Rescanning brings everything back in sync:
 
 ## Rules
 
-Every rule feeding the sorter — your own pair/placement rules, and (if
-imported) rules from a RimSort database — with edit and delete actions
+Every rule feeding the sorter (your own pair/placement rules, and, if
+imported, rules from a RimSort database), with edit and delete actions
 and, for an imported rule, a "promote to mine" action so it survives a
 re-import. See [concepts/rules-databases.md](concepts/rules-databases.md).
 
@@ -282,7 +503,7 @@ agrees. Feeds the merge mod (see [concepts/merge.md](concepts/merge.md)).
 ## Merge mod (`/merge-mod`)
 
 The generated compatibility mod covering every finding you've resolved
-with a merge decision — its own coverage summary and an export action.
+with a merge decision, with its own coverage summary and an export action.
 
 Deciding a merge does not put anything in your `Mods/` folder. The Apply
 dialog's **Write merge mod** checkbox starts unchecked (like the CLI's
@@ -298,16 +519,16 @@ a rescan), which takes a few seconds on a large install; reopening it with
 nothing changed reuses the last answer, so a merge-mod folder added or removed
 on disk outside the app is picked up at the next such change. Until the
 answer arrives, the section reads "Loading…" and the checkbox is disabled, so it never shows a
-previous session's answer. If that lookup fails, the section simply shows
+previous session's answer. If that lookup fails, the section shows
 no summary, never a previous session's.
 
 ## Compatibility patches (`/patches`, `/patches/:patchId`, `/patches/:patchId/merge/:key`)
 
 A patch project is a user-chosen scope of two or more mods with its own
-decisions, exported as a small, independently publishable mod — the
-same underlying engine as the merge mod, scoped down. A patch's own
+decisions, exported as a small, independently publishable mod. It uses
+the same underlying engine as the merge mod, scoped down. A patch's own
 findings open the same merge editor the profile-wide one uses
-(`/patches/:patchId/merge/:key`), just validated against that patch's
+(`/patches/:patchId/merge/:key`), but validated against that patch's
 own narrower scope instead of the whole install. See
 [concepts/merge.md](concepts/merge.md).
 
@@ -441,7 +662,7 @@ shown in the app.
 
 Every field in [settings.md](settings.md), editable, with an inline
 note on whether it can change what the sorter produces. If
-`app-settings.json` itself couldn't be read (damaged or unreadable —
+`app-settings.json` itself couldn't be read (damaged or unreadable;
 see [privacy-and-network.md](privacy-and-network.md)), the Internet access
 section shows a persistent warning saying so, since every network
 switch is silently off until settings are saved again and that's
@@ -449,7 +670,7 @@ otherwise invisible.
 
 At the bottom, an About section shows the installed version and links
 to the project's GitHub repository, its issues page, and a support
-page — each opens in your system browser through the same fixed-target
+page. Each opens in your system browser through the same fixed-target
 opener every other external link in the app uses (see
 [privacy-and-network.md](privacy-and-network.md)'s "Links you click"
 section). The sidebar also carries a small, unobtrusive "Support
@@ -457,7 +678,7 @@ Rimmerge" text link to the same support page.
 
 ## Notifications
 
-A bell in the sidebar's brand row shows every active notice — a
+A bell in the sidebar's brand row shows every active notice: a
 count badge, and a popover listing each one with its own action
 buttons, a Dismiss, and, for the kinds that allow it, "Don't remind me
 again" (mute). A notice reappears once its own underlying fact changes
@@ -468,11 +689,11 @@ explicitly unmuted from Settings → Internet access.
   section (not only a bell entry) the first time a project loads: it
   explains, in plain terms, what Rimmerge can contact over the network,
   when, and what it sends (see
-  [privacy-and-network.md](privacy-and-network.md)), with four
-  switches — *Check for updates*, *Refresh rule databases
-  automatically*, *Steam Workshop database* (about 49 MB, downloaded only
-  when you click Refresh), and the master *Allow internet access* — all
-  on by default. Answering fetches nothing. **Keep these settings** and **Turn off internet access** are
+  [privacy-and-network.md](privacy-and-network.md)). It has four
+  switches, all on by default: *Check for updates*, *Refresh rule
+  databases automatically*, *Steam Workshop database* (about 49 MB,
+  downloaded only when you click Refresh), and the master *Allow
+  internet access*. Answering fetches nothing. **Keep these settings** and **Turn off internet access** are
   equal-weight buttons, so turning internet features off is never a
   buried option; dismissing the card without clicking either also
   counts as "keep these settings," since the explanation was visible
@@ -484,16 +705,16 @@ explicitly unmuted from Settings → Internet access.
 - **A new Rimmerge version** is announced once GitHub reports one newer
   than what's running, with a link to its release page and a
   Settings-page shortcut. Dismissing skips that version; a later
-  release shows again. Nothing automatic — this check, and the
-  rule-database refresh below — ever runs before Welcome is answered:
-  the once-per-launch flag is still consumed on a launch spent showing
-  Welcome, so the first automatic check actually runs on the *next*
-  launch after answering it, not the moment it's answered.
+  release shows again. Nothing automatic (this check, and the
+  rule-database refresh below) ever runs before Welcome is answered.
+  The once-per-launch flag is still consumed on a launch spent showing
+  Welcome, so the first automatic check runs on the *next* launch after
+  answering it, not the moment it's answered.
 - **Rule databases stale** warns when an enabled source hasn't
-  refreshed recently enough — worded differently depending on whether
-  automatic refresh is expected to be covering it or not — with a
-  Refresh-now action that refreshes exactly the sources the notice
-  lists, not every enabled one.
+  refreshed recently enough, with a Refresh-now action. The wording
+  depends on whether automatic refresh is expected to cover the source.
+  The action refreshes exactly the sources the notice lists, not every
+  enabled one.
 - **Recommended rule databases** is shown, after Welcome is answered
   and while internet access is on, when a recommended source is off or is
   on but has never been downloaded and nothing automatic will fetch it
@@ -502,7 +723,7 @@ explicitly unmuted from Settings → Internet access.
   now; see [concepts/rules-databases.md](concepts/rules-databases.md).
 - **New rule content to import** is a passive signal (open the
   Rules page's Import from RimSort button) once a source's cache has
-  content this profile hasn't imported yet — nothing imports on its
+  content this profile hasn't imported yet. Nothing imports on its
   own.
 
   While the Dashboard's **Get the recommended rules** step is offering a
@@ -518,24 +739,27 @@ explicitly unmuted from Settings → Internet access.
 ## Language
 
 The UI itself (every page above, its labels and prose) is available in
-English, Simplified Chinese (`zh-CN`), and Brazilian Portuguese
-(`pt-BR`) — a display preference, picked from the Settings page or the
-Setup page before a project is even loaded, stored on this machine and
-applied immediately with no restart. Defaults to your OS language when
-it matches one of the three, English otherwise. A missing translation
+English and twelve translated languages: Simplified Chinese (`zh-CN`),
+Brazilian Portuguese (`pt-BR`), Russian (`ru`), Ukrainian (`uk`), Polish
+(`pl`), German (`de`), French (`fr`), Spanish (`es-ES`), Turkish (`tr`),
+Japanese (`ja`), Korean (`ko`) and Traditional Chinese (`zh-TW`). The
+language is a display preference, picked from the Settings page or from
+the Setup page before a project is loaded. It is stored on this machine
+and applied immediately with no restart. It defaults to your OS language
+when that matches one of these, English otherwise. A missing translation
 falls back to English rather than showing a raw key. This never affects
 the CLI, which stays English-only, and never affects a stored pair
-rule's own `comment` — a rule created from a verify suggestion keeps its
+rule's own `comment`. A rule created from a verify suggestion keeps its
 English wording even under a non-English UI, since a comment can be
 shared or published to a rules database where English is the common
 language.
 
-`zh-CN`/`pt-BR` are fully translated — every UI string has a value, with
-no fallback to English left. Both still carry the picker's own
-"(preview)" suffix and in-app note on where to report a wrong
-translation: that label means machine-drafted and not yet reviewed
-end-to-end by a native speaker, a different thing from coverage, and
-stays until that review happens even though every key is now filled in.
+Every locale is fully translated: every UI string has a value, with no
+fallback to English left. All but `pt-BR` still carry the picker's own
+"(preview)" suffix and an in-app note on where to report a wrong
+translation. That label means machine-drafted and not yet reviewed end
+to end by a native speaker. It is about review, not coverage, and stays
+until that review happens.
 See [translating.md](translating.md) if you'd like to help review, or
 to translate a newly added English key before the next pass.
 
@@ -546,9 +770,18 @@ first: the Apply dialog (opened from the sidebar's Apply button or the
 Dashboard strip; it also names any hard problem in the order first), and
 a patch or assignment export with "install" ticked (which also adds the
 generated mod to the list). The Mods page's activate/deactivate actions
-only stage a change in the app; it reaches the file when you Apply. Every
+and reorders only stage a change in the app; it reaches the file when you
+Apply. An install export writes your current order, so an order you have not
+applied yet (a move, an import) goes into the file with it; the export panel
+warns when that is the case, and warns too when the active mod list was
+changed outside Rimmerge, since the install writes your order over those
+changes. Every
 write takes a timestamped backup first, and each refuses to write while
 RimWorld looks like it is running unless you confirm the override.
+
+Keeping the Mods page's Added and Removed marks current reads `ModsConfig.xml`
+every few seconds but never writes it, and reads nothing else. It uses no
+network.
 
 Launching RimWorld writes nothing; the Apply its prompt may offer is the
 ordinary Apply above. Exporting a load order writes one `.rml` file where you

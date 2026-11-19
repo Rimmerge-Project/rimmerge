@@ -303,7 +303,7 @@ describe("MergeEditorPage", () => {
     await wrapper.vm.$nextTick();
 
     const header = wrapper.get('[data-testid="merge-container-auto-wildAnimals"]');
-    expect(header.text()).toContain("wildAnimals — 13 entries");
+    expect(header.text()).toContain("wildAnimals: 13 entries");
     expect(wrapper.text()).not.toContain("wildAnimals/Key0");
 
     await header.trigger("click");

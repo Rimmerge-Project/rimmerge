@@ -25,8 +25,10 @@ use rim_resolve::sort::{self, SortInput, SortOutcome};
 use rim_resolve::tags::infer_tags;
 
 use crate::ModKnowledge;
+use crate::ModUpdateTimes;
 use crate::ProjectPaths;
 use crate::active_set::ActiveSet;
+use crate::file_baseline::FileWatch;
 use crate::finding_index::FindingIndex;
 use crate::merge_workspace::{MergeWorkspace, PreviewSlot};
 use crate::ports::{DefSourceReader, ModsConfigFile, RulesLoadWarning, StoredRules};
@@ -333,14 +335,22 @@ pub struct Session {
     /// The working (in-memory, unsaved) active-mod list. Initialised from
     /// `orders.current` at construction (see [`ActiveSet::trusted`]'s own
     /// doc comment for why that's always valid); mutated only by
-    /// [`crate::use_cases::ActivateMods`]/[`crate::use_cases::DeactivateMods`],
-    /// which never touch `orders`, the ledgers, or the sorter — the report
-    /// doesn't know about a pending change yet, so re-sorting would be a
-    /// lie. This is the *only* in-memory-only state a mutating use case in
-    /// this crate carries; see this file's own top-of-file doc comment.
+    /// [`crate::use_cases::ActivateMods`]/[`crate::use_cases::DeactivateMods`]/
+    /// [`crate::use_cases::MoveMods`]. A membership edit never touches
+    /// `orders`, the ledgers, or the sorter — the report doesn't know about
+    /// a pending change yet, so re-sorting would be a lie. The one exception
+    /// is the edit settle: an edit that leaves the ids equal to Current's
+    /// replaces `orders.current` with `working`'s sequence in memory
+    /// ([`Session::settle_current_onto_working`], through
+    /// `current_order_replaced`, which clears the caches that read Current).
+    /// Nothing is persisted. This is the *only* in-memory-only state a
+    /// mutating use case in this crate edits directly; see this file's own
+    /// top-of-file doc comment.
     working: ActiveSet,
-    /// The active-mod list `ModsConfig.xml` actually held at load time —
-    /// updated by [`Session::set_current_order`] (whose own contract is
+    /// The live baseline: the active-mod list `ModsConfig.xml` held the last
+    /// time it was read successfully. Set at load, replaced by
+    /// [`Session::observe_file`] (the periodic refresh), updated by
+    /// [`Session::set_current_order`] (whose own contract is
     /// "the file now *is* this") and, for a session built by
     /// [`crate::use_cases::Rescan`], by [`Session::set_file_active_mods`]
     /// right after construction (the composition-root-sets-it-after-
@@ -350,6 +360,12 @@ pub struct Session {
     /// for [`Session::pending_changes`]'s `unapplied` diff to mean
     /// anything.
     file_active_mods: Vec<ModId>,
+    /// What Rimmerge itself last loaded or wrote of the file, whether the
+    /// latest read worked, and the epoch that discards an overtaken read.
+    /// `file_active_mods` is the live baseline; this is the anchor that
+    /// tells an outside change from Rimmerge's own (see
+    /// [`crate::file_baseline`]).
+    file_watch: FileWatch,
     /// Indexed `[OrderSource::Current as usize, OrderSource::Suggested as usize]`.
     ledgers: [Option<Ledger>; 2],
     /// A copy of `ledgers`, taken the moment each is built, before
@@ -405,6 +421,11 @@ pub struct Session {
     /// for a freshly-built `Session`, which is what most tests want; see
     /// [`ModKnowledge`]'s own doc comment for what that degrades.
     mod_knowledge: ModKnowledge,
+    /// When each mod was last updated, for the Mods page's display sort.
+    /// Set by [`crate::use_cases::LoadProject`] when it has a
+    /// [`crate::ports::ModTimestampReader`]; empty (every time
+    /// unavailable) otherwise. Never part of the report.
+    update_times: ModUpdateTimes,
     selected: OrderSource,
     /// Set by the composition root ([`Session::set_def_source_reader`])
     /// once real XML I/O is available. `None` in most tests (and in a
@@ -500,6 +521,7 @@ impl std::fmt::Debug for Session {
             .field("known_expansions", &self.known_expansions)
             .field("working", &self.working)
             .field("file_active_mods", &self.file_active_mods)
+            .field("file_watch", &self.file_watch)
             .field("ledgers", &self.ledgers)
             .field("pristine_ledgers", &self.pristine_ledgers)
             .field("finding_index", &self.finding_index)
@@ -569,6 +591,7 @@ impl Session {
         // that already existed before it ran).
         let file_active_mods = current_order.as_slice().to_vec();
         let working = ActiveSet::trusted(file_active_mods.clone());
+        let file_watch = FileWatch::loaded(&file_active_mods);
         let profile_hash = paths.profile_hash().to_string();
         let (tagging, sort_outcome, effective_rules) = compute(
             &report,
@@ -598,6 +621,7 @@ impl Session {
             known_expansions: mods_config.known_expansions,
             working,
             file_active_mods,
+            file_watch,
             ledgers: [None, None],
             pristine_ledgers: [None, None],
             finding_index: [None, None],
@@ -610,6 +634,7 @@ impl Session {
             scoped: HashMap::new(),
             rule_load_warnings: Vec::new(),
             mod_knowledge: ModKnowledge::default(),
+            update_times: ModUpdateTimes::default(),
             selected: OrderSource::Current,
             def_source_reader: None,
             inspections: HashMap::new(),
@@ -637,6 +662,19 @@ impl Session {
         self.mod_knowledge = knowledge;
     }
 
+    /// Records when each mod was last updated. Set by
+    /// [`crate::use_cases::LoadProject`] right after construction, so a
+    /// rescan, which builds a new session, refreshes it.
+    pub fn set_update_times(&mut self, times: ModUpdateTimes) {
+        self.update_times = times;
+    }
+
+    /// When each mod was last updated.
+    #[must_use]
+    pub fn update_times(&self) -> &ModUpdateTimes {
+        &self.update_times
+    }
+
     /// This session's own mod-specific knowledge — precedence rules,
     /// patch-operation behaviours, def-cache carriers. See
     /// [`ModKnowledge`].
@@ -645,9 +683,11 @@ impl Session {
         &self.mod_knowledge
     }
 
-    /// The active-mod list `ModsConfig.xml` held when this session was
-    /// loaded (or last written), by exact ids in file order: what an
-    /// import is diffed against.
+    /// The live baseline: the active-mod list `ModsConfig.xml` held the
+    /// last time it was read successfully (at load, after a write, or by
+    /// [`crate::use_cases::RefreshFileBaseline`]), by exact ids in file
+    /// order. What an import is diffed against and what the Mods page marks
+    /// pending changes against.
     #[must_use]
     pub fn file_active_mods(&self) -> &[ModId] {
         &self.file_active_mods
@@ -665,6 +705,7 @@ impl Session {
     /// [`crate::use_cases::LoadProject`] (in the same crate) should ever
     /// call this.
     pub(crate) fn set_file_active_mods(&mut self, ids: Vec<ModId>) {
+        self.file_watch.reset(&ids);
         self.file_active_mods = ids;
     }
 

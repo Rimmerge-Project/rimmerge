@@ -122,7 +122,7 @@ describe("MergeHeader", () => {
     expect(banner.text()).toContain("Findings page");
     expect(banner.text()).not.toContain("below");
     expect(wrapper.get('[data-testid="merge-header-state"]').text()).toBe(
-      "not auto-merged — confirm the winner",
+      "not auto-merged: confirm the winner",
     );
     // The totals line is untouched — still the real, literal per-field
     // counts (the "lesser lie" `rim-session`'s own state_from_plan

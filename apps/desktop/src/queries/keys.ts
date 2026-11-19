@@ -5,6 +5,7 @@ import type { FindingFilterDto } from "@/types/generated/FindingFilterDto";
 import type { ListItemsFilterDto } from "@/types/generated/ListItemsFilterDto";
 import type { MergeFieldFilterDto } from "@/types/generated/MergeFieldFilterDto";
 import type { ModFilterDto } from "@/types/generated/ModFilterDto";
+import type { ModListQueryDto } from "@/types/generated/ModListQueryDto";
 import type { OrderSourceDto } from "@/types/generated/OrderSourceDto";
 import type { RuleOriginDto } from "@/types/generated/RuleOriginDto";
 
@@ -22,8 +23,10 @@ export const queryKeys = {
   gameLaunchStatus: () => ["gameLaunch", "status"] as const,
   /** `get_apply_preflight`'s result for one order source. */
   applyPreflight: (source: OrderSourceDto) => ["apply", "preflight", source] as const,
-  /** `get_default_paths`'s result, for the setup page. */
-  defaultPaths: () => ["setup", "defaultPaths"] as const,
+  /** `get_default_paths`'s result for one committed game folder (`null`: no field answer). */
+  defaultPaths: (gameDir: string | null) => ["setup", "defaultPaths", gameDir] as const,
+  /** Every `get_default_paths` answer, whatever game folder asked: the invalidation prefix. */
+  defaultPathsAll: () => ["setup", "defaultPaths"] as const,
   /** `get_default_rimsort_paths`'s result, for the import dialog. */
   defaultRimSortPaths: () => ["setup", "defaultRimSortPaths"] as const,
   /** `list_order`'s result for one order source. */
@@ -54,8 +57,12 @@ export const queryKeys = {
   mod: (modId: string) => ["mods", "detail", modId] as const,
   /** `list_mod_names`'s result. */
   modNames: () => ["mods", "names"] as const,
-  /** `list_inactive_mods`'s result for one filter — the Inactive tab. */
-  inactiveMods: (filter: ModFilterDto) => ["mods", "inactive", filter] as const,
+  /** `list_working_mods`'s result for one query — the Active tab. */
+  workingMods: (query: ModListQueryDto) => ["mods", "working", query] as const,
+  /** `list_inactive_mods`'s result for one query — the Inactive tab. */
+  inactiveMods: (query: ModListQueryDto) => ["mods", "inactive", query] as const,
+  /** `get_mods_config_baseline`'s result: the live file baseline's status and outside change. */
+  fileBaseline: () => ["mods", "fileBaseline"] as const,
   /** `get_pending_active_changes`'s result. */
   pendingActiveChanges: () => ["mods", "pendingActiveChanges"] as const,
   /** `get_mod_info`'s result for one mod — the mod info panel. */

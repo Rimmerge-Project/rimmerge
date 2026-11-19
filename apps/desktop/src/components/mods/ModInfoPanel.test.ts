@@ -137,14 +137,6 @@ describe("ModInfoPanel", () => {
     expect(wrapper.emitted("close")).toHaveLength(1);
   });
 
-  it("pressing Escape inside the panel emits close", async () => {
-    const wrapper = await mountPanel("fixture.mod", { get_mod_info: activeModInfo() });
-
-    await wrapper.get('[data-testid="mod-info-panel"]').trigger("keydown", { key: "Escape" });
-
-    expect(wrapper.emitted("close")).toHaveLength(1);
-  });
-
   it("clicking the workshop link opens the mod's own workshop link, never a URL the frontend builds", async () => {
     const calls: { modId: string; link: string }[] = [];
     const wrapper = await mountPanel("fixture.mod", {
@@ -269,5 +261,81 @@ describe("ModInfoPanel", () => {
     });
 
     expect(wrapper.find('[data-testid="mod-info-panel-loading"]').exists()).toBe(true);
+  });
+
+  describe("as a drawer", () => {
+    /** Attached to the document: focus and window key events only exist for connected elements. */
+    function mountDrawer(modId: string | null, isOverlay: boolean) {
+      installMockIpc(defaultFixtures({ get_mod_info: activeModInfo() }));
+      return mount(ModInfoPanel, {
+        props: { modId, isOverlay },
+        attachTo: document.body,
+        global: { plugins: [createPinia(), PiniaColada, router] },
+      });
+    }
+
+    it("takes keyboard focus when it opens", async () => {
+      const wrapper = mountDrawer(null, true);
+
+      await wrapper.setProps({ modId: "fixture.mod" });
+      await flushPromises();
+
+      expect(document.activeElement).toBe(wrapper.get('[data-testid="mod-info-panel"]').element);
+      wrapper.unmount();
+    });
+
+    it("keeps focus where it is when the shown mod changes while it is open", async () => {
+      const wrapper = mountDrawer("fixture.mod", true);
+      await flushPromises();
+      const outside = document.createElement("button");
+      document.body.append(outside);
+      outside.focus();
+
+      await wrapper.setProps({ modId: "other.mod" });
+      await flushPromises();
+
+      expect(document.activeElement).toBe(outside);
+      outside.remove();
+      wrapper.unmount();
+    });
+
+    it("leaves focus alone when it has a column of its own", async () => {
+      const wrapper = mountDrawer(null, false);
+      const outside = document.createElement("button");
+      document.body.append(outside);
+      outside.focus();
+
+      await wrapper.setProps({ modId: "fixture.mod" });
+      await flushPromises();
+
+      expect(document.activeElement).toBe(outside);
+      outside.remove();
+      wrapper.unmount();
+    });
+
+    it("closes once on Escape from inside it", async () => {
+      const wrapper = mountDrawer("fixture.mod", true);
+      await flushPromises();
+
+      wrapper
+        .get('[data-testid="mod-info-panel"]')
+        .element.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+
+      expect(wrapper.emitted("close")).toHaveLength(1);
+      wrapper.unmount();
+    });
+
+    it("closes on Escape from anywhere on the page, but a column panel only from inside", async () => {
+      const drawer = mountDrawer("fixture.mod", true);
+      const column = mountDrawer("fixture.mod", false);
+      await flushPromises();
+
+      document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+
+      expect(drawer.emitted("close")).toHaveLength(1);
+      expect(column.emitted("close")).toBeUndefined();
+      drawer.unmount();
+      column.unmount();
+    });
   });
 });

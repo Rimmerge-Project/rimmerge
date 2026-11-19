@@ -311,4 +311,80 @@ mod tests {
             rim_resolve::domain::OrderSource::Suggested
         );
     }
+
+    type TestLoadProject = LoadProject<
+        SharedScanner,
+        InMemoryModsConfigStore,
+        InMemoryDecisionStore,
+        InMemoryRuleStore,
+        InMemoryPatchProjectStore,
+        InMemoryAssignmentProjectStore,
+        FakeModKnowledgeStore,
+    >;
+
+    fn load_project_over(scanner: &Rc<FakeScanner>, file_ids: &[&str]) -> TestLoadProject {
+        LoadProject::new(
+            SharedScanner(scanner.clone()),
+            InMemoryModsConfigStore::new(crate::ports::ModsConfigFile {
+                version: "1.6".to_string(),
+                active_mods: file_ids.iter().map(|id| ModId::new(*id)).collect(),
+                known_expansions: Vec::new(),
+            }),
+            InMemoryDecisionStore::new(),
+            InMemoryRuleStore::new(),
+            InMemoryPatchProjectStore::new(),
+            InMemoryAssignmentProjectStore::new(),
+            FakeModKnowledgeStore::empty(),
+            true,
+        )
+    }
+
+    #[test]
+    fn a_rescan_after_a_settled_move_scans_and_keeps_the_moved_order() {
+        use crate::active_set::Anchor;
+        use crate::use_cases::MoveMods;
+
+        let mut session = crate::test_support::session_fixture(&["a", "b", "c"]);
+        MoveMods::execute(&mut session, &[ModId::new("c")], &Anchor::Start).expect("valid");
+        let scanner = Rc::new(FakeScanner::new(
+            report_fixture_with_inactive(&["a", "b", "c"], &[]),
+            Vec::new(),
+        ));
+        let rescan = Rescan::new(load_project_over(&scanner, &["a", "b", "c"]));
+
+        let new_session = rescan
+            .execute(&session, &mut |_| {})
+            .expect("rescan must succeed");
+
+        let moved = vec![ModId::new("c"), ModId::new("a"), ModId::new("b")];
+        assert_eq!(scanner.last_override(), Some(Some(moved.clone())));
+        assert_eq!(new_session.orders().current.as_slice(), moved);
+        assert!(!new_session.file_matches(rim_resolve::domain::OrderSource::Current));
+    }
+
+    #[test]
+    fn a_rescan_after_a_move_with_a_pending_activation_scans_the_moved_order() {
+        use crate::active_set::Anchor;
+        use crate::use_cases::MoveMods;
+
+        let mut session = session_with_b_inactive();
+        let plan = ActivateMods::plan(&session, &[ModId::new("b")], false);
+        ActivateMods::execute(&mut session, &plan).expect("b is known");
+        MoveMods::execute(&mut session, &[ModId::new("b")], &Anchor::Start).expect("valid");
+        let scanner = Rc::new(FakeScanner::new(
+            report_fixture_with_inactive(&["a", "b"], &[]),
+            Vec::new(),
+        ));
+        let rescan = Rescan::new(load_project_over(&scanner, &["a"]));
+
+        let new_session = rescan
+            .execute(&session, &mut |_| {})
+            .expect("rescan must succeed");
+
+        assert_eq!(
+            new_session.orders().current.as_slice(),
+            [ModId::new("b"), ModId::new("a")]
+        );
+        assert!(!new_session.is_stale());
+    }
 }

@@ -20,50 +20,50 @@ rim-analyzer::domain
 
 `rim-io` implements `rim-session`'s ports (it depends on `rim-session`
 for the trait definitions, not the other way around). `rim-resolve`,
-`rim-merge`, and `rim-analyzer::extract` do no IO at all — every
+`rim-merge`, and `rim-analyzer::extract` do no IO at all. Every
 filesystem/network/process operation lives in `rim-io` or the two
 interface apps.
 
-- **`rim-analyzer`** — reads a RimWorld install (mods, defs, patches,
-  assemblies, textures) into a `Report`: the analysis/extraction layer.
-  Its `domain` module (pure types: `Report`, `Edge`, `EdgeKind`, `ModId`,
-  ...) has no IO of its own; `extract`/`analysis` build a `Report` from
-  parsed XML/PE data, also pure; `infra` is the one part of this crate
-  that touches the filesystem.
-- **`rim-resolve`** — pure domain: the sorter, tag inference, the
+- **`rim-analyzer`** is the analysis/extraction layer. It reads a
+  RimWorld install (mods, defs, patches, assemblies, textures) into a
+  `Report`. Its `domain` module (pure types: `Report`, `Edge`, `EdgeKind`,
+  `ModId`, ...) has no IO of its own. `extract`/`analysis` build a
+  `Report` from parsed XML/PE data, and are also pure. `infra` is the one
+  part of this crate that touches the filesystem.
+- **`rim-resolve`** is pure domain: the sorter, tag inference, the
   resolution ledger (findings, confidence, decisions), and the
   assignment domain (a patch-maker project's own schema, shape
   inference, coverage, precedence rules, and section model). No IO, no
   XML parsing, no Tauri. See [concepts/sorting.md](concepts/sorting.md)
   and [concepts/ledger.md](concepts/ledger.md).
-- **`rim-merge`** — pure domain: field-level diffing, the merge
+- **`rim-merge`** is pure domain: field-level diffing, the merge
   evaluator, and patch replay (`verify`). For the patch maker, this
-  crate only *renders* — turning an already-built `rim-resolve`
-  assignment project into patch XML — it owns none of that feature's
+  crate only *renders*: it turns an already-built `rim-resolve`
+  assignment project into patch XML. It owns none of that feature's
   own schema/coverage logic. See [concepts/merge.md](concepts/merge.md)
   and [concepts/verify.md](concepts/verify.md).
-- **`rim-session`** — application layer: orchestrates use cases over
+- **`rim-session`** is the application layer. It orchestrates use cases over
   the three crates above, defines the ports (`trait`s) `rim-io`
   implements, and owns the `Session`/`Settings` types a profile is
   built from.
-- **`rim-io`** — infrastructure: every real filesystem/network/process
-  adapter — reading the install, writing `ModsConfig.xml`, the rule
+- **`rim-io`** is infrastructure: every real filesystem/network/process
+  adapter (reading the install, writing `ModsConfig.xml`, the rule
   database cache and fetcher, profile/patch/assignment persistence,
-  starting the game. Its
+  starting the game). Its
   `mod_knowledge.rs` also embeds `rules/rimmerge-rules.json` at compile
-  time (`build.rs`) — a snapshot of the sibling
+  time (`build.rs`). That file is a snapshot of the sibling
   [`rimmerge-rules`](https://github.com/Rimmerge-Project/rimmerge-rules)
   repository, checked out here as a git submodule at `rules/`, outside
   the crate graph proper. See
   [concepts/rules-databases.md](concepts/rules-databases.md).
-- **`apps/cli`** — a `clap` binary, a thin composition root: parses
-  arguments, wires `rim-io` adapters into `rim-session`, calls one use
+- **`apps/cli`** is a `clap` binary and a thin composition root. It
+  parses arguments, wires `rim-io` adapters into `rim-session`, calls one use
   case, prints the result. No business logic.
-- **`apps/desktop`** — a Tauri v2 + Vue 3 app. `src-tauri` is the same
+- **`apps/desktop`** is a Tauri v2 + Vue 3 app. `src-tauri` is the same
   kind of composition root as the CLI (Tauri commands call into
   `rim-session`, nothing more); `src` is the Vue frontend, page-routed
   (see [desktop.md](desktop.md)), talking to the backend only through
-  generated, typed DTOs (`ts-rs` — see below).
+  generated, typed DTOs (`ts-rs`; see below).
 
 ## Where to add what
 
@@ -94,13 +94,13 @@ interface apps.
   case in `rim-session`, then a thin CLI subcommand and/or Tauri
   command calling it.
 - Nothing at the interface layer (`apps/*`) should contain a decision
-  about *what* to do — only how to parse the request and how to render
-  the result.
+  about *what* to do. It only decides how to parse the request and how
+  to render the result.
 - A new notice → a `Notification` variant, its `NotificationKind` (the
   declaration order is display priority) and a rule in
   `rim-session::notifications::evaluate`; the kind's on-disk spelling in
   `rim-io`'s `notifications.rs`; the mirrored DTOs in `src-tauri`; and
-  i18n keys, never a Rust sentence — the compiler and the frontend's
+  i18n keys, never a Rust sentence. The compiler and the frontend's
   `assertNever` switches point at each place. See `apps/desktop/CLAUDE.md`'s
   localization rules.
 - A new recommended or importable rule-database source → what
@@ -124,8 +124,8 @@ Parallel code (`rayon`) is allowed in any crate where a measurement shows
 it makes the project faster, the pure layers included (`rim-analyzer`'s
 `analysis`, `rim-session`'s `VerifyOrder` and merge previews); it never
 brings IO into a layer that has none. Results from parallel work reach any
-output in a fixed order — an indexed `collect`, a fold in input order, or
-a sort — never in the order threads happen to finish. Work that replays
+output in a fixed order (an indexed `collect`, a fold in input order, or
+a sort), never in the order threads happen to finish. Work that replays
 defs (`VerifyOrder`, the merge previews) runs on `rim-session`'s own
 4-thread pool rather than one thread per core, to leave most cores to the
 game when it is running alongside: more threads verify faster but use more
@@ -135,7 +135,7 @@ processor time and no less memory (the measured figures are in
 ## Frontend/backend boundary
 
 DTOs crossing the Tauri boundary are generated from the Rust types that
-define them (`ts-rs`) — the TypeScript types under
-`apps/desktop/src/types/generated/` are never hand-edited; they're
+define them (`ts-rs`). The TypeScript types under
+`apps/desktop/src/types/generated/` are never hand-edited. They're
 regenerated from the Rust `#[derive(TS)]` structs whenever a DTO
 changes.

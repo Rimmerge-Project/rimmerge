@@ -309,7 +309,7 @@ function kindLabel(kind: DefConflictKindDto): string {
                   opIndex: problem.opIndex,
                 })
               }}
-              (<code>{{ problem.class }}</code>) — {{ problem.reason }}
+              (<code>{{ problem.class }}</code>): {{ problem.reason }}
               <div
                 v-if="problem.xpath"
                 class="text-text-faint break-all"

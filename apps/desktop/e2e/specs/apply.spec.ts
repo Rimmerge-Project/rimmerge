@@ -283,7 +283,7 @@ test.describe("apply dialog", () => {
 
     const cosmeticRow = page.getByTestId("apply-dialog-verify-cosmetic-row");
     await expect(cosmeticRow).toBeVisible();
-    await expect(cosmeticRow).toContainText("cosmetic: the same final def either order");
+    await expect(cosmeticRow).toContainText("cosmetic: the final def is the same in either order");
     await expect(cosmeticRow.getByText("Merge instead")).toBeVisible();
 
     // No pair-rule button anywhere — the cosmetic row's own reorder is

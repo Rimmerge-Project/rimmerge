@@ -7,8 +7,10 @@
 import type {} from "../../src/e2e-mock-bootstrap";
 import type { IpcFixtures } from "../../src/services/ipc.mock";
 import type { ActionDto } from "../../src/types/generated/ActionDto";
+import type { ActivateModsResultDto } from "../../src/types/generated/ActivateModsResultDto";
 import type { ActivateRequestDto } from "../../src/types/generated/ActivateRequestDto";
 import type { AddAssignmentSectionRequestDto } from "../../src/types/generated/AddAssignmentSectionRequestDto";
+import type { AnchorDto } from "../../src/types/generated/AnchorDto";
 import type { AppConfigDto } from "../../src/types/generated/AppConfigDto";
 import type { AppLinkTargetDto } from "../../src/types/generated/AppLinkTargetDto";
 import type { ApplyPreflightDto } from "../../src/types/generated/ApplyPreflightDto";
@@ -27,6 +29,7 @@ import type { CreatePatchRequestDto } from "../../src/types/generated/CreatePatc
 import type { DeactivateRequestDto } from "../../src/types/generated/DeactivateRequestDto";
 import type { DecidePatchRequestDto } from "../../src/types/generated/DecidePatchRequestDto";
 import type { DecideRequestDto } from "../../src/types/generated/DecideRequestDto";
+import type { DefaultPathsRequestDto } from "../../src/types/generated/DefaultPathsRequestDto";
 import type { DefConflictViewRequestDto } from "../../src/types/generated/DefConflictViewRequestDto";
 import type { DefGraphicDto } from "../../src/types/generated/DefGraphicDto";
 import type { DefTextureDto } from "../../src/types/generated/DefTextureDto";
@@ -64,6 +67,8 @@ import type { MergeStateDto } from "../../src/types/generated/MergeStateDto";
 import type { MissingKindDto } from "../../src/types/generated/MissingKindDto";
 import type { ModCostRowDto } from "../../src/types/generated/ModCostRowDto";
 import type { ModLinkKindDto } from "../../src/types/generated/ModLinkKindDto";
+import type { MoveModsResultDto } from "../../src/types/generated/MoveModsResultDto";
+import type { MoveRequestDto } from "../../src/types/generated/MoveRequestDto";
 import type { NotificationDto } from "../../src/types/generated/NotificationDto";
 import type { NotificationKeyDto } from "../../src/types/generated/NotificationKeyDto";
 import type { NotificationKindDto } from "../../src/types/generated/NotificationKindDto";
@@ -111,6 +116,14 @@ import type { VerifyReportDto } from "../../src/types/generated/VerifyReportDto"
 import type { VerifyRequestDto } from "../../src/types/generated/VerifyRequestDto";
 import type { VersionCheckDto } from "../../src/types/generated/VersionCheckDto";
 
+/** A `list_working_mods`/`list_inactive_mods` query as the mock records it (the mock's own loose shape). */
+type RecordedModListQuery = {
+  search: string | null;
+  tag: string | null;
+  source: string | null;
+  sort: { key: string; direction: string } | null;
+};
+
 declare global {
   interface Window {
     /** Tauri's in-page IPC bridge (installed by `mockIPC`) — used to emit mocked events from a fixture. */
@@ -153,6 +166,8 @@ declare global {
     __READ_DEF_TEXTURE_CALLS__?: ReadDefTextureRequestDto[];
     /** Every `upsert_rule` payload the mock received, in order. */
     __UPSERT_RULE_CALLS__?: RuleDto[];
+    /** Every `get_default_paths` request the mock received, in order. */
+    __GET_DEFAULT_PATHS_CALLS__?: DefaultPathsRequestDto[];
     /** Every `save_app_config` payload the mock received, in order. */
     __SAVE_APP_CONFIG_CALLS__?: AppConfigDto[];
     /** Every `delete_rule` payload the mock received, in order. */
@@ -191,8 +206,44 @@ declare global {
     __ACTIVATE_CALLS__?: ActivateRequestDto[];
     /** Every `deactivate_mods` payload the mock received, in order — for the active-set spec. */
     __DEACTIVATE_CALLS__?: DeactivateRequestDto[];
+    /** Every `move_mods` payload the mock received, in order — for the reorder specs. */
+    __MOVE_MODS_CALLS__?: MoveRequestDto[];
+    /**
+     * What the mock's on-disk active mod list is, as an outside editor leaves it: a valid list
+     * (`ok`, in file order) or a file the next baseline refresh cannot read. Unset means the file
+     * is whatever the session last loaded or wrote. Never reset by the scenario, so a spec can set
+     * it before load; the mock reads it only when `refresh_mods_config_baseline`, a rescan or an
+     * import runs, like the real refresh reads the file.
+     */
+    __MODS_CONFIG_FILE__?:
+      | { status: "ok"; activeMods: string[] }
+      | { status: "missing" | "unreadable" | "malformed" };
+    /** How many `refresh_mods_config_baseline` calls the mock received. */
+    __REFRESH_BASELINE_CALLS__?: number;
+    /** How many of them have finished, the optional change event included: a positive end-of-call signal. */
+    __REFRESH_BASELINE_DONE__?: number;
+    /** How many `session://changed` events (reason `fileBaselineChanged`) the refresh emitted. */
+    __BASELINE_CHANGED_EMITS__?: number;
+    /** How many times `discard_pending_changes` was called. */
+    __DISCARD_PENDING_CALLS__?: number;
+    /** How many times `revert_order_to_file` was called. */
+    __REVERT_ORDER_CALLS__?: number;
+    /** Every `list_working_mods` query the mock received, in order — for the mods sort spec. */
+    __LIST_WORKING_MODS_CALLS__?: RecordedModListQuery[];
+    /** Every `list_inactive_mods` query the mock received, in order — for the mods sort spec. */
+    __LIST_INACTIVE_MODS_CALLS__?: RecordedModListQuery[];
     /** How many `rescan_project` calls the mock received — for the active-set spec. */
     __RESCAN_CALLS__?: number;
+    /**
+     * Set before the scenario installs: how many extra inactive mods (`mod.9xx` ids) the Inactive
+     * pool gets on top of its ten, so a spec can exercise a list well past the old 200-row page.
+     */
+    __EXTRA_INACTIVE_MODS__?: number;
+    /**
+     * Set before the scenario installs: ids that `ModsConfig.xml` lists but no folder on disk
+     * backs, appended to the working, scanned and file sets (the backend's `missing_mods`).
+     */
+    __MISSING_MODS__?: string[];
     /** Every `open_mod_link` payload the mock received, in order — for the mod info panel spec. */
     __OPEN_MOD_LINK_CALLS__?: { modId: string; link: ModLinkKindDto }[];
     /** Every `open_app_link` payload the mock received, in order — for the settings/sidebar link specs. */
@@ -1953,7 +2004,7 @@ export function installScenario(): void {
     name: string;
     source: "local" | "workshop";
     dependsOn: string[];
-  }[] = Array.from({ length: 10 }, (_, index) => ({
+  }[] = Array.from({ length: 10 + (window.__EXTRA_INACTIVE_MODS__ ?? 0) }, (_, index) => ({
     modId: `mod.9${(index + 1).toString().padStart(2, "0")}`,
     name: `Inactive Mod ${index + 1}`,
     source: index % 2 === 0 ? "local" : ("workshop" as const),
@@ -3150,7 +3201,13 @@ export function installScenario(): void {
   // only from the removal deltas never sees it. With full sets, `mod.906`
   // simply stops being in `workingActiveIds` while it's still in
   // `scannedActiveIds`, which is exactly what `removed` means.
-  const baseActiveIds = new Set([...mods, ...extraModsFromFixtures()].map((mod) => mod.modId));
+  // A missing mod is listed by `ModsConfig.xml` but has no folder, so it is active in every tier
+  // yet has no row in any pool (`Report::missing_mods`).
+  const missingModIds = [...(window.__MISSING_MODS__ ?? [])];
+  const baseActiveIds = new Set([
+    ...[...mods, ...extraModsFromFixtures()].map((mod) => mod.modId),
+    ...missingModIds,
+  ]);
   const workingActiveIds = new Set(baseActiveIds);
   let scannedActiveIds = new Set(baseActiveIds);
   let fileActiveIds = new Set(baseActiveIds);
@@ -3159,6 +3216,136 @@ export function installScenario(): void {
   // current order and becomes whichever order a successful
   // `apply { writeModsConfig: true }` wrote.
   let fileOrder = [...currentOrder];
+  // The live file baseline (`Session::file_watch`): the base ids the session itself last loaded or
+  // wrote (to tell an outside change from its own), and why the latest read of the file failed.
+  // `fileActiveIds`/`fileOrder` above are the baseline's list, the last one that read fine.
+  let acknowledgedFileBases = new Set([...fileActiveIds].map((id) => baseOf(id)));
+  let acknowledgedFileSequence = [...fileActiveIds].map((id) => baseOf(id));
+  // The same acknowledged list by exact id: "your own unsaved work" (`pendingActiveChanges`) is
+  // measured against it, never against the live `fileActiveIds`/`fileOrder`.
+  let acknowledgedFileIds = new Set(fileActiveIds);
+  let acknowledgedFileOrder = [...fileOrder];
+  let baselineIssue: "missing" | "unreadable" | "malformed" | null = null;
+
+  // The mock's `currentOrder` lists only the fixture's own mods, while the working/scanned sets
+  // also hold fixture-only owners and missing mods. The real Current is exactly the scanned
+  // set, so those "omitted" ids count as members of Current whenever they are scanned.
+  const omittedFromCurrentOrder = [...baseActiveIds].filter((id) => !currentOrder.includes(id));
+
+  /** The ids the real `orders.current` would hold: `currentOrder` plus its scanned omissions. */
+  function currentIdSet(): Set<string> {
+    return new Set([
+      ...currentOrder,
+      ...omittedFromCurrentOrder.filter((id) => scannedActiveIds.has(id)),
+    ]);
+  }
+
+  /** Whether working and Current hold exactly the same ids. */
+  function workingHasCurrentMembers(): boolean {
+    const current = currentIdSet();
+    return (
+      current.size === workingActiveIds.size && [...current].every((id) => workingActiveIds.has(id))
+    );
+  }
+
+  /** Replaces the working set's sequence (a `Set` keeps insertion order). */
+  function setWorkingOrder(ids: readonly string[]): void {
+    workingActiveIds.clear();
+    for (const id of ids) workingActiveIds.add(id);
+  }
+
+  /**
+   * `Session::settle_current_onto_working`, the edit direction: after a Mods-page edit, when
+   * working and Current hold the same ids, Current takes working's sequence. Nothing is written
+   * (`fileOrder` is untouched). The mock does not mirror the `PreserveCurrent` re-sort of Suggested, as its fixed Suggested
+   * order stands in for the sorter.
+   */
+  function settleCurrentOntoWorking(): void {
+    if (!workingHasCurrentMembers()) return;
+    const next = [...workingActiveIds].filter((id) => !omittedFromCurrentOrder.includes(id));
+    currentOrder.splice(0, currentOrder.length, ...next);
+  }
+
+  /**
+   * `Session::settle_working_onto_current`, the file-truth direction (Apply, a revert): when
+   * working and Current hold the same ids, working takes Current's sequence. A working set with
+   * pending membership edits keeps its own.
+   */
+  function settleWorking(): void {
+    if (!workingHasCurrentMembers()) return;
+    const settled = [
+      ...currentOrder,
+      ...[...workingActiveIds].filter((id) => !currentOrder.includes(id)),
+    ];
+    setWorkingOrder(settled);
+  }
+
+  /**
+   * `insertion_index`: where a block placed at `anchor` starts among `ids`. A neighbour no longer
+   * in the list is refused with its own code, never clamped.
+   */
+  function anchorIndex(ids: readonly string[], anchor: AnchorDto): number {
+    switch (anchor.kind) {
+      case "start":
+        return 0;
+      case "end":
+        return ids.length;
+      case "before":
+      case "after": {
+        const at = ids.indexOf(anchor.modId);
+        if (at === -1) {
+          throw {
+            code: "move_anchor_not_active",
+            message: `${anchor.modId} is not active, so nothing can be placed next to it`,
+          };
+        }
+        return anchor.kind === "before" ? at : at + 1;
+      }
+      default: {
+        const unreachable: never = anchor;
+        throw new Error(`unhandled anchor ${JSON.stringify(unreachable)}`);
+      }
+    }
+  }
+
+  /**
+   * `ActivateMods::execute` / `execute_at`: with an anchor the whole plan goes in as one block
+   * there; without one a mod that has a slot in Current goes right after its nearest Current
+   * predecessor that is active (or at the start), any other mod to the end. A mod whose declared
+   * dependency the same plan placed never lands before it (it goes right after the dependency).
+   */
+  function placeActivated(toAdd: readonly string[], anchor: AnchorDto | null): void {
+    const working = [...workingActiveIds];
+    if (anchor !== null) {
+      working.splice(anchorIndex(working, anchor), 0, ...toAdd);
+    } else {
+      toAdd.forEach((id) => {
+        const slot = currentOrder.indexOf(id);
+        let at = working.length;
+        if (slot !== -1) {
+          const predecessors = currentOrder
+            .slice(0, slot)
+            .reverse()
+            .map((candidate) => working.indexOf(candidate))
+            .filter((index) => index !== -1);
+          at = predecessors.length === 0 ? 0 : (predecessors[0] ?? 0) + 1;
+        }
+        const dependencies = inactiveMods.find((mod) => mod.modId === id)?.dependsOn ?? [];
+        // The floor is after every declared dependency in the list by now: one this call
+        // placed earlier or one that was already active (`after_declared_dependencies`).
+        const floor = Math.max(
+          0,
+          ...dependencies
+            .map((dependency) => working.indexOf(dependency))
+            .filter((position) => position !== -1)
+            .map((position) => position + 1),
+        );
+        working.splice(Math.max(at, floor), 0, id);
+      });
+    }
+    setWorkingOrder(working);
+    settleCurrentOntoWorking();
+  }
 
   // The Databases
   // card's own mock state — deliberately narrower than `RuleDatabaseViewDto`
@@ -3268,15 +3455,15 @@ export function installScenario(): void {
     community: [[5, 8]],
     steam: [[30, 34]],
   };
-  const baselineSuggestedOrder = [...suggestedOrder];
-  // The fixture's `movedMods` has always been 3 (its three swaps); an import's own swaps add the
-  // mods it moved on top of that, so the count really follows the order.
-  const BASELINE_MOVED_MODS = 3;
+  /**
+   * Mirrors `Session::moved_mods`: how many mods the suggested order places differently from the
+   * current one, measured over the live orders (`rim_resolve::sort::disturbance::compute`'s
+   * `positions_changed`: a mod whose position differs, or that Current lacks). Never a constant:
+   * an `apply` that makes Current equal Suggested must read 0.
+   */
   function movedModsCount(): number {
-    const movedByImport = suggestedOrder.filter(
-      (id, index) => id !== baselineSuggestedOrder[index],
-    ).length;
-    return BASELINE_MOVED_MODS + movedByImport;
+    const currentPosition = new Map(currentOrder.map((id, index) => [id, index]));
+    return suggestedOrder.filter((id, index) => currentPosition.get(id) !== index).length;
   }
 
   function recommendedRulesStepFor(skip: "honor" | "ignore"): RecommendedRulesStepDto {
@@ -3552,6 +3739,8 @@ export function installScenario(): void {
   const MAX_ORDER_SKIPPED_REPORTED = 500;
   const MOCK_CORE_ID = modId(0);
   const MOCK_GAME_VERSION = "1.6.4871";
+  /** The ModsConfig.xml the mock setup page fills in, and the session is loaded from. */
+  const MODS_CONFIG_PATH = "C:/Profile/ModsConfig.xml";
   const GENERATED_MOD_PREFIX = "rimmerge.merge.";
 
   function baseOf(id: string): string {
@@ -3789,15 +3978,18 @@ export function installScenario(): void {
     }
   }
 
-  /** Mirrors `plan_import` over the mock inventory, diffing against the file's order. */
+  /** Mirrors `plan_import` over the mock inventory, diffing against the working list. */
   function planOrderImport(parsed: Extract<ParsedOrderList, { kind: "parsed" }>) {
+    // `ImportTarget::from_session`: the diff is against the working list (pending edits included), the
+    // mock's own fixture-only owners left out like `currentOrder` leaves them out.
+    const activeList = [...workingActiveIds].filter((id) => !omittedFromCurrentOrder.includes(id));
     const inventory = installedInventory();
     const nameOf = (id: string): string => inventory.find((row) => row.modId === id)?.name ?? id;
     const present = new Set(inventory.map((row) => row.modId));
-    const fileSet = new Set(fileOrder);
+    const fileSet = new Set(activeList);
     // `ActiveIndex`: the first active copy that is on disk, per base id, in file order.
     const activeCopies = new Map<string, string>();
-    for (const id of fileOrder) {
+    for (const id of activeList) {
       if (present.has(id) && !activeCopies.has(baseOf(id))) activeCopies.set(baseOf(id), id);
     }
     const order: string[] = [];
@@ -3875,7 +4067,7 @@ export function installScenario(): void {
       }
     }
     const kept = new Set(order);
-    const deactivated = [...new Set(fileOrder)]
+    const deactivated = [...new Set(activeList)]
       .filter(
         (id) =>
           !kept.has(id) &&
@@ -3885,10 +4077,10 @@ export function installScenario(): void {
       .map((id) => ({ modId: id, name: nameOf(id) }));
     // Counted before the merge mod is re-added: it is not the list's to place.
     const moved = movedCount(
-      fileOrder.filter((id) => kept.has(id)),
+      activeList.filter((id) => kept.has(id)),
       order.filter((id) => fileSet.has(id)),
     );
-    keepOwnMergeMod(order, inventory);
+    keepOwnMergeMod(order, inventory, activeList);
     const { unscanned } = pendingActiveChanges();
     return {
       listed: parsed.entries.length,
@@ -3907,15 +4099,19 @@ export function installScenario(): void {
 
   /**
    * `keep_own_merge_mod`: a list never carries this profile's own merge mod, but an import must
-   * not drop it, so it is appended last when the file holds it and it is on disk.
+   * not drop it, so it is appended last when the active list holds it and it is on disk.
    */
-  function keepOwnMergeMod(order: string[], inventory: { modId: string }[]): void {
+  function keepOwnMergeMod(
+    order: string[],
+    inventory: { modId: string }[],
+    activeList: string[],
+  ): void {
     const ownBase = baseOf(MERGE_MOD_PACKAGE_ID);
     if (order.some((id) => baseOf(id) === ownBase)) return;
-    const inFile = fileOrder.find(
+    const inActive = activeList.find(
       (id) => baseOf(id) === ownBase && inventory.some((row) => row.modId === id),
     );
-    if (inFile !== undefined) order.push(inFile);
+    if (inActive !== undefined) order.push(inActive);
   }
 
   function previewOrderDocument(text: string): OrderImportOutcomeDto {
@@ -3964,6 +4160,7 @@ export function installScenario(): void {
         window.__RELEASE_IMPORT_ORDER__ = resolve;
       });
     }
+    resetFileWatch();
     // The whole import lands at once: Current is the order, the working and scanned sets are its
     // ids, and the mock sorter's Suggested over that set is the same sequence. `fileOrder` is
     // untouched: nothing is written until Apply.
@@ -4370,11 +4567,235 @@ export function installScenario(): void {
     return allRows.filter((mod) => scannedActiveIds.has(mod.modId));
   }
 
-  /** The Inactive tab's own list: every `inactiveMods` entry not currently (scanned-)active. */
-  function scannedInactiveModList(): (typeof mods)[number][] {
-    return inactiveMods
-      .filter((mod) => !scannedActiveIds.has(mod.modId))
-      .map((mod) => inactiveModRow(mod.modId));
+  /** `rim_session::MAX_PAGE_SIZE`: the most rows one scanned-tier `list_mods` page returns. */
+  const MAX_PAGE_SIZE = 200;
+
+  /** A `list_mods` row (`ModSummaryDto`), as the mock sends it. */
+  type ScannedListRow = {
+    modId: string;
+    name: string;
+    source: string | null;
+    tags: string[];
+    hardDependents: number;
+    generated: null;
+    missing: boolean;
+    workshopId: number | null;
+  };
+
+  /** A mock Workshop published-file id: only a Workshop mod has one. */
+  function workshopIdOf(row: { modId: string; source: string | null }): number | null {
+    return row.source === "workshop"
+      ? 1_000_000 + Number.parseInt(row.modId.replace(/\D/g, "") || "0", 10)
+      : null;
+  }
+
+  type SortKeyMock = "loadOrder" | "name" | "packageId" | "lastUpdated";
+  type ListSortMock = { key: SortKeyMock; direction: "ascending" | "descending" };
+
+  type ModListQueryMock = {
+    search: string | null;
+    tag: string | null;
+    source: string | null;
+    sort: ListSortMock | null;
+  };
+
+  type UpdateTimeMock =
+    | { kind: "known"; seconds: number }
+    | { kind: "shippedWithGame" }
+    | { kind: "unknown" };
+
+  /**
+   * `ModUpdateTimes::get` over the backend's readers: Core/DLC ship with the game, a missing mod
+   * (no source) has no answer, and the rest get a deterministic time from the digits of their id
+   * (none: unknown; every seventh: unknown, like a Workshop mod Steam has no record of; the others
+   * share eleven distinct days, so equal times, and with them the id tie-break, are exercised).
+   */
+  function updateTimeOf(row: { modId: string; source: string | null }): UpdateTimeMock {
+    if (row.source === "core" || row.source === "dlc") return { kind: "shippedWithGame" };
+    if (row.source === null) return { kind: "unknown" };
+    const digits = row.modId.replace(/\D/g, "");
+    if (digits === "") return { kind: "unknown" };
+    const n = Number.parseInt(digits, 10);
+    if (n % 7 === 0) return { kind: "unknown" };
+    return { kind: "known", seconds: 1_600_000_000 + ((n * 37) % 11) * 86_400 };
+  }
+
+  /** `mod_lists::compare_text`: lowercased first, then as written; no locale collation. */
+  function compareText(a: string, b: string): number {
+    const lowerA = a.toLowerCase();
+    const lowerB = b.toLowerCase();
+    if (lowerA !== lowerB) return lowerA < lowerB ? -1 : 1;
+    return a < b ? -1 : a > b ? 1 : 0;
+  }
+
+  /**
+   * `mod_lists::sort_rows`: the sort key runs in the chosen direction, unavailable update times
+   * go after every known one in both directions, and every tie falls back to the exact id,
+   * ascending.
+   */
+  function sortModListRows(rows: ModListRowMock[], sort: ListSortMock): ModListRowMock[] {
+    const sign = sort.direction === "ascending" ? 1 : -1;
+    const byKey = (a: ModListRowMock, b: ModListRowMock): number => {
+      switch (sort.key) {
+        case "loadOrder":
+          return sign * ((a.position ?? 0) - (b.position ?? 0));
+        case "name":
+          return sign * compareText(a.name, b.name);
+        case "packageId":
+          return sign * compareText(a.modId, b.modId);
+        case "lastUpdated": {
+          const left = a.updated.kind === "known" ? a.updated.seconds : null;
+          const right = b.updated.kind === "known" ? b.updated.seconds : null;
+          if (left !== null && right !== null) return sign * (left - right);
+          if (left !== null) return -1;
+          if (right !== null) return 1;
+          return 0;
+        }
+      }
+    };
+    return rows.toSorted((a, b) => byKey(a, b) || compareByModId(a, b));
+  }
+
+  /** `rim_session::MAX_MOD_LIST_ROWS`: the most rows either working-tier list returns. */
+  const MAX_MOD_LIST_ROWS = 5_000;
+
+  type ModRowStateMock =
+    | { kind: "scanned"; tags: string[]; hardDependents: number }
+    | { kind: "pendingScan" }
+    | { kind: "missing" };
+
+  /** One `ModListRowDto`, as the mock sends it. */
+  type ModListRowMock = {
+    modId: string;
+    name: string;
+    source: string | null;
+    position: number | null;
+    state: ModRowStateMock;
+    generated: null;
+    workshopId: number | null;
+    updated: UpdateTimeMock;
+    membership: MembershipMock;
+  };
+
+  type MembershipMock = "none" | "added" | "removed";
+
+  /** `file_baseline::FileMembership`: a row's mark against the file's base ids. */
+  function membershipOf(id: string, isActiveRow: boolean): MembershipMock {
+    const isInFile = [...fileActiveIds].some((fileId) => baseOf(fileId) === baseOf(id));
+    if (isActiveRow) return isInFile ? "none" : "added";
+    return isInFile ? "removed" : "none";
+  }
+
+  /** A pool row (`mods`, fixture owners, `inactiveModRow`) shaped as a `ModListRowDto`. */
+  function modListRow(
+    row: (typeof mods)[number],
+    position: number | null,
+    state: ModRowStateMock,
+  ): ModListRowMock {
+    return {
+      modId: row.modId,
+      name: row.name,
+      source: row.source,
+      position,
+      state,
+      generated: row.generated,
+      workshopId: workshopIdOf(row),
+      updated: updateTimeOf(row),
+      membership: membershipOf(row.modId, position !== null),
+    };
+  }
+
+  /** A row whose facts come from a scan (`tags`/`hardDependents`) or, unscanned, from nothing. */
+  function stateOf(row: (typeof mods)[number], isScanned: boolean): ModRowStateMock {
+    return isScanned
+      ? { kind: "scanned", tags: row.tags, hardDependents: row.hardDependents }
+      : { kind: "pendingScan" };
+  }
+
+  /**
+   * `Session::working_mod_list` / `inactive_mod_list`: the Active list is the working set in its
+   * own order (a row is scanned, pending its scan, or missing), the Inactive list is every
+   * discovered mod outside it, sorted by id. Search matches id or name; the tag filter applies to
+   * scanned rows of the Active list only; a source filter excludes a missing row. Bounded by
+   * `MAX_MOD_LIST_ROWS` with `total` reported before the cut.
+   */
+  function modListFor(which: "working" | "inactive", query: ModListQueryMock) {
+    const pool = [...mods, ...extraModsFromFixtures()];
+    const poolById = new Map(pool.map((row) => [row.modId, row]));
+    const unscannedById = new Map(
+      inactiveMods.map((mod) => [mod.modId, inactiveModRow(mod.modId)]),
+    );
+    let rows: ModListRowMock[];
+    if (which === "working") {
+      rows = [...workingActiveIds].map((id, position): ModListRowMock => {
+        const scanned = poolById.get(id);
+        if (scanned !== undefined) return modListRow(scanned, position, stateOf(scanned, true));
+        const unscanned = unscannedById.get(id);
+        if (unscanned !== undefined) {
+          // Activated since the last scan, or scanned since (then it has a scan's facts, which for
+          // an inactive-pool mod are the empty tags every such row carries).
+          return modListRow(unscanned, position, stateOf(unscanned, scannedActiveIds.has(id)));
+        }
+        return {
+          modId: id,
+          name: id,
+          source: null,
+          position,
+          state: { kind: "missing" },
+          generated: null,
+          workshopId: null,
+          updated: updateTimeOf({ modId: id, source: null }),
+          membership: membershipOf(id, true),
+        };
+      });
+    } else {
+      const deactivated = pool
+        .filter((row) => !workingActiveIds.has(row.modId))
+        .map((row) => modListRow(row, null, stateOf(row, true)));
+      const unscanned = [...unscannedById.values()]
+        .filter((row) => !workingActiveIds.has(row.modId))
+        .map((row) => modListRow(row, null, stateOf(row, scannedActiveIds.has(row.modId))));
+      rows = [...deactivated, ...unscanned];
+    }
+    const needle = query.search?.toLowerCase() ?? null;
+    const matching = rows
+      .filter((row) =>
+        needle === null
+          ? true
+          : row.modId.toLowerCase().includes(needle) || row.name.toLowerCase().includes(needle),
+      )
+      .filter((row) => query.source === null || row.source === query.source)
+      .filter((row) => {
+        if (which === "inactive" || query.tag === null) return true;
+        return row.state.kind === "scanned" && row.state.tags.includes(query.tag);
+      });
+    // The Active default is the working order itself; the Inactive default is name, A to Z, and
+    // an Inactive list has no load order to sort by, so that key means the default there.
+    const requested = query.sort;
+    const sort: ListSortMock =
+      which === "working"
+        ? (requested ?? { key: "loadOrder", direction: "ascending" })
+        : requested === null || requested.key === "loadOrder"
+          ? { key: "name", direction: "ascending" }
+          : requested;
+    const isLoadOrder = sort.key === "loadOrder" && sort.direction === "ascending";
+    const ordered = isLoadOrder ? matching : sortModListRows(matching, sort);
+    return {
+      total: ordered.length,
+      items: ordered.slice(0, MAX_MOD_LIST_ROWS),
+      // `ModList::reorderable`: the Active list in its own load order; a filter keeps it on.
+      reorderable: which === "working" && isLoadOrder,
+    };
+  }
+
+  /**
+   * `list_mods`/`list_inactive_mods` row order: ascending mod id, as
+   * `rim-session`'s `mod_index::query` sort. Code-unit
+   * comparison, not `localeCompare`, to match Rust's byte-wise `String`
+   * order on these (lowercase, ASCII) ids.
+   */
+  function compareByModId(a: { modId: string }, b: { modId: string }): number {
+    return a.modId < b.modId ? -1 : a.modId > b.modId ? 1 : 0;
   }
 
   /** `PendingActiveChangesDto`-shaped diff between two full active-id sets. */
@@ -4388,10 +4809,91 @@ export function installScenario(): void {
     };
   }
 
+  /** Rimmerge itself loaded or wrote the file: its mods and their order are what an outside change is measured from. */
+  function acknowledgeFile(): void {
+    acknowledgedFileBases = new Set([...fileActiveIds].map((id) => baseOf(id)));
+    acknowledgedFileSequence = [...fileActiveIds].map((id) => baseOf(id));
+    acknowledgedFileIds = new Set(fileActiveIds);
+    acknowledgedFileOrder = [...fileOrder];
+  }
+
+  /** `ExternalFileChangeDto`: a membership change first, else the same mods in another order, else none. */
+  function externalChange(added: number, removed: number, fileSequence: string[]) {
+    if (added > 0 || removed > 0) {
+      return { kind: "membership" as const, added, removed };
+    }
+    if (fileSequence.join(",") !== acknowledgedFileSequence.join(",")) {
+      return { kind: "reordered" as const };
+    }
+    return { kind: "none" as const };
+  }
+
+  /** `FileBaselineDto`: the baseline's status and what someone else changed in the file's membership. */
+  function fileBaselineDto() {
+    const fileBases = new Set([...fileActiveIds].map((id) => baseOf(id)));
+    const added = [...fileBases].filter((id) => !acknowledgedFileBases.has(id)).length;
+    const removed = [...acknowledgedFileBases].filter((id) => !fileBases.has(id)).length;
+    const fileSequence = [...fileActiveIds].map((id) => baseOf(id));
+    return {
+      state:
+        baselineIssue === null
+          ? { kind: "fresh" as const }
+          : { kind: "stale" as const, reason: baselineIssue },
+      externalChange: externalChange(added, removed, fileSequence),
+    };
+  }
+
+  /**
+   * `Session::observe_file`: reads `window.__MODS_CONFIG_FILE__` (unset: the file is as the session
+   * last left it). A valid list replaces the baseline list; a failure keeps the last valid list and
+   * records why. Returns whether the list or the status changed. Never touches working, Current
+   * or the scanned set.
+   */
+  function observeModsConfigFile(): boolean {
+    const file = window.__MODS_CONFIG_FILE__;
+    if (file === undefined) {
+      const wasStale = baselineIssue !== null;
+      baselineIssue = null;
+      return wasStale;
+    }
+    if (file.status !== "ok") {
+      const changed = baselineIssue !== file.status;
+      baselineIssue = file.status;
+      return changed;
+    }
+    const wasStale = baselineIssue !== null;
+    baselineIssue = null;
+    const isListChanged = file.activeMods.join(",") !== [...fileActiveIds].join(",");
+    fileActiveIds = new Set(file.activeMods);
+    fileOrder = [...file.activeMods];
+    return isListChanged || wasStale;
+  }
+
+  /**
+   * A load, rescan or import of the session's own: the file is read fresh (a file that cannot be
+   * read fails the way the real `LoadProject::load` does) and acknowledged.
+   */
+  function resetFileWatch(): void {
+    const file = window.__MODS_CONFIG_FILE__;
+    if (file !== undefined && file.status !== "ok") {
+      throw {
+        code: "mods_config_io_failed",
+        message: `ModsConfig.xml cannot be read (${file.status})`,
+      };
+    }
+    observeModsConfigFile();
+    baselineIssue = null;
+    acknowledgeFile();
+  }
+
   function pendingActiveChanges() {
     return {
       unscanned: activeSetDiff(workingActiveIds, scannedActiveIds),
-      unapplied: activeSetDiff(scannedActiveIds, fileActiveIds),
+      // Your own unsaved work: measured against what Rimmerge last loaded or wrote, so an outside
+      // edit of the file moves neither of these (the outside-change note explains it).
+      unapplied: activeSetDiff(scannedActiveIds, acknowledgedFileIds),
+      // A settled reorder changes no membership: only the sequence differs from the file.
+      orderUnapplied: !sameOrderIgnoringMergeMod(currentOrder, acknowledgedFileOrder),
     };
   }
 
@@ -4437,6 +4939,11 @@ export function installScenario(): void {
     const refused: string[] = [];
     const dependentsStillActive: Record<string, string[]> = {};
     for (const id of ids) {
+      // `ActiveSet::deactivate`'s own rule: Core is never removable.
+      if (id === "ludeon.rimworld") {
+        refused.push(id);
+        continue;
+      }
       if (!workingActiveIds.has(id)) continue;
       toRemove.push(id);
     }
@@ -6001,6 +6508,7 @@ export function installScenario(): void {
   window.__UPSERT_RULE_CALLS__ = [];
   window.__RESOLVE_DEF_GRAPHIC_CALLS__ = [];
   window.__READ_DEF_TEXTURE_CALLS__ = [];
+  window.__GET_DEFAULT_PATHS_CALLS__ = [];
   window.__SAVE_APP_CONFIG_CALLS__ = [];
   window.__DELETE_RULE_CALLS__ = [];
   window.__PROMOTE_RULE_CALLS__ = [];
@@ -6019,7 +6527,15 @@ export function installScenario(): void {
   window.__ADD_ASSIGNMENT_SECTION_CALLS__ = [];
   window.__REMOVE_ASSIGNMENT_SECTION_CALLS__ = [];
   window.__ACTIVATE_CALLS__ = [];
+  window.__LIST_WORKING_MODS_CALLS__ = [];
+  window.__LIST_INACTIVE_MODS_CALLS__ = [];
   window.__DEACTIVATE_CALLS__ = [];
+  window.__MOVE_MODS_CALLS__ = [];
+  window.__DISCARD_PENDING_CALLS__ = 0;
+  window.__REFRESH_BASELINE_CALLS__ = 0;
+  window.__REFRESH_BASELINE_DONE__ = 0;
+  window.__BASELINE_CHANGED_EMITS__ = 0;
+  window.__REVERT_ORDER_CALLS__ = 0;
   window.__RESCAN_CALLS__ = 0;
   window.__OPEN_MOD_LINK_CALLS__ = [];
   window.__OPEN_APP_LINK_CALLS__ = [];
@@ -6267,15 +6783,29 @@ export function installScenario(): void {
   }
 
   const fixtures: IpcFixtures = {
-    get_default_paths: {
-      gameDir: "C:/RimWorld",
-      workshopDir: "C:/RimWorld/workshop",
-      modsConfig: "C:/Profile/ModsConfig.xml",
-      profileDir: "C:/Profile/rimmerge",
-      warning: null,
-      warningCode: null,
-      error: null,
-      errorCode: null,
+    // Mirrors the rung-1 rule: a requested game folder is what the backend
+    // answers with; every other path keeps its detected default.
+    get_default_paths: (payload: unknown) => {
+      const { request } = payload as { request?: DefaultPathsRequestDto | null };
+      window.__GET_DEFAULT_PATHS_CALLS__?.push(request ?? { gameDir: null });
+      const gameDir = request?.gameDir ?? "C:/RimWorld";
+      // Mirrors `default_workshop_dir`: the game folder's grandparent plus
+      // `workshop/content/294100` (`<library>/steamapps/common/<x>` lands in
+      // `<library>/steamapps/workshop/...`); without two parents it is
+      // `<gameDir>/../../workshop/content/294100`.
+      const segments = gameDir.replace(/[\\/]+$/, "").split(/[\\/]/);
+      const workshopDir =
+        segments.length >= 3
+          ? `${segments.slice(0, -2).join("/")}/workshop/content/294100`
+          : `${gameDir}/../../workshop/content/294100`;
+      return {
+        gameDir,
+        workshopDir,
+        modsConfig: MODS_CONFIG_PATH,
+        profileDir: "C:/Profile/rimmerge",
+        warningCode: null,
+        errorCode: null,
+      };
     },
     save_app_config: (payload: unknown) => {
       window.__SAVE_APP_CONFIG_CALLS__?.push((payload as { config: AppConfigDto }).config);
@@ -6373,6 +6903,8 @@ export function installScenario(): void {
         // Mirrors `Session::file_matches`: same sequence, with the
         // generated merge mod's package id ignored on both sides.
         fileMatchesSuggested: sameOrderIgnoringMergeMod(suggestedOrder, fileOrder),
+        // The live comparison with the file, for the launch status. The "not applied yet" notes read
+        // `get_pending_active_changes` instead: an outside edit is not your own unsaved work.
         fileMatchesCurrent: sameOrderIgnoringMergeMod(currentOrder, fileOrder),
         sortProvenance: {
           tieBreak: settings.tieBreak,
@@ -6968,7 +7500,25 @@ export function installScenario(): void {
           };
         }
       ).filter;
-      let matching = scannedActiveModList();
+      // Mirrors `mod_index::query`: scanned rows plus a synthetic row per missing mod (no source,
+      // no tags), each carrying `missing` and `workshopId`, sorted by id, and a page capped at
+      // `MAX_PAGE_SIZE` however large a limit was asked for.
+      const scannedRows: ScannedListRow[] = scannedActiveModList().map((mod) => ({
+        ...mod,
+        missing: false,
+        workshopId: workshopIdOf(mod),
+      }));
+      const missingRows: ScannedListRow[] = missingModIds.map((id) => ({
+        modId: id,
+        name: id,
+        source: null,
+        tags: [],
+        hardDependents: 0,
+        generated: null,
+        missing: true,
+        workshopId: null,
+      }));
+      let matching = [...scannedRows, ...missingRows];
       if (filter.search) {
         const needle = filter.search.toLowerCase();
         matching = matching.filter(
@@ -6978,43 +7528,110 @@ export function installScenario(): void {
       }
       if (filter.tag) matching = matching.filter((mod) => mod.tags.includes(filter.tag as string));
       if (filter.source) matching = matching.filter((mod) => mod.source === filter.source);
+      matching = matching.toSorted(compareByModId);
       const total = matching.length;
-      const items = matching.slice(filter.offset, filter.offset + filter.limit);
+      const limit = Math.min(filter.limit, MAX_PAGE_SIZE);
+      const items = matching.slice(filter.offset, filter.offset + limit);
       return { total, items };
     },
     list_mod_names: () => allModNames(),
-    // The Inactive tab
-    // and the working active-mod set.
+    // The Mods page's two working-tier lists (`rim_session::mod_lists`).
+    list_working_mods: (payload: unknown) => {
+      const query = (payload as { query: ModListQueryMock }).query;
+      window.__LIST_WORKING_MODS_CALLS__?.push(query);
+      return modListFor("working", query);
+    },
     list_inactive_mods: (payload: unknown) => {
-      const filter = (
-        payload as {
-          filter: { search: string | null; source: string | null; offset: number; limit: number };
-        }
-      ).filter;
-      let matching = scannedInactiveModList();
-      if (filter.search) {
-        const needle = filter.search.toLowerCase();
-        matching = matching.filter(
-          (mod) =>
-            mod.modId.toLowerCase().includes(needle) || mod.name.toLowerCase().includes(needle),
-        );
-      }
-      if (filter.source) matching = matching.filter((mod) => mod.source === filter.source);
-      const total = matching.length;
-      const items = matching.slice(filter.offset, filter.offset + filter.limit);
-      return { total, items };
+      const query = (payload as { query: ModListQueryMock }).query;
+      window.__LIST_INACTIVE_MODS_CALLS__?.push(query);
+      return modListFor("inactive", query);
     },
     plan_activate_mods: (payload: unknown) => {
       const request = (payload as { request: ActivateRequestDto }).request;
+      // A stale anchor is refused at plan time too, as the real command does.
+      if (request.anchor !== null) anchorIndex([...workingActiveIds], request.anchor);
       return planActivateMods(request.ids, request.withDependencies);
     },
-    activate_mods: (payload: unknown) => {
+    activate_mods: (payload: unknown): ActivateModsResultDto => {
       const request = (payload as { request: ActivateRequestDto }).request;
       window.__ACTIVATE_CALLS__?.push(request);
       const plan = planActivateMods(request.ids, request.withDependencies);
-      for (const id of plan.toAdd) {
-        workingActiveIds.add(id);
+      placeActivated(plan.toAdd, request.anchor);
+      // `ActivateMods::execute_at`: an explicit drop position, like a move, switches a selected
+      // Suggested to Current when it added something. An un-anchored activation never does.
+      const didSwitchToCurrent =
+        request.anchor !== null && plan.toAdd.length > 0 && selected === "suggested";
+      if (didSwitchToCurrent) selected = "current";
+      return { pending: pendingActiveChanges(), selected, didSwitchToCurrent };
+    },
+    move_mods: (payload: unknown): MoveModsResultDto => {
+      const request = (payload as { request: MoveRequestDto }).request;
+      window.__MOVE_MODS_CALLS__?.push(request);
+      const requested = new Set<string>();
+      for (const id of request.ids) {
+        if (requested.has(id)) {
+          throw { code: "invalid_input", message: `${id} was listed more than once` };
+        }
+        if (!workingActiveIds.has(id)) {
+          throw { code: "invalid_input", message: `${id} is not active, so it cannot be moved` };
+        }
+        requested.add(id);
       }
+      const { anchor } = request;
+      if ((anchor.kind === "before" || anchor.kind === "after") && requested.has(anchor.modId)) {
+        throw {
+          code: "invalid_input",
+          message: `${anchor.modId} is one of the mods being moved, so it cannot be the anchor`,
+        };
+      }
+      // `ActiveSet::move_to`: the moved block keeps the ids' relative order in the list.
+      const working = [...workingActiveIds];
+      const moved = working.filter((id) => requested.has(id));
+      const remaining = working.filter((id) => !requested.has(id));
+      const at = anchorIndex(remaining, anchor);
+      const next = [...remaining.slice(0, at), ...moved, ...remaining.slice(at)];
+      const hasChanged = next.some((id, index) => id !== working[index]);
+      if (!hasChanged) return { selected, didSwitchToCurrent: false };
+      setWorkingOrder(next);
+      settleCurrentOntoWorking();
+      // `MoveMods`: the first reorder while Suggested is selected switches to Current.
+      const didSwitchToCurrent = selected === "suggested";
+      if (didSwitchToCurrent) selected = "current";
+      return { selected, didSwitchToCurrent };
+    },
+    discard_pending_changes: () => {
+      window.__DISCARD_PENDING_CALLS__ = (window.__DISCARD_PENDING_CALLS__ ?? 0) + 1;
+      // `working := Current`: Current's ids in Current's sequence (its scanned omissions last).
+      setWorkingOrder([
+        ...currentOrder,
+        ...omittedFromCurrentOrder.filter((id) => scannedActiveIds.has(id)),
+      ]);
+      return pendingActiveChanges();
+    },
+    revert_order_to_file: () => {
+      window.__REVERT_ORDER_CALLS__ = (window.__REVERT_ORDER_CALLS__ ?? 0) + 1;
+      const { unscanned } = pendingActiveChanges();
+      if (unscanned.added.length > 0 || unscanned.removed.length > 0) {
+        throw {
+          code: "revert_order_pending_changes",
+          message: "the active list has changes that were not scanned yet",
+        };
+      }
+      const hasSameMods =
+        currentOrder.length === fileOrder.length &&
+        currentOrder.every((id) => fileOrder.includes(id));
+      if (!hasSameMods) {
+        throw {
+          code: "revert_order_membership_differs",
+          message: "the file lists different mods than the current order",
+        };
+      }
+      // `Session::set_current_order(file sequence)`: Current, then working, take the file's order.
+      currentOrder.splice(0, currentOrder.length, ...fileOrder);
+      settleWorking();
+      // `Session::set_current_order` resets the file watch, like an Apply does.
+      acknowledgeFile();
+      baselineIssue = null;
       return pendingActiveChanges();
     },
     plan_deactivate_mods: (payload: unknown) => {
@@ -7028,9 +7645,25 @@ export function installScenario(): void {
       for (const id of plan.toRemove) {
         workingActiveIds.delete(id);
       }
+      settleCurrentOntoWorking();
       return pendingActiveChanges();
     },
     get_pending_active_changes: () => pendingActiveChanges(),
+    get_mods_config_baseline: () => fileBaselineDto(),
+    // `refresh_mods_config_baseline`: reads the file, and tells every query to refetch only when
+    // the list or the status changed (a quiet poll invalidates nothing), as the real command does.
+    refresh_mods_config_baseline: async () => {
+      window.__REFRESH_BASELINE_CALLS__ = (window.__REFRESH_BASELINE_CALLS__ ?? 0) + 1;
+      if (observeModsConfigFile()) {
+        window.__BASELINE_CHANGED_EMITS__ = (window.__BASELINE_CHANGED_EMITS__ ?? 0) + 1;
+        await window.__TAURI_INTERNALS__.invoke("plugin:event|emit", {
+          event: "session://changed",
+          payload: { reason: "fileBaselineChanged" },
+        });
+      }
+      window.__REFRESH_BASELINE_DONE__ = (window.__REFRESH_BASELINE_DONE__ ?? 0) + 1;
+      return fileBaselineDto();
+    },
     get_game_launch_status: gameLaunchStatusMock,
     launch_game: (payload: unknown) =>
       launchGameMock((payload as { request: LaunchGameRequestDto }).request),
@@ -7054,7 +7687,11 @@ export function installScenario(): void {
     preview_order_import_file: (payload: unknown): OrderImportOutcomeDto => {
       const request = (payload as { request: PreviewOrderImportFileRequestDto }).request;
       window.__PREVIEW_ORDER_IMPORT_FILE_CALLS__?.push(request);
-      const content = window.__ORDER_FILES__?.[request.path];
+      // The session's own ModsConfig.xml reads as the file's current list (what the real backend
+      // would parse), one package id per line, so "Use the list from the file" previews it.
+      const content =
+        window.__ORDER_FILES__?.[request.path] ??
+        (request.path === MODS_CONFIG_PATH ? [...fileActiveIds].join("\n") : undefined);
       if (content === undefined) {
         throw { code: "mod_list_io_failed", message: `${request.path}: the file was not found` };
       }
@@ -7077,7 +7714,15 @@ export function installScenario(): void {
     },
     rescan_project: () => {
       window.__RESCAN_CALLS__ = (window.__RESCAN_CALLS__ ?? 0) + 1;
+      resetFileWatch();
       scannedActiveIds = new Set(workingActiveIds);
+      // The real rescan scans working's sequence and the new session's Current is that scan.
+      // The ids the mock keeps out of `currentOrder` (see `omittedFromCurrentOrder`) stay out: `fileOrder` lacks them too.
+      currentOrder.splice(
+        0,
+        currentOrder.length,
+        ...[...workingActiveIds].filter((id) => !omittedFromCurrentOrder.includes(id)),
+      );
       return {
         modCount: scannedActiveModList().length,
         gameVersion: "1.6.4871",
@@ -7428,6 +8073,28 @@ export function installScenario(): void {
         }
         fileActiveIds = new Set(scannedActiveIds);
         fileOrder = [...orderFor(request.source)];
+        // `Session::set_current_order`: the file now is this order, so Current becomes it (the
+        // array is shared, mutated in place). The add/remove delta between the previous Current
+        // and the written order folds into working (an id the order dropped leaves it), and the
+        // working sequence follows Current only when the two hold the same ids.
+        const previousIds = currentIdSet();
+        const writtenIds = new Set([
+          ...fileOrder,
+          ...omittedFromCurrentOrder.filter((id) => previousIds.has(id)),
+        ]);
+        for (const id of writtenIds) {
+          if (!previousIds.has(id)) workingActiveIds.add(id);
+        }
+        for (const id of previousIds) {
+          if (!writtenIds.has(id)) workingActiveIds.delete(id);
+        }
+        currentOrder.splice(0, currentOrder.length, ...fileOrder);
+        settleWorking();
+        // `Session::set_current_order` resets the file watch: the file is now what Rimmerge wrote,
+        // and whatever an outside editor left in it is overwritten.
+        acknowledgeFile();
+        delete window.__MODS_CONFIG_FILE__;
+        baselineIssue = null;
       }
       const hasMergeContent = mergeModFiles().length > 0;
       const mergeModPath = request.writeMergeMod && hasMergeContent ? MERGE_MOD_PATH : null;

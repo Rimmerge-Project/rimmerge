@@ -140,17 +140,17 @@
     "thresholdLabel": "Próg pewności (automatycznie / wymaga decyzji)",
     "tieBreak": {
       "label": "Rozstrzyganie remisów",
-      "description": "Określa, od jakiej pozycji startuje mod, którego żaden inny mod nie przypina. „Odbuduj” szereguje takie mody według nazwy i pomija bieżącą kolejność, więc przy pierwszym odbudowaniu listy utworzonej przez RimSort spodziewaj się przesunięcia większości modów. „Zachowaj bieżącą” zaczyna każdy mod od jego pozycji w ModsConfig.xml i przesuwa jak najmniej modów.",
+      "description": "Określa, od jakiej pozycji startuje mod, którego żaden inny mod nie przypina. „Odbuduj” szereguje takie mody według nazwy i pomija bieżącą kolejność, więc przy pierwszym odbudowaniu listy utworzonej przez RimSort spodziewaj się przesunięcia większości modów. „Zachowaj bieżącą” zaczyna każdy mod od jego pozycji w kolejności aktywnych modów i przesuwa jak najmniej modów.",
       "rebuild": "Odbuduj",
       "preserveCurrent": "Zachowaj bieżącą"
     },
     "useImportedPairs": {
       "label": "Używaj zaimportowanych reguł par",
-      "description": "Pozwala, by reguły „ładuj przed/po” z RimSort/SteamDB wpływały na kolejność. Domyślnie włączone — większość zaimportowanych par powtarza dowody, które sortownik i tak sam egzekwuje. Ten przełącznik nigdy nie wpływa na reguły ustawione samodzielnie."
+      "description": "Pozwala, by reguły „ładuj przed/po” z RimSort/SteamDB wpływały na kolejność. Domyślnie włączone, bo większość zaimportowanych par powtarza dowody, które sortownik i tak sam egzekwuje. Ten przełącznik nigdy nie wpływa na reguły ustawione samodzielnie."
     },
     "useImportedPlacements": {
       "label": "Używaj zaimportowanych reguł położenia",
-      "description": "Pozwala, by położenia „ładuj na początku/na końcu” z RimSort/SteamDB przypinały warstwę moda. Domyślnie włączone — nic w plikach samego moda nie może powiedzieć „ładuj mnie na końcu”."
+      "description": "Pozwala, by położenia „ładuj na początku/na końcu” z RimSort/SteamDB przypinały warstwę moda. Domyślnie włączone, bo nic w plikach samego moda nie może powiedzieć „ładuj mnie na końcu”."
     },
     "enforceSoft": {
       "label": "Egzekwuj ograniczenia o sile „Miękka”",
@@ -158,7 +158,7 @@
     },
     "enforceAwareness": {
       "label": "Egzekwuj ograniczenia o sile „Świadomość”",
-      "description": "Te ograniczenia pochodzą ze wskazówek {edgeKinds} — dowodu, że mody na siebie oddziałują, a nie faktu dotyczącego kolejności. Domyślnie wyłączone: są znacznie częstsze niż ograniczenia o sile „Miękka”, więc ich egzekwowanie dużo mocniej zaburza kolejność."
+      "description": "Te ograniczenia pochodzą ze wskazówek {edgeKinds}. Są dowodem, że mody na siebie oddziałują, a nie faktem dotyczącym kolejności. Domyślnie wyłączone: są znacznie częstsze niż ograniczenia o sile „Miękka”, więc ich egzekwowanie dużo mocniej zaburza kolejność."
     },
     "enforceInferred": {
       "label": "Egzekwuj ograniczenia o sile „Wywnioskowana”",
@@ -169,11 +169,11 @@
       "recoveredWarning": "Nie udało się odczytać pliku ustawień aplikacji, więc dostęp do internetu jest wyłączony, dopóki ponownie nie zapiszesz ustawień.",
       "allowNetwork": {
         "label": "Zezwalaj na dostęp do internetu",
-        "description": "Główny przełącznik wszystkiego, co Rimmerge wysyła przez internet, automatycznie lub ręcznie. Aplikacja łączy się wyłącznie z dwoma hostami GitHub — api.github.com, aby sprawdzać aktualizacje, i raw.githubusercontent.com, aby odświeżać bazy reguł — i nigdy z twoją siecią lokalną. Wyłączenie pomija każde żądanie, zanim powstanie jakikolwiek adres lub zostanie otwarte połączenie. Dotyczy całej aplikacji na tym komputerze, niezależnie od tego, którą instalację RimWorld otworzysz."
+        "description": "Główny przełącznik wszystkiego, co Rimmerge wysyła przez internet, automatycznie lub ręcznie. Aplikacja łączy się wyłącznie z dwoma hostami GitHub (api.github.com, aby sprawdzać aktualizacje, i raw.githubusercontent.com, aby odświeżać bazy reguł) i nigdy z twoją siecią lokalną. Gdy przełącznik jest wyłączony, nie jest wysyłane żadne żądanie. Dotyczy całej aplikacji na tym komputerze, niezależnie od tego, którą instalację RimWorld otworzysz."
       },
       "autoRefreshRuleDatabases": {
         "label": "Automatycznie odświeżaj bazy reguł",
-        "description": "Raz dziennie, przy uruchomieniu, pobiera włączone bazy reguł wymienione na karcie „Bazy reguł” — nigdy bazę Warsztatu Steam, która odświeża się wyłącznie po kliknięciu „Odśwież”."
+        "description": "Raz dziennie, przy uruchomieniu, pobiera włączone bazy reguł wymienione na karcie „Bazy reguł”. Baza Warsztatu Steam nigdy nie jest pobierana w ten sposób, tylko po kliknięciu „Odśwież”."
       },
       "checkForUpdates": {
         "label": "Sprawdzaj aktualizacje",
@@ -182,10 +182,10 @@
       "checkNow": {
         "button": "Sprawdź teraz",
         "disabledTitle": "Wyłączone przez „Zezwalaj na dostęp do internetu”",
-        "awaitingFirstRun": "Jeszcze nie sprawdzono — najpierw odpowiedz na powiadomienie powitalne.",
+        "awaitingFirstRun": "Jeszcze nie sprawdzono. Najpierw odpowiedz na powiadomienie powitalne.",
         "alreadyRanThisLaunch": "Już sprawdzono podczas tego uruchomienia.",
         "networkDisabled": "Dostęp do internetu jest wyłączony.",
-        "checkDisabled": "Sprawdzono mimo to — automatyczne sprawdzanie jest wyłączone.",
+        "checkDisabled": "Sprawdzono mimo to, choć automatyczne sprawdzanie jest wyłączone.",
         "rateLimited": "Osiągnięto limit zapytań GitHub; spróbuj ponownie po {until}.",
         "updated": "Dostępna jest nowsza wersja: {version}.",
         "unchanged": "Wersja jest aktualna.",
@@ -206,7 +206,7 @@
     },
     "showDanglingDefReferences": {
       "label": "Pokazuj ustalenia o wiszących odwołaniach do defów",
-      "description": "Oznacza nazwę wpisaną w rozpoznanym miejscu odwołania (np. wymaganie badawcze, klucz modyfikatora statystyki), której nie ma żaden aktywny def żadnego typu. Domyślnie wyłączone — przy dużej instalacji może to dać sporo fałszywych alarmów (na przykład pole identyfikujące sam obiekt pomylone z odwołaniem do innego). Nigdy nie zmienia kolejności ładowania."
+      "description": "Oznacza nazwę wpisaną w rozpoznanym miejscu odwołania (na przykład wymaganie badawcze lub klucz modyfikatora statystyki), której nie ma żaden aktywny def żadnego typu. Domyślnie wyłączone, bo przy dużej instalacji może to dać sporo fałszywych alarmów (na przykład pole identyfikujące sam obiekt pomylone z odwołaniem do innego). Nigdy nie zmienia kolejności ładowania."
     },
     "saveButton": "Zapisz",
     "resetButton": "Resetuj do domyślnych",
@@ -365,13 +365,13 @@
         "title": "Użyj sugerowanej kolejności",
         "pending": "Oglądasz bieżącą kolejność. Sugerowana kolejność przesuwa {count} mod. | Oglądasz bieżącą kolejność. Sugerowana kolejność przesuwa {count} mody. | Oglądasz bieżącą kolejność. Sugerowana kolejność przesuwa {count} modów.",
         "doneText": "Wybrano sugerowaną kolejność.",
-        "doneMatchesFileText": "ModsConfig.xml już odpowiada sugerowanej kolejności.",
+        "doneMatchesFileText": "Kolejność aktywnych modów już odpowiada sugerowanej kolejności.",
         "button": "Użyj sugerowanej kolejności",
         "reviewLink": "Przejrzyj sugerowaną kolejność"
       },
       "apply": {
         "title": "Zastosuj",
-        "pending": "Zobacz, co zostanie zapisane w ModsConfig.xml. Najpierw tworzona jest kopia zapasowa.",
+        "pending": "Zobacz, co zostanie zapisane na liście aktywnych modów. Najpierw tworzona jest kopia zapasowa.",
         "button": "Zastosuj…",
         "staleBlocked": "Twoje aktywne mody zmieniły się od ostatniego skanowania. Przeskanuj ponownie przed zastosowaniem.",
         "rescanButton": "Skanuj ponownie"
@@ -380,11 +380,11 @@
         "title": "Potwierdź",
         "pending": "Sprawdź podsumowanie, a potem potwierdź. Jeśli coś się zepsuje, na przykład zabraknie wymaganego moda, aplikacja najpierw o to zapyta."
       },
-      "done": "ModsConfig.xml odpowiada sugerowanej kolejności. Uruchom RimWorld, aby grać.",
+      "done": "Kolejność aktywnych modów odpowiada sugerowanej kolejności. Uruchom RimWorld, aby grać.",
       "asOfLastScan": "Stan z ostatniego skanowania lub zastosowania.",
       "needsInputHint": "{count} ustalenie wymaga twojej decyzji (opcjonalnie) | {count} ustalenia wymagają twojej decyzji (opcjonalnie) | {count} ustaleń wymaga twojej decyzji (opcjonalnie)",
       "openInbox": "Otwórz Ustalenia",
-      "appliedAnnouncement": "Zastosowano. ModsConfig.xml odpowiada teraz sugerowanej kolejności."
+      "appliedAnnouncement": "Zastosowano. Kolejność aktywnych modów odpowiada teraz sugerowanej kolejności."
     }
   },
   "notifications": {
@@ -400,7 +400,7 @@
     },
     "welcome": {
       "title": "Witaj w Rimmerge",
-      "body": "Rimmerge może łączyć się z serwisem GitHub przy uruchomieniu:\n- aby sprawdzić, czy wydano nowszą wersję Rimmerge (api.github.com), przy każdym uruchomieniu;\n- aby pobrać zaktualizowane bazy reguł — reguły kolejności ładowania tworzone przez społeczność i własny plik reguł Rimmerge (raw.githubusercontent.com), najwyżej raz dziennie. Aktualizacje są przechowywane lokalnie; zmieniają kolejność ładowania tylko wtedy, gdy zdecydujesz się je zaimportować.\n\nNie wysyła niczego o tobie, twoich modach ani twojej instalacji — tylko zwykłe żądanie, przy którym GitHub widzi twój adres IP. Duża baza Warsztatu Steam nigdy nie jest pobierana automatycznie, tylko po kliknięciu „Odśwież”.",
+      "body": "Rimmerge może łączyć się z serwisem GitHub przy uruchomieniu:\n- aby sprawdzić, czy wydano nowszą wersję Rimmerge (api.github.com), przy każdym uruchomieniu;\n- aby pobrać zaktualizowane bazy reguł (reguły kolejności ładowania tworzone przez społeczność i własny plik reguł Rimmerge, z raw.githubusercontent.com), najwyżej raz dziennie. Aktualizacje są przechowywane lokalnie i zmieniają kolejność ładowania tylko wtedy, gdy zdecydujesz się je zaimportować.\n\nNie wysyła niczego o tobie, twoich modach ani twojej instalacji. GitHub widzi tylko zwykłe żądanie sieciowe z twojego adresu IP. Duża baza Warsztatu Steam nigdy nie jest pobierana automatycznie, tylko po kliknięciu „Odśwież”.",
       "settingsAlreadyRecommended": "Twoje ustawienia już odpowiadają zalecanym wartościom domyślnym.",
       "steamWorkshopLabel": "Baza Warsztatu Steam (około 49 MB, pobierana tylko po kliknięciu „Odśwież”)"
     },
@@ -500,7 +500,7 @@
       },
       "finding_not_found": {
         "title": "Nie znaleziono ustalenia",
-        "detail": "To ustalenie nie jest już aktualne — być może zostało już rozwiązane."
+        "detail": "To ustalenie nie jest już aktualne. Być może zostało już rozwiązane."
       },
       "merge_source_failed": {
         "title": "Nie udało się odczytać źródła scalania",
@@ -532,7 +532,7 @@
       },
       "stale_active_set": {
         "title": "Lista aktywnych modów jest nieaktualna",
-        "detail": "Przeskanuj ponownie przed zapisaniem ModsConfig.xml."
+        "detail": "Przeskanuj ponownie przed zapisaniem listy aktywnych modów."
       },
       "already_running": {
         "title": "Operacja już trwa",
@@ -570,11 +570,23 @@
       },
       "mod_list_io_failed": {
         "title": "Nie udało się odczytać ani zapisać listy modów",
-        "detail": "Nie udało się odczytać ani zapisać pliku listy modów. Sprawdź, czy plik (a przy zapisywaniu — jego folder) istnieje i czy masz uprawnienia, aby go tam otworzyć lub zapisać."
+        "detail": "Nie udało się odczytać ani zapisać pliku listy modów. Sprawdź, czy plik (a przy zapisywaniu także jego folder) istnieje i czy masz uprawnienia, aby go tam otworzyć lub zapisać."
       },
       "nothing_to_export": {
         "title": "Nie ma nic do eksportu",
-        "detail": "Nie udało się umieścić na liście żadnego aktywnego moda. Sprawdź aktywne mody w ModsConfig.xml."
+        "detail": "Nie udało się umieścić na liście żadnego aktywnego moda. Sprawdź, czy lista aktywnych modów nie jest pusta."
+      },
+      "move_anchor_not_active": {
+        "title": "Tego moda nie ma już na liście aktywnych",
+        "detail": "Mod, obok którego upuszczono wybór, został wyłączony lub przeniesiony, więc niczego nie zmieniono. Lista została odświeżona; spróbuj przenieść ponownie."
+      },
+      "revert_order_pending_changes": {
+        "title": "Najpierw odrzuć oczekujące zmiany",
+        "detail": "Lista aktywnych ma zmiany, które nie zostały jeszcze przeskanowane. Odrzuć je lub przeskanuj ponownie, a potem przywróć kolejność."
+      },
+      "revert_order_membership_differs": {
+        "title": "Zapisana lista zawiera inne mody",
+        "detail": "Zapisane aktywne mody różnią się od bieżącej kolejności, więc nie ma kolejności, do której można wrócić. Aby użyć zapisanej listy, otwórz ją przez „Importuj” na stronie „Kolejność ładowania”. W przeciwnym razie zastosuj własną kolejność."
       }
     }
   },
@@ -583,8 +595,9 @@
   },
   "defaultPathsError": {
     "noProfileBase": "Nie ustawiono ani RIMMERGE_PROFILE_DIR, ani LOCALAPPDATA, więc Rimmerge nie ma gdzie przechowywać własnych plików.",
-    "gameDirNotFound": "Nie znaleziono katalogu instalacji RimWorld. Każde sprawdzone miejsce wymieniają szczegóły techniczne poniżej.",
-    "modsConfigNotFound": "Rimmerge nie potrafi ustalić, gdzie jest ModsConfig.xml. Zobacz szczegóły techniczne poniżej."
+    "gameDirNotFound": "Nie znaleziono instalacji RimWorld. Wpisz poniżej folder gry albo wybierz go przyciskiem „Przeglądaj” (w przypadku Steam: folder steamapps\\common\\RimWorld w bibliotece, w której jest gra), a następnie wybierz „Zapisz jako domyślne”.",
+    "checkedLocations": "Sprawdzone lokalizacje:",
+    "modsConfigNotFound": "Rimmerge nie mógł ustalić, gdzie jest ModsConfig.xml, ponieważ nie ustawiono zmiennej środowiskowej USERPROFILE. Wpisz poniżej ścieżkę do ModsConfig.xml."
   },
   "finding": {
     "kind": {
@@ -726,8 +739,8 @@
         "referrerFromDef": "{defType}/{defName} moda {modId} ({fieldPath})",
         "referrerFromTemplate": "{defType}/{'@'}{name} moda {modId} ({fieldPath})",
         "referrerFromPatch": "łatka moda {modId} na {defType}/{defName} ({fieldPath})",
-        "sentence": "{name} nie wskazuje żadnego aktywnego defu żadnego typu — {cause}.",
-        "likelySound": "To wygląda na odwołanie do dźwięku — brakujący {soundDef} zapisuje ostrzeżenie w logu i po cichu przechodzi na niezdefiniowany dźwięk, zamiast powodować błąd wczytywania.",
+        "sentence": "{name} nie wskazuje żadnego aktywnego defu żadnego typu: {cause}.",
+        "likelySound": "To wygląda na odwołanie do dźwięku. Brakujący {soundDef} zapisuje ostrzeżenie w logu i po cichu przechodzi na niezdefiniowany dźwięk, zamiast powodować błąd wczytywania.",
         "referencedFrom": "Odwołania z:",
         "truncatedReferrers": "Pominięto jeszcze {count} źródło odwołania (limit wyświetlania). | Pominięto jeszcze {count} źródła odwołań (limit wyświetlania). | Pominięto jeszcze {count} źródeł odwołań (limit wyświetlania)."
       },
@@ -774,7 +787,7 @@
         "sentence": "{user} używa typu {typeName} z biblioteki DLL moda {provider}, a między nimi nie zadeklarowano relacji."
       },
       "runtimePatchCollision": {
-        "sentence": "{target} — łatane przez (w kolejności ładowania):",
+        "sentence": "{target}, łatane przez (w kolejności ładowania):",
         "runsLast": "działa na końcu",
         "runLastButton": "Uruchamiaj na końcu",
         "runLastAriaLabel": "Uruchamiaj mod {modId} na końcu"
@@ -808,26 +821,26 @@
         "sentence": "Pole {field} defu {def} moda {modId} wskazuje teksturę {path}, której nie dostarcza żaden aktywny mod."
       },
       "undecodableTexture": {
-        "sentence": "Pliku {path} z moda {modId} nie da się zdekodować ({width}x{height}, {fourcc}) — gra podstawowa pokazuje w jego miejscu zastępczą teksturę błędu.",
+        "sentence": "Pliku {path} z moda {modId} nie da się zdekodować ({width}x{height}, {fourcc}). Gra podstawowa pokazuje w jego miejscu zastępczą teksturę błędu.",
         "pngSibling": "Ten mod dostarcza też plik w formacie innym niż DDS pod tą samą ścieżką, ale gra podstawowa nigdy nie używa go w zastępstwie."
       },
       "brokenInheritance": {
-        "missingParent": "{child} z moda {modId} dziedziczy po {parentName} — żaden aktywny mod go nie definiuje, więc wczytuje się bez żadnego z własnych pól tego rodzica.",
-        "wrongType": "{child} z moda {modId} dziedziczy po {parentName} — w miejscu ładowania tego moda wskazuje on typ {parentType}, a nie {childDefType}.",
+        "missingParent": "{child} z moda {modId} dziedziczy po {parentName}, ale żaden aktywny mod go nie definiuje, więc wczytuje się bez żadnego z własnych pól tego rodzica.",
+        "wrongType": "{child} z moda {modId} dziedziczy po {parentName}, ale w miejscu ładowania tego moda wskazuje on typ {parentType}, a nie {childDefType}.",
         "affectedCount": "{count} dotknięty def: | {count} dotknięte defy: | {count} dotkniętych defów:",
-        "andMore": "… i jeszcze {count}",
+        "andMore": "i jeszcze {count}",
         "truncated": "Pominięto jeszcze {count} dotknięty def (limit wyświetlania). | Pominięto jeszcze {count} dotknięte defy (limit wyświetlania). | Pominięto jeszcze {count} dotkniętych defów (limit wyświetlania)."
       },
       "nearMissModReference": {
-        "findModName": "Nazwa FindMod {written} w modzie {modId} nie wskazuje żadnego aktywnego ani zainstalowanego moda, ale bardzo przypomina {candidateName} — możliwa literówka.",
-        "mayRequireId": "ID MayRequire {written} w modzie {modId} nie wskazuje żadnego aktywnego ani zainstalowanego moda, ale bardzo przypomina {candidateName} — możliwa literówka.",
+        "findModName": "Nazwa FindMod {written} w modzie {modId} nie wskazuje żadnego aktywnego ani zainstalowanego moda, ale bardzo przypomina {candidateName}. Możliwe, że to literówka.",
+        "mayRequireId": "ID MayRequire {written} w modzie {modId} nie wskazuje żadnego aktywnego ani zainstalowanego moda, ale bardzo przypomina {candidateName}. Możliwe, że to literówka.",
         "writtenIn": "Zapisane w pliku {file}"
       },
       "patchWillFail": {
-        "causeRemovedBy": "Przewiduje się, że {operation} moda {modId} na {defKey} nie powiedzie się w tej kolejności — mod {causeModId}, ładowany wcześniej, usuwa docelowy węzeł własną operacją.",
-        "causeNotYetInjected": "Przewiduje się, że {operation} moda {modId} na {defKey} nie powiedzie się w tej kolejności — celuje w węzeł wstrzykiwany przez mod {causeModId}, ale ten mod ładuje się później.",
-        "causeDeadTarget": "Przewiduje się, że {operation} moda {modId} na {defKey} nie powiedzie się w tej kolejności — rozwiązana struktura zwycięskiego właściciela nigdy nie ma tego węzła, niezależnie od kolejności ładowania.",
-        "causeUnclassified": "Przewiduje się, że {operation} moda {modId} na {defKey} nie powiedzie się w tej kolejności — nie udało się sklasyfikować przyczyny.",
+        "causeRemovedBy": "Przewiduje się, że {operation} moda {modId} na {defKey} nie powiedzie się w tej kolejności. Mod {causeModId}, ładowany wcześniej, usuwa docelowy węzeł własną operacją.",
+        "causeNotYetInjected": "Przewiduje się, że {operation} moda {modId} na {defKey} nie powiedzie się w tej kolejności. Celuje w węzeł wstrzykiwany przez mod {causeModId}, ale ten mod ładuje się później.",
+        "causeDeadTarget": "Przewiduje się, że {operation} moda {modId} na {defKey} nie powiedzie się w tej kolejności. Rozwiązana struktura zwycięskiego właściciela nigdy nie ma tego węzła, niezależnie od kolejności ładowania.",
+        "causeUnclassified": "Przewiduje się, że {operation} moda {modId} na {defKey} nie powiedzie się w tej kolejności. Nie udało się sklasyfikować przyczyny.",
         "specificField": "Konkretne pole: {leafXpath}"
       },
       "contributesNothing": {
@@ -876,12 +889,12 @@
       "shipThisFile": "Dostarcz ten plik"
     },
     "defConflictView": {
-      "sourceFailed": "Pliki zmieniły się od skanowania — wczytaj projekt ponownie.",
+      "sourceFailed": "Pliki zmieniły się od skanowania. Wczytaj projekt ponownie.",
       "loadFailed": "Nie udało się wczytać widoku konfliktu.",
       "completenessPartial": "Częściowy",
       "completenessCompleteWithProblems": "Kompletny, z problemami",
       "completenessComplete": "Kompletny",
-      "patchCollisionWithSubPath": "Kolizja łatek — {subPath}",
+      "patchCollisionWithSubPath": "Kolizja łatek: {subPath}",
       "injectedNodeRelation": "Łatka moda {selector} wybiera węzeł wstrzyknięty przez mod {injector}",
       "showLabel": "Pokaż",
       "filterAllChanged": "Wszystkie zmienione",
@@ -954,7 +967,7 @@
     "state": {
       "merged": "scalone",
       "needsInput": "{count} pole wymaga decyzji | {count} pola wymagają decyzji | {count} pól wymaga decyzji",
-      "structuralGuard": "nie scalono automatycznie — potwierdź zwycięzcę",
+      "structuralGuard": "nie scalono automatycznie: potwierdź zwycięzcę",
       "cannotMerge": "nie można scalić"
     },
     "skipped": {
@@ -969,7 +982,7 @@
     "header": {
       "inspectLink": "Zbadaj",
       "outOfScope": "Poza zakresem, nie scalono: {mods}",
-      "structuralGuardLine": "{field} się różni ({by} względem kopii bazowej) — scalanie na poziomie pól jest dla tego defu niebezpieczne. Potwierdź zwycięzcę wynikającego z kolejności ładowania, akceptując to ustalenie na stronie „Ustalenia”; nie da się go dokończyć jako scalenia.",
+      "structuralGuardLine": "{field} się różni ({by} względem kopii bazowej), więc scalanie na poziomie pól jest dla tego defu niebezpieczne. Potwierdź zwycięzcę wynikającego z kolejności ładowania, akceptując to ustalenie na stronie „Ustalenia”. Nie da się go dokończyć jako scalenia.",
       "baseTag": "(baza)",
       "winnerTag": "(zwycięzca)",
       "totalsFields": "{count} pole | {count} pola | {count} pól",
@@ -991,27 +1004,27 @@
       "heading": "Wynik scalania",
       "mergedDefs": "{count} scalony def | {count} scalone defy | {count} scalonych defów",
       "nothingYet": "pusty",
-      "summary": "Mod zgodności, do którego Rimmerge zapisuje twoje decyzje dotyczące scalania i zasobów — obecnie: {contents}. Generowany na nowo przy każdym zastosowaniu; w sugerowanej kolejności zawsze ładuje się na końcu.",
-      "summaryWithSources": "Mod zgodności, do którego Rimmerge zapisuje twoje decyzje dotyczące scalania i zasobów — obecnie: {contents} (z {count} moda). Generowany na nowo przy każdym zastosowaniu; w sugerowanej kolejności zawsze ładuje się na końcu. | Mod zgodności, do którego Rimmerge zapisuje twoje decyzje dotyczące scalania i zasobów — obecnie: {contents} (z {count} modów). Generowany na nowo przy każdym zastosowaniu; w sugerowanej kolejności zawsze ładuje się na końcu. | Mod zgodności, do którego Rimmerge zapisuje twoje decyzje dotyczące scalania i zasobów — obecnie: {contents} (z {count} modów). Generowany na nowo przy każdym zastosowaniu; w sugerowanej kolejności zawsze ładuje się na końcu.",
+      "summary": "Mod zgodności, do którego Rimmerge zapisuje twoje decyzje dotyczące scalania i zasobów. Obecnie: {contents}. Generowany na nowo przy każdym zastosowaniu; w sugerowanej kolejności zawsze ładuje się na końcu.",
+      "summaryWithSources": "Mod zgodności, do którego Rimmerge zapisuje twoje decyzje dotyczące scalania i zasobów. Obecnie: {contents} (z {count} moda). Generowany na nowo przy każdym zastosowaniu; w sugerowanej kolejności zawsze ładuje się na końcu. | Mod zgodności, do którego Rimmerge zapisuje twoje decyzje dotyczące scalania i zasobów. Obecnie: {contents} (z {count} modów). Generowany na nowo przy każdym zastosowaniu; w sugerowanej kolejności zawsze ładuje się na końcu. | Mod zgodności, do którego Rimmerge zapisuje twoje decyzje dotyczące scalania i zasobów. Obecnie: {contents} (z {count} modów). Generowany na nowo przy każdym zastosowaniu; w sugerowanej kolejności zawsze ładuje się na końcu.",
       "loadFailed": "Nie udało się wczytać wyniku scalania.",
       "packageIdLabel": "ID pakietu",
       "folderLabel": "Folder",
       "pathLabel": "Ścieżka",
       "onDiskLabel": "Na dysku",
-      "existsYes": "Tak — generowany na nowo przy każdym zastosowaniu",
-      "existsNo": "Jeszcze nie — zastosuj z opcją „Zapisz mod scalający”, aby go wygenerować",
+      "existsYes": "Tak, generowany na nowo przy każdym zastosowaniu",
+      "existsNo": "Jeszcze nie. Zastosuj z opcją „Zapisz mod scalający”, aby go wygenerować",
       "placementLabel": "Położenie w kolejności ładowania",
       "placementValue": "Na końcu (sortownik zawsze umieszcza wygenerowany mod na dole sugerowanej kolejności)",
       "sourceModsLabel": "Mody źródłowe",
       "entriesHeading": "Wpisy",
-      "noEntriesYet": "Brak jeszcze decyzji „Scal” ani „Dostarcz zasób” — aby jakąś dodać, zdecyduj w edytorze scalania o ustaleniu typu nadpisanie defu lub kolizja łatek.",
+      "noEntriesYet": "Brak jeszcze decyzji „Scal” ani „Dostarcz zasób”. Aby jakąś dodać, zdecyduj w edytorze scalania o ustaleniu typu nadpisanie defu lub kolizja łatek.",
       "filesHeading": "Pliki",
       "nothingRendersYet": "Pliki pojawią się tutaj, gdy będzie istnieć co najmniej jedna decyzja „Scal” lub „Dostarcz zasób”.",
       "fileLoadFailed": "Nie udało się wyrenderować tego pliku."
     },
     "filePreviewLabel": "Podgląd pliku",
     "editor": {
-      "sourceFailedSuffix": "{message} — pliki projektu zmieniły się od ostatniego skanowania.",
+      "sourceFailedSuffix": "Pliki projektu zmieniły się od ostatniego skanowania: {message}",
       "reloadProject": "Wczytaj projekt ponownie",
       "loadFailed": "Nie udało się wczytać podglądu scalania.",
       "showMore": "Pokaż więcej ({loaded} z {total})",
@@ -1038,7 +1051,7 @@
       "sectionAuto": "Rozwiązane automatycznie ({count})",
       "sectionUnchanged": "Bez zmian ({count})",
       "containerEntries": "{count} wpis | {count} wpisy | {count} wpisów",
-      "containerSummary": "{container} — {entries}",
+      "containerSummary": "{container}: {entries}",
       "containerConflicts": "{count} konflikt | {count} konflikty | {count} konfliktów",
       "containerSummaryWithConflicts": "{base}, {conflicts}",
       "acceptSuggested": "Akceptuj sugerowane ({count})"
@@ -1055,7 +1068,7 @@
       "needsInput": "wymaga decyzji",
       "saving": "zapisywanie…",
       "drop": "Odrzuć",
-      "dropUnavailableTitle": "Odrzucanie nie jest obsługiwane dla kolizji łatek — własne łatki RimWorld zawsze odtwarzają się do jakiejś wartości.",
+      "dropUnavailableTitle": "Odrzucanie nie jest obsługiwane dla kolizji łatek, bo własne łatki RimWorld zawsze odtwarzają się do jakiejś wartości.",
       "clearChoice": "Wyczyść wybór",
       "autoRevert": "Auto"
     },
@@ -1089,7 +1102,7 @@
       "label": "częściowo: +{mods}"
     },
     "table": {
-      "emptyState": "Brak łatek zgodności — naciśnij n, aby utworzyć pierwszą.",
+      "emptyState": "Brak łatek zgodności. Naciśnij n, aby utworzyć pierwszą.",
       "nameHeader": "Nazwa",
       "packageIdHeader": "ID pakietu",
       "scopeHeader": "Zakres",
@@ -1126,7 +1139,7 @@
       "importedNoSkips": "Zaimportowano {count} decyzję. | Zaimportowano {count} decyzje. | Zaimportowano {count} decyzji.",
       "rejection": {
         "outOfScope": "nie jest to ustalenie między członkami zakresu tej łatki",
-        "notPatchable": "łatka może zawierać tylko decyzje „Scal”, „Dostarcz zasób” i „Ignoruj” — nie „{action}”",
+        "notPatchable": "łatka może zawierać tylko decyzje „Scal”, „Dostarcz zasób” i „Ignoruj”, a nie „{action}”",
         "choiceOutsideScope": "{path}: wybór wskazuje mod {mod}, którego nie ma w zakresie tej łatki",
         "assetOutsideScope": "jej dostarczany zasób pochodzi z moda {mod}, którego nie ma w zakresie tej łatki",
         "actionName": {
@@ -1170,7 +1183,7 @@
       "searchLabel": "Szukaj modów do dodania do zakresu",
       "searchResultsLabel": "Mody pasujące do wyszukiwania",
       "noMatches": "Brak wyników.",
-      "scopeShrunk": "Zakres zmniejszony — {count} decyzja jest teraz osierocona. | Zakres zmniejszony — {count} decyzje są teraz osierocone. | Zakres zmniejszony — {count} decyzji jest teraz osieroconych.",
+      "scopeShrunk": "Zakres zmniejszony: {count} decyzja jest teraz osierocona. | Zakres zmniejszony: {count} decyzje są teraz osierocone. | Zakres zmniejszony: {count} decyzji jest teraz osieroconych.",
       "remainingChoicesNamingRemoved": "{count} pozostały wybór nadal wskazuje usunięty mod. | {count} pozostałe wybory nadal wskazują usunięty mod. | {count} pozostałych wyborów nadal wskazuje usunięty mod."
     },
     "exportPanel": {
@@ -1178,8 +1191,10 @@
       "exportDirPlaceholder": "Wybierz folder…",
       "chooseButton": "Wybierz…",
       "installCheckboxLabel": "Zainstaluj w folderze Mods i włącz",
-      "staleActiveSetNote": "Oczekujące zmiany włączenia i wyłączenia modów nie są uwzględnione — jeśli mają trafić do tej instalacji, najpierw przeskanuj ponownie.",
-      "forceWarning": "Wygląda na to, że RimWorldWin64.exe jest uruchomiony. Instalacja w tej chwili zapisuje ModsConfig.xml, który gra nadpisuje przy zamykaniu, więc zmiana może zostać utracona. Wyeksportować mimo to?",
+      "staleActiveSetNote": "Oczekujące zmiany włączenia i wyłączenia modów nie są uwzględnione. Jeśli mają trafić do tej instalacji, najpierw przeskanuj ponownie.",
+      "unappliedOrderNote": "Instalacja zapisuje twoją bieżącą kolejność, która nie jest jeszcze zastosowana.",
+      "outsideChangeNote": "Lista aktywnych modów została zmieniona poza Rimmerge. Instalacja nadpisze te zmiany bieżącą kolejnością.",
+      "forceWarning": "Wygląda na to, że RimWorldWin64.exe jest uruchomiony. Instalacja w tej chwili zapisuje listę aktywnych modów, którą gra nadpisuje przy zamykaniu, więc zmiana może zostać utracona. Wyeksportować mimo to?",
       "exportAnyway": "Eksportuj mimo to",
       "export": "Eksportuj",
       "exportedTo": "Wyeksportowano do: {path}",
@@ -1189,7 +1204,7 @@
       "renderLoadFailed": "Nie udało się wyrenderować tej łatki.",
       "dependenciesHeading": "Zależności",
       "entriesHeading": "Wpisy",
-      "noEntriesYet": "Brak jeszcze decyzji „Scal” ani „Dostarcz zasób” — aby jakąś dodać, zdecyduj w ustaleniach tej łatki o ustaleniu typu nadpisanie defu lub kolizja łatek.",
+      "noEntriesYet": "Brak jeszcze decyzji „Scal” ani „Dostarcz zasób”. Aby jakąś dodać, zdecyduj w ustaleniach tej łatki o ustaleniu typu nadpisanie defu lub kolizja łatek.",
       "skippedHeading": "Pominięte",
       "filesHeading": "Pliki",
       "nothingRendersYet": "Pliki pojawią się tutaj, gdy ta łatka będzie miała co najmniej jedną decyzję „Scal” lub „Dostarcz zasób”.",
@@ -1233,18 +1248,79 @@
     "table": {
       "regionLabel": "Mody",
       "missing": "brakujący",
-      "rovingHint": "Strzałki: przechodzenie, Enter: otwieranie, Spacja: przełączanie"
+      "sourceUnknown": "Nieznane źródło (mod niezainstalowany)",
+      "sourceBadge": {
+        "core": "RimWorld Core",
+        "dlc": "DLC RimWorld",
+        "local": "Mod lokalny",
+        "workshop": "Warsztat Steam"
+      },
+      "rovingHint": "Strzałki: przechodzenie, Enter: otwieranie, Spacja: przełączanie",
+      "pendingScan": "jeszcze nie zeskanowano",
+      "loadOrderPosition": "Pozycja w kolejności ładowania: {position}",
+      "membership": {
+        "added": "Dodany",
+        "removed": "Usunięty",
+        "addedTitle": "Tego moda nie ma jeszcze na zapisanej liście aktywnych modów. Zastosowanie go doda.",
+        "removedTitle": "Ten mod jest na zapisanej liście aktywnych modów. Zastosowanie go z niej usunie."
+      }
+    },
+    "sort": {
+      "groupLabel": "Kolejność sortowania",
+      "heading": "Sortuj",
+      "key": {
+        "loadOrder": "Kolejność ładowania",
+        "name": "Nazwa",
+        "packageId": "ID pakietu",
+        "lastUpdated": "Data aktualizacji"
+      },
+      "ascending": {
+        "loadOrder": "Sortuj według kolejności ładowania, od pierwszego do ostatniego",
+        "name": "Sortuj według nazwy, od A do Z",
+        "packageId": "Sortuj według ID pakietu, od A do Z",
+        "lastUpdated": "Sortuj według daty aktualizacji, od najstarszych"
+      },
+      "activeAscending": {
+        "loadOrder": "Posortowano według kolejności ładowania, od pierwszego do ostatniego. Kliknij, aby sortować od ostatniego do pierwszego.",
+        "name": "Posortowano według nazwy, od A do Z. Kliknij, aby sortować od Z do A.",
+        "packageId": "Posortowano według ID pakietu, od A do Z. Kliknij, aby sortować od Z do A.",
+        "lastUpdated": "Posortowano według daty aktualizacji, od najstarszych. Kliknij, aby sortować od najnowszych."
+      },
+      "activeDescending": {
+        "loadOrder": "Posortowano według kolejności ładowania, od ostatniego do pierwszego. Kliknij, aby sortować od pierwszego do ostatniego.",
+        "name": "Posortowano według nazwy, od Z do A. Kliknij, aby sortować od A do Z.",
+        "packageId": "Posortowano według ID pakietu, od Z do A. Kliknij, aby sortować od A do Z.",
+        "lastUpdated": "Posortowano według daty aktualizacji, od najnowszych. Kliknij, aby sortować od najstarszych."
+      },
+      "updatedUnavailable": {
+        "shippedWithGame": "W zestawie z grą",
+        "unknown": "Nieznana data aktualizacji"
+      }
     },
     "pendingChanges": {
-      "unscanned": "{count} oczekująca zmiana — przeskanuj ponownie, aby zaktualizować analizę | {count} oczekujące zmiany — przeskanuj ponownie, aby zaktualizować analizę | {count} oczekujących zmian — przeskanuj ponownie, aby zaktualizować analizę",
-      "unapplied": "{count} zmiana jeszcze niezastosowana w ModsConfig.xml | {count} zmiany jeszcze niezastosowane w ModsConfig.xml | {count} zmian jeszcze niezastosowanych w ModsConfig.xml",
+      "unscanned": "{count} oczekująca zmiana. Przeskanuj ponownie, aby zaktualizować analizę. | {count} oczekujące zmiany. Przeskanuj ponownie, aby zaktualizować analizę. | {count} oczekujących zmian. Przeskanuj ponownie, aby zaktualizować analizę.",
+      "unapplied": "{count} zmiana jeszcze niezastosowana | {count} zmiany jeszcze niezastosowane | {count} zmian jeszcze niezastosowanych",
       "rescanButton": "Skanuj ponownie",
       "rescanFinishedToast": "Ponowne skanowanie zakończone z {count} uwagą | Ponowne skanowanie zakończone z {count} uwagami | Ponowne skanowanie zakończone z {count} uwagami",
-      "rescannedWithWarningsToast": "Przeskanowano ponownie z ostrzeżeniami"
+      "rescannedWithWarningsToast": "Przeskanowano ponownie z ostrzeżeniami",
+      "discardButton": "Odrzuć oczekujące zmiany"
+    },
+    "fileChange": {
+      "outside": "Lista aktywnych modów została zmieniona poza Rimmerge (+{added}, -{removed}). Twoje oczekujące zmiany zostają zachowane. Zastosowanie nadpisałoby te zewnętrzne zmiany.",
+      "reordered": "Kolejność aktywnych modów została zmieniona poza Rimmerge. Twoje oczekujące zmiany zostają zachowane. Zastosowanie nadpisałoby tę kolejność.",
+      "outsideNoPending": "Lista aktywnych modów została zmieniona poza Rimmerge (+{added}, -{removed}). Zastosowanie nadpisałoby te zewnętrzne zmiany.",
+      "reorderedNoPending": "Kolejność aktywnych modów została zmieniona poza Rimmerge. Zastosowanie nadpisałoby tę kolejność.",
+      "useFile": "Użyj listy z pliku",
+      "useFileTitle": "Najpierw otwiera podgląd. Nic się nie zmieni, dopóki nie potwierdzisz.",
+      "stale": {
+        "missing": "Brak pliku ModsConfig.xml. Oznaczenia „Dodany” i „Usunięty” opierają się na ostatniej liście, którą Rimmerge zdołał odczytać.",
+        "unreadable": "Rimmerge nie może teraz odczytać pliku ModsConfig.xml. Oznaczenia „Dodany” i „Usunięty” opierają się na ostatniej liście, którą zdołał odczytać.",
+        "malformed": "Nie można teraz zinterpretować pliku ModsConfig.xml, być może dlatego, że trwa jego zapisywanie. Oznaczenia „Dodany” i „Usunięty” opierają się na ostatniej liście, którą Rimmerge zdołał odczytać."
+      }
     },
     "closeGuard": {
       "header": "Niezapisane zmiany aktywnych modów",
-      "body": "Robocza lista aktywnych modów ma zmiany, których nie uwzględniło jeszcze żadne ponowne skanowanie, albo przeskanowanej kolejności nie zastosowano jeszcze do {modsConfig}. Wyjście teraz oznacza utratę tych zmian, które są tylko w pamięci — plik gry w obu przypadkach pozostaje nietknięty.",
+      "body": "Aktywne mody mają zmiany, których nie uwzględniło jeszcze żadne ponowne skanowanie, albo przeskanowaną kolejność, której jeszcze nie zastosowano. Wyjście teraz oznacza utratę tych zmian. Lista modów zapisana w grze w obu przypadkach pozostaje nietknięta.",
       "stay": "Zostań",
       "leaveAnyway": "Wyjdź mimo to"
     },
@@ -1253,7 +1329,7 @@
     },
     "detail": {
       "loadFailed": "Nie udało się wczytać tego moda.",
-      "idAndSource": "{modId} — {source}",
+      "idAndSource": "{modId} ({source})",
       "byAuthors": "Autor: {authors}",
       "tagsHeading": "Tagi",
       "declaredOrderHeading": "Zadeklarowana kolejność",
@@ -1272,8 +1348,8 @@
     },
     "page": {
       "heading": "Mody",
-      "activeTab": "Aktywne",
-      "inactiveTab": "Nieaktywne",
+      "activeHeading": "Aktywne",
+      "inactiveHeading": "Nieaktywne",
       "searchPlaceholder": "Szukaj modów…",
       "tagFilterPlaceholder": "Filtruj według tagu…",
       "sourcePlaceholder": "Źródło",
@@ -1283,7 +1359,7 @@
       "activateSelectedButton": "Włącz zaznaczone",
       "loadFailed": "Nie udało się wczytać modów.",
       "totalMods": "{count} mod | {count} mody | {count} modów",
-      "pageCapHint": "(pokazano pierwsze {count} — zawęź wyszukiwanie)",
+      "pageCapHint": "(pokazano pierwsze {count}; zawęź wyszukiwanie, aby zobaczyć więcej)",
       "activateDialogHeader": "Włącz mody",
       "willActivateHeading": "Zostaną włączone:",
       "alreadyActiveHeading": "Już aktywne, pominięte:",
@@ -1295,11 +1371,50 @@
       "refusedHeading": "Odmówiono (wymagane):",
       "dependentsStillActive": "{count} aktywny mod nadal zależy od moda {mod}: {deps}. | {count} aktywne mody nadal zależą od moda {mod}: {deps}. | {count} aktywnych modów nadal zależy od moda {mod}: {deps}.",
       "deactivatedToast": "Wyłączono",
-      "deactivateButton": "Wyłącz"
+      "deactivateButton": "Wyłącz",
+      "rescanButton": "Skanuj mody ponownie",
+      "searchActiveLabel": "Szukaj wśród aktywnych modów",
+      "searchInactiveLabel": "Szukaj wśród nieaktywnych modów"
     },
     "defSearch": {
       "ariaLabel": "Przejdź do defu",
       "placeholder": "Przejdź do defu…"
+    },
+    "selection": {
+      "selectAllShown": "Zaznacz widoczny mod ({count}) | Zaznacz widoczne mody ({count}) | Zaznacz widoczne mody ({count})",
+      "selectAllEmpty": "Zaznacz wszystkie",
+      "selectedCount": "{count} zaznaczony | {count} zaznaczone | {count} zaznaczonych",
+      "notShown": "({count} niewidoczny) | ({count} niewidoczne) | ({count} niewidocznych)",
+      "clear": "Odznacz wszystkie"
+    },
+    "move": {
+      "up": "Przenieś wyżej",
+      "down": "Przenieś niżej",
+      "top": "Przenieś na górę",
+      "bottom": "Przenieś na dół",
+      "after": "Przenieś za…",
+      "menuButton": "Przenieś mod {name}",
+      "activateAtButton": "Włącz mod {name} na pozycji…",
+      "afterDialogHeader": "Przenieś za inny mod",
+      "activateAtDialogHeader": "Włącz na wybranej pozycji",
+      "pickHelp": "Wybierz mod, bezpośrednio za którym ma trafić zaznaczenie.",
+      "atStart": "Na początku listy",
+      "atEnd": "Na końcu listy",
+      "pickCapped": "Pokazano tylko pierwsze dopasowania ({count}). Zawęź wyszukiwanie, aby zobaczyć pozostałe.",
+      "blockedReason": "Zmiana kolejności jest wyłączona, bo ta lista nie jest posortowana według kolejności ładowania, od pierwszego do ostatniego. Posortuj według kolejności ładowania, aby przenosić mody.",
+      "edgeTop": "Już na górze tej listy",
+      "edgeBottom": "Już na dole tej listy",
+      "announced": "Przeniesiono mod {name} na pozycję {position}",
+      "announcedOf": "Przeniesiono mod {name} na pozycję {position} z {total}",
+      "announcedMany": "Przeniesiono {count} mod, od pozycji {position} | Przeniesiono {count} mody, od pozycji {position} | Przeniesiono {count} modów, od pozycji {position}",
+      "announcedManyOf": "Przeniesiono {count} mod, od pozycji {position} z {total} | Przeniesiono {count} mody, od pozycji {position} z {total} | Przeniesiono {count} modów, od pozycji {position} z {total}",
+      "announcedManyHidden": "Przeniesiono {count} mod (niewidoczne: {hidden}), od pozycji {position} | Przeniesiono {count} mody (niewidoczne: {hidden}), od pozycji {position} | Przeniesiono {count} modów (niewidoczne: {hidden}), od pozycji {position}",
+      "announcedManyHiddenOf": "Przeniesiono {count} mod (niewidoczne: {hidden}), od pozycji {position} z {total} | Przeniesiono {count} mody (niewidoczne: {hidden}), od pozycji {position} z {total} | Przeniesiono {count} modów (niewidoczne: {hidden}), od pozycji {position} z {total}",
+      "switchedNote": "Używasz teraz własnej kolejności. Sugerowana kolejność się nie zmieniła.",
+      "viewSuggested": "Pokaż sugerowaną",
+      "suggestedNote": "„Zastosuj” zapisze sugerowaną kolejność. Przeniesienie moda przełączy na twoją własną kolejność.",
+      "coreStaysActive": "Modu Core nie można wyłączyć.",
+      "inactiveNotOrdered": "Ta lista nie ma własnej kolejności. Przeciągnij mody na listę aktywnych, aby je włączyć."
     }
   },
   "rules": {
@@ -1316,7 +1431,7 @@
       "notAppliedTitle": "Nie obowiązuje: zaimportowane pary są wyłączone",
       "promotedFrom": "(przejęta z: {origin})",
       "overridesDeclaredTag": "(nadpisuje zadeklarowane)",
-      "overridesDeclaredTitle": "Ta reguła jest oznaczona jako nadpisująca zadeklarowane ograniczenie (loadAfter/modDependencies) między tymi samymi dwoma modami, jeśli takie istnieje — dla tej konkretnej pary wygrywa z deklaracją autora, ale nigdy z twardą zależnością.",
+      "overridesDeclaredTitle": "Ta reguła jest oznaczona jako nadpisująca zadeklarowane ograniczenie (loadAfter/modDependencies) między tymi samymi dwoma modami, jeśli takie istnieje. Dla tej pary wygrywa z deklaracją autora, ale nigdy z twardą zależnością.",
       "promotedButton": "Przejęta",
       "promoteButton": "Przejmij",
       "deleteButton": "Usuń"
@@ -1327,7 +1442,7 @@
       "loadsBeforeLabel": "Ładowany przed (zależność)",
       "commentLabel": "Komentarz (opcjonalnie)",
       "overrideDeclaredLabel": "Nadpisz zadeklarowane ograniczenie między tymi modami, jeśli istnieje",
-      "overrideDeclaredWarning": "Dla tej konkretnej pary wygrywa to z własnymi loadAfter/modDependencies autora — nigdy z twardą zależnością. Używaj tylko wtedy, gdy sama deklaracja jest nieaktualna lub błędna.",
+      "overrideDeclaredWarning": "Dla tej pary wygrywa to z własnymi loadAfter/modDependencies autora, ale nigdy z twardą zależnością. Używaj tego tylko wtedy, gdy sama deklaracja jest nieaktualna lub błędna.",
       "sameModError": "Reguła pary wymaga dwóch różnych modów.",
       "replaceWarning": "Zastępuje to istniejącą regułę ({origin}) dla tej pary.",
       "addButton": "Dodaj"
@@ -1369,7 +1484,7 @@
       "refreshButton": "Odśwież",
       "refreshDisabledTitle": "Wyłączone przez „Zezwalaj na dostęp do internetu” (strona Ustawienia)",
       "networkDisabledNotice": "Dostęp do internetu jest wyłączony, więc odświeżanie jest niedostępne. Bazy z pamięci podręcznej są nadal używane.",
-      "failureBanner": "Ostatnie odświeżenie nie powiodło się dla co najmniej jednego źródła — kopia z pamięci podręcznej jest nadal używana.",
+      "failureBanner": "Ostatnie odświeżenie nie powiodło się dla co najmniej jednego źródła. Kopia z pamięci podręcznej jest nadal używana.",
       "loadFailed": "Nie udało się wczytać baz reguł.",
       "needsReimport": "(dostępny ponowny import)",
       "neverFetched": "Nigdy nie pobrano",
@@ -1461,15 +1576,15 @@
   },
   "defPage": {
     "loadFailed": "Nie udało się wczytać tego defu.",
-    "sourceTitle": "Widok: kolejność {source} — kliknij, aby przełączyć",
-    "partialBanner": "Niekompletne — powód zatrzymania: {reason}. Pola po tym miejscu nie są pokazane.",
+    "sourceTitle": "Widok: kolejność {source}. Kliknij, aby przełączyć",
+    "partialBanner": "Niekompletne. Powód zatrzymania: {reason}. Pola po tym miejscu nie są pokazane.",
     "replayStopper": "Operacja {opIndex} moda {mod}: {error}",
-    "ambiguousTemplateIntro": "Niejednoznaczny szablon: ta nazwa (Name) ma {count} rejestrację. RimWorld rozwiązuje każdego potomka niezależnie, do tej rejestracji, która ładuje się najbliżej przed nim lub w tym samym miejscu — nigdy do jednego zwycięzcy. „Zwycięzca” i „ostatnio załadowany reprezentant” powyżej to jedynie jawnie oznaczony zamiennik tej aplikacji na wypadek, gdy nie chodzi o konkretnego potomka, a nie odpowiedź. | Niejednoznaczny szablon: ta nazwa (Name) ma {count} rejestracje. RimWorld rozwiązuje każdego potomka niezależnie, do tej rejestracji, która ładuje się najbliżej przed nim lub w tym samym miejscu — nigdy do jednego zwycięzcy. „Zwycięzca” i „ostatnio załadowany reprezentant” powyżej to jedynie jawnie oznaczony zamiennik tej aplikacji na wypadek, gdy nie chodzi o konkretnego potomka, a nie odpowiedź. | Niejednoznaczny szablon: ta nazwa (Name) ma {count} rejestracji. RimWorld rozwiązuje każdego potomka niezależnie, do tej rejestracji, która ładuje się najbliżej przed nim lub w tym samym miejscu — nigdy do jednego zwycięzcy. „Zwycięzca” i „ostatnio załadowany reprezentant” powyżej to jedynie jawnie oznaczony zamiennik tej aplikacji na wypadek, gdy nie chodzi o konkretnego potomka, a nie odpowiedź.",
+    "ambiguousTemplateIntro": "Niejednoznaczny szablon: ta nazwa (Name) ma {count} rejestrację. RimWorld rozwiązuje każdego potomka osobno, używając rejestracji, która ładuje się najbliżej przed nim lub w tym samym miejscu, więc nie ma jednego zwycięzcy. „Zwycięzca” i „ostatnio załadowany reprezentant” powyżej to tylko zamiennik tej aplikacji na wypadek, gdy nie chodzi o konkretnego potomka, a nie odpowiedź. | Niejednoznaczny szablon: ta nazwa (Name) ma {count} rejestracje. RimWorld rozwiązuje każdego potomka osobno, używając rejestracji, która ładuje się najbliżej przed nim lub w tym samym miejscu, więc nie ma jednego zwycięzcy. „Zwycięzca” i „ostatnio załadowany reprezentant” powyżej to tylko zamiennik tej aplikacji na wypadek, gdy nie chodzi o konkretnego potomka, a nie odpowiedź. | Niejednoznaczny szablon: ta nazwa (Name) ma {count} rejestracji. RimWorld rozwiązuje każdego potomka osobno, używając rejestracji, która ładuje się najbliżej przed nim lub w tym samym miejscu, więc nie ma jednego zwycięzcy. „Zwycięzca” i „ostatnio załadowany reprezentant” powyżej to tylko zamiennik tej aplikacji na wypadek, gdy nie chodzi o konkretnego potomka, a nie odpowiedź.",
     "knownChildrenResolve": "{count} znany potomek jest rozwiązywany tutaj | {count} znanych potomków jest rozwiązywanych tutaj | {count} znanych potomków jest rozwiązywanych tutaj",
     "ownersHeading": "Właściciele",
     "winnerTag": "(zwycięzca)",
     "representativeTag": "(ostatnio załadowany reprezentant)",
-    "representativeTitle": "Tylko reprezentant — jedna odpowiedź nie istnieje, zobacz powyższą informację o niejednoznacznym szablonie",
+    "representativeTitle": "Tylko reprezentant. Jedna odpowiedź nie istnieje; zobacz powyższą informację o niejednoznacznym szablonie",
     "generatedTag": "(wygenerowany)",
     "patchersHeading": "Łatający",
     "patcherStatusNotReached": "nie osiągnięto",
@@ -1515,7 +1630,7 @@
     "awareness": "Świadomość"
   },
   "order": {
-    "heading": "Kolejność ładowania — {source}",
+    "heading": "Kolejność ładowania: {source}",
     "loadFailed": "Nie udało się wczytać kolejności.",
     "sortProvenance": {
       "summary": "rozstrzyganie remisów: {tieBreak} · zaimportowane pary: {pairs} · zaimportowane położenia: {placements}",
@@ -1532,7 +1647,7 @@
       "movedFrom": "z #{position}"
     },
     "whyPanel": {
-      "headerWithMod": "{mod} — dlaczego tutaj?",
+      "headerWithMod": "Dlaczego {mod} jest tutaj?",
       "headerFallback": "Dlaczego tutaj?",
       "loadFailed": "Nie udało się wczytać wyjaśnienia.",
       "positionHeading": "Pozycja",
@@ -1587,7 +1702,7 @@
   "orderShare": {
     "export": {
       "button": "Eksportuj",
-      "hint": "Eksportuje kolejność z ModsConfig.xml — tę, którą ładuje RimWorld.",
+      "hint": "Eksportuje kolejność aktywnych modów, czyli tę, którą ładuje RimWorld.",
       "saveFile": "Zapisz jako listę modów RimWorld (.rml)…",
       "copyText": "Kopiuj jako tekst",
       "fileFilter": "Lista modów RimWorld",
@@ -1613,7 +1728,7 @@
       "summary": "{count} mod na liście | {count} mody na liście | {count} modów na liście",
       "versionDiffers": "Utworzono w RimWorld {listed}; masz wersję {game}.",
       "replacesPending": "Zmiany włączenia i wyłączenia modów wprowadzone od ostatniego skanowania zostaną zastąpione.",
-      "replacesUnwritten": "Ten import zastąpi bieżącą kolejność, która nie jest jeszcze zapisana w ModsConfig.xml.",
+      "replacesUnwritten": "Ten import zastąpi bieżącą kolejność, która nie została jeszcze zastosowana.",
       "moved": "{count} mod zmienia pozycję. | {count} mody zmieniają pozycję. | {count} modów zmienia pozycję.",
       "sameOrder": "Zainstalowane mody zachowują dotychczasową kolejność.",
       "coreAdded": "Modu Core nie było na liście; pozostaje pierwszy.",
@@ -1631,7 +1746,7 @@
       "copyMissing": "Kopiuj listę brakujących modów",
       "missingCopied": "Skopiowano listę brakujących modów.",
       "duplicatesHeading": "Na liście więcej niż raz ({count})",
-      "duplicateRow": "{id} — używana jest pierwsza pozycja (#{position}).",
+      "duplicateRow": "{id}: używana jest pierwsza pozycja (#{position}).",
       "otherCopyHeading": "Dopasowano inną kopię ({count})",
       "otherCopyRow": "{listed} → twoja kopia: {installed}",
       "skippedHeading": "Niezrozumiałe wiersze ({count})",
@@ -1643,7 +1758,7 @@
       "blocked": {
         "coreMissing": "Mod Core nie jest zainstalowany, więc nie można zaimportować tej listy.",
         "nothingInstalled": "Żaden z modów z listy nie jest zainstalowany, więc nie ma czego importować.",
-        "tooMany": "Ta kolejność zawierałaby za dużo modów; import może ich zawierać najwyżej {limit}.",
+        "tooMany": "Ta kolejność zawierałaby za dużo modów. Import może ich zawierać najwyżej {limit}.",
         "unknown": "{id} nie jest zainstalowanym modem.",
         "duplicate": "{id} występuje w kolejności więcej niż raz."
       },
@@ -1652,8 +1767,8 @@
       "whatHappens": "Rimmerge przeskanuje ponownie z tą kolejnością i pokaże ją jako bieżącą. Nic nie zostanie zapisane, dopóki jej nie zastosujesz.",
       "confirm": "Użyj tej kolejności"
     },
-    "imported": "Zaimportowana kolejność jest gotowa. Przejrzyj ją, a potem zastosuj, aby zapisać ModsConfig.xml.",
-    "notInFile": "Ta kolejność nie jest jeszcze zapisana w ModsConfig.xml.",
+    "imported": "Zaimportowana kolejność jest gotowa. Przejrzyj ją, a potem zastosuj, aby zapisać ją jako kolejność aktywnych modów.",
+    "notInFile": "To jeszcze nie jest kolejność aktywnych modów.",
     "notInFileApply": "Zastosuj",
     "previewOutdated": "Zainstalowane mody zmieniły się od czasu podglądu. Wyświetl podgląd listy ponownie.",
     "rejected": {
@@ -1668,17 +1783,19 @@
       "noEntries": "Nie znaleziono żadnego ID pakietu."
     },
     "importedWithWarnings": "Skanowanie zgłosiło {count} ostrzeżenie. | Skanowanie zgłosiło {count} ostrzeżenia. | Skanowanie zgłosiło {count} ostrzeżeń.",
-    "importedRuleWarnings": "Zaimportowano, ale części reguł nie udało się wczytać"
+    "importedRuleWarnings": "Zaimportowano, ale części reguł nie udało się wczytać",
+    "revertOrder": "Przywróć zapisaną kolejność aktywnych modów",
+    "revertOrderTitle": "Przywraca kolejność zapisaną w ModsConfig.xml."
   },
   "apply": {
     "dialog": {
       "header": "Zastosuj",
       "defCacheNote": "Aktywny mod pamięci podręcznej defów wiąże ją z kolejnością ładowania; pierwsze uruchomienie gry po tym zastosowaniu ją odbuduje{parenthetical}.",
       "defCacheParenthetical": " (około {seconds} s według ostatniego logu)",
-      "writeModsConfigLabel": "Zapisz ModsConfig.xml (kolejność ładowania, którą odczytuje RimWorld)",
-      "staleActiveSetMessage": "Robocza lista aktywnych modów ma oczekujące zmiany — przeskanuj ponownie, aby zapisać ModsConfig.xml.",
+      "writeModsConfigLabel": "Zapisz listę aktywnych modów (kolejność ładowania, którą odczytuje RimWorld)",
+      "staleActiveSetMessage": "Aktywne mody mają oczekujące zmiany. Przeskanuj ponownie przed zapisaniem listy aktywnych modów.",
       "rescanButton": "Skanuj ponownie",
-      "writeMergeModLabel": "Zapisz mod scalający (wygeneruj mod w Mods/ albo usuń go, jeśli nie pozostała żadna decyzja scalania ani zasobu)",
+      "writeMergeModLabel": "Zapisz mod scalający (zapisuje wygenerowany mod w Mods/ albo usuwa go, jeśli nie pozostała żadna decyzja scalania ani zasobu)",
       "closeButton": "Zamknij",
       "cancelButton": "Anuluj",
       "writeAnywayButton": "Zapisz mimo to",
@@ -1687,11 +1804,11 @@
       "saveDecisionsButton": "Zapisz decyzje i reguły"
     },
     "preflight": {
-      "unappliedHeading": "Przeskanowane, ale jeszcze niezastosowane w ModsConfig.xml:",
+      "unappliedHeading": "Przeskanowane, ale jeszcze niezastosowane:",
       "addedLabel": "Dodane:",
       "removedLabel": "Usunięte:",
       "orderLabel": "Kolejność",
-      "modsConfigLabel": "ModsConfig.xml",
+      "modsConfigLabel": "Lista aktywnych modów",
       "decisionsLabel": "Decyzje",
       "rulesLabel": "Reguły",
       "movedModsLabel": "Przesuwane mody",
@@ -1704,41 +1821,41 @@
     },
     "progress": {
       "heading": "Weryfikuj kolejność",
-      "description": "Odtwarza każdą obcą operację łatki, aby przewidzieć, które nie powiodą się w tej kolejności — tak, jak pokazałby to log samego RimWorld. Tylko na żądanie — w dużej instalacji trwa to około minuty.",
+      "description": "Odtwarza każdą obcą operację łatki, aby przewidzieć, które nie powiodą się w tej kolejności, tak jak pokazałby to log samego RimWorld. Działa tylko na żądanie, a w dużej instalacji trwa około minuty.",
       "verifyingLabel": "Weryfikowanie kolejności",
       "checksCaption": "Sprawdzenia: {checked} z {total}",
       "startingCaption": "Uruchamianie…"
     },
     "diff": {
-      "summary": "Sprawdzono {count} def (kolejność {source}) — {list}. | Sprawdzono {count} defy (kolejność {source}) — {list}. | Sprawdzono {count} defów (kolejność {source}) — {list}.",
+      "summary": "Sprawdzono {count} def (kolejność {source}): {list}. | Sprawdzono {count} defy (kolejność {source}): {list}. | Sprawdzono {count} defów (kolejność {source}): {list}.",
       "summaryOperations": "{count} operacja z przewidywanym niepowodzeniem | {count} operacje z przewidywanym niepowodzeniem | {count} operacji z przewidywanym niepowodzeniem",
       "summaryTargets": "{count} dotknięty docelowy def | {count} dotknięte docelowe defy | {count} dotkniętych docelowych defów",
       "removedByCount": "Usunięte przez wcześniejszy mod: {count}",
       "notYetInjectedCount": "Jeszcze niewstrzyknięte: {count}",
       "deadTargetCount": "Martwy cel: {count}",
       "unknownCount": "Nieznane: {count}",
-      "orderFixableHeading": "Do naprawienia zmianą kolejności — przesunięcie wskazanego moda może je rozwiązać:",
-      "cosmeticText": "kosmetyczne: ten sam końcowy def w obu kolejnościach — bez propozycji zmiany kolejności.",
+      "orderFixableHeading": "Do naprawienia zmianą kolejności (przesunięcie wskazanego moda może je rozwiązać):",
+      "cosmeticText": "kosmetyczne: końcowy def jest taki sam w obu kolejnościach, więc nie proponuje się zmiany kolejności.",
       "mergeInsteadLink": "Zamiast tego scal",
       "mergeInstead": "{link}, aby zachować intencję przegrywającego moda.",
       "noMergeAvailable": "Dla tego celu scalanie jest niedostępne.",
       "removedByCause": "Mod {mod}, ładowany wcześniej, usuwa docelowy węzeł.",
       "notYetInjectedCause": "docelowy węzeł wstrzykuje mod {mod}, który ładuje się później.",
       "modPossessive": "{operation} moda {mod}",
-      "notFullyFixableHeading": "Nie w pełni do naprawienia zmianą kolejności — nieaktualne łatki, niesklasyfikowana przyczyna lub ich mieszanka; pogrupowane według modów:",
-      "groupedByModLine": "{mod} — {list}",
+      "notFullyFixableHeading": "Nie w pełni do naprawienia zmianą kolejności (nieaktualne łatki, niesklasyfikowana przyczyna lub ich mieszanka), pogrupowane według modów:",
+      "groupedByModLine": "{mod}: {list}",
       "groupedOperations": "{count} operacja | {count} operacje | {count} operacji",
       "groupedTargets": "{count} docelowy def | {count} docelowe defy | {count} docelowych defów",
-      "partlyFixableHeading": "Niektóre z nich da się częściowo naprawić zmianą kolejności — zmiana kolejności rozwiązuje część ich docelowych defów:",
+      "partlyFixableHeading": "Niektóre z nich da się częściowo naprawić zmianą kolejności. Zmiana kolejności rozwiązałaby część ich docelowych defów:",
       "skippedCandidates": "Nie udało się sprawdzić {count} kandydata. | Nie udało się sprawdzić {count} kandydatów. | Nie udało się sprawdzić {count} kandydatów.",
-      "pvoMismatchWarning": "Zaimportowany log powstał przy innej kolejności modów niż ta właśnie zweryfikowana — poniższe liczby porównują dwa niezwiązane uruchomienia.",
+      "pvoMismatchWarning": "Zaimportowany log powstał przy innej kolejności modów niż ta właśnie zweryfikowana, więc poniższe liczby porównują dwa niezwiązane uruchomienia.",
       "pvoHeading": "Przewidywane a zaobserwowane (ostatnio zaimportowany log)",
       "pvoSnapshotNote": "Zaimportowany log to zrzut konsoli, a nie zapis całego działania gry: niepowodzenia zapisanego przez grę przed najstarszym wpisem konsoli w nim nie ma, więc „przewidywane, niezaobserwowane” nie dowodzi, że niepowodzenie nie wystąpiło.",
       "pvoCutOffNote": "Zaimportowany log kończy się bez czystego wyjścia i zanim zapisano jakikolwiek wynik łatki, więc gra mogła nigdy nie dojść do fazy łatek: „przewidywane, niezaobserwowane” nie dowodzi, że niepowodzenie nie wystąpiło.",
       "pvoGapsNote": "W czasie, gdy powstawał zaimportowany log, gra przestała zapisywać komunikaty, więc może w nim brakować niepowodzenia: „przewidywane, niezaobserwowane” nie dowodzi, że niepowodzenie nie wystąpiło.",
       "pvoMatchedSummary": "Potwierdzone przez log: {count}",
       "pvoPredictedOnlySummary": "Przewidywane, niezaobserwowane w logu: {count}",
-      "pvoObservedOnlySummary": "Zaobserwowane w logu, nieprzewidywane: {count} — wymienione bez zmian, nigdy nie pomijane:",
+      "pvoObservedOnlySummary": "Zaobserwowane w logu, nieprzewidywane: {count} (wymienione bez zmian, nigdy nie pomijane):",
       "unattributedRaw": "(nieprzypisane: {raw})",
       "counterfactualJobsLine": "{count} operacja ponownie sprawdzona względem innych kolejności ładowania | {count} operacje ponownie sprawdzone względem innych kolejności ładowania | {count} operacji ponownie sprawdzonych względem innych kolejności ładowania",
       "counterfactualResolvedLine": "{count} niepowodzenie wyjaśnione | {count} niepowodzenia wyjaśnione | {count} niepowodzeń wyjaśnionych",
@@ -1751,18 +1868,18 @@
       "createPairRule": "Utwórz regułę pary",
       "createPairRuleAnyway": "Utwórz regułę pary mimo to",
       "conflictText": "jest w konflikcie z ograniczeniem „{kind}”: {detail} ({status})",
-      "ruleCreated": "Utworzono regułę. Uruchom ponownie „Weryfikuj kolejność”, aby ją sprawdzić — reguła wciąż może zostać uchylona przez deklarację autora lub inną regułę, a dwie reguły o przeciwnych kierunkach się znoszą; strona „Reguły” pokazuje, co faktycznie obowiązuje.",
+      "ruleCreated": "Utworzono regułę. Uruchom ponownie „Weryfikuj kolejność”, aby ją sprawdzić. Reguła wciąż może zostać uchylona przez deklarację autora lub inną regułę, a dwie reguły o przeciwnych kierunkach się znoszą. Strona „Reguły” pokazuje, co faktycznie obowiązuje.",
       "ruleExists": "Reguła już istnieje."
     },
     "result": {
-      "forceWarning": "Wygląda na to, że RimWorldWin64.exe jest uruchomiony. Gra nadpisuje ModsConfig.xml przy zamykaniu, więc to, co teraz zapiszesz, może zostać utracone. Zapisać mimo to?",
+      "forceWarning": "Wygląda na to, że RimWorldWin64.exe jest uruchomiony. Gra nadpisuje listę aktywnych modów przy zamykaniu, więc to, co teraz zapiszesz, może zostać utracone. Zapisać mimo to?",
       "mergeModPath": "Mod scalający: {path}",
       "mergeModRemoved": "Mod scalający: usunięty (nie pozostała żadna decyzja scalania ani zasobu)",
       "mergeModBackupPath": "Kopia zapasowa moda scalającego: {path}",
-      "skippedHeading": "Pominięte — mod scalający zapisano bez nich:",
+      "skippedHeading": "Pominięte. Mod scalający zapisano bez nich:",
       "toastAppliedSummary": "Zastosowano",
       "toastSavedSummary": "Zapisano",
-      "toastModsConfigPath": "ModsConfig: {path}",
+      "toastModsConfigPath": "Lista aktywnych modów: {path}",
       "toastBackupPath": "Kopia zapasowa: {path}",
       "toastDecisionsPath": "Decyzje: {path}",
       "toastRulesPath": "Reguły: {path}",
@@ -1797,11 +1914,11 @@
     },
     "launchedSteam": "Poproszono Steam o uruchomienie RimWorld.",
     "launchedExecutable": "Uruchamianie RimWorld.",
-    "notStartedAfterApply": "Nie zapisano ModsConfig.xml, więc RimWorld nie został uruchomiony.",
+    "notStartedAfterApply": "Nie zapisano listy aktywnych modów, więc RimWorld nie został uruchomiony.",
     "applyFirst": {
       "header": "Najpierw zastosować?",
-      "orderDiffers": "Kolejność {order} nie jest zapisana w ModsConfig.xml (stan z ostatniego skanowania lub zastosowania). Jeśli uruchomisz grę teraz, RimWorld wystartuje z modami i w kolejności, które podaje ten plik.",
-      "activationChanges": "Oczekujące zmiany włączenia i wyłączenia modów nie są jeszcze zapisane w ModsConfig.xml. Jeśli uruchomisz grę teraz, RimWorld wystartuje bez nich.",
+      "orderDiffers": "Kolejność {order} nie jest jeszcze zapisana jako kolejność aktywnych modów (stan z ostatniego skanowania lub zastosowania). Jeśli uruchomisz grę teraz, RimWorld wystartuje z zapisanymi modami w zapisanej kolejności.",
+      "activationChanges": "Oczekujące zmiany włączenia i wyłączenia modów nie są jeszcze zapisane. Jeśli uruchomisz grę teraz, RimWorld wystartuje bez nich.",
       "applyButton": "Najpierw zastosuj",
       "launchAnywayButton": "Uruchom mimo to"
     }
@@ -1822,7 +1939,7 @@
       "snapshot": {
         "belowCap": "Konsola zawierała tylko {count} wpis, więc ta kopia nic nie mówi o etapach, których ten wpis nie pokazuje | Konsola zawierała tylko {count} wpisy, więc ta kopia nic nie mówi o etapach, których te wpisy nie pokazują | Konsola zawierała tylko {count} wpisów, więc ta kopia nic nie mówi o etapach, których te wpisy nie pokazują",
         "atCap": "Tylko {count} wpis, który mieściła konsola (osiągnięty limit konsoli): starsze wpisy gra odrzuciła | Tylko {count} wpisy, które mieściła konsola (osiągnięty limit konsoli): starsze wpisy gra odrzuciła | Tylko {count} wpisów, które mieściła konsola (osiągnięty limit konsoli): starsze wpisy gra odrzuciła",
-        "overCap": "{count} wpis, czyli więcej, niż mieści jedna konsola, więc to nie jest pojedyncza kopia konsoli: kilka kopii wklejonych razem albo problem z przetwarzaniem; nie da się określić, ile gra odrzuciła | {count} wpisy, czyli więcej, niż mieści jedna konsola, więc to nie jest pojedyncza kopia konsoli: kilka kopii wklejonych razem albo problem z przetwarzaniem; nie da się określić, ile gra odrzuciła | {count} wpisów, czyli więcej, niż mieści jedna konsola, więc to nie jest pojedyncza kopia konsoli: kilka kopii wklejonych razem albo problem z przetwarzaniem; nie da się określić, ile gra odrzuciła",
+        "overCap": "{count} wpis to więcej, niż mieści jedna konsola, więc to nie jest pojedyncza kopia konsoli. Możliwe, że wklejono razem kilka kopii albo log został błędnie przetworzony. Nie da się określić, ile gra odrzuciła | {count} wpisy to więcej, niż mieści jedna konsola, więc to nie jest pojedyncza kopia konsoli. Możliwe, że wklejono razem kilka kopii albo log został błędnie przetworzony. Nie da się określić, ile gra odrzuciła | {count} wpisów to więcej, niż mieści jedna konsola, więc to nie jest pojedyncza kopia konsoli. Możliwe, że wklejono razem kilka kopii albo log został błędnie przetworzony. Nie da się określić, ile gra odrzuciła",
         "headTruncated": "Kopia zaczyna się w środku wpisu: jej pierwszy wpis jest niekompletny."
       }
     },
@@ -1848,9 +1965,9 @@
   },
   "startup": {
     "heading": "Koszt uruchomienia",
-    "description": "Jeden wiersz na aktywny mod — modyfikujące operacje łatek, xpath o wolnym kształcie, tekstury, biblioteki DLL i defy, bez pomiarów czasu (Rimmerge nigdy nie uruchamia gry). Zaimportuj {playerLog} lub zrzut konsoli, aby wypełnić kolumny DDS o złych wymiarach i zaobserwowanych pomiarów czasu (zrzut konsoli nie wypełni pomiarów czasu).",
-    "orderMismatchWarning": "Zaimportowany log powstał przy innej kolejności modów niż obecnie wybrana — poniższe kolumny DDS o złych wymiarach i zaobserwowanych pomiarów czasu odzwierciedlają tamto uruchomienie, nie to.",
-    "noOrderBlockWarning": "Zaimportowany log w ogóle nie zawiera listy aktywnych modów, więc nie da się go porównać z wybraną kolejnością — poniższe kolumny DDS o złych wymiarach i zaobserwowanych pomiarów czasu mogą dotyczyć innego uruchomienia.",
+    "description": "Jeden wiersz na aktywny mod, z liczbą modyfikujących operacji łatek, wyrażeń xpath o wolnym kształcie, tekstur, bibliotek DLL i defów. Nie ma pomiarów czasu, bo Rimmerge nigdy nie uruchamia gry. Zaimportuj {playerLog} lub zrzut konsoli, aby wypełnić kolumny DDS o złych wymiarach i zaobserwowanych pomiarów czasu (zrzut konsoli nie wypełni pomiarów czasu).",
+    "orderMismatchWarning": "Zaimportowany log powstał przy innej kolejności modów niż obecnie wybrana, więc poniższe kolumny DDS o złych wymiarach i zaobserwowanych pomiarów czasu odzwierciedlają tamto uruchomienie, nie to.",
+    "noOrderBlockWarning": "Zaimportowany log w ogóle nie zawiera listy aktywnych modów, więc nie da się go porównać z wybraną kolejnością. Poniższe kolumny DDS o złych wymiarach i zaobserwowanych pomiarów czasu mogą dotyczyć innego uruchomienia.",
     "loadFailed": "Nie udało się wczytać tabeli kosztu uruchomienia.",
     "modHeader": "Mod",
     "patchOpsHeader": "Operacje łatek",
@@ -1888,20 +2005,20 @@
         "reclassified": "przeklasyfikowano {count} pole | przeklasyfikowano {count} pola | przeklasyfikowano {count} pól"
       },
       "reclassifiedNames": " ({names})",
-      "strandedValuesLine": "Odrzucono {count} zapisaną wartość — nowa rola przeklasyfikowanego pola nie przyjmuje już tego, co tam zapisano: | Odrzucono {count} zapisane wartości — nowa rola przeklasyfikowanego pola nie przyjmuje już tego, co tam zapisano: | Odrzucono {count} zapisanych wartości — nowa rola przeklasyfikowanego pola nie przyjmuje już tego, co tam zapisano:",
-      "droppedRowsLine": "Odrzucono {count} wiersz — jego cel opuścił zbiór celów: | Odrzucono {count} wiersze — ich cele opuściły zbiór celów: | Odrzucono {count} wierszy — ich cele opuściły zbiór celów:",
+      "strandedValuesLine": "Odrzucono {count} zapisaną wartość, bo nowa rola przeklasyfikowanego pola nie przyjmuje już tego, co tam zapisano: | Odrzucono {count} zapisane wartości, bo nowa rola przeklasyfikowanego pola nie przyjmuje już tego, co tam zapisano: | Odrzucono {count} zapisanych wartości, bo nowa rola przeklasyfikowanego pola nie przyjmuje już tego, co tam zapisano:",
+      "droppedRowsLine": "Odrzucono {count} wiersz, bo jego cel opuścił zbiór celów: | Odrzucono {count} wiersze, bo ich cele opuściły zbiór celów: | Odrzucono {count} wierszy, bo ich cele opuściły zbiór celów:",
       "clean": "Ta zmiana nie odrzuciła żadnych wierszy ani wartości.",
       "closeButton": "Zamknij",
       "saveButton": "Zapisz"
     },
     "rowEditor": {
       "copyFrom": "Kopiuj z:",
-      "winnerBadge": "— zwycięzca",
-      "prefillFrom": "— z moda {mod}",
-      "clampedTo": "— ograniczono do „{name}”: to miejsce przechowuje tylko jedną nazwę, a ta wartość wskazywała kilka ({count}: {joined})",
-      "droppedFromCopy": "— pominięto {count} zapożyczoną wartość, bo ten def nie jest aktywny: {names} | — pominięto {count} zapożyczone wartości, bo te defy nie są aktywne: {names} | — pominięto {count} zapożyczonych wartości, bo te defy nie są aktywne: {names}",
+      "winnerBadge": "(zwycięzca)",
+      "prefillFrom": "(z moda {mod})",
+      "clampedTo": "Ograniczono do „{name}”: to miejsce przechowuje tylko jedną nazwę, a ta wartość wskazywała kilka ({count}: {joined})",
+      "droppedFromCopy": "Pominięto {count} zapożyczoną wartość, bo ten def nie jest aktywny: {names} | Pominięto {count} zapożyczone wartości, bo te defy nie są aktywne: {names} | Pominięto {count} zapożyczonych wartości, bo te defy nie są aktywne: {names}",
       "pairedTo": "sparowane z {slot}",
-      "overrideBadge": "Nadpisanie — {count} istniejące dopasowanie | Nadpisanie — {count} istniejące dopasowania | Nadpisanie — {count} istniejących dopasowań",
+      "overrideBadge": "Nadpisanie: {count} istniejące dopasowanie | Nadpisanie: {count} istniejące dopasowania | Nadpisanie: {count} istniejących dopasowań",
       "inspectDefLink": "Zbadaj def",
       "defNameLabel": "defName",
       "saveRowButton": "Zapisz wiersz",
@@ -1915,8 +2032,8 @@
       "coveredByMod": "pokryte przez {mod}",
       "coveredByAnotherMod": "pokryte przez inny mod",
       "uncovered": "niepokryte",
-      "wouldWinNoOwner": "— wygrałby",
-      "wouldWinWithOwner": "— wygrałby {mod}",
+      "wouldWinNoOwner": "(wygrałby)",
+      "wouldWinWithOwner": "(wygrałby {mod})",
       "noMatches": "Brak pasujących celów."
     },
     "schemaTable": {
@@ -1928,7 +2045,7 @@
       "defTypePlaceholder": "typ defu",
       "hideButton": "Ukryj",
       "unreadableTargets": "Podczas ustalania struktury nie udało się odczytać {count} celu z odwołań: | Podczas ustalania struktury nie udało się odczytać {count} celów z odwołań: | Podczas ustalania struktury nie udało się odczytać {count} celów z odwołań:",
-      "unreadableTargetLine": "{field}: {defType}/{defName} — {reason}",
+      "unreadableTargetLine": "{field}: {defType}/{defName} ({reason})",
       "newFieldPathLabel": "Ścieżka nowego pola",
       "roleLabel": "Rola",
       "defTypeLabel": "Typ defu",
@@ -1941,8 +2058,10 @@
       "exportDirPlaceholder": "Wybierz folder…",
       "chooseButton": "Wybierz…",
       "installCheckboxLabel": "Zainstaluj w folderze Mods i włącz",
-      "staleActiveSetNote": "Oczekujące zmiany włączenia i wyłączenia modów nie są uwzględnione — jeśli mają trafić do tej instalacji, najpierw przeskanuj ponownie.",
-      "forceWarning": "Wygląda na to, że RimWorldWin64.exe jest uruchomiony. Instalacja w tej chwili zapisuje ModsConfig.xml, który gra nadpisuje przy zamykaniu, więc zmiana może zostać utracona. Wyeksportować mimo to?",
+      "staleActiveSetNote": "Oczekujące zmiany włączenia i wyłączenia modów nie są uwzględnione. Jeśli mają trafić do tej instalacji, najpierw przeskanuj ponownie.",
+      "unappliedOrderNote": "Instalacja zapisuje twoją bieżącą kolejność, która nie jest jeszcze zastosowana.",
+      "outsideChangeNote": "Lista aktywnych modów została zmieniona poza Rimmerge. Instalacja nadpisze te zmiany bieżącą kolejnością.",
+      "forceWarning": "Wygląda na to, że RimWorldWin64.exe jest uruchomiony. Instalacja w tej chwili zapisuje listę aktywnych modów, którą gra nadpisuje przy zamykaniu, więc zmiana może zostać utracona. Wyeksportować mimo to?",
       "exportAnyway": "Eksportuj mimo to",
       "export": "Eksportuj",
       "exportedTo": "Wyeksportowano do: {path}",
@@ -1960,7 +2079,7 @@
       "noTargetSelected": "Nie wybrano celu.",
       "ownRowsHeading": "Własne wiersze",
       "newRowButton": "Nowy wiersz",
-      "standaloneHint": "To samodzielna sekcja — jej wiersze nie mają celu do dopasowania, więc nie ma tu kolejki pokrycia.",
+      "standaloneHint": "To samodzielna sekcja. Jej wiersze nie mają celu do dopasowania, więc nie ma tu kolejki pokrycia.",
       "noRowsYet": "Brak wierszy.",
       "selectOrNewRow": "Wybierz wiersz lub kliknij „Nowy wiersz”, aby go utworzyć.",
       "exportHeading": "Eksport",
@@ -1969,11 +2088,11 @@
       "addSectionDialogHeader": "Dodaj sekcję",
       "listingCandidates": "Wyszukiwanie kandydatów…",
       "candidateGroupLabel": "Kandydujący typ sekcji",
-      "noAddableCandidates": "Brak kandydatów do dodania — każdy typ defu należący do modów referencyjnych tego projektu jest już sekcją.",
+      "noAddableCandidates": "Brak kandydatów do dodania. Każdy typ defu należący do modów referencyjnych tego projektu jest już sekcją.",
       "addButton": "Dodaj",
       "removeSectionDialogHeader": "Usunąć tę sekcję?",
       "removeSectionBody": "Usuwa sekcję {defType} i wszystkie jej wiersze. Tego nie da się tutaj cofnąć.",
-      "sectionInUse": "Nadal odwołuje się do niej {count} wiersz w innej sekcji. Usunięcie mimo to pozostawi te odwołania wiszące — późniejszy eksport zgłosi każde z nich jako pominięcie. | Nadal odwołują się do niej {count} wiersze w innej sekcji. Usunięcie mimo to pozostawi te odwołania wiszące — późniejszy eksport zgłosi każde z nich jako pominięcie. | Nadal odwołuje się do niej {count} wierszy w innej sekcji. Usunięcie mimo to pozostawi te odwołania wiszące — późniejszy eksport zgłosi każde z nich jako pominięcie.",
+      "sectionInUse": "Nadal odwołuje się do niej {count} wiersz w innej sekcji. Usunięcie mimo to pozostawi te odwołania wiszące, a późniejszy eksport zgłosi każde z nich jako pominięcie. | Nadal odwołują się do niej {count} wiersze w innej sekcji. Usunięcie mimo to pozostawi te odwołania wiszące, a późniejszy eksport zgłosi każde z nich jako pominięcie. | Nadal odwołuje się do niej {count} wierszy w innej sekcji. Usunięcie mimo to pozostawi te odwołania wiszące, a późniejszy eksport zgłosi każde z nich jako pominięcie.",
       "referenceLine": "{defType} {row}: {path}",
       "removeAnywayButton": "Usuń mimo to",
       "removeButton": "Usuń"
@@ -1990,7 +2109,7 @@
       "targetsHint": "Pozostaw puste, aby utworzyć zupełnie nowy typ defu (projekt „nowy def”) zamiast łatać istniejący.",
       "listCandidatesButton": "Wyszukaj kandydatów",
       "effectiveRefsHeading": "Efektywny zbiór referencji",
-      "excludedTitle": "Wykluczone — kliknij, aby uwzględnić",
+      "excludedTitle": "Wykluczone. Kliknij, aby uwzględnić",
       "includeTitle": "Kliknij, aby wykluczyć",
       "excludedTag": "wykluczone",
       "includedTag": "×",
@@ -1998,7 +2117,7 @@
       "candidateGroupLabel": "Kandydujący typ przypisania",
       "instanceCount": "{defType} ({count} instancja) | {defType} ({count} instancje) | {defType} ({count} instancji)",
       "inferringSchema": "Ustalanie struktury…",
-      "standaloneNote": "Ten kandydat nie ma pola klucza celu — będzie projektem „nowy def”, z samodzielnymi wierszami zamiast dopasowanych do celów.",
+      "standaloneNote": "Ten kandydat nie ma pola klucza celu, więc będzie projektem „nowy def”, z samodzielnymi wierszami zamiast dopasowanych do celów.",
       "excludedTargetsNote": "{count} cel z odwołań spoza T/Core nigdy nie został odczytany (przestrzeganie T przyspiesza działanie). | {count} cele z odwołań spoza T/Core nigdy nie zostały odczytane (przestrzeganie T przyspiesza działanie). | {count} celów z odwołań spoza T/Core nigdy nie zostało odczytanych (przestrzeganie T przyspiesza działanie).",
       "createButton": "Utwórz"
     },
@@ -2048,13 +2167,13 @@
       "patchTargetsDef": "łatki stosuje się do scalonego dokumentu defów po wczytaniu defów wszystkich modów, niezależnie od kolejności ładowania",
       "parentTemplate": "nieosiągalne: ograniczenie ParentName to fakt dotyczący kolejności w czasie ładowania (siła „Twarda”), nigdy wskazówka",
       "usesType": "typ jest rozwiązywany we wszystkich wczytanych bibliotekach DLL niezależnie od kolejności ładowania",
-      "patchSelectsInjectedNode": "wybrany węzeł może już istnieć w inny sposób (zapisany bezpośrednio, wstrzykiwany przez więcej niż jeden aktywny mod albo przez własną łatkę wybierającego moda) lub leży głębiej, niż sięga indeks analizatora — więc nie jest to udowodnione wymaganie kolejności ładowania",
-      "patchRemovedNode": "analizator wnioskuje to z zawartości łatek: jeden mod usuwa węzeł, który łata też inny mod, i usuwający musi ładować się ostatni, inaczej druga łatka nie znajdzie już nic do zmiany — to nie jest kolejność ładowania zadeklarowana przez autora, więc ustępuje, gdy deklaracja lub położenie mówią inaczej",
-      "retextureAfterOwner": "analizator wnioskuje to ze wspólnej ścieżki tekstury: pakiet zmieniający wyłącznie tekstury musi ładować się po modzie z zawartością, którego wygląd zmienia, inaczej jego zamiennik zostanie nadpisany przez zawartość, której wygląd miał zmienić — to nie jest kolejność ładowania zadeklarowana przez autora, więc ustępuje, gdy deklaracja lub położenie mówią inaczej",
-      "defOverrideAfterOrigin": "analizator wnioskuje to z dowodów dotyczących szablonów i liczby defów: mod, który dostarcza też def należący do przestrzeni nazw innego moda, musi ładować się po właścicielu tej przestrzeni, inaczej jego nadpisanie trafi pod pierwotną definicję zamiast na nią — to nie jest kolejność ładowania zadeklarowana przez autora, więc ustępuje, gdy deklaracja lub położenie mówią inaczej",
-      "patchInvalidatesPredicate": "analizator wnioskuje to z zawartości łatek: operacja Replace/Remove przepisuje lub usuwa węzeł odczytywany przez predykat xpath innego moda, a operacja odczytująca predykat musi ładować się pierwsza, inaczej jej predykat przestanie pasować — to nie jest kolejność ładowania zadeklarowana przez autora, więc ustępuje, gdy deklaracja lub położenie mówią inaczej",
-      "patchRemovedNodeCosmetic": "analizator wnioskuje to z zawartości łatek, ale końcowe defy są tu identyczne w obu kolejnościach — zmienia się tylko to, operacja którego moda zapisze błąd w logu — więc to słabszy dowód niż kolejność ładowania zadeklarowana przez autora i ustępuje, gdy deklaracja lub położenie mówią inaczej",
-      "replaceDiscardsAddition": "analizator wnioskuje to z zawartości łatek: Replace podmienia cały węzeł, po cichu odrzucając wszystko, co zapisało w nim wcześniejsze dodanie, więc dodanie musi ładować się po zastąpieniu, inaczej jego zawartość przepada bez żadnego wpisu w logu — to nie jest kolejność ładowania zadeklarowana przez autora, więc ustępuje, gdy deklaracja lub położenie mówią inaczej",
+      "patchSelectsInjectedNode": "wybrany węzeł może już istnieć w inny sposób (zapisany bezpośrednio, wstrzykiwany przez więcej niż jeden aktywny mod albo przez własną łatkę wybierającego moda) lub leży głębiej, niż sięga indeks analizatora, więc nie jest to udowodnione wymaganie kolejności ładowania",
+      "patchRemovedNode": "analizator wnioskuje to z zawartości łatek: jeden mod usuwa węzeł, który łata też inny mod, i usuwający musi ładować się ostatni, inaczej druga łatka nie znajdzie już nic do zmiany. To nie jest kolejność ładowania zadeklarowana przez autora, więc ustępuje, gdy deklaracja lub położenie mówią inaczej",
+      "retextureAfterOwner": "analizator wnioskuje to ze wspólnej ścieżki tekstury: pakiet zmieniający wyłącznie tekstury musi ładować się po modzie z zawartością, którego wygląd zmienia, inaczej jego zamiennik zostanie nadpisany przez zawartość, której wygląd miał zmienić. To nie jest kolejność ładowania zadeklarowana przez autora, więc ustępuje, gdy deklaracja lub położenie mówią inaczej",
+      "defOverrideAfterOrigin": "analizator wnioskuje to z dowodów dotyczących szablonów i liczby defów: mod, który dostarcza też def należący do przestrzeni nazw innego moda, musi ładować się po właścicielu tej przestrzeni, inaczej jego nadpisanie trafi pod pierwotną definicję zamiast na nią. To nie jest kolejność ładowania zadeklarowana przez autora, więc ustępuje, gdy deklaracja lub położenie mówią inaczej",
+      "patchInvalidatesPredicate": "analizator wnioskuje to z zawartości łatek: operacja Replace/Remove przepisuje lub usuwa węzeł odczytywany przez predykat xpath innego moda, a operacja odczytująca predykat musi ładować się pierwsza, inaczej jej predykat przestanie pasować. To nie jest kolejność ładowania zadeklarowana przez autora, więc ustępuje, gdy deklaracja lub położenie mówią inaczej",
+      "patchRemovedNodeCosmetic": "analizator wnioskuje to z zawartości łatek, ale końcowe defy są tu identyczne w obu kolejnościach (zmienia się tylko to, operacja którego moda zapisze błąd w logu), więc to słabszy dowód niż kolejność ładowania zadeklarowana przez autora i ustępuje, gdy deklaracja lub położenie mówią inaczej",
+      "replaceDiscardsAddition": "analizator wnioskuje to z zawartości łatek: Replace podmienia cały węzeł, po cichu odrzucając wszystko, co zapisało w nim wcześniejsze dodanie, więc dodanie musi ładować się po zastąpieniu, inaczej jego zawartość przepada bez żadnego wpisu w logu. To nie jest kolejność ładowania zadeklarowana przez autora, więc ustępuje, gdy deklaracja lub położenie mówią inaczej",
       "interactionEvidence": "to dowód, że mody na siebie oddziałują, a nie fakt dotyczący kolejności, którego potrzebuje sam mechanizm ładowania"
     },
     "rulePhrase": {
@@ -2096,8 +2215,8 @@
     "placementQuestioned": "{modId} jest przypięty {placementPhrase}; {relationExplanation} ({relationDetail}).",
     "enforceRelationAsUserDecision": "Wymuś tę relację jawnie jako decyzję użytkownika.",
     "placementOrderingOverridden": {
-      "loadsAfter": "{pinned} jest przypięty {placementPhrase}, ale {modId} i tak musi ładować się po nim — źródło: {layerPhrase} ({detail}).",
-      "loadsBefore": "{pinned} jest przypięty {placementPhrase}, ale {modId} i tak musi ładować się przed nim — źródło: {layerPhrase} ({detail})."
+      "loadsAfter": "{pinned} jest przypięty {placementPhrase}, ale {modId} i tak musi ładować się po nim. Źródło: {layerPhrase} ({detail}).",
+      "loadsBefore": "{pinned} jest przypięty {placementPhrase}, ale {modId} i tak musi ładować się przed nim. Źródło: {layerPhrase} ({detail})."
     },
     "placementPromotesDependents": "{modId} jest przypięty {placementPhrase}; przypisuje mu się też {count} inny mod podniesiony ponad granicę własnej warstwy{sample} | {modId} jest przypięty {placementPhrase}; przypisuje mu się też {count} inne mody podniesione ponad granicę własnej warstwy{sample} | {modId} jest przypięty {placementPhrase}; przypisuje mu się też {count} innych modów podniesionych ponad granicę własnej warstwy{sample}",
     "promotedSample": {
@@ -2124,36 +2243,36 @@
     "reorderBeforeRemover": "Ładuj {modId} przed {remover}, aby jego operacja zadziałała, póki węzeł jeszcze istnieje.",
     "patchWillFailNotYetInjected": "Operacja moda {modId} w „{xpath}” celuje w węzeł wstrzykiwany przez mod {injector}, ale w sprawdzanej kolejności {injector} ładuje się później.",
     "reorderAfterInjector": "Ładuj {modId} po {injector}, aby jego operacja znalazła węzeł po wstrzyknięciu.",
-    "patchWillFailDeadTarget": "Operacja moda {modId} w „{xpath}” celuje w węzeł, którego rozwiązana struktura zwycięskiego właściciela nigdy nie ma, niezależnie od kolejności ładowania — żadna zmiana kolejności tego nie naprawi.",
+    "patchWillFailDeadTarget": "Operacja moda {modId} w „{xpath}” celuje w węzeł, którego rozwiązana struktura zwycięskiego właściciela nigdy nie ma, niezależnie od kolejności ładowania, więc żadna zmiana kolejności tego nie naprawi.",
     "patchWillFailUnknownCause": "Przewiduje się, że operacja moda {modId} w „{xpath}” się nie powiedzie; nie udało się sklasyfikować przyczyny.",
-    "brokenInheritance": "To odwołanie `ParentName` nie rozwiązuje się tak, jak oczekuje typ elementu potomka — def wczytuje się z brakującą lub błędną zawartością. Zgłoś to autorowi moda, który zawiera odwołanie.",
-    "danglingDefReference": "Ta nazwa nie wskazuje żadnego aktywnego defu żadnego typu — {cause}.{soundCaveat} Odwołania do innych defów rozwiązują się po wczytaniu defów i łatek wszystkich modów, więc to nigdy nie zależy od kolejności ładowania.",
-    "danglingDefReferenceSoundCaveat": " To wygląda na odwołanie do dźwięku — brakujący `SoundDef` zapisuje ostrzeżenie w logu i po cichu przechodzi na niezdefiniowany dźwięk, zamiast powodować błąd wczytywania.",
+    "brokenInheritance": "To odwołanie `ParentName` nie rozwiązuje się tak, jak oczekuje typ elementu potomka. Def wczytuje się z brakującą lub błędną zawartością. Zgłoś to autorowi moda, który zawiera odwołanie.",
+    "danglingDefReference": "Ta nazwa nie wskazuje żadnego aktywnego defu żadnego typu: {cause}.{soundCaveat} Odwołania do innych defów rozwiązują się po wczytaniu defów i łatek wszystkich modów, więc to nigdy nie zależy od kolejności ładowania.",
+    "danglingDefReferenceSoundCaveat": " To wygląda na odwołanie do dźwięku. Brakujący `SoundDef` zapisuje ostrzeżenie w logu i po cichu przechodzi na niezdefiniowany dźwięk, zamiast powodować błąd wczytywania.",
     "discardedAdditionDeliberate": "{replacer} deklaruje ładowanie po {adder} i zastępuje „{path}”: własne dodanie moda {adder} w „{adderPath}” zostaje celowo odrzucone.",
     "forceTextureWinner": "Wymuś zwycięstwo tekstury jednego moda.",
     "copyTextureIntoMergeMod": "Skopiuj plik tekstury tego moda do moda scalającego, niezależnie od kolejności ładowania.",
     "textureOverrideCosmetic": "Nadpisanie tekstury jest kosmetyczne i widoczne w grze; nigdy niczego nie blokuje.",
     "forceTemplateRegistrationWinner": "Wymuś, aby rejestracja tego moda obowiązywała dla każdego potomka szablonu, niezależnie od kolejności ładowania.",
-    "duplicateTemplateNameExplanation": "{ownerCount} mod rejestruje tę nazwę szablonu; każdy potomek niezależnie dziedziczy po tej rejestracji, która ładuje się najbliżej przed nim lub w tym samym miejscu. Jeśli takiej nie ma, wraca do rejestracji z gry podstawowej, a gdy i jej brak — do rejestracji z moda ładowanego jako pierwszy w kolejności ładowania, więc różni potomkowie mogą wskazywać różne mody. | {ownerCount} mody rejestrują tę nazwę szablonu; każdy potomek niezależnie dziedziczy po tej rejestracji, która ładuje się najbliżej przed nim lub w tym samym miejscu. Jeśli takiej nie ma, wraca do rejestracji z gry podstawowej, a gdy i jej brak — do rejestracji z moda ładowanego jako pierwszy w kolejności ładowania, więc różni potomkowie mogą wskazywać różne mody. | {ownerCount} modów rejestruje tę nazwę szablonu; każdy potomek niezależnie dziedziczy po tej rejestracji, która ładuje się najbliżej przed nim lub w tym samym miejscu. Jeśli takiej nie ma, wraca do rejestracji z gry podstawowej, a gdy i jej brak — do rejestracji z moda ładowanego jako pierwszy w kolejności ładowania, więc różni potomkowie mogą wskazywać różne mody.",
+    "duplicateTemplateNameExplanation": "{ownerCount} mod rejestruje tę nazwę szablonu; każdy potomek niezależnie dziedziczy po tej rejestracji, która ładuje się najbliżej przed nim lub w tym samym miejscu. Jeśli takiej nie ma, wraca do rejestracji z gry podstawowej, a gdy i jej brak, do rejestracji z moda ładowanego jako pierwszy w kolejności ładowania, więc różni potomkowie mogą wskazywać różne mody. | {ownerCount} mody rejestrują tę nazwę szablonu; każdy potomek niezależnie dziedziczy po tej rejestracji, która ładuje się najbliżej przed nim lub w tym samym miejscu. Jeśli takiej nie ma, wraca do rejestracji z gry podstawowej, a gdy i jej brak, do rejestracji z moda ładowanego jako pierwszy w kolejności ładowania, więc różni potomkowie mogą wskazywać różne mody. | {ownerCount} modów rejestruje tę nazwę szablonu; każdy potomek niezależnie dziedziczy po tej rejestracji, która ładuje się najbliżej przed nim lub w tym samym miejscu. Jeśli takiej nie ma, wraca do rejestracji z gry podstawowej, a gdy i jej brak, do rejestracji z moda ładowanego jako pierwszy w kolejności ładowania, więc różni potomkowie mogą wskazywać różne mody.",
     "keyedTranslationCollision": "Te dwa mody mają {keyCount} wspólny klucz tłumaczenia; wygrywa ten ładowany jako ostatni. | Te dwa mody mają {keyCount} wspólne klucze tłumaczeń; przy każdym z nich wygrywa ten ładowany jako ostatni. | Te dwa mody mają {keyCount} wspólnych kluczy tłumaczeń; przy każdym z nich wygrywa ten ładowany jako ostatni.",
     "soundOverrideCosmetic": "Nadpisanie dźwięku jest kosmetyczne i słyszalne w grze; nigdy niczego nie blokuje.",
     "forceSoundWinner": "Wymuś zwycięstwo dźwięku jednego moda.",
-    "missingTexturePath": "Tej ścieżki tekstury nie dostarcza żaden aktywny mod — gra pokaże w jej miejscu teksturę zastępczą w kolorze magenty.",
-    "undecodableTexture": "Tego pliku .dds nie da się zdekodować — gra podstawowa pokazuje w jego miejscu zastępczą teksturę błędu.",
-    "contributesNothing": "Mod {modId} nie wnosi w tej kolejności niczego zauważalnego: nie dostarcza biblioteki DLL, każdy jego def jest nadpisany przez późniejszą kopię, każda dostarczana przez niego tekstura i każde tłumaczenie są nadpisane, a każda jego operacja łatki albo się nie stosuje, albo nigdy nie zostaje uruchomiona — wyłączenie go nic nie zmienia w grze i oszczędza jego koszt ładowania.",
+    "missingTexturePath": "Tej ścieżki tekstury nie dostarcza żaden aktywny mod. Gra pokaże w jej miejscu teksturę zastępczą w kolorze magenty.",
+    "undecodableTexture": "Tego pliku .dds nie da się zdekodować. Gra podstawowa pokazuje w jego miejscu zastępczą teksturę błędu.",
+    "contributesNothing": "Mod {modId} nie wnosi w tej kolejności niczego zauważalnego: nie dostarcza biblioteki DLL, każdy jego def jest nadpisany przez późniejszą kopię, każda dostarczana przez niego tekstura i każde tłumaczenie są nadpisane, a każda jego operacja łatki albo się nie stosuje, albo nigdy nie zostaje uruchomiona. Wyłączenie go nic nie zmienia w grze i oszczędza jego koszt ładowania.",
     "undeclaredTypeDependency": "{user} używa typu z biblioteki DLL moda {provider}, ale nie deklaruje od niego zależności.",
     "pinRelationExplicitly": "Utrwal relację jawnie jako regułę kolejności ładowania.",
     "runtimePatchCollisionNoLastPatcher": "Kilka modów łata {targetType}.{targetMethod}.",
     "runtimePatchCollisionLastPatcher": "{ownerCount} mod łata {targetType}.{targetMethod}; {last} ładuje się obecnie jako ostatni, więc jego łatka działa ostatnia. | {ownerCount} mody łatają {targetType}.{targetMethod}; {last} ładuje się obecnie jako ostatni, więc jego łatka działa ostatnia. | {ownerCount} modów łata {targetType}.{targetMethod}; {last} ładuje się obecnie jako ostatni, więc jego łatka działa ostatnia.",
     "forceRuntimePatchLastWinner": "Wymuś, aby łatka tego moda działała ostatnia, niezależnie od kolejności ładowania.",
-    "transpilerCollision": "{ownerCount} mod przepisuje IL metody {targetType}.{targetMethod} transpilerem (łatką w czasie działania); kolejność ich działania może zdecydować, czy wzorzec późniejszego nadal pasuje. Większość takich kolizji jest nieszkodliwa — jeśli któryś z tych modów zapisze w logu błąd łatania, ustal działającą kolejność poleceniem `rimmerge rule set-pair`. | {ownerCount} mody przepisują IL metody {targetType}.{targetMethod} transpilerem (łatką w czasie działania); kolejność ich działania może zdecydować, czy wzorzec późniejszego nadal pasuje. Większość takich kolizji jest nieszkodliwa — jeśli któryś z tych modów zapisze w logu błąd łatania, ustal działającą kolejność poleceniem `rimmerge rule set-pair`. | {ownerCount} modów przepisuje IL metody {targetType}.{targetMethod} transpilerem (łatką w czasie działania); kolejność ich działania może zdecydować, czy wzorzec późniejszego nadal pasuje. Większość takich kolizji jest nieszkodliwa — jeśli któryś z tych modów zapisze w logu błąd łatania, ustal działającą kolejność poleceniem `rimmerge rule set-pair`.",
+    "transpilerCollision": "{ownerCount} mod przepisuje IL metody {targetType}.{targetMethod} transpilerem (łatką w czasie działania); kolejność ich działania może zdecydować, czy wzorzec późniejszego nadal pasuje. Większość takich kolizji jest nieszkodliwa. Jeśli któryś z tych modów zapisze w logu błąd łatania, ustal działającą kolejność poleceniem `rimmerge rule set-pair`. | {ownerCount} mody przepisują IL metody {targetType}.{targetMethod} transpilerem (łatką w czasie działania); kolejność ich działania może zdecydować, czy wzorzec późniejszego nadal pasuje. Większość takich kolizji jest nieszkodliwa. Jeśli któryś z tych modów zapisze w logu błąd łatania, ustal działającą kolejność poleceniem `rimmerge rule set-pair`. | {ownerCount} modów przepisuje IL metody {targetType}.{targetMethod} transpilerem (łatką w czasie działania); kolejność ich działania może zdecydować, czy wzorzec późniejszego nadal pasuje. Większość takich kolizji jest nieszkodliwa. Jeśli któryś z tych modów zapisze w logu błąd łatania, ustal działającą kolejność poleceniem `rimmerge rule set-pair`.",
     "duplicateAssemblyFirstLoadedWins": "Więcej niż jeden aktywny mod dostarcza bibliotekę DLL o tej nazwie; w czasie działania wygrywa kopia załadowana jako pierwsza.",
     "removeDuplicateAssemblyCopy": "Usuń z listy aktywnych jedną ze zduplikowanych kopii.",
     "likelyDuplicateMod": "Te dwa mody mają wiele identycznych defów, a między nimi nie zadeklarowano relacji.",
     "removeLikelyDuplicateModA": "Usuń z listy aktywnych jeden z prawdopodobnie zduplikowanych modów.",
     "removeLikelyDuplicateModB": "Usuń z listy aktywnych drugi prawdopodobnie zduplikowany mod.",
-    "missingModNotInstalled": "Ten mod jest aktywny w ModsConfig.xml, ale nie jest zainstalowany; RimWorld i tak odrzuca nieznane ID.",
-    "keepMissingModId": "Zachowaj ID w ModsConfig.xml na wypadek, gdyby mod znów się pojawił.",
+    "missingModNotInstalled": "Ten mod jest na liście aktywnych modów, ale nie jest zainstalowany. RimWorld i tak odrzuca nieznane ID.",
+    "keepMissingModId": "Zachowaj ID na liście aktywnych modów na wypadek, gdyby mod znów się pojawił.",
     "missingDependencyNotEnforced": "Zadeklarowana zależność nie jest aktywna; RimWorld tylko o tym ostrzega, ale tego nie wymusza.",
     "incompatiblePair": "Te mody deklarują się nawzajem jako niekompatybilne.",
     "removeIncompatibleModA": "Usuń z listy aktywnych jeden z niekompatybilnych modów.",
@@ -2163,14 +2282,14 @@
     "pinRelationExplicitlyAnyway": "Mimo to utrwal relację jawnie jako regułę kolejności ładowania.",
     "lazyReferenceViolatedJitResolved": "To leniwie rozwiązywane odwołanie do biblioteki DLL nie jest respektowane przez obecną kolejność, ale rozwiązuje się w czasie kompilacji JIT, po wczytaniu wszystkich bibliotek, więc kolejność ładowania w rzeczywistości na nie nie wpływa.",
     "nearMissModReference": {
-      "findModName": "Ta nazwa FindMod „{written}” nie wskazuje żadnego aktywnego ani zainstalowanego moda, ale bardzo przypomina aktywny mod „{candidateName}” — możliwa literówka. Zgłoś to autorowi moda, który zawiera to odwołanie.",
-      "mayRequireId": "To ID MayRequire „{written}” nie wskazuje żadnego aktywnego ani zainstalowanego moda, ale bardzo przypomina aktywny mod „{candidateName}” — możliwa literówka. Zgłoś to autorowi moda, który zawiera to odwołanie."
+      "findModName": "Ta nazwa FindMod „{written}” nie wskazuje żadnego aktywnego ani zainstalowanego moda, ale bardzo przypomina aktywny mod „{candidateName}”. Możliwe, że to literówka. Zgłoś to autorowi moda, który zawiera to odwołanie.",
+      "mayRequireId": "To ID MayRequire „{written}” nie wskazuje żadnego aktywnego ani zainstalowanego moda, ale bardzo przypomina aktywny mod „{candidateName}”. Możliwe, że to literówka. Zgłoś to autorowi moda, który zawiera to odwołanie."
     },
     "mergeCompleteNothingToMerge": "gra stosuje te zmiany po kolei do jednej wartości; nie ma czego scalać",
     "mergeLeadDefOverrideCombine": "Mody zmieniają różne pola; scalenie połączyłoby obie zmiany.",
     "mergePromotedPatchCollisionKeepsBoth": "Mody zmieniają różne pola; scalenie zachowuje obie zmiany.",
     "keepLoadOrderWinner": "Zachowaj zwycięzcę wynikającego z kolejności ładowania.",
-    "mergeStructuralGuard": "{field} różni się między właścicielami — scalanie na poziomie pól jest niebezpieczne; potwierdź zwycięzcę wynikającego z kolejności ładowania",
+    "mergeStructuralGuard": "{field} różni się między właścicielami, więc scalanie na poziomie pól jest niebezpieczne. Potwierdź zwycięzcę wynikającego z kolejności ładowania",
     "mergeFieldsNeedChoice": "Scal, {unresolved} pole wymaga wyboru. | Scal, {unresolved} pola wymagają wyboru. | Scal, {unresolved} pól wymaga wyboru.",
     "identicalCopiesOrderIrrelevant": "identyczne kopie; kolejność nie może zmienić wyniku",
     "notAddressedByPatch": "Ta łatka tego nie obejmuje; kolejność ładowania decyduje tak jak obecnie."
@@ -2187,14 +2306,14 @@
       "previewUnsupportedFormat": "Podgląd nie jest plikiem PNG ani JPEG",
       "previewUnreadable": "Nie udało się odczytać podglądu",
       "missingHeading": "Brakujący",
-      "missingBody": "Na liście w ModsConfig.xml, ale nie znaleziono go na dysku",
+      "missingBody": "Na liście aktywnych modów, ale nie znaleziono go na dysku",
       "requiredByHeading": "Wymagany przez",
-      "pendingActivation": "Oczekuje na włączenie — zastosuj lub przeskanuj ponownie, aby zadziałało",
-      "pendingDeactivation": "Oczekuje na wyłączenie — zastosuj lub przeskanuj ponownie, aby zadziałało",
+      "pendingActivation": "Oczekuje na włączenie. Zastosuj lub przeskanuj ponownie, aby zadziałało",
+      "pendingDeactivation": "Oczekuje na wyłączenie. Zastosuj lub przeskanuj ponownie, aby zadziałało",
       "packageIdLine": "ID pakietu: {id}",
       "workshopCopyNote": "Kopia z Warsztatu",
       "versionLine": "Wersja moda: {version}",
-      "aboutNotOnDisk": "Nie znaleziono pliku About.xml tego moda — jego pliki mogły zostać przeniesione lub usunięte od ostatniego skanowania.",
+      "aboutNotOnDisk": "Nie znaleziono pliku About.xml tego moda. Jego pliki mogły zostać przeniesione lub usunięte od ostatniego skanowania.",
       "supportedVersionsLabel": "Obsługiwane wersje",
       "supportsGameVersion": "Obsługuje tę wersję gry",
       "doesNotSupportGameVersion": "Nie deklaruje obsługi tej wersji gry",
@@ -2224,7 +2343,7 @@
       "noDescription": "Brak opisu.",
       "showMore": "Pokaż więcej",
       "showLess": "Pokaż mniej",
-      "aboutChanged": "About.xml zmienił się od ostatniego skanowania — przeskanuj ponownie",
+      "aboutChanged": "About.xml zmienił się od ostatniego skanowania. Przeskanuj ponownie, aby uwzględnić zmianę",
       "aboutUnreadable": "Nie udało się odczytać About.xml: {reason}",
       "aboutUnreadableIoHeadline": "nie udało się odczytać pliku",
       "aboutUnreadableXmlHeadline": "plik nie jest poprawnym XML",

@@ -68,6 +68,18 @@ here or in the two interface apps; `rim-resolve`/`rim-merge`/
   `TlsConfig::root_certs(RootCerts::PlatformVerifier)` explicitly: ureq's
   own default panics at the first real request without the
   `rustls-webpki-roots` feature backing it.
+- **`mod_timestamps.rs`**: `FileModTimestampReader` implements
+  `rim_session::ports::ModTimestampReader`. Workshop: `timeupdated` (when the installed version was published on the
+  Workshop, as Steam records it; not the download time) under `WorkshopItemsInstalled` in `<library>/steamapps/workshop/appworkshop_294100.acf`
+  (two parents above the workshop `content/294100` folder), read once per call and
+  only when a Workshop mod is asked about. Local: mtime of `About/About.xml`.
+  Core/DLC: `ShippedWithGame`, no IO. The `.acf` is untrusted: `read_bounded_with_limit`
+  at 4 MiB, UTF-8 only, a streaming tokenizer (`Tokens`, an iterator the parse loop drives,
+  so no token vector is ever built) with a depth bound of 16, and a malformed
+  file yields no times at all (never a partial guess). A time of zero or past
+  `MAX_PLAUSIBLE_SECONDS` (9999-12-31, the same bound on the `About.xml` mtime) is no time:
+  the UI's date formatting throws on anything larger. A missing file, an implausible time or
+  a time under the wrong section is `Unavailable(Unknown)`. Local only, no network.
 - Tests only ever touch `tempfile` copies of `tests/fixtures/` — never
   the real install, and never anything "near" it: every path an
   end-to-end test touches, `ModsConfig.xml` included, is a scratch copy
@@ -306,6 +318,18 @@ gate block in the root `CLAUDE.md`.
   `stamp_checks` counter, never by timing. The cache lock is held for map
   operations only, never across a read or a parse: the replay pool reads
   through one reader (or one view) from four threads.
+- **`ModsConfigFileStore::read` is bounded and typed.** It reads through
+  `read_bounded_with_limit` at 4 MiB (`MAX_MODS_CONFIG_BYTES`; a real file is a few
+  hundred kilobytes), because the desktop re-reads it every few seconds, and every
+  failure is a `ConfigError` with a `ConfigErrorKind`: `Missing` (not found),
+  `Unreadable` (any other I/O failure, including a failed write or backup),
+  `Malformed` (not parseable as a `ModsConfigData` document, truncated or partly
+  written files and an over-limit file included). Replacement is atomic only for
+  Rimmerge's own writers (`write_atomically`), so a read that races one of those is
+  one whole list or a failure, never a blend. Another program may write the file
+  non-atomically: a read that lands mid-write sees a truncated document and reads as
+  `Malformed`, which the desktop's baseline refresh absorbs as a stale status (the last
+  good list stays the baseline) until the next good read.
 - **`ModsConfigFileStore`** backs up first
   (`ModsConfig.xml.bak-<timestamp>`), refuses to proceed on any read
   error other than NotFound, and preserves `version`, `knownExpansions`,

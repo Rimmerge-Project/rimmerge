@@ -15,6 +15,7 @@ import {
   RimmergeError,
   suggestedModListPath,
 } from "@/services/ipc";
+import { useSessionStore } from "@/stores/session";
 import type { ExportTextDto } from "@/types/generated/ExportTextDto";
 import type { OrderImportOutcomeDto } from "@/types/generated/OrderImportOutcomeDto";
 import type { ProjectSummaryDto } from "@/types/generated/ProjectSummaryDto";
@@ -48,6 +49,7 @@ export function useOrderShare() {
   const tm = useTranslateMessage();
   const toast = useToast();
   const adoptImportedSession = useAdoptImportedSession();
+  const session = useSessionStore();
 
   const isBusy = ref(false);
   const isPasteOpen = ref(false);
@@ -189,6 +191,25 @@ export function useOrderShare() {
     });
   }
 
+  /**
+   * Previews importing the active mod list the game's own file holds now, without a file dialog:
+   * the same preview and the same confirm as "Open a mod list file". A no-op until a project is
+   * loaded (there is no file to name).
+   */
+  async function previewModsConfig(): Promise<void> {
+    const path = session.paths?.modsConfig;
+    if (path === undefined) {
+      return;
+    }
+    await exclusive(async () => {
+      try {
+        showPreview(await previewOrderImportFile({ path }));
+      } catch (error: unknown) {
+        toastFailure(null, error);
+      }
+    });
+  }
+
   function openPaste(): void {
     isPasteOpen.value = true;
   }
@@ -302,6 +323,7 @@ export function useOrderShare() {
     saveAsFile,
     copyAsText,
     openFile,
+    previewModsConfig,
     openPaste,
     previewPasted,
     confirmImport,

@@ -938,6 +938,7 @@ mod tests {
                 .map(|i| format!("synthetic/{i}"))
                 .collect(),
             ref_sites_by_mod: BTreeMap::new(),
+            unloaded_defs_dirs_by_mod: BTreeMap::new(),
         }
     }
 

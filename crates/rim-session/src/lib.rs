@@ -13,6 +13,7 @@ pub mod app_settings;
 mod assignment_refs;
 mod call_reader;
 mod changes;
+mod file_baseline;
 mod finding_index;
 mod game_launch;
 mod import_sources;
@@ -22,6 +23,8 @@ pub mod mod_info;
 mod mod_inventory;
 mod mod_knowledge;
 pub mod mod_list;
+mod mod_lists;
+mod mod_times;
 mod paths;
 mod recommended_rules;
 mod replay_pool;
@@ -35,8 +38,8 @@ pub mod ports;
 pub mod use_cases;
 
 pub use active_set::{
-    ActivatePlan, ActiveSet, ActiveSetDiff, ActiveSetError, DeactivatePlan, PendingActiveChanges,
-    plan_activate, plan_deactivate,
+    ActivatePlan, ActiveSet, ActiveSetDiff, ActiveSetError, Anchor, DeactivatePlan, MoveError,
+    PendingActiveChanges, plan_activate, plan_deactivate,
 };
 pub use app_settings::{
     AppSettings, NetworkPolicy, ReminderPolicy, StaleAfterDays, StaleAfterDaysError,
@@ -45,6 +48,9 @@ pub use changes::{AssetKind, ChangeFilter, ChangeKind, ChangePage, ChangeRow};
 pub use def_conflict_view::{
     DefConflictKind, DefConflictView, DefConflictViewError, FieldRow, FieldRowKind,
     InjectedNodeRelation, Preference, Problem, Toucher as DefConflictToucher, ToucherRole,
+};
+pub use file_baseline::{
+    BaselineChange, BaselineIssue, ExternalFileChange, FileBaseline, FileProbe, MembershipMark,
 };
 pub use finding_index::{FindingFilter, FindingIndex, FindingKind, FindingPage, MAX_PAGE_SIZE};
 pub use game_launch::{
@@ -58,6 +64,11 @@ pub use merge_workspace::{
 pub use mod_index::{ModFilter, ModPage, ModSummary};
 pub use mod_inventory::{InventoryEntry, ModInventory};
 pub use mod_knowledge::ModKnowledge;
+pub use mod_lists::{
+    ListSort, ListSortKey, MAX_MOD_LIST_ROWS, ModList, ModListQuery, ModListRow, RowState,
+    SortDirection,
+};
+pub use mod_times::{ModTimeSubject, ModUpdateTimes, UnixSeconds, UpdateTime, UpdateUnavailable};
 pub use paths::ProjectPaths;
 pub use recommended_rules::{
     FirstRun, RecommendedRulesFacts, RecommendedRulesStep, SourceNeed, StepSkip, Unavailable,

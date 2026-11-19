@@ -6,7 +6,7 @@
 
 use std::collections::BTreeSet;
 
-use rim_analyzer::domain::{InactiveMod, ModId, Report, Source};
+use rim_analyzer::domain::{ModId, Report, Source};
 use rim_resolve::domain::{Tag, Tagging};
 
 use crate::MAX_PAGE_SIZE;
@@ -118,52 +118,6 @@ pub(crate) fn query(report: &Report, tagging: &Tagging, filter: &ModFilter) -> M
         .into_iter()
         .skip(filter.offset)
         .take(limit)
-        .collect();
-
-    ModPage { total, items }
-}
-
-/// Searches, filters, and pages `inactive_mods` —
-/// [`crate::Session::inactive_mods`]'s own worker. Only
-/// `search`/`source` apply: an inactive mod carries no tags (`filter.tag`
-/// is ignored, never treated as "match nothing") and no
-/// Hard-strength-edge dependents (the analyzer only ever computes edges
-/// between active mods), so every row's `tags` is empty and
-/// `hard_dependents` is `0` — a free function, not a method, for the same
-/// borrow-shape reason [`query`] is.
-pub(crate) fn query_inactive(inactive_mods: &[InactiveMod], filter: &ModFilter) -> ModPage {
-    let search = filter.search.as_deref().map(str::to_lowercase);
-
-    let mut matching: Vec<_> = inactive_mods
-        .iter()
-        .filter(|mod_entry| {
-            search.as_deref().is_none_or(|needle| {
-                mod_entry.id.as_str().to_lowercase().contains(needle)
-                    || mod_entry.name.to_lowercase().contains(needle)
-            })
-        })
-        .filter(|mod_entry| {
-            filter
-                .source
-                .is_none_or(|source| mod_entry.source == source)
-        })
-        .collect();
-    matching.sort_by(|a, b| a.id.cmp(&b.id));
-
-    let total = matching.len();
-    let limit = filter.limit.min(MAX_PAGE_SIZE);
-    let items = matching
-        .into_iter()
-        .skip(filter.offset)
-        .take(limit)
-        .map(|mod_entry| ModSummary {
-            mod_id: mod_entry.id.clone(),
-            name: mod_entry.name.clone(),
-            source: Some(mod_entry.source),
-            tags: BTreeSet::new(),
-            hard_dependents: 0,
-            missing: false,
-        })
         .collect();
 
     ModPage { total, items }
@@ -332,69 +286,5 @@ mod tests {
             page.items.iter().all(|m| !m.missing),
             "a specific source filter must exclude every missing row"
         );
-    }
-
-    fn inactive_mods(ids: &[&str]) -> Vec<InactiveMod> {
-        let mut builder = rim_resolve::test_support::ReportBuilder::new();
-        for id in ids {
-            builder = builder.inactive(id);
-        }
-        builder.build().inactive_mods
-    }
-
-    #[test]
-    fn query_inactive_searches_by_id_or_name_and_sorts_by_id() {
-        let inactive = inactive_mods(&["zzz.mod", "aaa.mod"]);
-
-        let page = query_inactive(
-            &inactive,
-            &ModFilter {
-                limit: 10,
-                ..ModFilter::default()
-            },
-        );
-
-        assert_eq!(page.total, 2);
-        assert_eq!(
-            page.items
-                .iter()
-                .map(|m| m.mod_id.clone())
-                .collect::<Vec<_>>(),
-            vec![ModId::new("aaa.mod"), ModId::new("zzz.mod")]
-        );
-        assert!(
-            page.items
-                .iter()
-                .all(|m| m.tags.is_empty() && m.hard_dependents == 0)
-        );
-    }
-
-    #[test]
-    fn query_inactive_filters_by_source_and_ignores_tag() {
-        let inactive = inactive_mods(&["a.mod", "b.mod"]);
-
-        let page = query_inactive(
-            &inactive,
-            &ModFilter {
-                tag: Some(Tag::new("framework").expect("valid tag")),
-                limit: 10,
-                ..ModFilter::default()
-            },
-        );
-
-        assert_eq!(
-            page.total, 2,
-            "an inactive mod carries no tags, so a tag filter must not exclude it"
-        );
-
-        let page = query_inactive(
-            &inactive,
-            &ModFilter {
-                source: Some(Source::Workshop),
-                limit: 10,
-                ..ModFilter::default()
-            },
-        );
-        assert_eq!(page.total, 0, "the fixture's inactive mods are all Local");
     }
 }

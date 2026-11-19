@@ -22,7 +22,7 @@ import {
 
 const { preview, replacesUnwritten } = defineProps<{
   preview: OrderImportPreviewDto;
-  /** This import replaces the Current order, which is not in ModsConfig.xml yet. */
+  /** This import replaces the Current order, which is not your active order yet. */
   replacesUnwritten: boolean;
 }>();
 const emit = defineEmits<{ openWorkshop: [workshopId: number] }>();

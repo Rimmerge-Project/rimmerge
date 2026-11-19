@@ -8,30 +8,50 @@ import { queryKeys } from "@/queries/keys";
 import {
   activateMods,
   deactivateMods,
+  discardPendingChanges,
   getPendingActiveChanges,
   listInactiveMods,
+  listWorkingMods,
+  moveMods,
   planActivateMods,
   planDeactivateMods,
   rescanProject,
+  revertOrderToFile,
 } from "@/services/ipc";
 import { useSessionStore } from "@/stores/session";
 import type { ActivateRequestDto } from "@/types/generated/ActivateRequestDto";
 import type { DeactivateRequestDto } from "@/types/generated/DeactivateRequestDto";
-import type { ModFilterDto } from "@/types/generated/ModFilterDto";
+import type { ModListQueryDto } from "@/types/generated/ModListQueryDto";
+import type { MoveRequestDto } from "@/types/generated/MoveRequestDto";
 import { ruleWarningsDetail } from "@/utils/ruleWarning";
 
 /**
- * Searches and pages the inactive mod list — the Mods page's Inactive
- * tab. `enabled` (default: always) skips the query while that tab isn't
- * showing, the same as `useModsQuery`'s own parameter.
+ * The Mods page's Inactive list. `enabled` (default: always) skips the query
+ * while that tab isn't showing, the same as {@link useWorkingModsQuery}.
  */
 export function useInactiveModsQuery(
-  filter: MaybeRefOrGetter<ModFilterDto>,
+  query: MaybeRefOrGetter<ModListQueryDto>,
   enabled: MaybeRefOrGetter<boolean> = true,
 ) {
   return useQuery({
-    key: () => queryKeys.inactiveMods(toValue(filter)),
-    query: () => listInactiveMods(toValue(filter)),
+    key: () => queryKeys.inactiveMods(toValue(query)),
+    query: () => listInactiveMods(toValue(query)),
+    enabled: () => toValue(enabled),
+  });
+}
+
+/**
+ * The Mods page's Active list: the working set in its own order. `enabled`
+ * lets a page with two tabs skip the query while its own tab isn't showing,
+ * rather than fetching both on every keystroke.
+ */
+export function useWorkingModsQuery(
+  query: MaybeRefOrGetter<ModListQueryDto>,
+  enabled: MaybeRefOrGetter<boolean> = true,
+) {
+  return useQuery({
+    key: () => queryKeys.workingMods(toValue(query)),
+    query: () => listWorkingMods(toValue(query)),
     enabled: () => toValue(enabled),
   });
 }
@@ -64,12 +84,54 @@ export function usePlanActivateModsMutation() {
  * Commits an activation onto the working set. Invalidates every query
  * directly (not just `queryKeys.pendingActiveChanges`) so the dialog's
  * own caller doesn't have to wait on the `session://changed` event round
- * trip — the same reasoning `useApplyMutation` already documents.
+ * trip — the same reasoning `useApplyMutation` already documents. An
+ * anchored activation (a drop position) can switch the selected order from
+ * Suggested to Current; the store adopts the backend's answer here, and the
+ * result's `didSwitchToCurrent` lets the caller say so.
  */
 export function useActivateModsMutation() {
   const queryCache = useQueryCache();
+  const session = useSessionStore();
   return useMutation({
     mutation: (request: ActivateRequestDto) => activateMods(request),
+    onSuccess: async (result) => {
+      session.setSelected(result.selected);
+      await awaitInvalidation(queryCache);
+    },
+  });
+}
+
+/**
+ * Moves active mods next to an anchor. Adopts the selection the move left (the first reorder
+ * while Suggested is selected switches to Current) and refetches every query, so the caller can
+ * read the new position from the refreshed list.
+ */
+export function useMoveModsMutation() {
+  const queryCache = useQueryCache();
+  const session = useSessionStore();
+  return useMutation({
+    mutation: (request: MoveRequestDto) => moveMods(request),
+    onSuccess: async (result) => {
+      session.setSelected(result.selected);
+      await awaitInvalidation(queryCache);
+    },
+  });
+}
+
+/** Drops every pending membership edit (`working := Current`); no rescan is needed. */
+export function useDiscardPendingChangesMutation() {
+  const queryCache = useQueryCache();
+  return useMutation({
+    mutation: () => discardPendingChanges(),
+    onSuccess: () => awaitInvalidation(queryCache),
+  });
+}
+
+/** Puts Current's sequence back to `ModsConfig.xml`'s, when both list the same mods. */
+export function useRevertOrderToFileMutation() {
+  const queryCache = useQueryCache();
+  return useMutation({
+    mutation: () => revertOrderToFile(),
     onSuccess: () => awaitInvalidation(queryCache),
   });
 }

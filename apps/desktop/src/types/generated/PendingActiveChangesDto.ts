@@ -6,7 +6,9 @@ import type { ActiveSetDiffDto } from "./ActiveSetDiffDto";
  * result, and `activate_mods`/`deactivate_mods`/`rescan_project`'s own
  * updated reading of it — a non-empty `unscanned` is what the Rescan
  * banner reads, a non-empty `unapplied` is what the apply dialog warns
- * about.
+ * about. Everything here is the user's own unsaved work: `unapplied` and
+ * `order_unapplied` compare with what Rimmerge last loaded or wrote, so an
+ * outside edit of the file never shows up in them.
  */
 export type PendingActiveChangesDto = { 
 /**
@@ -14,6 +16,14 @@ export type PendingActiveChangesDto = {
  */
 unscanned: ActiveSetDiffDto, 
 /**
- * The last scan's own active list vs. `ModsConfig.xml` on disk.
+ * The last scan's own active list vs. the list Rimmerge last loaded
+ * or wrote.
  */
-unapplied: ActiveSetDiffDto, };
+unapplied: ActiveSetDiffDto, 
+/**
+ * The current order differs from the list Rimmerge last loaded or
+ * wrote (a settled reorder, or any membership change) and an Apply
+ * would write it. `unapplied` is a
+ * membership diff and stays empty for it.
+ */
+orderUnapplied: boolean, };

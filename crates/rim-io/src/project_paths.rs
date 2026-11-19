@@ -201,10 +201,37 @@ impl Environment for SystemEnvironment {
     }
 }
 
-fn resolve_with(
-    overrides: &PathOverrides,
-    environment: &dyn Environment,
-) -> Result<ResolvedPaths, PathResolutionError> {
+/// Every path the ladder can answer on its own, resolved independently:
+/// one that cannot be found does not stop the others from resolving.
+///
+/// The desktop Setup page needs this shape: with no install found, the
+/// `ModsConfig.xml` and profile folder (which depend on `%USERPROFILE%`,
+/// not on the game folder) are still worth showing, and a game folder the
+/// user types in turns the workshop folder into a derivable answer.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PartialPaths {
+    /// The install directory, or why none was found.
+    pub game_dir: Result<PathBuf, PathResolutionError>,
+    /// The workshop folder: given (flag, environment, config) or derived
+    /// from a known `game_dir`; `None` only when neither exists.
+    pub workshop_dir: Option<PathBuf>,
+    /// `ModsConfig.xml`, or why none could be worked out.
+    pub mods_config: Result<PathBuf, PathResolutionError>,
+    /// The profile folder: given, or derived from a resolved `mods_config`;
+    /// `None` when neither exists.
+    pub profile_dir: Option<PathBuf>,
+    /// See [`ResolvedPaths::warning`].
+    pub warning: Option<String>,
+}
+
+/// Applies the ladder in this module's doc comment to each path on its own;
+/// [`resolve_project_paths`] is the all-or-error form built on it.
+#[must_use]
+pub fn resolve_each_path(overrides: &PathOverrides) -> PartialPaths {
+    resolve_each_with(overrides, &SystemEnvironment)
+}
+
+fn resolve_each_with(overrides: &PathOverrides, environment: &dyn Environment) -> PartialPaths {
     let config = AppConfig::load(&overrides.base);
 
     // Rungs 1-3 are answers someone *gave*; rung 4 is one this code
@@ -223,29 +250,61 @@ fn resolve_with(
         .or_else(|| environment.detect_game_dir())
         .ok_or_else(|| PathResolutionError::GameDirNotFound {
             candidates: environment.game_dir_candidates(),
-        })?;
+        });
 
     let workshop_dir = first_of(
         overrides.workshop_dir.clone(),
         environment.path_var(WORKSHOP_DIR_VAR),
         config.workshop_dir.clone(),
     )
-    .unwrap_or_else(|| paths::default_workshop_dir(&game_dir));
+    .or_else(|| {
+        game_dir
+            .as_ref()
+            .ok()
+            .map(|game_dir| paths::default_workshop_dir(game_dir))
+    });
 
     let mods_config = match first_of(
         overrides.mods_config.clone(),
         environment.path_var(MODS_CONFIG_VAR),
         config.mods_config.clone(),
     ) {
-        Some(path) => path,
+        Some(path) => Ok(path),
         None => environment
             .default_mods_config()
-            .map_err(|reason| PathResolutionError::ModsConfigNotFound { reason })?,
+            .map_err(|reason| PathResolutionError::ModsConfigNotFound { reason }),
     };
 
-    let profile_dir = overrides
+    let profile_dir = overrides.profile_dir.clone().or_else(|| {
+        mods_config
+            .as_ref()
+            .ok()
+            .map(|mods_config| crate::profile_dir(&overrides.base, mods_config))
+    });
+
+    PartialPaths {
+        game_dir,
+        workshop_dir,
+        mods_config,
+        profile_dir,
+        warning,
+    }
+}
+
+fn resolve_with(
+    overrides: &PathOverrides,
+    environment: &dyn Environment,
+) -> Result<ResolvedPaths, PathResolutionError> {
+    let partial = resolve_each_with(overrides, environment);
+    let game_dir = partial.game_dir?;
+    let mods_config = partial.mods_config?;
+    // Both are `Some` once their sources resolved: a workshop folder
+    // derives from the game folder and the profile from the ModsConfig.
+    let workshop_dir = partial
+        .workshop_dir
+        .unwrap_or_else(|| paths::default_workshop_dir(&game_dir));
+    let profile_dir = partial
         .profile_dir
-        .clone()
         .unwrap_or_else(|| crate::profile_dir(&overrides.base, &mods_config));
 
     Ok(ResolvedPaths {
@@ -255,7 +314,7 @@ fn resolve_with(
             mods_config,
             profile_dir,
         },
-        warning,
+        warning: partial.warning,
     })
 }
 
@@ -635,5 +694,62 @@ mod tests {
             SystemEnvironment.path_var("RIMMERGE_DEFINITELY_UNSET_IN_THIS_PROCESS"),
             None
         );
+    }
+
+    #[test]
+    fn a_missing_game_dir_still_resolves_mods_config_and_profile_dir() {
+        let base = tempdir().expect("tempdir");
+        let environment =
+            FakeEnvironment::default().with_default_mods_config("/mods/ModsConfig.xml");
+
+        let partial = resolve_each_with(&overrides_at(base.path()), &environment);
+
+        assert!(matches!(
+            partial.game_dir,
+            Err(PathResolutionError::GameDirNotFound { .. })
+        ));
+        assert_eq!(
+            partial.mods_config,
+            Ok(PathBuf::from("/mods/ModsConfig.xml"))
+        );
+        assert_eq!(
+            partial.profile_dir,
+            Some(crate::profile_dir(
+                base.path(),
+                Path::new("/mods/ModsConfig.xml")
+            ))
+        );
+        assert_eq!(partial.workshop_dir, None);
+    }
+
+    #[test]
+    fn a_setup_field_game_dir_derives_the_workshop_dir() {
+        let base = tempdir().expect("tempdir");
+        let environment = FakeEnvironment::default()
+            .with_install_at("/steam/steamapps/common/RimWorld")
+            .with_default_mods_config("/mods/ModsConfig.xml");
+        let mut overrides = overrides_at(base.path());
+        overrides.game_dir = Some(PathBuf::from("/steam/steamapps/common/RimWorld"));
+
+        let partial = resolve_each_with(&overrides, &environment);
+
+        assert_eq!(
+            partial.workshop_dir,
+            Some(paths::default_workshop_dir(Path::new(
+                "/steam/steamapps/common/RimWorld"
+            )))
+        );
+        assert_eq!(partial.warning, None);
+    }
+
+    #[test]
+    fn the_all_or_error_form_still_reports_the_game_dir_first() {
+        let base = tempdir().expect("tempdir");
+        let environment = FakeEnvironment::default();
+
+        let error =
+            resolve_with(&overrides_at(base.path()), &environment).expect_err("nothing resolves");
+
+        assert!(matches!(error, PathResolutionError::GameDirNotFound { .. }));
     }
 }

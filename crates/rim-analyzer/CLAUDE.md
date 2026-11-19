@@ -46,7 +46,7 @@ cargo nextest run -p rim-analyzer --all-features
 ```
 Ground-truth PE-metadata tests compare against real DLLs and are
 `#[ignore]`d (`--run-ignored ignored-only`); the real-install tier
-(`tests/common/mod.rs`, all seven `real_install_*.rs` files plus
+(`tests/common/mod.rs`, all eight `real_install_*.rs` files plus
 `pe_metadata_ground_truth.rs`) is described in the root `CLAUDE.md` and
 `docs/testing.md`. Before reporting done, run the full gate block in the
 root `CLAUDE.md`.
@@ -120,16 +120,25 @@ is the proof, not the arithmetic.
 `infra::paths::is_game_dir(&Path)` (`Version.txt` **and** `Data/Core/`
 both present) is the single definition of "this is an install" — used by
 detection and by every real-install test guard, so it can never mean two
-things. `default_game_dir_candidates()`/`detect_game_dir()` read only env
-vars plus `steamapps/libraryfolders.vdf` (a ~60-line hand-rolled reader,
-no new dependency; a malformed file degrades to "no libraries found"
-rather than erroring — unit-tested against a fixture with invented drive
-letters, never a real machine's layout). The Windows registry
-(`HKCU\...\SteamPath`) is deliberately not read — the two
-`%ProgramFiles*%\Steam` probes plus `libraryfolders.vdf` already cover
-every library. Per-OS candidates are emitted so a non-Windows user gets a
-sane error, but that is not a claim of non-Windows support: `deny.toml`
-pins `x86_64-pc-windows-msvc` and CI is `windows-latest`.
+things. `default_game_dir_candidates()`/`detect_game_dir()` read env
+vars, `steamapps/libraryfolders.vdf` (a ~60-line hand-rolled reader, read
+through `read_bounded_regular_file` with the 1 MiB `STEAM_LIBRARY_LIST_MAX_BYTES`;
+a malformed or oversized file degrades to "no libraries found" rather than
+erroring — unit-tested against a fixture with invented drive letters, never
+a real machine's layout) and, on Windows only, two read-only registry values
+(`winreg`, a `cfg(windows)` dependency): `HKCU\Software\Valve\Steam\SteamPath`
+then `HKLM\SOFTWARE\WOW6432Node\Valve\Steam\InstallPath`. They lead the
+two `%ProgramFiles*%\Steam` roots in `steam_roots_from` (`/` read as `\`,
+deduplicated by `library_key`; Steam writes `SteamPath` lowercased, so on a
+collision the HKLM/Program Files spelling wins, and `dedup_preserving_order`
+compares candidates by the same key so a case-only duplicate never lists
+twice). A missing key yields nothing. The same roots feed
+`is_steam_managed_install`. No test touches the real registry: they use
+`steam_roots_from` and `windows_candidates_from` over injected roots, so the
+`default_steam_roots` composition that actually reads the registry is
+untested. Per-OS candidates are emitted so a non-Windows user gets a sane
+error, but that is not a claim of non-Windows support: `deny.toml` pins
+`x86_64-pc-windows-msvc` and CI is `windows-latest`.
 
 `is_steam_managed_install(game_dir)` decides the Launch RimWorld route
 (Steam or the executable): the folder is in `<library>/steamapps/common/`,

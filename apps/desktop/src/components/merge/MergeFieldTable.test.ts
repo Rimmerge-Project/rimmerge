@@ -181,7 +181,7 @@ describe("MergeFieldTable", () => {
     });
 
     const header = wrapper.get('[data-testid="merge-container-auto-wildAnimals"]');
-    expect(header.text()).toContain("wildAnimals — 2 entries");
+    expect(header.text()).toContain("wildAnimals: 2 entries");
     expect(header.text()).not.toContain("conflict");
     expect(wrapper.text()).toContain("wildAnimals/Allosaurus");
     expect(wrapper.text()).toContain("wildAnimals/Mammoth");
@@ -203,7 +203,7 @@ describe("MergeFieldTable", () => {
     });
 
     const header = wrapper.get('[data-testid="merge-container-auto-wildAnimals"]');
-    expect(header.text()).toContain("wildAnimals — 13 entries");
+    expect(header.text()).toContain("wildAnimals: 13 entries");
     expect(header.text()).toContain("▸");
     expect(wrapper.text()).not.toContain("wildAnimals/Key0");
 
@@ -239,7 +239,7 @@ describe("MergeFieldTable", () => {
     });
 
     const header = wrapper.get('[data-testid="merge-container-conflicts-wildAnimals"]');
-    expect(header.text()).toContain("wildAnimals — 2 entries, 2 conflicts");
+    expect(header.text()).toContain("wildAnimals: 2 entries, 2 conflicts");
     // No collapse arrow — the conflicts section's own header never collapses.
     expect(header.text()).not.toContain("▸");
     expect(header.text()).not.toContain("▾");

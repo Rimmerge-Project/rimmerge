@@ -1,13 +1,16 @@
 //! [`LoadProject`]: scans a RimWorld install, loads persisted decisions
 //! and rules, and builds a fresh [`Session`].
 
+use std::sync::Arc;
+
 use rim_analyzer::domain::ModId;
 
 use crate::ports::{
     AssignmentProjectStore, ConfigError, DecisionStore, ModKnowledgeStore, ModScanner,
-    ModsConfigStore, PatchProjectStore, RuleStore, ScanError, ScanProgress, StoreError,
+    ModTimestampReader, ModsConfigStore, PatchProjectStore, RuleStore, ScanError, ScanProgress,
+    StoreError,
 };
-use crate::{ProjectPaths, Session};
+use crate::{ModTimeSubject, ModUpdateTimes, ProjectPaths, Session};
 
 /// Everything that can go wrong loading a project.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
@@ -52,6 +55,11 @@ pub struct LoadProject<Scanner, Config, Decisions, Rules, Patches, Assignments, 
     /// `crate::app_settings::NetworkPolicy`'s own doc comment for why this
     /// moved out of `Settings`.
     fetch_rimmerge_rules: bool,
+    /// Reads each mod's last-updated time for the Mods page's display
+    /// sort. Optional so the many callers that never list mods (the CLI,
+    /// most tests) need not supply one; a session built without it
+    /// answers "unavailable" for every mod.
+    timestamp_reader: Option<Arc<dyn ModTimestampReader + Send + Sync>>,
 }
 
 impl<Scanner, Config, Decisions, Rules, Patches, Assignments, Knowledge>
@@ -106,7 +114,20 @@ where
             assignment_store,
             knowledge_store,
             fetch_rimmerge_rules,
+            timestamp_reader: None,
         }
+    }
+
+    /// Has every session this builds read its mods' last-updated times
+    /// through `reader` (a rescan builds a new session, so it refreshes
+    /// them too).
+    #[must_use]
+    pub fn with_timestamp_reader(
+        mut self,
+        reader: Arc<dyn ModTimestampReader + Send + Sync>,
+    ) -> Self {
+        self.timestamp_reader = Some(reader);
+        self
     }
 
     /// Scans `paths`, loads persisted state, and builds a [`Session`].
@@ -209,6 +230,11 @@ where
         warnings.extend(loaded_knowledge.warnings);
         session.set_rule_load_warnings(warnings);
         session.set_mod_knowledge(loaded_knowledge.knowledge);
+        if let Some(reader) = &self.timestamp_reader {
+            let subjects = ModTimeSubject::all_in(session.report());
+            let times = reader.read_update_times(&session.paths().workshop_dir, &subjects);
+            session.set_update_times(ModUpdateTimes::new(times));
+        }
         // `Session::new`'s own default for `file_active_mods` (whatever
         // `mods_config.active_mods` held when it ran) is wrong exactly
         // when an override was in play: that field is the *working* set
@@ -223,11 +249,42 @@ where
 
 #[cfg(test)]
 mod tests {
+    use std::path::PathBuf;
+
     use super::*;
     use crate::test_support::{
-        FakeModKnowledgeStore, FakeScanner, InMemoryAssignmentProjectStore, InMemoryDecisionStore,
-        InMemoryModsConfigStore, InMemoryPatchProjectStore, InMemoryRuleStore, report_fixture,
+        FakeModKnowledgeStore, FakeModTimestampReader, FakeScanner, InMemoryAssignmentProjectStore,
+        InMemoryDecisionStore, InMemoryModsConfigStore, InMemoryPatchProjectStore,
+        InMemoryRuleStore, report_fixture,
     };
+    use crate::{UpdateTime, UpdateUnavailable};
+
+    fn load_project_with(
+        report: rim_analyzer::domain::Report,
+    ) -> LoadProject<
+        FakeScanner,
+        InMemoryModsConfigStore,
+        InMemoryDecisionStore,
+        InMemoryRuleStore,
+        InMemoryPatchProjectStore,
+        InMemoryAssignmentProjectStore,
+        FakeModKnowledgeStore,
+    > {
+        LoadProject::new(
+            FakeScanner::new(report, Vec::new()),
+            InMemoryModsConfigStore::new(crate::ports::ModsConfigFile {
+                version: "1.6".to_string(),
+                active_mods: Vec::new(),
+                known_expansions: Vec::new(),
+            }),
+            InMemoryDecisionStore::new(),
+            InMemoryRuleStore::new(),
+            InMemoryPatchProjectStore::new(),
+            InMemoryAssignmentProjectStore::new(),
+            FakeModKnowledgeStore::empty(),
+            true,
+        )
+    }
 
     fn paths() -> ProjectPaths {
         ProjectPaths {
@@ -266,6 +323,44 @@ mod tests {
 
         assert!(!progressed.is_empty(), "progress callback must be invoked");
         assert_eq!(session.orders().current.as_slice().len(), 2);
+    }
+
+    #[test]
+    fn a_timestamp_reader_fills_the_session_from_the_workshop_folder() {
+        let reader = Arc::new(FakeModTimestampReader::default().with_time(
+            "a",
+            UpdateTime::Known(crate::UnixSeconds::new(1_700_000_000)),
+        ));
+        let use_case =
+            load_project_with(report_fixture(&["a", "b"])).with_timestamp_reader(reader.clone());
+
+        let session = use_case
+            .execute(paths(), &mut |_| {})
+            .expect("load must succeed");
+
+        assert_eq!(
+            session.update_times().get(&ModId::new("a")),
+            UpdateTime::Known(crate::UnixSeconds::new(1_700_000_000))
+        );
+        assert_eq!(
+            session.update_times().get(&ModId::new("b")),
+            UpdateTime::Unavailable(UpdateUnavailable::Unknown)
+        );
+        assert_eq!(reader.last_workshop_dir(), Some(PathBuf::from("workshop")));
+    }
+
+    #[test]
+    fn without_a_timestamp_reader_every_time_is_unavailable() {
+        let use_case = load_project_with(report_fixture(&["a"]));
+
+        let session = use_case
+            .execute(paths(), &mut |_| {})
+            .expect("load must succeed");
+
+        assert_eq!(
+            session.update_times().get(&ModId::new("a")),
+            UpdateTime::Unavailable(UpdateUnavailable::Unknown)
+        );
     }
 
     /// `LoadProject::new`'s own `fetch_rimmerge_rules` argument (the
@@ -597,5 +692,62 @@ mod tests {
             Some(Some(working_set.clone()))
         );
         assert_eq!(session.orders().current.as_slice(), working_set.as_slice());
+    }
+
+    /// A rescan builds its session from the working set, but the file still
+    /// holds its own list: that list is what Rimmerge last loaded, so the
+    /// file is neither an outside change nor stale. Without the reset in
+    /// `set_file_active_mods` the working set would be read as the file's
+    /// list and every rescan would look like an outside edit.
+    #[test]
+    fn a_rescanned_session_treats_the_files_own_list_as_acknowledged() {
+        let use_case = LoadProject::new(
+            FakeScanner::new(report_fixture(&["a", "b"]), Vec::new()),
+            InMemoryModsConfigStore::new(crate::ports::ModsConfigFile {
+                version: "1.6".to_string(),
+                active_mods: vec![ModId::new("a")],
+                known_expansions: Vec::new(),
+            }),
+            InMemoryDecisionStore::new(),
+            InMemoryRuleStore::new(),
+            InMemoryPatchProjectStore::new(),
+            InMemoryAssignmentProjectStore::new(),
+            FakeModKnowledgeStore::empty(),
+            true,
+        );
+        let working_set = vec![ModId::new("a"), ModId::new("b")];
+
+        let session = use_case
+            .execute_with_active_set(paths(), working_set, &mut |_| {})
+            .expect("load must succeed");
+
+        assert_eq!(
+            session.external_file_change(),
+            crate::ExternalFileChange::None
+        );
+        assert_eq!(session.file_baseline(), crate::FileBaseline::Fresh);
+        assert_eq!(session.file_active_mods(), [ModId::new("a")].as_slice());
+        let mut session = session;
+        assert_eq!(
+            session.pending_changes().unapplied.added,
+            [ModId::new("b")],
+            "the rescanned working set is unapplied work of our own"
+        );
+
+        use_case
+            .config_store
+            .set_file(crate::ports::ModsConfigFile {
+                version: "1.6".to_string(),
+                active_mods: vec![ModId::new("a"), ModId::new("z")],
+                known_expansions: Vec::new(),
+            });
+        crate::use_cases::RefreshFileBaseline::new(&use_case.config_store).execute(&mut session);
+        let pending = session.pending_changes();
+
+        assert_eq!(pending.unapplied.added, [ModId::new("b")]);
+        assert!(
+            pending.unapplied.removed.is_empty(),
+            "the outside z is not ours"
+        );
     }
 }

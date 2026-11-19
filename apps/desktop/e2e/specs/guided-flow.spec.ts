@@ -29,7 +29,7 @@ test.describe("guided flow", () => {
       { source: "suggested", writeModsConfig: true, writeMergeMod: false, force: false },
     ]);
     await expect(page.getByTestId("guide-done")).toContainText(
-      "ModsConfig.xml matches the suggested order",
+      "Your active order matches the suggested order",
     );
     await expect(page.getByTestId("guide-step-apply")).toHaveAttribute("data-status", "done");
     await expect(page.getByTestId("guide-live-region")).toContainText("Applied.");

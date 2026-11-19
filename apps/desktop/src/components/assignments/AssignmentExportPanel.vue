@@ -10,6 +10,7 @@ import { useExportFlow } from "@/composables/useExportFlow";
 import { useTranslateMessage } from "@/composables/useTranslateMessage";
 import { usePendingActiveChangesQuery } from "@/queries/activeSet";
 import { useExportAssignmentMutation } from "@/queries/assignments";
+import { useFileBaselineQuery } from "@/queries/fileBaseline";
 import { pickFolder } from "@/services/dialogs";
 import type { AssignmentSkipDto } from "@/types/generated/AssignmentSkipDto";
 import type { ExportAssignmentReportDto } from "@/types/generated/ExportAssignmentReportDto";
@@ -70,6 +71,14 @@ const hasUnscannedActiveChanges = computed(() => {
   const diff = pendingActiveChanges.value?.unscanned;
   return diff !== undefined && (diff.added.length > 0 || diff.removed.length > 0);
 });
+// Install writes `orders.current`, the order the user is looking at, not the file's own list:
+// a move or an import that no Apply has written yet reaches `ModsConfig.xml` with the install.
+const isCurrentOrderUnapplied = computed(() => pendingActiveChanges.value?.orderUnapplied === true);
+// Install writes Current over the file, so an edit made outside Rimmerge is overwritten too.
+const { data: fileBaseline } = useFileBaselineQuery();
+const hasOutsideChange = computed(
+  () => fileBaseline.value !== undefined && fileBaseline.value.externalChange.kind !== "none",
+);
 
 async function choose(): Promise<void> {
   const picked = await pickFolder(outDir.value.length > 0 ? outDir.value : undefined);
@@ -121,6 +130,22 @@ const canExport = computed(() => outDir.value.trim().length > 0);
       data-testid="assignment-export-stale-note"
     >
       {{ t("assignments.exportPanel.staleActiveSetNote") }}
+    </Message>
+
+    <Message
+      v-if="install && isCurrentOrderUnapplied"
+      severity="warn"
+      data-testid="assignment-export-unapplied-order-note"
+    >
+      {{ t("assignments.exportPanel.unappliedOrderNote") }}
+    </Message>
+
+    <Message
+      v-if="install && hasOutsideChange"
+      severity="warn"
+      data-testid="assignment-export-outside-change-note"
+    >
+      {{ t("assignments.exportPanel.outsideChangeNote") }}
     </Message>
 
     <Message
@@ -201,8 +226,7 @@ const canExport = computed(() => outDir.value.trim().length > 0);
           >
             {{ skip.defType }} {{ formatSkipRow(skip) }}{{
               skip.path ? t("assignments.exportPanel.skippedPath", { path: skip.path }) : ""
-            }}
-            — {{ skip.reason }}
+            }} ({{ skip.reason }})
           </li>
         </ul>
       </div>

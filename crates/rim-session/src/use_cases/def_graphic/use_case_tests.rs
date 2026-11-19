@@ -404,6 +404,48 @@ fn a_resolution_is_cached_and_cleared_when_the_order_changes() {
 }
 
 #[test]
+fn a_settled_move_re_resolves_the_def_for_the_new_winner() {
+    let thing = |path: &str| {
+        format!(
+            "<ThingDef><defName>X</defName><graphicData><texPath>{path}</texPath><graphicClass>Graphic_Single</graphicClass></graphicData></ThingDef>"
+        )
+    };
+    let (mut session, reader) = Install::new(&["a", "b"])
+        .def("a", "ThingDef", "X", &thing("Things/FromA"))
+        .def("b", "ThingDef", "X", &thing("Things/FromB"))
+        .file("a", "things/froma")
+        .file("b", "things/fromb")
+        .build();
+    let use_case = ResolveDefGraphic::new(reader);
+    let reference = def_ref("ThingDef", "X");
+    let default_key = |session: &mut Session| -> String {
+        let Ok(graphic) = use_case.execute(session, &reference).cloned() else {
+            panic!("resolve failed")
+        };
+        resolved(&graphic).slots()[0].variants()[0]
+            .faces
+            .default_face()
+            .key
+            .as_str()
+            .to_owned()
+    };
+    assert_eq!(default_key(&mut session), "things/fromb", "b loads last");
+
+    crate::use_cases::MoveMods::execute(
+        &mut session,
+        &[ModId::new("a")],
+        &crate::active_set::Anchor::End,
+    )
+    .expect("a is active");
+
+    assert_eq!(
+        default_key(&mut session),
+        "things/froma",
+        "the move changed the winner, so the cached answer must not survive it"
+    );
+}
+
+#[test]
 fn a_resolution_under_suggested_is_dropped_when_a_rule_resorts() {
     let (mut session, reader) = Install::new(&["a", "b"])
         .def("a", "ThingDef", "X", SINGLE_THING)

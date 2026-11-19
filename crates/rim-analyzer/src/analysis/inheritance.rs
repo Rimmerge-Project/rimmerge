@@ -953,6 +953,7 @@ mod tests {
             discovered_mod_count,
             core_resource_textures: BTreeSet::new(),
             ref_sites_by_mod: BTreeMap::new(),
+            unloaded_defs_dirs_by_mod: BTreeMap::new(),
         }
     }
 

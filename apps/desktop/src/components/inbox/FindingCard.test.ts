@@ -121,7 +121,7 @@ describe("FindingCard", () => {
       },
     });
     expect(wrapper.get('[data-testid="merge-state-pill"]').text()).toBe(
-      "not auto-merged — confirm the winner",
+      "not auto-merged: confirm the winner",
     );
   });
 

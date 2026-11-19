@@ -45,6 +45,58 @@ pub enum ActiveSetError {
     Duplicate(ModId),
 }
 
+/// Where a move or an anchored activation puts its mods, named by a
+/// neighbour's id rather than an index, so it stays exact under filtering
+/// and sorting of the *view* and a stale reference is detectable.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Anchor {
+    /// Directly before this active mod.
+    Before(ModId),
+    /// Directly after this active mod.
+    After(ModId),
+    /// At the start of the list.
+    Start,
+    /// At the end of the list.
+    End,
+}
+
+/// Why [`ActiveSet::move_to`] or [`ActiveSet::activate_at`] refused. Every
+/// refusal leaves the set untouched.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+pub enum MoveError {
+    /// The anchor names a mod that is not in the set (it was deactivated, or
+    /// the caller's view is stale).
+    #[error("{0} is not active, so nothing can be placed next to it")]
+    AnchorNotActive(ModId),
+    /// The anchor is one of the mods being moved.
+    #[error("{0} is one of the mods being moved, so it cannot be the anchor")]
+    AnchorInMovedSet(ModId),
+    /// A mod to move is not in the set.
+    #[error("{0} is not active, so it cannot be moved")]
+    NotActive(ModId),
+    /// The same mod was listed twice in one request.
+    #[error("{0} was listed more than once")]
+    Duplicate(ModId),
+    /// A mod to activate resolves to nothing in the inventory.
+    #[error("{0} is not a known mod")]
+    Unknown(ModId),
+}
+
+/// The index in `ids` where a block placed at `anchor` starts.
+fn insertion_index(ids: &[ModId], anchor: &Anchor) -> Result<usize, MoveError> {
+    let position_of = |id: &ModId| {
+        ids.iter()
+            .position(|active| active == id)
+            .ok_or_else(|| MoveError::AnchorNotActive(id.clone()))
+    };
+    match anchor {
+        Anchor::Start => Ok(0),
+        Anchor::End => Ok(ids.len()),
+        Anchor::Before(id) => position_of(id),
+        Anchor::After(id) => position_of(id).map(|position| position + 1),
+    }
+}
+
 /// The working active-mod list, in RimSort's model of
 /// "an Active and an Inactive list, moves between them are edits to an
 /// *unsaved* list". [`crate::Session::working`] holds one; it never
@@ -151,6 +203,158 @@ impl ActiveSet {
         Ok(added)
     }
 
+    /// Moves every id in `ids` next to `anchor`, keeping them together and in
+    /// the relative order they already have in this set (so moving a
+    /// selection never shuffles it). A move is a permutation: nothing is
+    /// added, dropped or duplicated. Everything is validated before the set
+    /// changes.
+    ///
+    /// # Errors
+    ///
+    /// [`MoveError::Duplicate`] for a repeated id, [`MoveError::NotActive`]
+    /// for an id not in the set, [`MoveError::AnchorInMovedSet`] when the
+    /// anchor is among `ids`, [`MoveError::AnchorNotActive`] when it is in
+    /// no part of the set.
+    pub fn move_to(&mut self, ids: &[ModId], anchor: &Anchor) -> Result<(), MoveError> {
+        let mut requested = BTreeSet::new();
+        for id in ids {
+            if !requested.insert(id.clone()) {
+                return Err(MoveError::Duplicate(id.clone()));
+            }
+            if !self.contains(id) {
+                return Err(MoveError::NotActive(id.clone()));
+            }
+        }
+        if let Anchor::Before(id) | Anchor::After(id) = anchor
+            && requested.contains(id)
+        {
+            return Err(MoveError::AnchorInMovedSet(id.clone()));
+        }
+        let (moved, mut remaining): (Vec<ModId>, Vec<ModId>) = self
+            .ids
+            .iter()
+            .cloned()
+            .partition(|id| requested.contains(id));
+        let at = insertion_index(&remaining, anchor)?;
+        remaining.splice(at..at, moved);
+        self.ids = remaining;
+        Ok(())
+    }
+
+    /// Checks that `anchor` could be used now: `Start`/`End` always, a
+    /// neighbour only while it is in the set.
+    ///
+    /// # Errors
+    ///
+    /// [`MoveError::AnchorNotActive`].
+    pub fn check_anchor(&self, anchor: &Anchor) -> Result<(), MoveError> {
+        insertion_index(&self.ids, anchor).map(|_| ())
+    }
+
+    /// Activates `ids` as one block placed at `anchor`, in the order given
+    /// (a plan's closure order: dependencies first), skipping any id already
+    /// active by base id. Validated before the set changes. Returns what
+    /// was inserted.
+    ///
+    /// # Errors
+    ///
+    /// [`MoveError::Unknown`] for an id the inventory does not know,
+    /// [`MoveError::AnchorNotActive`] for a stale anchor.
+    pub fn activate_at(
+        &mut self,
+        ids: Vec<ModId>,
+        anchor: &Anchor,
+        inventory: &ModInventory,
+    ) -> Result<Vec<ModId>, MoveError> {
+        let added = self
+            .to_activate(ids, inventory)
+            .map_err(MoveError::Unknown)?;
+        let at = insertion_index(&self.ids, anchor)?;
+        self.ids.splice(at..at, added.iter().cloned());
+        Ok(added)
+    }
+
+    /// Activates `ids` with no anchor: a mod that has a slot in `reference`
+    /// (the scanned Current order) goes right after its nearest
+    /// predecessor there that is in this set, or at the start; any other
+    /// mod goes to the end. Deactivating a mod and activating it again
+    /// therefore puts it back where it was.
+    ///
+    /// Dependencies still come first: `ids` is a plan (dependencies before
+    /// their dependents), and a mod never lands before a declared dependency
+    /// that is in the set by then, whether this same call inserted it or it was
+    /// active already (a dependency moved behind the mod's old slot). When
+    /// its own slot would put it earlier, it goes right after that dependency
+    /// instead.
+    ///
+    /// Validated before the set changes. Returns what was inserted.
+    ///
+    /// # Errors
+    ///
+    /// [`ActiveSetError::Unknown`] for an id the inventory does not know.
+    pub(crate) fn activate_at_reference_slots(
+        &mut self,
+        ids: Vec<ModId>,
+        reference: &[ModId],
+        inventory: &ModInventory,
+    ) -> Result<Vec<ModId>, ActiveSetError> {
+        let added = self
+            .to_activate(ids, inventory)
+            .map_err(ActiveSetError::Unknown)?;
+        for id in &added {
+            let slot = self.reference_slot(id, reference);
+            let floor = self.after_declared_dependencies(id, inventory);
+            self.ids.insert(slot.max(floor), id.clone());
+        }
+        Ok(added)
+    }
+
+    /// The first position after every declared dependency of `id` that is in
+    /// the set now (placed earlier in this call, or active before it), `0`
+    /// when none.
+    fn after_declared_dependencies(&self, id: &ModId, inventory: &ModInventory) -> usize {
+        let Some(entry) = inventory.entry(id) else {
+            return 0;
+        };
+        entry
+            .declared_dependencies
+            .iter()
+            .filter_map(|dependency| {
+                let base = dependency.base();
+                self.ids.iter().rposition(|active| active.base() == base)
+            })
+            .map(|position| position + 1)
+            .max()
+            .unwrap_or(0)
+    }
+
+    /// The ids of `ids` that are not yet active, deduplicated, once every
+    /// one is known to `inventory`; the error is the first unknown id.
+    fn to_activate(&self, ids: Vec<ModId>, inventory: &ModInventory) -> Result<Vec<ModId>, ModId> {
+        if let Some(unknown) = ids.iter().find(|id| !inventory.contains(id)) {
+            return Err(unknown.clone());
+        }
+        let mut added: Vec<ModId> = Vec::new();
+        for id in ids {
+            if !self.contains_base(&id) && !added.contains(&id) {
+                added.push(id);
+            }
+        }
+        Ok(added)
+    }
+
+    /// Where `id` goes among `self.ids` to sit in `reference`'s slot.
+    fn reference_slot(&self, id: &ModId, reference: &[ModId]) -> usize {
+        let Some(slot) = reference.iter().position(|candidate| candidate == id) else {
+            return self.ids.len();
+        };
+        reference[..slot]
+            .iter()
+            .rev()
+            .find_map(|predecessor| self.ids.iter().position(|active| active == predecessor))
+            .map_or(0, |position| position + 1)
+    }
+
     /// Force-appends `id` with no inventory validation — a no-op if `id`
     /// (exact) is already present. `pub(crate)`, for
     /// [`crate::Session::set_current_order`]'s own reconciliation only:
@@ -212,14 +416,28 @@ impl ActiveSetDiff {
 
 /// [`crate::Session::pending_changes`]'s own two-diff result: what the
 /// working set has that the last scan hasn't seen yet (`unscanned`), and
-/// what the scanned order has that the file on disk doesn't yet
-/// (`unapplied`).
+/// what the scanned order has that Rimmerge hasn't written to
+/// `ModsConfig.xml` yet (`unapplied`).
+///
+/// Both are facts about the user's own unsaved work, so the `unapplied`
+/// side is measured against the list Rimmerge last loaded or wrote (the
+/// acknowledged list), never against the live file: someone else editing
+/// the file changes neither field, and the outside-change note is the one
+/// place that says so. The launch status and the dashboard's
+/// `file_matches` facts are the live comparison
+/// ([`crate::Session::file_matches`]).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct PendingActiveChanges {
     /// `working` vs. the scanned `orders().current`.
     pub unscanned: ActiveSetDiff,
-    /// The scanned `orders().current` vs. `file_active_mods`.
+    /// The scanned `orders().current` vs. the acknowledged list: what an
+    /// Apply of the user's own edits would add or remove.
     pub unapplied: ActiveSetDiff,
+    /// `orders().current` differs from the acknowledged list in membership
+    /// or sequence (the generated merge mod ignored on both sides), so an
+    /// Apply would write the user's own edit. `unapplied` is a membership
+    /// diff and cannot see a reorder: a settled move leaves it empty.
+    pub order_unapplied: bool,
 }
 
 /// [`crate::use_cases::ActivateMods`]'s plan — what [`plan_activate`]
@@ -721,5 +939,413 @@ mod tests {
             plan.dependents_still_active.get(&ModId::new("target.mod")),
             Some(&vec![ModId::new("dependent.mod")])
         );
+    }
+
+    fn ids_of(set: &ActiveSet) -> Vec<&str> {
+        set.ids().iter().map(ModId::as_str).collect()
+    }
+
+    fn working(ids: &[&str]) -> ActiveSet {
+        ActiveSet::trusted(ids.iter().map(|id| ModId::new(*id)).collect())
+    }
+
+    fn mods(ids: &[&str]) -> Vec<ModId> {
+        ids.iter().map(|id| ModId::new(*id)).collect()
+    }
+
+    #[test]
+    fn move_to_places_mods_before_an_anchor() {
+        let mut set = working(&["a", "b", "c", "d"]);
+
+        set.move_to(&mods(&["d"]), &Anchor::Before(ModId::new("b")))
+            .expect("valid move");
+
+        assert_eq!(ids_of(&set), ["a", "d", "b", "c"]);
+    }
+
+    #[test]
+    fn move_to_places_mods_after_an_anchor() {
+        let mut set = working(&["a", "b", "c", "d"]);
+
+        set.move_to(&mods(&["a"]), &Anchor::After(ModId::new("c")))
+            .expect("valid move");
+
+        assert_eq!(ids_of(&set), ["b", "c", "a", "d"]);
+    }
+
+    #[test]
+    fn move_to_start_and_end() {
+        let mut set = working(&["a", "b", "c"]);
+
+        set.move_to(&mods(&["c"]), &Anchor::Start).expect("valid");
+        assert_eq!(ids_of(&set), ["c", "a", "b"]);
+        set.move_to(&mods(&["c"]), &Anchor::End).expect("valid");
+
+        assert_eq!(ids_of(&set), ["a", "b", "c"]);
+    }
+
+    #[test]
+    fn move_to_keeps_the_moved_mods_in_their_own_relative_order() {
+        let mut set = working(&["a", "b", "c", "d", "e"]);
+
+        // Requested out of order: the set's own order wins.
+        set.move_to(&mods(&["d", "b"]), &Anchor::After(ModId::new("e")))
+            .expect("valid move");
+
+        assert_eq!(ids_of(&set), ["a", "c", "e", "b", "d"]);
+    }
+
+    #[test]
+    fn move_to_rejects_a_stale_anchor_and_leaves_the_set_untouched() {
+        let mut set = working(&["a", "b"]);
+
+        let error = set
+            .move_to(&mods(&["a"]), &Anchor::After(ModId::new("gone")))
+            .expect_err("gone is not active");
+
+        assert_eq!(error, MoveError::AnchorNotActive(ModId::new("gone")));
+        assert_eq!(ids_of(&set), ["a", "b"]);
+    }
+
+    #[test]
+    fn move_to_rejects_an_anchor_inside_the_moved_set() {
+        let mut set = working(&["a", "b", "c"]);
+
+        let error = set
+            .move_to(&mods(&["a", "b"]), &Anchor::Before(ModId::new("b")))
+            .expect_err("b is being moved");
+
+        assert_eq!(error, MoveError::AnchorInMovedSet(ModId::new("b")));
+        assert_eq!(ids_of(&set), ["a", "b", "c"]);
+    }
+
+    #[test]
+    fn move_to_rejects_an_inactive_or_repeated_id_without_changing_anything() {
+        let mut set = working(&["a", "b", "c"]);
+
+        let not_active = set
+            .move_to(&mods(&["a", "ghost"]), &Anchor::End)
+            .expect_err("ghost is not active");
+        let repeated = set
+            .move_to(&mods(&["a", "a"]), &Anchor::End)
+            .expect_err("a is listed twice");
+
+        assert_eq!(not_active, MoveError::NotActive(ModId::new("ghost")));
+        assert_eq!(repeated, MoveError::Duplicate(ModId::new("a")));
+        assert_eq!(ids_of(&set), ["a", "b", "c"]);
+    }
+
+    #[test]
+    fn move_to_can_move_core_but_deactivate_still_refuses_it() {
+        let mut set = working(&["a", "ludeon.rimworld"]);
+
+        set.move_to(&mods(&["ludeon.rimworld"]), &Anchor::Start)
+            .expect("Core is movable");
+        let removed = set.deactivate(&mods(&["ludeon.rimworld"]));
+
+        assert_eq!(ids_of(&set), ["ludeon.rimworld", "a"]);
+        assert!(removed.is_empty());
+    }
+
+    #[test]
+    fn move_to_with_nothing_to_move_changes_nothing() {
+        let mut set = working(&["a", "b"]);
+
+        set.move_to(&[], &Anchor::Start).expect("empty is valid");
+
+        assert_eq!(ids_of(&set), ["a", "b"]);
+    }
+
+    #[test]
+    fn activate_at_inserts_the_dependency_closure_before_the_anchor_dependencies_first() {
+        let report = rim_resolve::test_support::ReportBuilder::new()
+            .mod_("core.mod")
+            .mod_("z.mod")
+            .inactive("a.mod")
+            .inactive("b.mod")
+            .inactive_dependency("a.mod", "b.mod")
+            .build();
+        let inv = ModInventory::from_report(&report);
+        let mut set = working(&["core.mod", "z.mod"]);
+        let plan = plan_activate(&set, &inv, &mods(&["a.mod"]), true);
+
+        let added = set
+            .activate_at(plan.to_add, &Anchor::Before(ModId::new("z.mod")), &inv)
+            .expect("valid");
+
+        assert_eq!(added, mods(&["b.mod", "a.mod"]));
+        assert_eq!(ids_of(&set), ["core.mod", "b.mod", "a.mod", "z.mod"]);
+    }
+
+    #[test]
+    fn activate_at_after_start_and_end() {
+        let inv = inventory(&["a", "b"], &["x"]);
+        let mut after = working(&["a", "b"]);
+        let mut start = working(&["a", "b"]);
+        let mut end = working(&["a", "b"]);
+
+        after
+            .activate_at(mods(&["x"]), &Anchor::After(ModId::new("a")), &inv)
+            .expect("valid");
+        start
+            .activate_at(mods(&["x"]), &Anchor::Start, &inv)
+            .expect("valid");
+        end.activate_at(mods(&["x"]), &Anchor::End, &inv)
+            .expect("valid");
+
+        assert_eq!(ids_of(&after), ["a", "x", "b"]);
+        assert_eq!(ids_of(&start), ["x", "a", "b"]);
+        assert_eq!(ids_of(&end), ["a", "b", "x"]);
+    }
+
+    #[test]
+    fn activate_at_rejects_a_stale_anchor_or_unknown_id_and_leaves_the_set_untouched() {
+        let inv = inventory(&["a"], &["x"]);
+        let mut set = working(&["a"]);
+
+        let stale = set
+            .activate_at(mods(&["x"]), &Anchor::Before(ModId::new("gone")), &inv)
+            .expect_err("gone is not active");
+        let unknown = set
+            .activate_at(mods(&["x", "ghost"]), &Anchor::End, &inv)
+            .expect_err("ghost is unknown");
+
+        assert_eq!(stale, MoveError::AnchorNotActive(ModId::new("gone")));
+        assert_eq!(unknown, MoveError::Unknown(ModId::new("ghost")));
+        assert_eq!(ids_of(&set), ["a"]);
+    }
+
+    #[test]
+    fn activate_at_skips_a_mod_already_active_by_base_id() {
+        let inv = inventory(&["a"], &["x", "x_steam"]);
+        let mut set = working(&["a", "x"]);
+
+        let added = set
+            .activate_at(mods(&["x_steam"]), &Anchor::Start, &inv)
+            .expect("valid");
+
+        assert!(added.is_empty());
+        assert_eq!(ids_of(&set), ["a", "x"]);
+    }
+
+    #[test]
+    fn reference_slots_put_a_mod_after_its_nearest_active_predecessor() {
+        let inv = inventory(&["a", "c"], &["b"]);
+        let mut set = working(&["a", "c"]);
+
+        set.activate_at_reference_slots(mods(&["b"]), &mods(&["a", "b", "c"]), &inv)
+            .expect("known");
+
+        assert_eq!(ids_of(&set), ["a", "b", "c"]);
+    }
+
+    #[test]
+    fn reference_slots_skip_predecessors_that_are_not_active() {
+        let inv = inventory(&["a", "d"], &["b", "c"]);
+        let mut set = working(&["a", "d"]);
+
+        // Both come back at once, in plan order (later slot first): each is
+        // placed against the reference, never by arrival order.
+        set.activate_at_reference_slots(mods(&["c", "b"]), &mods(&["a", "b", "c", "d"]), &inv)
+            .expect("known");
+
+        assert_eq!(ids_of(&set), ["a", "b", "c", "d"]);
+    }
+
+    #[test]
+    fn reference_slots_put_a_mod_with_no_active_predecessor_at_the_start() {
+        let inv = inventory(&["b"], &["a"]);
+        let mut set = working(&["b"]);
+
+        set.activate_at_reference_slots(mods(&["a"]), &mods(&["a", "b"]), &inv)
+            .expect("known");
+
+        assert_eq!(ids_of(&set), ["a", "b"]);
+    }
+
+    #[test]
+    fn reference_slots_append_a_mod_the_reference_does_not_know() {
+        let inv = inventory(&["a", "b"], &["new"]);
+        let mut set = working(&["a", "b"]);
+
+        set.activate_at_reference_slots(mods(&["new"]), &mods(&["a", "b"]), &inv)
+            .expect("known");
+
+        assert_eq!(ids_of(&set), ["a", "b", "new"]);
+    }
+
+    /// `dependent` declares `dependency`; both inactive, `anchors` active.
+    fn dependency_inventory(anchors: &[&str]) -> ModInventory {
+        let mut builder = rim_resolve::test_support::ReportBuilder::new();
+        for id in anchors {
+            builder = builder.mod_(id);
+        }
+        let report = builder
+            .inactive("dependent")
+            .inactive("dependency")
+            .inactive_dependency("dependent", "dependency")
+            .build();
+        ModInventory::from_report(&report)
+    }
+
+    #[test]
+    fn reference_slots_keep_a_dependency_before_its_dependent_when_it_has_no_slot() {
+        let inv = dependency_inventory(&["m", "z"]);
+        let mut set = working(&["m", "z"]);
+
+        // The reference knows `dependent` only: its slot (after `m`) would
+        // otherwise leave the slot-less dependency, appended, behind it.
+        set.activate_at_reference_slots(
+            mods(&["dependency", "dependent"]),
+            &mods(&["m", "dependent", "z"]),
+            &inv,
+        )
+        .expect("known");
+
+        assert_eq!(ids_of(&set), ["m", "z", "dependency", "dependent"]);
+    }
+
+    #[test]
+    fn reference_slots_keep_a_dependency_before_its_dependent_when_its_slot_is_later() {
+        let inv = dependency_inventory(&["m", "z"]);
+        let mut set = working(&["m", "z"]);
+
+        set.activate_at_reference_slots(
+            mods(&["dependency", "dependent"]),
+            &mods(&["m", "dependent", "z", "dependency"]),
+            &inv,
+        )
+        .expect("known");
+
+        assert_eq!(ids_of(&set), ["m", "z", "dependency", "dependent"]);
+    }
+
+    #[test]
+    fn reference_slots_still_use_the_dependents_own_slot_when_it_is_already_after_the_dependency() {
+        let inv = dependency_inventory(&["m", "z"]);
+        let mut set = working(&["m", "z"]);
+
+        set.activate_at_reference_slots(
+            mods(&["dependency", "dependent"]),
+            &mods(&["dependency", "m", "z", "dependent"]),
+            &inv,
+        )
+        .expect("known");
+
+        assert_eq!(ids_of(&set), ["dependency", "m", "z", "dependent"]);
+    }
+
+    #[test]
+    fn reference_slots_keep_a_mod_behind_a_dependency_that_is_already_active() {
+        // Current held [dependency, a, dependent]; `dependent` was deactivated
+        // and `dependency` moved to the end, so the working set is [a, dependency].
+        let mut builder = rim_resolve::test_support::ReportBuilder::new();
+        builder = builder.mod_("a").mod_("dependency");
+        let report = builder
+            .inactive("dependent")
+            .inactive_dependency("dependent", "dependency")
+            .build();
+        let inv = ModInventory::from_report(&report);
+        let mut set = working(&["a", "dependency"]);
+
+        set.activate_at_reference_slots(
+            mods(&["dependent"]),
+            &mods(&["dependency", "a", "dependent"]),
+            &inv,
+        )
+        .expect("known");
+
+        assert_eq!(ids_of(&set), ["a", "dependency", "dependent"]);
+    }
+
+    #[test]
+    fn reference_slots_reject_an_unknown_id_and_leave_the_set_untouched() {
+        let inv = inventory(&["a"], &["x"]);
+        let mut set = working(&["a"]);
+
+        let error = set
+            .activate_at_reference_slots(mods(&["x", "ghost"]), &mods(&["a"]), &inv)
+            .expect_err("ghost is unknown");
+
+        assert_eq!(error, ActiveSetError::Unknown(ModId::new("ghost")));
+        assert_eq!(ids_of(&set), ["a"]);
+    }
+
+    mod move_properties {
+        use proptest::prelude::*;
+
+        use super::*;
+
+        const POOL: [&str; 8] = ["a", "b", "c", "d", "e", "f", "g", "h"];
+
+        fn anchor_strategy() -> impl Strategy<Value = Anchor> {
+            prop_oneof![
+                Just(Anchor::Start),
+                Just(Anchor::End),
+                (0..POOL.len()).prop_map(|i| Anchor::Before(ModId::new(POOL[i]))),
+                (0..POOL.len()).prop_map(|i| Anchor::After(ModId::new(POOL[i]))),
+            ]
+        }
+
+        proptest! {
+            /// Whatever the request, a successful move permutes the set and
+            /// a refused one leaves it as it was: never a duplicate, never a
+            /// loss.
+            #[test]
+            fn any_move_is_a_permutation_or_changes_nothing(
+                requested in proptest::collection::vec(0..POOL.len(), 0..5),
+                anchor in anchor_strategy(),
+                active_count in 1..=POOL.len(),
+            ) {
+                let mut set = working(&POOL[..active_count]);
+                let before = set.ids().to_vec();
+                let ids: Vec<ModId> = requested.iter().map(|i| ModId::new(POOL[*i])).collect();
+
+                let result = set.move_to(&ids, &anchor);
+
+                let mut after_sorted = set.ids().to_vec();
+                after_sorted.sort();
+                let mut before_sorted = before.clone();
+                before_sorted.sort();
+                prop_assert_eq!(after_sorted, before_sorted);
+                if result.is_err() {
+                    prop_assert_eq!(set.ids(), before.as_slice());
+                }
+            }
+
+            #[test]
+            fn a_move_puts_the_moved_block_right_next_to_its_anchor(
+                requested in proptest::collection::btree_set(0..POOL.len(), 1..4),
+                anchor_index in 0..POOL.len(),
+                is_before in any::<bool>(),
+            ) {
+                let mut set = working(&POOL);
+                let ids: Vec<ModId> = requested.iter().map(|i| ModId::new(POOL[*i])).collect();
+                let anchor_id = ModId::new(POOL[anchor_index]);
+                let anchor = if is_before {
+                    Anchor::Before(anchor_id.clone())
+                } else {
+                    Anchor::After(anchor_id.clone())
+                };
+
+                if set.move_to(&ids, &anchor).is_ok() {
+                    let position = |id: &ModId| set.ids().iter().position(|x| x == id);
+                    let positions: Vec<usize> = ids.iter().filter_map(position).collect();
+                    let first = positions.iter().copied().min();
+                    let last = positions.iter().copied().max();
+                    let (Some(first), Some(last), Some(anchor_position)) =
+                        (first, last, position(&anchor_id))
+                    else {
+                        return Err(TestCaseError::fail("a moved id or the anchor vanished"));
+                    };
+                    prop_assert_eq!(last - first + 1, ids.len(), "the block is contiguous");
+                    if is_before {
+                        prop_assert_eq!(last + 1, anchor_position);
+                    } else {
+                        prop_assert_eq!(first, anchor_position + 1);
+                    }
+                }
+            }
+        }
     }
 }

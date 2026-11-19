@@ -8,6 +8,8 @@ import ToastService from "primevue/toastservice";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
+import { createAppI18n, loadLocale } from "@/i18n/i18n";
+
 import SetupPage from "@/pages/SetupPage.vue";
 import { installMockIpc } from "@/services/ipc.mock";
 import { useSessionStore } from "@/stores/session";
@@ -25,14 +27,16 @@ vi.mock("primevue/usetoast", () => ({
   useToast: () => ({ add: toastAddSpy }),
 }));
 
+// The native folder dialog, answered per test.
+const { pickFolderMock } = vi.hoisted(() => ({ pickFolderMock: vi.fn() }));
+vi.mock("@/services/dialogs", () => ({ pickFolder: pickFolderMock }));
+
 const defaultsFixture: DefaultPathsDto = {
   gameDir: "C:/RimWorld",
   workshopDir: "C:/RimWorld/workshop",
   modsConfig: "C:/Profile/ModsConfig.xml",
   profileDir: "C:/Profile/rimmerge",
-  warning: null,
   warningCode: null,
-  error: null,
   errorCode: null,
 };
 
@@ -55,7 +59,27 @@ const runLaunchNetworkChecksFixture = {
   databaseRefresh: [],
 };
 
-function mountSetupPage() {
+const noInstallFixture: DefaultPathsDto = {
+  gameDir: null,
+  workshopDir: null,
+  modsConfig: "C:/Profile/ModsConfig.xml",
+  profileDir: "C:/Profile/rimmerge",
+  warningCode: null,
+  errorCode: {
+    kind: "gameDirNotFound",
+    candidates: [
+      "Q:\\Steam\\steamapps\\common\\RimWorld",
+      "W:\\SteamGames\\steamapps\\common\\RimWorld",
+    ],
+  },
+};
+
+async function settle(wrapper: { vm: { $nextTick: () => Promise<void> } }): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await wrapper.vm.$nextTick();
+}
+
+function mountSetupPage(i18nOverride?: ReturnType<typeof createAppI18n>) {
   const pinia = createPinia();
   const router = createRouter({
     history: createMemoryHistory(),
@@ -67,7 +91,14 @@ function mountSetupPage() {
 
   const wrapper = mount(SetupPage, {
     global: {
-      plugins: [pinia, router, PiniaColada, [PrimeVue, { theme: { preset: Aura } }], ToastService],
+      plugins: [
+        pinia,
+        router,
+        PiniaColada,
+        [PrimeVue, { theme: { preset: Aura } }],
+        ToastService,
+        ...(i18nOverride ? [i18nOverride] : []),
+      ],
     },
   });
 
@@ -78,6 +109,7 @@ describe("SetupPage", () => {
   afterEach(() => {
     clearMocks();
     toastAddSpy.mockClear();
+    pickFolderMock.mockReset();
   });
 
   it("prefills the folder inputs from get_default_paths", async () => {
@@ -290,40 +322,146 @@ describe("SetupPage", () => {
     expect(wrapper.find('[data-testid="setup-progress"]').exists()).toBe(false);
   });
 
-  it("shows the no-install-found error with every candidate location, and leaves the form empty", async () => {
-    // The machine-with-no-install case: `get_default_paths` never fails
-    // outright (the user still has to be able to type a path), so the
-    // reason comes back on the DTO. The candidate list is the actionable
-    // part -- a bare "not found" would leave the user with nothing to
-    // check.
+  // SPEC CHANGE: the banner used to print the backend's English CLI text
+  // (`error`, with `--game-dir` hints). `get_default_paths` now sends
+  // `errorCode` only; the page words it and lists the checked locations.
+  it("shows the no-install-found error in the page's own words, each checked location as a code element, and leaves the game folder empty", async () => {
+    installMockIpc({ get_default_paths: noInstallFixture });
+
+    const { wrapper } = mountSetupPage();
+    await settle(wrapper);
+
+    const banner = wrapper.get('[data-testid="setup-detection-error"]');
+    const locations = banner.findAll("li code").map((code) => code.text());
+    expect(locations).toEqual([
+      "Q:\\Steam\\steamapps\\common\\RimWorld",
+      "W:\\SteamGames\\steamapps\\common\\RimWorld",
+    ]);
+    expect(banner.text()).toContain("Locations checked:");
+    expect(banner.text()).not.toContain("--game-dir");
+    expect((wrapper.get('[data-testid="game-dir-input"]').element as HTMLInputElement).value).toBe(
+      "",
+    );
+    // ModsConfig and the profile do not depend on the install, so they fill anyway.
+    expect(
+      (wrapper.get('[data-testid="mods-config-input"]').element as HTMLInputElement).value,
+    ).toBe("C:/Profile/ModsConfig.xml");
+    expect(wrapper.get('[data-testid="load-project-button"]').attributes("disabled")).toBeDefined();
+  });
+
+  it("renders gameDirNotFound in the active locale with each checked location as a code element and no English backend sentence", async () => {
+    installMockIpc({ get_default_paths: noInstallFixture });
+    const i18n = createAppI18n();
+    await loadLocale(i18n, "pt-BR");
+    i18n.global.locale.value = "pt-BR";
+
+    const { wrapper } = mountSetupPage(i18n);
+    await settle(wrapper);
+
+    const banner = wrapper.get('[data-testid="setup-detection-error"]');
+    expect(banner.findAll("li code")).toHaveLength(2);
+    expect(banner.text()).toContain("Q:\\Steam\\steamapps\\common\\RimWorld");
+    expect(banner.text()).not.toContain("no RimWorld install found");
+    expect(banner.text()).not.toContain("--game-dir");
+    expect(banner.text()).not.toContain("technical details");
+  });
+
+  it("clears the detection error and fills workshop, ModsConfig and profile once the user browses to a game folder", async () => {
+    const requests: unknown[] = [];
     installMockIpc({
-      get_default_paths: {
-        gameDir: null,
-        workshopDir: null,
-        modsConfig: null,
-        profileDir: null,
-        warning: null,
-        error: [
-          "no RimWorld install found. Pass --game-dir <path>, set RIMMERGE_GAME_DIR, or run",
-          "`rimmerge config set --game-dir <path>`. Looked in:",
-          "  Q:\\Steam\\steamapps\\common\\RimWorld",
-          "  W:\\SteamGames\\steamapps\\common\\RimWorld",
-        ].join("\n"),
+      get_default_paths: (payload: unknown) => {
+        const { request } = payload as { request: { gameDir: string | null } };
+        requests.push(request);
+        if (request.gameDir === null) {
+          return noInstallFixture;
+        }
+        return {
+          gameDir: request.gameDir,
+          workshopDir: "D:/Steam/steamapps/workshop/content/294100",
+          modsConfig: "C:/Profile/ModsConfig.xml",
+          profileDir: "C:/Profile/rimmerge",
+          warningCode: null,
+          errorCode: null,
+        } satisfies DefaultPathsDto;
+      },
+    });
+    pickFolderMock.mockResolvedValue("D:/Steam/steamapps/common/RimWorld");
+
+    const { wrapper } = mountSetupPage();
+    await settle(wrapper);
+    expect(wrapper.find('[data-testid="setup-detection-error"]').exists()).toBe(true);
+    expect(wrapper.get('[data-testid="load-project-button"]').attributes("disabled")).toBeDefined();
+
+    await wrapper
+      .findAll("button")
+      .find((button) => button.text() === "Browse…")
+      ?.trigger("click");
+    await settle(wrapper);
+    await settle(wrapper);
+
+    expect(requests).toEqual([
+      { gameDir: null },
+      { gameDir: "D:/Steam/steamapps/common/RimWorld" },
+    ]);
+    expect(wrapper.find('[data-testid="setup-detection-error"]').exists()).toBe(false);
+    expect((wrapper.get('[data-testid="game-dir-input"]').element as HTMLInputElement).value).toBe(
+      "D:/Steam/steamapps/common/RimWorld",
+    );
+    expect(
+      (wrapper.get('[data-testid="workshop-dir-input"]').element as HTMLInputElement).value,
+    ).toBe("D:/Steam/steamapps/workshop/content/294100");
+    expect(
+      (wrapper.get('[data-testid="profile-dir-input"]').element as HTMLInputElement).value,
+    ).toBe("C:/Profile/rimmerge");
+    expect(
+      wrapper.get('[data-testid="load-project-button"]').attributes("disabled"),
+    ).toBeUndefined();
+  });
+
+  it("keeps the checked-locations list while the user types a game folder, until the answer is committed", async () => {
+    installMockIpc({
+      get_default_paths: (payload: unknown) => {
+        const { request } = payload as { request: { gameDir: string | null } };
+        return request.gameDir === null ? noInstallFixture : defaultsFixture;
       },
     });
 
     const { wrapper } = mountSetupPage();
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    await wrapper.vm.$nextTick();
+    await settle(wrapper);
+    await wrapper.get('[data-testid="game-dir-input"]').setValue("Q:\\Steam\\steamapps\\common");
 
-    const message = wrapper.get('[data-testid="setup-detection-error"]').text();
-    expect(message).toContain("no RimWorld install found");
-    expect(message).toContain("Q:\\Steam\\steamapps\\common\\RimWorld");
-    expect(message).toContain("W:\\SteamGames\\steamapps\\common\\RimWorld");
-    expect((wrapper.get('[data-testid="game-dir-input"]').element as HTMLInputElement).value).toBe(
-      "",
-    );
-    expect(wrapper.get('[data-testid="load-project-button"]').attributes("disabled")).toBeDefined();
+    expect(wrapper.findAll('[data-testid="setup-detection-error"] li code')).toHaveLength(2);
+
+    await wrapper.get('[data-testid="game-dir-input"]').trigger("blur");
+    await settle(wrapper);
+    await settle(wrapper);
+
+    expect(wrapper.find('[data-testid="setup-detection-error"]').exists()).toBe(false);
+  });
+
+  it("keeps a workshop folder the user changed when the game folder is committed", async () => {
+    installMockIpc({
+      get_default_paths: (payload: unknown) => {
+        const { request } = payload as { request: { gameDir: string | null } };
+        return {
+          ...defaultsFixture,
+          gameDir: request.gameDir ?? defaultsFixture.gameDir,
+          workshopDir: request.gameDir === null ? defaultsFixture.workshopDir : "E:/derived",
+        };
+      },
+    });
+
+    const { wrapper } = mountSetupPage();
+    await settle(wrapper);
+    await wrapper.get('[data-testid="workshop-dir-input"]').setValue("F:/my-workshop");
+    await wrapper.get('[data-testid="game-dir-input"]').setValue("G:/Elsewhere");
+    await wrapper.get('[data-testid="game-dir-input"]').trigger("blur");
+    await settle(wrapper);
+    await settle(wrapper);
+
+    expect(
+      (wrapper.get('[data-testid="workshop-dir-input"]').element as HTMLInputElement).value,
+    ).toBe("F:/my-workshop");
   });
 
   it("shows the non-fatal warning beside the prefilled fields, without blocking Load", async () => {
@@ -334,8 +472,7 @@ describe("SetupPage", () => {
     installMockIpc({
       get_default_paths: {
         ...defaultsFixture,
-        warning:
-          "D:/Wrong does not look like a RimWorld install (Version.txt or Data/Core/ is missing)",
+        warningCode: { kind: "notAnInstall", gameDir: "C:/RimWorld" },
       },
     });
 
@@ -353,7 +490,10 @@ describe("SetupPage", () => {
 
   it("drops the warning once the user edits the game directory it was about", async () => {
     installMockIpc({
-      get_default_paths: { ...defaultsFixture, warning: "D:/Wrong does not look like..." },
+      get_default_paths: {
+        ...defaultsFixture,
+        warningCode: { kind: "notAnInstall", gameDir: "C:/RimWorld" },
+      },
     });
 
     const { wrapper } = mountSetupPage();

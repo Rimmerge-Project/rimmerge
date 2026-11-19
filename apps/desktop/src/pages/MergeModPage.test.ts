@@ -158,6 +158,6 @@ describe("MergeModPage", () => {
 
     expect(wrapper.find('[data-testid="merge-mod-entry-list"]').exists()).toBe(false);
     expect(wrapper.findAll('[data-testid="empty-state"]')).toHaveLength(2);
-    expect(wrapper.get('[data-testid="merge-mod-summary"]').text()).toContain("currently empty");
+    expect(wrapper.get('[data-testid="merge-mod-summary"]').text()).toContain("Currently empty");
   });
 });

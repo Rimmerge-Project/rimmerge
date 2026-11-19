@@ -659,6 +659,102 @@ mod tests {
         assert_eq!(writes[0].active_mods, suggested);
     }
 
+    /// A session over `a`, `b` whose suggested order differs from its
+    /// current one (a user reorder decision).
+    fn session_with_distinct_suggested_order() -> Session {
+        let mut session = session_fixture(&["a", "b"]);
+        session
+            .decide(Decision {
+                key: rim_resolve::domain::FindingKey::UndeclaredHardDependency {
+                    after: ModId::new("a"),
+                    before: ModId::new("b"),
+                },
+                action: Action::Reorder {
+                    after: ModId::new("a"),
+                    before: ModId::new("b"),
+                },
+                note: None,
+                decided_at: jiff::Timestamp::UNIX_EPOCH,
+            })
+            .expect("reorder is always a valid action");
+        assert_ne!(
+            session.orders().suggested.as_slice(),
+            session.orders().current.as_slice(),
+            "sanity check: the two orders must differ for this test to mean anything"
+        );
+        session
+    }
+
+    fn apply_suggested(session: &mut Session) {
+        let store = InMemoryModsConfigStore::new(ModsConfigFile {
+            version: "1.6".to_string(),
+            active_mods: vec![ModId::new("a"), ModId::new("b")],
+            known_expansions: Vec::new(),
+        });
+        use_case(store)
+            .execute(
+                session,
+                ApplyOptions {
+                    source: OrderSource::Suggested,
+                    write_mods_config: true,
+                    write_merge_mod: false,
+                },
+            )
+            .expect("apply must succeed");
+    }
+
+    #[test]
+    fn moved_mods_is_zero_after_applying_suggested() {
+        let mut session = session_with_distinct_suggested_order();
+        assert!(session.moved_mods() > 0, "sanity: something moves before");
+        // The sort snapshot is what the dashboard used to read.
+        assert!(session.sort_outcome().stats.positions_changed > 0);
+
+        apply_suggested(&mut session);
+
+        assert_eq!(
+            session.moved_mods(),
+            0,
+            "Current now equals Suggested, so nothing moves"
+        );
+        assert!(
+            session.sort_outcome().stats.positions_changed > 0,
+            "the sort snapshot is still the pre-apply value: it is why the dashboard \
+             must not read it"
+        );
+    }
+
+    #[test]
+    fn rescan_after_applying_suggested_keeps_the_written_order() {
+        let mut session = session_with_distinct_suggested_order();
+        let written = session.orders().suggested.as_slice().to_vec();
+        apply_suggested(&mut session);
+
+        let load_project = crate::use_cases::LoadProject::new(
+            crate::test_support::FakeScanner::new(
+                crate::test_support::report_fixture(&["a", "b"]),
+                Vec::new(),
+            ),
+            InMemoryModsConfigStore::new(ModsConfigFile {
+                version: "1.6".to_string(),
+                active_mods: written.clone(),
+                known_expansions: Vec::new(),
+            }),
+            InMemoryDecisionStore::new(),
+            InMemoryRuleStore::new(),
+            crate::test_support::InMemoryPatchProjectStore::new(),
+            crate::test_support::InMemoryAssignmentProjectStore::new(),
+            crate::test_support::FakeModKnowledgeStore::empty(),
+            true,
+        );
+        let rescanned = crate::use_cases::Rescan::new(load_project)
+            .execute(&session, &mut |_| {})
+            .expect("rescan must succeed");
+
+        assert_eq!(rescanned.orders().current.as_slice(), written);
+        assert!(rescanned.file_matches(OrderSource::Current));
+    }
+
     #[test]
     fn file_matches_is_true_after_applying_that_source() {
         let mut session = session_fixture(&["a", "b"]);
@@ -698,5 +794,41 @@ mod tests {
             .expect("apply must succeed");
 
         assert!(session.file_matches(OrderSource::Suggested));
+    }
+
+    /// After a settled move, Current is the moved order: an Apply of Current
+    /// writes it, never the pre-move list.
+    #[test]
+    fn apply_after_a_move_writes_the_moved_order() {
+        let mut session = session_fixture(&["a", "b", "c"]);
+        crate::use_cases::MoveMods::execute(
+            &mut session,
+            &[ModId::new("c")],
+            &crate::active_set::Anchor::Start,
+        )
+        .expect("valid move");
+        let use_case = use_case(config_store());
+
+        use_case
+            .execute(
+                &mut session,
+                ApplyOptions {
+                    source: OrderSource::Current,
+                    write_mods_config: true,
+                    write_merge_mod: false,
+                },
+            )
+            .expect("a settled move is not stale");
+
+        let writes = use_case.config_store.writes();
+        assert_eq!(
+            writes[0].active_mods,
+            [ModId::new("c"), ModId::new("a"), ModId::new("b")]
+        );
+        assert!(session.file_matches(OrderSource::Current));
+        assert_eq!(
+            session.working().ids(),
+            [ModId::new("c"), ModId::new("a"), ModId::new("b")]
+        );
     }
 }

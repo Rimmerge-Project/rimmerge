@@ -140,17 +140,17 @@
     "thresholdLabel": "Confidence threshold (auto vs. needs input)",
     "tieBreak": {
       "label": "Tie-break",
-      "description": "Sets where a mod that no other mod pins starts from. Rebuild ranks those mods by name and ignores your current order, so expect most mods to move the first time you rebuild a list RimSort produced. Preserve current starts each mod from its position in ModsConfig.xml, moving as few mods as possible.",
+      "description": "Sets where a mod that no other mod pins starts from. Rebuild ranks those mods by name and ignores your current order, so expect most mods to move the first time you rebuild a list RimSort produced. Preserve current starts each mod from its position in your active order, moving as few mods as possible.",
       "rebuild": "Rebuild",
       "preserveCurrent": "Preserve current"
     },
     "useImportedPairs": {
       "label": "Use imported pair rules",
-      "description": "Let RimSort/SteamDB \"load before/after\" rules affect ordering. On by default — most imported pairs restate evidence the sorter already enforces on its own. A rule you set yourself is never affected by this toggle."
+      "description": "Let RimSort/SteamDB \"load before/after\" rules affect ordering. On by default, because most imported pairs restate evidence the sorter already enforces on its own. A rule you set yourself is never affected by this toggle."
     },
     "useImportedPlacements": {
       "label": "Use imported placement rules",
-      "description": "Let RimSort/SteamDB \"load first/last\" placements pin a mod's tier. On by default — nothing in a mod's own files can say \"load me last\"."
+      "description": "Let RimSort/SteamDB \"load first/last\" placements pin a mod's tier. On by default, because nothing in a mod's own files can say \"load me last\"."
     },
     "enforceSoft": {
       "label": "Enforce Soft-strength edges",
@@ -158,7 +158,7 @@
     },
     "enforceAwareness": {
       "label": "Enforce Awareness-strength edges",
-      "description": "These edges come from {edgeKinds} hints — evidence that the mods interact, not an ordering fact. Off by default: they are far more common than Soft edges, so enforcing them is far more disruptive to the order."
+      "description": "These edges come from {edgeKinds} hints. They are evidence that the mods interact, not an ordering fact. Off by default: they are far more common than Soft edges, so enforcing them is far more disruptive to the order."
     },
     "enforceInferred": {
       "label": "Enforce Inferred-strength edges",
@@ -169,11 +169,11 @@
       "recoveredWarning": "Your app settings file couldn't be read, so internet access is off until you save settings again.",
       "allowNetwork": {
         "label": "Allow internet access",
-        "description": "The master switch for everything Rimmerge sends over the internet, automatic or manual. It only ever contacts two GitHub hosts — api.github.com for update checks and raw.githubusercontent.com for rule-database refreshes — and never your local network. Off skips every request before any address is built or connection opened. Applies to this whole app, on this computer, whichever RimWorld install you open."
+        "description": "The master switch for everything Rimmerge sends over the internet, automatic or manual. It only contacts two GitHub hosts (api.github.com for update checks and raw.githubusercontent.com for rule-database refreshes) and never your local network. When it is off, no request is made at all. It applies to the whole app on this computer, whichever RimWorld install you open."
       },
       "autoRefreshRuleDatabases": {
         "label": "Refresh rule databases automatically",
-        "description": "Once a day, at launch, fetch the enabled rule databases the Rule databases card lists — never the Steam Workshop database, which only ever refreshes when you click Refresh."
+        "description": "Once a day, at launch, fetch the enabled rule databases the Rule databases card lists. The Steam Workshop database is never fetched this way, only when you click Refresh."
       },
       "checkForUpdates": {
         "label": "Check for updates",
@@ -182,10 +182,10 @@
       "checkNow": {
         "button": "Check now",
         "disabledTitle": "Turned off by Allow internet access",
-        "awaitingFirstRun": "Not checked yet — answer the Welcome notice first.",
+        "awaitingFirstRun": "Not checked yet. Answer the Welcome notice first.",
         "alreadyRanThisLaunch": "Already checked this launch.",
         "networkDisabled": "Internet access is off.",
-        "checkDisabled": "Checked anyway — automatic checks are off.",
+        "checkDisabled": "Checked anyway, even though automatic checks are off.",
         "rateLimited": "GitHub's rate limit was reached; try again after {until}.",
         "updated": "A newer version is available: {version}.",
         "unchanged": "Up to date.",
@@ -206,7 +206,7 @@
     },
     "showDanglingDefReferences": {
       "label": "Show dangling def reference findings",
-      "description": "Flag a name written at a recognized reference site (e.g. a research prerequisite, a stat offset key) that no active def of any type actually has. Off by default — this can produce a meaningful number of false positives on a large install (for example a self-identifying field mistaken for a cross-reference). Never changes the load order."
+      "description": "Flag a name written at a recognized reference site (for example a research prerequisite or a stat offset key) that no active def of any type actually has. Off by default, because it can produce a fair number of false positives on a large install (for example a self-identifying field mistaken for a cross-reference). Never changes the load order."
     },
     "saveButton": "Save",
     "resetButton": "Reset to defaults",
@@ -365,13 +365,13 @@
         "title": "Use the suggested order",
         "pending": "You're viewing your current order. The suggested order moves {count} mod. | You're viewing your current order. The suggested order moves {count} mods.",
         "doneText": "The suggested order is selected.",
-        "doneMatchesFileText": "ModsConfig.xml already matches the suggested order.",
+        "doneMatchesFileText": "Your active order already matches the suggested order.",
         "button": "Use suggested order",
         "reviewLink": "Review the suggested order"
       },
       "apply": {
         "title": "Apply",
-        "pending": "See what will be written to ModsConfig.xml. A backup is made first.",
+        "pending": "See what will be written to your active mod list. A backup is made first.",
         "button": "Apply…",
         "staleBlocked": "Your active mods changed since the last scan. Rescan before applying.",
         "rescanButton": "Rescan"
@@ -380,11 +380,11 @@
         "title": "Confirm",
         "pending": "Check the summary, then confirm. If something will break, such as a missing required mod, you're asked first."
       },
-      "done": "ModsConfig.xml matches the suggested order. Launch RimWorld to play.",
+      "done": "Your active order matches the suggested order. Launch RimWorld to play.",
       "asOfLastScan": "As of the last scan or apply.",
       "needsInputHint": "{count} finding needs your input (optional) | {count} findings need your input (optional)",
       "openInbox": "Open Findings",
-      "appliedAnnouncement": "Applied. ModsConfig.xml now matches the suggested order."
+      "appliedAnnouncement": "Applied. Your active order now matches the suggested order."
     }
   },
   "notifications": {
@@ -400,7 +400,7 @@
     },
     "welcome": {
       "title": "Welcome to Rimmerge",
-      "body": "Rimmerge can contact GitHub when it starts:\n- to check whether a newer Rimmerge has been released (api.github.com), each time it starts;\n- to download updated rule databases — the community load-order rules and Rimmerge's own rules file (raw.githubusercontent.com), at most once a day. Updates are stored locally; they change your load order only when you choose to import them.\n\nIt sends nothing about you, your mods, or your install — only a plain request that GitHub sees your IP address for. The large Steam Workshop database is never downloaded automatically, only when you click Refresh.",
+      "body": "Rimmerge can contact GitHub when it starts:\n- to check whether a newer Rimmerge has been released (api.github.com), each time it starts;\n- to download updated rule databases (the community load-order rules and Rimmerge's own rules file, from raw.githubusercontent.com), at most once a day. Updates are stored locally and change your load order only when you choose to import them.\n\nIt sends nothing about you, your mods, or your install. GitHub only sees an ordinary web request from your IP address. The large Steam Workshop database is never downloaded automatically, only when you click Refresh.",
       "settingsAlreadyRecommended": "Your settings already match the recommended defaults.",
       "steamWorkshopLabel": "Steam Workshop database (about 49 MB, downloaded only when you click Refresh)"
     },
@@ -500,7 +500,7 @@
       },
       "finding_not_found": {
         "title": "Finding not found",
-        "detail": "That finding is no longer live — it may already be resolved."
+        "detail": "That finding is no longer live. It may already be resolved."
       },
       "merge_source_failed": {
         "title": "Couldn't read a merge source",
@@ -532,7 +532,7 @@
       },
       "stale_active_set": {
         "title": "Active-mod list is out of date",
-        "detail": "Rescan before writing ModsConfig.xml."
+        "detail": "Rescan before writing your active mod list."
       },
       "already_running": {
         "title": "Already in progress",
@@ -574,7 +574,19 @@
       },
       "nothing_to_export": {
         "title": "Nothing to export",
-        "detail": "No active mod could be listed. Check the active mods in ModsConfig.xml."
+        "detail": "No active mod could be listed. Check that your active mod list isn't empty."
+      },
+      "move_anchor_not_active": {
+        "title": "That mod is no longer in the active list",
+        "detail": "The mod you dropped next to was deactivated or moved away, so nothing was changed. The list has been refreshed; try the move again."
+      },
+      "revert_order_pending_changes": {
+        "title": "Discard your pending changes first",
+        "detail": "The active list has changes that haven't been scanned yet. Discard them or rescan, then revert the order."
+      },
+      "revert_order_membership_differs": {
+        "title": "The saved list has different mods",
+        "detail": "Your saved active mods differ from your current order, so there is no order to go back to. To use the saved list instead, open it from Import on the Load order page. Otherwise, apply your own order."
       }
     }
   },
@@ -583,8 +595,9 @@
   },
   "defaultPathsError": {
     "noProfileBase": "Neither RIMMERGE_PROFILE_DIR nor LOCALAPPDATA is set, so Rimmerge has nowhere to keep its own files.",
-    "gameDirNotFound": "No RimWorld install directory could be found. See the technical details below for every location that was checked.",
-    "modsConfigNotFound": "Rimmerge couldn't work out where ModsConfig.xml is. See the technical details below."
+    "gameDirNotFound": "No RimWorld install was found. Enter the game folder below or choose it with Browse (for Steam, the steamapps\\common\\RimWorld folder in the library that holds the game), then choose Save as defaults.",
+    "checkedLocations": "Locations checked:",
+    "modsConfigNotFound": "Rimmerge couldn't work out where ModsConfig.xml is, because the USERPROFILE environment variable is not set. Enter the path to ModsConfig.xml below."
   },
   "finding": {
     "kind": {
@@ -726,8 +739,8 @@
         "referrerFromDef": "{modId}'s {defType}/{defName} ({fieldPath})",
         "referrerFromTemplate": "{modId}'s {defType}/{'@'}{name} ({fieldPath})",
         "referrerFromPatch": "{modId}'s patch on {defType}/{defName} ({fieldPath})",
-        "sentence": "{name} resolves to no active def of any type — {cause}.",
-        "likelySound": "This looks like a sound reference — a missing {soundDef} logs a warning and silently falls back to an undefined sound rather than failing to load.",
+        "sentence": "{name} resolves to no active def of any type: {cause}.",
+        "likelySound": "This looks like a sound reference. A missing {soundDef} logs a warning and silently falls back to an undefined sound instead of failing to load.",
         "referencedFrom": "Referenced from:",
         "truncatedReferrers": "{count} further referrer not shown (display limit). | {count} further referrers not shown (display limit)."
       },
@@ -808,26 +821,26 @@
         "sentence": "{modId}'s {def} field {field} names texture {path}, which no active mod ships."
       },
       "undecodableTexture": {
-        "sentence": "{modId}'s {path} won't decode ({width}x{height}, {fourcc}) — the base game shows the bad-texture placeholder in its place.",
+        "sentence": "{modId}'s {path} won't decode ({width}x{height}, {fourcc}). The base game shows the bad-texture placeholder in its place.",
         "pngSibling": "This mod also ships a non-DDS file at the same path, but the base game never falls back to it."
       },
       "brokenInheritance": {
-        "missingParent": "{modId}'s {child} inherits from {parentName} — no active mod defines it, so it loads without any of that parent's own fields.",
-        "wrongType": "{modId}'s {child} inherits from {parentName} — it resolves to a {parentType}, not a {childDefType}, at this mod's own load position.",
+        "missingParent": "{modId}'s {child} inherits from {parentName}, but no active mod defines it, so it loads without any of that parent's own fields.",
+        "wrongType": "{modId}'s {child} inherits from {parentName}, but it resolves to a {parentType}, not a {childDefType}, at this mod's own load position.",
         "affectedCount": "{count} affected def: | {count} affected defs:",
-        "andMore": "… and {count} more",
+        "andMore": "and {count} more",
         "truncated": "{count} further affected def not shown (display limit). | {count} further affected defs not shown (display limit)."
       },
       "nearMissModReference": {
-        "findModName": "{modId}'s FindMod name {written} resolves to no active or installed mod, but closely resembles {candidateName} — possibly a typo.",
-        "mayRequireId": "{modId}'s MayRequire id {written} resolves to no active or installed mod, but closely resembles {candidateName} — possibly a typo.",
+        "findModName": "{modId}'s FindMod name {written} resolves to no active or installed mod, but closely resembles {candidateName}. It may be a typo.",
+        "mayRequireId": "{modId}'s MayRequire id {written} resolves to no active or installed mod, but closely resembles {candidateName}. It may be a typo.",
         "writtenIn": "Written in {file}"
       },
       "patchWillFail": {
-        "causeRemovedBy": "{modId}'s {operation}, on {defKey}, is predicted to fail under this order — {causeModId}, which loads first, removes the target node with its own operation.",
-        "causeNotYetInjected": "{modId}'s {operation}, on {defKey}, is predicted to fail under this order — it targets a node {causeModId} injects, but that mod loads after it.",
-        "causeDeadTarget": "{modId}'s {operation}, on {defKey}, is predicted to fail under this order — the winning owner's own resolved structure never has that node, regardless of load order.",
-        "causeUnclassified": "{modId}'s {operation}, on {defKey}, is predicted to fail under this order — the cause couldn't be classified.",
+        "causeRemovedBy": "{modId}'s {operation}, on {defKey}, is predicted to fail under this order. {causeModId}, which loads first, removes the target node with its own operation.",
+        "causeNotYetInjected": "{modId}'s {operation}, on {defKey}, is predicted to fail under this order. It targets a node {causeModId} injects, but that mod loads after it.",
+        "causeDeadTarget": "{modId}'s {operation}, on {defKey}, is predicted to fail under this order. The winning owner's own resolved structure never has that node, regardless of load order.",
+        "causeUnclassified": "{modId}'s {operation}, on {defKey}, is predicted to fail under this order. The cause couldn't be classified.",
         "specificField": "Specific field: {leafXpath}"
       },
       "contributesNothing": {
@@ -881,7 +894,7 @@
       "completenessPartial": "Partial",
       "completenessCompleteWithProblems": "Complete, with problems",
       "completenessComplete": "Complete",
-      "patchCollisionWithSubPath": "Patch collision — {subPath}",
+      "patchCollisionWithSubPath": "Patch collision: {subPath}",
       "injectedNodeRelation": "{selector}'s patch selects a node injected by {injector}",
       "showLabel": "Show",
       "filterAllChanged": "All changed",
@@ -954,7 +967,7 @@
     "state": {
       "merged": "merged",
       "needsInput": "{count} field needs input | {count} fields need input",
-      "structuralGuard": "not auto-merged — confirm the winner",
+      "structuralGuard": "not auto-merged: confirm the winner",
       "cannotMerge": "cannot merge"
     },
     "skipped": {
@@ -969,7 +982,7 @@
     "header": {
       "inspectLink": "Inspect",
       "outOfScope": "Out of scope, not merged: {mods}",
-      "structuralGuardLine": "{field} differs ({by} vs. the base copy) — field-level merging is unsafe for this def. Confirm the load-order winner by accepting this finding on the Findings page; it can't be completed as a merge.",
+      "structuralGuardLine": "{field} differs ({by} vs. the base copy), so field-level merging is unsafe for this def. Confirm the load-order winner by accepting this finding on the Findings page. It can't be completed as a merge.",
       "baseTag": "(base)",
       "winnerTag": "(winner)",
       "totalsFields": "{count} field | {count} fields",
@@ -991,27 +1004,27 @@
       "heading": "Merge output",
       "mergedDefs": "{count} merged def | {count} merged defs",
       "nothingYet": "empty",
-      "summary": "The compatibility mod Rimmerge writes your merge and asset decisions into — currently {contents}. Regenerated every time you Apply; always loads last in the suggested order.",
-      "summaryWithSources": "The compatibility mod Rimmerge writes your merge and asset decisions into — currently {contents}, sourced from {count} mod. Regenerated every time you Apply; always loads last in the suggested order. | The compatibility mod Rimmerge writes your merge and asset decisions into — currently {contents}, sourced from {count} mods. Regenerated every time you Apply; always loads last in the suggested order.",
+      "summary": "The compatibility mod Rimmerge writes your merge and asset decisions into. Currently {contents}. Regenerated every time you Apply; it always loads last in the suggested order.",
+      "summaryWithSources": "The compatibility mod Rimmerge writes your merge and asset decisions into. Currently {contents}, sourced from {count} mod. Regenerated every time you Apply; it always loads last in the suggested order. | The compatibility mod Rimmerge writes your merge and asset decisions into. Currently {contents}, sourced from {count} mods. Regenerated every time you Apply; it always loads last in the suggested order.",
       "loadFailed": "Failed to load the merge output.",
       "packageIdLabel": "Package id",
       "folderLabel": "Folder",
       "pathLabel": "Path",
       "onDiskLabel": "On disk",
-      "existsYes": "Yes — regenerated on every apply",
-      "existsNo": "Not yet — apply with \"Write merge mod\" to generate it",
+      "existsYes": "Yes, regenerated on every apply",
+      "existsNo": "Not yet. Apply with \"Write merge mod\" to generate it",
       "placementLabel": "Load order placement",
       "placementValue": "Last (the sorter always places the generated mod at the bottom of the suggested order)",
       "sourceModsLabel": "Source mods",
       "entriesHeading": "Entries",
-      "noEntriesYet": "No merge or shipped-asset decisions yet — decide a def-override or patch-collision finding with the merge editor to add one.",
+      "noEntriesYet": "No merge or shipped-asset decisions yet. Decide a def-override or patch-collision finding with the merge editor to add one.",
       "filesHeading": "Files",
       "nothingRendersYet": "Files appear here once at least one merge or shipped-asset decision exists.",
       "fileLoadFailed": "Failed to render this file."
     },
     "filePreviewLabel": "File preview",
     "editor": {
-      "sourceFailedSuffix": "{message} — the project's files changed since the last scan.",
+      "sourceFailedSuffix": "The project's files changed since the last scan: {message}",
       "reloadProject": "Reload the project",
       "loadFailed": "Failed to load the merge preview.",
       "showMore": "Show more ({loaded} of {total})",
@@ -1038,7 +1051,7 @@
       "sectionAuto": "Auto-resolved ({count})",
       "sectionUnchanged": "Unchanged ({count})",
       "containerEntries": "{count} entry | {count} entries",
-      "containerSummary": "{container} — {entries}",
+      "containerSummary": "{container}: {entries}",
       "containerConflicts": "{count} conflict | {count} conflicts",
       "containerSummaryWithConflicts": "{base}, {conflicts}",
       "acceptSuggested": "Accept suggested ({count})"
@@ -1055,7 +1068,7 @@
       "needsInput": "needs input",
       "saving": "saving…",
       "drop": "Drop",
-      "dropUnavailableTitle": "Dropping isn't supported for a patch collision — RimWorld's own patches always replay to a value.",
+      "dropUnavailableTitle": "Dropping isn't supported for a patch collision, because RimWorld's own patches always replay to a value.",
       "clearChoice": "Clear choice",
       "autoRevert": "Auto"
     },
@@ -1089,7 +1102,7 @@
       "label": "partial: +{mods}"
     },
     "table": {
-      "emptyState": "No compat patches yet — press n to create one.",
+      "emptyState": "No compat patches yet. Press n to create one.",
       "nameHeader": "Name",
       "packageIdHeader": "Package id",
       "scopeHeader": "Scope",
@@ -1126,7 +1139,7 @@
       "importedNoSkips": "Imported {count} decision. | Imported {count} decisions.",
       "rejection": {
         "outOfScope": "it is not a finding between this patch's scope members",
-        "notPatchable": "a patch can only hold merge, shipped-asset and ignore decisions — not {action}",
+        "notPatchable": "a patch can only hold merge, shipped-asset and ignore decisions, not {action}",
         "choiceOutsideScope": "{path}: its choice names {mod}, which is not in this patch's scope",
         "assetOutsideScope": "its shipped asset comes from {mod}, which is not in this patch's scope",
         "actionName": {
@@ -1170,7 +1183,7 @@
       "searchLabel": "Search mods to add to scope",
       "searchResultsLabel": "Mods matching the search",
       "noMatches": "No matches.",
-      "scopeShrunk": "Scope shrunk — {count} decision now orphaned. | Scope shrunk — {count} decisions now orphaned.",
+      "scopeShrunk": "Scope shrunk: {count} decision now orphaned. | Scope shrunk: {count} decisions now orphaned.",
       "remainingChoicesNamingRemoved": "{count} remaining choice still names a removed mod. | {count} remaining choices still name a removed mod."
     },
     "exportPanel": {
@@ -1178,8 +1191,10 @@
       "exportDirPlaceholder": "Choose a folder…",
       "chooseButton": "Choose…",
       "installCheckboxLabel": "Install into Mods and activate",
-      "staleActiveSetNote": "Pending activation changes are not included — rescan first if you want them in this install.",
-      "forceWarning": "RimWorldWin64.exe looks like it's running. Installing now writes ModsConfig.xml, which the game overwrites when it exits, so the change may be lost. Export anyway?",
+      "staleActiveSetNote": "Pending activation changes are not included. Rescan first if you want them in this install.",
+      "unappliedOrderNote": "Install writes your current order, which is not applied yet.",
+      "outsideChangeNote": "Your active mod list was changed outside Rimmerge. Installing writes your Current order over those changes.",
+      "forceWarning": "RimWorldWin64.exe looks like it's running. Installing now writes your active mod list, which the game overwrites when it exits, so the change may be lost. Export anyway?",
       "exportAnyway": "Export anyway",
       "export": "Export",
       "exportedTo": "Exported to: {path}",
@@ -1189,7 +1204,7 @@
       "renderLoadFailed": "Failed to render this patch.",
       "dependenciesHeading": "Dependencies",
       "entriesHeading": "Entries",
-      "noEntriesYet": "No merge or shipped-asset decisions yet — decide a def-override or patch-collision finding in this patch's findings to add one.",
+      "noEntriesYet": "No merge or shipped-asset decisions yet. Decide a def-override or patch-collision finding in this patch's findings to add one.",
       "skippedHeading": "Skipped",
       "filesHeading": "Files",
       "nothingRendersYet": "Files appear here once this patch has at least one merge or shipped-asset decision.",
@@ -1233,18 +1248,79 @@
     "table": {
       "regionLabel": "Mods",
       "missing": "missing",
-      "rovingHint": "Use the arrow keys to move, Enter to open, Space to toggle"
+      "sourceUnknown": "Origin unknown (not installed)",
+      "sourceBadge": {
+        "core": "RimWorld Core",
+        "dlc": "RimWorld DLC",
+        "local": "Local mod",
+        "workshop": "Steam Workshop"
+      },
+      "rovingHint": "Use the arrow keys to move, Enter to open, Space to toggle",
+      "pendingScan": "not scanned yet",
+      "loadOrderPosition": "Load order position {position}",
+      "membership": {
+        "added": "Added",
+        "removed": "Removed",
+        "addedTitle": "Not in your saved active mod list yet. Applying adds it.",
+        "removedTitle": "In your saved active mod list. Applying removes it."
+      }
+    },
+    "sort": {
+      "groupLabel": "Sort order",
+      "heading": "Sort",
+      "key": {
+        "loadOrder": "Load order",
+        "name": "Name",
+        "packageId": "Package ID",
+        "lastUpdated": "Last updated"
+      },
+      "ascending": {
+        "loadOrder": "Sort by load order, first to last",
+        "name": "Sort by name, A to Z",
+        "packageId": "Sort by package ID, A to Z",
+        "lastUpdated": "Sort by last updated, oldest first"
+      },
+      "activeAscending": {
+        "loadOrder": "Sorted by load order, first to last. Click for last to first.",
+        "name": "Sorted by name, A to Z. Click for Z to A.",
+        "packageId": "Sorted by package ID, A to Z. Click for Z to A.",
+        "lastUpdated": "Sorted by last updated, oldest first. Click for newest first."
+      },
+      "activeDescending": {
+        "loadOrder": "Sorted by load order, last to first. Click for first to last.",
+        "name": "Sorted by name, Z to A. Click for A to Z.",
+        "packageId": "Sorted by package ID, Z to A. Click for A to Z.",
+        "lastUpdated": "Sorted by last updated, newest first. Click for oldest first."
+      },
+      "updatedUnavailable": {
+        "shippedWithGame": "Ships with the game",
+        "unknown": "Update time unknown"
+      }
     },
     "pendingChanges": {
-      "unscanned": "{count} pending change — Rescan to update analysis | {count} pending changes — Rescan to update analysis",
-      "unapplied": "{count} change not yet applied to ModsConfig.xml | {count} changes not yet applied to ModsConfig.xml",
+      "unscanned": "{count} pending change. Rescan to update the analysis. | {count} pending changes. Rescan to update the analysis.",
+      "unapplied": "{count} change not yet applied | {count} changes not yet applied",
       "rescanButton": "Rescan",
       "rescanFinishedToast": "Rescan finished with {count} note | Rescan finished with {count} notes",
-      "rescannedWithWarningsToast": "Rescanned with warnings"
+      "rescannedWithWarningsToast": "Rescanned with warnings",
+      "discardButton": "Discard pending changes"
+    },
+    "fileChange": {
+      "outside": "Your active mod list was changed outside Rimmerge (+{added}, -{removed}). Your pending changes are kept. Applying would overwrite those outside changes.",
+      "reordered": "Your active order was changed outside Rimmerge. Your pending changes are kept. Applying would overwrite that order.",
+      "outsideNoPending": "Your active mod list was changed outside Rimmerge (+{added}, -{removed}). Applying would overwrite those outside changes.",
+      "reorderedNoPending": "Your active order was changed outside Rimmerge. Applying would overwrite that order.",
+      "useFile": "Use the list from the file",
+      "useFileTitle": "Opens a preview first. Nothing changes until you confirm.",
+      "stale": {
+        "missing": "ModsConfig.xml is missing. The Added and Removed marks use the last list Rimmerge could read.",
+        "unreadable": "Rimmerge can't read ModsConfig.xml right now. The Added and Removed marks use the last list it could read.",
+        "malformed": "ModsConfig.xml can't be understood right now, possibly because it is being written. The Added and Removed marks use the last list Rimmerge could read."
+      }
     },
     "closeGuard": {
       "header": "Unsaved active-mod changes",
-      "body": "The working active-mod list has changes no rescan has picked up yet, or a scanned order hasn't been applied to {modsConfig}. Leaving now loses that work in memory — the game's own file is untouched either way.",
+      "body": "Your active mods have changes that no rescan has picked up yet, or a scanned order that hasn't been applied. Leaving now loses that work. The game's own mod list is untouched either way.",
       "stay": "Stay",
       "leaveAnyway": "Leave anyway"
     },
@@ -1253,7 +1329,7 @@
     },
     "detail": {
       "loadFailed": "Failed to load this mod.",
-      "idAndSource": "{modId} — {source}",
+      "idAndSource": "{modId} ({source})",
       "byAuthors": "By {authors}",
       "tagsHeading": "Tags",
       "declaredOrderHeading": "Declared order",
@@ -1272,8 +1348,8 @@
     },
     "page": {
       "heading": "Mods",
-      "activeTab": "Active",
-      "inactiveTab": "Inactive",
+      "activeHeading": "Active",
+      "inactiveHeading": "Inactive",
       "searchPlaceholder": "Search mods…",
       "tagFilterPlaceholder": "Filter by tag…",
       "sourcePlaceholder": "Source",
@@ -1283,7 +1359,7 @@
       "activateSelectedButton": "Activate selected",
       "loadFailed": "Failed to load mods.",
       "totalMods": "{count} mod | {count} mods",
-      "pageCapHint": "(showing first {count} — narrow with search)",
+      "pageCapHint": "(showing the first {count}; narrow the search to see more)",
       "activateDialogHeader": "Activate mods",
       "willActivateHeading": "Will activate:",
       "alreadyActiveHeading": "Already active, skipped:",
@@ -1295,11 +1371,50 @@
       "refusedHeading": "Refused (required):",
       "dependentsStillActive": "{count} active mod still depends on {mod}: {deps}. | {count} active mods still depend on {mod}: {deps}.",
       "deactivatedToast": "Deactivated",
-      "deactivateButton": "Deactivate"
+      "deactivateButton": "Deactivate",
+      "rescanButton": "Rescan mods",
+      "searchActiveLabel": "Search the active mods",
+      "searchInactiveLabel": "Search the inactive mods"
     },
     "defSearch": {
       "ariaLabel": "Jump to a def",
       "placeholder": "Jump to a def…"
+    },
+    "selection": {
+      "selectAllShown": "Select all {count} shown | Select all {count} shown",
+      "selectAllEmpty": "Select all",
+      "selectedCount": "{count} selected | {count} selected",
+      "notShown": "({count} not shown) | ({count} not shown)",
+      "clear": "Clear selection"
+    },
+    "move": {
+      "up": "Move up",
+      "down": "Move down",
+      "top": "Move to top",
+      "bottom": "Move to bottom",
+      "after": "Move after…",
+      "menuButton": "Move {name}",
+      "activateAtButton": "Activate {name} at…",
+      "afterDialogHeader": "Move after another mod",
+      "activateAtDialogHeader": "Activate at a position",
+      "pickHelp": "Choose the mod to place the selection right after.",
+      "atStart": "At the start of the list",
+      "atEnd": "At the end of the list",
+      "pickCapped": "Showing the first {count} matches. Narrow the search to see others.",
+      "blockedReason": "Reordering is off because this list isn't sorted by load order, first to last. Sort by load order to move mods.",
+      "edgeTop": "Already at the top of this list",
+      "edgeBottom": "Already at the bottom of this list",
+      "announced": "Moved {name} to position {position}",
+      "announcedOf": "Moved {name} to position {position} of {total}",
+      "announcedMany": "Moved {count} mod, starting at position {position} | Moved {count} mods, starting at position {position}",
+      "announcedManyOf": "Moved {count} mod, starting at position {position} of {total} | Moved {count} mods, starting at position {position} of {total}",
+      "announcedManyHidden": "Moved {count} mod ({hidden} not shown), starting at position {position} | Moved {count} mods ({hidden} not shown), starting at position {position}",
+      "announcedManyHiddenOf": "Moved {count} mod ({hidden} not shown), starting at position {position} of {total} | Moved {count} mods ({hidden} not shown), starting at position {position} of {total}",
+      "switchedNote": "Now using your own order. The suggested order is unchanged.",
+      "viewSuggested": "View suggested",
+      "suggestedNote": "Apply will write the suggested order. Moving a mod switches to your own order.",
+      "coreStaysActive": "Core can't be deactivated.",
+      "inactiveNotOrdered": "This list has no order of its own. Drag mods to the Active list to activate them."
     }
   },
   "rules": {
@@ -1316,7 +1431,7 @@
       "notAppliedTitle": "Not in effect: imported pairs are off",
       "promotedFrom": "(promoted from {origin})",
       "overridesDeclaredTag": "(overrides declared)",
-      "overridesDeclaredTitle": "This rule is flagged to override a declared edge (loadAfter/modDependencies) between the same two mods, should one exist — it beats an author's own declaration for this pair specifically, but never a Hard dependency.",
+      "overridesDeclaredTitle": "This rule is flagged to override a declared edge (loadAfter/modDependencies) between the same two mods, should one exist. It beats an author's own declaration for this pair, but never a Hard dependency.",
       "promotedButton": "Promoted",
       "promoteButton": "Promote",
       "deleteButton": "Delete"
@@ -1327,7 +1442,7 @@
       "loadsBeforeLabel": "Loads before (the dependency)",
       "commentLabel": "Comment (optional)",
       "overrideDeclaredLabel": "Override a declared edge between these mods, if one exists",
-      "overrideDeclaredWarning": "This beats the author's own loadAfter/modDependencies for this pair specifically — never a Hard dependency. Use only when the declaration itself is stale or wrong.",
+      "overrideDeclaredWarning": "This beats the author's own loadAfter/modDependencies for this pair, but never a Hard dependency. Use it only when the declaration itself is stale or wrong.",
       "sameModError": "A pair rule needs two different mods.",
       "replaceWarning": "This replaces the existing {origin} rule for this pair.",
       "addButton": "Add"
@@ -1369,7 +1484,7 @@
       "refreshButton": "Refresh",
       "refreshDisabledTitle": "Turned off by Allow internet access (Settings page)",
       "networkDisabledNotice": "Internet access is off, so refresh is disabled. Cached databases are still in use.",
-      "failureBanner": "The last refresh failed for at least one source — the cached copy is still in use.",
+      "failureBanner": "The last refresh failed for at least one source. The cached copy is still in use.",
       "loadFailed": "Failed to load rule databases.",
       "needsReimport": "(re-import available)",
       "neverFetched": "Never fetched",
@@ -1461,15 +1576,15 @@
   },
   "defPage": {
     "loadFailed": "Failed to load this def.",
-    "sourceTitle": "Viewed under the {source} order — click to switch",
+    "sourceTitle": "Viewed under the {source} order. Click to switch",
     "partialBanner": "Incomplete: stopped at {reason}. Fields after this point are not shown.",
     "replayStopper": "{mod}'s operation {opIndex}: {error}",
-    "ambiguousTemplateIntro": "Ambiguous template: this Name has {count} registration. RimWorld resolves each child independently to whichever registration loads nearest at or before it — never a single winner. \"Winner\"/\"last-loaded representative\" above is only this app's own disclosed stand-in for when no specific child is being asked, not an answer. | Ambiguous template: this Name has {count} registrations. RimWorld resolves each child independently to whichever registration loads nearest at or before it — never a single winner. \"Winner\"/\"last-loaded representative\" above is only this app's own disclosed stand-in for when no specific child is being asked, not an answer.",
+    "ambiguousTemplateIntro": "Ambiguous template: this Name has {count} registration. RimWorld resolves each child on its own, using the registration that loads nearest at or before it, so there is no single winner. The \"Winner\" and \"last-loaded representative\" above are only this app's stand-in for when no specific child is being asked about, not an answer. | Ambiguous template: this Name has {count} registrations. RimWorld resolves each child on its own, using the registration that loads nearest at or before it, so there is no single winner. The \"Winner\" and \"last-loaded representative\" above are only this app's stand-in for when no specific child is being asked about, not an answer.",
     "knownChildrenResolve": "{count} known child resolves here | {count} known children resolve here",
     "ownersHeading": "Owners",
     "winnerTag": "(winner)",
     "representativeTag": "(last-loaded representative)",
-    "representativeTitle": "Representative only — no single answer exists, see the ambiguous-template notice above",
+    "representativeTitle": "Representative only. No single answer exists; see the ambiguous-template notice above",
     "generatedTag": "(generated)",
     "patchersHeading": "Patchers",
     "patcherStatusNotReached": "not reached",
@@ -1515,7 +1630,7 @@
     "awareness": "Awareness"
   },
   "order": {
-    "heading": "Load order — {source}",
+    "heading": "Load order: {source}",
     "loadFailed": "Failed to load the order.",
     "sortProvenance": {
       "summary": "tie-break: {tieBreak} · imported pairs: {pairs} · imported placements: {placements}",
@@ -1532,7 +1647,7 @@
       "movedFrom": "from #{position}"
     },
     "whyPanel": {
-      "headerWithMod": "{mod} — why here?",
+      "headerWithMod": "Why is {mod} here?",
       "headerFallback": "Why here?",
       "loadFailed": "Failed to load the explanation.",
       "positionHeading": "Position",
@@ -1587,7 +1702,7 @@
   "orderShare": {
     "export": {
       "button": "Export",
-      "hint": "Exports the order in ModsConfig.xml — what RimWorld loads.",
+      "hint": "Exports the active order, the one RimWorld loads.",
       "saveFile": "Save as RimWorld mod list (.rml)…",
       "copyText": "Copy as text",
       "fileFilter": "RimWorld mod list",
@@ -1613,7 +1728,7 @@
       "summary": "{count} mod in the list | {count} mods in the list",
       "versionDiffers": "Made with RimWorld {listed}; you have {game}.",
       "replacesPending": "Activation changes you haven't rescanned yet will be replaced.",
-      "replacesUnwritten": "This import replaces your Current order, which isn't in ModsConfig.xml yet.",
+      "replacesUnwritten": "This import replaces your Current order, which hasn't been applied yet.",
       "moved": "{count} mod changes position. | {count} mods change position.",
       "sameOrder": "The installed mods keep their current order.",
       "coreAdded": "Core wasn't in the list; it stays first.",
@@ -1631,19 +1746,19 @@
       "copyMissing": "Copy the missing list",
       "missingCopied": "Copied the missing list.",
       "duplicatesHeading": "Listed more than once ({count})",
-      "duplicateRow": "{id} — the first position (#{position}) is used.",
+      "duplicateRow": "{id}: the first position (#{position}) is used.",
       "otherCopyHeading": "Matched another copy ({count})",
       "otherCopyRow": "{listed} → your copy {installed}",
       "skippedHeading": "Lines not understood ({count})",
       "skipped": {
         "notAnEntry": "Line {line}: not a mod entry.",
-        "malformedId": "Entry {position}: “{text}” isn't a valid package id."
+        "malformedId": "Entry {position}: \"{text}\" isn't a valid package id."
       },
       "skippedOmitted": "{count} more entry not shown. | {count} more entries not shown.",
       "blocked": {
         "coreMissing": "Core isn't installed, so this list can't be imported.",
         "nothingInstalled": "None of the listed mods are installed, so there is nothing to import.",
-        "tooMany": "This order would hold too many mods; an import can hold at most {limit}.",
+        "tooMany": "This order would hold too many mods. An import can hold at most {limit}.",
         "unknown": "{id} isn't an installed mod.",
         "duplicate": "{id} appears more than once in the order."
       },
@@ -1652,8 +1767,8 @@
       "whatHappens": "Rimmerge rescans with this order and shows it as Current. Nothing is written until you Apply.",
       "confirm": "Use this order"
     },
-    "imported": "Imported order ready. Review it, then Apply to write ModsConfig.xml.",
-    "notInFile": "This order isn't in ModsConfig.xml yet.",
+    "imported": "Imported order ready. Review it, then Apply to save it as your active order.",
+    "notInFile": "This isn't your active order yet.",
     "notInFileApply": "Apply",
     "previewOutdated": "Your installed mods changed since the preview. Preview the list again.",
     "rejected": {
@@ -1668,17 +1783,19 @@
       "noEntries": "No package ids were found."
     },
     "importedWithWarnings": "The scan reported {count} warning. | The scan reported {count} warnings.",
-    "importedRuleWarnings": "Imported, with rules that couldn't be loaded"
+    "importedRuleWarnings": "Imported, with rules that couldn't be loaded",
+    "revertOrder": "Revert to your saved active order",
+    "revertOrderTitle": "Puts your order back to the sequence saved in ModsConfig.xml."
   },
   "apply": {
     "dialog": {
       "header": "Apply",
       "defCacheNote": "An active def-cache mod keys its cache on the load order; the first launch after this apply will rebuild it{parenthetical}.",
       "defCacheParenthetical": " (about {seconds} seconds on your last log)",
-      "writeModsConfigLabel": "Write ModsConfig.xml (the load order RimWorld reads)",
-      "staleActiveSetMessage": "The working active-mod set has pending changes — Rescan to write ModsConfig.xml.",
+      "writeModsConfigLabel": "Write your active mod list (the load order RimWorld reads)",
+      "staleActiveSetMessage": "Your active mods have pending changes. Rescan before writing your active mod list.",
       "rescanButton": "Rescan",
-      "writeMergeModLabel": "Write merge mod (render the generated mod into Mods/, or remove it if no merge/asset decision remains)",
+      "writeMergeModLabel": "Write merge mod (writes the generated mod into Mods/, or removes it if no merge or asset decision remains)",
       "closeButton": "Close",
       "cancelButton": "Cancel",
       "writeAnywayButton": "Write anyway",
@@ -1687,11 +1804,11 @@
       "saveDecisionsButton": "Save decisions and rules"
     },
     "preflight": {
-      "unappliedHeading": "Scanned but not yet applied to ModsConfig.xml:",
+      "unappliedHeading": "Scanned but not yet applied:",
       "addedLabel": "Added:",
       "removedLabel": "Removed:",
       "orderLabel": "Order",
-      "modsConfigLabel": "ModsConfig.xml",
+      "modsConfigLabel": "Active mod list",
       "decisionsLabel": "Decisions",
       "rulesLabel": "Rules",
       "movedModsLabel": "Mods that move",
@@ -1704,41 +1821,41 @@
     },
     "progress": {
       "heading": "Verify order",
-      "description": "Replays every foreign patch operation to predict which would fail under this order, the way RimWorld's own log would show it. On demand only — a large install takes about a minute.",
+      "description": "Replays every foreign patch operation to predict which would fail under this order, the way RimWorld's own log would show it. It runs only when you ask, and a large install takes about a minute.",
       "verifyingLabel": "Verifying order",
       "checksCaption": "{checked} of {total} checks",
       "startingCaption": "Starting…"
     },
     "diff": {
-      "summary": "Checked {count} def against the {source} order — {list}. | Checked {count} defs against the {source} order — {list}.",
+      "summary": "Checked {count} def against the {source} order: {list}. | Checked {count} defs against the {source} order: {list}.",
       "summaryOperations": "{count} operation predicted to fail | {count} operations predicted to fail",
       "summaryTargets": "{count} def target affected | {count} def targets affected",
       "removedByCount": "Removed by an earlier mod: {count}",
       "notYetInjectedCount": "Not yet injected: {count}",
       "deadTargetCount": "Dead target: {count}",
       "unknownCount": "Unknown: {count}",
-      "orderFixableHeading": "Order-fixable — reordering the named mod may resolve these:",
-      "cosmeticText": "cosmetic: the same final def either order — no reorder offered.",
+      "orderFixableHeading": "Fixable by order (reordering the named mod may resolve these):",
+      "cosmeticText": "cosmetic: the final def is the same in either order, so no reorder is offered.",
       "mergeInsteadLink": "Merge instead",
       "mergeInstead": "{link} keeps the losing mod's own intent.",
       "noMergeAvailable": "No merge is available for this target.",
       "removedByCause": "{mod}, which loads first, removes the target node.",
       "notYetInjectedCause": "the target node is injected by {mod}, which loads later.",
       "modPossessive": "{mod}'s {operation}",
-      "notFullyFixableHeading": "Not fully order-fixable — stale patches, an unclassified cause, or a mix; grouped by mod:",
-      "groupedByModLine": "{mod} — {list}",
+      "notFullyFixableHeading": "Not fully order-fixable (stale patches, an unclassified cause, or a mix), grouped by mod:",
+      "groupedByModLine": "{mod}: {list}",
       "groupedOperations": "{count} operation | {count} operations",
       "groupedTargets": "{count} def target | {count} def targets",
-      "partlyFixableHeading": "Some of these are partly order-fixable — a reorder resolves some of their def targets:",
+      "partlyFixableHeading": "Some of these are partly order-fixable. A reorder would resolve some of their def targets:",
       "skippedCandidates": "{count} candidate couldn't be checked. | {count} candidates couldn't be checked.",
-      "pvoMismatchWarning": "The imported log was produced by a different mod order than the one just verified — the counts below are comparing two unrelated runs.",
+      "pvoMismatchWarning": "The imported log was produced by a different mod order than the one just verified, so the counts below compare two unrelated runs.",
       "pvoHeading": "Predicted vs. observed (last imported log)",
       "pvoSnapshotNote": "The imported log is a console snapshot, not the log of a whole game run: a failure the game logged before the console's oldest entry is not in it, so \"predicted, not observed\" is not evidence that a failure did not happen.",
       "pvoCutOffNote": "The imported log ended without a clean exit and before any patch result was logged, so the game may never have reached the patch phase: \"predicted, not observed\" is not evidence that a failure did not happen.",
       "pvoGapsNote": "The game stopped writing messages while the imported log was being written, so a failure may be missing from it: \"predicted, not observed\" is not evidence that a failure did not happen.",
       "pvoMatchedSummary": "Confirmed by the log: {count}",
       "pvoPredictedOnlySummary": "Predicted, not observed in the log: {count}",
-      "pvoObservedOnlySummary": "Observed in the log, not predicted: {count} — listed as-is, never dropped:",
+      "pvoObservedOnlySummary": "Observed in the log, not predicted: {count} (listed as is, never dropped):",
       "unattributedRaw": "(unattributed: {raw})",
       "counterfactualJobsLine": "{count} operation re-checked against other load orders | {count} operations re-checked against other load orders",
       "counterfactualResolvedLine": "{count} failure explained | {count} failures explained",
@@ -1751,18 +1868,18 @@
       "createPairRule": "Create pair rule",
       "createPairRuleAnyway": "Create pair rule anyway",
       "conflictText": "conflicts with {kind}: {detail} ({status})",
-      "ruleCreated": "Rule created. Re-run Verify order to check it — a rule can still be overruled by an author declaration or by another rule, and two opposite-direction rules cancel out; the Rules page shows what actually took effect.",
+      "ruleCreated": "Rule created. Re-run Verify order to check it. A rule can still be overruled by an author declaration or by another rule, and two rules in opposite directions cancel out. The Rules page shows what actually took effect.",
       "ruleExists": "Rule already exists."
     },
     "result": {
-      "forceWarning": "RimWorldWin64.exe looks like it's running. The game overwrites ModsConfig.xml when it exits, so what you write now may be lost. Write anyway?",
+      "forceWarning": "RimWorldWin64.exe looks like it's running. The game overwrites your active mod list when it exits, so what you write now may be lost. Write anyway?",
       "mergeModPath": "Merge mod: {path}",
       "mergeModRemoved": "Merge mod: removed (no merge or asset decision remains)",
       "mergeModBackupPath": "Merge mod backup: {path}",
-      "skippedHeading": "Skipped — the merge mod was written without them:",
+      "skippedHeading": "Skipped. The merge mod was written without them:",
       "toastAppliedSummary": "Applied",
       "toastSavedSummary": "Saved",
-      "toastModsConfigPath": "ModsConfig: {path}",
+      "toastModsConfigPath": "Active mod list: {path}",
       "toastBackupPath": "Backup: {path}",
       "toastDecisionsPath": "Decisions: {path}",
       "toastRulesPath": "Rules: {path}",
@@ -1797,11 +1914,11 @@
     },
     "launchedSteam": "Asked Steam to start RimWorld.",
     "launchedExecutable": "Starting RimWorld.",
-    "notStartedAfterApply": "ModsConfig.xml wasn't written, so RimWorld wasn't started.",
+    "notStartedAfterApply": "Your active mod list wasn't written, so RimWorld wasn't started.",
     "applyFirst": {
       "header": "Apply first?",
-      "orderDiffers": "ModsConfig.xml doesn't hold the {order} order (as of the last scan or apply). If you launch now, RimWorld will start with the mods and order that file lists.",
-      "activationChanges": "Your pending activation changes aren't in ModsConfig.xml yet. If you launch now, RimWorld will start without them.",
+      "orderDiffers": "The {order} order isn't saved as your active order yet (as of the last scan or apply). If you launch now, RimWorld will start with the mods and order that were saved.",
+      "activationChanges": "Your pending activation changes aren't saved yet. If you launch now, RimWorld will start without them.",
       "applyButton": "Apply first",
       "launchAnywayButton": "Launch anyway"
     }
@@ -1822,7 +1939,7 @@
       "snapshot": {
         "belowCap": "The console held only {count} entry, so this copy says nothing about any stage that entry does not show | The console held only {count} entries, so this copy says nothing about any stage those entries do not show",
         "atCap": "Only the {count} entry the console held, at the console's cap: older entries were dropped by the game | Only the {count} entries the console held, at the console's cap: older entries were dropped by the game",
-        "overCap": "{count} entry, more than one console holds, so this is not a single console copy: several copies pasted together, or a parsing problem; how much the game dropped cannot be said | {count} entries, more than one console holds, so this is not a single console copy: several copies pasted together, or a parsing problem; how much the game dropped cannot be said",
+        "overCap": "{count} entry is more than one console holds, so this is not a single console copy. Several copies may have been pasted together, or the log was parsed wrongly. How much the game dropped cannot be said | {count} entries are more than one console holds, so this is not a single console copy. Several copies may have been pasted together, or the log was parsed wrongly. How much the game dropped cannot be said",
         "headTruncated": "The copy starts mid-entry: its first entry is incomplete."
       }
     },
@@ -1848,9 +1965,9 @@
   },
   "startup": {
     "heading": "Startup cost",
-    "description": "One row per active mod — mutating patch ops, slow-shape xpaths, textures, DLLs, and defs, no timings (Rimmerge never runs the game). Import a {playerLog} or a console snapshot to fill in the bad-dimension DDS and observed-timer columns (a console snapshot cannot fill the timers).",
-    "orderMismatchWarning": "The imported log was produced by a different mod order than the one currently selected — the bad-dimension DDS and observed-timer columns below reflect that other run, not this one.",
-    "noOrderBlockWarning": "The imported log carries no active-mod list at all, so it can't be checked against the selected order — the bad-dimension DDS and observed-timer columns below may reflect a different run than this one.",
+    "description": "One row per active mod, counting mutating patch ops, slow-shape xpaths, textures, DLLs, and defs. There are no timings, because Rimmerge never runs the game. Import a {playerLog} or a console snapshot to fill in the bad-dimension DDS and observed-timer columns (a console snapshot cannot fill the timers).",
+    "orderMismatchWarning": "The imported log was produced by a different mod order than the one currently selected, so the bad-dimension DDS and observed-timer columns below reflect that other run, not this one.",
+    "noOrderBlockWarning": "The imported log carries no active-mod list at all, so it can't be checked against the selected order. The bad-dimension DDS and observed-timer columns below may reflect a different run than this one.",
     "loadFailed": "Failed to load the startup-cost table.",
     "modHeader": "Mod",
     "patchOpsHeader": "Patch ops",
@@ -1888,20 +2005,20 @@
         "reclassified": "{count} field reclassified | {count} fields reclassified"
       },
       "reclassifiedNames": " ({names})",
-      "strandedValuesLine": "{count} stored value was dropped — a reclassified field's new role no longer accepts what was stored there: | {count} stored values were dropped — a reclassified field's new role no longer accepts what was stored there:",
-      "droppedRowsLine": "{count} row was dropped — its target left the target set: | {count} rows were dropped — their target left the target set:",
+      "strandedValuesLine": "{count} stored value was dropped because a reclassified field's new role no longer accepts what was stored there: | {count} stored values were dropped because a reclassified field's new role no longer accepts what was stored there:",
+      "droppedRowsLine": "{count} row was dropped because its target left the target set: | {count} rows were dropped because their targets left the target set:",
       "clean": "Nothing was dropped or stranded by this change.",
       "closeButton": "Close",
       "saveButton": "Save"
     },
     "rowEditor": {
       "copyFrom": "Copy from:",
-      "winnerBadge": "— winner",
-      "prefillFrom": "— from {mod}",
-      "clampedTo": "— reduced to \"{name}\": this slot only keeps one name, but this value named {count} ({joined})",
-      "droppedFromCopy": "— {count} borrowed value skipped because that def is not active: {names} | — {count} borrowed values skipped because those defs are not active: {names}",
+      "winnerBadge": "(winner)",
+      "prefillFrom": "(from {mod})",
+      "clampedTo": "Reduced to \"{name}\": this slot only keeps one name, but this value named {count} ({joined})",
+      "droppedFromCopy": "{count} borrowed value skipped because that def is not active: {names} | {count} borrowed values skipped because those defs are not active: {names}",
       "pairedTo": "paired to {slot}",
-      "overrideBadge": "Override — {count} existing match | Override — {count} existing matches",
+      "overrideBadge": "Override: {count} existing match | Override: {count} existing matches",
       "inspectDefLink": "Inspect def",
       "defNameLabel": "defName",
       "saveRowButton": "Save row",
@@ -1915,8 +2032,8 @@
       "coveredByMod": "covered by {mod}",
       "coveredByAnotherMod": "covered by another mod",
       "uncovered": "uncovered",
-      "wouldWinNoOwner": "— would win",
-      "wouldWinWithOwner": "— {mod} would win",
+      "wouldWinNoOwner": "(would win)",
+      "wouldWinWithOwner": "({mod} would win)",
       "noMatches": "No matching targets."
     },
     "schemaTable": {
@@ -1928,7 +2045,7 @@
       "defTypePlaceholder": "def type",
       "hideButton": "Hide",
       "unreadableTargets": "{count} referenced target couldn't be read while learning a shape: | {count} referenced targets couldn't be read while learning a shape:",
-      "unreadableTargetLine": "{field}: {defType}/{defName} — {reason}",
+      "unreadableTargetLine": "{field}: {defType}/{defName} ({reason})",
       "newFieldPathLabel": "New field path",
       "roleLabel": "Role",
       "defTypeLabel": "Def type",
@@ -1941,8 +2058,10 @@
       "exportDirPlaceholder": "Choose a folder…",
       "chooseButton": "Choose…",
       "installCheckboxLabel": "Install into Mods and activate",
-      "staleActiveSetNote": "Pending activation changes are not included — rescan first if you want them in this install.",
-      "forceWarning": "RimWorldWin64.exe looks like it's running. Installing now writes ModsConfig.xml, which the game overwrites when it exits, so the change may be lost. Export anyway?",
+      "staleActiveSetNote": "Pending activation changes are not included. Rescan first if you want them in this install.",
+      "unappliedOrderNote": "Install writes your current order, which is not applied yet.",
+      "outsideChangeNote": "Your active mod list was changed outside Rimmerge. Installing writes your Current order over those changes.",
+      "forceWarning": "RimWorldWin64.exe looks like it's running. Installing now writes your active mod list, which the game overwrites when it exits, so the change may be lost. Export anyway?",
       "exportAnyway": "Export anyway",
       "export": "Export",
       "exportedTo": "Exported to: {path}",
@@ -1960,7 +2079,7 @@
       "noTargetSelected": "No target selected.",
       "ownRowsHeading": "Own rows",
       "newRowButton": "New row",
-      "standaloneHint": "This is a free-standing section — its own rows have no target to match through, so there's no coverage queue here.",
+      "standaloneHint": "This is a free-standing section. Its own rows have no target to match through, so there's no coverage queue here.",
       "noRowsYet": "No rows yet.",
       "selectOrNewRow": "Select a row, or click \"New row\" to create one.",
       "exportHeading": "Export",
@@ -1969,11 +2088,11 @@
       "addSectionDialogHeader": "Add a section",
       "listingCandidates": "Listing candidates…",
       "candidateGroupLabel": "Candidate section type",
-      "noAddableCandidates": "No candidates to add — every def type this project's own reference mods own is already a section.",
+      "noAddableCandidates": "No candidates to add. Every def type this project's own reference mods own is already a section.",
       "addButton": "Add",
       "removeSectionDialogHeader": "Remove this section?",
       "removeSectionBody": "This removes the {defType} section and every row it has. This can't be undone from here.",
-      "sectionInUse": "Still referenced by {count} row in another section. Removing anyway leaves those references dangling — a later export reports each one as a skip. | Still referenced by {count} rows in another section. Removing anyway leaves those references dangling — a later export reports each one as a skip.",
+      "sectionInUse": "Still referenced by {count} row in another section. Removing anyway leaves those references dangling, and a later export reports each one as a skip. | Still referenced by {count} rows in another section. Removing anyway leaves those references dangling, and a later export reports each one as a skip.",
       "referenceLine": "{defType} {row}: {path}",
       "removeAnywayButton": "Remove anyway",
       "removeButton": "Remove"
@@ -1990,7 +2109,7 @@
       "targetsHint": "Leave empty to author a brand-new def type (a \"new def\" project) instead of patching an existing one.",
       "listCandidatesButton": "List candidates",
       "effectiveRefsHeading": "Effective reference set",
-      "excludedTitle": "Excluded — click to include",
+      "excludedTitle": "Excluded. Click to include",
       "includeTitle": "Click to exclude",
       "excludedTag": "excluded",
       "includedTag": "×",
@@ -1998,7 +2117,7 @@
       "candidateGroupLabel": "Candidate assignment type",
       "instanceCount": "{defType} ({count} instance) | {defType} ({count} instances)",
       "inferringSchema": "Inferring schema…",
-      "standaloneNote": "This candidate has no target-key field — it will be a \"new def\" project, with free-standing rows instead of target-matched ones.",
+      "standaloneNote": "This candidate has no target-key field, so it will be a \"new def\" project with free-standing rows instead of target-matched ones.",
       "excludedTargetsNote": "{count} referenced target outside T/Core was never read (honouring T keeps this fast). | {count} referenced targets outside T/Core were never read (honouring T keeps this fast).",
       "createButton": "Create"
     },
@@ -2048,13 +2167,13 @@
       "patchTargetsDef": "patches apply to the merged def document after every mod's defs are loaded, regardless of load order",
       "parentTemplate": "unreachable: a ParentName edge is a load-time ordering fact (Hard), never advisory",
       "usesType": "the type is resolved across every loaded assembly regardless of load order",
-      "patchSelectsInjectedNode": "the selected node may already exist another way (written inline, injected by more than one active mod, or injected by the selecting mod's own patch), or lies deeper than the analyzer indexes to check — so this isn't a proven load-order requirement",
-      "patchRemovedNode": "the analyzer infers this from patch content: one mod removes a node another mod also patches, and the remover must load last or the other patch finds nothing left to touch — not an author's own declared load order, so it yields when a declaration or placement disagrees",
-      "retextureAfterOwner": "the analyzer infers this from a shared texture path: a texture-only retexture pack must load after the content mod it reskins, or its replacement is overwritten by the content it's meant to retexture — not an author's own declared load order, so it yields when a declaration or placement disagrees",
-      "defOverrideAfterOrigin": "the analyzer infers this from template/def-count evidence: a mod that also ships a def belonging to another mod's own namespace must load after that namespace's owner, or its override lands under the origin's own definition instead of on top of it — not an author's own declared load order, so it yields when a declaration or placement disagrees",
-      "patchInvalidatesPredicate": "the analyzer infers this from patch content: a Replace/Remove rewrites or deletes a node another mod's own xpath predicate reads, and the predicate-reading op must load first or its own predicate no longer matches — not an author's own declared load order, so it yields when a declaration or placement disagrees",
-      "patchRemovedNodeCosmetic": "the analyzer infers this from patch content, but the final defs are identical either order here — only which mod's own op logs the failure changes — so it's weaker evidence than an author's own declared load order and yields when a declaration or placement disagrees",
-      "replaceDiscardsAddition": "the analyzer infers this from patch content: a Replace swaps in a whole new node, silently discarding whatever an earlier addition wrote into it, so the addition must load after the replace or its own content is lost with no log line at all — not an author's own declared load order, so it yields when a declaration or placement disagrees",
+      "patchSelectsInjectedNode": "the selected node may already exist another way (written inline, injected by more than one active mod, or injected by the selecting mod's own patch), or lies deeper than the analyzer indexes to check, so this isn't a proven load-order requirement",
+      "patchRemovedNode": "the analyzer infers this from patch content: one mod removes a node another mod also patches, and the remover must load last or the other patch finds nothing left to touch. It is not an author's own declared load order, so it yields when a declaration or placement disagrees",
+      "retextureAfterOwner": "the analyzer infers this from a shared texture path: a texture-only retexture pack must load after the content mod it reskins, or its replacement is overwritten by the content it's meant to retexture. It is not an author's own declared load order, so it yields when a declaration or placement disagrees",
+      "defOverrideAfterOrigin": "the analyzer infers this from template/def-count evidence: a mod that also ships a def belonging to another mod's own namespace must load after that namespace's owner, or its override lands under the origin's own definition instead of on top of it. It is not an author's own declared load order, so it yields when a declaration or placement disagrees",
+      "patchInvalidatesPredicate": "the analyzer infers this from patch content: a Replace/Remove rewrites or deletes a node another mod's own xpath predicate reads, and the predicate-reading op must load first or its own predicate no longer matches. It is not an author's own declared load order, so it yields when a declaration or placement disagrees",
+      "patchRemovedNodeCosmetic": "the analyzer infers this from patch content, but the final defs are identical in either order here (only which mod's own op logs the failure changes), so it's weaker evidence than an author's own declared load order and yields when a declaration or placement disagrees",
+      "replaceDiscardsAddition": "the analyzer infers this from patch content: a Replace swaps in a whole new node, silently discarding whatever an earlier addition wrote into it, so the addition must load after the replace or its own content is lost with no log line at all. It is not an author's own declared load order, so it yields when a declaration or placement disagrees",
       "interactionEvidence": "this is evidence the mods interact, not an ordering fact the loader itself needs"
     },
     "rulePhrase": {
@@ -2124,11 +2243,11 @@
     "reorderBeforeRemover": "Load {modId} before {remover}, so its operation runs while the node still exists.",
     "patchWillFailNotYetInjected": "{modId}'s operation at '{xpath}' targets a node {injector} injects, but {injector} loads after it in the order this was checked against.",
     "reorderAfterInjector": "Load {modId} after {injector}, so its operation finds the node once injected.",
-    "patchWillFailDeadTarget": "{modId}'s operation at '{xpath}' targets a node the winning owner's own resolved structure never has, regardless of load order — no reorder fixes this.",
+    "patchWillFailDeadTarget": "{modId}'s operation at '{xpath}' targets a node the winning owner's own resolved structure never has, regardless of load order, so no reorder fixes this.",
     "patchWillFailUnknownCause": "{modId}'s operation at '{xpath}' is predicted to fail; the cause couldn't be classified.",
-    "brokenInheritance": "This `ParentName` reference doesn't resolve the way the child's own element type expects — the def loads with content missing or wrong. Report this to the referencing mod's author.",
-    "danglingDefReference": "This name resolves to no active def of any type — {cause}.{soundCaveat} Cross-references resolve after every mod's defs and patches have loaded, so this never depends on load order.",
-    "danglingDefReferenceSoundCaveat": " This looks like a sound reference — a missing `SoundDef` logs a warning and silently falls back to an undefined sound rather than failing to load.",
+    "brokenInheritance": "This `ParentName` reference doesn't resolve the way the child's own element type expects. The def loads with content missing or wrong. Report this to the referencing mod's author.",
+    "danglingDefReference": "This name resolves to no active def of any type: {cause}.{soundCaveat} Cross-references resolve after every mod's defs and patches have loaded, so this never depends on load order.",
+    "danglingDefReferenceSoundCaveat": " This looks like a sound reference. A missing `SoundDef` logs a warning and silently falls back to an undefined sound instead of failing to load.",
     "discardedAdditionDeliberate": "{replacer} declares it loads after {adder} and replaces '{path}': {adder}'s own addition at '{adderPath}' is discarded on purpose.",
     "forceTextureWinner": "Force one mod's texture to win.",
     "copyTextureIntoMergeMod": "Copy this mod's texture file into the merge mod, independent of load order.",
@@ -2138,22 +2257,22 @@
     "keyedTranslationCollision": "These two mods share {keyCount} translation key; the last-loaded one wins. | These two mods share {keyCount} translation keys; the last-loaded one wins each one.",
     "soundOverrideCosmetic": "A sound override is cosmetic and audible in-game; it never blocks.",
     "forceSoundWinner": "Force one mod's sound to win.",
-    "missingTexturePath": "This texture path is shipped by no active mod — the game will show a magenta placeholder in its place.",
-    "undecodableTexture": "This .dds file won't decode — the base game shows the bad-texture placeholder in its place.",
-    "contributesNothing": "{modId} contributes nothing observable under this order: it ships no assembly, every def it owns is overridden by a later copy, every texture and translation it ships is overridden, and every patch operation it has either fails to apply or never runs — disabling it changes nothing in-game and saves its load cost.",
+    "missingTexturePath": "This texture path is shipped by no active mod. The game will show a magenta placeholder in its place.",
+    "undecodableTexture": "This .dds file won't decode. The base game shows the bad-texture placeholder in its place.",
+    "contributesNothing": "{modId} contributes nothing observable under this order: it ships no assembly, every def it owns is overridden by a later copy, every texture and translation it ships is overridden, and every patch operation it has either fails to apply or never runs. Disabling it changes nothing in game and saves its load cost.",
     "undeclaredTypeDependency": "{user} uses a type from {provider}'s assembly but declares no dependency on it.",
     "pinRelationExplicitly": "Pin the relation explicitly as a load-order rule.",
     "runtimePatchCollisionNoLastPatcher": "Multiple mods patch {targetType}.{targetMethod}.",
     "runtimePatchCollisionLastPatcher": "{ownerCount} mod patches {targetType}.{targetMethod}; {last} loads last today, so its patch runs last. | {ownerCount} mods patch {targetType}.{targetMethod}; {last} loads last today, so its patch runs last.",
     "forceRuntimePatchLastWinner": "Force this mod's patch to run last, regardless of load order.",
-    "transpilerCollision": "{ownerCount} mod rewrites {targetType}.{targetMethod}'s IL with a runtime-patch transpiler; the order they run in can decide whether a later one's own pattern still matches. Most such collisions are harmless — if one of these mods logs a patching error, state the working order with `rimmerge rule set-pair`. | {ownerCount} mods each rewrite {targetType}.{targetMethod}'s IL with a runtime-patch transpiler; the order they run in can decide whether a later one's own pattern still matches. Most such collisions are harmless — if one of these mods logs a patching error, state the working order with `rimmerge rule set-pair`.",
+    "transpilerCollision": "{ownerCount} mod rewrites {targetType}.{targetMethod}'s IL with a runtime-patch transpiler; the order they run in can decide whether a later one's own pattern still matches. Most such collisions are harmless. If one of these mods logs a patching error, state the working order with `rimmerge rule set-pair`. | {ownerCount} mods each rewrite {targetType}.{targetMethod}'s IL with a runtime-patch transpiler; the order they run in can decide whether a later one's own pattern still matches. Most such collisions are harmless. If one of these mods logs a patching error, state the working order with `rimmerge rule set-pair`.",
     "duplicateAssemblyFirstLoadedWins": "More than one active mod ships an assembly of this name; the first-loaded copy wins at runtime.",
     "removeDuplicateAssemblyCopy": "Remove one of the duplicate copies from the active list.",
     "likelyDuplicateMod": "These two mods share a large number of identical defs with no declared relation between them.",
     "removeLikelyDuplicateModA": "Remove one of the likely-duplicate mods from the active list.",
     "removeLikelyDuplicateModB": "Remove the other likely-duplicate mod from the active list.",
-    "missingModNotInstalled": "This mod is active in ModsConfig.xml but isn't installed; RimWorld drops unknown ids anyway.",
-    "keepMissingModId": "Keep the id in ModsConfig.xml in case the mod reappears.",
+    "missingModNotInstalled": "This mod is in your active list but isn't installed. RimWorld drops unknown ids anyway.",
+    "keepMissingModId": "Keep the id in your active list in case the mod reappears.",
     "missingDependencyNotEnforced": "A declared dependency isn't active; RimWorld only warns about this, it doesn't enforce it.",
     "incompatiblePair": "These mods declare each other incompatible.",
     "removeIncompatibleModA": "Remove one of the incompatible mods from the active list.",
@@ -2163,14 +2282,14 @@
     "pinRelationExplicitlyAnyway": "Pin the relation explicitly as a load-order rule anyway.",
     "lazyReferenceViolatedJitResolved": "This lazily-resolved assembly reference isn't honored by the current order, but it resolves at JIT time after every assembly is loaded, so load order doesn't actually affect it.",
     "nearMissModReference": {
-      "findModName": "This FindMod name '{written}' resolves to no active or installed mod, but closely resembles the active mod '{candidateName}' — possibly a typo. Report this to the referencing mod's author.",
-      "mayRequireId": "This MayRequire id '{written}' resolves to no active or installed mod, but closely resembles the active mod '{candidateName}' — possibly a typo. Report this to the referencing mod's author."
+      "findModName": "This FindMod name '{written}' resolves to no active or installed mod, but closely resembles the active mod '{candidateName}'. It may be a typo. Report this to the referencing mod's author.",
+      "mayRequireId": "This MayRequire id '{written}' resolves to no active or installed mod, but closely resembles the active mod '{candidateName}'. It may be a typo. Report this to the referencing mod's author."
     },
     "mergeCompleteNothingToMerge": "the game applies these contributions in sequence to a single value; nothing to merge",
     "mergeLeadDefOverrideCombine": "The mods change different fields; merging would combine both.",
     "mergePromotedPatchCollisionKeepsBoth": "The mods change different fields; merging keeps both.",
     "keepLoadOrderWinner": "Keep the load-order winner.",
-    "mergeStructuralGuard": "{field} differs between owners — field-level merging is unsafe; confirm the load-order winner",
+    "mergeStructuralGuard": "{field} differs between owners, so field-level merging is unsafe. Confirm the load-order winner",
     "mergeFieldsNeedChoice": "Merge, {unresolved} field needs a choice. | Merge, {unresolved} fields need a choice.",
     "identicalCopiesOrderIrrelevant": "identical copies; order cannot change the outcome",
     "notAddressedByPatch": "Not addressed by this patch; load order decides as today."
@@ -2187,14 +2306,14 @@
       "previewUnsupportedFormat": "Preview isn't a PNG or JPEG",
       "previewUnreadable": "Preview couldn't be read",
       "missingHeading": "Missing",
-      "missingBody": "Listed in ModsConfig.xml but not found on disk",
+      "missingBody": "In your active list but not found on disk",
       "requiredByHeading": "Required by",
-      "pendingActivation": "Pending activation — apply or rescan to take effect",
-      "pendingDeactivation": "Pending deactivation — apply or rescan to take effect",
+      "pendingActivation": "Pending activation. Apply or rescan to take effect",
+      "pendingDeactivation": "Pending deactivation. Apply or rescan to take effect",
       "packageIdLine": "Package id: {id}",
       "workshopCopyNote": "Workshop copy",
       "versionLine": "Mod version: {version}",
-      "aboutNotOnDisk": "This mod's About.xml couldn't be found — its files may have moved or been deleted since the last scan.",
+      "aboutNotOnDisk": "This mod's About.xml couldn't be found. Its files may have moved or been deleted since the last scan.",
       "supportedVersionsLabel": "Supported versions",
       "supportsGameVersion": "Supports this game version",
       "doesNotSupportGameVersion": "Does not declare support for this game version",
@@ -2224,7 +2343,7 @@
       "noDescription": "No description provided.",
       "showMore": "Show more",
       "showLess": "Show less",
-      "aboutChanged": "About.xml changed since the last scan — rescan",
+      "aboutChanged": "About.xml changed since the last scan. Rescan to pick up the change",
       "aboutUnreadable": "Couldn't read About.xml: {reason}",
       "aboutUnreadableIoHeadline": "the file could not be read",
       "aboutUnreadableXmlHeadline": "the file is not valid XML",

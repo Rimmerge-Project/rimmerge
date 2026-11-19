@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { describeDefaultPathsError, describeDefaultPathsWarning } from "@/utils/defaultPaths";
+import {
+  checkedLocations,
+  describeDefaultPathsError,
+  describeDefaultPathsWarning,
+} from "@/utils/defaultPaths";
 
 describe("describeDefaultPathsWarning", () => {
   it("carries the game dir into notAnInstall's params", () => {
@@ -25,8 +29,22 @@ describe("describeDefaultPathsError", () => {
   });
 
   it("maps modsConfigNotFound to its own key", () => {
-    expect(
-      describeDefaultPathsError({ kind: "modsConfigNotFound", reason: "no %USERPROFILE%" }),
-    ).toEqual({ key: "defaultPathsError.modsConfigNotFound" });
+    expect(describeDefaultPathsError({ kind: "modsConfigNotFound" })).toEqual({
+      key: "defaultPathsError.modsConfigNotFound",
+    });
+  });
+});
+
+describe("checkedLocations", () => {
+  it("lists the candidates of gameDirNotFound in order", () => {
+    expect(checkedLocations({ kind: "gameDirNotFound", candidates: ["C:/a", "C:/b"] })).toEqual([
+      "C:/a",
+      "C:/b",
+    ]);
+  });
+
+  it("is empty for every other error", () => {
+    expect(checkedLocations({ kind: "modsConfigNotFound" })).toEqual([]);
+    expect(checkedLocations({ kind: "noProfileBase" })).toEqual([]);
   });
 });

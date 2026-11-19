@@ -15,11 +15,11 @@ import type { ModFilterDto } from "@/types/generated/ModFilterDto";
 import type { ModLinkKindDto } from "@/types/generated/ModLinkKindDto";
 
 /**
- * Searches and pages the active mod list. `enabled` (default: always)
- * lets a caller with more than one tab of mod lists — `ModsPage.vue`'s
- * own Active/Inactive split — skip the query entirely
- * while its own tab isn't showing, rather than fetching both on every
- * keystroke.
+ * Searches and pages the **scanned** active mod list (`list_mods`): what the
+ * last scan saw, which is what patch scopes and rule pickers are about. The
+ * Mods page reads the working tier instead (`useWorkingModsQuery`).
+ * `enabled` (default: always) lets a caller skip the query while it is not
+ * needed.
  */
 export function useModsQuery(
   filter: MaybeRefOrGetter<ModFilterDto>,

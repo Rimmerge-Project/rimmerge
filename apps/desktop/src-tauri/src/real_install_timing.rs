@@ -1016,3 +1016,397 @@ async fn contributes_nothing_against_the_real_install() {
         );
     }
 }
+
+/// The Mods page's two lists against the real install: Active returns the
+/// whole working set (the real tier has at least 200 active mods, which the
+/// old 200-row page silently cut), deterministically, and Inactive shares no
+/// base id with it. Read-only; budgets are generous (it guards against an
+/// accidentally quadratic list, not against a few milliseconds).
+#[tokio::test]
+#[ignore = "needs the real install plus RIMMERGE_PERF_PROFILE_DIR pointing at a scratch profile copy"]
+async fn mod_lists_against_the_real_install() {
+    use std::collections::BTreeSet;
+
+    use crate::commands::active_set::list_inactive_mods_inner;
+    use crate::commands::mods::list_working_mods_inner;
+    use crate::dto::mod_lists::ModListQueryDto;
+
+    const LIST_BUDGET: Duration = Duration::from_secs(2);
+
+    let Some(profile_dir) = crate::real_install_support::require_profile_dir(RERUN_COMMAND) else {
+        return;
+    };
+    let paths = crate::real_install_support::real_install_paths(profile_dir, RERUN_COMMAND);
+    let state = AppState::default();
+    let adapters = state.adapters.clone();
+    let use_case = rim_session::use_cases::LoadProject::new(
+        adapters.scanner,
+        adapters.config_store,
+        adapters.decision_store,
+        adapters.rule_store,
+        adapters.patch_store,
+        adapters.assignment_store,
+        rim_io::FsModKnowledgeStore::vendored(),
+        true,
+    )
+    .with_timestamp_reader(adapters.mod_timestamp_reader.clone());
+    let session = use_case.execute(paths, &mut |_| {}).expect("load project");
+    let read_start = Instant::now();
+    let subjects = rim_session::ModTimeSubject::all_in(session.report());
+    let _ = rim_session::ports::ModTimestampReader::read_update_times(
+        adapters.mod_timestamp_reader.as_ref(),
+        &session.paths().workshop_dir,
+        &subjects,
+    );
+    eprintln!(
+        "update times for {} mods read in {:.1} ms",
+        subjects.len(),
+        read_start.elapsed().as_secs_f64() * 1e3
+    );
+    let working_len = session.working().ids().len();
+    *state.session.write().expect("lock") = Some(session);
+
+    let start = Instant::now();
+    let first = list_working_mods_inner(&state, ModListQueryDto::default())
+        .await
+        .expect("working list");
+    let active_elapsed = start.elapsed();
+    let second = list_working_mods_inner(&state, ModListQueryDto::default())
+        .await
+        .expect("working list again");
+    let start = Instant::now();
+    let inactive = list_inactive_mods_inner(&state, ModListQueryDto::default())
+        .await
+        .expect("inactive list");
+    let inactive_elapsed = start.elapsed();
+
+    // A freshly loaded, unedited session matches its file: no row carries a mark. Refreshing the
+    // baseline reads the real file (read-only; nothing here writes) and finds it unchanged.
+    let marks = first.items.iter().chain(&inactive.items);
+    assert!(
+        marks
+            .clone()
+            .all(|row| row.membership == crate::dto::file_baseline::MembershipMarkDto::None),
+        "an unedited session has no Added or Removed mark"
+    );
+    let (baseline, change) = crate::commands::file_baseline::refresh_mods_config_baseline_inner(
+        &state,
+        state.adapters.config_store,
+    )
+    .await
+    .expect("refresh the baseline");
+    assert_eq!(change, rim_session::BaselineChange::Unchanged);
+    assert_eq!(
+        baseline.external_change,
+        crate::dto::file_baseline::ExternalFileChangeDto::None
+    );
+
+    eprintln!(
+        "list_working_mods: {} rows in {:.1} ms; list_inactive_mods: {} rows in {:.1} ms",
+        first.total,
+        active_elapsed.as_secs_f64() * 1e3,
+        inactive.total,
+        inactive_elapsed.as_secs_f64() * 1e3
+    );
+    assert_eq!(
+        first.total, working_len,
+        "Active lists the whole working set"
+    );
+    assert!(
+        first.total >= 200,
+        "the real-install floor is 200 active mods, which the old page cut"
+    );
+    assert_eq!(
+        first.items.len(),
+        first.total.min(rim_session::MAX_MOD_LIST_ROWS)
+    );
+    assert_eq!(first, second, "the list is deterministic across two calls");
+    let active_bases: BTreeSet<String> = first
+        .items
+        .iter()
+        .map(|row| {
+            rim_analyzer::domain::ModId::new(&row.mod_id)
+                .base()
+                .as_str()
+                .to_string()
+        })
+        .collect();
+    assert!(
+        inactive.items.iter().all(|row| !active_bases.contains(
+            rim_analyzer::domain::ModId::new(&row.mod_id)
+                .base()
+                .as_str()
+        )),
+        "Inactive shares no base id with Active"
+    );
+    assert_last_updated_sort(&state, &first).await;
+    assert!(
+        active_elapsed < LIST_BUDGET,
+        "Active took {active_elapsed:?}"
+    );
+    assert!(
+        inactive_elapsed < LIST_BUDGET,
+        "Inactive took {inactive_elapsed:?}"
+    );
+}
+
+/// A reorder over the real install: `move_mods` puts two mods at the start of
+/// the Active list, the list shows them there, Current changed and settled at
+/// once (no rescan, no pending diff), `ModsConfig.xml` on disk and the session's
+/// own file record are untouched, and `revert_order_to_file` restores the
+/// original order. Read-only: it never calls apply and never writes a file.
+#[tokio::test]
+#[ignore = "needs the real install plus RIMMERGE_PERF_PROFILE_DIR pointing at a scratch profile copy"]
+async fn reorder_against_the_real_install_settles_in_memory_only() {
+    use crate::commands::active_set::{
+        get_pending_active_changes_inner, move_mods_inner, revert_order_to_file_inner,
+    };
+    use crate::commands::mods::list_working_mods_inner;
+    use crate::dto::active_set::{AnchorDto, MoveRequestDto};
+    use crate::dto::mod_lists::ModListQueryDto;
+
+    const COMMAND_BUDGET: Duration = Duration::from_secs(5);
+
+    let Some(profile_dir) = crate::real_install_support::require_profile_dir(RERUN_COMMAND) else {
+        return;
+    };
+    let paths = crate::real_install_support::real_install_paths(profile_dir, RERUN_COMMAND);
+    let mods_config_before =
+        std::fs::read(&paths.mods_config).expect("read the real ModsConfig.xml");
+    let state = AppState::default();
+    let adapters = state.adapters.clone();
+    let use_case = rim_session::use_cases::LoadProject::new(
+        adapters.scanner,
+        adapters.config_store,
+        adapters.decision_store,
+        adapters.rule_store,
+        adapters.patch_store,
+        adapters.assignment_store,
+        rim_io::FsModKnowledgeStore::vendored(),
+        true,
+    );
+    let session = use_case
+        .execute(paths.clone(), &mut |_| {})
+        .expect("load project");
+    let file_before = session.file_active_mods().to_vec();
+    *state.session.write().expect("lock") = Some(session);
+
+    let before = list_working_mods_inner(&state, ModListQueryDto::default())
+        .await
+        .expect("working list");
+    assert!(
+        before.reorderable,
+        "the default Active list is in load order"
+    );
+    assert!(
+        before.total >= 200,
+        "the real-install floor is 200 active mods"
+    );
+    let ids: Vec<String> = before.items.iter().map(|row| row.mod_id.clone()).collect();
+    let moved = vec![ids[ids.len() - 2].clone(), ids[ids.len() - 1].clone()];
+
+    let start = Instant::now();
+    let result = move_mods_inner(
+        &state,
+        MoveRequestDto {
+            ids: moved.clone(),
+            anchor: AnchorDto::Start,
+        },
+    )
+    .await
+    .expect("move two active mods to the start");
+    let move_elapsed = start.elapsed();
+    let moved_list = list_working_mods_inner(&state, ModListQueryDto::default())
+        .await
+        .expect("working list after the move");
+    let pending = get_pending_active_changes_inner(&state)
+        .await
+        .expect("pending changes");
+
+    let moved_ids: Vec<String> = moved_list
+        .items
+        .iter()
+        .map(|row| row.mod_id.clone())
+        .collect();
+    assert_eq!(
+        moved_ids[..2],
+        moved[..],
+        "the two mods lead, in their old relative order"
+    );
+    assert_eq!(
+        moved_ids[2..],
+        ids[..ids.len() - 2],
+        "every other mod keeps its relative order"
+    );
+    assert!(moved_list.reorderable);
+    assert_eq!(result.selected, crate::dto::common::OrderSourceDto::Current);
+    assert!(
+        !result.did_switch_to_current,
+        "a fresh session already selects Current"
+    );
+    assert!(
+        pending.unscanned.added.is_empty() && pending.unscanned.removed.is_empty(),
+        "a same-set reorder is never a pending scan"
+    );
+    assert!(
+        pending.order_unapplied,
+        "the moved order is not in the file yet"
+    );
+    {
+        let guard = state.session.read().expect("lock");
+        let session = guard.as_ref().expect("a session is loaded");
+        let current: Vec<String> = session
+            .orders()
+            .current
+            .as_slice()
+            .iter()
+            .map(|id| id.as_str().to_string())
+            .collect();
+        assert_eq!(current[..2], moved[..], "Current took the moved sequence");
+        assert_eq!(session.file_active_mods(), file_before.as_slice());
+    }
+    assert_eq!(
+        std::fs::read(&paths.mods_config).expect("read the real ModsConfig.xml"),
+        mods_config_before,
+        "a reorder never writes ModsConfig.xml"
+    );
+
+    let start = Instant::now();
+    let reverted = revert_order_to_file_inner(&state)
+        .await
+        .expect("the file lists the same mods");
+    let revert_elapsed = start.elapsed();
+    let restored = list_working_mods_inner(&state, ModListQueryDto::default())
+        .await
+        .expect("working list after the revert");
+
+    eprintln!(
+        "move_mods: {:.1} ms; revert_order_to_file: {:.1} ms",
+        move_elapsed.as_secs_f64() * 1e3,
+        revert_elapsed.as_secs_f64() * 1e3
+    );
+    assert!(!reverted.order_unapplied);
+    assert_eq!(restored, before, "the revert restores the original list");
+    assert!(
+        move_elapsed < COMMAND_BUDGET,
+        "move_mods took {move_elapsed:?}"
+    );
+    assert!(
+        revert_elapsed < COMMAND_BUDGET,
+        "revert took {revert_elapsed:?}"
+    );
+    assert_eq!(
+        std::fs::read(&paths.mods_config).expect("read the real ModsConfig.xml"),
+        mods_config_before,
+        "nothing was written"
+    );
+}
+
+/// The LastUpdated sort over the real install: inside the budget, the same
+/// rows as the default list (a sort never adds or drops one), known times
+/// ordered with every unavailable time after them in both directions,
+/// ties in ascending id order, identical across two calls, and the
+/// default list unchanged afterwards.
+async fn assert_last_updated_sort(
+    state: &crate::state::AppState,
+    default_active: &crate::dto::mod_lists::ModListDto,
+) {
+    use crate::commands::active_set::list_inactive_mods_inner;
+    use crate::commands::mods::list_working_mods_inner;
+    use crate::dto::mod_lists::{
+        ListSortDto, ListSortKeyDto, ModListDto, ModListQueryDto, SortDirectionDto, UpdateTimeDto,
+    };
+
+    fn query(direction: SortDirectionDto) -> ModListQueryDto {
+        ModListQueryDto {
+            sort: Some(ListSortDto {
+                key: ListSortKeyDto::LastUpdated,
+                direction,
+            }),
+            ..ModListQueryDto::default()
+        }
+    }
+    fn seconds(row: &crate::dto::mod_lists::ModListRowDto) -> Option<u64> {
+        match row.updated {
+            UpdateTimeDto::Known { seconds } => Some(seconds),
+            UpdateTimeDto::ShippedWithGame | UpdateTimeDto::Unknown => None,
+        }
+    }
+    fn assert_ordered(list: &ModListDto, direction: SortDirectionDto) {
+        let mut previous: Option<&crate::dto::mod_lists::ModListRowDto> = None;
+        for row in &list.items {
+            if let Some(before) = previous {
+                match (seconds(before), seconds(row)) {
+                    (None, Some(_)) => panic!("an unavailable time sorted before a known one"),
+                    (Some(a), Some(b)) => {
+                        let in_order = match direction {
+                            SortDirectionDto::Ascending => a <= b,
+                            SortDirectionDto::Descending => a >= b,
+                        };
+                        assert!(in_order, "known times out of order");
+                        if a == b {
+                            assert!(before.mod_id < row.mod_id, "tie not in ascending id order");
+                        }
+                    }
+                    (Some(_), None) => {}
+                    (None, None) => {
+                        assert!(before.mod_id < row.mod_id, "tie not in ascending id order");
+                    }
+                }
+            }
+            previous = Some(row);
+        }
+    }
+    fn sorted_ids(list: &ModListDto) -> Vec<&str> {
+        let mut ids: Vec<&str> = list.items.iter().map(|row| row.mod_id.as_str()).collect();
+        ids.sort_unstable();
+        ids
+    }
+
+    let start = Instant::now();
+    let descending = list_working_mods_inner(state, query(SortDirectionDto::Descending))
+        .await
+        .expect("sorted working list");
+    let elapsed = start.elapsed();
+    let ascending = list_working_mods_inner(state, query(SortDirectionDto::Ascending))
+        .await
+        .expect("sorted working list");
+    let again = list_working_mods_inner(state, query(SortDirectionDto::Descending))
+        .await
+        .expect("sorted working list again");
+    let inactive = list_inactive_mods_inner(state, query(SortDirectionDto::Descending))
+        .await
+        .expect("sorted inactive list");
+    let known = descending
+        .items
+        .iter()
+        .filter(|row| seconds(row).is_some())
+        .count();
+    eprintln!(
+        "LastUpdated sort: {} rows ({known} with a time) in {:.1} ms",
+        descending.total,
+        elapsed.as_secs_f64() * 1e3
+    );
+
+    assert!(
+        elapsed < Duration::from_secs(2),
+        "sorted Active took {elapsed:?}"
+    );
+    assert_eq!(
+        descending, again,
+        "the sort is deterministic across two calls"
+    );
+    assert_eq!(descending.total, default_active.total);
+    assert_eq!(
+        sorted_ids(&descending),
+        sorted_ids(default_active),
+        "a sort neither adds nor drops a row"
+    );
+    assert_ordered(&descending, SortDirectionDto::Descending);
+    assert_ordered(&ascending, SortDirectionDto::Ascending);
+    assert_ordered(&inactive, SortDirectionDto::Descending);
+    let after = list_working_mods_inner(state, ModListQueryDto::default())
+        .await
+        .expect("default list after sorting");
+    assert_eq!(&after, default_active, "sorting left the load order alone");
+}

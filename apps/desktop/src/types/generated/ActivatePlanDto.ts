@@ -6,9 +6,11 @@
  */
 export type ActivatePlanDto = { 
 /**
- * Every id that would be appended, in order: each requested id's own
- * inactive dependency closure (dependencies first), then the id
- * itself.
+ * Every id that would be added to the active set, in order: each
+ * requested id's own inactive dependency closure (dependencies first),
+ * then the id itself. Where each lands is the commit's business: at the
+ * request's anchor as one block, or else at its Current slot (after any
+ * declared dependency), a mod Current never held going to the end.
  */
 toAdd: Array<string>, 
 /**

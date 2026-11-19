@@ -84,7 +84,7 @@ describe("LaunchGameButton", () => {
       await flush();
 
       expect(wrapper.get('[data-testid="launch-apply-first-sentence"]').text()).toContain(
-        "doesn't hold the current order",
+        "isn't saved as your active order yet",
       );
       expect(document.activeElement).toBe(
         wrapper.get('[data-testid="launch-apply-first-cancel"]').element,
@@ -171,7 +171,7 @@ describe("LaunchGameButton", () => {
       expect(backend.applyCalls).toHaveLength(1);
       expect(backend.launchCalls).toEqual([]);
       expect(toastAddSpy.mock.calls.map(([toast]) => toast.summary)).toContain(
-        "ModsConfig.xml wasn't written, so RimWorld wasn't started.",
+        "Your active mod list wasn't written, so RimWorld wasn't started.",
       );
     });
 

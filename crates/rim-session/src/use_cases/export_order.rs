@@ -114,7 +114,7 @@ where
 mod tests {
     use super::*;
     use crate::mod_list::SharedModList;
-    use crate::ports::ModsConfigFile;
+    use crate::ports::{ConfigErrorKind, ModsConfigFile};
     use crate::test_support::{InMemoryModListFileStore, InMemoryModsConfigStore};
     use rim_resolve::test_support::ReportBuilder;
 
@@ -221,7 +221,7 @@ mod tests {
 
         assert_eq!(
             error,
-            ExportOrderError::Config(ConfigError("no such file".to_string()))
+            ExportOrderError::Config(ConfigError::new(ConfigErrorKind::Missing, "no such file"))
         );
     }
 
@@ -300,7 +300,7 @@ mod tests {
 
     impl ModsConfigStore for FailingConfig {
         fn read(&self, _path: &Path) -> Result<ModsConfigFile, ConfigError> {
-            Err(ConfigError("no such file".to_string()))
+            Err(ConfigError::new(ConfigErrorKind::Missing, "no such file"))
         }
 
         fn write_with_backup(
@@ -308,7 +308,7 @@ mod tests {
             _path: &Path,
             _file: &ModsConfigFile,
         ) -> Result<PathBuf, ConfigError> {
-            Err(ConfigError("read only".to_string()))
+            Err(ConfigError::new(ConfigErrorKind::Unreadable, "read only"))
         }
     }
 }

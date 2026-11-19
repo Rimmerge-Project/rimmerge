@@ -121,6 +121,7 @@ async function mountEditorPage(
     get_pending_active_changes: {
       unscanned: { added: [], removed: [] },
       unapplied: { added: [], removed: [] },
+      orderUnapplied: false,
     },
     get_assignment: () => detail,
     get_assignment_coverage: () => coverage(),
@@ -397,7 +398,7 @@ describe("AssignmentEditorPage", () => {
 
     const empty = wrapper.get('[data-testid="add-section-empty"]');
     expect(empty.text()).toContain(
-      "every def type this project's own reference mods own is already a section",
+      "Every def type this project's own reference mods own is already a section",
     );
     expect(empty.text()).not.toContain("target set is empty");
   });

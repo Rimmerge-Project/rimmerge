@@ -46,7 +46,7 @@ pub enum UnappliedReason {
     /// Activations or deactivations staged in the app that no rescan has
     /// picked up ([`crate::Session::is_stale`]).
     ActivationChangesNotScanned,
-    /// The selected order differs from the file's last-known list.
+    /// The selected order differs from the file's list as last read.
     OrderDiffers,
 }
 

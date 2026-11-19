@@ -191,7 +191,7 @@ describe("ApplyDialog", () => {
       const wrapper = await runVerify({ ...verifyReportFixture([]), defsChecked: 1 });
 
       expect(wrapper.get('[data-testid="apply-dialog-verify-summary"]').text()).toBe(
-        "Checked 1 def against the current order — 0 operations predicted to fail and 0 def targets affected.",
+        "Checked 1 def against the current order: 0 operations predicted to fail and 0 def targets affected.",
       );
     });
 

@@ -188,7 +188,7 @@ test.describe("keyed-map container grouping", () => {
     await expect(page.getByTestId("merge-header-state")).toHaveText("2 fields need input");
 
     const header = page.getByTestId("merge-container-conflicts-wildAnimals");
-    await expect(header).toContainText("wildAnimals — 10 entries, 2 conflicts");
+    await expect(header).toContainText("wildAnimals: 10 entries, 2 conflicts");
 
     const acceptButton = page.getByTestId("merge-accept-union-wildAnimals");
     await expect(acceptButton).toHaveText("Accept suggested (2)");
@@ -219,7 +219,7 @@ test.describe("keyed-map container grouping", () => {
 
     await page.getByTestId("merge-section-auto").click();
     const header = page.getByTestId("merge-container-auto-wildAnimals");
-    await expect(header).toContainText("wildAnimals — 10 entries, 2 conflicts");
+    await expect(header).toContainText("wildAnimals: 10 entries, 2 conflicts");
     // Starts open: `wildAnimals` still has two unresolved conflicts
     // elsewhere in the container, so the default-collapse rule (more than
     // 12 entries *and* nothing left to review) never applies here.
@@ -341,7 +341,7 @@ test.describe("structural guard", () => {
     // `STRUCTURAL_GUARD_TEXT`) — never a field count, which would
     // contradict the totals line right above it (2 fields, 0 conflicts).
     await expect(page.getByTestId("merge-header-state")).toHaveText(
-      "not auto-merged — confirm the winner",
+      "not auto-merged: confirm the winner",
     );
     await expect(page.getByTestId("merge-header-totals")).toContainText("2 fields");
     await expect(page.getByTestId("merge-header-totals")).toContainText("0 conflicts");

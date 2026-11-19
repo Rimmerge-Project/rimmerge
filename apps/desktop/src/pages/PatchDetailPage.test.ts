@@ -64,6 +64,7 @@ async function mountDetailPage(patch: PatchDetailDto, extraFixtures: Record<stri
     get_pending_active_changes: {
       unscanned: { added: [], removed: [] },
       unapplied: { added: [], removed: [] },
+      orderUnapplied: false,
     },
     get_patch_render: () => renderFixture(),
     list_patch_findings: () => ({ total: 0, items: [] }),
@@ -175,7 +176,7 @@ describe("PatchDetailPage", () => {
     expect(toastAddMock).toHaveBeenCalledWith(
       expect.objectContaining({
         detail:
-          "Imported 1 decision. 2 decisions skipped: it is not a finding between this patch's scope members; a patch can only hold merge, shipped-asset and ignore decisions — not Reorder",
+          "Imported 1 decision. 2 decisions skipped: it is not a finding between this patch's scope members; a patch can only hold merge, shipped-asset and ignore decisions, not Reorder",
       }),
     );
   });
@@ -198,7 +199,7 @@ describe("PatchDetailPage", () => {
     expect(toastAddMock).toHaveBeenLastCalledWith(
       expect.objectContaining({
         detail:
-          "Imported 0 decisions. 3 decisions skipped: it is not a finding between this patch's scope members; a patch can only hold merge, shipped-asset and ignore decisions — not Reorder; a patch can only hold merge, shipped-asset and ignore decisions — not Accept",
+          "Imported 0 decisions. 3 decisions skipped: it is not a finding between this patch's scope members; a patch can only hold merge, shipped-asset and ignore decisions, not Reorder; a patch can only hold merge, shipped-asset and ignore decisions, not Accept",
       }),
     );
   });

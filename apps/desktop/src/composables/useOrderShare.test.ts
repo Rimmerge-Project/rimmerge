@@ -220,7 +220,7 @@ describe("useOrderShare", () => {
     expect(session.selected).toBe("current");
     expect(share.isPreviewOpen.value).toBe(false);
     expect(toastAdd.mock.calls.at(-1)?.[0].summary).toBe(
-      "Imported order ready. Review it, then Apply to write ModsConfig.xml.",
+      "Imported order ready. Review it, then Apply to save it as your active order.",
     );
   });
 
@@ -241,7 +241,7 @@ describe("useOrderShare", () => {
     expect(share.isImporting.value).toBe(false);
     expect(share.isPreviewOpen.value).toBe(false);
     expect(toastAdd.mock.calls.at(-1)?.[0].summary).toBe(
-      "Imported order ready. Review it, then Apply to write ModsConfig.xml.",
+      "Imported order ready. Review it, then Apply to save it as your active order.",
     );
     await running;
   });

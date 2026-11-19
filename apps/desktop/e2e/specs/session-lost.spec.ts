@@ -32,8 +32,6 @@ test.describe("session lost", () => {
           workshopDir: "C:/DefaultGame/workshop",
           modsConfig: "C:/DefaultProfile/ModsConfig.xml",
           profileDir: "C:/DefaultProfile/rimmerge",
-          warning: null,
-          error: null,
         },
         load_project: (payload: unknown) => {
           const { paths } = payload as { paths: { gameDir: string } };
@@ -93,8 +91,6 @@ test.describe("session lost", () => {
           workshopDir: "C:/RimWorld/workshop",
           modsConfig: "C:/Profile/ModsConfig.xml",
           profileDir: "C:/Profile/rimmerge",
-          warning: null,
-          error: null,
         },
         load_project: {
           modCount: 1,

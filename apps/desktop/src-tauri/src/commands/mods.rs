@@ -8,6 +8,7 @@ use rim_session::use_cases::{ReadModAbout, ReadModPreview};
 use rim_session::{FindingFilter, MAX_PAGE_SIZE};
 
 use crate::dto::mod_info::{ModInfoDto, ModPreviewDto, mod_info_dto};
+use crate::dto::mod_lists::{ModListDto, ModListQueryDto};
 use crate::dto::mods::{
     ModDetailDto, ModEdgeDto, ModFilterDto, ModNamesDto, ModPageDto, mod_page_dto,
 };
@@ -45,6 +46,40 @@ pub async fn list_mods(
     filter: ModFilterDto,
 ) -> Result<ModPageDto, CommandError> {
     list_mods_inner(&state, filter).await
+}
+
+/// The Mods page's Active list: the working set in its own order, every
+/// matching row up to the backend's bound. Filtering lives in
+/// [`rim_session::Session::working_mod_list`]; this only maps the DTO in
+/// and out.
+///
+/// # Errors
+///
+/// Returns [`CommandError::no_project_loaded`] when no project is loaded,
+/// or [`CommandError::invalid_input`] when `query.tag` isn't a valid tag
+/// slug.
+pub(crate) async fn list_working_mods_inner(
+    state: &AppState,
+    query: ModListQueryDto,
+) -> Result<ModListDto, CommandError> {
+    with_session(state, move |session| {
+        let query: rim_session::ModListQuery = query.try_into()?;
+        Ok(session.working_mod_list(&query).into())
+    })
+    .await
+}
+
+/// See [`list_working_mods_inner`].
+///
+/// # Errors
+///
+/// See [`list_working_mods_inner`].
+#[tauri::command]
+pub async fn list_working_mods(
+    state: tauri::State<'_, AppState>,
+    query: ModListQueryDto,
+) -> Result<ModListDto, CommandError> {
+    list_working_mods_inner(&state, query).await
 }
 
 /// One mod's full detail: declared order, edges grouped by direction and

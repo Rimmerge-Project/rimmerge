@@ -5,13 +5,17 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use rim_analyzer::domain::{LoadOrder, ModId};
 use rim_resolve::domain::{BothOrders, OrderSource};
-use rim_resolve::sort::SortOutcome;
+use rim_resolve::sort::{SortOutcome, TieBreak, compute_disturbance};
 
 use super::Session;
 use super::{compute, mods_by_id};
 use crate::active_set::{ActiveSet, PendingActiveChanges};
+use crate::file_baseline::{
+    BaselineChange, BaselineIssue, ExternalFileChange, FileBaseline, FileMembership, FileProbe,
+};
 use crate::game_launch::{OrderOnDisk, UnappliedReason};
 use crate::mod_index::{self, ModFilter, ModPage};
+use crate::mod_lists::{self, ModList, ModListQuery};
 use crate::ports::ModsConfigFile;
 use crate::settings::SortProvenance;
 
@@ -54,18 +58,53 @@ impl Session {
         mod_index::query(&self.report, &self.tagging, filter)
     }
 
-    /// Searches, filters, and pages `report.inactive_mods`
-    /// — the Inactive tab's own
-    /// list. Pure, like [`Self::mods`]: only `search`/`source` apply
-    /// ([`mod_index::query_inactive`]'s own doc comment has why).
+    /// The Mods page's Active list: the working set in its own order,
+    /// every row (up to [`crate::MAX_MOD_LIST_ROWS`]) matching `query`.
+    /// Pure (`&self`).
     #[must_use]
-    pub fn inactive_mods(&self, filter: &ModFilter) -> ModPage {
-        mod_index::query_inactive(&self.report.inactive_mods, filter)
+    pub fn working_mod_list(&self, query: &ModListQuery) -> ModList {
+        mod_lists::working_list(
+            &self.report,
+            &self.tagging,
+            &self.working,
+            &self.update_times,
+            &FileMembership::of(&self.file_active_mods),
+            query,
+        )
+    }
+
+    /// The Mods page's Inactive list: every mod on disk whose base id is
+    /// not in the working set, by name (A first) unless `query.sort` says
+    /// otherwise. Pure (`&self`).
+    #[must_use]
+    pub fn inactive_mod_list(&self, query: &ModListQuery) -> ModList {
+        mod_lists::inactive_list(
+            &self.report,
+            &self.tagging,
+            &self.working,
+            &self.update_times,
+            &FileMembership::of(&self.file_active_mods),
+            query,
+        )
     }
 
     /// Changes which order is selected for ledger/finding queries.
     pub fn select(&mut self, source: OrderSource) {
         self.selected = source;
+    }
+
+    /// The selection rule of a manual reorder: a user who places mods
+    /// means their own order, so a selected Suggested becomes Current
+    /// (Apply writes the selected order). Returns whether it switched.
+    /// Used by [`crate::use_cases::MoveMods`] and an anchored
+    /// [`crate::use_cases::ActivateMods::execute_at`], never by an
+    /// un-anchored activation.
+    pub(crate) fn switch_to_current_after_reorder(&mut self) -> bool {
+        let is_suggested = self.selected == OrderSource::Suggested;
+        if is_suggested {
+            self.selected = OrderSource::Current;
+        }
+        is_suggested
     }
 
     /// The [`ModsConfigFile`] to write for `order`, preserving the
@@ -121,7 +160,11 @@ impl Session {
     /// appended id (e.g. a just-installed patch) isn't in `self.report`
     /// yet — only the next scan picks it up — so there is nothing new for
     /// the sorter to place; only the ledgers, which read `current`
-    /// directly, need to go stale.
+    /// directly, need to go stale. The one exception is a new *sequence*
+    /// over the *same* ids under [`TieBreak::PreserveCurrent`], where
+    /// `suggested` ranks by `current`'s positions and is re-sorted. The
+    /// working set also follows `current`'s sequence whenever both hold the
+    /// same ids (`Self::settle_working_onto_current`).
     ///
     /// [`Self::file_active_mods`] is reset to `order` here too —
     /// this method's own contract is "the file now *is* this", and that
@@ -146,8 +189,77 @@ impl Session {
         if !newly_absent.is_empty() {
             self.working.deactivate(&newly_absent);
         }
+        let is_reorder_of_same_ids =
+            previous == next && self.orders.current.as_slice() != order.as_slice();
         self.orders.current = order;
+        self.settle_working_onto_current();
         self.file_active_mods = self.orders.current.as_slice().to_vec();
+        self.file_watch.reset(&self.file_active_mods);
+        self.current_order_replaced(is_reorder_of_same_ids);
+    }
+
+    /// What to read to refresh the file baseline: the path and the epoch
+    /// the result must still match when it is committed.
+    #[must_use]
+    pub fn file_probe(&self) -> FileProbe {
+        FileProbe {
+            path: self.paths.mods_config.clone(),
+            epoch: self.file_watch.epoch(),
+        }
+    }
+
+    /// Whether the baseline is what the file holds now, or the last valid
+    /// list because the latest read failed.
+    #[must_use]
+    pub fn file_baseline(&self) -> FileBaseline {
+        self.file_watch.baseline()
+    }
+
+    /// What someone else did to the file's membership since Rimmerge last
+    /// loaded or wrote it, by base id.
+    #[must_use]
+    pub fn external_file_change(&self) -> ExternalFileChange {
+        self.file_watch.change_to(&self.file_active_mods)
+    }
+
+    /// Swaps one read of the file into the baseline. A success replaces
+    /// `file_active_mods`; a failure keeps it and records the reason, so a
+    /// truncated or missing file never reads as an empty list. A read
+    /// whose probe predates a load or write of Rimmerge's own is dropped.
+    /// Never touches `working`, the orders or the file.
+    pub(crate) fn observe_file(
+        &mut self,
+        probe: &FileProbe,
+        outcome: Result<Vec<ModId>, BaselineIssue>,
+    ) -> BaselineChange {
+        if probe.epoch != self.file_watch.epoch() || probe.path != self.paths.mods_config {
+            return BaselineChange::Unchanged;
+        }
+        let baseline_before = self.file_watch.baseline();
+        match outcome {
+            Ok(ids) => {
+                self.file_watch.set_baseline(FileBaseline::Fresh);
+                let list_changed = ids != self.file_active_mods;
+                self.file_active_mods = ids;
+                change_if(list_changed || baseline_before != FileBaseline::Fresh)
+            }
+            Err(reason) => {
+                let stale = FileBaseline::Stale { reason };
+                self.file_watch.set_baseline(stale);
+                change_if(baseline_before != stale)
+            }
+        }
+    }
+
+    /// What every replacement of `orders.current` after load must do:
+    /// invalidate the ledger family and the selected-order caches, and
+    /// re-sort when Suggested ranks by Current's own sequence.
+    ///
+    /// `PreserveCurrent` ranks unconstrained mods by `current`'s own
+    /// sequence, so a new sequence over the same ids makes `suggested`
+    /// stale. A changed id set never re-sorts (a just-written id is not in
+    /// the report yet).
+    fn current_order_replaced(&mut self, is_reorder_of_same_ids: bool) {
         self.invalidate_ledgers();
         // `orders.current` just got a new value — same reasoning as
         // `Self::recompute_sort`'s own clear.
@@ -155,6 +267,61 @@ impl Session {
         self.assignment_instances.clear();
         self.assignment_coverage.clear();
         self.def_graphics.clear();
+        if is_reorder_of_same_ids && self.rules.settings.tie_break == TieBreak::PreserveCurrent {
+            self.recompute_sort();
+        }
+    }
+
+    /// The file-truth direction of the settle rule: when `working` and
+    /// `orders.current` hold exactly the same ids (duplicates respected),
+    /// `working` takes Current's sequence. Runs at the end of
+    /// [`Self::set_current_order`] (Apply, an install export, a revert),
+    /// where the file is the truth. A rescan scans `working`'s sequence, so
+    /// without this a rescan right after an `Apply` would scan the
+    /// pre-apply order and revert Current. A `working` with pending
+    /// membership edits keeps its own sequence: nothing was settled yet.
+    fn settle_working_onto_current(&mut self) {
+        if self.working_has_current_members() {
+            self.working = ActiveSet::trusted(self.orders.current.as_slice().to_vec());
+        }
+    }
+
+    /// The edit direction of the settle rule: after an edit to `working`
+    /// made from the Mods page (a move, an activation, a deactivation),
+    /// when `working` and `orders.current` hold exactly the same ids,
+    /// Current takes `working`'s sequence. The edit is the user's intent,
+    /// so it is not undone. Nothing is written: `file_active_mods` stays
+    /// what the file held, so the order shows as not yet in the file until
+    /// an Apply. Invalidates exactly what [`Self::set_current_order`]
+    /// does. With pending membership edits nothing is settled, and the
+    /// next rescan carries the sequence.
+    pub(crate) fn settle_current_onto_working(&mut self) {
+        if !self.working_has_current_members()
+            || self.working.ids() == self.orders.current.as_slice()
+        {
+            return;
+        }
+        self.orders.current = LoadOrder::new(self.working.ids().to_vec());
+        self.current_order_replaced(true);
+    }
+
+    /// Whether `working` and `orders.current` hold the same ids, duplicates
+    /// respected, in any sequence.
+    fn working_has_current_members(&self) -> bool {
+        let mut working_ids = self.working.ids().to_vec();
+        let mut current_ids = self.orders.current.as_slice().to_vec();
+        working_ids.sort();
+        current_ids.sort();
+        working_ids == current_ids
+    }
+
+    /// How many mods the suggested order places differently from the
+    /// current one, measured over the live orders — never a snapshot from
+    /// the last sort, which goes stale the moment `Apply` calls
+    /// [`Self::set_current_order`].
+    #[must_use]
+    pub fn moved_mods(&self) -> usize {
+        compute_disturbance(&self.orders.suggested, &self.orders.current).positions_changed
     }
 
     /// Which order is currently selected for ledger/finding queries.
@@ -209,9 +376,10 @@ impl Session {
         &self.working
     }
 
-    /// `pub(crate)`: only [`crate::use_cases::ActivateMods`]/
-    /// [`crate::use_cases::DeactivateMods`] (in this crate) mutate the
-    /// working set directly.
+    /// `pub(crate)`: only the use cases in this crate
+    /// ([`crate::use_cases::ActivateMods`], [`crate::use_cases::DeactivateMods`],
+    /// [`crate::use_cases::MoveMods`], [`crate::use_cases::DiscardPendingChanges`])
+    /// mutate the working set directly.
     pub(crate) fn working_mut(&mut self) -> &mut ActiveSet {
         &mut self.working
     }
@@ -219,21 +387,40 @@ impl Session {
     /// What's changed but not yet reflected further along the pipeline:
     /// `unscanned` is [`Self::working`] against the scanned
     /// `orders().current` (what a [`crate::use_cases::Rescan`] would pick
-    /// up), `unapplied` is `orders().current` against the file's own
-    /// last-known list (what an `apply` would write). Both empty for a
-    /// freshly loaded, unedited session.
+    /// up), `unapplied` is `orders().current` against the list Rimmerge
+    /// last loaded or wrote (what an `apply` of the user's own edits would
+    /// change), and `order_unapplied` is the same comparison by sequence,
+    /// which is what a settled reorder changes. The live file is never
+    /// consulted: an outside edit is not the user's unsaved work (see
+    /// [`Self::external_file_change`]). All empty/false for a freshly
+    /// loaded, unedited session.
     #[must_use]
     pub fn pending_changes(&self) -> PendingActiveChanges {
         let current = ActiveSet::trusted(self.orders.current.as_slice().to_vec());
-        let file = ActiveSet::trusted(self.file_active_mods.clone());
+        let acknowledged = ActiveSet::trusted(self.file_watch.acknowledged().to_vec());
         PendingActiveChanges {
             unscanned: self.working.diff(&current),
-            unapplied: current.diff(&file),
+            unapplied: current.diff(&acknowledged),
+            order_unapplied: !self.is_same_order_ignoring_merge_mod(
+                self.orders.current.as_slice(),
+                acknowledged.ids(),
+            ),
         }
     }
 
-    /// Whether `ModsConfig.xml` (as last scanned or written) already lists
-    /// exactly `source`'s order, in the same sequence.
+    /// Whether two id lists are the same sequence once the profile's
+    /// generated merge mod is dropped from both.
+    fn is_same_order_ignoring_merge_mod(&self, left: &[ModId], right: &[ModId]) -> bool {
+        let merge_mod = self.own_merge_mod_id();
+        left.iter()
+            .filter(|id| **id != merge_mod)
+            .eq(right.iter().filter(|id| **id != merge_mod))
+    }
+
+    /// Whether `ModsConfig.xml` (as last read: at load, after a write of
+    /// Rimmerge's own, or by the periodic baseline refresh) already lists
+    /// exactly `source`'s order, in the same sequence. It follows an
+    /// outside edit of the file once the refresh has seen it.
     ///
     /// The profile's generated merge mod is ignored on both sides: `Apply`
     /// appends it to the file, but a suggested order only contains it after
@@ -241,12 +428,10 @@ impl Session {
     /// after a successful apply.
     #[must_use]
     pub fn file_matches(&self, source: OrderSource) -> bool {
-        let merge_mod = self.own_merge_mod_id();
-        let without_merge_mod = |ids: &[ModId]| -> Vec<ModId> {
-            ids.iter().filter(|id| **id != merge_mod).cloned().collect()
-        };
-        without_merge_mod(self.orders.get(source).as_slice())
-            == without_merge_mod(&self.file_active_mods)
+        self.is_same_order_ignoring_merge_mod(
+            self.orders.get(source).as_slice(),
+            &self.file_active_mods,
+        )
     }
 
     /// Whether the working set has changes a rescan hasn't picked up yet
@@ -256,8 +441,8 @@ impl Session {
         !self.pending_changes().unscanned.is_empty()
     }
 
-    /// Whether `ModsConfig.xml` (as last scanned or written) holds the
-    /// *selected* order, for the Launch RimWorld button.
+    /// Whether `ModsConfig.xml` (as last read, see [`Self::file_matches`])
+    /// holds the *selected* order, for the Launch RimWorld button.
     ///
     /// Unscanned working-set changes come first: they have to be resolved
     /// before an apply can write anything ([`Self::is_stale`]). Otherwise
@@ -275,4 +460,12 @@ impl Session {
     }
 
     // -- Compat patches ---------
+}
+
+fn change_if(has_changed: bool) -> BaselineChange {
+    if has_changed {
+        BaselineChange::Changed
+    } else {
+        BaselineChange::Unchanged
+    }
 }

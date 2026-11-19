@@ -37,6 +37,7 @@ function mountShell(openAppLinkCalls: string[] = []) {
     get_pending_active_changes: {
       unscanned: { added: [], removed: [] },
       unapplied: { added: [], removed: [] },
+      orderUnapplied: false,
     },
     open_app_link: (payload: unknown) => {
       openAppLinkCalls.push((payload as { target: string }).target);

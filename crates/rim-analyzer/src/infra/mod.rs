@@ -22,6 +22,7 @@ use crate::extract::about_xml::{self, AboutDetails, AboutXmlError};
 use crate::extract::mods_config;
 
 use discovery::{Discovered, DiscoveredMod};
+use mod_scan::ModScan;
 
 // `ScanOutput`/`ScanProgress`/`ScanStage` all live in `domain::scan` (plain
 // data, per the hexagonal layering contract) — re-exported here so
@@ -125,14 +126,19 @@ pub fn scan_with_progress(
     // list is unsound.
     let discovered_mod_count = discovered.len();
     let inactive_mods = discovered.inactive_excluding(&to_scan);
-    let (scanned_mods, child_value_hashes_by_mod, ref_sites_by_mod, scan_warnings) =
-        scan_all_with_progress(
-            &to_scan,
-            config.game_version,
-            &active_bases,
-            config.folder_policy,
-            on_progress,
-        );
+    let ModScans {
+        scanned_mods,
+        child_value_hashes_by_mod,
+        ref_sites_by_mod,
+        unloaded_defs_dirs_by_mod,
+        warnings: scan_warnings,
+    } = scan_all_with_progress(
+        &to_scan,
+        config.game_version,
+        &active_bases,
+        config.folder_policy,
+        on_progress,
+    );
     warnings.extend(scan_warnings);
 
     on_progress(ScanProgress {
@@ -162,6 +168,7 @@ pub fn scan_with_progress(
         discovered_mod_count,
         core_resource_textures,
         ref_sites_by_mod,
+        unloaded_defs_dirs_by_mod,
     })
 }
 
@@ -296,22 +303,16 @@ fn resolve_active_mods<'a>(
 /// every warning raised while extracting them. Calls `on_progress` once
 /// per mod, from this function's own caller thread only — see
 /// [`scan_with_progress`]'s doc comment.
-#[allow(clippy::type_complexity)]
 fn scan_all_with_progress(
     to_scan: &[(&ModId, &DiscoveredMod)],
     game_version: GameVersion,
     active_bases: &HashSet<ModId>,
     folder_policy: FolderPolicy,
     on_progress: &mut dyn FnMut(ScanProgress),
-) -> (
-    Vec<ScannedMod>,
-    BTreeMap<ModId, HashSet<u64>>,
-    BTreeMap<ModId, Vec<RefSite>>,
-    Vec<Warning>,
-) {
+) -> ModScans {
     let total = to_scan.len();
     if total == 0 {
-        return (Vec::new(), BTreeMap::new(), BTreeMap::new(), Vec::new());
+        return ModScans::default();
     }
 
     // Workers only ever send a zero-sized progress *ping* down this
@@ -322,64 +323,61 @@ fn scan_all_with_progress(
     // the (non-`Sync`) `Sender` ever crosses a worker boundary.
     let (sender, receiver) = mpsc::channel::<()>();
 
-    let results: Vec<(ModId, ScannedMod, HashSet<u64>, Vec<RefSite>, Vec<Warning>)> =
-        std::thread::scope(|scope| {
-            let handle = scope.spawn(move || {
-                to_scan
-                    .par_iter()
-                    .map_with(sender, |sender, &(id, m)| {
-                        let (scanned, child_value_hashes, ref_sites, mod_warnings) =
-                            mod_scan::scan_one_mod(
-                                id,
-                                m,
-                                game_version,
-                                active_bases,
-                                folder_policy,
-                            );
-                        let _ = sender.send(());
-                        (
-                            id.clone(),
-                            scanned,
-                            child_value_hashes,
-                            ref_sites,
-                            mod_warnings,
-                        )
-                    })
-                    .collect()
-            });
-
-            for (index, ()) in receiver.into_iter().enumerate() {
-                on_progress(ScanProgress {
-                    stage: ScanStage::Scanning,
-                    done: index + 1,
-                    total,
-                });
-            }
-
-            // The receive loop above only ends once every `sender` clone has
-            // been dropped, which happens only after `collect()` has already
-            // produced its result — so this join is never left waiting on
-            // in-flight work. A panicking worker poisons the join instead of
-            // this function unwrapping it away.
-            handle.join().unwrap_or_default()
+    let results: Vec<(ModId, ModScan)> = std::thread::scope(|scope| {
+        let handle = scope.spawn(move || {
+            to_scan
+                .par_iter()
+                .map_with(sender, |sender, &(id, m)| {
+                    let mod_scan =
+                        mod_scan::scan_one_mod(id, m, game_version, active_bases, folder_policy);
+                    let _ = sender.send(());
+                    (id.clone(), mod_scan)
+                })
+                .collect()
         });
 
-    let mut scanned_mods = Vec::with_capacity(results.len());
-    let mut child_value_hashes_by_mod = BTreeMap::new();
-    let mut ref_sites_by_mod = BTreeMap::new();
-    let mut warnings = Vec::new();
-    for (id, scanned, child_value_hashes, ref_sites, mod_warnings) in results {
-        scanned_mods.push(scanned);
-        child_value_hashes_by_mod.insert(id.clone(), child_value_hashes);
-        ref_sites_by_mod.insert(id, ref_sites);
-        warnings.extend(mod_warnings);
+        for (index, ()) in receiver.into_iter().enumerate() {
+            on_progress(ScanProgress {
+                stage: ScanStage::Scanning,
+                done: index + 1,
+                total,
+            });
+        }
+
+        // The receive loop above only ends once every `sender` clone has
+        // been dropped, which happens only after `collect()` has already
+        // produced its result — so this join is never left waiting on
+        // in-flight work. A panicking worker poisons the join instead of
+        // this function unwrapping it away.
+        handle.join().unwrap_or_default()
+    });
+
+    let mut scans = ModScans::default();
+    for (id, mod_scan) in results {
+        scans.scanned_mods.push(mod_scan.scanned);
+        scans
+            .child_value_hashes_by_mod
+            .insert(id.clone(), mod_scan.child_value_hashes);
+        scans
+            .ref_sites_by_mod
+            .insert(id.clone(), mod_scan.ref_sites);
+        scans
+            .unloaded_defs_dirs_by_mod
+            .insert(id, mod_scan.unloaded_defs_dirs);
+        scans.warnings.extend(mod_scan.warnings);
     }
-    (
-        scanned_mods,
-        child_value_hashes_by_mod,
-        ref_sites_by_mod,
-        warnings,
-    )
+    scans
+}
+
+/// [`scan_all_with_progress`]'s result: every mod's [`ModScan`] folded
+/// into the per-mod maps [`ScanOutput`] carries, in `to_scan` order.
+#[derive(Default)]
+struct ModScans {
+    scanned_mods: Vec<ScannedMod>,
+    child_value_hashes_by_mod: BTreeMap<ModId, HashSet<u64>>,
+    ref_sites_by_mod: BTreeMap<ModId, Vec<RefSite>>,
+    unloaded_defs_dirs_by_mod: BTreeMap<ModId, Vec<PathBuf>>,
+    warnings: Vec<Warning>,
 }
 
 /// `Assembly-CSharp.dll`'s own [`AssemblyMetadata::type_hierarchy`] —

@@ -10,7 +10,7 @@ import { useI18n } from "vue-i18n";
 import ImportPreviewDialog from "@/components/order/ImportPreviewDialog.vue";
 import PasteOrderDialog from "@/components/order/PasteOrderDialog.vue";
 import { useOrderShare } from "@/composables/useOrderShare";
-import { useDashboardQuery } from "@/queries/dashboard";
+import { usePendingActiveChangesQuery } from "@/queries/activeSet";
 
 const { t } = useI18n();
 const {
@@ -28,7 +28,7 @@ const {
   openWorkshop,
   copyMissing,
 } = useOrderShare();
-const { data: dashboard } = useDashboardQuery();
+const { data: pending } = usePendingActiveChangesQuery();
 
 const exportMenu = useTemplateRef<MenuMethods>("exportMenu");
 const importMenu = useTemplateRef<MenuMethods>("importMenu");
@@ -41,8 +41,9 @@ function toggleImport(event: Event): void {
   importMenu.value?.toggle(event);
 }
 
-// Unknown until the dashboard answers: no claim is made about an order we cannot see.
-const replacesUnwritten = computed(() => dashboard.value?.fileMatchesCurrent === false);
+// Your own unapplied order only: an outside edit of the file is not something this import replaces.
+// Unknown until the pending changes answer: no claim is made about an order we cannot see.
+const replacesUnwritten = computed(() => pending.value?.orderUnapplied === true);
 
 // `testId` rides along on the item (a MenuItem accepts extra keys) for the item template.
 const exportItems = computed<MenuItem[]>(() => [

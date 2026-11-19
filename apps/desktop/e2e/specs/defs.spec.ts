@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 // Type-only: pulls in `Window.__E2E_MOCK_IPC__`'s ambient declaration.
 import type {} from "../../src/e2e-mock-bootstrap";
-import { loadScenario } from "./support";
+import { loadScenario, modsPane } from "./support";
 
 /**
  * Reaches the def page in-app via the mods page's search box — never
@@ -24,7 +24,7 @@ test.describe("def inspector", () => {
   }) => {
     await loadScenario(page);
     await page.getByTestId("nav-mods").click();
-    await page.getByTestId("mods-search").fill("RimWorld");
+    await modsPane(page, "active").getByTestId("mods-search").fill("RimWorld");
     await page.getByTestId("mod-row-ludeon.rimworld").click();
     await expect(page).toHaveURL(/\/mods\/ludeon\.rimworld$/);
     // The mod info panel's own "All details" link, not the panel itself

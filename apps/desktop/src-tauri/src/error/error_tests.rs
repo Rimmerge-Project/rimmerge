@@ -10,7 +10,11 @@ fn scan_error_maps_to_scan_failed() {
 
 #[test]
 fn config_error_maps_to_mods_config_io_failed() {
-    let error: CommandError = rim_session::ports::ConfigError("boom".to_string()).into();
+    let error: CommandError = rim_session::ports::ConfigError::new(
+        rim_session::ports::ConfigErrorKind::Unreadable,
+        "boom",
+    )
+    .into();
     assert_eq!(error.code, CommandErrorCode::ModsConfigIoFailed);
 }
 
@@ -88,10 +92,12 @@ fn import_rimsort_error_store_maps_to_profile_io_failed() {
 
 #[test]
 fn apply_error_config_maps_to_mods_config_io_failed() {
-    let error: CommandError = rim_session::use_cases::ApplyError::Config(
-        rim_session::ports::ConfigError("boom".to_string()),
-    )
-    .into();
+    let error: CommandError =
+        rim_session::use_cases::ApplyError::Config(rim_session::ports::ConfigError::new(
+            rim_session::ports::ConfigErrorKind::Unreadable,
+            "boom",
+        ))
+        .into();
     assert_eq!(error.code, CommandErrorCode::ModsConfigIoFailed);
 }
 
@@ -726,10 +732,12 @@ fn export_nothing_active_maps_to_nothing_to_export() {
 
 #[test]
 fn export_config_failure_keeps_the_mods_config_code() {
-    let error: CommandError = rim_session::use_cases::ExportOrderError::Config(
-        rim_session::ports::ConfigError("boom".to_string()),
-    )
-    .into();
+    let error: CommandError =
+        rim_session::use_cases::ExportOrderError::Config(rim_session::ports::ConfigError::new(
+            rim_session::ports::ConfigErrorKind::Unreadable,
+            "boom",
+        ))
+        .into();
     assert_eq!(error.code, CommandErrorCode::ModsConfigIoFailed);
 }
 

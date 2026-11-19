@@ -13,7 +13,7 @@ use crate::extract::about_xml::{self, AboutXmlData};
 use crate::extract::expansion_defs::{self, ExpansionDefEntry};
 use crate::extract::rimmerge_marker;
 
-use super::mod_scan::read_bounded;
+use super::mod_scan::{is_directory, read_bounded};
 use super::paths;
 
 /// One mod found on disk, with its `About.xml` already parsed.
@@ -304,8 +304,8 @@ fn subdirectories(dir: &Path) -> Vec<PathBuf> {
     };
     let mut dirs: Vec<PathBuf> = entries
         .filter_map(Result::ok)
+        .filter(is_directory)
         .map(|e| e.path())
-        .filter(|p| p.is_dir())
         .collect();
     dirs.sort();
     dirs
@@ -407,6 +407,33 @@ mod tests {
             format!("<ModMetaData><packageId>{package_id}</packageId><name>{package_id}</name></ModMetaData>"
             ))
         .unwrap();
+    }
+
+    /// A mod folder that is a directory junction (a mod manager's link to
+    /// a copy kept elsewhere) is still discovered.
+    #[test]
+    fn discover_finds_a_mod_folder_that_is_a_junction() {
+        let root = tempdir("junction-mod");
+        let real_mod = root.join("kept-elsewhere");
+        write_about(&real_mod, "sample.linked");
+        fs::create_dir_all(root.join("Mods")).unwrap();
+        let status = std::process::Command::new("cmd")
+            .args(["/C", "mklink", "/J"])
+            .arg(root.join("Mods").join("Linked"))
+            .arg(&real_mod)
+            .stdout(std::process::Stdio::null())
+            .status()
+            .unwrap();
+        assert!(status.success(), "mklink /J failed");
+
+        let (discovered, _) = discover(
+            &root,
+            &root.join("workshop_does_not_exist"),
+            GameVersion::new(1, 6),
+        );
+
+        assert!(discovered.lookup(&ModId::new("sample.linked")).is_some());
+        let _ = fs::remove_dir_all(&root);
     }
 
     #[test]

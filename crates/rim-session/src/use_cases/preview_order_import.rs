@@ -13,26 +13,31 @@ use crate::mod_list::{
 };
 use crate::ports::{ModListFileError, ModListFileStore, ModListRead};
 
-/// What an import is diffed against: the receiver's inventory, the
-/// `ModsConfig.xml` order as last known, and the context facts.
+/// What an import is diffed against: the receiver's inventory, the active
+/// list the user has now, and the context facts. In the desktop that is the
+/// session's working list (what the Mods page's Active list shows, pending
+/// edits included), since that is what an import replaces; the CLI has no
+/// working set, so it passes `ModsConfig.xml`'s list.
 #[derive(Debug, Clone)]
 pub struct ImportTarget {
     /// Every mod this install knows, by exact id.
     pub inventory: ModInventory,
-    /// `ModsConfig.xml`'s active list, by exact ids, in file order.
-    pub file_ids: Vec<ModId>,
+    /// The active list being replaced, by exact ids, in order.
+    pub active_ids: Vec<ModId>,
     /// The receiver's own merge mod, game version and pending edits.
     pub context: ImportContext,
 }
 
 impl ImportTarget {
-    /// The target for a loaded session. `has_pending_changes` is the
-    /// session's unrescanned activation edits, which an import replaces.
+    /// The target for a loaded session: diffed against its working list, so
+    /// pending activations, deactivations and moves show as the changes they
+    /// are. `has_pending_changes` is the session's unrescanned activation
+    /// edits, which an import replaces.
     #[must_use]
     pub fn from_session(session: &Session) -> Self {
         Self {
             inventory: ModInventory::from_report(session.report()),
-            file_ids: session.file_active_mods().to_vec(),
+            active_ids: session.working().ids().to_vec(),
             context: ImportContext {
                 own_merge_mod: session.own_merge_mod_id(),
                 game_version: session.game_version(),
@@ -124,7 +129,7 @@ fn ready(parsed: ParsedModList, target: &ImportTarget) -> ImportPreview {
     let plan = plan_import(
         &parsed.list,
         &target.inventory,
-        &target.file_ids,
+        &target.active_ids,
         target.context.clone(),
     );
     ImportPreview::Ready(ReadyImport {
@@ -149,13 +154,13 @@ mod tests {
         for id in inactive {
             builder = builder.inactive(id);
         }
-        let file_ids = std::iter::once("ludeon.rimworld")
+        let active_ids = std::iter::once("ludeon.rimworld")
             .chain(active.iter().copied())
             .map(ModId::new)
             .collect();
         ImportTarget {
             inventory: ModInventory::from_report(&builder.build()),
-            file_ids,
+            active_ids,
             context: ImportContext {
                 own_merge_mod: ModId::new("rimmerge.merge.3f9a1c2b7d5e"),
                 game_version: None,
@@ -283,12 +288,12 @@ mod tests {
     }
 
     #[test]
-    fn from_session_reads_the_files_list_and_flags_pending_edits() {
+    fn from_session_reads_the_working_list_and_flags_pending_edits() {
         let mut session = session_fixture(&["ludeon.rimworld", "a"]);
 
         let clean = ImportTarget::from_session(&session);
         assert_eq!(
-            clean.file_ids,
+            clean.active_ids,
             [ModId::new("ludeon.rimworld"), ModId::new("a")]
         );
         assert!(!clean.context.has_pending_changes);
@@ -308,9 +313,56 @@ mod tests {
             "an unrescanned deactivation is replaced by an import"
         );
         assert_eq!(
-            edited.file_ids, clean.file_ids,
-            "the file's list does not change with working edits"
+            edited.active_ids,
+            [ModId::new("ludeon.rimworld")],
+            "the diff base follows the working edits, not the file"
         );
+    }
+
+    /// The file still lists `a`, but the user deactivated it and has not
+    /// rescanned: importing the file's own list brings `a` back, which the
+    /// preview must show as a change (it was diffed against the file, where
+    /// it read as already active and nothing changed).
+    #[test]
+    fn a_pending_deactivation_shows_as_a_change_when_the_files_list_is_previewed() {
+        let mut session = session_fixture(&["ludeon.rimworld", "example.a"]);
+        let plan = crate::use_cases::DeactivateMods::plan(&session, &[ModId::new("example.a")]);
+        crate::use_cases::DeactivateMods::execute(&mut session, &plan);
+
+        let ready = ready_plan(ImportPreview::from_text(
+            "ludeon.rimworld
+example.a
+",
+            &ImportTarget::from_session(&session),
+        ));
+
+        assert!(
+            ready.plan.entries.contains(&ImportedEntry::Activated {
+                id: ModId::new("example.a")
+            }),
+            "{:?}",
+            ready.plan.entries
+        );
+        assert!(ready.plan.replaces_pending_changes);
+    }
+
+    #[test]
+    fn a_pending_activation_not_in_the_list_is_deactivated_by_the_import() {
+        let mut session = crate::test_support::session_fixture_with_inactive(
+            &["ludeon.rimworld"],
+            &["example.x"],
+        );
+        let plan =
+            crate::use_cases::ActivateMods::plan(&session, &[ModId::new("example.x")], false);
+        crate::use_cases::ActivateMods::execute(&mut session, &plan).expect("known mod");
+
+        let ready = ready_plan(ImportPreview::from_text(
+            "ludeon.rimworld
+",
+            &ImportTarget::from_session(&session),
+        ));
+
+        assert_eq!(ready.plan.deactivated, [ModId::new("example.x")]);
     }
 
     #[test]

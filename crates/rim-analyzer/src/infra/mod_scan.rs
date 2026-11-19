@@ -73,7 +73,12 @@ pub fn read_bounded_with_limit(path: &Path, limit: u64) -> Result<Vec<u8>, ReadE
     // The size above is only a fast refusal with an exact number: the
     // bound that holds is on the read itself, so a file that grows between
     // the stat and the read is still cut off one byte past the limit.
-    let mut bytes = Vec::new();
+    // `Take` gives `read_to_end` no size hint, so without the stat size as
+    // the starting capacity it grows the buffer by doubling from a small
+    // probe — several reallocations and copies per file. Already bounded by
+    // `limit` above, and the `0` fallback (a size that does not fit `usize`)
+    // is only a capacity hint: `read_to_end` still grows the buffer as needed.
+    let mut bytes = Vec::with_capacity(usize::try_from(size).unwrap_or(0));
     file.take(limit.saturating_add(1)).read_to_end(&mut bytes)?;
     if bytes.len() as u64 > limit {
         return Err(ReadError::TooLarge {
@@ -157,10 +162,9 @@ struct Extracted {
     ref_sites: Vec<RefSite>,
 }
 
-/// [`scan_folder`]'s own `AssetBundles/` walk needs three things beyond
+/// [`scan_folder`]'s own `AssetBundles/` walk needs two things beyond
 /// what it already receives for `Defs/`/`Patches/`/`Assemblies/` — grouped
-/// here so its parameter list doesn't grow by three more independent
-/// values.
+/// here so its parameter list doesn't grow by two more independent values.
 struct BundleScanContext {
     /// This mod's own installed directory name
     /// (`ModContentPack.FolderName` — the folder RimWorld actually
@@ -171,10 +175,6 @@ struct BundleScanContext {
     /// non-vanilla lookup) — `None` for Core and every DLC, which
     /// `bundle_asset_key` must never try.
     package_id: Option<String>,
-    /// Bundle files (by absolute path) a higher-priority loaded folder
-    /// already supplies at the same relative path — the `AssetBundles/`
-    /// analogue of [`shadowed_paths`], computed once per mod the same way.
-    shadowed_bundles: HashSet<PathBuf>,
 }
 
 /// Resolves loaded folders and extracts everything under them for one
@@ -190,18 +190,29 @@ struct BundleScanContext {
 /// lets [`LoadOrder`](crate::domain::LoadOrder) position lookups find it
 /// later.
 ///
-/// The third element of the returned tuple is this mod's own
-/// [`Extracted::child_value_hashes`] — see
+/// Everything [`scan_one_mod`] found for one mod. Only [`Self::scanned`] is
+/// a [`ScannedMod`] field; the rest travel beside it into [`ScanOutput`]'s
+/// own per-mod maps — see
 /// [`crate::domain::ScanOutput::child_value_hashes_by_mod`]'s own doc
-/// comment for why it travels separately from [`ScannedMod`] rather than
-/// as one of its fields.
+/// comment for why.
+///
+/// [`ScanOutput`]: crate::domain::ScanOutput
+pub struct ModScan {
+    pub scanned: ScannedMod,
+    pub child_value_hashes: HashSet<u64>,
+    pub ref_sites: Vec<RefSite>,
+    pub warnings: Vec<Warning>,
+    /// See [`crate::domain::ScanOutput::unloaded_defs_dirs_by_mod`].
+    pub unloaded_defs_dirs: Vec<PathBuf>,
+}
+
 pub fn scan_one_mod(
     active_id: &ModId,
     discovered: &DiscoveredMod,
     game_version: GameVersion,
     active_bases: &HashSet<ModId>,
     folder_policy: FolderPolicy,
-) -> (ScannedMod, HashSet<u64>, Vec<RefSite>, Vec<Warning>) {
+) -> ModScan {
     let mut extracted = Extracted::default();
     let (load_folders_bytes, load_folders_version_matched, read_warning) =
         read_load_folders(&discovered.path.join("LoadFolders.xml"), game_version);
@@ -225,22 +236,11 @@ pub fn scan_one_mod(
     let loaded_folders: Vec<PathBuf> = resolved_folders.iter().map(|f| f.path.clone()).collect();
 
     let recursive = folder_policy == FolderPolicy::Everything;
-    let shadowed = shadowed_paths(&loaded_folders, "Defs", &["xml"], recursive)
-        .into_iter()
-        .chain(shadowed_paths(
-            &loaded_folders,
-            "Patches",
-            &["xml"],
-            recursive,
-        ))
+    let folder_files: Vec<FolderFiles> = loaded_folders
+        .iter()
+        .map(|folder| FolderFiles::list(FolderListing::new(folder.clone(), recursive)))
         .collect();
-    let shadowed_assemblies = shadowed_paths(&loaded_folders, "Assemblies", &["dll"], recursive);
-    // A `.dds` file's own winning copy, across this mod's loaded folders —
-    // the `AssetBundles/` walk needs the analogous shadow set for bundle
-    // files themselves. Neither set changes `out.textures`/`ScanCost`
-    // accounting (see `scan_folder`'s own doc comment): only the header
-    // check and the manifest read respect it.
-    let shadowed_dds = shadowed_paths(&loaded_folders, "Textures", &["dds"], recursive);
+    let shadowed = ShadowedFiles::of(&folder_files, recursive);
     let bundle_context = BundleScanContext {
         folder_name: discovered
             .path
@@ -250,16 +250,12 @@ pub fn scan_one_mod(
             .to_string(),
         package_id: (!discovered.source.is_vanilla())
             .then(|| active_id.base().as_str().to_string()),
-        shadowed_bundles: shadowed_bundle_paths(&loaded_folders, recursive),
     };
-    for folder in &resolved_folders {
+    for (folder, files) in resolved_folders.iter().zip(folder_files) {
         scan_folder(
-            &folder.path,
+            files,
             active_id,
-            recursive,
             &shadowed,
-            &shadowed_assemblies,
-            &shadowed_dds,
             &bundle_context,
             &folder.if_mod_active,
             &mut extracted,
@@ -284,7 +280,8 @@ pub fn scan_one_mod(
         }
     }
 
-    if let Some(message) = side_loaded_assembly_note(&discovered.path) {
+    let survey = survey_mod_root(&discovered.path, &loaded_folders);
+    if let Some(message) = survey.side_loaded_note {
         extracted
             .warnings
             .push(Warning::new(Some(active_id.clone()), message));
@@ -320,8 +317,8 @@ pub fn scan_one_mod(
     // over from extending this per file would otherwise be kept as well.
     let mut ref_sites = extracted.ref_sites;
     ref_sites.shrink_to_fit();
-    (
-        ScannedMod {
+    ModScan {
+        scanned: ScannedMod {
             info,
             defs: extracted.defs,
             templates: extracted.templates,
@@ -341,10 +338,11 @@ pub fn scan_one_mod(
             undecodable_textures: extracted.undecodable_textures,
             nested_may_require: extracted.nested_may_require,
         },
-        extracted.child_value_hashes,
+        child_value_hashes: extracted.child_value_hashes,
         ref_sites,
-        extracted.warnings,
-    )
+        warnings: extracted.warnings,
+        unloaded_defs_dirs: survey.unloaded_defs_dirs,
+    }
 }
 
 /// Reads `path` (a mod's own `LoadFolders.xml`) once for both
@@ -505,9 +503,118 @@ fn dedup_folders_by_path(folders: Vec<LoadedFolder>) -> Vec<LoadedFolder> {
         .collect()
 }
 
-/// Absolute paths of every `<subdir_name>/**` file matching `extensions`
-/// that a higher-priority folder in `folders_in_priority_order` (index 0
-/// highest) already supplies at the same folder-relative path —
+/// Every file the scan reads under one loaded folder, enumerated once — the
+/// same lists feed both [`ShadowedFiles::of`] and [`scan_folder`], so no
+/// subtree is walked twice. `Sounds/` and `Languages/` are looked up later
+/// from [`Self::listing`] instead: nothing shadows them.
+struct FolderFiles {
+    listing: FolderListing,
+    /// Every `Defs/` directory's `.xml` files, each in
+    /// [`engine_enumeration_order`], directories in listing order.
+    defs: Vec<PathBuf>,
+    /// The same for `Patches/`.
+    patches: Vec<PathBuf>,
+    /// Each `Textures/` directory with its image files and their sizes.
+    textures: Vec<(PathBuf, Vec<(PathBuf, u64)>)>,
+    /// Every file directly inside each `AssetBundles/` directory.
+    bundles: Vec<PathBuf>,
+    /// Every `Assemblies/**/*.dll` file and its size.
+    assemblies: Vec<(PathBuf, u64)>,
+}
+
+impl FolderFiles {
+    fn list(listing: FolderListing) -> Self {
+        let engine_ordered = |name: &str| -> Vec<PathBuf> {
+            listing
+                .named(name)
+                .flat_map(|dir| engine_enumeration_order(dir, &["xml"]))
+                .collect()
+        };
+        let defs = engine_ordered("Defs");
+        let patches = engine_ordered("Patches");
+        let textures = listing
+            .named("Textures")
+            .map(|dir| {
+                let files = walk_files_with_size(dir, &textures::IMAGE_EXTENSIONS);
+                (dir.to_path_buf(), files)
+            })
+            .collect();
+        let bundles = listing
+            .named("AssetBundles")
+            .flat_map(list_dir_files)
+            .collect();
+        let assemblies = listing
+            .named("Assemblies")
+            .flat_map(|dir| walk_files_with_size(dir, &["dll"]))
+            .collect();
+        Self {
+            listing,
+            defs,
+            patches,
+            textures,
+            bundles,
+            assemblies,
+        }
+    }
+
+    fn dds_files(&self) -> impl Iterator<Item = &Path> {
+        self.textures
+            .iter()
+            .flat_map(|(_, files)| files)
+            .map(|(path, _)| path.as_path())
+            .filter(|path| {
+                path.extension()
+                    .is_some_and(|ext| ext.eq_ignore_ascii_case("dds"))
+            })
+    }
+}
+
+/// Files (by absolute path) a higher-priority loaded folder already supplies
+/// at the same folder-relative path, per kind — see [`shadowed_paths`].
+#[derive(Default)]
+struct ShadowedFiles {
+    /// `Defs/` and `Patches/` files: never read.
+    xml: HashSet<PathBuf>,
+    /// `Assemblies/` files: never read or counted.
+    assemblies: HashSet<PathBuf>,
+    /// `Textures/**/*.dds` files: never header-checked.
+    dds: HashSet<PathBuf>,
+    /// `AssetBundles/` files: their manifests are never read.
+    bundles: HashSet<PathBuf>,
+}
+
+impl ShadowedFiles {
+    /// The shadow sets across `folders_in_priority_order` (index 0
+    /// highest). One folder listed by direct children only can shadow
+    /// nothing — every path in it is unique — so that common case skips the
+    /// work. A recursive (`--all-folders`) listing still computes them: a
+    /// nested `Defs/**/Defs/` directory enumerates the same file twice, at
+    /// the same absolute path, so both sightings land in the shadowed set and
+    /// `extract_files` skips both — such a file is never read in that mode.
+    /// That behaviour is long-standing and kept on purpose.
+    fn of(folders_in_priority_order: &[FolderFiles], recursive: bool) -> Self {
+        if folders_in_priority_order.len() < 2 && !recursive {
+            return Self::default();
+        }
+        let folders = folders_in_priority_order;
+        let mut xml = shadowed_paths(folders, |f| f.defs.iter().map(PathBuf::as_path));
+        xml.extend(shadowed_paths(folders, |f| {
+            f.patches.iter().map(PathBuf::as_path)
+        }));
+        Self {
+            xml,
+            assemblies: shadowed_paths(folders, |f| {
+                f.assemblies.iter().map(|(path, _)| path.as_path())
+            }),
+            dds: shadowed_paths(folders, FolderFiles::dds_files),
+            bundles: shadowed_paths(folders, |f| f.bundles.iter().map(PathBuf::as_path)),
+        }
+    }
+}
+
+/// Absolute paths of every file `files_of` yields for a folder in
+/// `folders_in_priority_order` (index 0 highest) that a higher-priority
+/// folder already supplies at the same folder-relative path —
 /// ground-truthed against decompiled `Verse.DirectXmlLoader
 /// .XmlAssetsInModFolder`/`ModContentPack.GetAllFilesForMod`, both of which
 /// build a `Dictionary<string, FileInfo>` over exactly this key (a file's
@@ -519,59 +626,38 @@ fn dedup_folders_by_path(folders: Vec<LoadedFolder>) -> Vec<LoadedFolder> {
 /// and doubled assembly references a real game log never shows. `.NET`'s
 /// default `Dictionary<string, _>` key comparer is ordinal (case-sensitive,
 /// no folding) and never normalizes path separators beyond what
-/// `Path.Combine` already wrote — [`PathBuf`]'s own `Eq`/`Hash` are exactly
+/// `Path.Combine` already wrote — [`Path`]'s own `Eq`/`Hash` are exactly
 /// that (byte-exact `OsStr` component comparison), so using it directly as
 /// the key here needs no extra folding to match. Called once for `Defs`,
 /// once for `Patches` (`ModContentPack.LoadPatches`/`LoadDefs` both route
-/// through the identical method, so the rule is the same for both), and
-/// once for `Assemblies` (`GetAllFilesForModPreserveOrder` applies the same
+/// through the identical method, so the rule is the same for both), once
+/// for `Assemblies` (`GetAllFilesForModPreserveOrder` applies the same
 /// per-relative-path first-wins rule, walking lowest-priority-first and
 /// overwriting rather than `TryAdd`ing — the opposite walk direction
 /// produces the identical winner, since either way it's the
-/// highest-priority folder's own copy that survives).
-fn shadowed_paths(
-    folders_in_priority_order: &[PathBuf],
-    subdir_name: &str,
-    extensions: &[&str],
-    recursive: bool,
-) -> HashSet<PathBuf> {
+/// highest-priority folder's own copy that survives), and once each for
+/// `.dds` textures and `AssetBundles/` files.
+///
+/// The `Defs`/`Patches` lists leave out dot-prefixed file names (the engine
+/// never reads one); such a file can only ever claim the key of another
+/// dot-prefixed copy, which is never read either, so leaving them out
+/// changes nothing that is read.
+fn shadowed_paths<'a, I>(
+    folders_in_priority_order: &'a [FolderFiles],
+    files_of: impl Fn(&'a FolderFiles) -> I,
+) -> HashSet<PathBuf>
+where
+    I: Iterator<Item = &'a Path>,
+{
     let mut shadowed = HashSet::new();
-    let mut claimed_keys: HashSet<PathBuf> = HashSet::new();
+    let mut claimed_keys: HashSet<&Path> = HashSet::new();
     for folder in folders_in_priority_order {
-        for dir in find_subdirs(folder, subdir_name, recursive) {
-            for path in walk_files(&dir, extensions) {
-                let Ok(key) = path.strip_prefix(folder) else {
-                    continue;
-                };
-                if !claimed_keys.insert(key.to_path_buf()) {
-                    shadowed.insert(path);
-                }
-            }
-        }
-    }
-    shadowed
-}
-
-/// The `AssetBundles/` analogue of [`shadowed_paths`]: a bundle file's own
-/// extensionless name has no `extensions` list [`walk_files`] could filter
-/// on, so this walks [`list_dir_files`] directly instead, otherwise
-/// applying the identical same-relative-path, highest-priority-folder-wins
-/// rule.
-fn shadowed_bundle_paths(
-    folders_in_priority_order: &[PathBuf],
-    recursive: bool,
-) -> HashSet<PathBuf> {
-    let mut shadowed = HashSet::new();
-    let mut claimed_keys: HashSet<PathBuf> = HashSet::new();
-    for folder in folders_in_priority_order {
-        for dir in find_subdirs(folder, "AssetBundles", recursive) {
-            for path in list_dir_files(&dir) {
-                let Ok(key) = path.strip_prefix(folder) else {
-                    continue;
-                };
-                if !claimed_keys.insert(key.to_path_buf()) {
-                    shadowed.insert(path);
-                }
+        for path in files_of(folder) {
+            let Ok(key) = path.strip_prefix(&folder.listing.path) else {
+                continue;
+            };
+            if !claimed_keys.insert(key) {
+                shadowed.insert(path.to_path_buf());
             }
         }
     }
@@ -635,7 +721,7 @@ fn subdirectory_names(dir: &Path) -> Vec<String> {
         .into_iter()
         .flatten()
         .filter_map(Result::ok)
-        .filter(|e| e.path().is_dir())
+        .filter(is_directory)
         .filter_map(|e| e.file_name().into_string().ok())
         .collect();
     names.sort();
@@ -755,35 +841,26 @@ fn extract_files<T, E: std::fmt::Display>(
 }
 
 /// Walks one loaded folder's `Defs/`, `Patches/`, `Textures/`, and
-/// `Assemblies/` subdirectories. In normal mode these must be *direct*
-/// children of `folder`, matching how RimWorld itself resolves them; in
-/// `--all-folders` diagnostic mode `folder` is the whole mod root, so
-/// every subdirectory with one of these names — at any depth — counts.
+/// `Assemblies/` subdirectories, looked up in its [`FolderListing`]. In
+/// normal mode these must be *direct* children of the folder, matching how
+/// RimWorld itself resolves them; in `--all-folders` diagnostic mode the
+/// folder is the whole mod root, listed recursively, so every subdirectory
+/// with one of these names — at any depth — counts.
 ///
-/// `shadowed`/`shadowed_assemblies` (from [`shadowed_paths`], computed
-/// once per mod across every loaded folder) dedup the `Defs/`/`Patches/`
-/// and `Assemblies/` walks respectively, by relative-path — see that
-/// function's own doc comment. `load_folder_gate` is this one folder's own
+/// `shadowed` (computed once per mod across every loaded folder's own
+/// [`FolderFiles`]) dedups the `Defs/`/`Patches/` and `Assemblies/` walks
+/// by relative path — see [`shadowed_paths`]'s own doc comment. `load_folder_gate` is this one folder's own
 /// `IfModActive`/`IfModActiveAll` gate (empty for the default folder rule),
 /// stamped onto every [`PatchOp`] this call's own `Patches/` walk finds.
-/// `shadowed_dds` is the same rule for `Textures/**/*.dds` specifically —
+/// Its `dds` set is the same rule for `Textures/**/*.dds` specifically —
 /// it gates only the DDS header check, never `out.textures`/`ScanCost`
 /// accounting (which stays whole-mod, summing every folder's own copy, as
 /// it always has). `bundle_context` carries what the new `AssetBundles/`
 /// walk needs (see its own doc comment).
-// Nine parameters: one per independent per-mod fact this private walk
-// needs (five already existed; the two this change adds group three more
-// independent values into `bundle_context` rather than adding them
-// separately). A struct wrapping the rest would just move the same count
-// into a second type with no caller but this one.
-#[allow(clippy::too_many_arguments)]
 fn scan_folder(
-    folder: &Path,
+    folder: FolderFiles,
     mod_id: &ModId,
-    recursive: bool,
-    shadowed: &HashSet<PathBuf>,
-    shadowed_assemblies: &HashSet<PathBuf>,
-    shadowed_dds: &HashSet<PathBuf>,
+    shadowed: &ShadowedFiles,
     bundle_context: &BundleScanContext,
     load_folder_gate: &[ModId],
     out: &mut Extracted,
@@ -795,31 +872,29 @@ fn scan_folder(
     // borrow a genuinely separate field; reaching into `out.warnings` from
     // inside the closure too would make the two borrows overlap.
     let mut ref_sites_truncated_files = 0u32;
-    for dir in find_subdirs(folder, "Defs", recursive) {
-        extract_files(
-            engine_enumeration_order(&dir, &["xml"]),
-            mod_id,
-            shadowed,
-            defs::index,
-            |defs_file: defs::DefsFile| {
-                out.defs.extend(defs_file.defs);
-                out.templates.extend(defs_file.templates);
-                out.inline_types.extend(defs_file.inline_types);
-                out.inline_node_path_hashes
-                    .extend(defs_file.inline_node_path_hashes);
-                out.child_value_hashes.extend(defs_file.child_value_hashes);
-                out.texture_path_candidates
-                    .extend(defs_file.texture_path_candidates);
-                out.nameless_def_count += defs_file.nameless_def_count;
-                out.nested_may_require.extend(defs_file.nested_may_require);
-                out.ref_sites.extend(defs_file.ref_sites);
-                if defs_file.ref_sites_truncated {
-                    ref_sites_truncated_files += 1;
-                }
-            },
-            &mut out.warnings,
-        );
-    }
+    extract_files(
+        folder.defs,
+        mod_id,
+        &shadowed.xml,
+        defs::index,
+        |defs_file: defs::DefsFile| {
+            out.defs.extend(defs_file.defs);
+            out.templates.extend(defs_file.templates);
+            out.inline_types.extend(defs_file.inline_types);
+            out.inline_node_path_hashes
+                .extend(defs_file.inline_node_path_hashes);
+            out.child_value_hashes.extend(defs_file.child_value_hashes);
+            out.texture_path_candidates
+                .extend(defs_file.texture_path_candidates);
+            out.nameless_def_count += defs_file.nameless_def_count;
+            out.nested_may_require.extend(defs_file.nested_may_require);
+            out.ref_sites.extend(defs_file.ref_sites);
+            if defs_file.ref_sites_truncated {
+                ref_sites_truncated_files += 1;
+            }
+        },
+        &mut out.warnings,
+    );
     if ref_sites_truncated_files > 0 {
         out.warnings.push(Warning::new(
             Some(mod_id.clone()),
@@ -831,30 +906,28 @@ fn scan_folder(
     }
 
     let mut patch_tree_truncated_files = 0u32;
-    for dir in find_subdirs(folder, "Patches", recursive) {
-        extract_files(
-            engine_enumeration_order(&dir, &["xml"]),
-            mod_id,
-            shadowed,
-            patches::walk_with_ref_sites,
-            |(ops, value_ref_sites, tree_depth_truncated): (
-                Vec<PatchOp>,
-                Vec<patches::PatchValueRefSite>,
-                bool,
-            )| {
-                out.patch_ops.extend(ops.into_iter().map(|mut op| {
-                    op.load_folder_gate = load_folder_gate.to_vec();
-                    op
-                }));
-                out.ref_sites
-                    .extend(patch_ref_sites(mod_id, value_ref_sites));
-                if tree_depth_truncated {
-                    patch_tree_truncated_files += 1;
-                }
-            },
-            &mut out.warnings,
-        );
-    }
+    extract_files(
+        folder.patches,
+        mod_id,
+        &shadowed.xml,
+        patches::walk_with_ref_sites,
+        |(ops, value_ref_sites, tree_depth_truncated): (
+            Vec<PatchOp>,
+            Vec<patches::PatchValueRefSite>,
+            bool,
+        )| {
+            out.patch_ops.extend(ops.into_iter().map(|mut op| {
+                op.load_folder_gate = load_folder_gate.to_vec();
+                op
+            }));
+            out.ref_sites
+                .extend(patch_ref_sites(mod_id, value_ref_sites));
+            if tree_depth_truncated {
+                patch_tree_truncated_files += 1;
+            }
+        },
+        &mut out.warnings,
+    );
     if patch_tree_truncated_files > 0 {
         out.warnings.push(Warning::new(
             Some(mod_id.clone()),
@@ -866,8 +939,8 @@ fn scan_folder(
         ));
     }
 
-    for dir in find_subdirs(folder, "Textures", recursive) {
-        for (path, size) in walk_files_with_size(&dir, &textures::IMAGE_EXTENSIONS) {
+    for (dir, files) in folder.textures {
+        for (path, size) in files {
             let Ok(relative) = path.strip_prefix(&dir) else {
                 continue;
             };
@@ -890,8 +963,8 @@ fn scan_folder(
                     // contents either (see `shadowed_paths`' own doc
                     // comment). The header read itself happens once, after
                     // every folder has been walked — see [`scan_one_mod`].
-                    if !shadowed_dds.contains(&path) {
-                        out.dds_candidates.push((path.clone(), key));
+                    if !shadowed.dds.contains(&path) {
+                        out.dds_candidates.push((path, key));
                     }
                 } else {
                     out.non_dds_texture_keys.insert(key);
@@ -900,55 +973,53 @@ fn scan_folder(
         }
     }
 
-    for dir in find_subdirs(folder, "AssetBundles", recursive) {
-        for path in list_dir_files(&dir) {
-            let Some(file_name) = path.file_name().and_then(|n| n.to_str()) else {
-                continue;
-            };
-            // Only extensionless files are bundles (`ModAssetBundlesHandler.IsAcceptableExtension`) — a `.manifest`
-            // sidecar (or a `.manifest.txt`/anything else with a dot) is
-            // never itself walked as a candidate bundle; it's read below,
-            // keyed off its own bundle file's path.
-            if file_name.contains('.') {
-                continue;
-            }
-            if !asset_index::is_os_eligible_bundle_name(file_name) {
-                continue;
-            }
-            if bundle_context.shadowed_bundles.contains(&path) {
-                continue;
-            }
-            let manifest_path = path.with_extension("manifest");
-            match read_bounded(&manifest_path) {
-                Ok(bytes) => {
-                    let text = String::from_utf8_lossy(&bytes);
-                    for entry in asset_index::parse_bundle_manifest(&text) {
-                        if let Some(key) = asset_index::bundle_asset_key(
-                            &entry,
-                            &bundle_context.folder_name,
-                            bundle_context.package_id.as_deref(),
-                        ) {
-                            out.bundle_textures.insert(key);
-                        }
+    for path in folder.bundles {
+        let Some(file_name) = path.file_name().and_then(|n| n.to_str()) else {
+            continue;
+        };
+        // Only extensionless files are bundles (`ModAssetBundlesHandler.IsAcceptableExtension`) — a `.manifest`
+        // sidecar (or a `.manifest.txt`/anything else with a dot) is
+        // never itself walked as a candidate bundle; it's read below,
+        // keyed off its own bundle file's path.
+        if file_name.contains('.') {
+            continue;
+        }
+        if !asset_index::is_os_eligible_bundle_name(file_name) {
+            continue;
+        }
+        if shadowed.bundles.contains(&path) {
+            continue;
+        }
+        let manifest_path = path.with_extension("manifest");
+        match read_bounded(&manifest_path) {
+            Ok(bytes) => {
+                let text = String::from_utf8_lossy(&bytes);
+                for entry in asset_index::parse_bundle_manifest(&text) {
+                    if let Some(key) = asset_index::bundle_asset_key(
+                        &entry,
+                        &bundle_context.folder_name,
+                        bundle_context.package_id.as_deref(),
+                    ) {
+                        out.bundle_textures.insert(key);
                     }
                 }
-                Err(e) if is_missing_file(&e) => {
-                    out.warnings.push(file_warning(
-                        mod_id,
-                        &path,
-                        &"bundle has no manifest; its textures are unknown",
-                    ));
-                }
-                Err(e) => {
-                    out.warnings.push(file_warning(mod_id, &manifest_path, &e));
-                }
+            }
+            Err(e) if is_missing_file(&e) => {
+                out.warnings.push(file_warning(
+                    mod_id,
+                    &path,
+                    &"bundle has no manifest; its textures are unknown",
+                ));
+            }
+            Err(e) => {
+                out.warnings.push(file_warning(mod_id, &manifest_path, &e));
             }
         }
     }
 
-    for dir in find_subdirs(folder, "Sounds", recursive) {
-        for path in walk_files(&dir, &sounds::SOUND_EXTENSIONS) {
-            if let Ok(relative) = path.strip_prefix(&dir)
+    for dir in folder.listing.named("Sounds") {
+        for path in walk_files(dir, &sounds::SOUND_EXTENSIONS) {
+            if let Ok(relative) = path.strip_prefix(dir)
                 && let Some(key) = sounds::normalize(relative)
             {
                 out.sounds.insert(key);
@@ -962,8 +1033,8 @@ fn scan_folder(
     // `recursive` (which governs the *outer* Defs/Patches/Textures/
     // Assemblies/Sounds folders' own depth relative to the version folder,
     // an unrelated concern).
-    for languages_dir in find_subdirs(folder, "Languages", recursive) {
-        for keyed_dir in find_subdirs(&languages_dir, "Keyed", true) {
+    for languages_dir in folder.listing.named("Languages") {
+        for keyed_dir in find_subdirs(languages_dir, "Keyed", true) {
             extract_files(
                 walk_files(&keyed_dir, &["xml"]),
                 mod_id,
@@ -975,18 +1046,16 @@ fn scan_folder(
         }
     }
 
-    for dir in find_subdirs(folder, "Assemblies", recursive) {
-        for (path, size) in walk_files_with_size(&dir, &["dll"]) {
-            if shadowed_assemblies.contains(&path) {
-                continue;
-            }
-            out.scan_cost.assembly_bytes += size;
-            let read = read_assembly(&path);
-            if let Some(message) = read.warning {
-                out.warnings.push(file_warning(mod_id, &path, &message));
-            }
-            out.assemblies.push(read.info);
+    for (path, size) in folder.assemblies {
+        if shadowed.assemblies.contains(&path) {
+            continue;
         }
+        out.scan_cost.assembly_bytes += size;
+        let read = read_assembly(&path);
+        if let Some(message) = read.warning {
+            out.warnings.push(file_warning(mod_id, &path, &message));
+        }
+        out.assemblies.push(read.info);
     }
 }
 
@@ -1109,22 +1178,23 @@ fn read_assembly(path: &Path) -> AssemblyRead {
     }
 }
 
-/// Media directory names this walk never needs to descend into: none of them
-/// can hold a loadable `.dll` by construction (on a real workshop tree,
-/// pruning these plus every dev/inert name skips about two thirds of all
-/// files and nearly halves a full-tree walk). Every
+/// Media directory names [`survey_mod_root`]'s side-loaded-assembly count
+/// never looks inside: none of them can hold a loadable `.dll` by
+/// construction. (The same walk still descends them, only as deep as an
+/// unloaded `Defs` folder could sit.) Every
 /// `side_loaded_assemblies::is_always_ignored` name is *also* pruned (see
 /// [`is_prunable`]) — safe only because dev/inert wins unconditionally over a
 /// nested `Assemblies/` component
 /// (`a_dev_directory_wins_over_an_assemblies_component_nested_inside_it`):
 /// otherwise a dev directory could contain a real, *rescued* `Loaded` path,
-/// and pruning it from the walk entirely would silently drop a genuinely
-/// `Loaded` count.
+/// and leaving it out of the count would silently drop a genuinely
+/// `Loaded` one.
 const PRUNABLE_MEDIA_DIRS: [&str; 3] = ["textures", "sounds", "languages"];
 
-/// Whether `entry` is a directory this walk can skip descending into
-/// entirely — a media directory, or one `side_loaded_assemblies::
-/// is_always_ignored` already treats as ignored regardless of content.
+/// Whether `entry` is a directory whose `.dll` files never count toward the
+/// side-loaded-assembly note — a media directory, or one
+/// `side_loaded_assemblies::is_always_ignored` already treats as ignored
+/// regardless of content.
 fn is_prunable(entry: &walkdir::DirEntry) -> bool {
     entry.depth() > 0
         && entry.file_type().is_dir()
@@ -1167,39 +1237,82 @@ fn read_manifest(mod_root: &Path) -> (ManifestOrder, Option<String>) {
     }
 }
 
-/// Detects a mod whose real engine side-loads from outside `Assemblies/` at
-/// runtime (see `extract::side_loaded_assemblies`'s module doc) and, if so,
-/// returns the note text to attach as a [`Warning`].
+/// How many directory levels deep [`survey_mod_root`]'s search for an
+/// unloaded `Defs` folder descends under one mod's own root — generous
+/// over any real compat-framework nesting convention (e.g.
+/// `1.6/Mods/X/Defs`), while still bounding the walk against a
+/// pathological directory tree.
+const MAX_UNLOADED_DEFS_SEARCH_DEPTH: usize = 12;
+
+/// What one walk of a mod's whole root finds, beyond its loaded folders.
+pub(super) struct RootSurvey {
+    /// The side-loaded-assembly note, if this mod's shape calls for one —
+    /// see [`side_loaded_assemblies::note`].
+    pub(super) side_loaded_note: Option<String>,
+    /// See [`crate::domain::ScanOutput::unloaded_defs_dirs_by_mod`].
+    pub(super) unloaded_defs_dirs: Vec<PathBuf>,
+}
+
+/// One sorted walk of `mod_root` that answers two questions at once, which
+/// used to take a walk each (one here, one more in the post-scan
+/// dangling-reference explanation):
 ///
-/// Walks `mod_root` as a whole, not the loaded folders `scan_folder` was just
-/// given — a side-loaded engine typically lives in a folder that is a sibling
-/// of the version folder (e.g. `Lunar/Components/`), not something
-/// `LoadFolders.xml`/the default folder rule would ever resolve as loaded, so
-/// it would never be visited by the `Assemblies/` walk above regardless of
-/// `folder_policy`. Uses its own `WalkDir` (not the shared [`walk_files`]) so
-/// [`is_prunable`] can skip whole directories via `filter_entry` —
-/// `walk_files` is shared with the XML/def scan, where `Languages/` genuinely
-/// does hold relevant `.xml` files, so pruning it there would be a real
-/// correctness bug, not a speedup.
-fn side_loaded_assembly_note(mod_root: &Path) -> Option<String> {
+/// - **Side-loaded assemblies.** Detects a mod whose real engine side-loads
+///   from outside `Assemblies/` at runtime (see
+///   `extract::side_loaded_assemblies`'s module doc). The whole root is
+///   walked, not the loaded folders `scan_folder` was given — a side-loaded
+///   engine typically lives in a folder that is a sibling of the version
+///   folder (e.g. `Lunar/Components/`), not something `LoadFolders.xml`/the
+///   default folder rule would ever resolve as loaded. A `.dll` counts only
+///   outside every [`is_prunable`] directory. This is its own walk, never
+///   the shared [`walk_files`]: `walk_files` serves the XML/def scan, where
+///   `Languages/` genuinely does hold relevant `.xml` files, so pruning it
+///   there would be a real correctness bug, not a speedup.
+/// - **Unloaded `Defs` folders.** Every `Defs` directory (case-insensitive)
+///   at most [`MAX_UNLOADED_DEFS_SEARCH_DEPTH`] levels below the root whose
+///   direct parent is **not** one of `loaded_folders` — at any depth, inside
+///   a prunable directory too, not only the mod's immediate subdirectories:
+///   a compat framework can gate content behind an extra nesting level
+///   (`1.6/Mods/X/Defs`), and the mod's own root `Defs/` counts when
+///   `LoadFolders.xml` doesn't include `/` for the running version.
+///
+/// A prunable directory is still descended for the second question, but
+/// only as deep as a `Defs` folder could still be found.
+pub(super) fn survey_mod_root(mod_root: &Path, loaded_folders: &[PathBuf]) -> RootSurvey {
     let mut counts = side_loaded_assemblies::SideLoadCounts::default();
     let mut offending_top_level: BTreeSet<String> = BTreeSet::new();
-    let entries = WalkDir::new(mod_root)
-        .sort_by_file_name()
-        .into_iter()
-        .filter_entry(|entry| !is_prunable(entry))
-        .filter_map(Result::ok)
-        .filter(|entry| entry.file_type().is_file())
-        .filter(|entry| {
-            entry
-                .path()
-                .extension()
-                .and_then(|ext| ext.to_str())
-                .is_some_and(|ext| ext.eq_ignore_ascii_case("dll"))
-        });
-    for entry in entries {
-        let path = entry.into_path();
-        let Ok(relative) = path.strip_prefix(mod_root) else {
+    let mut unloaded_defs_dirs = Vec::new();
+    // The depth of the outermost prunable directory the walk is inside.
+    let mut pruned_at: Option<usize> = None;
+    let mut entries = WalkDir::new(mod_root).sort_by_file_name().into_iter();
+    while let Some(entry) = entries.next() {
+        let Ok(entry) = entry else {
+            continue;
+        };
+        let depth = entry.depth();
+        if pruned_at.is_some_and(|pruned| depth <= pruned) {
+            pruned_at = None;
+        }
+        if entry.file_type().is_dir() {
+            if depth <= MAX_UNLOADED_DEFS_SEARCH_DEPTH
+                && entry.file_name().eq_ignore_ascii_case("Defs")
+                && let Some(parent) = entry.path().parent()
+                && !loaded_folders.iter().any(|folder| folder == parent)
+            {
+                unloaded_defs_dirs.push(entry.path().to_path_buf());
+            }
+            if pruned_at.is_none() && is_prunable(&entry) {
+                pruned_at = Some(depth);
+            }
+            if pruned_at.is_some() && depth >= MAX_UNLOADED_DEFS_SEARCH_DEPTH {
+                entries.skip_current_dir();
+            }
+            continue;
+        }
+        if pruned_at.is_some() || !entry.file_type().is_file() || !is_dll(entry.path()) {
+            continue;
+        }
+        let Ok(relative) = entry.path().strip_prefix(mod_root) else {
             continue;
         };
         match side_loaded_assemblies::classify(relative) {
@@ -1217,45 +1330,92 @@ fn side_loaded_assembly_note(mod_root: &Path) -> Option<String> {
             AssemblyLocation::Ignored => {}
         }
     }
-    side_loaded_assemblies::note(counts, &offending_top_level)
+    RootSurvey {
+        side_loaded_note: side_loaded_assemblies::note(counts, &offending_top_level),
+        unloaded_defs_dirs,
+    }
+}
+
+fn is_dll(path: &Path) -> bool {
+    path.extension()
+        .and_then(|ext| ext.to_str())
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("dll"))
 }
 
 fn file_warning(mod_id: &ModId, path: &Path, error: &dyn std::fmt::Display) -> Warning {
     Warning::new(Some(mod_id.clone()), format!("{}: {error}", path.display()))
 }
 
-/// Subdirectories of `folder` named `name` (case-insensitive). Direct
-/// children only, unless `recursive` — used by `--all-folders` mode to
-/// find e.g. `1.6/Defs` when `folder` is the mod root rather than `1.6`.
-fn find_subdirs(folder: &Path, name: &str, recursive: bool) -> Vec<PathBuf> {
-    if recursive {
-        return WalkDir::new(folder)
-            .sort_by_file_name()
-            .into_iter()
-            .filter_map(Result::ok)
-            .filter(|e| {
-                e.file_type().is_dir()
-                    && e.file_name()
-                        .to_str()
-                        .is_some_and(|n| n.eq_ignore_ascii_case(name))
-            })
-            .map(walkdir::DirEntry::into_path)
-            .collect();
+/// Whether a `read_dir` entry is a directory, the way `Path::is_dir` on its
+/// path answers it (following a symlink or junction) — but read off the
+/// entry's own type, which the directory enumeration already returned, for
+/// the common case. On Windows `Path::is_dir` opens a handle per call, so
+/// asking it of every entry was the scan's most frequent kernel call. Only a
+/// link (or an entry whose type can't be read) still pays for that
+/// follow-through check.
+pub(super) fn is_directory(entry: &std::fs::DirEntry) -> bool {
+    match entry.file_type() {
+        Ok(file_type) if file_type.is_symlink() => entry.path().is_dir(),
+        Ok(file_type) => file_type.is_dir(),
+        Err(_) => entry.path().is_dir(),
     }
-    let mut dirs: Vec<PathBuf> = std::fs::read_dir(folder)
-        .into_iter()
-        .flatten()
-        .filter_map(Result::ok)
-        .filter(|e| {
-            e.path().is_dir()
-                && e.file_name()
-                    .to_str()
+}
+
+/// Every subdirectory of one loaded folder, listed once and reused for each
+/// of the dozen or so named lookups (`Defs`, `Patches`, `Textures`, ...) the
+/// scan and the shadow sets make of it. Direct children only, unless
+/// `recursive` — used by `--all-folders` mode to find e.g. `1.6/Defs` when
+/// the folder is the mod root rather than `1.6`.
+struct FolderListing {
+    path: PathBuf,
+    /// Sorted by path (direct children), or in the recursive walk's own
+    /// sorted pre-order — the order [`Self::named`] keeps.
+    subdirs: Vec<PathBuf>,
+}
+
+impl FolderListing {
+    fn new(path: PathBuf, recursive: bool) -> Self {
+        let subdirs = if recursive {
+            WalkDir::new(&path)
+                .sort_by_file_name()
+                .into_iter()
+                .filter_map(Result::ok)
+                .filter(|e| e.file_type().is_dir())
+                .map(walkdir::DirEntry::into_path)
+                .collect()
+        } else {
+            let mut dirs: Vec<PathBuf> = std::fs::read_dir(&path)
+                .into_iter()
+                .flatten()
+                .filter_map(Result::ok)
+                .filter(is_directory)
+                .map(|e| e.path())
+                .collect();
+            dirs.sort();
+            dirs
+        };
+        Self { path, subdirs }
+    }
+
+    /// The listed subdirectories named `name` (case-insensitive), in
+    /// listing order.
+    fn named<'a>(&'a self, name: &'a str) -> impl Iterator<Item = &'a Path> + 'a {
+        self.subdirs
+            .iter()
+            .filter(move |dir| {
+                dir.file_name()
+                    .and_then(|n| n.to_str())
                     .is_some_and(|n| n.eq_ignore_ascii_case(name))
-        })
-        .map(|e| e.path())
-        .collect();
-    dirs.sort();
-    dirs
+            })
+            .map(PathBuf::as_path)
+    }
+}
+
+/// Subdirectories of `folder` named `name` (case-insensitive) — a one-off
+/// [`FolderListing`] lookup, for a folder searched only once.
+fn find_subdirs(folder: &Path, name: &str, recursive: bool) -> Vec<PathBuf> {
+    let listing = FolderListing::new(folder.to_path_buf(), recursive);
+    listing.named(name).map(Path::to_path_buf).collect()
 }
 
 /// Every file under `dir` (recursive) whose extension matches one of
@@ -1531,7 +1691,7 @@ mod tests {
         let mut discovered = discovered_mod(root.clone());
         discovered.workshop_id = Some(2_009_463_077);
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -1545,7 +1705,7 @@ mod tests {
 
     /// The side-loaded-assembly note actually reaches `Report.warnings`
     /// through `scan_one_mod` end to end — other tests call
-    /// `side_loaded_assembly_note` directly; this drives the full function
+    /// `survey_mod_root` directly; this drives the full function
     /// instead.
     #[test]
     fn scan_one_mod_surfaces_the_side_loaded_assembly_note_as_a_warning() {
@@ -1558,7 +1718,7 @@ mod tests {
         }
         let discovered = discovered_mod(root.clone());
 
-        let (_, _, _, warnings) = scan_one_mod(
+        let ModScan { warnings, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -1593,6 +1753,34 @@ mod tests {
         let _ = fs::remove_dir_all(&root);
     }
 
+    /// A file larger than any single read chunk comes back whole and
+    /// unchanged — the pre-sized buffer is filled, not just the first read.
+    #[test]
+    fn read_bounded_with_limit_returns_a_multi_chunk_file_whole() {
+        let root = tempdir("read-bounded-whole");
+        let path = root.join("big.xml");
+        let contents: Vec<u8> = (0..300_000u32).map(|i| (i % 251) as u8).collect();
+        fs::write(&path, &contents).unwrap();
+
+        let bytes = read_bounded_with_limit(&path, 1_000_000).unwrap();
+
+        assert_eq!(bytes, contents);
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    /// An empty file reads as empty, not as an error.
+    #[test]
+    fn read_bounded_with_limit_reads_an_empty_file() {
+        let root = tempdir("read-bounded-empty");
+        let path = root.join("empty.xml");
+        fs::write(&path, b"").unwrap();
+
+        let bytes = read_bounded_with_limit(&path, 10).unwrap();
+
+        assert!(bytes.is_empty());
+        let _ = fs::remove_dir_all(&root);
+    }
+
     #[test]
     fn read_bounded_with_limit_rejects_files_over_the_given_limit() {
         let root = tempdir("read-bounded-with-limit");
@@ -1606,13 +1794,92 @@ mod tests {
     }
 
     /// Writes `count` empty `.dll` files under `dir` (created if needed) —
-    /// content is irrelevant, `side_loaded_assembly_note` only looks at
+    /// content is irrelevant, `survey_mod_root` only looks at
     /// paths.
     fn write_dlls(dir: &Path, names: &[&str]) {
         fs::create_dir_all(dir).unwrap();
         for name in names {
             fs::write(dir.join(name), b"").unwrap();
         }
+    }
+
+    /// `root` joined with `names`, one nesting level per name.
+    fn nested(root: &Path, names: &[&str]) -> PathBuf {
+        names
+            .iter()
+            .fold(root.to_path_buf(), |path, name| path.join(name))
+    }
+
+    /// The survey walks into media and dev folders when looking for unloaded
+    /// `Defs` folders, even though their `.dll` files never count, and skips
+    /// a `Defs` folder whose parent is a loaded folder.
+    #[test]
+    fn survey_finds_unloaded_defs_folders_inside_media_and_dev_folders_too() {
+        let root = tempdir("survey-defs-in-pruned");
+        for dir in [
+            root.join("1.6").join("Defs"),
+            root.join("Defs"),
+            root.join("Source").join("Defs"),
+            root.join("Textures").join("Defs"),
+        ] {
+            fs::create_dir_all(dir).unwrap();
+        }
+
+        let survey = survey_mod_root(&root, &[root.join("1.6")]);
+
+        assert_eq!(
+            survey.unloaded_defs_dirs,
+            vec![
+                root.join("Defs"),
+                root.join("Source").join("Defs"),
+                root.join("Textures").join("Defs"),
+            ]
+        );
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    /// A `Defs` folder twelve levels below the root is found; one thirteen
+    /// levels below is not, inside a media folder or out of it.
+    #[test]
+    fn survey_looks_for_unloaded_defs_folders_twelve_levels_deep() {
+        let root = tempdir("survey-defs-depth");
+        let levels = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"];
+        let at_twelve = nested(&root, &levels[..11]).join("Defs");
+        let at_thirteen = nested(&root, &levels).join("Defs");
+        let pruned_at_thirteen = nested(&root.join("Textures"), &levels[..11]).join("Defs");
+        for dir in [&at_twelve, &at_thirteen, &pruned_at_thirteen] {
+            fs::create_dir_all(dir).unwrap();
+        }
+
+        let survey = survey_mod_root(&root, &[]);
+
+        assert_eq!(survey.unloaded_defs_dirs, vec![at_twelve]);
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    /// A `.dll` any depth below an ordinary folder counts as side-loaded;
+    /// one anywhere inside a media folder never does.
+    #[test]
+    fn survey_counts_a_deep_dll_but_never_one_inside_a_media_folder() {
+        let root = tempdir("survey-dll-depth");
+        let levels = [
+            "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+        ];
+        write_dlls(&nested(&root, &levels), &["Engine.dll"]);
+        write_dlls(&root.join("Textures"), &["Atlas.dll"]);
+        write_dlls(&nested(&root.join("Textures"), &levels), &["Deep.dll"]);
+
+        let note = survey_mod_root(&root, &[]).side_loaded_note;
+
+        assert_eq!(
+            note.as_deref(),
+            Some(
+                "1 assemblies outside `Assemblies/` (a/) were not analyzed \
+                 — runtime patches and assembly references in them are not \
+                 represented in this report."
+            )
+        );
+        let _ = fs::remove_dir_all(&root);
     }
 
     #[test]
@@ -1624,7 +1891,7 @@ mod tests {
             &["Engine.dll", "Patches.dll", "Utils.dll"],
         );
 
-        let note = side_loaded_assembly_note(&root);
+        let note = survey_mod_root(&root, &[]).side_loaded_note;
 
         assert_eq!(
             note.as_deref(),
@@ -1646,7 +1913,7 @@ mod tests {
             &["Mod.dll", "Mod.old.dll", "Mod.older.dll"],
         );
 
-        assert!(side_loaded_assembly_note(&root).is_none());
+        assert!(survey_mod_root(&root, &[]).side_loaded_note.is_none());
         let _ = fs::remove_dir_all(&root);
     }
 
@@ -1659,7 +1926,7 @@ mod tests {
         write_dlls(&root.join("Source").join("obj").join("Debug"), &["Mod.dll"]);
         write_dlls(&root.join("Source").join("bin").join("Debug"), &["Mod.dll"]);
 
-        assert!(side_loaded_assembly_note(&root).is_none());
+        assert!(survey_mod_root(&root, &[]).side_loaded_note.is_none());
         let _ = fs::remove_dir_all(&root);
     }
 
@@ -1669,7 +1936,7 @@ mod tests {
         write_dlls(&root.join("Assemblies"), &["A.dll", "B.dll", "C.dll"]);
         write_dlls(&root.join("Extra"), &["D.dll"]);
 
-        assert!(side_loaded_assembly_note(&root).is_none());
+        assert!(survey_mod_root(&root, &[]).side_loaded_note.is_none());
         let _ = fs::remove_dir_all(&root);
     }
 
@@ -1693,8 +1960,8 @@ mod tests {
         );
         write_dlls(&root.join("Middle"), &["M1.dll"]);
 
-        let first = side_loaded_assembly_note(&root);
-        let second = side_loaded_assembly_note(&root);
+        let first = survey_mod_root(&root, &[]).side_loaded_note;
+        let second = survey_mod_root(&root, &[]).side_loaded_note;
 
         assert_eq!(first, second);
         assert_eq!(
@@ -1726,7 +1993,9 @@ mod tests {
         .unwrap();
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, warnings) = scan_one_mod(
+        let ModScan {
+            scanned, warnings, ..
+        } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -1754,7 +2023,9 @@ mod tests {
         let root = tempdir("manifest-xml-absent");
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, warnings) = scan_one_mod(
+        let ModScan {
+            scanned, warnings, ..
+        } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -1779,7 +2050,9 @@ mod tests {
         fs::write(root.join("About").join("Manifest.xml"), b"<NotManifest/>").unwrap();
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, warnings) = scan_one_mod(
+        let ModScan {
+            scanned, warnings, ..
+        } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -1816,7 +2089,11 @@ mod tests {
         .unwrap();
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, _warnings) = scan_one_mod(
+        let ModScan {
+            scanned,
+            warnings: _warnings,
+            ..
+        } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -1871,7 +2148,11 @@ mod tests {
         .unwrap();
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, _warnings) = scan_one_mod(
+        let ModScan {
+            scanned,
+            warnings: _warnings,
+            ..
+        } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -1906,7 +2187,11 @@ mod tests {
         .unwrap();
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, _warnings) = scan_one_mod(
+        let ModScan {
+            scanned,
+            warnings: _warnings,
+            ..
+        } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -1938,7 +2223,11 @@ mod tests {
         .unwrap();
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, _warnings) = scan_one_mod(
+        let ModScan {
+            scanned,
+            warnings: _warnings,
+            ..
+        } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2053,7 +2342,7 @@ mod tests {
             </loadFolders>"#;
         fs::write(root.join("LoadFolders.xml"), xml).unwrap();
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2097,7 +2386,7 @@ mod tests {
         let mut active_bases = HashSet::new();
         active_bases.insert(ModId::new("some.framework"));
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2143,7 +2432,7 @@ mod tests {
             </loadFolders>"#;
         fs::write(root.join("LoadFolders.xml"), xml).unwrap();
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2153,6 +2442,146 @@ mod tests {
 
         let names: Vec<_> = scanned.defs.iter().map(|d| d.def_name.as_str()).collect();
         assert_eq!(names, vec!["FromSecond", "FromFirst"]);
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    /// The survey's unloaded `Defs` folders reach `ModScan` through
+    /// `scan_one_mod`: `1.6` is the loaded folder, so `1.5/Defs` is the one
+    /// unloaded folder, and the loaded `1.6/Defs` is not listed.
+    #[test]
+    fn scan_one_mod_reports_the_unloaded_defs_folders_of_the_survey() {
+        let root = tempdir("scan-one-mod-unloaded-defs");
+        fs::create_dir_all(root.join("1.6").join("Defs")).unwrap();
+        fs::create_dir_all(root.join("1.5").join("Defs")).unwrap();
+        let discovered = discovered_mod(root.clone());
+
+        let ModScan {
+            unloaded_defs_dirs, ..
+        } = scan_one_mod(
+            &ModId::new("test.mod"),
+            &discovered,
+            v16(),
+            &HashSet::new(),
+            FolderPolicy::LoadFolders,
+        );
+
+        assert_eq!(unloaded_defs_dirs, vec![root.join("1.5").join("Defs")]);
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    /// Characterizes `--all-folders` mode: a `Defs/sub/Defs/` directory
+    /// enumerates its files twice (once under the outer `Defs`, once as a
+    /// `Defs` of its own) at the same absolute path, so both sightings count
+    /// as shadowed and the file is never read, while `Defs/Top.xml` is.
+    #[test]
+    fn scan_one_mod_in_everything_mode_never_reads_a_def_inside_a_nested_defs_folder() {
+        let root = tempdir("everything-nested-defs");
+        let nested = root.join("Defs").join("sub").join("Defs");
+        fs::create_dir_all(&nested).unwrap();
+        fs::write(
+            root.join("Defs").join("Top.xml"),
+            br#"<Defs><ThingDef><defName>Top</defName></ThingDef></Defs>"#,
+        )
+        .unwrap();
+        fs::write(
+            nested.join("X.xml"),
+            br#"<Defs><ThingDef><defName>Nested</defName></ThingDef></Defs>"#,
+        )
+        .unwrap();
+        let discovered = discovered_mod(root.clone());
+
+        let ModScan { scanned, .. } = scan_one_mod(
+            &ModId::new("test.mod"),
+            &discovered,
+            v16(),
+            &HashSet::new(),
+            FolderPolicy::Everything,
+        );
+
+        let names: Vec<_> = scanned.defs.iter().map(|d| d.def_name.as_str()).collect();
+        assert_eq!(names, vec!["Top"]);
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    /// A directory junction at `link` pointing at `target` — what a mod
+    /// manager or a hand-made link leaves in a mod tree. A junction needs no
+    /// elevation (unlike a symbolic link), so this works on any Windows box.
+    fn make_junction(link: &Path, target: &Path) {
+        let status = std::process::Command::new("cmd")
+            .args(["/C", "mklink", "/J"])
+            .arg(link)
+            .arg(target)
+            .stdout(std::process::Stdio::null())
+            .status()
+            .unwrap();
+        assert!(status.success(), "mklink /J failed for {}", link.display());
+    }
+
+    #[test]
+    fn folder_listing_matches_directories_case_insensitively_and_never_a_file() {
+        let root = tempdir("listing-names");
+        fs::create_dir_all(root.join("DEFS")).unwrap();
+        fs::create_dir_all(root.join("Textures")).unwrap();
+        fs::write(root.join("Patches"), b"a file, not a folder").unwrap();
+
+        let listing = FolderListing::new(root.clone(), false);
+
+        let defs: Vec<_> = listing.named("Defs").collect();
+        assert_eq!(defs, vec![root.join("DEFS").as_path()]);
+        assert_eq!(listing.named("Patches").count(), 0);
+        assert_eq!(listing.named("Sounds").count(), 0);
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    /// A loaded folder's `Defs` reached through a junction is still scanned:
+    /// the entry's own type says "link", so the listing must follow it the
+    /// way `Path::is_dir` would rather than read it as "not a directory".
+    #[test]
+    fn scan_one_mod_reads_defs_through_a_directory_junction() {
+        let root = tempdir("junction-defs");
+        let real_defs = root.join("elsewhere");
+        fs::create_dir_all(&real_defs).unwrap();
+        fs::write(
+            real_defs.join("A.xml"),
+            br#"<Defs><ThingDef><defName>ThroughJunction</defName></ThingDef></Defs>"#,
+        )
+        .unwrap();
+        let mod_root = root.join("TheMod");
+        fs::create_dir_all(&mod_root).unwrap();
+        make_junction(&mod_root.join("Defs"), &real_defs);
+
+        let ModScan { scanned, .. } = scan_one_mod(
+            &ModId::new("test.mod"),
+            &discovered_mod(mod_root),
+            v16(),
+            &HashSet::new(),
+            FolderPolicy::LoadFolders,
+        );
+
+        let names: Vec<_> = scanned.defs.iter().map(|d| d.def_name.as_str()).collect();
+        assert_eq!(names, vec!["ThroughJunction"]);
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    /// The default folder rule sees a version folder that is a junction.
+    #[test]
+    fn a_junctioned_version_folder_is_a_default_loaded_folder() {
+        let root = tempdir("junction-version-folder");
+        let real_version = root.join("shared-1.6");
+        fs::create_dir_all(&real_version).unwrap();
+        let mod_root = root.join("TheMod");
+        fs::create_dir_all(&mod_root).unwrap();
+        make_junction(&mod_root.join("1.6"), &real_version);
+
+        let (resolved, _, _) = resolve_loaded_folders(
+            &discovered_mod(mod_root.clone()),
+            None,
+            v16(),
+            &HashSet::new(),
+            FolderPolicy::LoadFolders,
+        );
+
+        assert_eq!(paths(&resolved), vec![mod_root.join("1.6"), mod_root]);
         let _ = fs::remove_dir_all(&root);
     }
 
@@ -2173,7 +2602,7 @@ mod tests {
         fs::write(root.join("Assemblies").join("Mod.dll"), vec![0u8; 22]).unwrap();
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2215,7 +2644,7 @@ mod tests {
         fs::write(root.join("LoadFolders.xml"), xml).unwrap();
         let active = HashSet::from([ModId::new("mod.a"), ModId::new("mod.b")]);
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2248,7 +2677,7 @@ mod tests {
         fs::write(root.join("LoadFolders.xml"), xml).unwrap();
         let active = HashSet::from([ModId::new("mod.a")]);
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2296,7 +2725,7 @@ mod tests {
         );
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2326,7 +2755,9 @@ mod tests {
         .unwrap();
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, warnings) = scan_one_mod(
+        let ModScan {
+            scanned, warnings, ..
+        } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2347,7 +2778,9 @@ mod tests {
         fs::write(bundles.join("standalone"), vec![0u8; 4]).unwrap();
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, warnings) = scan_one_mod(
+        let ModScan {
+            scanned, warnings, ..
+        } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2378,7 +2811,7 @@ mod tests {
         );
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2421,7 +2854,7 @@ mod tests {
         fs::write(root.join("Textures").join("Wall.dds"), dds_bytes(true)).unwrap();
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),
@@ -2452,7 +2885,7 @@ mod tests {
         .unwrap();
         let discovered = discovered_mod(root.clone());
 
-        let (scanned, _, _, _) = scan_one_mod(
+        let ModScan { scanned, .. } = scan_one_mod(
             &ModId::new("test.mod"),
             &discovered,
             v16(),

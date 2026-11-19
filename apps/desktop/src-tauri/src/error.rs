@@ -133,6 +133,16 @@ pub enum CommandErrorCode {
     /// An export found no active mod it could put in a list (an empty
     /// `ModsConfig.xml` list, or only ids a mod list cannot hold).
     NothingToExport,
+    /// A move or an anchored activation named a neighbour that is no longer
+    /// in the active list (deactivated meanwhile, or the view is stale): the
+    /// list is shown again and the move is tried afresh.
+    MoveAnchorNotActive,
+    /// `revert_order_to_file` was refused because the active list has
+    /// changes no rescan has picked up; discard them first.
+    RevertOrderPendingChanges,
+    /// `revert_order_to_file` was refused because the file lists different
+    /// mods than the current order, so there is no sequence to restore.
+    RevertOrderMembershipDiffers,
 }
 
 /// Structured detail some [`CommandError`]s carry alongside their plain

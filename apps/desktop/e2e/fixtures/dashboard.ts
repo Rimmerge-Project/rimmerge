@@ -10,9 +10,7 @@ export const defaultPathsFixture: DefaultPathsDto = {
   workshopDir: "C:/RimWorld/workshop",
   modsConfig: "C:/Profile/ModsConfig.xml",
   profileDir: "C:/Profile/rimmerge",
-  warning: null,
   warningCode: null,
-  error: null,
   errorCode: null,
 };
 

@@ -1,5 +1,6 @@
 // Project lifecycle, orders, mods, the active set, apply, startup costs, and settings.
 
+import type { ActivateModsResultDto } from "@/types/generated/ActivateModsResultDto";
 import type { ActivatePlanDto } from "@/types/generated/ActivatePlanDto";
 import type { ActivateRequestDto } from "@/types/generated/ActivateRequestDto";
 import type { AppConfigDto } from "@/types/generated/AppConfigDto";
@@ -13,6 +14,7 @@ import type { DashboardDto } from "@/types/generated/DashboardDto";
 import type { DeactivatePlanDto } from "@/types/generated/DeactivatePlanDto";
 import type { DeactivateRequestDto } from "@/types/generated/DeactivateRequestDto";
 import type { DefaultPathsDto } from "@/types/generated/DefaultPathsDto";
+import type { DefaultPathsRequestDto } from "@/types/generated/DefaultPathsRequestDto";
 import type { DefCacheCarrierDto } from "@/types/generated/DefCacheCarrierDto";
 import type { GameLogSummaryDto } from "@/types/generated/GameLogSummaryDto";
 import type { ImportGameLogRequestDto } from "@/types/generated/ImportGameLogRequestDto";
@@ -22,9 +24,13 @@ import type { ModDetailDto } from "@/types/generated/ModDetailDto";
 import type { ModFilterDto } from "@/types/generated/ModFilterDto";
 import type { ModInfoDto } from "@/types/generated/ModInfoDto";
 import type { ModLinkKindDto } from "@/types/generated/ModLinkKindDto";
+import type { ModListDto } from "@/types/generated/ModListDto";
+import type { ModListQueryDto } from "@/types/generated/ModListQueryDto";
 import type { ModNamesDto } from "@/types/generated/ModNamesDto";
 import type { ModPageDto } from "@/types/generated/ModPageDto";
 import type { ModPreviewDto } from "@/types/generated/ModPreviewDto";
+import type { MoveModsResultDto } from "@/types/generated/MoveModsResultDto";
+import type { MoveRequestDto } from "@/types/generated/MoveRequestDto";
 import type { OrderRowDto } from "@/types/generated/OrderRowDto";
 import type { OrderSourceDto } from "@/types/generated/OrderSourceDto";
 import type { PendingActiveChangesDto } from "@/types/generated/PendingActiveChangesDto";
@@ -42,12 +48,13 @@ export function loadProject(paths: ProjectPathsDto): Promise<ProjectSummaryDto> 
 
 /**
  * The default game/workshop/`ModsConfig.xml`/profile paths for the setup
- * page — the result of the backend's one precedence ladder. Every field
- * is `null`, and `error` carries the reason (naming every candidate
- * location that was looked at), when no install could be found.
+ * page — the result of the backend's one precedence ladder, with the
+ * page's game folder field as its first rung. Each path resolves on its
+ * own: with no install found, `errorCode` names every candidate location
+ * that was looked at while `modsConfig` and `profileDir` stay filled.
  */
-export function getDefaultPaths(): Promise<DefaultPathsDto> {
-  return call("get_default_paths");
+export function getDefaultPaths(request: DefaultPathsRequestDto): Promise<DefaultPathsDto> {
+  return call("get_default_paths", { request });
 }
 
 /**
@@ -107,9 +114,20 @@ export function listModNames(): Promise<ModNamesDto> {
   return call("list_mod_names");
 }
 
-/** Searches and pages the inactive mod list — the Mods page's Inactive tab. */
-export function listInactiveMods(filter: ModFilterDto): Promise<ModPageDto> {
-  return call("list_inactive_mods", { filter });
+/**
+ * The Mods page's Active list: the working set in its own order, every
+ * matching row (the backend bounds it, `total` says when it cut).
+ */
+export function listWorkingMods(query: ModListQueryDto): Promise<ModListDto> {
+  return call("list_working_mods", { query });
+}
+
+/**
+ * The Mods page's Inactive list: every mod on disk whose base id is not in
+ * the working set, so a mod deactivated since the last scan is already here.
+ */
+export function listInactiveMods(query: ModListQueryDto): Promise<ModListDto> {
+  return call("list_inactive_mods", { query });
 }
 
 /**
@@ -166,8 +184,27 @@ export function planActivateMods(request: ActivateRequestDto): Promise<ActivateP
 }
 
 /** Commits an activation onto the working (unscanned) active-mod set. */
-export function activateMods(request: ActivateRequestDto): Promise<PendingActiveChangesDto> {
+export function activateMods(request: ActivateRequestDto): Promise<ActivateModsResultDto> {
   return call("activate_mods", { request });
+}
+
+/**
+ * Moves active mods next to an anchor. When the ids then equal Current's, Current takes the
+ * new sequence (nothing is written until Apply); the result says whether the first reorder
+ * switched the selection from Suggested to Current.
+ */
+export function moveMods(request: MoveRequestDto): Promise<MoveModsResultDto> {
+  return call("move_mods", { request });
+}
+
+/** Drops every edit no rescan has picked up (`working := Current`); no rescan is needed. */
+export function discardPendingChanges(): Promise<PendingActiveChangesDto> {
+  return call("discard_pending_changes");
+}
+
+/** Puts Current's sequence back to ModsConfig.xml's, when both list the same mods. */
+export function revertOrderToFile(): Promise<PendingActiveChangesDto> {
+  return call("revert_order_to_file");
 }
 
 /** Plans what {@link deactivateMods} would do. */

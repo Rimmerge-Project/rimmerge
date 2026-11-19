@@ -194,11 +194,11 @@ bun run test
 
 `src/i18n/locales.test.ts` checks every locale file:
 
-- no key repeated twice in the same object — if you reopen a section
-  you already translated (to add a key you missed, say) and your editor
-  or a merge leaves the old block in place too, only your *new* block
-  would otherwise survive silently, with the rest of that section's
-  translations gone;
+- no key repeated twice in the same object. Say you reopen a section
+  you already translated (to add a key you missed) and your editor or a
+  merge leaves the old block in place too. Without this check only your
+  *new* block would survive, silently, and the rest of that section's
+  translations would be gone;
 - no key that `en.json` lacks;
 - the same placeholders as English, for every key present;
 - the right number of plural forms for the locale;
@@ -206,13 +206,13 @@ bun run test
 
 It also fails on a missing key. `STRICT_TRANSLATION_PARITY`, a constant
 near the top of `locales.test.ts`, was flipped to `true` on 2026-09-26
-and stays `true` for good — every run is strict for every locale, with
+and stays `true` for good. Every run is strict for every locale, with
 no environment variable needed. A locale that is still being translated
 therefore fails its own "no missing keys" row until it is complete,
 and only that row.
 
-`I18N_STRICT_LOCALE=zh-CN bun run test` (or any other locale) still works — it
-turns on the missing-key check for that one locale, for that one run —
+`I18N_STRICT_LOCALE=zh-CN bun run test` (or any other locale) still works. It
+turns on the missing-key check for that one locale, for that one run,
 but is now a redundant superset of the always-on check above. It
 remains useful when a new English key lands and a translator wants to
 confirm their own locale's row without waiting on the other locale's
@@ -220,7 +220,7 @@ translator to catch up in the same run. A metadata key (`_pending`, a
 future `_context` note, …) is never required, in either mode.
 
 Either way, the test reports each locale on its own row (`zh-CN has no
-missing keys (strict mode only)`) — read your own locale's row.
+missing keys (strict mode only)`). Read your own locale's row.
 
 ### The status report
 

@@ -69,7 +69,7 @@ test.describe("sharing a load order", () => {
     await openOrderPage(page);
 
     await page.getByTestId("order-export-button").click();
-    await expect(page.getByTestId("order-export-hint")).toContainText("what RimWorld loads");
+    await expect(page.getByTestId("order-export-hint")).toContainText("the one RimWorld loads");
     await page.getByTestId("order-export-copy").click();
 
     await expect(page.getByText("Copied 60 mods.")).toBeVisible();
@@ -210,7 +210,9 @@ test.describe("sharing a load order", () => {
 
     await expect(page.getByTestId("import-preview-dialog")).toBeHidden();
     await expect(
-      page.getByText("Imported order ready. Review it, then Apply to write ModsConfig.xml."),
+      page.getByText(
+        "Imported order ready. Review it, then Apply to save it as your active order.",
+      ),
     ).toBeVisible();
     expect(await page.evaluate(() => window.__IMPORT_ORDER_CALLS__)).toEqual([
       { order: ["mod.000", "mod.001", "mod.901", "mod.002"] },
@@ -220,7 +222,7 @@ test.describe("sharing a load order", () => {
     await expect(rows).toHaveCount(4);
     await expect(rows.nth(2)).toHaveAttribute("data-testid", "order-row-mod.901");
     await expect(page.getByTestId("order-not-in-file")).toContainText(
-      "This order isn't in ModsConfig.xml yet.",
+      "This isn't your active order yet.",
     );
     // Nothing was written by the import itself.
     expect(await page.evaluate(() => window.__APPLY_CALLS__ ?? [])).toEqual([]);
