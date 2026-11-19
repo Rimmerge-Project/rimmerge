@@ -6,6 +6,13 @@ run `rimmerge config set --game-dir <path>` to pin it permanently. See
 [install.md](install.md) for the full detection ladder and where each
 platform is searched.
 
+In the desktop app, the Setup page lists the locations that were checked.
+Enter or browse to your game folder instead (for Steam,
+`steamapps\common\RimWorld` inside the library that holds the game; if
+your Steam is outside Program Files, that is the folder on its own drive),
+and the workshop folder and profile fill in from it. Then choose **Save as
+defaults** so the next launch starts from it.
+
 **A finding I decided keeps reappearing** — a decision is remembered
 per finding *key*; if the underlying facts change enough (a mod
 updated, a def restructured) that the key no longer matches cleanly,

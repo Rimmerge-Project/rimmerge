@@ -173,9 +173,9 @@ const STEAM_LIBRARY_LIST_MAX_BYTES: u64 = 1024 * 1024;
 /// The library check rejects a backed-up copy of a whole Steam library: its
 /// folder and manifest look exactly like the live ones, but
 /// `steam://run/294100` would start the live copy. The roots are the default
-/// ones [`detect_game_dir`] uses (`%ProgramFiles(x86)%\Steam`,
-/// `%ProgramFiles%\Steam`); a Steam installed elsewhere is not found and
-/// degrades to `false`, like everything else that can't be read.
+/// ones [`detect_game_dir`] uses (the registry's Steam folders, then
+/// `%ProgramFiles(x86)%\Steam` and `%ProgramFiles%\Steam`); a Steam none of
+/// those names degrades to `false`, like everything else that can't be read.
 ///
 /// `steam_appid.txt` is deliberately not consulted: every Steam copy has one,
 /// so a copy taken out of Steam would pass. Names compare ASCII
@@ -287,15 +287,12 @@ fn manifest_install_dir(manifest: &str) -> Option<String> {
 /// exist. Duplicates are removed, keeping the first occurrence.
 ///
 /// Windows order: every Steam library named by a `libraryfolders.vdf`
-/// under `%ProgramFiles(x86)%\Steam` / `%ProgramFiles%\Steam` (in the
-/// file's own order), then those two Steam roots' own `steamapps\common`
-/// folders, then the two standard GOG locations.
-///
-/// The Windows registry (`HKCU\Software\Valve\Steam\SteamPath`) is
-/// deliberately *not* read: it would cost a new dependency for a case the
-/// two `%ProgramFiles*%` probes already cover, including a library on a
-/// second drive (the `libraryfolders.vdf` found under the default root
-/// lists every library, wherever it lives).
+/// under a Steam root (in the file's own order), then those roots' own
+/// `steamapps\common` folders, then the two standard GOG locations. The
+/// Steam roots are the registry's (`HKCU\Software\Valve\Steam\SteamPath`,
+/// `HKLM\SOFTWARE\WOW6432Node\Valve\Steam\InstallPath`, read-only and
+/// local) followed by `%ProgramFiles(x86)%\Steam` / `%ProgramFiles%\Steam`,
+/// so a Steam installed outside Program Files is found too.
 #[must_use]
 pub fn default_game_dir_candidates() -> Vec<PathBuf> {
     dedup_preserving_order(platform_candidates())
@@ -378,11 +375,12 @@ fn quoted_tokens(line: &str) -> impl Iterator<Item = String> + '_ {
 }
 
 /// Reads `<steam_root>/steamapps/libraryfolders.vdf` and maps each
-/// library it names to that library's RimWorld folder. An unreadable or
-/// absent file yields nothing.
+/// library it names to that library's RimWorld folder. An unreadable,
+/// absent, non-regular or oversized (over `STEAM_LIBRARY_LIST_MAX_BYTES`)
+/// file yields nothing.
 fn rimworld_dirs_from_steam_root(steam_root: &Path) -> Vec<PathBuf> {
     let vdf_path = steam_root.join("steamapps").join("libraryfolders.vdf");
-    let Ok(text) = std::fs::read_to_string(&vdf_path) else {
+    let Some(text) = read_bounded_regular_file(&vdf_path, STEAM_LIBRARY_LIST_MAX_BYTES) else {
         return Vec::new();
     };
     steam_library_dirs(&text)
@@ -391,29 +389,109 @@ fn rimworld_dirs_from_steam_root(steam_root: &Path) -> Vec<PathBuf> {
         .collect()
 }
 
+/// Drops a candidate repeated under a different case, separator or trailing
+/// slash (`library_key`), keeping the first spelling: Windows paths are
+/// case-insensitive, and Steam writes some of its own roots in lowercase.
+/// On a case-sensitive file system this could merge two distinct paths;
+/// only Windows is a supported target (`deny.toml`).
 fn dedup_preserving_order(candidates: Vec<PathBuf>) -> Vec<PathBuf> {
     let mut seen = std::collections::BTreeSet::new();
     candidates
         .into_iter()
-        .filter(|candidate| seen.insert(candidate.clone()))
+        .filter(|candidate| seen.insert(library_key(candidate)))
         .collect()
 }
 
-/// The Steam roots this OS puts Steam in by default, most likely first.
-/// Reads environment variables only; none is known to exist.
+/// The Steam roots on this machine, most likely first: the ones Steam
+/// itself recorded in the registry (so a Steam installed on any drive is
+/// found), then the two `%ProgramFiles*%\Steam` defaults. Reads the
+/// registry (read-only, local) and environment variables; none is known to
+/// exist on disk.
 #[cfg(windows)]
 fn default_steam_roots() -> Vec<PathBuf> {
-    ["ProgramFiles(x86)", "ProgramFiles"]
-        .iter()
-        .filter_map(std::env::var_os)
-        .map(|program_files| PathBuf::from(program_files).join("Steam"))
-        .collect()
+    let (current_user_root, machine_root) = registry_steam_roots();
+    let correctly_cased_roots: Vec<PathBuf> = machine_root
+        .into_iter()
+        .chain(
+            ["ProgramFiles(x86)", "ProgramFiles"]
+                .iter()
+                .filter_map(std::env::var_os)
+                .map(|program_files| PathBuf::from(program_files).join("Steam")),
+        )
+        .collect();
+    steam_roots_from(current_user_root, correctly_cased_roots)
+}
+
+/// The Steam install folders Steam's own registry keys name: the current
+/// user's `SteamPath` (which Steam writes lowercased) and the machine-wide
+/// `InstallPath`. A missing or unreadable key yields `None`, never an error.
+#[cfg(windows)]
+fn registry_steam_roots() -> (Option<PathBuf>, Option<PathBuf>) {
+    use winreg::RegKey;
+    use winreg::enums::{HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE};
+
+    let read = |hive, subkey: &str, value: &str| -> Option<PathBuf> {
+        // REG_EXPAND_SZ is read unexpanded; harmless, since a path with an
+        // unexpanded `%VAR%` fails the later stat like any other missing one.
+        let text: String = RegKey::predef(hive)
+            .open_subkey(subkey)
+            .ok()?
+            .get_value(value)
+            .ok()?;
+        (!text.trim().is_empty()).then(|| PathBuf::from(text))
+    };
+    (
+        read(HKEY_CURRENT_USER, r"Software\Valve\Steam", "SteamPath"),
+        read(
+            HKEY_LOCAL_MACHINE,
+            r"SOFTWARE\WOW6432Node\Valve\Steam",
+            "InstallPath",
+        ),
+    )
+}
+
+/// `current_user_root` (the registry's `SteamPath`) then `other_roots`
+/// (the machine-wide `InstallPath`, then the `%ProgramFiles*%\Steam`
+/// defaults), with `/` read as `\`. A root repeated under a different case,
+/// separator or trailing slash (`library_key`) is dropped, keeping the first
+/// position; its spelling is the first one from `other_roots` when there is
+/// one, because Steam writes `SteamPath` in lowercase and the other sources
+/// carry the folder's real case.
+#[cfg(any(windows, test))]
+fn steam_roots_from(current_user_root: Option<PathBuf>, other_roots: Vec<PathBuf>) -> Vec<PathBuf> {
+    let normalized = |root: PathBuf| PathBuf::from(root.to_string_lossy().replace('/', "\\"));
+    let current_user_root = current_user_root.map(normalized);
+    let other_roots: Vec<PathBuf> = other_roots.into_iter().map(normalized).collect();
+    let mut seen = std::collections::BTreeSet::new();
+    let mut roots = Vec::new();
+    for root in current_user_root.iter().chain(&other_roots) {
+        if !seen.insert(library_key(root)) {
+            continue;
+        }
+        let real_case = other_roots
+            .iter()
+            .find(|other| library_key(other) == library_key(root));
+        roots.push(real_case.unwrap_or(root).clone());
+    }
+    roots
 }
 
 #[cfg(windows)]
 fn platform_candidates() -> Vec<PathBuf> {
-    let steam_roots = default_steam_roots();
+    windows_candidates_from(
+        &default_steam_roots(),
+        std::env::var_os("ProgramFiles(x86)").map(PathBuf::from),
+    )
+}
 
+/// The Windows candidate list over injected Steam roots: every library each
+/// root's `libraryfolders.vdf` names (file order), then each root's own
+/// `steamapps\common`, then the two standard GOG locations.
+#[cfg(any(windows, test))]
+fn windows_candidates_from(
+    steam_roots: &[PathBuf],
+    program_files_x86: Option<PathBuf>,
+) -> Vec<PathBuf> {
     let mut candidates: Vec<PathBuf> = steam_roots
         .iter()
         .flat_map(|root| rimworld_dirs_from_steam_root(root))
@@ -423,9 +501,9 @@ fn platform_candidates() -> Vec<PathBuf> {
             .iter()
             .map(|root| rimworld_under_steam_library(root)),
     );
-    if let Some(program_files_x86) = std::env::var_os("ProgramFiles(x86)") {
+    if let Some(program_files_x86) = program_files_x86 {
         candidates.push(
-            PathBuf::from(program_files_x86)
+            program_files_x86
                 .join("GOG Galaxy")
                 .join("Games")
                 .join("RimWorld"),
@@ -881,6 +959,118 @@ mod tests {
         write_library_list(&steam_root, &libraryfolders_vdf(&[display(&library)]));
 
         assert!(is_steam_managed_install_under(&game_dir, &[steam_root]));
+    }
+
+    #[test]
+    fn a_registry_steam_root_outside_program_files_is_searched_first() {
+        let roots = steam_roots_from(
+            Some(PathBuf::from("q:/steam")),
+            vec![
+                PathBuf::from(r"E:\Other"),
+                PathBuf::from(r"C:\Program Files (x86)\Steam"),
+                PathBuf::from(r"Q:\Steam"),
+            ],
+        );
+
+        assert_eq!(
+            roots,
+            vec![
+                PathBuf::from(r"Q:\Steam"),
+                PathBuf::from(r"E:\Other"),
+                PathBuf::from(r"C:\Program Files (x86)\Steam"),
+            ],
+            "the user's root leads, `/` becomes `\\`, and the lowercase duplicate takes the real-case spelling"
+        );
+    }
+
+    #[test]
+    fn detection_finds_rimworld_in_a_library_listed_by_a_non_default_steam_root() {
+        let scratch = Scratch::new("detect-nondefault");
+        let steam_root = scratch.path().join("Steam");
+        let library = scratch.path().join("Games").join("Library");
+        write_library_list(
+            &steam_root,
+            &libraryfolders_vdf(&[display(&steam_root), display(&library)]),
+        );
+        let game_dir = place_game(&library, "RimWorld", None);
+        std::fs::write(game_dir.join("Version.txt"), "1.6.0 rev1\n").expect("write version");
+        std::fs::create_dir_all(game_dir.join("Data").join("Core")).expect("create core");
+
+        let roots = steam_roots_from(Some(steam_root), Vec::new());
+        let detected = detect_from(dedup_preserving_order(windows_candidates_from(
+            &roots, None,
+        )));
+
+        assert_eq!(detected, Some(game_dir));
+    }
+
+    #[test]
+    fn a_lowercase_registry_root_listed_in_real_case_yields_one_candidate() {
+        let scratch = Scratch::new("registry-case");
+        let steam_root = scratch.path().join("Steam");
+        write_library_list(&steam_root, &libraryfolders_vdf(&[display(&steam_root)]));
+        let registry_spelling =
+            PathBuf::from(display(&steam_root).replace('\\', "/").to_lowercase());
+        let roots = steam_roots_from(Some(registry_spelling), Vec::new());
+
+        let candidates = dedup_preserving_order(windows_candidates_from(&roots, None));
+
+        let own_candidate = rimworld_under_steam_library(&steam_root);
+        let for_this_root: Vec<&PathBuf> = candidates
+            .iter()
+            .filter(|candidate| library_key(candidate) == library_key(&own_candidate))
+            .collect();
+        assert_eq!(
+            for_this_root,
+            vec![&own_candidate],
+            "one candidate, in the real case the library list spells"
+        );
+    }
+
+    #[test]
+    fn a_real_case_root_beats_the_lowercase_registry_spelling_without_a_library_list() {
+        let scratch = Scratch::new("registry-case-no-vdf");
+        let steam_root = scratch.path().join("Steam");
+        let registry_spelling =
+            PathBuf::from(display(&steam_root).replace('\\', "/").to_lowercase());
+        let roots = steam_roots_from(Some(registry_spelling), vec![steam_root.clone()]);
+
+        let candidates = dedup_preserving_order(windows_candidates_from(&roots, None));
+
+        assert_eq!(
+            candidates.first(),
+            Some(&rimworld_under_steam_library(&steam_root))
+        );
+    }
+
+    #[test]
+    fn a_steam_copy_under_a_registry_root_is_steam_managed() {
+        let (_scratch, steam_root, game_dir) = steam_layout(
+            "registry-root",
+            "RimWorld",
+            Some(&manifest_naming("RimWorld")),
+        );
+        // As Steam writes `SteamPath`: lowercase, forward slashes.
+        let registry_spelling =
+            PathBuf::from(display(&steam_root).replace('\\', "/").to_lowercase());
+        // No HKLM or Program Files spelling to swap in: the lowercase `/`
+        // form itself must be accepted (Steam outside Program Files).
+        let roots = steam_roots_from(Some(registry_spelling), Vec::new());
+
+        assert!(is_steam_managed_install_under(&game_dir, &roots));
+    }
+
+    #[test]
+    fn an_oversized_library_list_yields_no_candidates() {
+        let scratch = Scratch::new("oversized-vdf");
+        let steam_root = scratch.path().join("Steam");
+        let padding = " ".repeat(STEAM_LIBRARY_LIST_MAX_BYTES as usize + 1);
+        write_library_list(
+            &steam_root,
+            &format!("{}{padding}", libraryfolders_vdf(&["Q:\\Lib".to_owned()])),
+        );
+
+        assert!(rimworld_dirs_from_steam_root(&steam_root).is_empty());
     }
 
     #[test]

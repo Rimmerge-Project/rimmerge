@@ -9,7 +9,14 @@ just gives it a UI.
 The first thing you see if no path is pinned yet
 (`config.json` is empty or missing — see [install.md](install.md)).
 Lets you point the app at your RimWorld install, workshop folder, and
-`ModsConfig.xml` directly, or confirm what auto-detection found.
+`ModsConfig.xml` directly, or confirm what auto-detection found. When no
+install is found, the page lists every location it checked; enter or
+browse to your game folder (for Steam, `steamapps\common\RimWorld` in the
+library that holds the game) and the remaining fields fill in from it:
+the workshop folder, and the profile folder alongside `ModsConfig.xml`. A
+field you changed yourself is never overwritten. A folder that is not a
+RimWorld install is flagged but does not block Load; choose **Save as
+defaults** to keep your choice.
 
 ## Dashboard
 
@@ -119,10 +126,12 @@ Rimmerge stays open.
 install folder, with no arguments. A copy counts as a Steam copy only when
 Steam's own record names that folder: the folder sits in a library's
 `steamapps/common`, the library's `appmanifest_294100.acf` names it, and the
-library is listed in a default Steam root's `libraryfolders.vdf`. A folder
+library is listed in a Steam folder's `libraryfolders.vdf` (the Steam
+folders are the ones Steam records in the registry, then the Program Files
+defaults). A folder
 copied out of Steam, or a backed-up library, is not mistaken for the real one
-(Steam would start a different folder). A Steam copy whose Steam is installed
-outside the default Program Files folders is started directly through
+(Steam would start a different folder). A Steam copy whose Steam folder neither the
+registry nor the Program Files defaults name is started directly through
 `RimWorldWin64.exe`, since its library cannot be found.
 
 **What the button says.** It reads from the **selected** order and the last

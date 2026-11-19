@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { useQuery } from "@pinia/colada";
+import { useQuery, useQueryCache } from "@pinia/colada";
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
 import Message from "primevue/message";
 import { useToast } from "primevue/usetoast";
-import { computed, onMounted, ref, watchEffect } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 
@@ -13,13 +13,19 @@ import LanguagePicker from "@/components/settings/LanguagePicker.vue";
 import { useTauriEvent } from "@/composables/useTauriEvent";
 import { useTranslateMessage } from "@/composables/useTranslateMessage";
 import type { MessageDescriptor } from "@/i18n/messageDescriptor";
+import { startInvalidation } from "@/queries/invalidation";
 import { queryKeys } from "@/queries/keys";
 import { useRunLaunchNetworkChecksMutation } from "@/queries/notifications";
 import { pickFolder } from "@/services/dialogs";
 import { getDefaultPaths, loadProject, saveAppConfig } from "@/services/ipc";
 import { useSessionStore } from "@/stores/session";
+import type { DefaultPathsDto } from "@/types/generated/DefaultPathsDto";
 import type { ProgressEventDto } from "@/types/generated/ProgressEventDto";
-import { describeDefaultPathsError, describeDefaultPathsWarning } from "@/utils/defaultPaths";
+import {
+  checkedLocations,
+  describeDefaultPathsError,
+  describeDefaultPathsWarning,
+} from "@/utils/defaultPaths";
 import { type CommandErrorDescriptor, describeCommandError } from "@/utils/errors";
 import { ruleWarningsDetail } from "@/utils/ruleWarning";
 import { scanStageLabel } from "@/utils/scanStage";
@@ -31,9 +37,20 @@ const router = useRouter();
 const session = useSessionStore();
 const toast = useToast();
 
+const queryCache = useQueryCache();
+
+/**
+ * The game folder the user has settled on (after Browse, or when the field
+ * loses focus), as `get_default_paths`'s rung-1 answer. Not the field
+ * itself: a per-keystroke request would answer for half-typed paths.
+ * `""` means "no field answer yet", so the first request lets the backend
+ * detect.
+ */
+const committedGameDir = ref("");
+
 const { data: defaults } = useQuery({
-  key: queryKeys.defaultPaths,
-  query: getDefaultPaths,
+  key: () => queryKeys.defaultPaths(committedGameDir.value || null),
+  query: () => getDefaultPaths({ gameDir: committedGameDir.value || null }),
 });
 const { mutate: runLaunchNetworkChecks } = useRunLaunchNetworkChecksMutation();
 
@@ -42,67 +59,72 @@ const workshopDir = ref("");
 const modsConfig = ref("");
 const profileDir = ref("");
 
-watchEffect(() => {
-  if (!defaults.value) {
-    return;
+/** The last answer written into the fields: a field still equal to its value there was never edited. */
+let appliedDefaults: DefaultPathsDto | null = null;
+
+/** The field's new value: filled when empty or still the previous default, kept when the user changed it. */
+function refreshed(current: string, previous: string | null | undefined, next: string | null) {
+  if (current !== "" && current !== (previous ?? "")) {
+    return current;
   }
-  if (!gameDir.value && defaults.value.gameDir) {
-    gameDir.value = defaults.value.gameDir;
-  }
-  if (!workshopDir.value && defaults.value.workshopDir) {
-    workshopDir.value = defaults.value.workshopDir;
-  }
-  if (!modsConfig.value && defaults.value.modsConfig) {
-    modsConfig.value = defaults.value.modsConfig;
-  }
-  if (!profileDir.value && defaults.value.profileDir) {
-    profileDir.value = defaults.value.profileDir;
-  }
-});
+  return next ?? "";
+}
+
+watch(
+  defaults,
+  (next) => {
+    if (!next) {
+      return;
+    }
+    const previous = appliedDefaults;
+    gameDir.value = refreshed(gameDir.value, previous?.gameDir, next.gameDir);
+    workshopDir.value = refreshed(workshopDir.value, previous?.workshopDir, next.workshopDir);
+    modsConfig.value = refreshed(modsConfig.value, previous?.modsConfig, next.modsConfig);
+    profileDir.value = refreshed(profileDir.value, previous?.profileDir, next.profileDir);
+    appliedDefaults = next;
+  },
+  { immediate: true },
+);
+
+/** Settles the game folder field: the next `get_default_paths` answers for it. */
+function commitGameDir(): void {
+  committedGameDir.value = gameDir.value.trim();
+}
 
 /**
- * The backend's own "no RimWorld install found" text, which names every
- * candidate location it looked at, one per line. Shown as a persistent
- * message rather than a toast: on a machine with no detectable install
- * this is the whole reason the four fields are empty, and the user needs
- * to be able to read the list while typing a path into the first one.
- * Kept alongside {@link detectionErrorDescriptor} as the "technical
- * details" line — it names real file paths, which are never translated.
+ * Why detection or derivation failed, as the backend last answered. Tied to
+ * that answer only, not to the field's current text: the checked-locations
+ * list must stay readable while the user types a path taken from it. The
+ * next committed answer replaces it.
  */
-const detectionError = computed(() => defaults.value?.error ?? null);
+const detectionErrorCode = computed(() => defaults.value?.errorCode ?? null);
 
-/** The localized counterpart of {@link detectionError}, from `get_default_paths`'s structured `errorCode` — `null` for an older/mocked response that doesn't carry one, in which case {@link detectionError} alone still renders. */
 const detectionErrorDescriptor = computed<MessageDescriptor | null>(() =>
-  defaults.value?.errorCode ? describeDefaultPathsError(defaults.value.errorCode) : null,
+  detectionErrorCode.value ? describeDefaultPathsError(detectionErrorCode.value) : null,
+);
+
+/** Every location checked for an install, each rendered as its own `<code>`. */
+const detectionLocations = computed(() =>
+  detectionErrorCode.value ? checkedLocations(detectionErrorCode.value) : [],
 );
 
 /**
- * A resolved-but-suspicious install: an explicit `RIMMERGE_GAME_DIR` or a
- * pinned `config.json` entry naming a directory with no `Version.txt` and
- * `Data/Core/`. Shown alongside the (still prefilled) fields rather than
- * blocking Load — the drive may simply not be mounted yet, and the scan
- * that follows will say far more about why it failed than a refusal here
- * could. Same sentence `rimmerge config set` prints.
- *
- * Only ever reflects what the *backend* resolved on load, so it stops
- * being shown the moment the user edits the field: keeping it live would
- * need a per-keystroke round trip for a hint the Load button is about to
- * settle anyway.
+ * A resolved-but-suspicious install: the committed game folder (or an
+ * `RIMMERGE_GAME_DIR` / pinned `config.json` entry) names a directory with
+ * no `Version.txt` and `Data/Core/`. Shown alongside the (still filled)
+ * fields rather than blocking Load: the drive may simply not be mounted
+ * yet, and the scan that follows says far more about why it failed than a
+ * refusal here could. It is the backend's answer for the committed folder,
+ * so it clears when a valid folder is committed and hides while the field
+ * holds an uncommitted edit.
  */
-const resolvedWarning = computed(() => {
-  const warning = defaults.value?.warning ?? null;
-  if (warning === null || gameDir.value !== defaults.value?.gameDir) {
+const resolvedWarningDescriptor = computed<MessageDescriptor | null>(() => {
+  const warning = defaults.value?.warningCode ?? null;
+  if (warning === null || gameDir.value.trim() !== defaults.value?.gameDir) {
     return null;
   }
-  return warning;
+  return describeDefaultPathsWarning(warning);
 });
-
-/** The localized counterpart of {@link resolvedWarning} — see {@link detectionErrorDescriptor} for the fallback behavior. */
-const resolvedWarningDescriptor = computed<MessageDescriptor | null>(() =>
-  resolvedWarning.value !== null && defaults.value?.warningCode
-    ? describeDefaultPathsWarning(defaults.value.warningCode)
-    : null,
-);
 
 async function browseFolder(target: "gameDir" | "workshopDir" | "profileDir"): Promise<void> {
   const targets = { gameDir, workshopDir, profileDir };
@@ -110,6 +132,9 @@ async function browseFolder(target: "gameDir" | "workshopDir" | "profileDir"): P
   const picked = await pickFolder(field.value || undefined);
   if (picked !== null) {
     field.value = picked;
+    if (target === "gameDir") {
+      commitGameDir();
+    }
   }
 }
 
@@ -204,6 +229,8 @@ async function saveDefaults(): Promise<void> {
       workshopDir: workshopDir.value,
       modsConfig: modsConfig.value,
     });
+    // The pinned values are now rung 3 of every `get_default_paths` answer.
+    startInvalidation(queryCache, { key: queryKeys.defaultPathsAll() });
     toast.add({
       severity: "success",
       summary: t("setup.savedAsDefaultsToast"),
@@ -252,31 +279,34 @@ onMounted(() => {
     </div>
 
     <Message
-      v-if="detectionError"
+      v-if="detectionErrorDescriptor"
       severity="warn"
       data-testid="setup-detection-error"
     >
-      <div
-        v-if="detectionErrorDescriptor"
-        class="font-medium"
-      >
+      <div class="font-medium">
         {{ tm(detectionErrorDescriptor) }}
       </div>
-      <span class="whitespace-pre-wrap">{{ detectionError }}</span>
+      <template v-if="detectionLocations.length > 0">
+        <div class="mt-2">
+          {{ t("defaultPathsError.checkedLocations") }}
+        </div>
+        <ul class="mt-1 list-disc pl-5">
+          <li
+            v-for="location in detectionLocations"
+            :key="location"
+          >
+            <code class="break-all">{{ location }}</code>
+          </li>
+        </ul>
+      </template>
     </Message>
 
     <Message
-      v-if="resolvedWarning"
+      v-if="resolvedWarningDescriptor"
       severity="warn"
       data-testid="setup-path-warning"
     >
-      <div
-        v-if="resolvedWarningDescriptor"
-        class="font-medium"
-      >
-        {{ tm(resolvedWarningDescriptor) }}
-      </div>
-      {{ resolvedWarning }}
+      {{ tm(resolvedWarningDescriptor) }}
     </Message>
 
     <label class="flex flex-col gap-1">
@@ -286,6 +316,7 @@ onMounted(() => {
           v-model="gameDir"
           class="flex-1"
           data-testid="game-dir-input"
+          @blur="commitGameDir"
         />
         <Button
           :label="t('setup.browse')"
@@ -348,7 +379,7 @@ onMounted(() => {
         v-if="errorMessage.technicalDetail"
         class="text-xs opacity-75"
       >
-        {{ errorMessage.technicalDetail }}
+        {{ t("common.technicalDetail", { detail: errorMessage.technicalDetail }) }}
       </div>
     </Message>
 

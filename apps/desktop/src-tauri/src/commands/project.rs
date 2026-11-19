@@ -12,8 +12,9 @@ use rim_session::ports::DefSourceReader;
 use tauri::async_runtime::spawn_blocking;
 
 use crate::dto::project::{
-    AppConfigDto, DefaultPathsDto, DefaultPathsErrorDto, DefaultPathsWarningDto, ProgressEventDto,
-    ProjectPathsDto, ProjectSummaryDto, RuleWarningDto, ScanWarningDto,
+    AppConfigDto, DefaultPathsDto, DefaultPathsErrorDto, DefaultPathsRequestDto,
+    DefaultPathsWarningDto, ProgressEventDto, ProjectPathsDto, ProjectSummaryDto, RuleWarningDto,
+    ScanWarningDto,
 };
 use crate::dto::rule::RimSortPathsDto;
 use crate::error::CommandError;
@@ -184,72 +185,79 @@ pub(crate) fn profile_base() -> Option<PathBuf> {
 }
 
 /// The default game/workshop/`ModsConfig.xml`/profile paths, straight
-/// off [`rim_io::resolve_project_paths`] — the one precedence ladder
-/// `apps/cli`'s own
-/// `resolve_paths` also goes through, so the two interfaces can never
-/// disagree about where this machine's install is. Touches the
-/// filesystem only to read `config.json` and, during detection, each
-/// candidate's `Version.txt`/`Data/Core/` — no scan, no
+/// off [`rim_io::resolve_each_path`] — the one precedence ladder
+/// `apps/cli`'s own `resolve_paths` also goes through, so the two
+/// interfaces can never disagree about where this machine's install is.
+/// `request.game_dir` is the ladder's rung 1 (the Setup page's field).
+/// Touches the filesystem only to read `config.json` and, during
+/// detection, each candidate's `Version.txt`/`Data/Core/` (plus the
+/// read-only Steam registry keys on Windows) — no scan, no
 /// `ModsConfig.xml` read.
 ///
 /// Never an `Err`: a machine with no detectable install still has to see
 /// the setup form, so the failure comes back as
-/// [`DefaultPathsDto::error`] with every candidate location named, and a
-/// resolved-but-suspicious install as [`DefaultPathsDto::warning`].
+/// [`DefaultPathsDto::error_code`] with every candidate location named,
+/// and a resolved-but-suspicious install as
+/// [`DefaultPathsDto::warning_code`]. Each path resolves on its own, so
+/// `modsConfig`/`profileDir` are filled even without an install.
 ///
 /// Deliberately **not** `spawn_blocking`, unlike every command that
-/// touches the session: the whole call is a handful of `stat`s (each
-/// candidate's `Version.txt`/`Data/Core/`, plus one small `config.json`
-/// read), which is far below the threshold where moving work off the
-/// async runtime pays for the task hop.
+/// touches the session: the whole call is a handful of `stat`s, a
+/// registry read and one small `config.json` read, which is far below
+/// the threshold where moving work off the async runtime pays for the
+/// task hop.
 #[tauri::command]
-pub async fn get_default_paths() -> DefaultPathsDto {
-    let empty = DefaultPathsDto {
-        game_dir: None,
-        workshop_dir: None,
-        mods_config: None,
-        profile_dir: None,
-        warning: None,
-        warning_code: None,
-        error: None,
-        error_code: None,
-    };
+pub async fn get_default_paths(request: Option<DefaultPathsRequestDto>) -> DefaultPathsDto {
     let Some(base) = profile_base() else {
         return DefaultPathsDto {
-            error: Some(
-                "neither RIMMERGE_PROFILE_DIR nor LOCALAPPDATA is set, so rimmerge has nowhere \
-                 to keep its own files"
-                    .to_string(),
-            ),
+            game_dir: None,
+            workshop_dir: None,
+            mods_config: None,
+            profile_dir: None,
+            warning_code: None,
             error_code: Some(DefaultPathsErrorDto::NoProfileBase),
-            ..empty
         };
     };
-    match rim_io::resolve_project_paths(rim_io::PathOverrides::new(base)) {
-        Ok(resolved) => {
-            let warning_code =
-                resolved
-                    .warning
-                    .as_ref()
-                    .map(|_| DefaultPathsWarningDto::NotAnInstall {
-                        game_dir: resolved.paths.game_dir.display().to_string(),
-                    });
-            DefaultPathsDto {
-                game_dir: Some(resolved.paths.game_dir.display().to_string()),
-                workshop_dir: Some(resolved.paths.workshop_dir.display().to_string()),
-                mods_config: Some(resolved.paths.mods_config.display().to_string()),
-                profile_dir: Some(resolved.paths.profile_dir.display().to_string()),
-                warning: resolved.warning,
-                warning_code,
-                error: None,
-                error_code: None,
-            }
-        }
-        Err(error) => DefaultPathsDto {
-            error_code: Some(path_resolution_error_to_dto(&error)),
-            error: Some(error.to_string()),
-            ..empty
-        },
+    get_default_paths_at(base, request.unwrap_or_default())
+}
+
+/// [`get_default_paths`] over an explicit `base` (`<base>/config.json`),
+/// so its tests run against a temp directory.
+pub(crate) fn get_default_paths_at(
+    base: PathBuf,
+    request: DefaultPathsRequestDto,
+) -> DefaultPathsDto {
+    let mut overrides = rim_io::PathOverrides::new(base);
+    overrides.game_dir = request
+        .game_dir
+        .map(|text| text.trim().to_string())
+        .filter(|text| !text.is_empty())
+        .map(PathBuf::from);
+    let partial = rim_io::resolve_each_path(&overrides);
+    let display = |path: &PathBuf| path.display().to_string();
+
+    let error_code = partial
+        .game_dir
+        .as_ref()
+        .err()
+        .or_else(|| partial.mods_config.as_ref().err())
+        .map(path_resolution_error_to_dto);
+    let warning_code = partial.warning.as_ref().and_then(|_| {
+        partial
+            .game_dir
+            .as_ref()
+            .ok()
+            .map(|game_dir| DefaultPathsWarningDto::NotAnInstall {
+                game_dir: display(game_dir),
+            })
+    });
+    DefaultPathsDto {
+        game_dir: partial.game_dir.as_ref().ok().map(display),
+        workshop_dir: partial.workshop_dir.as_ref().map(display),
+        mods_config: partial.mods_config.as_ref().ok().map(display),
+        profile_dir: partial.profile_dir.as_ref().map(display),
+        warning_code,
+        error_code,
     }
 }
 
@@ -268,10 +276,8 @@ fn path_resolution_error_to_dto(error: &rim_io::PathResolutionError) -> DefaultP
                     .collect(),
             }
         }
-        rim_io::PathResolutionError::ModsConfigNotFound { reason } => {
-            DefaultPathsErrorDto::ModsConfigNotFound {
-                reason: reason.clone(),
-            }
+        rim_io::PathResolutionError::ModsConfigNotFound { .. } => {
+            DefaultPathsErrorDto::ModsConfigNotFound
         }
     }
 }
@@ -570,18 +576,69 @@ mod tests {
     }
 
     #[test]
-    fn path_resolution_error_to_dto_carries_the_reason() {
+    fn path_resolution_error_to_dto_drops_the_english_reason() {
         let error = rim_io::PathResolutionError::ModsConfigNotFound {
             reason: "%USERPROFILE% is not set".to_string(),
         };
 
-        let dto = path_resolution_error_to_dto(&error);
-
         assert_eq!(
-            dto,
-            DefaultPathsErrorDto::ModsConfigNotFound {
-                reason: "%USERPROFILE% is not set".to_string(),
-            }
+            path_resolution_error_to_dto(&error),
+            DefaultPathsErrorDto::ModsConfigNotFound
         );
+    }
+
+    /// A folder with the install shape (`Version.txt`, `Data/Core/`) under
+    /// a `steamapps/common/` parent, so the workshop folder derives.
+    fn scratch_install(root: &std::path::Path) -> PathBuf {
+        let game_dir = root.join("steamapps").join("common").join("RimWorld");
+        std::fs::create_dir_all(game_dir.join("Data").join("Core")).expect("create core");
+        std::fs::write(game_dir.join("Version.txt"), "1.6.0 rev1\n").expect("write version");
+        game_dir
+    }
+
+    #[test]
+    fn a_requested_game_dir_with_the_install_shape_resolves_everything() {
+        let base = tempfile::tempdir().expect("base");
+        let library = tempfile::tempdir().expect("library");
+        let game_dir = scratch_install(library.path());
+
+        let dto = get_default_paths_at(
+            base.path().to_path_buf(),
+            DefaultPathsRequestDto {
+                game_dir: Some(game_dir.display().to_string()),
+            },
+        );
+
+        // Only what the explicit request (rung 1) fixes: the workshop and
+        // profile paths come from the environment and are covered with a
+        // fake environment in rim-io.
+        assert_eq!(dto.game_dir, Some(game_dir.display().to_string()));
+        assert!(!matches!(
+            dto.error_code,
+            Some(DefaultPathsErrorDto::GameDirNotFound { .. })
+        ));
+        assert_eq!(dto.warning_code, None);
+    }
+
+    #[test]
+    fn a_requested_folder_that_is_not_an_install_warns_but_still_fills_the_rest() {
+        let base = tempfile::tempdir().expect("base");
+        let not_an_install = tempfile::tempdir().expect("folder");
+
+        let dto = get_default_paths_at(
+            base.path().to_path_buf(),
+            DefaultPathsRequestDto {
+                game_dir: Some(not_an_install.path().display().to_string()),
+            },
+        );
+
+        assert_eq!(dto.error_code, None);
+        assert_eq!(
+            dto.warning_code,
+            Some(DefaultPathsWarningDto::NotAnInstall {
+                game_dir: not_an_install.path().display().to_string()
+            })
+        );
+        assert!(dto.workshop_dir.is_some());
     }
 }

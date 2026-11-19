@@ -13,6 +13,7 @@ import type { DashboardDto } from "@/types/generated/DashboardDto";
 import type { DeactivatePlanDto } from "@/types/generated/DeactivatePlanDto";
 import type { DeactivateRequestDto } from "@/types/generated/DeactivateRequestDto";
 import type { DefaultPathsDto } from "@/types/generated/DefaultPathsDto";
+import type { DefaultPathsRequestDto } from "@/types/generated/DefaultPathsRequestDto";
 import type { DefCacheCarrierDto } from "@/types/generated/DefCacheCarrierDto";
 import type { GameLogSummaryDto } from "@/types/generated/GameLogSummaryDto";
 import type { ImportGameLogRequestDto } from "@/types/generated/ImportGameLogRequestDto";
@@ -44,12 +45,13 @@ export function loadProject(paths: ProjectPathsDto): Promise<ProjectSummaryDto> 
 
 /**
  * The default game/workshop/`ModsConfig.xml`/profile paths for the setup
- * page — the result of the backend's one precedence ladder. Every field
- * is `null`, and `error` carries the reason (naming every candidate
- * location that was looked at), when no install could be found.
+ * page — the result of the backend's one precedence ladder, with the
+ * page's game folder field as its first rung. Each path resolves on its
+ * own: with no install found, `errorCode` names every candidate location
+ * that was looked at while `modsConfig` and `profileDir` stay filled.
  */
-export function getDefaultPaths(): Promise<DefaultPathsDto> {
-  return call("get_default_paths");
+export function getDefaultPaths(request: DefaultPathsRequestDto): Promise<DefaultPathsDto> {
+  return call("get_default_paths", { request });
 }
 
 /**

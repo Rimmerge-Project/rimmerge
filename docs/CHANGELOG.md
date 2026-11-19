@@ -6,6 +6,25 @@ maintainer's own checkout for the full record, if you have it.
 
 ## [Unreleased]
 
+- **A Steam installed outside Program Files is now found.** Detection
+  only looked under `%ProgramFiles(x86)%\Steam` and `%ProgramFiles%\Steam`,
+  so a game in a library of a Steam installed elsewhere (for example
+  `Q:\Steam`) was reported as "no RimWorld install found", and Launch started
+  such a copy directly instead of through Steam. Detection and Launch now
+  also use the Steam folders Steam records in the Windows registry (a local,
+  read-only lookup), and read `libraryfolders.vdf` with a size bound.
+- **The Setup page recovers once you point it at your game folder.** Entering
+  or browsing to the folder now re-checks it: the "no install found" message
+  clears, and the workshop folder, `ModsConfig.xml` and profile folder fill
+  in (a field you changed is kept). `ModsConfig.xml` and the profile folder
+  are shown even while no install is found. Save as defaults refreshes the
+  page's answer.
+- **The "no install found" message is in your language.** It listed the
+  backend's English command-line advice ("see the technical details
+  below"); it now says what to do in the app's language and lists each
+  checked location. The "technical details" label on a load error is
+  translated too.
+
 - **Mods that move now follows the orders.** After Apply made the current
   order the suggested one, the Dashboard, the getting-started strip and the
   Apply dialog kept showing the number measured before the Apply until

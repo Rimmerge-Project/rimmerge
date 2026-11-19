@@ -583,8 +583,9 @@
   },
   "defaultPathsError": {
     "noProfileBase": "RIMMERGE_PROFILE_DIR과 LOCALAPPDATA가 모두 설정되어 있지 않아 Rimmerge가 자체 파일을 보관할 곳이 없습니다.",
-    "gameDirNotFound": "RimWorld 설치 폴더를 찾을 수 없습니다. 확인한 모든 위치는 아래 기술 세부 정보를 참고하세요.",
-    "modsConfigNotFound": "Rimmerge가 ModsConfig.xml의 위치를 알아낼 수 없습니다. 아래 기술 세부 정보를 참고하세요."
+    "gameDirNotFound": "RimWorld 설치 폴더를 찾을 수 없습니다. 아래에 게임 폴더(Steam의 경우 게임이 설치된 라이브러리의 steamapps\\common\\RimWorld 폴더)를 입력하거나 '찾아보기'로 선택한 다음 '기본값으로 저장'을 누르세요.",
+    "checkedLocations": "확인한 위치:",
+    "modsConfigNotFound": "USERPROFILE 환경 변수가 설정되어 있지 않아 Rimmerge가 ModsConfig.xml 파일의 위치를 알아낼 수 없습니다. 아래에 ModsConfig.xml 파일의 경로를 입력하세요."
   },
   "finding": {
     "kind": {

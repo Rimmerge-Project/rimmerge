@@ -174,7 +174,7 @@ works out both from the configured install.
   always does (sign-in, updates, cloud saves). That is Steam's
   behaviour, outside Rimmerge and its settings.
 - **Any other copy** (GOG, a standalone folder, or a Steam copy whose
-  library isn't listed in a default Steam root's `libraryfolders.vdf`)
+  library isn't listed in a known Steam folder's `libraryfolders.vdf`)
   is started by running `RimWorldWin64.exe` from the install folder,
   with no arguments and no shell. Rimmerge doesn't wait for the game or
   read its output.
@@ -182,6 +182,13 @@ works out both from the configured install.
 Launching reads the install folder, Steam's own records of it
 (`appmanifest_294100.acf` and `libraryfolders.vdf`) and the list of
 running programs, and writes nothing.
+
+Finding the game, and deciding whether a copy is a Steam copy, also reads
+two Windows registry values Steam itself keeps
+(`HKCU\Software\Valve\Steam\SteamPath` and
+`HKLM\SOFTWARE\WOW6432Node\Valve\Steam\InstallPath`) to learn where
+Steam is installed. This is a local, read-only lookup: nothing is written
+to the registry, nothing is sent anywhere, and no new host is involved.
 
 ## Sharing a load order
 

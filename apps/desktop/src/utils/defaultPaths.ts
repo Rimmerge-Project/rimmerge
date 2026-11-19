@@ -6,9 +6,8 @@ import { assertNever } from "@/utils/assertNever";
 /**
  * Localizes `get_default_paths`'s structured, `kind`-tagged
  * `warningCode` — the Setup page's own resolved-but-suspicious-install
- * notice. The plain-string `warning` field stays as the "technical
- * details" fallback for one release (see `apps/desktop/CLAUDE.md`'s
- * i18n conventions).
+ * notice. The directory crosses as a path parameter; the sentence is
+ * worded here, never sent by the backend.
  */
 export function describeDefaultPathsWarning(warning: DefaultPathsWarningDto): MessageDescriptor {
   // Exactly one variant today, so ts-rs emits `DefaultPathsWarningDto`
@@ -28,6 +27,23 @@ export function describeDefaultPathsError(error: DefaultPathsErrorDto): MessageD
       return descriptor("defaultPathsError.gameDirNotFound");
     case "modsConfigNotFound":
       return descriptor("defaultPathsError.modsConfigNotFound");
+    default:
+      return assertNever(error);
+  }
+}
+
+/**
+ * The locations `get_default_paths` checked for an install, in the order
+ * it tried them: non-empty only for `gameDirNotFound`. File paths, shown
+ * untranslated in `<code>` elements.
+ */
+export function checkedLocations(error: DefaultPathsErrorDto): readonly string[] {
+  switch (error.kind) {
+    case "gameDirNotFound":
+      return error.candidates;
+    case "noProfileBase":
+    case "modsConfigNotFound":
+      return [];
     default:
       return assertNever(error);
   }

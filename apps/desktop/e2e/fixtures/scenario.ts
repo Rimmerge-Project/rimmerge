@@ -27,6 +27,7 @@ import type { CreatePatchRequestDto } from "../../src/types/generated/CreatePatc
 import type { DeactivateRequestDto } from "../../src/types/generated/DeactivateRequestDto";
 import type { DecidePatchRequestDto } from "../../src/types/generated/DecidePatchRequestDto";
 import type { DecideRequestDto } from "../../src/types/generated/DecideRequestDto";
+import type { DefaultPathsRequestDto } from "../../src/types/generated/DefaultPathsRequestDto";
 import type { DefConflictViewRequestDto } from "../../src/types/generated/DefConflictViewRequestDto";
 import type { DefGraphicDto } from "../../src/types/generated/DefGraphicDto";
 import type { DefTextureDto } from "../../src/types/generated/DefTextureDto";
@@ -153,6 +154,8 @@ declare global {
     __READ_DEF_TEXTURE_CALLS__?: ReadDefTextureRequestDto[];
     /** Every `upsert_rule` payload the mock received, in order. */
     __UPSERT_RULE_CALLS__?: RuleDto[];
+    /** Every `get_default_paths` request the mock received, in order. */
+    __GET_DEFAULT_PATHS_CALLS__?: DefaultPathsRequestDto[];
     /** Every `save_app_config` payload the mock received, in order. */
     __SAVE_APP_CONFIG_CALLS__?: AppConfigDto[];
     /** Every `delete_rule` payload the mock received, in order. */
@@ -6181,6 +6184,7 @@ export function installScenario(): void {
   window.__UPSERT_RULE_CALLS__ = [];
   window.__RESOLVE_DEF_GRAPHIC_CALLS__ = [];
   window.__READ_DEF_TEXTURE_CALLS__ = [];
+  window.__GET_DEFAULT_PATHS_CALLS__ = [];
   window.__SAVE_APP_CONFIG_CALLS__ = [];
   window.__DELETE_RULE_CALLS__ = [];
   window.__PROMOTE_RULE_CALLS__ = [];
@@ -6447,15 +6451,29 @@ export function installScenario(): void {
   }
 
   const fixtures: IpcFixtures = {
-    get_default_paths: {
-      gameDir: "C:/RimWorld",
-      workshopDir: "C:/RimWorld/workshop",
-      modsConfig: "C:/Profile/ModsConfig.xml",
-      profileDir: "C:/Profile/rimmerge",
-      warning: null,
-      warningCode: null,
-      error: null,
-      errorCode: null,
+    // Mirrors the rung-1 rule: a requested game folder is what the backend
+    // answers with; every other path keeps its detected default.
+    get_default_paths: (payload: unknown) => {
+      const { request } = payload as { request?: DefaultPathsRequestDto | null };
+      window.__GET_DEFAULT_PATHS_CALLS__?.push(request ?? { gameDir: null });
+      const gameDir = request?.gameDir ?? "C:/RimWorld";
+      // Mirrors `default_workshop_dir`: the game folder's grandparent plus
+      // `workshop/content/294100` (`<library>/steamapps/common/<x>` lands in
+      // `<library>/steamapps/workshop/...`); without two parents it is
+      // `<gameDir>/../../workshop/content/294100`.
+      const segments = gameDir.replace(/[\\/]+$/, "").split(/[\\/]/);
+      const workshopDir =
+        segments.length >= 3
+          ? `${segments.slice(0, -2).join("/")}/workshop/content/294100`
+          : `${gameDir}/../../workshop/content/294100`;
+      return {
+        gameDir,
+        workshopDir,
+        modsConfig: "C:/Profile/ModsConfig.xml",
+        profileDir: "C:/Profile/rimmerge",
+        warningCode: null,
+        errorCode: null,
+      };
     },
     save_app_config: (payload: unknown) => {
       window.__SAVE_APP_CONFIG_CALLS__?.push((payload as { config: AppConfigDto }).config);

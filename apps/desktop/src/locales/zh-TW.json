@@ -583,8 +583,9 @@
   },
   "defaultPathsError": {
     "noProfileBase": "RIMMERGE_PROFILE_DIR 和 LOCALAPPDATA 都未設定，因此 Rimmerge 沒有地方存放自己的檔案。",
-    "gameDirNotFound": "找不到 RimWorld 安裝目錄。下方的技術細節列出了每個已檢查的位置。",
-    "modsConfigNotFound": "Rimmerge 無法判斷 ModsConfig.xml 的位置。請參閱下方的技術細節。"
+    "gameDirNotFound": "找不到已安裝的 RimWorld。請在下方輸入遊戲資料夾，或按「瀏覽…」選取（Steam 版請選擇存放遊戲的收藏庫中的 steamapps\\common\\RimWorld 資料夾），然後按「儲存為預設值」。",
+    "checkedLocations": "已檢查的位置：",
+    "modsConfigNotFound": "由於未設定 USERPROFILE 環境變數，Rimmerge 無法判斷 ModsConfig.xml 的位置。請在下方輸入 ModsConfig.xml 的路徑。"
   },
   "finding": {
     "kind": {

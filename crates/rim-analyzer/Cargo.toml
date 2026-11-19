@@ -40,6 +40,12 @@ strsim = "0.11.1"
 thiserror = "2.0.20"
 walkdir = "2.5.0"
 
+# Windows only: read the Steam install folder from the registry
+# (`infra::paths`), so a Steam outside Program Files is detected. Read-only,
+# local, no network. Already in `Cargo.lock` via `embed-resource`.
+[target.'cfg(windows)'.dependencies]
+winreg = "0.55.0"
+
 [dev-dependencies]
 pretty_assertions = "1.4.1"
 # `extract::rich_text`'s own round-trip/no-markup-survives properties —

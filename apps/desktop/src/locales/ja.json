@@ -583,8 +583,9 @@
   },
   "defaultPathsError": {
     "noProfileBase": "RIMMERGE_PROFILE_DIRもLOCALAPPDATAも設定されていないため、Rimmergeが自身のファイルを保存する場所がありません。",
-    "gameDirNotFound": "RimWorldのインストールフォルダーが見つかりませんでした。確認したすべての場所は、下の技術的な詳細を参照してください。",
-    "modsConfigNotFound": "RimmergeはModsConfig.xmlの場所を特定できませんでした。下の技術的な詳細を参照してください。"
+    "gameDirNotFound": "RimWorldのインストールフォルダーが見つかりませんでした。下にゲームのフォルダーを入力するか、「参照…」で選択してから（Steamの場合は、ゲームが入っているライブラリ内のsteamapps\\common\\RimWorldフォルダー）、「既定として保存」を選択してください。",
+    "checkedLocations": "確認した場所：",
+    "modsConfigNotFound": "USERPROFILE環境変数が設定されていないため、RimmergeはModsConfig.xmlの場所を特定できませんでした。下にModsConfig.xmlのパスを入力してください。"
   },
   "finding": {
     "kind": {

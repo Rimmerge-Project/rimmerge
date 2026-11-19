@@ -47,19 +47,29 @@ impl From<&ProjectPaths> for ProjectPathsDto {
     }
 }
 
-/// A closed, machine-readable reason for [`DefaultPathsDto::warning`] —
-/// today there is exactly one, [`rim_io::not_an_install_warning`]'s own
-/// sentence, but this stays a `kind`-tagged union (not a bare marker
-/// field) so a second warning shape is an additive variant, never a
-/// breaking rename. The frontend renders this, localized; `warning`
-/// (the English sentence) stays as the "technical details" fallback —
-/// see `apps/desktop/CLAUDE.md`'s i18n conventions.
+/// What `get_default_paths` is asked: the game folder the Setup page's
+/// field currently holds (rung 1 of the path ladder). Absent or blank
+/// means "no field answer", and the ladder falls through to the
+/// environment, `config.json` and detection.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export, export_to = "../../src/types/generated/")]
+pub struct DefaultPathsRequestDto {
+    /// The install folder as typed or browsed to on the Setup page.
+    pub game_dir: Option<String>,
+}
+
+/// A closed, machine-readable reason for [`DefaultPathsDto::warning_code`].
+/// Today there is exactly one ([`rim_io::not_an_install_warning`]'s case),
+/// but this stays a `kind`-tagged union so a second warning shape is an
+/// additive variant, never a breaking rename. The frontend renders it,
+/// localized.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[ts(export, export_to = "../../src/types/generated/")]
 pub enum DefaultPathsWarningDto {
     /// A resolved install directory that doesn't look like one (no
-    /// `Version.txt`/`Data/Core/`) — see [`rim_io::not_an_install_warning`].
+    /// `Version.txt`/`Data/Core/`).
     NotAnInstall {
         /// The directory in question. A file path: never translated,
         /// rendered in `<code>`/monospace.
@@ -69,12 +79,11 @@ pub enum DefaultPathsWarningDto {
 }
 
 /// A closed, machine-readable reason `get_default_paths` could not
-/// resolve everything — the structured half of [`DefaultPathsDto::error`],
-/// which stays as the "technical details" fallback. Mirrors
-/// [`rim_io::PathResolutionError`]'s two ladder-exhaustion variants;
-/// [`NoProfileBase`](DefaultPathsErrorDto::NoProfileBase) is this
-/// command's own third case (neither `RIMMERGE_PROFILE_DIR` nor
+/// resolve everything. Mirrors [`rim_io::PathResolutionError`]'s two
+/// ladder-exhaustion variants; [`NoProfileBase`](DefaultPathsErrorDto::NoProfileBase)
+/// is this command's own third case (neither `RIMMERGE_PROFILE_DIR` nor
 /// `LOCALAPPDATA` is set), which happens before the ladder ever starts.
+/// No variant carries backend prose: the frontend words each one.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[ts(export, export_to = "../../src/types/generated/")]
@@ -89,57 +98,41 @@ pub enum DefaultPathsErrorDto {
         /// never translated, rendered in `<code>`/monospace.
         candidates: Vec<String>,
     },
-    /// No `ModsConfig.xml` path could be worked out — see
+    /// No `ModsConfig.xml` path could be worked out (the default location
+    /// derives from `%USERPROFILE%`) — see
     /// [`rim_io::PathResolutionError::ModsConfigNotFound`].
-    ModsConfigNotFound {
-        /// Why the derivation failed — an OS-level technical detail,
-        /// shown as such, never translated.
-        reason: String,
-    },
+    ModsConfigNotFound,
 }
 
 /// The default paths `get_default_paths` prefills the setup page with —
-/// the result of the one precedence ladder
-/// (`rim_io::resolve_project_paths`) `apps/cli`'s own `resolve_paths` also
-/// goes through.
+/// the result of the one precedence ladder (`rim_io::resolve_each_path`)
+/// `apps/cli`'s own `resolve_paths` also goes through.
 ///
-/// Every field is optional and `error`/`errorCode` carry the reason when
-/// the ladder ran out of rungs, rather than the command failing
-/// outright: the setup page is exactly where a user with no detectable
-/// install needs to land, and it needs to render its (empty) form *and*
-/// tell them where was looked. `error` is the full
-/// [`rim_io::PathResolutionError`] text, which names every candidate on
-/// its own line; `errorCode`/`warningCode` are its localizable,
-/// structured counterparts (kept alongside the strings for one release
-/// as the "technical details" fallback — see
-/// `apps/desktop/CLAUDE.md`'s i18n conventions).
+/// Every field is optional and each path resolves on its own: with no
+/// install found, `errorCode` says so while `modsConfig` and `profileDir`
+/// are still filled, because the setup page is exactly where a user with
+/// no detectable install needs to land. No field carries backend prose;
+/// `errorCode`/`warningCode` are structured and the frontend words them.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export, export_to = "../../src/types/generated/")]
 pub struct DefaultPathsDto {
     /// The resolved RimWorld install directory, if one was found.
     pub game_dir: Option<String>,
-    /// The resolved Steam workshop content folder for that install.
+    /// The resolved Steam workshop content folder.
     pub workshop_dir: Option<String>,
     /// The resolved `ModsConfig.xml` path.
     pub mods_config: Option<String>,
     /// The profile directory `mods_config` hashes to.
     pub profile_dir: Option<String>,
-    /// A **non-fatal** complaint about what *was* resolved — today, an
-    /// explicit field, `RIMMERGE_GAME_DIR`, or a pinned `config.json`
-    /// entry naming a directory that isn't a RimWorld install
-    /// ([`rim_io::ResolvedPaths::warning`]). The fields above are still
-    /// filled in: the user may be pointing at a drive that isn't mounted
-    /// yet, and refusing would be worse than saying so.
-    pub warning: Option<String>,
-    /// [`DefaultPathsWarningDto`] version of `warning`. `Some` exactly
-    /// when `warning` is.
+    /// A **non-fatal** complaint about what *was* resolved — an explicit
+    /// field, `RIMMERGE_GAME_DIR`, or a pinned `config.json` entry naming
+    /// a directory that isn't a RimWorld install. The fields above are
+    /// still filled in: the user may be pointing at a drive that isn't
+    /// mounted yet, and refusing would be worse than saying so.
     pub warning_code: Option<DefaultPathsWarningDto>,
-    /// Why nothing could be resolved, including every candidate location
-    /// that was looked at. `None` when resolution succeeded.
-    pub error: Option<String>,
-    /// [`DefaultPathsErrorDto`] version of `error`. `Some` exactly when
-    /// `error` is.
+    /// Why something could not be resolved: the first failure, the game
+    /// folder's before the others. `None` when everything did.
     pub error_code: Option<DefaultPathsErrorDto>,
 }
 

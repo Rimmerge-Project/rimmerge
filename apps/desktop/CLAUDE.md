@@ -511,8 +511,9 @@ The UI is localized in `en` plus twelve translated locales (`zh-CN`,
   "technical details" line (`CommandErrorDescriptor.technicalDetail`).
   `DefaultPathsDto.warningCode`/`.errorCode` (`utils/defaultPaths.ts`)
   are the same pattern for `get_default_paths`'s own prefill
-  warning/error, with the plain-string `warning`/`error` fields kept
-  alongside as that same fallback for one release. The same rule
+  warning/error, with no plain-string companion (the English `warning`/`error`
+  fields were removed; the checked locations cross as paths in `errorCode`).
+  The same rule
   applies to any future DTO field carrying prose built in `src-tauri` —
   add a code/enum, not a translated string field, unless nothing but
   that one hard-coded English sentence exists to send (rare, and a
@@ -520,7 +521,7 @@ The UI is localized in `en` plus twelve translated locales (`zh-CN`,
   (`SuggestionDto`/`AlternativeDto`/`VerifyReorderDto.rationaleCode`,
   rendered by `utils/rationale.ts`) is this same pattern's largest
   instance — but its own plain-string `rationale` field, unlike
-  `DefaultPathsDto`'s warning/error strings, is never a transitional
+  the removed `DefaultPathsDto` warning/error strings, is never a transitional
   fallback due to be dropped: `useApplyDialog.ts`'s "Create pair rule"
   action copies it verbatim into a new rule's own `comment`, which is
   **persisted** in `rules.json` and can be shared or published to a
@@ -759,14 +760,22 @@ The UI is localized in `en` plus twelve translated locales (`zh-CN`,
   database in particular). The mutation's variable is the request or
   `null`; the Playwright mock mirrors all of it and records the requests
   in `__REFRESH_RULE_DATABASES_CALLS__`.
-- **`get_default_paths` delegates to `rim_io::resolve_project_paths`**,
-  the same precedence ladder (explicit field >
-  `RIMMERGE_GAME_DIR` > `<base>/config.json` > detection > a typed
-  error) `apps/cli`'s own `resolve_paths` uses, so the two interfaces
-  can never disagree about where an install is. The command never fails
-  outright — a machine with no install still has to reach the setup
-  form — so the resolution error/warning text comes back on the DTO and
-  `SetupPage.vue` renders it as a persistent `Message`, never a toast.
+- **`get_default_paths` delegates to `rim_io::resolve_each_path`**
+  (`resolve_project_paths` is its all-or-error form), the same precedence
+  ladder (explicit field > `RIMMERGE_GAME_DIR` > `<base>/config.json` >
+  detection > a typed error) `apps/cli`'s own `resolve_paths` uses, so the
+  two interfaces can never disagree about where an install is. It takes an
+  optional `DefaultPathsRequestDto { gameDir }`, the Setup field as rung 1
+  (`get_default_paths_at(base, request)` is the testable half), and each
+  path resolves on its own: `modsConfig`/`profileDir` are filled even with
+  `errorCode: gameDirNotFound`. The command never fails outright — a
+  machine with no install still has to reach the setup form — so the
+  structured `errorCode`/`warningCode` come back on the DTO (no English
+  prose) and `SetupPage.vue` words them in a persistent `Message`, never a
+  toast. The page re-queries (`queryKeys.defaultPaths(gameDir)`) when the
+  game folder is committed (Browse or blur, never per keystroke), refills
+  each other field only when it is empty or still equals the previous
+  default, and ties the banner to the answer for the committed folder.
   `save_app_config` (the desktop half of `rimmerge config set`)
   deliberately never derives or pins `profileDir` from a
   `ModsConfig.xml` path it might not match — that is exactly how two

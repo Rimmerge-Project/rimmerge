@@ -583,8 +583,9 @@
   },
   "defaultPathsError": {
     "noProfileBase": "Ne RIMMERGE_PROFILE_DIR ne de LOCALAPPDATA ayarlı; bu yüzden Rimmerge kendi dosyalarını tutacak bir yer bulamıyor.",
-    "gameDirNotFound": "Hiçbir RimWorld kurulum klasörü bulunamadı. Denetlenen tüm konumlar için aşağıdaki teknik ayrıntılara bak.",
-    "modsConfigNotFound": "Rimmerge, ModsConfig.xml dosyasının nerede olduğunu belirleyemedi. Aşağıdaki teknik ayrıntılara bak."
+    "gameDirNotFound": "Hiçbir RimWorld kurulumu bulunamadı. Oyun klasörünü aşağıya gir ya da Gözat düğmesiyle seç (Steam için oyunun bulunduğu kütüphanedeki steamapps\\common\\RimWorld klasörü), ardından Varsayılan olarak kaydet düğmesine bas.",
+    "checkedLocations": "Denetlenen konumlar:",
+    "modsConfigNotFound": "USERPROFILE ortam değişkeni ayarlı olmadığı için Rimmerge, ModsConfig.xml dosyasının nerede olduğunu belirleyemedi. ModsConfig.xml dosyasının yolunu aşağıya gir."
   },
   "finding": {
     "kind": {

@@ -60,6 +60,7 @@ advisories/licenses in non-Windows branches of Tauri's dependency tree
 | Crate | Version | Used by | Notes |
 | --- | --- | --- | --- |
 | walkdir | 2.5.0 | rim-analyzer, rim-io | |
+| winreg | 0.55.0 | rim-analyzer (`cfg(windows)` only) | reads Steam's own install-folder registry values (`HKCU\Software\Valve\Steam\SteamPath`, `HKLM\SOFTWARE\WOW6432Node\Valve\Steam\InstallPath`) so a Steam outside Program Files is detected; a safe wrapper (the crate forbids `unsafe` in rim-analyzer, so no direct `windows-sys` calls), MIT, already in `Cargo.lock` through `embed-resource`; read-only and local, no network |
 | predicates | 3.1.4 | apps/cli (dev) | |
 | base64 | 0.23.1 | apps/desktop/src-tauri | encodes `read_texture`'s response as a `data:` URL; the `Engine`/`general_purpose::STANDARD` API this crate uses is stable across the 0.22–0.23 line |
 

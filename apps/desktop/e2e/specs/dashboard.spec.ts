@@ -19,6 +19,12 @@ test.describe("setup page path config", () => {
     await page.goto("/setup");
 
     await page.getByTestId("game-dir-input").fill("Q:/Steam/steamapps/common/RimWorld");
+    // Committing the game folder refills the workshop folder; wait for it so
+    // the saved payload does not depend on that refetch's timing.
+    await page.getByTestId("workshop-dir-input").focus();
+    await expect(page.getByTestId("workshop-dir-input")).toHaveValue(
+      "Q:/Steam/steamapps/workshop/content/294100",
+    );
     await page.getByTestId("save-defaults-button").click();
 
     await expect(page.getByText("Saved as defaults")).toBeVisible();
@@ -29,12 +35,14 @@ test.describe("setup page path config", () => {
     expect(calls).toEqual([
       {
         gameDir: "Q:/Steam/steamapps/common/RimWorld",
-        workshopDir: "C:/RimWorld/workshop",
+        workshopDir: "Q:/Steam/steamapps/workshop/content/294100",
         modsConfig: "C:/Profile/ModsConfig.xml",
       },
     ]);
   });
 
+  // SPEC CHANGE: the banner used to print the backend's English CLI text.
+  // The page now words `errorCode` itself and lists the checked locations.
   test("shows the no-install-found error with every candidate location", async ({ page }) => {
     await page.addInitScript((fixtures) => {
       window.__E2E_MOCK_IPC__ = {
@@ -44,24 +52,47 @@ test.describe("setup page path config", () => {
           workshopDir: null,
           modsConfig: null,
           profileDir: null,
-          warning: null,
-          error: [
-            "no RimWorld install found. Pass --game-dir <path>, set RIMMERGE_GAME_DIR, or",
-            "run `rimmerge config set --game-dir <path>`. Looked in:",
-            "  Q:/Steam/steamapps/common/RimWorld",
-            "  W:/SteamGames/steamapps/common/RimWorld",
-          ].join("\n"),
+          warningCode: null,
+          errorCode: {
+            kind: "gameDirNotFound",
+            candidates: [
+              "Q:/Steam/steamapps/common/RimWorld",
+              "W:/SteamGames/steamapps/common/RimWorld",
+            ],
+          },
         },
       };
     }, dashboardScenario);
     await page.goto("/setup");
 
     const banner = page.getByTestId("setup-detection-error");
-    await expect(banner).toContainText("no RimWorld install found");
-    await expect(banner).toContainText("Q:/Steam/steamapps/common/RimWorld");
-    await expect(banner).toContainText("W:/SteamGames/steamapps/common/RimWorld");
+    await expect(banner).toContainText("Locations checked:");
+    await expect(banner.locator("li code")).toHaveText([
+      "Q:/Steam/steamapps/common/RimWorld",
+      "W:/SteamGames/steamapps/common/RimWorld",
+    ]);
+    await expect(banner).not.toContainText("--game-dir");
     await expect(page.getByTestId("game-dir-input")).toHaveValue("");
     await expect(page.getByTestId("load-project-button")).toBeDisabled();
+  });
+
+  test("asks get_default_paths again with the game folder once the field loses focus", async ({
+    page,
+  }) => {
+    await page.addInitScript(installScenario);
+    await page.goto("/setup");
+
+    await page.getByTestId("game-dir-input").fill("D:/Steam/steamapps/common/RimWorld");
+    await page.getByTestId("workshop-dir-input").focus();
+
+    await expect
+      .poll(() => page.evaluate(() => window.__GET_DEFAULT_PATHS_CALLS__ ?? []))
+      .toEqual([{ gameDir: null }, { gameDir: "D:/Steam/steamapps/common/RimWorld" }]);
+    // The workshop folder follows the committed game folder, derived as the
+    // backend's `default_workshop_dir` does.
+    await expect(page.getByTestId("workshop-dir-input")).toHaveValue(
+      "D:/Steam/steamapps/workshop/content/294100",
+    );
   });
 });
 

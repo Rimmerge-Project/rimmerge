@@ -23,8 +23,10 @@ export const queryKeys = {
   gameLaunchStatus: () => ["gameLaunch", "status"] as const,
   /** `get_apply_preflight`'s result for one order source. */
   applyPreflight: (source: OrderSourceDto) => ["apply", "preflight", source] as const,
-  /** `get_default_paths`'s result, for the setup page. */
-  defaultPaths: () => ["setup", "defaultPaths"] as const,
+  /** `get_default_paths`'s result for one committed game folder (`null`: no field answer). */
+  defaultPaths: (gameDir: string | null) => ["setup", "defaultPaths", gameDir] as const,
+  /** Every `get_default_paths` answer, whatever game folder asked: the invalidation prefix. */
+  defaultPathsAll: () => ["setup", "defaultPaths"] as const,
   /** `get_default_rimsort_paths`'s result, for the import dialog. */
   defaultRimSortPaths: () => ["setup", "defaultRimSortPaths"] as const,
   /** `list_order`'s result for one order source. */

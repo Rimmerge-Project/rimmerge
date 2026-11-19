@@ -583,8 +583,9 @@
   },
   "defaultPathsError": {
     "noProfileBase": "Weder RIMMERGE_PROFILE_DIR noch LOCALAPPDATA ist gesetzt, daher hat Rimmerge keinen Ort für seine eigenen Dateien.",
-    "gameDirNotFound": "Es wurde kein RimWorld-Installationsverzeichnis gefunden. Die technischen Details unten nennen jeden geprüften Ort.",
-    "modsConfigNotFound": "Rimmerge konnte nicht ermitteln, wo ModsConfig.xml liegt. Siehe die technischen Details unten."
+    "gameDirNotFound": "Es wurde keine RimWorld-Installation gefunden. Gib unten den Spielordner ein oder wähle ihn mit „Durchsuchen“ aus (bei Steam den Ordner steamapps\\common\\RimWorld in der Bibliothek, die das Spiel enthält), und wähle dann „Als Standard speichern“.",
+    "checkedLocations": "Geprüfte Orte:",
+    "modsConfigNotFound": "Rimmerge konnte nicht ermitteln, wo ModsConfig.xml liegt, weil die Umgebungsvariable USERPROFILE nicht gesetzt ist. Gib unten den Pfad zu ModsConfig.xml ein."
   },
   "finding": {
     "kind": {

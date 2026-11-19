@@ -583,8 +583,9 @@
   },
   "defaultPathsError": {
     "noProfileBase": "Не задано ні RIMMERGE_PROFILE_DIR, ні LOCALAPPDATA, тож Rimmerge ніде зберігати власні файли.",
-    "gameDirNotFound": "Не вдалося знайти теку встановлення RimWorld. Усі перевірені розташування наведено в технічних подробицях нижче.",
-    "modsConfigNotFound": "Rimmerge не зміг визначити, де розташований ModsConfig.xml. Див. технічні подробиці нижче."
+    "gameDirNotFound": "Теку встановлення RimWorld не знайдено. Укажіть теку гри нижче або виберіть її кнопкою «Огляд» (для Steam — теку steamapps\\common\\RimWorld у бібліотеці, де встановлено гру), а потім натисніть «Зберегти як типові».",
+    "checkedLocations": "Перевірені розташування:",
+    "modsConfigNotFound": "Rimmerge не зміг визначити, де розташований ModsConfig.xml, бо змінну середовища USERPROFILE не задано. Укажіть шлях до ModsConfig.xml нижче."
   },
   "finding": {
     "kind": {

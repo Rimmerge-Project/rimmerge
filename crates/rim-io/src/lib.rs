@@ -64,8 +64,8 @@ pub use patches::JsonPatchProjectStore;
 pub use process::{GameProcessProbe, SysinfoGameProcessProbe};
 pub use profile::{databases_dir, profile_dir, resolve_user_dir};
 pub use project_paths::{
-    GAME_DIR_VAR, MODS_CONFIG_VAR, PathOverrides, PathResolutionError, ResolvedPaths,
-    WORKSHOP_DIR_VAR, not_an_install_warning, resolve_project_paths,
+    GAME_DIR_VAR, MODS_CONFIG_VAR, PartialPaths, PathOverrides, PathResolutionError, ResolvedPaths,
+    WORKSHOP_DIR_VAR, not_an_install_warning, resolve_each_path, resolve_project_paths,
 };
 pub use release_feed::GithubReleaseFeed;
 pub use rimsort::RimSortImporter;

@@ -4,20 +4,14 @@ import type { DefaultPathsWarningDto } from "./DefaultPathsWarningDto";
 
 /**
  * The default paths `get_default_paths` prefills the setup page with —
- * the result of the one precedence ladder
- * (`rim_io::resolve_project_paths`) `apps/cli`'s own `resolve_paths` also
- * goes through.
+ * the result of the one precedence ladder (`rim_io::resolve_each_path`)
+ * `apps/cli`'s own `resolve_paths` also goes through.
  *
- * Every field is optional and `error`/`errorCode` carry the reason when
- * the ladder ran out of rungs, rather than the command failing
- * outright: the setup page is exactly where a user with no detectable
- * install needs to land, and it needs to render its (empty) form *and*
- * tell them where was looked. `error` is the full
- * [`rim_io::PathResolutionError`] text, which names every candidate on
- * its own line; `errorCode`/`warningCode` are its localizable,
- * structured counterparts (kept alongside the strings for one release
- * as the "technical details" fallback — see
- * `apps/desktop/CLAUDE.md`'s i18n conventions).
+ * Every field is optional and each path resolves on its own: with no
+ * install found, `errorCode` says so while `modsConfig` and `profileDir`
+ * are still filled, because the setup page is exactly where a user with
+ * no detectable install needs to land. No field carries backend prose;
+ * `errorCode`/`warningCode` are structured and the frontend words them.
  */
 export type DefaultPathsDto = { 
 /**
@@ -25,7 +19,7 @@ export type DefaultPathsDto = {
  */
 gameDir: string | null, 
 /**
- * The resolved Steam workshop content folder for that install.
+ * The resolved Steam workshop content folder.
  */
 workshopDir: string | null, 
 /**
@@ -37,26 +31,15 @@ modsConfig: string | null,
  */
 profileDir: string | null, 
 /**
- * A **non-fatal** complaint about what *was* resolved — today, an
- * explicit field, `RIMMERGE_GAME_DIR`, or a pinned `config.json`
- * entry naming a directory that isn't a RimWorld install
- * ([`rim_io::ResolvedPaths::warning`]). The fields above are still
- * filled in: the user may be pointing at a drive that isn't mounted
- * yet, and refusing would be worse than saying so.
- */
-warning: string | null, 
-/**
- * [`DefaultPathsWarningDto`] version of `warning`. `Some` exactly
- * when `warning` is.
+ * A **non-fatal** complaint about what *was* resolved — an explicit
+ * field, `RIMMERGE_GAME_DIR`, or a pinned `config.json` entry naming
+ * a directory that isn't a RimWorld install. The fields above are
+ * still filled in: the user may be pointing at a drive that isn't
+ * mounted yet, and refusing would be worse than saying so.
  */
 warningCode: DefaultPathsWarningDto | null, 
 /**
- * Why nothing could be resolved, including every candidate location
- * that was looked at. `None` when resolution succeeded.
- */
-error: string | null, 
-/**
- * [`DefaultPathsErrorDto`] version of `error`. `Some` exactly when
- * `error` is.
+ * Why something could not be resolved: the first failure, the game
+ * folder's before the others. `None` when everything did.
  */
 errorCode: DefaultPathsErrorDto | null, };

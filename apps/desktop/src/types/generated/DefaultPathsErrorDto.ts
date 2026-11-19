@@ -2,21 +2,15 @@
 
 /**
  * A closed, machine-readable reason `get_default_paths` could not
- * resolve everything — the structured half of [`DefaultPathsDto::error`],
- * which stays as the "technical details" fallback. Mirrors
- * [`rim_io::PathResolutionError`]'s two ladder-exhaustion variants;
- * [`NoProfileBase`](DefaultPathsErrorDto::NoProfileBase) is this
- * command's own third case (neither `RIMMERGE_PROFILE_DIR` nor
+ * resolve everything. Mirrors [`rim_io::PathResolutionError`]'s two
+ * ladder-exhaustion variants; [`NoProfileBase`](DefaultPathsErrorDto::NoProfileBase)
+ * is this command's own third case (neither `RIMMERGE_PROFILE_DIR` nor
  * `LOCALAPPDATA` is set), which happens before the ladder ever starts.
+ * No variant carries backend prose: the frontend words each one.
  */
 export type DefaultPathsErrorDto = { "kind": "noProfileBase" } | { "kind": "gameDirNotFound", 
 /**
  * Every candidate location that was looked at. File paths:
  * never translated, rendered in `<code>`/monospace.
  */
-candidates: Array<string>, } | { "kind": "modsConfigNotFound", 
-/**
- * Why the derivation failed — an OS-level technical detail,
- * shown as such, never translated.
- */
-reason: string, };
+candidates: Array<string>, } | { "kind": "modsConfigNotFound" };

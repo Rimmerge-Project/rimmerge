@@ -111,20 +111,22 @@ In order, the first that resolves wins:
 3. `game_dir` in the app's own `config.json` (see below).
 4. auto-detection, platform-specific — every candidate is just checked
    for existence and RimWorld's own install shape (`Version.txt` +
-   `Data/Core/`); nothing is read from the registry or any other
-   Windows-specific API:
-   - **Windows**: every Steam library named by
-     `steamapps\libraryfolders.vdf` under `%ProgramFiles(x86)%\Steam`,
-     then under `%ProgramFiles%\Steam` (each library checked for its own
-     `steamapps\common\RimWorld`), then those two Steam roots'
-     `steamapps\common\RimWorld` directly, then
+   `Data/Core/`). Beyond `libraryfolders.vdf`, the only other thing read is
+   Steam's own install folder from the registry (below):
+   - **Windows**: Rimmerge first finds the Steam folders: the one Steam
+     records for the current user
+     (`HKCU\Software\Valve\Steam\SteamPath`), the machine-wide one
+     (`HKLM\SOFTWARE\WOW6432Node\Valve\Steam\InstallPath`), then
+     `%ProgramFiles(x86)%\Steam` and `%ProgramFiles%\Steam`. The
+     registry read is local and read-only; a missing or unreadable key
+     simply contributes nothing, and no network host is involved. So a
+     Steam installed on any drive, not only under Program Files, is
+     found. Then it checks every Steam library named by
+     `steamapps\libraryfolders.vdf` under each of those folders (each
+     library for its own `steamapps\common\RimWorld`), then those
+     folders' `steamapps\common\RimWorld` directly, then
      `%ProgramFiles(x86)%\GOG Galaxy\Games\RimWorld` and
-     `C:\GOG Games\RimWorld`. The Windows registry
-     (`HKCU\Software\Valve\Steam\SteamPath`) is deliberately not read —
-     it would cost a new dependency for a case the two `%ProgramFiles*%`
-     probes already cover, including a library on a second drive
-     (`libraryfolders.vdf` under the default root lists every library,
-     wherever it actually lives).
+     `C:\GOG Games\RimWorld`.
    - **macOS**: `~/Library/Application Support/Steam/steamapps/common/RimWorld`,
      then every other Steam library, then `/Applications/RimWorld.app`.
    - **Linux**: the usual native and Flatpak Steam locations, then every
@@ -138,7 +140,12 @@ every test that needs a real install.
 
 The workshop folder and `ModsConfig.xml` follow the identical ladder
 (`RIMMERGE_WORKSHOP_DIR`/`RIMMERGE_MODS_CONFIG`, then `config.json`,
-then a game-folder-relative default).
+then a default). The workshop default is relative to the game folder
+(`steamapps\workshop\content\294100` beside `steamapps\common`); the
+`ModsConfig.xml` default derives from `%USERPROFILE%`, not from the game
+folder. Each path resolves on its own: with no install found, the desktop
+Setup page still shows `ModsConfig.xml` and the profile folder, and once
+you enter or browse to a game folder it fills in the workshop folder too.
 
 **Platform support today**: Rimmerge builds and ships for Windows only.
 The candidate lists above cover macOS and Linux paths in case that
