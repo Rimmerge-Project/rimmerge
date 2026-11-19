@@ -274,7 +274,7 @@ of that command surface — no direct filesystem or process access outside
   pending** (the call can wait behind a long command such as verify, and a tick per
   interval would queue). A failed poll is ignored. Each `ModListRowDto` carries
   `membership` (`none`/`added`/`removed`, by base id), drawn by `MembershipBadge.vue`
-  beside the source badge (icon, word and tooltip, never colour alone). `FileChangeNote.vue`
+  after the mod name (icon, word and tooltip, never colour alone). `FileChangeNote.vue`
   on the Mods page shows two notes: the outside change (plain words, no file name; a
   membership change is the `(+N, -M)` sentence, a `reordered` change its own; each has a
   whole-sentence key with and without "Your pending changes are kept.", chosen by

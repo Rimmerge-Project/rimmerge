@@ -1,6 +1,9 @@
 import path from "node:path";
 
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
+// Type-only: pulls in `Window.__MODS_CONFIG_FILE__`'s ambient declaration.
+import type {} from "../../src/e2e-mock-bootstrap";
+import type { ModListDto } from "../../src/types/generated/ModListDto";
 import { loadScenario, modsPane } from "../specs/support";
 import { waitForQuietMain } from "./settle";
 
@@ -96,6 +99,56 @@ async function capture(page: Page, filePath: string): Promise<void> {
   await settle(page);
   // Playwright creates the file's parent directories.
   await page.screenshot({ path: filePath, animations: "disabled" });
+}
+
+/** Captures one element (settled first), so a doc image can show just the part it explains. */
+async function captureLocator(page: Page, target: Locator, filePath: string): Promise<void> {
+  await settle(page);
+  await target.screenshot({ path: filePath, animations: "disabled" });
+}
+
+/** Captures the smallest rectangle holding every given element, with a little air around it. */
+async function captureAround(
+  page: Page,
+  targets: readonly Locator[],
+  filePath: string,
+): Promise<void> {
+  await settle(page);
+  const boxes = await Promise.all(targets.map((target) => target.boundingBox()));
+  const found = boxes.filter((box) => box !== null);
+  if (found.length !== targets.length) {
+    throw new Error("every element of a cropped capture must be on screen");
+  }
+  const padding = 12;
+  const left = Math.max(0, Math.min(...found.map((box) => box.x)) - padding);
+  const top = Math.max(0, Math.min(...found.map((box) => box.y)) - padding);
+  const viewport = page.viewportSize();
+  if (viewport === null) {
+    throw new Error("docs screenshots need a fixed viewport");
+  }
+  const right = Math.min(
+    viewport.width,
+    Math.max(...found.map((box) => box.x + box.width)) + padding,
+  );
+  const bottom = Math.min(
+    viewport.height,
+    Math.max(...found.map((box) => box.y + box.height)) + padding,
+  );
+  await page.screenshot({
+    path: filePath,
+    animations: "disabled",
+    clip: { x: left, y: top, width: right - left, height: bottom - top },
+  });
+}
+
+/** The ids the session holds active now, in order. */
+async function activeModIds(page: Page): Promise<string[]> {
+  const list = await page.evaluate(() =>
+    window.__TAURI_INTERNALS__.invoke("list_working_mods", {
+      query: { search: null, tag: null, source: null, sort: null },
+    }),
+  );
+  return (list as ModListDto).items.map((row) => row.modId);
 }
 
 async function selectModRow(page: Page, modId: string): Promise<void> {
@@ -196,5 +249,86 @@ test.describe("docs screenshots", () => {
     await page.keyboard.press("Escape");
     await expect(page.getByTestId("apply-dialog")).toBeHidden();
     await capture(page, path.join(MODS_PAGE_DIR, "mods-page-after-rescan.png"));
+  });
+
+  test("mods page: the sort toggle, with a criterion other than the default active", async ({
+    page,
+  }) => {
+    await startScenario(page, "dark");
+    await openMods(page);
+    const activePane = modsPane(page, "active");
+    await activePane.getByTestId("mods-sort-name").click();
+    await expect(activePane.getByTestId("mods-sort-name")).toHaveAccessibleName(/Sorted by name/);
+
+    await captureLocator(
+      page,
+      activePane.getByTestId("mods-sort-bar"),
+      path.join(MODS_PAGE_DIR, "sort-toggle.png"),
+    );
+  });
+
+  test("mods page: Added and Removed marks after the mod names", async ({ page }) => {
+    await startScenario(page, "dark");
+    await openMods(page);
+    const activeIds = await activeModIds(page);
+    // Mod 8 is a plain mid-list mod the scenario lets go without a dependents warning.
+    const removedId = "mod.008";
+    expect(activeIds).toContain(removedId);
+
+    await selectModRow(page, "mod.905");
+    await page.getByTestId("activate-selected-button").click();
+    await page.getByTestId("activate-confirm-submit").click();
+    await expect(page.getByTestId("activate-confirm-dialog")).toBeHidden();
+
+    await modsPane(page, "active").getByTestId("mods-search").fill(removedId);
+    await selectModRow(page, removedId);
+    await page.getByTestId("deactivate-selected-button").click();
+    await page.getByTestId("deactivate-confirm-submit").click();
+    await expect(page.getByTestId("deactivate-confirm-dialog")).toBeHidden();
+
+    // Narrow each list to its own marked row, so both marks are in the frame.
+    await modsPane(page, "active").getByTestId("mods-search").fill("mod.905");
+    await modsPane(page, "inactive").getByTestId("mods-search").fill(removedId);
+    await expect(
+      modsPane(page, "active").getByTestId("mod-row-mod.905").getByTestId("membership-badge"),
+    ).toContainText("Added");
+    await expect(
+      modsPane(page, "inactive")
+        .getByTestId(`mod-row-${removedId}`)
+        .getByTestId("membership-badge"),
+    ).toContainText("Removed");
+    await capture(page, path.join(MODS_PAGE_DIR, "membership-marks.png"));
+  });
+
+  test("mods page: the saved list was changed outside Rimmerge", async ({ page }) => {
+    await startScenario(page, "dark");
+    await openMods(page);
+    const before = await activeModIds(page);
+
+    // What another program does: writes the file, then the window comes back into focus.
+    await page.evaluate(
+      (outside) => {
+        window.__MODS_CONFIG_FILE__ = { status: "ok", activeMods: outside };
+        window.dispatchEvent(new Event("blur"));
+        window.dispatchEvent(new Event("focus"));
+      },
+      [...before.filter((modId) => modId !== "mod.008"), "mod.906"],
+    );
+    await expect(page.getByTestId("file-changed-outside-text")).toContainText("(+1, -1)");
+    await capture(page, path.join(MODS_PAGE_DIR, "outside-change-note.png"));
+  });
+
+  test("mods page: a moved order is not your active order yet", async ({ page }) => {
+    await startScenario(page, "dark");
+    await openMods(page);
+    await page.getByTestId("mod-row-menu-mod.004").click();
+    await page.getByTestId("mod-move-top").click();
+    await expect(page.getByTestId("order-not-in-file-revert")).toBeVisible();
+
+    await captureAround(
+      page,
+      [page.getByTestId("order-not-in-file"), page.getByTestId("order-switched-note")],
+      path.join(MODS_PAGE_DIR, "order-not-applied-note.png"),
+    );
   });
 });

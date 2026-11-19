@@ -510,7 +510,7 @@ function rowMenuLabel(modId: string): string {
           :tabindex="rovingIndex === null ? (virtualRow.index === 0 ? 0 : -1) : virtualRow.index === rovingIndex ? 0 : -1"
           :aria-current="mod.modId === lastFocusedId ? 'true' : undefined"
           :draggable="draggable"
-          class="border-border-subtle hover:bg-surface-2 focus-visible:bg-accent-soft absolute top-0 left-0 flex w-full cursor-pointer items-center gap-3 border-b px-3 text-sm focus-visible:outline"
+          class="border-border-subtle hover:bg-surface-2 focus-visible:bg-accent-soft absolute top-0 left-0 flex w-full cursor-pointer items-center gap-2 overflow-hidden border-b @lg:gap-3 px-3 text-sm focus-visible:outline"
           :class="draggingSet.has(mod.modId) ? 'opacity-50' : ''"
           :style="{
             height: `${virtualRow.size}px`,
@@ -542,8 +542,9 @@ function rowMenuLabel(modId: string): string {
           </template>
           <SourceBadge :source="mod.source" />
           <span
-            class="text-text flex-1 truncate font-medium"
+            class="text-text min-w-12 flex-1 truncate font-medium"
             :title="modLabel.titleFor(mod.modId)"
+            :data-testid="`mod-row-name-${mod.modId}`"
           >{{ modLabel.label(mod.modId) }}</span>
           <MembershipBadge :mark="mod.membership" />
           <span
@@ -553,24 +554,40 @@ function rowMenuLabel(modId: string): string {
           >{{ t("mods.table.missing") }}</span>
           <span
             v-else-if="showActiveColumns && mod.state.kind === 'pendingScan'"
-            class="bg-surface-2 text-text-muted shrink-0 rounded px-1.5 py-0.5 text-xs font-medium"
+            role="img"
+            class="bg-surface-2 text-text-muted inline-flex shrink-0 items-center rounded px-1.5 py-0.5 text-xs font-medium"
+            :aria-label="t('mods.table.pendingScan')"
+            :title="t('mods.table.pendingScan')"
             data-testid="mod-row-pending-scan-pill"
-          >{{ t("mods.table.pendingScan") }}</span>
+          >
+            <!-- One accessible name on this wrapper, as SourceBadge does. Narrow, the words give way to an icon; a keyboard user has no hover tooltip, so the state reaches them through this name and the pending-changes banner. -->
+            <span
+              class="hidden @md:inline"
+              aria-hidden="true"
+            >{{ t("mods.table.pendingScan") }}</span>
+            <span
+              class="@md:hidden"
+              aria-hidden="true"
+            ><span class="pi pi-clock" /></span>
+          </span>
           <span
             v-if="showUpdated"
-            class="text-text-muted w-28 shrink-0 truncate text-right text-xs"
+            class="text-text-muted w-20 min-w-0 truncate text-right text-xs @lg:w-28 @lg:shrink-0"
             :title="updatedText(mod)"
             :data-testid="`mod-row-updated-${mod.modId}`"
           >{{ updatedText(mod) }}</span>
           <template v-if="showActiveColumns">
-            <span class="flex gap-1">
+            <span
+              v-if="tagsOf(mod).length > 0"
+              class="hidden min-w-0 gap-1 overflow-hidden @md:flex"
+            >
               <span
                 v-for="tag in tagsOf(mod)"
                 :key="tag"
-                class="bg-surface-2 text-text-muted rounded px-1.5 py-0.5 text-xs"
+                class="bg-surface-2 text-text-muted shrink-0 rounded px-1.5 py-0.5 text-xs"
               >{{ tag }}</span>
             </span>
-            <span class="text-text-muted w-10 text-right text-xs">{{ hardDependentsOf(mod) ?? "—" }}</span>
+            <span class="text-text-muted hidden w-10 shrink-0 text-right text-xs @md:inline">{{ hardDependentsOf(mod) ?? "—" }}</span>
           </template>
           <Button
             v-if="rowMenu !== 'none'"

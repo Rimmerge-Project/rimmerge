@@ -10,6 +10,9 @@ import { defineConfig } from "@playwright/test";
 // `RIMMERGE_DOCS_SCREENSHOTS=1`; each spec skips without its own variable.
 // Same mock-IPC tier and same dedicated port (5183, `--strictPort`) as
 // `e2e/playwright.config.ts`, so never run the two at once.
+// The launch flags keep Chromium's rasterizer from varying between runs:
+// without them a few rounded-border pixels of the docs images flipped by one
+// colour level from run to run, so two runs did not write identical files.
 export default defineConfig({
   testDir: ".",
   testMatch: /.*\.spec\.ts/,
@@ -29,5 +32,15 @@ export default defineConfig({
     reuseExistingServer: false,
     cwd: "../..",
   },
-  projects: [{ name: "chromium", use: { browserName: "chromium" } }],
+  projects: [
+    {
+      name: "chromium",
+      use: {
+        browserName: "chromium",
+        launchOptions: {
+          args: ["--disable-partial-raster", "--disable-lcd-text", "--disable-threaded-animation"],
+        },
+      },
+    },
+  ],
 });

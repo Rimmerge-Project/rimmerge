@@ -254,7 +254,8 @@ search, tag and source filters, and it only changes what you see: it never
 changes the load order, a pending edit or `ModsConfig.xml`, and it is not
 saved (it is kept while the page stays open and starts over when another
 project is loaded). While the sort is Last updated, each row also shows its
-date. While Active is sorted by anything other than Load order, each of its
+date (shortened when a narrow list runs out of room; hover it for the full
+date). While Active is sorted by anything other than Load order, each of its
 rows also shows its load-order position (`#12`), so the sort cannot be
 mistaken for the order.
 
@@ -349,8 +350,8 @@ outside Rimmerge (the outside-change note's own action covers that case). See
 on your computer carries a small mark. An Active row the saved list does not
 have is **Added** (Apply will add it), and an Inactive row the saved list still
 has is **Removed** (Apply will remove it). The mark has an icon and a word, and
-its tooltip says what Apply does, so it is never colour alone; it sits beside
-the source icon. A mod counts as the same mod with or without its `_steam`
+its tooltip says what Apply does, so it is never colour alone; it sits after
+the mod name. A mod counts as the same mod with or without its `_steam`
 suffix, and a reorder alone never makes a mark. "Removed" means a mod that is
 installed and still in the saved list: it stays easy to find in Inactive until
 you Apply or activate it again. A mod that is in the saved list but not
@@ -432,6 +433,27 @@ Selecting inactive mods to activate:
 A move leaves an order to apply, and says the page now uses your own order:
 
 ![After moving a mod](screenshots/mods-page/moved-order.png)
+
+The two notes a move raises, up close: the order is not your active order yet
+(with Apply and Revert to your saved active order), and the page now uses your
+own order (with View suggested):
+
+![The notes after a move: This isn't your active order yet, and Now using your own order](screenshots/mods-page/order-not-applied-note.png)
+
+One button per criterion sorts a list; the active one shows its direction:
+
+![The sort buttons above the Active list, Name sorted A to Z](screenshots/mods-page/sort-toggle.png)
+
+Rows that differ from the saved active mod list carry an Added or Removed mark
+after their name (each list is narrowed to its marked row here):
+
+![An Added row in Active and a Removed row in Inactive](screenshots/mods-page/membership-marks.png)
+
+When the saved list is changed outside Rimmerge, a note says so and offers the
+file's list; the marks follow the file, so the mod the file adds shows as
+Removed in Inactive and the mod it lacks as Added in Active:
+
+![The note: Your active mod list was changed outside Rimmerge](screenshots/mods-page/outside-change-note.png)
 
 Activating pulls in dependencies on request:
 
