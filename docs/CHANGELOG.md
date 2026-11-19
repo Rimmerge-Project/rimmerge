@@ -3,7 +3,7 @@
 This changelog starts at the first public release. Development history
 before that point is not summarized here.
 
-## [Unreleased]
+## [1.2.4] - 2026-11-19
 
 - **New: see what Apply will add or remove.** On the Mods page, an Active mod
   that your saved active mod list does not have is marked **Added**, and an
