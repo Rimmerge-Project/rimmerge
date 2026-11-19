@@ -1240,7 +1240,8 @@
         "local": "Local mod",
         "workshop": "Steam Workshop"
       },
-      "rovingHint": "Use the arrow keys to move, Enter to open, Space to toggle"
+      "rovingHint": "Use the arrow keys to move, Enter to open, Space to toggle",
+      "pendingScan": "not scanned yet"
     },
     "pendingChanges": {
       "unscanned": "{count} pending change — Rescan to update analysis | {count} pending changes — Rescan to update analysis",
@@ -1302,11 +1303,19 @@
       "refusedHeading": "Refused (required):",
       "dependentsStillActive": "{count} active mod still depends on {mod}: {deps}. | {count} active mods still depend on {mod}: {deps}.",
       "deactivatedToast": "Deactivated",
-      "deactivateButton": "Deactivate"
+      "deactivateButton": "Deactivate",
+      "rescanButton": "Rescan mods"
     },
     "defSearch": {
       "ariaLabel": "Jump to a def",
       "placeholder": "Jump to a def…"
+    },
+    "selection": {
+      "selectAllShown": "Select all {count} shown | Select all {count} shown",
+      "selectAllEmpty": "Select all",
+      "selectedCount": "{count} selected | {count} selected",
+      "notShown": "{count} not shown | {count} not shown",
+      "clear": "Clear selection"
     }
   },
   "rules": {

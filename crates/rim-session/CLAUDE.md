@@ -124,6 +124,25 @@ first use and never invalidated.
   already caps). `Session.def_graphics` (what a def's texture resolves to)
   is bounded the same way at `MAX_CACHED_DEF_GRAPHICS` (1,024), so a
   refetch stays cheap after the smaller inspection cache has been thrashed.
+- **Working set == current set implies working sequence == current
+  sequence.** `settle_working` (`pub(crate)`) runs at the end of
+  `set_current_order` and after every production mutation of `working`
+  (`ActivateMods::execute`, `DeactivateMods::execute`): when
+  `working` and the new Current hold exactly the same ids (duplicates
+  respected), `working` takes Current's sequence. A rescan scans
+  `working`'s sequence, so without it an `Apply` followed by a rescan
+  scanned the pre-apply order and reverted Current. A `working` with
+  pending membership edits keeps its own sequence (nothing is settled
+  yet). `is_stale` stays set-based.
+- **"Mods that move" is derived on read.** `Session::moved_mods` measures
+  `suggested` against the live `current`
+  (`rim_resolve::sort::compute_disturbance`); `SortOutcome.stats` is the
+  snapshot from the last sort and goes stale at `set_current_order`, so the
+  desktop dashboard never reads it (the CLI's `sort` output still does).
+- `set_current_order` re-sorts (`recompute_sort`) only when the id set is
+  unchanged, Current's sequence changed and `tie_break` is `PreserveCurrent`
+  (Suggested ranks by Current's positions there). A changed id set never
+  re-sorts: a just-written id is not in the report yet.
 - `Session::set_current_order` is the **one** way anything should change
   `orders.current` after load — `ExportPatch`'s own `install` and `Apply`
   both call it right after writing `ModsConfig.xml`. Skipping it is a
@@ -622,13 +641,24 @@ that same delta into `working` too (`ActiveSet::force_activate`, no
 inventory check — the caller just wrote this id to the real file) —
 otherwise a plain install-then-apply would read as stale for no reason.
 
-`Session::mods`/`inactive_mods` flow through `mod_index::query`/
-`query_inactive`; `query` also `.chain()`s a synthetic row per
-`report.missing_mods` entry onto the ordinary rows so a missing mod is
-searchable through the same path as everything else —
-`ModSummary.source` is `None` only for a missing row (there's no
-`About.xml` to have read a source from; a fabricated one would be a
-lie), and it only ever matches an unrestricted source filter.
+`Session::mods` flows through `mod_index::query` (the **scanned** tier, paged
+and capped at `MAX_PAGE_SIZE`; patch scopes and rule pickers use it); it
+`.chain()`s a synthetic row per `report.missing_mods` entry so a missing mod
+is searchable through the same path as everything else, and
+`ModSummary.source` is `None` only for a missing row (there's no `About.xml`
+to have read a source from; a fabricated one would be a lie).
+
+The Mods page reads the **working** tier through `mod_lists`:
+`Session::working_mod_list` (the working set in its own order) and
+`Session::inactive_mod_list` (every discovered mod whose base id is not in
+it, by id). Both take a `ModListQuery` (search, tag, source; no paging) and
+return every matching row up to `MAX_MOD_LIST_ROWS` (5,000) with `total`
+counted before the cut, so a cut is visible. A row's `RowState` is closed:
+`Scanned { tags, hard_dependents }` (in `report.mods`), `PendingScan` (no
+scan facts: in the Active list, activated since the last scan; in the
+Inactive list, an ordinary inactive mod) or `Missing`. Filtering lives
+there, never in a command or in Vue. The tag filter applies to scanned rows
+of the Active list only; a specific source excludes a missing row.
 
 ## Sharing a load order (`mod_list`, `ExportOrder`, `PreviewOrderImport`, `ImportOrder`)
 

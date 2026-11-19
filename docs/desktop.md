@@ -84,6 +84,13 @@ saved, so the next load opens on Suggested again. A rescan keeps the
 order you had selected. Apply writes the order named in the dialog's
 "Order" row, which is sent with the request.
 
+**Mods that move** (on the Dashboard, in the strip and in the Apply dialog)
+is how many mods the suggested order places differently from the current
+one. It is measured against the orders as they are now, not against the
+moment the sorter last ran, so it falls to 0 as soon as an Apply makes the
+current order the suggested one, and it follows any later change to either
+order without a rescan.
+
 The app can also list the **hard problems** in the order Apply would
 write: a required mod that is not active, two active mods declared
 incompatible, a mod in `ModsConfig.xml` that is not on disk, a violated
@@ -209,6 +216,32 @@ you Rescan and then Apply. Until then a pending-changes banner shows it,
 and a stale-order warning appears once the active set no longer matches
 the order you last built.
 `Activate` can pull in a mod's own declared dependencies first.
+
+**The lists show the working set.** Active is the active-mod list as you
+have edited it, in its own order, with every mod in it (there is no page
+limit; a list is bounded at 5,000 rows, with the full count shown and a
+note when it is cut). Inactive is every mod found on disk that is not in
+it, by id. A mod you just activated is in Active at once, marked "not
+scanned yet" until you Rescan (its tags and dependents are scan results);
+a mod you just deactivated is in Inactive at once. A mod `ModsConfig.xml`
+lists but that is not installed is in Active with a "missing" mark.
+
+**Select all and Clear selection.** Each list has a "Select all N shown"
+checkbox that selects the rows matching the current search and filters,
+and nothing else, and a **Clear selection** button. A row selected before
+a filter hid it stays selected; the list says "(N not shown)", and Clear
+removes those too. A selection is never saved and changes nothing by
+itself: Activate selected and Deactivate selected still open their plan
+and confirmation first, and if the plan cannot be made the dialog opens
+with the reason and no way to confirm.
+
+**Rescan mods** (top right of the page, always available) re-scans the
+mods in the active list in their current order, exactly as the pending
+changes banner's Rescan does. Use it after changing files on disk.
+Everything that depends on the order, such as Mods that move, is
+recalculated whenever either order changes (an Apply, an import).
+Activating or deactivating mods only changes the pending list, so those
+changes reach it after a rescan.
 
 Opening a row from either tab (`/mods/:modId` — inactive mods can be
 opened too, not just active ones) shows a mod info panel beside the

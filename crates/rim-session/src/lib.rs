@@ -22,6 +22,7 @@ pub mod mod_info;
 mod mod_inventory;
 mod mod_knowledge;
 pub mod mod_list;
+mod mod_lists;
 mod paths;
 mod recommended_rules;
 mod replay_pool;
@@ -58,6 +59,7 @@ pub use merge_workspace::{
 pub use mod_index::{ModFilter, ModPage, ModSummary};
 pub use mod_inventory::{InventoryEntry, ModInventory};
 pub use mod_knowledge::ModKnowledge;
+pub use mod_lists::{MAX_MOD_LIST_ROWS, ModList, ModListQuery, ModListRow, RowState};
 pub use paths::ProjectPaths;
 pub use recommended_rules::{
     FirstRun, RecommendedRulesFacts, RecommendedRulesStep, SourceNeed, StepSkip, Unavailable,

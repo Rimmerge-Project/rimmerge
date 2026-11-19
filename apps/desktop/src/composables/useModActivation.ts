@@ -10,7 +10,8 @@ import { type CommandErrorDescriptor, describeCommandError } from "@/utils/error
  * The Mods page's activate flow: plan the selected inactive mods, show
  * the plan in a confirm dialog, then commit. A successful commit closes
  * the dialog, clears `selectedIds` and toasts; a failed one keeps both
- * and shows the error in the dialog.
+ * and shows the error in the dialog. A failed plan opens the dialog too, with the
+ * error and no plan.
  */
 export function useModActivation({
   selectedIds,
@@ -38,7 +39,11 @@ export function useModActivation({
       });
       isDialogVisible.value = true;
     } catch (caught: unknown) {
+      // The dialog opens with no plan so the failure is shown where the user
+      // is looking; its confirm button stays disabled until a plan exists.
+      plan.value = null;
       error.value = describeCommandError(caught);
+      isDialogVisible.value = true;
     }
   }
 

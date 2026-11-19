@@ -38,7 +38,9 @@ test.describe("apply preflight mock", () => {
     expect(suggested.requiresConfirmation).toBe(true);
   });
 
-  test("the file matches the suggested order only after applying it", async ({ page }) => {
+  test("the file matches the suggested order after applying it, and keeps matching once Current is applied", async ({
+    page,
+  }) => {
     await loadScenario(page);
     const matches = () =>
       page.evaluate(async () => {
@@ -57,7 +59,9 @@ test.describe("apply preflight mock", () => {
     expect(await matches()).toBe(false);
     await applySource("suggested");
     expect(await matches()).toBe(true);
+    // Applying makes the written order Current (`Session::set_current_order`), so the file keeps
+    // matching the suggested order, which equals Current now, whichever source is applied next.
     await applySource("current");
-    expect(await matches()).toBe(false);
+    expect(await matches()).toBe(true);
   });
 });

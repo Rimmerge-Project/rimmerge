@@ -1240,7 +1240,8 @@
         "local": "Yerel mod",
         "workshop": "Steam Atölyesi"
       },
-      "rovingHint": "Gezinmek için ok tuşlarını, açmak için Enter'ı, seçimi değiştirmek için Boşluk'u kullan"
+      "rovingHint": "Gezinmek için ok tuşlarını, açmak için Enter'ı, seçimi değiştirmek için Boşluk'u kullan",
+      "pendingScan": "henüz taranmadı"
     },
     "pendingChanges": {
       "unscanned": "{count} bekleyen değişiklik — analizi güncellemek için yeniden tara | {count} bekleyen değişiklik — analizi güncellemek için yeniden tara",
@@ -1302,11 +1303,19 @@
       "refusedHeading": "Reddedildi (gerekli):",
       "dependentsStillActive": "{count} etkin mod hâlâ {mod} moduna bağımlı: {deps}. | {count} etkin mod hâlâ {mod} moduna bağımlı: {deps}.",
       "deactivatedToast": "Devre dışı bırakıldı",
-      "deactivateButton": "Devre dışı bırak"
+      "deactivateButton": "Devre dışı bırak",
+      "rescanButton": "Modları yeniden tara"
     },
     "defSearch": {
       "ariaLabel": "Bir Def'e git",
       "placeholder": "Bir Def'e git…"
+    },
+    "selection": {
+      "selectAllShown": "Gösterilen {count} modun tümünü seç | Gösterilen {count} modun tümünü seç",
+      "selectAllEmpty": "Tümünü seç",
+      "selectedCount": "{count} seçili | {count} seçili",
+      "notShown": "{count} gösterilmiyor | {count} gösterilmiyor",
+      "clear": "Seçimi temizle"
     }
   },
   "rules": {

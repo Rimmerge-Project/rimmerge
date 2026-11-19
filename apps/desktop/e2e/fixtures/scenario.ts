@@ -193,6 +193,16 @@ declare global {
     __DEACTIVATE_CALLS__?: DeactivateRequestDto[];
     /** How many `rescan_project` calls the mock received — for the active-set spec. */
     __RESCAN_CALLS__?: number;
+    /**
+     * Set before the scenario installs: how many extra inactive mods (`mod.9xx` ids) the Inactive
+     * pool gets on top of its ten, so a spec can exercise a list well past the old 200-row page.
+     */
+    __EXTRA_INACTIVE_MODS__?: number;
+    /**
+     * Set before the scenario installs: ids that `ModsConfig.xml` lists but no folder on disk
+     * backs, appended to the working, scanned and file sets (the backend's `missing_mods`).
+     */
+    __MISSING_MODS__?: string[];
     /** Every `open_mod_link` payload the mock received, in order — for the mod info panel spec. */
     __OPEN_MOD_LINK_CALLS__?: { modId: string; link: ModLinkKindDto }[];
     /** Every `open_app_link` payload the mock received, in order — for the settings/sidebar link specs. */
@@ -1953,7 +1963,7 @@ export function installScenario(): void {
     name: string;
     source: "local" | "workshop";
     dependsOn: string[];
-  }[] = Array.from({ length: 10 }, (_, index) => ({
+  }[] = Array.from({ length: 10 + (window.__EXTRA_INACTIVE_MODS__ ?? 0) }, (_, index) => ({
     modId: `mod.9${(index + 1).toString().padStart(2, "0")}`,
     name: `Inactive Mod ${index + 1}`,
     source: index % 2 === 0 ? "local" : ("workshop" as const),
@@ -3150,7 +3160,13 @@ export function installScenario(): void {
   // only from the removal deltas never sees it. With full sets, `mod.906`
   // simply stops being in `workingActiveIds` while it's still in
   // `scannedActiveIds`, which is exactly what `removed` means.
-  const baseActiveIds = new Set([...mods, ...extraModsFromFixtures()].map((mod) => mod.modId));
+  // A missing mod is listed by `ModsConfig.xml` but has no folder, so it is active in every tier
+  // yet has no row in any pool (`Report::missing_mods`).
+  const missingModIds = [...(window.__MISSING_MODS__ ?? [])];
+  const baseActiveIds = new Set([
+    ...[...mods, ...extraModsFromFixtures()].map((mod) => mod.modId),
+    ...missingModIds,
+  ]);
   const workingActiveIds = new Set(baseActiveIds);
   let scannedActiveIds = new Set(baseActiveIds);
   let fileActiveIds = new Set(baseActiveIds);
@@ -3159,6 +3175,37 @@ export function installScenario(): void {
   // current order and becomes whichever order a successful
   // `apply { writeModsConfig: true }` wrote.
   let fileOrder = [...currentOrder];
+
+  // The mock's `currentOrder` lists only the fixture's own mods, while the working/scanned sets
+  // also hold fixture-only owners and missing mods. The real Current is exactly the scanned
+  // set, so those "omitted" ids count as members of Current whenever they are scanned.
+  const omittedFromCurrentOrder = [...baseActiveIds].filter((id) => !currentOrder.includes(id));
+
+  /** The ids the real `orders.current` would hold: `currentOrder` plus its scanned omissions. */
+  function currentIdSet(): Set<string> {
+    return new Set([
+      ...currentOrder,
+      ...omittedFromCurrentOrder.filter((id) => scannedActiveIds.has(id)),
+    ]);
+  }
+
+  /**
+   * `Session::settle_working`: when working and Current hold the same ids, working takes
+   * Current's sequence. A working set with pending membership edits keeps its own.
+   */
+  function settleWorking(): void {
+    const current = currentIdSet();
+    const hasSameIds =
+      current.size === workingActiveIds.size &&
+      [...current].every((id) => workingActiveIds.has(id));
+    if (!hasSameIds) return;
+    const settled = [
+      ...currentOrder,
+      ...[...workingActiveIds].filter((id) => !currentOrder.includes(id)),
+    ];
+    workingActiveIds.clear();
+    for (const id of settled) workingActiveIds.add(id);
+  }
 
   // The Databases
   // card's own mock state — deliberately narrower than `RuleDatabaseViewDto`
@@ -3268,15 +3315,15 @@ export function installScenario(): void {
     community: [[5, 8]],
     steam: [[30, 34]],
   };
-  const baselineSuggestedOrder = [...suggestedOrder];
-  // The fixture's `movedMods` has always been 3 (its three swaps); an import's own swaps add the
-  // mods it moved on top of that, so the count really follows the order.
-  const BASELINE_MOVED_MODS = 3;
+  /**
+   * Mirrors `Session::moved_mods`: how many mods the suggested order places differently from the
+   * current one, measured over the live orders (`rim_resolve::sort::disturbance::compute`'s
+   * `positions_changed`: a mod whose position differs, or that Current lacks). Never a constant:
+   * an `apply` that makes Current equal Suggested must read 0.
+   */
   function movedModsCount(): number {
-    const movedByImport = suggestedOrder.filter(
-      (id, index) => id !== baselineSuggestedOrder[index],
-    ).length;
-    return BASELINE_MOVED_MODS + movedByImport;
+    const currentPosition = new Map(currentOrder.map((id, index) => [id, index]));
+    return suggestedOrder.filter((id, index) => currentPosition.get(id) !== index).length;
   }
 
   function recommendedRulesStepFor(skip: "honor" | "ignore"): RecommendedRulesStepDto {
@@ -4370,21 +4417,139 @@ export function installScenario(): void {
     return allRows.filter((mod) => scannedActiveIds.has(mod.modId));
   }
 
+  /** `rim_session::MAX_PAGE_SIZE`: the most rows one scanned-tier `list_mods` page returns. */
+  const MAX_PAGE_SIZE = 200;
+
+  /** A `list_mods` row (`ModSummaryDto`), as the mock sends it. */
+  type ScannedListRow = {
+    modId: string;
+    name: string;
+    source: string | null;
+    tags: string[];
+    hardDependents: number;
+    generated: null;
+    missing: boolean;
+    workshopId: number | null;
+  };
+
+  /** A mock Workshop published-file id: only a Workshop mod has one. */
+  function workshopIdOf(row: { modId: string; source: string | null }): number | null {
+    return row.source === "workshop"
+      ? 1_000_000 + Number.parseInt(row.modId.replace(/\D/g, "") || "0", 10)
+      : null;
+  }
+
+  type ModListQueryMock = { search: string | null; tag: string | null; source: string | null };
+
+  /** `rim_session::MAX_MOD_LIST_ROWS`: the most rows either working-tier list returns. */
+  const MAX_MOD_LIST_ROWS = 5_000;
+
+  type ModRowStateMock =
+    | { kind: "scanned"; tags: string[]; hardDependents: number }
+    | { kind: "pendingScan" }
+    | { kind: "missing" };
+
+  /** One `ModListRowDto`, as the mock sends it. */
+  type ModListRowMock = {
+    modId: string;
+    name: string;
+    source: string | null;
+    position: number | null;
+    state: ModRowStateMock;
+    generated: null;
+    workshopId: number | null;
+  };
+
+  /** A pool row (`mods`, fixture owners, `inactiveModRow`) shaped as a `ModListRowDto`. */
+  function modListRow(
+    row: (typeof mods)[number],
+    position: number | null,
+    state: ModRowStateMock,
+  ): ModListRowMock {
+    return {
+      modId: row.modId,
+      name: row.name,
+      source: row.source,
+      position,
+      state,
+      generated: row.generated,
+      workshopId: workshopIdOf(row),
+    };
+  }
+
+  /** A row whose facts come from a scan (`tags`/`hardDependents`) or, unscanned, from nothing. */
+  function stateOf(row: (typeof mods)[number], isScanned: boolean): ModRowStateMock {
+    return isScanned
+      ? { kind: "scanned", tags: row.tags, hardDependents: row.hardDependents }
+      : { kind: "pendingScan" };
+  }
+
+  /**
+   * `Session::working_mod_list` / `inactive_mod_list`: the Active list is the working set in its
+   * own order (a row is scanned, pending its scan, or missing), the Inactive list is every
+   * discovered mod outside it, sorted by id. Search matches id or name; the tag filter applies to
+   * scanned rows of the Active list only; a source filter excludes a missing row. Bounded by
+   * `MAX_MOD_LIST_ROWS` with `total` reported before the cut.
+   */
+  function modListFor(which: "working" | "inactive", query: ModListQueryMock) {
+    const pool = [...mods, ...extraModsFromFixtures()];
+    const poolById = new Map(pool.map((row) => [row.modId, row]));
+    const unscannedById = new Map(
+      inactiveMods.map((mod) => [mod.modId, inactiveModRow(mod.modId)]),
+    );
+    let rows: ModListRowMock[];
+    if (which === "working") {
+      rows = [...workingActiveIds].map((id, position): ModListRowMock => {
+        const scanned = poolById.get(id);
+        if (scanned !== undefined) return modListRow(scanned, position, stateOf(scanned, true));
+        const unscanned = unscannedById.get(id);
+        if (unscanned !== undefined) {
+          // Activated since the last scan, or scanned since (then it has a scan's facts, which for
+          // an inactive-pool mod are the empty tags every such row carries).
+          return modListRow(unscanned, position, stateOf(unscanned, scannedActiveIds.has(id)));
+        }
+        return {
+          modId: id,
+          name: id,
+          source: null,
+          position,
+          state: { kind: "missing" },
+          generated: null,
+          workshopId: null,
+        };
+      });
+    } else {
+      const deactivated = pool
+        .filter((row) => !workingActiveIds.has(row.modId))
+        .map((row) => modListRow(row, null, stateOf(row, true)));
+      const unscanned = [...unscannedById.values()]
+        .filter((row) => !workingActiveIds.has(row.modId))
+        .map((row) => modListRow(row, null, stateOf(row, scannedActiveIds.has(row.modId))));
+      rows = [...deactivated, ...unscanned].toSorted(compareByModId);
+    }
+    const needle = query.search?.toLowerCase() ?? null;
+    const matching = rows
+      .filter((row) =>
+        needle === null
+          ? true
+          : row.modId.toLowerCase().includes(needle) || row.name.toLowerCase().includes(needle),
+      )
+      .filter((row) => query.source === null || row.source === query.source)
+      .filter((row) => {
+        if (which === "inactive" || query.tag === null) return true;
+        return row.state.kind === "scanned" && row.state.tags.includes(query.tag);
+      });
+    return { total: matching.length, items: matching.slice(0, MAX_MOD_LIST_ROWS) };
+  }
+
   /**
    * `list_mods`/`list_inactive_mods` row order: ascending mod id, as
-   * `rim-session`'s `mod_index::query`/`query_inactive` sort. Code-unit
+   * `rim-session`'s `mod_index::query` sort. Code-unit
    * comparison, not `localeCompare`, to match Rust's byte-wise `String`
    * order on these (lowercase, ASCII) ids.
    */
   function compareByModId(a: { modId: string }, b: { modId: string }): number {
     return a.modId < b.modId ? -1 : a.modId > b.modId ? 1 : 0;
-  }
-
-  /** The Inactive tab's own list: every `inactiveMods` entry not currently (scanned-)active. */
-  function scannedInactiveModList(): (typeof mods)[number][] {
-    return inactiveMods
-      .filter((mod) => !scannedActiveIds.has(mod.modId))
-      .map((mod) => inactiveModRow(mod.modId));
   }
 
   /** `PendingActiveChangesDto`-shaped diff between two full active-id sets. */
@@ -4447,6 +4612,11 @@ export function installScenario(): void {
     const refused: string[] = [];
     const dependentsStillActive: Record<string, string[]> = {};
     for (const id of ids) {
+      // `ActiveSet::deactivate`'s own rule: Core is never removable.
+      if (id === "ludeon.rimworld") {
+        refused.push(id);
+        continue;
+      }
       if (!workingActiveIds.has(id)) continue;
       toRemove.push(id);
     }
@@ -6978,7 +7148,25 @@ export function installScenario(): void {
           };
         }
       ).filter;
-      let matching = scannedActiveModList();
+      // Mirrors `mod_index::query`: scanned rows plus a synthetic row per missing mod (no source,
+      // no tags), each carrying `missing` and `workshopId`, sorted by id, and a page capped at
+      // `MAX_PAGE_SIZE` however large a limit was asked for.
+      const scannedRows: ScannedListRow[] = scannedActiveModList().map((mod) => ({
+        ...mod,
+        missing: false,
+        workshopId: workshopIdOf(mod),
+      }));
+      const missingRows: ScannedListRow[] = missingModIds.map((id) => ({
+        modId: id,
+        name: id,
+        source: null,
+        tags: [],
+        hardDependents: 0,
+        generated: null,
+        missing: true,
+        workshopId: null,
+      }));
+      let matching = [...scannedRows, ...missingRows];
       if (filter.search) {
         const needle = filter.search.toLowerCase();
         matching = matching.filter(
@@ -6990,32 +7178,16 @@ export function installScenario(): void {
       if (filter.source) matching = matching.filter((mod) => mod.source === filter.source);
       matching = matching.toSorted(compareByModId);
       const total = matching.length;
-      const items = matching.slice(filter.offset, filter.offset + filter.limit);
+      const limit = Math.min(filter.limit, MAX_PAGE_SIZE);
+      const items = matching.slice(filter.offset, filter.offset + limit);
       return { total, items };
     },
     list_mod_names: () => allModNames(),
-    // The Inactive tab
-    // and the working active-mod set.
-    list_inactive_mods: (payload: unknown) => {
-      const filter = (
-        payload as {
-          filter: { search: string | null; source: string | null; offset: number; limit: number };
-        }
-      ).filter;
-      let matching = scannedInactiveModList();
-      if (filter.search) {
-        const needle = filter.search.toLowerCase();
-        matching = matching.filter(
-          (mod) =>
-            mod.modId.toLowerCase().includes(needle) || mod.name.toLowerCase().includes(needle),
-        );
-      }
-      if (filter.source) matching = matching.filter((mod) => mod.source === filter.source);
-      matching = matching.toSorted(compareByModId);
-      const total = matching.length;
-      const items = matching.slice(filter.offset, filter.offset + filter.limit);
-      return { total, items };
-    },
+    // The Mods page's two working-tier lists (`rim_session::mod_lists`).
+    list_working_mods: (payload: unknown) =>
+      modListFor("working", (payload as { query: ModListQueryMock }).query),
+    list_inactive_mods: (payload: unknown) =>
+      modListFor("inactive", (payload as { query: ModListQueryMock }).query),
     plan_activate_mods: (payload: unknown) => {
       const request = (payload as { request: ActivateRequestDto }).request;
       return planActivateMods(request.ids, request.withDependencies);
@@ -7027,6 +7199,7 @@ export function installScenario(): void {
       for (const id of plan.toAdd) {
         workingActiveIds.add(id);
       }
+      settleWorking();
       return pendingActiveChanges();
     },
     plan_deactivate_mods: (payload: unknown) => {
@@ -7040,6 +7213,7 @@ export function installScenario(): void {
       for (const id of plan.toRemove) {
         workingActiveIds.delete(id);
       }
+      settleWorking();
       return pendingActiveChanges();
     },
     get_pending_active_changes: () => pendingActiveChanges(),
@@ -7090,6 +7264,13 @@ export function installScenario(): void {
     rescan_project: () => {
       window.__RESCAN_CALLS__ = (window.__RESCAN_CALLS__ ?? 0) + 1;
       scannedActiveIds = new Set(workingActiveIds);
+      // The real rescan scans working's sequence and the new session's Current is that scan.
+      // The ids the mock keeps out of `currentOrder` (see `omittedFromCurrentOrder`) stay out: `fileOrder` lacks them too.
+      currentOrder.splice(
+        0,
+        currentOrder.length,
+        ...[...workingActiveIds].filter((id) => !omittedFromCurrentOrder.includes(id)),
+      );
       return {
         modCount: scannedActiveModList().length,
         gameVersion: "1.6.4871",
@@ -7440,6 +7621,23 @@ export function installScenario(): void {
         }
         fileActiveIds = new Set(scannedActiveIds);
         fileOrder = [...orderFor(request.source)];
+        // `Session::set_current_order`: the file now is this order, so Current becomes it (the
+        // array is shared, mutated in place). The add/remove delta between the previous Current
+        // and the written order folds into working (an id the order dropped leaves it), and the
+        // working sequence follows Current only when the two hold the same ids.
+        const previousIds = currentIdSet();
+        const writtenIds = new Set([
+          ...fileOrder,
+          ...omittedFromCurrentOrder.filter((id) => previousIds.has(id)),
+        ]);
+        for (const id of writtenIds) {
+          if (!previousIds.has(id)) workingActiveIds.add(id);
+        }
+        for (const id of previousIds) {
+          if (!writtenIds.has(id)) workingActiveIds.delete(id);
+        }
+        currentOrder.splice(0, currentOrder.length, ...fileOrder);
+        settleWorking();
       }
       const hasMergeContent = mergeModFiles().length > 0;
       const mergeModPath = request.writeMergeMod && hasMergeContent ? MERGE_MOD_PATH : null;

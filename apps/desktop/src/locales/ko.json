@@ -1240,7 +1240,8 @@
         "local": "로컬 모드",
         "workshop": "스팀 창작마당"
       },
-      "rovingHint": "화살표 키로 이동, Enter로 열기, Space로 전환"
+      "rovingHint": "화살표 키로 이동, Enter로 열기, Space로 전환",
+      "pendingScan": "아직 스캔되지 않음"
     },
     "pendingChanges": {
       "unscanned": "대기 중인 변경 {count}개 — 분석을 갱신하려면 다시 스캔하세요",
@@ -1302,11 +1303,19 @@
       "refusedHeading": "거부됨 (필수):",
       "dependentsStillActive": "활성 모드 {count}개가 아직 {mod} 모드에 종속되어 있습니다: {deps}.",
       "deactivatedToast": "비활성화했습니다",
-      "deactivateButton": "비활성화"
+      "deactivateButton": "비활성화",
+      "rescanButton": "모드 다시 스캔"
     },
     "defSearch": {
       "ariaLabel": "Def로 이동",
       "placeholder": "Def로 이동…"
+    },
+    "selection": {
+      "selectAllShown": "표시된 {count}개 모두 선택",
+      "selectAllEmpty": "모두 선택",
+      "selectedCount": "{count}개 선택됨",
+      "notShown": "{count}개 표시되지 않음",
+      "clear": "선택 해제"
     }
   },
   "rules": {

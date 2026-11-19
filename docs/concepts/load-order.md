@@ -185,6 +185,18 @@ that only runs in some orders (a later step of a sequence that stops early
 in the other order), the order decides whether the reference exists at all,
 never whether the name resolves.
 
+## The Current order after an Apply
+
+Applying an order makes it the **Current** order: the file now holds it, so
+the app treats it as what was last scanned and written. Two things follow.
+A later **Rescan** scans the mods in that same order (it never goes back to
+the order from before the Apply), and everything measured between the
+suggested and the current order, such as how many mods the suggested order
+would move, is read against the new Current at once. With the "preserve
+current order" tie-break, which ranks unconstrained mods by where Current
+puts them, the suggested order is also sorted again whenever Current's
+sequence changes over the same set of mods.
+
 ## What Rimmerge adds beyond what RimWorld enforces
 
 RimWorld itself never picks an order for you — it just loads whatever

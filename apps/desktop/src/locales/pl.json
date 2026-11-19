@@ -1240,7 +1240,8 @@
         "local": "Mod lokalny",
         "workshop": "Warsztat Steam"
       },
-      "rovingHint": "Strzałki: przechodzenie, Enter: otwieranie, Spacja: przełączanie"
+      "rovingHint": "Strzałki: przechodzenie, Enter: otwieranie, Spacja: przełączanie",
+      "pendingScan": "jeszcze nie zeskanowano"
     },
     "pendingChanges": {
       "unscanned": "{count} oczekująca zmiana — przeskanuj ponownie, aby zaktualizować analizę | {count} oczekujące zmiany — przeskanuj ponownie, aby zaktualizować analizę | {count} oczekujących zmian — przeskanuj ponownie, aby zaktualizować analizę",
@@ -1302,11 +1303,19 @@
       "refusedHeading": "Odmówiono (wymagane):",
       "dependentsStillActive": "{count} aktywny mod nadal zależy od moda {mod}: {deps}. | {count} aktywne mody nadal zależą od moda {mod}: {deps}. | {count} aktywnych modów nadal zależy od moda {mod}: {deps}.",
       "deactivatedToast": "Wyłączono",
-      "deactivateButton": "Wyłącz"
+      "deactivateButton": "Wyłącz",
+      "rescanButton": "Skanuj mody ponownie"
     },
     "defSearch": {
       "ariaLabel": "Przejdź do defu",
       "placeholder": "Przejdź do defu…"
+    },
+    "selection": {
+      "selectAllShown": "Zaznacz widoczny mod ({count}) | Zaznacz widoczne mody ({count}) | Zaznacz widoczne mody ({count})",
+      "selectAllEmpty": "Zaznacz wszystkie",
+      "selectedCount": "{count} zaznaczony | {count} zaznaczone | {count} zaznaczonych",
+      "notShown": "{count} niewidoczny | {count} niewidoczne | {count} niewidocznych",
+      "clear": "Odznacz wszystkie"
     }
   },
   "rules": {

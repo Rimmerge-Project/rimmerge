@@ -29,7 +29,9 @@ impl DeactivateMods {
     /// Commits `plan.to_remove` onto `session`'s working set. Returns
     /// what was actually removed.
     pub fn execute(session: &mut Session, plan: &DeactivatePlan) -> Vec<ModId> {
-        session.working_mut().deactivate(&plan.to_remove)
+        let removed = session.working_mut().deactivate(&plan.to_remove);
+        session.settle_working();
+        removed
     }
 }
 

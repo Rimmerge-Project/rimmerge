@@ -82,6 +82,7 @@ pub fn run() {
             commands::tags::list_tags,
             commands::tags::set_manual_tag,
             commands::mods::list_mods,
+            commands::mods::list_working_mods,
             commands::mods::get_mod,
             commands::mods::list_mod_names,
             commands::mods::get_mod_info,

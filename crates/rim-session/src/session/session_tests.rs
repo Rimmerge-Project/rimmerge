@@ -889,6 +889,123 @@ fn toggling_tie_break_reaches_the_sorter_and_re_sorts() {
     );
 }
 
+#[test]
+fn settle_keeps_working_sequence_equal_to_current_when_sets_match() {
+    let mut session = session(&["a", "b", "c"]);
+
+    session.set_current_order(LoadOrder::new(vec![
+        ModId::new("c"),
+        ModId::new("a"),
+        ModId::new("b"),
+    ]));
+
+    assert_eq!(
+        session.working().ids(),
+        [ModId::new("c"), ModId::new("a"), ModId::new("b")]
+    );
+}
+
+#[test]
+fn settle_leaves_working_alone_while_membership_edits_are_pending() {
+    let mut session = session(&["a", "b"]);
+    session.working_mut().deactivate(&[ModId::new("b")]);
+
+    session.set_current_order(LoadOrder::new(vec![ModId::new("b"), ModId::new("a")]));
+
+    assert_eq!(
+        session.working().ids(),
+        [ModId::new("a")],
+        "the pending deactivation must survive and keep its own sequence"
+    );
+    assert!(session.is_stale());
+}
+
+#[test]
+fn moved_mods_follows_current_after_set_current_order() {
+    let mut session = session(&["z", "a"]);
+    assert_eq!(session.moved_mods(), 2, "Rebuild suggests a, z over z, a");
+
+    session.set_current_order(LoadOrder::new(vec![ModId::new("a"), ModId::new("z")]));
+
+    assert_eq!(session.moved_mods(), 0);
+}
+
+#[test]
+fn preserve_current_resorts_when_current_sequence_changes() {
+    let mut session = session(&["z", "a"]);
+    session.update_settings(Settings {
+        tie_break: rim_resolve::sort::TieBreak::PreserveCurrent,
+        ..session.settings()
+    });
+    assert_eq!(
+        session.orders().suggested.as_slice(),
+        [ModId::new("z"), ModId::new("a")]
+    );
+
+    session.set_current_order(LoadOrder::new(vec![ModId::new("a"), ModId::new("z")]));
+
+    assert_eq!(
+        session.orders().suggested.as_slice(),
+        [ModId::new("a"), ModId::new("z")],
+        "PreserveCurrent keeps Current's sequence, so Suggested must follow it"
+    );
+}
+
+#[test]
+fn rebuild_does_not_resort_when_current_sequence_changes() {
+    let mut session = session(&["z", "a"]);
+    let before = session.orders().suggested.as_slice().to_vec();
+    let moved_before = session.sort_outcome().stats.positions_changed;
+    assert!(moved_before > 0, "sanity: the sort snapshot records a move");
+
+    session.set_current_order(LoadOrder::new(vec![ModId::new("a"), ModId::new("z")]));
+
+    assert_eq!(session.orders().suggested.as_slice(), before);
+    assert_eq!(
+        session.sort_outcome().stats.positions_changed,
+        moved_before,
+        "no re-sort ran, so the snapshot is still the pre-change value"
+    );
+}
+
+#[test]
+fn preserve_current_does_not_resort_when_the_id_set_changes() {
+    let mut session = session(&["z", "a"]);
+    session.update_settings(Settings {
+        tie_break: rim_resolve::sort::TieBreak::PreserveCurrent,
+        ..session.settings()
+    });
+    let suggested_before = session.orders().suggested.as_slice().to_vec();
+    let moved_before = session.sort_outcome().stats.positions_changed;
+
+    // A new sequence AND an id the report has never scanned.
+    session.set_current_order(LoadOrder::new(vec![
+        ModId::new("a"),
+        ModId::new("z"),
+        ModId::new("unscanned"),
+    ]));
+
+    assert_eq!(session.orders().suggested.as_slice(), suggested_before);
+    assert_eq!(session.sort_outcome().stats.positions_changed, moved_before);
+}
+
+#[test]
+fn deactivate_then_reactivate_restores_the_current_sequence() {
+    let mut session = session(&["a", "b", "c"]);
+    let removal = crate::use_cases::DeactivateMods::plan(&session, &[ModId::new("b")]);
+    crate::use_cases::DeactivateMods::execute(&mut session, &removal);
+    let addition = crate::use_cases::ActivateMods::plan(&session, &[ModId::new("b")], false);
+    crate::use_cases::ActivateMods::execute(&mut session, &addition)
+        .expect("b is known to the report");
+
+    assert_eq!(
+        session.working().ids(),
+        session.orders().current.as_slice(),
+        "re-adding the removed mod must put it back in Current's slot"
+    );
+    assert!(!session.is_stale());
+}
+
 /// The merge mod's placement rule: no placement at all
 /// when the merge mod neither exists nor is about to; a placement the
 /// moment either becomes true.

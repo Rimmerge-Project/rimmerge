@@ -1240,7 +1240,8 @@
         "local": "Lokale Mod",
         "workshop": "Steam Workshop"
       },
-      "rovingHint": "Pfeiltasten zum Bewegen, Enter zum Öffnen, Leertaste zum Umschalten"
+      "rovingHint": "Pfeiltasten zum Bewegen, Enter zum Öffnen, Leertaste zum Umschalten",
+      "pendingScan": "noch nicht gescannt"
     },
     "pendingChanges": {
       "unscanned": "{count} ausstehende Änderung – erneut scannen, um die Analyse zu aktualisieren | {count} ausstehende Änderungen – erneut scannen, um die Analyse zu aktualisieren",
@@ -1302,11 +1303,19 @@
       "refusedHeading": "Abgelehnt (benötigt):",
       "dependentsStillActive": "{count} aktive Mod hängt noch von {mod} ab: {deps}. | {count} aktive Mods hängen noch von {mod} ab: {deps}.",
       "deactivatedToast": "Deaktiviert",
-      "deactivateButton": "Deaktivieren"
+      "deactivateButton": "Deaktivieren",
+      "rescanButton": "Mods erneut scannen"
     },
     "defSearch": {
       "ariaLabel": "Zu einer Def springen",
       "placeholder": "Zu einer Def springen…"
+    },
+    "selection": {
+      "selectAllShown": "{count} angezeigte auswählen | Alle {count} angezeigten auswählen",
+      "selectAllEmpty": "Alle auswählen",
+      "selectedCount": "{count} ausgewählt | {count} ausgewählt",
+      "notShown": "{count} nicht angezeigt | {count} nicht angezeigt",
+      "clear": "Auswahl aufheben"
     }
   },
   "rules": {

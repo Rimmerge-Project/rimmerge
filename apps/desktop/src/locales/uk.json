@@ -1240,7 +1240,8 @@
         "local": "Локальний мод",
         "workshop": "Майстерня Steam"
       },
-      "rovingHint": "Стрілки — переміщення, Enter — відкрити, пробіл — перемкнути"
+      "rovingHint": "Стрілки — переміщення, Enter — відкрити, пробіл — перемкнути",
+      "pendingScan": "ще не відскановано"
     },
     "pendingChanges": {
       "unscanned": "{count} зміна очікує — перескануйте, щоб оновити аналіз | {count} зміни очікують — перескануйте, щоб оновити аналіз | {count} змін очікують — перескануйте, щоб оновити аналіз",
@@ -1302,11 +1303,19 @@
       "refusedHeading": "Відмовлено (потрібні):",
       "dependentsStillActive": "{count} активний мод досі залежить від мода {mod}: {deps}. | {count} активні моди досі залежать від мода {mod}: {deps}. | {count} активних модів досі залежать від мода {mod}: {deps}.",
       "deactivatedToast": "Вимкнено",
-      "deactivateButton": "Вимкнути"
+      "deactivateButton": "Вимкнути",
+      "rescanButton": "Пересканувати моди"
     },
     "defSearch": {
       "ariaLabel": "Перейти до Def",
       "placeholder": "Перейти до Def…"
+    },
+    "selection": {
+      "selectAllShown": "Вибрати {count} показаний мод | Вибрати всі {count} показані моди | Вибрати всі {count} показаних модів",
+      "selectAllEmpty": "Вибрати всі",
+      "selectedCount": "Вибрано {count} | Вибрано {count} | Вибрано {count}",
+      "notShown": "з них {count} не показано | з них {count} не показано | з них {count} не показано",
+      "clear": "Скасувати вибір"
     }
   },
   "rules": {

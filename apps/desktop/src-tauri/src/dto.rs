@@ -27,6 +27,7 @@ pub mod game_log_coverage;
 pub mod links;
 pub mod merge;
 pub mod mod_info;
+pub mod mod_lists;
 pub mod mods;
 pub mod notifications;
 pub mod order;

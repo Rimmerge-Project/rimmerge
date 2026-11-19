@@ -6,14 +6,15 @@ import { useI18n } from "vue-i18n";
 
 import SourceBadge from "@/components/mods/SourceBadge.vue";
 import { useModLabel } from "@/composables/useModLabel";
-import type { ModSummaryDto } from "@/types/generated/ModSummaryDto";
+import type { ModListRowDto } from "@/types/generated/ModListRowDto";
+import { assertNever } from "@/utils/assertNever";
 
 const {
   mods,
   selectable = false,
   showActiveColumns = true,
 } = defineProps<{
-  mods: ModSummaryDto[];
+  mods: ModListRowDto[];
   /** Adds a checkbox column bound to {@link selectedIds}. */
   selectable?: boolean;
   /**
@@ -47,7 +48,7 @@ const virtualizer = useVirtualizer(
 
 interface VisibleRow {
   virtualRow: VirtualItem;
-  mod: ModSummaryDto;
+  mod: ModListRowDto;
 }
 
 const visibleRows = computed<VisibleRow[]>(() =>
@@ -64,6 +65,34 @@ const rovingIndex = computed<number | null>(() => {
   return index >= 0 ? index : null;
 });
 const lastFocusedId = defineModel<string | null>("focusedId", { default: null });
+
+/** A row's tags; only a scanned row has any. */
+function tagsOf(mod: ModListRowDto): readonly string[] {
+  const state = mod.state;
+  switch (state.kind) {
+    case "scanned":
+      return state.tags;
+    case "pendingScan":
+    case "missing":
+      return [];
+    default:
+      return assertNever(state);
+  }
+}
+
+/** A row's Hard-dependent count; `null` while no scan facts exist for it. */
+function hardDependentsOf(mod: ModListRowDto): number | null {
+  const state = mod.state;
+  switch (state.kind) {
+    case "scanned":
+      return state.hardDependents;
+    case "pendingScan":
+    case "missing":
+      return null;
+    default:
+      return assertNever(state);
+  }
+}
 
 function isSelected(modId: string): boolean {
   return selectedIds.value.includes(modId);
@@ -203,19 +232,24 @@ function onRowKeydown(event: KeyboardEvent, modId: string): void {
           :title="modLabel.titleFor(mod.modId)"
         >{{ modLabel.label(mod.modId) }}</span>
         <span
-          v-if="mod.missing"
+          v-if="mod.state.kind === 'missing'"
           class="bg-status-danger-soft text-status-danger shrink-0 rounded px-1.5 py-0.5 text-xs font-medium"
           data-testid="mod-row-missing-pill"
         >{{ t("mods.table.missing") }}</span>
+        <span
+          v-else-if="showActiveColumns && mod.state.kind === 'pendingScan'"
+          class="bg-surface-2 text-text-muted shrink-0 rounded px-1.5 py-0.5 text-xs font-medium"
+          data-testid="mod-row-pending-scan-pill"
+        >{{ t("mods.table.pendingScan") }}</span>
         <template v-if="showActiveColumns">
           <span class="flex gap-1">
             <span
-              v-for="tag in mod.tags"
+              v-for="tag in tagsOf(mod)"
               :key="tag"
               class="bg-surface-2 text-text-muted rounded px-1.5 py-0.5 text-xs"
             >{{ tag }}</span>
           </span>
-          <span class="text-text-muted w-10 text-right text-xs">{{ mod.hardDependents }}</span>
+          <span class="text-text-muted w-10 text-right text-xs">{{ hardDependentsOf(mod) ?? "—" }}</span>
         </template>
       </div>
     </div>

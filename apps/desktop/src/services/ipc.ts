@@ -98,6 +98,7 @@ export {
   listModNames,
   listMods,
   listOrder,
+  listWorkingMods,
   loadProject,
   openAppLink,
   openModLink,

@@ -3,6 +3,8 @@ import { expect, type Page, test } from "@playwright/test";
 import type {} from "../../src/e2e-mock-bootstrap";
 import { loadScenario } from "./support";
 
+type Ipc = Record<string, (payload?: unknown) => Promise<unknown>>;
+
 async function openModInfo(page: Page, modId: string): Promise<void> {
   await page.getByTestId("nav-mods").click();
   await page.getByTestId("mods-search").fill(modId);
@@ -21,14 +23,19 @@ async function renderedRowIds(page: Page): Promise<string[]> {
 }
 
 test.describe("mods", () => {
-  test("lists both tabs in mod-id order, as the backend sorts them", async ({ page }) => {
+  test("lists Active in the working set's own order and Inactive in mod-id order", async ({
+    page,
+  }) => {
     await loadScenario(page);
     await page.getByTestId("nav-mods").click();
-    await expect(page.getByTestId("mod-row-core.gadget.mod")).toBeVisible();
+    // The working set lists the scenario's own mods first, in their order; the fixture owners
+    // that sort ahead of them by id (`core.gadget.mod`, ...) come after, as in `ModsConfig.xml`.
+    await expect(page.getByTestId("mod-row-mod.000")).toBeVisible();
 
     const activeIds = await renderedRowIds(page);
-    expect(activeIds[0]).toBe("core.gadget.mod");
-    expect(activeIds).toEqual(activeIds.toSorted());
+    expect(activeIds[0]).toBe("mod.000");
+    // Only the viewport is rendered, so assert the leading working-order prefix, not absence.
+    expect(activeIds.slice(0, 3)).toEqual(["mod.000", "mod.001", "mod.002"]);
 
     await page.getByTestId("mods-tab-inactive").click();
     await expect(page.getByTestId("mod-row-mod.901")).toBeVisible();
@@ -189,5 +196,70 @@ test.describe("mods", () => {
 
     await expect(page).toHaveURL(/\/mods$/);
     await expect(page.getByTestId("mod-info-panel")).not.toBeAttached();
+  });
+
+  test("an Apply followed by a Rescan keeps the written order", async ({ page }) => {
+    await loadScenario(page);
+    const workingIds = () =>
+      page.evaluate(async () => {
+        const ipc = window.__E2E_MOCK_IPC__ as unknown as Ipc;
+        const list = (await ipc.list_working_mods?.({
+          query: { search: null, tag: null, source: null },
+        })) as { items: { modId: string }[] };
+        return list.items.map((row) => row.modId);
+      });
+    const fileMatchesCurrent = () =>
+      page.evaluate(async () => {
+        const ipc = window.__E2E_MOCK_IPC__ as unknown as Ipc;
+        const dashboard = (await ipc.get_dashboard?.()) as { fileMatchesCurrent: boolean };
+        return dashboard.fileMatchesCurrent;
+      });
+    const call = (name: string, payload?: unknown) =>
+      page.evaluate(
+        async ([command, args]) => {
+          const ipc = window.__E2E_MOCK_IPC__ as unknown as Ipc;
+          await ipc[command as string]?.(args);
+        },
+        [name, payload] as const,
+      );
+
+    const before = await workingIds();
+    // A rescan that changes nothing must not make the file look different from Current.
+    await call("rescan_project");
+    expect(await fileMatchesCurrent(), "after a no-op rescan").toBe(true);
+    await call("apply", {
+      request: { source: "suggested", writeModsConfig: true, writeMergeMod: false, force: false },
+    });
+    const afterApply = await workingIds();
+    expect(afterApply, "the working order follows the written order").not.toEqual(before);
+
+    await call("rescan_project");
+
+    expect(await workingIds()).toEqual(afterApply);
+    expect(await fileMatchesCurrent(), "after apply then rescan").toBe(true);
+  });
+
+  test("deactivating then re-activating a mod puts it back in its place", async ({ page }) => {
+    await loadScenario(page);
+    await page.getByTestId("nav-mods").click();
+    await expect(page.getByTestId("mod-row-mod.002")).toBeVisible();
+    const before = (await renderedRowIds(page)).slice(0, 5);
+    expect(before[2]).toBe("mod.002");
+
+    await page.getByTestId("mod-row-select-mod.002").locator('input[type="checkbox"]').check();
+    await page.getByTestId("deactivate-selected-button").click();
+    await page.getByTestId("deactivate-confirm-submit").click();
+    await expect(page.getByTestId("deactivate-confirm-dialog")).toBeHidden();
+
+    await page.getByTestId("mods-tab-inactive").click();
+    await page.getByTestId("mod-row-select-mod.002").locator('input[type="checkbox"]').check();
+    await page.getByTestId("activate-selected-button").click();
+    await page.getByTestId("activate-confirm-submit").click();
+    await expect(page.getByTestId("activate-confirm-dialog")).toBeHidden();
+
+    await page.getByTestId("mods-tab-active").click();
+    await expect(page.getByTestId("mod-row-mod.002")).toBeVisible();
+    expect((await renderedRowIds(page)).slice(0, 5)).toEqual(before);
+    await expect(page.getByTestId("pending-changes-banner")).toHaveCount(0);
   });
 });

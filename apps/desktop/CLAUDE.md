@@ -16,8 +16,8 @@ license first.
 
 `src-tauri` is a composition root: every `#[tauri::command]` maps a DTO
 to a `rim-session` call and maps the result back. Filtering, paging,
-and aggregation live in `rim-session` (`FindingIndex`, `Session::mods`/
-`inactive_mods`), never in a command handler or in Vue. The adapters a
+and aggregation live in `rim-session` (`FindingIndex`, `Session::mods`,
+`working_mod_list`/`inactive_mod_list`), never in a command handler or in Vue. The adapters a
 command needs for the loaded project (scanner, decision/rule/patch
 stores, def reader, asset locator, release feed, ...) come from
 `AppState::adapters`, never constructed inline. The narrow exception is
@@ -203,9 +203,10 @@ of that command surface — no direct filesystem or process access outside
   is the established pattern this mirrors), never by faking the port.
 - **The working active-mod set has three tiers.** `working`
   (uncommitted activate/deactivate edits), `scanned` (what the last
-  `Rescan`/`load` saw — `list_mods`/`list_inactive_mods` always read
-  this tier, never `working`, so activating a mod does not move it to
-  the Active tab until a rescan), and `file` (what's actually on disk
+  `Rescan`/`load` saw — `list_mods` reads this tier, for patch scopes and
+  rule pickers; the Mods page's `list_working_mods`/`list_inactive_mods`
+  read `working`, so an activated mod is in Active at once as a
+  `pendingScan` row and a deactivated one is in Inactive at once), and `file` (what's actually on disk
   in `ModsConfig.xml` — what a real, non-dry-run `apply` writes).
   `activate_mods`/`deactivate_mods` re-plan against the session's
   current report inside the same call rather than trusting whatever
@@ -263,6 +264,18 @@ of that command surface — no direct filesystem or process access outside
   later step, never merged into the same button. The needs-input count is
   information only (a count and an Inbox link); the old `applyAnyway` /
   `canSubmit` checkboxes in the dialog and on the Dashboard are gone.
+- **The Mods page's selection is a client-side view of the backend's lists.**
+  `useModSelection` works over the rows of the current `list_working_mods`/
+  `list_inactive_mods` response, which the backend already filtered, so "Select
+  all N shown" never re-implements a filter in Vue. A selected id a later filter
+  hides stays selected and is counted ("N not shown"); Clear removes all. An
+  *unfiltered* response is the whole list, so a selected id missing from it is
+  pruned (`ModListPane`'s watcher); under a filter it is only hidden. Selecting
+  writes nothing: the activate/deactivate plan and confirm dialogs are unchanged,
+  and a failed plan opens the dialog with the error and no plan (Confirm
+  disabled). The always-visible "Rescan mods" button (`ModsRescanButton.vue`) is
+  `useRescanMutation`, so the `rescan_project` lock protocol and its refusal
+  ("working set changed during the rescan") are unchanged.
 - **The Dashboard strip is derived, never stored.** `GuidedFlowStrip.vue`
   reads `utils/guidedFlow.ts`'s `guidedStep()` over five facts (the
   recommended-rules step's `rules` state, `selected`,
@@ -892,7 +905,8 @@ The UI is localized in `en` plus twelve translated locales (`zh-CN`,
   search/owner filtering happens client-side, since nothing else in
   this codebase filters a `Coverage` result server-side either.
 - A missing mod (active per `ModsConfig.xml`, never found on disk) has
-  no `report.mods` row at all; it's recovered by `rim-session`'s own
-  `mod_index::query`, not reconstructed in Vue — `ModSummaryDto.missing`/
-  `.source: SourceDto | null` carry it, and its `source` is always
-  unknowable (shown only under "any source").
+  no `report.mods` row at all; it's recovered by `rim-session` (`mod_index::query`
+  for `list_mods`, `mod_lists` for the Mods page's lists), not reconstructed in
+  Vue — `ModSummaryDto.missing`/`.source: SourceDto | null` (`list_mods`) and a
+  `ModListRowDto` with `state.kind === "missing"` (`list_working_mods`) carry it,
+  and its `source` is always unknowable (shown only under "any source").

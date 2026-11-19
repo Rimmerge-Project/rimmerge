@@ -7,21 +7,11 @@ import PrimeVue from "primevue/config";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import ModTable from "@/components/mods/ModTable.vue";
+import { modRow as baseRow, type ModRowOverrides } from "@/components/mods/modListRow.test-support";
 import { installMockIpc } from "@/services/ipc.mock";
-import type { ModSummaryDto } from "@/types/generated/ModSummaryDto";
 
-function mod(overrides: Partial<ModSummaryDto> = {}): ModSummaryDto {
-  return {
-    modId: "fixture.mod",
-    name: "Fixture Mod",
-    source: "local",
-    tags: [],
-    hardDependents: 0,
-    missing: false,
-    generated: null,
-    workshopId: null,
-    ...overrides,
-  };
+function modRow(overrides: ModRowOverrides = {}) {
+  return baseRow({ modId: "fixture.mod", name: "Fixture Mod", ...overrides });
 }
 
 let mountedWrappers: ReturnType<typeof mount>[] = [];
@@ -68,7 +58,7 @@ describe("ModTable", () => {
   });
 
   it("emits selectMod when a row is clicked, and renders no checkbox by default", async () => {
-    const wrapper = mountTable({ mods: [mod()] });
+    const wrapper = mountTable({ mods: [modRow()] });
     await flushPromises();
 
     expect(wrapper.find('[data-testid="mod-row-select-fixture.mod"]').exists()).toBe(false);
@@ -79,9 +69,9 @@ describe("ModTable", () => {
   it("renders a source badge per row instead of the raw source enum", async () => {
     const wrapper = mountTable({
       mods: [
-        mod({ modId: "a", source: "workshop" }),
-        mod({ modId: "b", source: "dlc" }),
-        mod({ modId: "c", source: null, missing: true }),
+        modRow({ modId: "a", source: "workshop" }),
+        modRow({ modId: "b", source: "dlc" }),
+        modRow({ modId: "c", source: null, missing: true }),
       ],
     });
     await flushPromises();
@@ -104,7 +94,7 @@ describe("ModTable", () => {
 
   it("renders a checkbox per row when selectable, toggling the selectedIds model", async () => {
     const wrapper = mountTable({
-      mods: [mod({ modId: "a" }), mod({ modId: "b" })],
+      mods: [modRow({ modId: "a" }), modRow({ modId: "b" })],
       selectable: true,
       selectedIds: ["a"],
     });
@@ -120,7 +110,7 @@ describe("ModTable", () => {
   });
 
   it("clicking a row's checkbox does not also emit selectMod", async () => {
-    const wrapper = mountTable({ mods: [mod()], selectable: true });
+    const wrapper = mountTable({ mods: [modRow()], selectable: true });
     await flushPromises();
 
     await wrapper.get('[data-testid="mod-row-select-fixture.mod"]').trigger("click");
@@ -129,7 +119,7 @@ describe("ModTable", () => {
 
   it("renders a missing pill only for rows whose own missing field is true", async () => {
     const wrapper = mountTable({
-      mods: [mod({ modId: "a", missing: true, source: null }), mod({ modId: "b" })],
+      mods: [modRow({ modId: "a", missing: true, source: null }), modRow({ modId: "b" })],
     });
     await flushPromises();
 
@@ -139,9 +129,38 @@ describe("ModTable", () => {
     expect(rowB.find('[data-testid="mod-row-missing-pill"]').exists()).toBe(false);
   });
 
+  it("marks a row activated since the last scan, only where the active columns show", async () => {
+    const wrapper = mountTable({ mods: [modRow({ modId: "a", pendingScan: true })] });
+    await flushPromises();
+    expect(wrapper.get('[data-testid="mod-row-pending-scan-pill"]').text()).toBe("not scanned yet");
+
+    const inactive = mountTable({
+      mods: [modRow({ modId: "a", pendingScan: true })],
+      showActiveColumns: false,
+    });
+    await flushPromises();
+    expect(inactive.find('[data-testid="mod-row-pending-scan-pill"]').exists()).toBe(false);
+  });
+
+  it("shows a dash, not 0, for a Hard-dependent count no scan has produced", async () => {
+    const wrapper = mountTable({
+      mods: [
+        modRow({ modId: "scanned.mod", hardDependents: 0 }),
+        modRow({ modId: "fresh.mod", pendingScan: true }),
+        modRow({ modId: "gone.mod", source: null, missing: true }),
+      ],
+    });
+    await flushPromises();
+
+    const cellText = (modId: string) => wrapper.get(`[data-testid="mod-row-${modId}"]`).text();
+    expect(cellText("scanned.mod")).toContain("0");
+    expect(cellText("fresh.mod")).toContain("—");
+    expect(cellText("gone.mod")).toContain("—");
+  });
+
   it("hides tags/hardDependents but still navigates when showActiveColumns is false", async () => {
     const wrapper = mountTable({
-      mods: [mod({ tags: ["framework"] })],
+      mods: [modRow({ tags: ["framework"] })],
       showActiveColumns: false,
     });
     await flushPromises();
@@ -154,7 +173,7 @@ describe("ModTable", () => {
   });
 
   it("only the first row is in the tab order before anything has been focused", async () => {
-    const wrapper = mountTable({ mods: [mod({ modId: "a" }), mod({ modId: "b" })] });
+    const wrapper = mountTable({ mods: [modRow({ modId: "a" }), modRow({ modId: "b" })] });
     await flushPromises();
 
     expect(wrapper.get('[data-testid="mod-row-a"]').attributes("tabindex")).toBe("0");
@@ -162,7 +181,7 @@ describe("ModTable", () => {
   });
 
   it("ArrowDown moves roving focus to the next row and emits focusMod", async () => {
-    const wrapper = mountTable({ mods: [mod({ modId: "a" }), mod({ modId: "b" })] });
+    const wrapper = mountTable({ mods: [modRow({ modId: "a" }), modRow({ modId: "b" })] });
     await flushPromises();
 
     await wrapper.get('[data-testid="mod-row-a"]').trigger("keydown", { key: "ArrowDown" });
@@ -174,7 +193,7 @@ describe("ModTable", () => {
   });
 
   it("Enter selects the row immediately", async () => {
-    const wrapper = mountTable({ mods: [mod({ modId: "a" })] });
+    const wrapper = mountTable({ mods: [modRow({ modId: "a" })] });
     await flushPromises();
 
     await wrapper.get('[data-testid="mod-row-a"]').trigger("keydown", { key: "Enter" });
@@ -183,7 +202,7 @@ describe("ModTable", () => {
   });
 
   it("Space toggles the row's own checkbox when selectable", async () => {
-    const wrapper = mountTable({ mods: [mod({ modId: "a" })], selectable: true });
+    const wrapper = mountTable({ mods: [modRow({ modId: "a" })], selectable: true });
     await flushPromises();
 
     await wrapper.get('[data-testid="mod-row-a"]').trigger("keydown", { key: " " });

@@ -1240,7 +1240,8 @@
         "local": "ローカルMOD",
         "workshop": "Steamワークショップ"
       },
-      "rovingHint": "矢印キーで移動、Enterで開く、Spaceで切り替え"
+      "rovingHint": "矢印キーで移動、Enterで開く、Spaceで切り替え",
+      "pendingScan": "未スキャン"
     },
     "pendingChanges": {
       "unscanned": "保留中の変更{count}件。解析を更新するには再スキャンしてください",
@@ -1302,11 +1303,19 @@
       "refusedHeading": "拒否（必須）：",
       "dependentsStillActive": "{count}個の有効なMODが、まだ{mod}に依存しています：{deps}。",
       "deactivatedToast": "無効化しました",
-      "deactivateButton": "無効化"
+      "deactivateButton": "無効化",
+      "rescanButton": "MODを再スキャン"
     },
     "defSearch": {
       "ariaLabel": "Defへ移動",
       "placeholder": "Defへ移動…"
+    },
+    "selection": {
+      "selectAllShown": "表示中の{count}個をすべて選択",
+      "selectAllEmpty": "すべて選択",
+      "selectedCount": "{count}個を選択中",
+      "notShown": "{count}個は非表示",
+      "clear": "選択を解除"
     }
   },
   "rules": {

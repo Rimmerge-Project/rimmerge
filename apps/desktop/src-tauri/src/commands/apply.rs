@@ -274,6 +274,57 @@ mod tests {
         );
     }
 
+    /// The Dashboard's "Mods that move" is derived from the live orders: after
+    /// an apply makes Current equal Suggested it must read 0, not the count
+    /// the sorter measured against the pre-apply Current.
+    #[tokio::test]
+    async fn dashboard_moved_mods_is_zero_after_applying_the_suggested_order() {
+        use rim_analyzer::domain::ModId;
+        use rim_resolve::domain::{Action, Decision, FindingKey};
+
+        let (_temp_dir, mut session) = session_fixture_with_temp_paths(&["a", "b"]);
+        session
+            .decide(Decision {
+                key: FindingKey::UndeclaredHardDependency {
+                    after: ModId::new("a"),
+                    before: ModId::new("b"),
+                },
+                action: Action::Reorder {
+                    after: ModId::new("a"),
+                    before: ModId::new("b"),
+                },
+                note: None,
+                decided_at: jiff::Timestamp::UNIX_EPOCH,
+            })
+            .expect("reorder is always a valid action");
+        let state = AppState {
+            game_process_probe: Arc::new(FixedProbe(false)),
+            ..AppState::default()
+        };
+        *state.session.write().expect("lock") = Some(session);
+        let before = crate::commands::dashboard::get_dashboard_inner(&state)
+            .await
+            .expect("dashboard");
+        assert!(before.moved_mods > 0, "sanity: the sorter moves something");
+
+        apply_inner(
+            &state,
+            ApplyRequestDto {
+                source: crate::dto::common::OrderSourceDto::Suggested,
+                write_mods_config: true,
+                write_merge_mod: false,
+                force: false,
+            },
+        )
+        .await
+        .expect("apply must succeed");
+
+        let after = crate::commands::dashboard::get_dashboard_inner(&state)
+            .await
+            .expect("dashboard");
+        assert_eq!(after.moved_mods, 0);
+    }
+
     #[tokio::test]
     async fn preflight_without_a_project_is_no_project_loaded() {
         let state = AppState::default();

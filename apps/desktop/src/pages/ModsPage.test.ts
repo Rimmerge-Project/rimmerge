@@ -9,31 +9,12 @@ import ToastService from "primevue/toastservice";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
+import { modList, modRow } from "@/components/mods/modListRow.test-support";
 import ModsPage from "@/pages/ModsPage.vue";
 import { installMockIpc } from "@/services/ipc.mock";
 import type { ActivateRequestDto } from "@/types/generated/ActivateRequestDto";
 import type { DeactivateRequestDto } from "@/types/generated/DeactivateRequestDto";
-import type { ModFilterDto } from "@/types/generated/ModFilterDto";
-import type { ModPageDto } from "@/types/generated/ModPageDto";
-import type { ModSummaryDto } from "@/types/generated/ModSummaryDto";
-
-function mod(overrides: Partial<ModSummaryDto> = {}): ModSummaryDto {
-  return {
-    modId: "active.mod",
-    name: "Active Mod",
-    source: "local",
-    tags: [],
-    hardDependents: 0,
-    missing: false,
-    generated: null,
-    workshopId: null,
-    ...overrides,
-  };
-}
-
-function page(items: ModSummaryDto[]): ModPageDto {
-  return { total: items.length, items };
-}
+import type { ModListQueryDto } from "@/types/generated/ModListQueryDto";
 
 const toastAddSpy = vi.hoisted(() => vi.fn());
 vi.mock("primevue/usetoast", () => ({ useToast: () => ({ add: toastAddSpy }) }));
@@ -41,23 +22,23 @@ vi.mock("primevue/usetoast", () => ({ useToast: () => ({ add: toastAddSpy }) }))
 const activateCalls: ActivateRequestDto[] = [];
 const deactivateCalls: DeactivateRequestDto[] = [];
 const planActivateCalls: ActivateRequestDto[] = [];
-const listModsCalls: ModFilterDto[] = [];
-const listInactiveModsCalls: ModFilterDto[] = [];
+const listWorkingModsCalls: ModListQueryDto[] = [];
+const listInactiveModsCalls: ModListQueryDto[] = [];
 
 function mountModsPage(fixtureOverrides: Record<string, unknown> = {}) {
   activateCalls.length = 0;
   deactivateCalls.length = 0;
   planActivateCalls.length = 0;
-  listModsCalls.length = 0;
+  listWorkingModsCalls.length = 0;
   listInactiveModsCalls.length = 0;
   installMockIpc({
-    list_mods: (payload: unknown) => {
-      listModsCalls.push((payload as { filter: ModFilterDto }).filter);
-      return page([mod({ modId: "active.mod", name: "Active Mod" })]);
+    list_working_mods: (payload: unknown) => {
+      listWorkingModsCalls.push((payload as { query: ModListQueryDto }).query);
+      return modList([modRow({ modId: "active.mod", name: "Active Mod" })]);
     },
     list_inactive_mods: (payload: unknown) => {
-      listInactiveModsCalls.push((payload as { filter: ModFilterDto }).filter);
-      return page([mod({ modId: "inactive.mod", name: "Inactive Mod" })]);
+      listInactiveModsCalls.push((payload as { query: ModListQueryDto }).query);
+      return modList([modRow({ modId: "inactive.mod", name: "Inactive Mod" })]);
     },
     list_mod_names: {},
     list_findings: { total: 0, items: [] },
@@ -360,12 +341,10 @@ describe("ModsPage", () => {
     );
   });
 
-  it("queries the Active list unfiltered, from offset 0, capped at 200 rows", async () => {
+  it("queries the Active list unfiltered, with no paging", async () => {
     await mountAndNavigate();
 
-    expect(listModsCalls).toEqual([
-      { search: null, tag: null, source: null, offset: 0, limit: 200 },
-    ]);
+    expect(listWorkingModsCalls).toEqual([{ search: null, tag: null, source: null }]);
     expect(listInactiveModsCalls).toEqual([]);
   });
 
@@ -376,16 +355,14 @@ describe("ModsPage", () => {
     await wrapper.get('[data-testid="mods-search"]').setValue("Some");
     vi.advanceTimersByTime(299);
     await flushPromises();
-    expect(listModsCalls.map((filter) => filter.search)).toEqual([null]);
+    expect(listWorkingModsCalls.map((filter) => filter.search)).toEqual([null]);
 
     vi.advanceTimersByTime(1);
     await flushPromises();
-    expect(listModsCalls.at(-1)).toEqual({
+    expect(listWorkingModsCalls.at(-1)).toEqual({
       search: "Some",
       tag: null,
       source: null,
-      offset: 0,
-      limit: 200,
     });
   });
 
@@ -396,12 +373,10 @@ describe("ModsPage", () => {
     await wrapper.findComponent(Select).vm.$emit("update:modelValue", "workshop");
     await flushPromises();
 
-    expect(listModsCalls.at(-1)).toEqual({
+    expect(listWorkingModsCalls.at(-1)).toEqual({
       search: null,
       tag: "framework",
       source: "workshop",
-      offset: 0,
-      limit: 200,
     });
   });
 
@@ -431,8 +406,6 @@ describe("ModsPage", () => {
       search: null,
       tag: null,
       source: "local",
-      offset: 0,
-      limit: 200,
     });
   });
 
@@ -445,7 +418,7 @@ describe("ModsPage", () => {
 
   it("shows the page-cap hint when the backend holds more rows than it returned", async () => {
     const wrapper = await mountAndNavigate({
-      list_mods: () => ({ total: 250, items: [mod()] }),
+      list_working_mods: () => ({ total: 250, items: [modRow()] }),
     });
 
     expect(wrapper.get('[data-testid="mods-total"]').text()).toContain("250 mods");
@@ -456,7 +429,7 @@ describe("ModsPage", () => {
 
   it("shows the Inactive tab's own total and page-cap hint", async () => {
     const wrapper = await mountAndNavigate({
-      list_inactive_mods: () => ({ total: 3, items: [mod({ modId: "inactive.mod" })] }),
+      list_inactive_mods: () => ({ total: 3, items: [modRow({ modId: "inactive.mod" })] }),
     });
 
     await wrapper.get('[data-testid="mods-tab-inactive"]').trigger("click");
@@ -468,7 +441,7 @@ describe("ModsPage", () => {
 
   it("shows the query error message when the Active query fails", async () => {
     const wrapper = await mountAndNavigate({
-      list_mods: () => {
+      list_working_mods: () => {
         throw { code: "internal", message: "boom" };
       },
     });
@@ -590,7 +563,7 @@ describe("ModsPage", () => {
   it("hides the active-only columns on the Inactive tab", async () => {
     const wrapper = await mountAndNavigate({
       list_inactive_mods: () =>
-        page([mod({ modId: "inactive.mod", tags: ["framework"], hardDependents: 7 })]),
+        modList([modRow({ modId: "inactive.mod", tags: ["framework"], hardDependents: 7 })]),
     });
 
     await wrapper.get('[data-testid="mods-tab-inactive"]').trigger("click");
@@ -601,9 +574,7 @@ describe("ModsPage", () => {
     expect(rowText).not.toContain("7");
   });
 
-  // Pins today's behaviour, a known bug: a failed plan sets the error,
-  // but the dialog that would show it never opens.
-  it("a failed activation plan opens no dialog and shows no error", async () => {
+  it("a failed activation plan opens the dialog with the error and no way to confirm", async () => {
     const wrapper = await mountAndNavigate({
       plan_activate_mods: () => {
         throw { code: "invalid_input", message: "ghost.mod is not a known mod" };
@@ -618,17 +589,228 @@ describe("ModsPage", () => {
     await wrapper.get('[data-testid="activate-selected-button"]').trigger("click");
     await flushPromises();
 
-    expect(wrapper.find('[data-testid="activate-confirm-dialog"]').exists()).toBe(false);
-    expect(wrapper.find('[data-testid="activate-confirm-error"]').exists()).toBe(false);
-    expect(wrapper.text()).not.toContain("ghost.mod is not a known mod");
+    expect(wrapper.find('[data-testid="activate-confirm-dialog"]').exists()).toBe(true);
+    expect(wrapper.get('[data-testid="activate-confirm-error"]').text()).toContain(
+      "ghost.mod is not a known mod",
+    );
+    expect(
+      wrapper.get('[data-testid="activate-confirm-submit"]').attributes("disabled"),
+    ).toBeDefined();
+    expect(activateCalls).toEqual([]);
+  });
+
+  it("a failed deactivation plan opens the dialog with the error and no way to confirm", async () => {
+    const wrapper = await mountAndNavigate({
+      plan_deactivate_mods: () => {
+        throw { code: "invalid_input", message: "plan refused" };
+      },
+    });
+    await wrapper
+      .get('[data-testid="mod-row-select-active.mod"] input[type="checkbox"]')
+      .setValue(true);
+
+    await wrapper.get('[data-testid="deactivate-selected-button"]').trigger("click");
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="deactivate-confirm-dialog"]').exists()).toBe(true);
+    expect(wrapper.get('[data-testid="deactivate-confirm-error"]').text()).toContain(
+      "plan refused",
+    );
+    expect(
+      wrapper.get('[data-testid="deactivate-confirm-submit"]').attributes("disabled"),
+    ).toBeDefined();
+    expect(deactivateCalls).toEqual([]);
+  });
+
+  describe("selecting rows", () => {
+    const threeActive = {
+      list_working_mods: () =>
+        modList([
+          modRow({ modId: "a.mod", name: "A" }),
+          modRow({ modId: "b.mod", name: "B" }),
+          modRow({ modId: "c.mod", name: "C" }),
+        ]),
+    };
+
+    it("Select all picks every shown row and says how many", async () => {
+      const wrapper = await mountAndNavigate(threeActive);
+
+      expect(wrapper.get('[data-testid="mods-select-all-label"]').text()).toBe(
+        "Select all 3 shown",
+      );
+      await wrapper.get('[data-testid="mods-select-all"] input').setValue(true);
+      await flushPromises();
+
+      expect(wrapper.get('[data-testid="mods-selected-count"]').text()).toBe("3 selected");
+      await wrapper.get('[data-testid="deactivate-selected-button"]').trigger("click");
+      await flushPromises();
+      await wrapper.get('[data-testid="deactivate-confirm-submit"]').trigger("click");
+      await flushPromises();
+      expect(deactivateCalls).toEqual([{ ids: ["a.mod", "b.mod", "c.mod"] }]);
+    });
+
+    it("keeps the selected count in an always-mounted polite live region", async () => {
+      const wrapper = await mountAndNavigate(threeActive);
+      const region = wrapper.get('[data-testid="mods-selected-count"]');
+
+      expect(region.attributes("role")).toBe("status");
+      expect(region.attributes("aria-live")).toBe("polite");
+      expect(region.text()).toBe("");
+
+      await wrapper.get('[data-testid="mods-select-all"] input').setValue(true);
+      await flushPromises();
+
+      // Same element, now carrying text: a screen reader announces the change.
+      expect(wrapper.get('[data-testid="mods-selected-count"]').element).toBe(region.element);
+      expect(region.text()).toBe("3 selected");
+    });
+
+    it("names the Select all checkbox by its label and shows a mixed state for a partial selection", async () => {
+      const wrapper = await mountAndNavigate(threeActive);
+      const checkbox = wrapper.get('[data-testid="mods-select-all"] input')
+        .element as HTMLInputElement;
+
+      expect(checkbox.labels?.[0]?.textContent).toContain("Select all 3 shown");
+      expect(checkbox.indeterminate).toBe(false);
+
+      await wrapper
+        .get('[data-testid="mod-row-select-a.mod"] input[type="checkbox"]')
+        .setValue(true);
+      await flushPromises();
+
+      expect(checkbox.indeterminate).toBe(true);
+      expect(checkbox.checked).toBe(false);
+    });
+
+    it("Clear selection removes everything and is disabled when nothing is selected", async () => {
+      const wrapper = await mountAndNavigate(threeActive);
+      const clear = wrapper.get('[data-testid="mods-clear-selection"]');
+      expect(clear.attributes("disabled")).toBeDefined();
+
+      await wrapper.get('[data-testid="mods-select-all"] input').setValue(true);
+      await flushPromises();
+      expect(clear.attributes("disabled")).toBeUndefined();
+      await clear.trigger("click");
+      await flushPromises();
+
+      expect(wrapper.get('[data-testid="mods-selected-count"]').text()).toBe("");
+      expect(
+        wrapper.get('[data-testid="deactivate-selected-button"]').attributes("disabled"),
+      ).toBeDefined();
+    });
+
+    it("disables the controls on an empty list", async () => {
+      const wrapper = await mountAndNavigate({ list_working_mods: () => modList([]) });
+
+      expect(wrapper.get('[data-testid="mods-select-all-label"]').text()).toBe("Select all");
+      expect(
+        wrapper.get('[data-testid="mods-select-all"] input').attributes("disabled"),
+      ).toBeDefined();
+    });
+
+    it("keeps a row a later filter hides selected and says it is not shown", async () => {
+      vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+      const wrapper = await mountAndNavigate({
+        list_working_mods: (payload: unknown) => {
+          const { search } = (payload as { query: ModListQueryDto }).query;
+          return modList(
+            [modRow({ modId: "a.mod", name: "A" }), modRow({ modId: "b.mod", name: "B" })].filter(
+              (row) => search === null || row.name === search,
+            ),
+          );
+        },
+      });
+      await wrapper.get('[data-testid="mods-select-all"] input').setValue(true);
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mods-search"]').setValue("A");
+      vi.advanceTimersByTime(300);
+      await flushPromises();
+
+      expect(wrapper.get('[data-testid="mods-select-all-label"]').text()).toBe(
+        "Select all 1 shown",
+      );
+      expect(wrapper.get('[data-testid="mods-selected-count"]').text()).toContain("2 selected");
+      expect(wrapper.get('[data-testid="mods-selected-hidden"]').text()).toBe("(1 not shown)");
+
+      await wrapper.get('[data-testid="mods-clear-selection"]').trigger("click");
+      await flushPromises();
+      expect(wrapper.get('[data-testid="mods-selected-count"]').text()).toBe("");
+    });
+
+    it("drops a selected id that left an unfiltered list", async () => {
+      let rows = [modRow({ modId: "a.mod", name: "A" }), modRow({ modId: "b.mod", name: "B" })];
+      const wrapper = await mountAndNavigate({
+        list_working_mods: () => modList(rows),
+        rescan_project: () => ({
+          modCount: 1,
+          gameVersion: "1.6",
+          elapsedMs: 1,
+          warnings: [],
+          ruleWarnings: [],
+          selected: "current",
+        }),
+      });
+      await wrapper.get('[data-testid="mods-select-all"] input').setValue(true);
+      await flushPromises();
+      expect(wrapper.get('[data-testid="mods-selected-count"]').text()).toBe("2 selected");
+
+      rows = [modRow({ modId: "a.mod", name: "A" })];
+      await wrapper.get('[data-testid="mods-rescan-button"]').trigger("click");
+      await flushPromises();
+
+      expect(wrapper.get('[data-testid="mods-selected-count"]').text()).toBe("1 selected");
+    });
+  });
+
+  describe("the Rescan button", () => {
+    it("is always visible and rescans the project", async () => {
+      let rescans = 0;
+      const wrapper = await mountAndNavigate({
+        rescan_project: () => {
+          rescans += 1;
+          return {
+            modCount: 1,
+            gameVersion: "1.6",
+            elapsedMs: 1,
+            warnings: [],
+            ruleWarnings: [],
+            selected: "current",
+          };
+        },
+      });
+
+      await wrapper.get('[data-testid="mods-rescan-button"]').trigger("click");
+      await flushPromises();
+
+      expect(rescans).toBe(1);
+    });
+
+    it("shows the failure beside the button", async () => {
+      const wrapper = await mountAndNavigate({
+        rescan_project: () => {
+          throw {
+            code: "invalid_input",
+            message: "the working active-mod set changed during the rescan; rescan again",
+          };
+        },
+      });
+
+      await wrapper.get('[data-testid="mods-rescan-button"]').trigger("click");
+      await flushPromises();
+
+      expect(wrapper.get('[data-testid="mods-rescan-error"]').text()).toContain(
+        "the working active-mod set changed during the rescan",
+      );
+    });
   });
 
   describe("the info panel follows keyboard focus", () => {
     const twoActiveMods = {
-      list_mods: () =>
-        page([
-          mod({ modId: "active.mod", name: "Active Mod" }),
-          mod({ modId: "second.mod", name: "Second Mod" }),
+      list_working_mods: () =>
+        modList([
+          modRow({ modId: "active.mod", name: "Active Mod" }),
+          modRow({ modId: "second.mod", name: "Second Mod" }),
         ]),
     };
 

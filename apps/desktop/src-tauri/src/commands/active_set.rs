@@ -23,29 +23,29 @@ use crate::dto::active_set::{
     ActivatePlanDto, ActivateRequestDto, DeactivatePlanDto, DeactivateRequestDto,
     PendingActiveChangesDto,
 };
-use crate::dto::mods::{ModFilterDto, ModPageDto};
+use crate::dto::mod_lists::{ModListDto, ModListQueryDto};
 use crate::dto::project::{ProgressEventDto, ProjectSummaryDto, SessionChangeReasonDto};
 use crate::error::CommandError;
 use crate::state::{Adapters, AppState, with_session};
 
-/// Searches and pages the inactive mod list — the Mods page's Inactive
-/// tab. Filtering/sorting/paging lives in
-/// [`rim_session::Session::inactive_mods`]; this only maps the DTO in and
-/// out.
+/// The Mods page's Inactive list: every mod on disk whose base id is not
+/// in the working set, so a mod deactivated since the last scan appears at
+/// once. Filtering lives in [`rim_session::Session::inactive_mod_list`];
+/// this only maps the DTO in and out.
 ///
 /// # Errors
 ///
 /// Returns [`CommandError::no_project_loaded`] when no project is loaded,
-/// or [`CommandError::invalid_input`] when `filter.tag` isn't a valid tag
-/// slug (accepted for symmetry with `list_mods`'s own filter shape, even
-/// though an inactive mod never actually carries one).
+/// or [`CommandError::invalid_input`] when `query.tag` isn't a valid tag
+/// slug (accepted for symmetry with the Active list's query, though the
+/// Inactive list ignores it).
 pub(crate) async fn list_inactive_mods_inner(
     state: &AppState,
-    filter: ModFilterDto,
-) -> Result<ModPageDto, CommandError> {
+    query: ModListQueryDto,
+) -> Result<ModListDto, CommandError> {
     with_session(state, move |session| {
-        let filter: rim_session::ModFilter = filter.try_into()?;
-        Ok(session.inactive_mods(&filter).into())
+        let query: rim_session::ModListQuery = query.try_into()?;
+        Ok(session.inactive_mod_list(&query).into())
     })
     .await
 }
@@ -58,9 +58,9 @@ pub(crate) async fn list_inactive_mods_inner(
 #[tauri::command]
 pub async fn list_inactive_mods(
     state: tauri::State<'_, AppState>,
-    filter: ModFilterDto,
-) -> Result<ModPageDto, CommandError> {
-    list_inactive_mods_inner(&state, filter).await
+    query: ModListQueryDto,
+) -> Result<ModListDto, CommandError> {
+    list_inactive_mods_inner(&state, query).await
 }
 
 /// Plans what `activate_mods` would do — the confirm dialog's own read,
@@ -457,6 +457,8 @@ mod tests {
     use rim_session::test_support::report_fixture_with_inactive;
 
     use super::*;
+    use crate::dto::mod_lists::ModListQueryDto;
+    use crate::dto::mods::ModFilterDto;
 
     fn state_with(active: &[&str], inactive: &[&str]) -> AppState {
         let state = AppState::default();
@@ -489,19 +491,13 @@ mod tests {
     async fn list_inactive_mods_lists_only_inactive_mods_sorted_by_id() {
         let state = state_with(&["a"], &["zzz.mod", "aaa.mod"]);
 
-        let page = list_inactive_mods_inner(
-            &state,
-            ModFilterDto {
-                limit: 10,
-                ..ModFilterDto::default()
-            },
-        )
-        .await
-        .expect("must succeed");
+        let list = list_inactive_mods_inner(&state, ModListQueryDto::default())
+            .await
+            .expect("must succeed");
 
-        assert_eq!(page.total, 2);
-        assert_eq!(page.items[0].mod_id, "aaa.mod");
-        assert_eq!(page.items[1].mod_id, "zzz.mod");
+        assert_eq!(list.total, 2);
+        assert_eq!(list.items[0].mod_id, "aaa.mod");
+        assert_eq!(list.items[1].mod_id, "zzz.mod");
     }
 
     #[tokio::test]
@@ -795,6 +791,55 @@ mod tests {
         );
     }
 
+    /// Regression for the apply-then-rescan revert: `Apply` ends in
+    /// `set_current_order`, and a rescan scans the working set's own
+    /// sequence, so that sequence must have followed the written order.
+    #[tokio::test]
+    async fn rescan_after_the_current_order_changed_keeps_that_order() {
+        let (_scratch, state) = loaded_sample_state().await;
+        let reversed = {
+            let mut guard = state.session.write().expect("lock");
+            let session = guard.as_mut().expect("a session is loaded");
+            let mut ids = session.orders().current.as_slice().to_vec();
+            ids.reverse();
+            session.set_current_order(rim_analyzer::domain::LoadOrder::new(ids.clone()));
+            ids
+        };
+
+        rescan_project_inner(&state, |_| {})
+            .await
+            .expect("rescanning the scratch sample game must succeed");
+
+        let guard = state.session.read().expect("lock");
+        let rescanned = guard.as_ref().expect("a session is loaded");
+        assert_eq!(rescanned.orders().current.as_slice(), reversed);
+    }
+
+    #[tokio::test]
+    async fn list_working_mods_returns_the_working_set_in_its_own_order() {
+        let (_scratch, state) = loaded_sample_state().await;
+        activate_mods_inner(&state, activate_request("zzz.mod"))
+            .await
+            .expect("zzz.mod is installed but inactive, so it can be activated");
+
+        let list =
+            crate::commands::mods::list_working_mods_inner(&state, ModListQueryDto::default())
+                .await
+                .expect("a project is loaded");
+
+        let listed: Vec<String> = list.items.iter().map(|row| row.mod_id.clone()).collect();
+        assert_eq!(listed, working_ids_of(&state));
+        let activated = list
+            .items
+            .iter()
+            .find(|row| row.mod_id == "zzz.mod")
+            .expect("the activated mod is listed at once");
+        assert_eq!(
+            activated.state,
+            crate::dto::mod_lists::ModRowStateDto::PendingScan
+        );
+    }
+
     #[tokio::test]
     async fn rescan_refuses_when_the_working_set_changed_mid_scan() {
         let (_scratch, state) = loaded_sample_state().await;
@@ -931,7 +976,7 @@ mod tests {
         let state = AppState::default();
 
         assert_eq!(
-            list_inactive_mods_inner(&state, ModFilterDto::default())
+            list_inactive_mods_inner(&state, ModListQueryDto::default())
                 .await
                 .unwrap_err()
                 .code,

@@ -33,7 +33,11 @@ export function useModDeactivation({
       plan.value = await planDeactivate({ ids: selectedIds.value });
       isDialogVisible.value = true;
     } catch (caught: unknown) {
+      // The dialog opens with no plan so the failure is shown where the user
+      // is looking; its confirm button stays disabled until a plan exists.
+      plan.value = null;
       error.value = describeCommandError(caught);
+      isDialogVisible.value = true;
     }
   }
 

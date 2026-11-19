@@ -1240,7 +1240,8 @@
         "local": "Mod local",
         "workshop": "Oficina Steam"
       },
-      "rovingHint": "Use as setas para mover, Enter para abrir e Espaço para marcar/desmarcar"
+      "rovingHint": "Use as setas para mover, Enter para abrir e Espaço para marcar/desmarcar",
+      "pendingScan": "ainda não escaneado"
     },
     "pendingChanges": {
       "unscanned": "{count} alteração pendente — escaneie novamente para atualizar a análise | {count} alterações pendentes — escaneie novamente para atualizar a análise",
@@ -1302,11 +1303,19 @@
       "refusedHeading": "Recusados (necessários):",
       "dependentsStillActive": "{count} mod ativo ainda depende de {mod}: {deps}. | {count} mods ativos ainda dependem de {mod}: {deps}.",
       "deactivatedToast": "Desativados",
-      "deactivateButton": "Desativar"
+      "deactivateButton": "Desativar",
+      "rescanButton": "Escanear mods novamente"
     },
     "defSearch": {
       "ariaLabel": "Ir para uma def",
       "placeholder": "Ir para uma def…"
+    },
+    "selection": {
+      "selectAllShown": "Selecionar {count} exibido | Selecionar todos os {count} exibidos",
+      "selectAllEmpty": "Selecionar todos",
+      "selectedCount": "{count} selecionado | {count} selecionados",
+      "notShown": "{count} não exibido | {count} não exibidos",
+      "clear": "Limpar seleção"
     }
   },
   "rules": {

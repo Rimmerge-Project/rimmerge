@@ -6,6 +6,30 @@ maintainer's own checkout for the full record, if you have it.
 
 ## [Unreleased]
 
+- **Mods that move now follows the orders.** After Apply made the current
+  order the suggested one, the Dashboard, the getting-started strip and the
+  Apply dialog kept showing the number measured before the Apply until
+  something re-sorted. It is now measured against the orders as they are, so
+  it reads 0 right after such an Apply.
+- **Rescan after Apply no longer reverts the current order.** The active-mod
+  list the app rescans kept the order from before the Apply, so a rescan
+  scanned the old order while `ModsConfig.xml` held the new one, and a later
+  Apply of Current would have written the old order back. The list now
+  follows the written order, and the suggested order is sorted again when the
+  current order changes over the same mods and the tie-break preserves the
+  current order.
+- **The Mods page shows every mod, and has Select all, Clear selection and
+  Rescan mods.** The Active and Inactive lists no longer stop at 200 rows
+  (a list is bounded at 5,000, with the full count shown). They show your
+  edits at once: an activated mod is in Active ("not scanned yet" until a
+  rescan), a deactivated one in Inactive. Each list has a "Select all N
+  shown" checkbox for the rows matching the search and filters, a note for
+  selected rows a filter hides, and Clear selection; the plan and
+  confirmation dialogs are unchanged. Rescan mods is always available in the
+  page header.
+- **A refused activate or deactivate plan is no longer silent.** When the
+  plan for Activate selected or Deactivate selected failed, nothing visible
+  happened. The dialog now opens with the reason and no way to confirm.
 - **Faster mod scan.** Loading, rescanning and importing a load order start
   by scanning every active mod's files; that scan now makes far fewer
   file-system calls and allocations. Each loaded folder is listed once

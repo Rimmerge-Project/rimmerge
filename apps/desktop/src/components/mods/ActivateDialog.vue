@@ -15,9 +15,8 @@ const { plan, error, isSubmitting } = defineProps<{
   /** The plan to confirm; the body stays empty until the first plan arrives. */
   plan: ActivatePlanDto | null;
   /**
-   * The last commit failure. A plan failure is currently not shown: the
-   * dialog never opens on one (tracked in the milestone plan, fixed in
-   * batch B).
+   * The last plan or commit failure. A failed plan opens the dialog with
+   * `plan` null, so the error is the whole body and Confirm is disabled.
    */
   error: CommandErrorDescriptor | null;
   isSubmitting: boolean;
@@ -85,23 +84,24 @@ const modLabel = useModLabel();
           }, deps.length)
         }}
       </Message>
-      <Message
-        v-if="error"
-        severity="error"
-        data-testid="activate-confirm-error"
-      >
-        <div class="font-medium">
-          {{ tm(error.title) }}
-        </div>
-        <div>{{ tm(error.detail) }}</div>
-        <div
-          v-if="error.technicalDetail"
-          class="text-xs opacity-75"
-        >
-          {{ error.technicalDetail }}
-        </div>
-      </Message>
     </div>
+    <Message
+      v-if="error"
+      class="w-96"
+      severity="error"
+      data-testid="activate-confirm-error"
+    >
+      <div class="font-medium">
+        {{ tm(error.title) }}
+      </div>
+      <div>{{ tm(error.detail) }}</div>
+      <div
+        v-if="error.technicalDetail"
+        class="text-xs opacity-75"
+      >
+        {{ error.technicalDetail }}
+      </div>
+    </Message>
     <template #footer>
       <Button
         :label="t('common.cancel')"
@@ -112,6 +112,7 @@ const modLabel = useModLabel();
       <Button
         :label="t('mods.page.activateButton')"
         :loading="isSubmitting"
+        :disabled="plan === null"
         data-testid="activate-confirm-submit"
         @click="emit('confirm')"
       />

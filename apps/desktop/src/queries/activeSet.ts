@@ -10,6 +10,7 @@ import {
   deactivateMods,
   getPendingActiveChanges,
   listInactiveMods,
+  listWorkingMods,
   planActivateMods,
   planDeactivateMods,
   rescanProject,
@@ -17,21 +18,36 @@ import {
 import { useSessionStore } from "@/stores/session";
 import type { ActivateRequestDto } from "@/types/generated/ActivateRequestDto";
 import type { DeactivateRequestDto } from "@/types/generated/DeactivateRequestDto";
-import type { ModFilterDto } from "@/types/generated/ModFilterDto";
+import type { ModListQueryDto } from "@/types/generated/ModListQueryDto";
 import { ruleWarningsDetail } from "@/utils/ruleWarning";
 
 /**
- * Searches and pages the inactive mod list — the Mods page's Inactive
- * tab. `enabled` (default: always) skips the query while that tab isn't
- * showing, the same as `useModsQuery`'s own parameter.
+ * The Mods page's Inactive list. `enabled` (default: always) skips the query
+ * while that tab isn't showing, the same as {@link useWorkingModsQuery}.
  */
 export function useInactiveModsQuery(
-  filter: MaybeRefOrGetter<ModFilterDto>,
+  query: MaybeRefOrGetter<ModListQueryDto>,
   enabled: MaybeRefOrGetter<boolean> = true,
 ) {
   return useQuery({
-    key: () => queryKeys.inactiveMods(toValue(filter)),
-    query: () => listInactiveMods(toValue(filter)),
+    key: () => queryKeys.inactiveMods(toValue(query)),
+    query: () => listInactiveMods(toValue(query)),
+    enabled: () => toValue(enabled),
+  });
+}
+
+/**
+ * The Mods page's Active list: the working set in its own order. `enabled`
+ * lets a page with two tabs skip the query while its own tab isn't showing,
+ * rather than fetching both on every keystroke.
+ */
+export function useWorkingModsQuery(
+  query: MaybeRefOrGetter<ModListQueryDto>,
+  enabled: MaybeRefOrGetter<boolean> = true,
+) {
+  return useQuery({
+    key: () => queryKeys.workingMods(toValue(query)),
+    query: () => listWorkingMods(toValue(query)),
     enabled: () => toValue(enabled),
   });
 }

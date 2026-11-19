@@ -1240,7 +1240,8 @@
         "local": "Mod local",
         "workshop": "Steam Workshop"
       },
-      "rovingHint": "Flèches pour se déplacer, Entrée pour ouvrir, Espace pour cocher ou décocher"
+      "rovingHint": "Flèches pour se déplacer, Entrée pour ouvrir, Espace pour cocher ou décocher",
+      "pendingScan": "pas encore analysé"
     },
     "pendingChanges": {
       "unscanned": "{count} modification en attente : réanalysez pour mettre à jour les résultats | {count} modifications en attente : réanalysez pour mettre à jour les résultats",
@@ -1302,11 +1303,19 @@
       "refusedHeading": "Refusés (requis) :",
       "dependentsStillActive": "{count} mod actif dépend encore de {mod} : {deps}. | {count} mods actifs dépendent encore de {mod} : {deps}.",
       "deactivatedToast": "Désactivés",
-      "deactivateButton": "Désactiver"
+      "deactivateButton": "Désactiver",
+      "rescanButton": "Réanalyser les mods"
     },
     "defSearch": {
       "ariaLabel": "Aller à une def",
       "placeholder": "Aller à une def…"
+    },
+    "selection": {
+      "selectAllShown": "Tout sélectionner ({count} affiché) | Tout sélectionner ({count} affichés)",
+      "selectAllEmpty": "Tout sélectionner",
+      "selectedCount": "{count} sélectionné | {count} sélectionnés",
+      "notShown": "{count} non affiché | {count} non affichés",
+      "clear": "Tout désélectionner"
     }
   },
   "rules": {

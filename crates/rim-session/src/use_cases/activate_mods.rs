@@ -41,9 +41,11 @@ impl ActivateMods {
         plan: &ActivatePlan,
     ) -> Result<Vec<ModId>, ActiveSetError> {
         let inventory = ModInventory::from_report(session.report());
-        session
+        let activated = session
             .working_mut()
-            .activate(plan.to_add.clone(), &inventory)
+            .activate(plan.to_add.clone(), &inventory)?;
+        session.settle_working();
+        Ok(activated)
     }
 }
 

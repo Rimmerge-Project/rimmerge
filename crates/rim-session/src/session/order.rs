@@ -5,13 +5,14 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use rim_analyzer::domain::{LoadOrder, ModId};
 use rim_resolve::domain::{BothOrders, OrderSource};
-use rim_resolve::sort::SortOutcome;
+use rim_resolve::sort::{SortOutcome, TieBreak, compute_disturbance};
 
 use super::Session;
 use super::{compute, mods_by_id};
 use crate::active_set::{ActiveSet, PendingActiveChanges};
 use crate::game_launch::{OrderOnDisk, UnappliedReason};
 use crate::mod_index::{self, ModFilter, ModPage};
+use crate::mod_lists::{self, ModList, ModListQuery};
 use crate::ports::ModsConfigFile;
 use crate::settings::SortProvenance;
 
@@ -54,13 +55,19 @@ impl Session {
         mod_index::query(&self.report, &self.tagging, filter)
     }
 
-    /// Searches, filters, and pages `report.inactive_mods`
-    /// — the Inactive tab's own
-    /// list. Pure, like [`Self::mods`]: only `search`/`source` apply
-    /// ([`mod_index::query_inactive`]'s own doc comment has why).
+    /// The Mods page's Active list: the working set in its own order,
+    /// every row (up to [`crate::MAX_MOD_LIST_ROWS`]) matching `query`.
+    /// Pure (`&self`).
     #[must_use]
-    pub fn inactive_mods(&self, filter: &ModFilter) -> ModPage {
-        mod_index::query_inactive(&self.report.inactive_mods, filter)
+    pub fn working_mod_list(&self, query: &ModListQuery) -> ModList {
+        mod_lists::working_list(&self.report, &self.tagging, &self.working, query)
+    }
+
+    /// The Mods page's Inactive list: every mod on disk whose base id is
+    /// not in the working set, sorted by id. Pure (`&self`).
+    #[must_use]
+    pub fn inactive_mod_list(&self, query: &ModListQuery) -> ModList {
+        mod_lists::inactive_list(&self.report, &self.tagging, &self.working, query)
     }
 
     /// Changes which order is selected for ledger/finding queries.
@@ -121,7 +128,11 @@ impl Session {
     /// appended id (e.g. a just-installed patch) isn't in `self.report`
     /// yet — only the next scan picks it up — so there is nothing new for
     /// the sorter to place; only the ledgers, which read `current`
-    /// directly, need to go stale.
+    /// directly, need to go stale. The one exception is a new *sequence*
+    /// over the *same* ids under [`TieBreak::PreserveCurrent`], where
+    /// `suggested` ranks by `current`'s positions and is re-sorted. The
+    /// working set also follows `current`'s sequence whenever both hold the
+    /// same ids ([`Self::settle_working`]).
     ///
     /// [`Self::file_active_mods`] is reset to `order` here too —
     /// this method's own contract is "the file now *is* this", and that
@@ -146,7 +157,10 @@ impl Session {
         if !newly_absent.is_empty() {
             self.working.deactivate(&newly_absent);
         }
+        let is_reorder_of_same_ids =
+            previous == next && self.orders.current.as_slice() != order.as_slice();
         self.orders.current = order;
+        self.settle_working();
         self.file_active_mods = self.orders.current.as_slice().to_vec();
         self.invalidate_ledgers();
         // `orders.current` just got a new value — same reasoning as
@@ -155,6 +169,39 @@ impl Session {
         self.assignment_instances.clear();
         self.assignment_coverage.clear();
         self.def_graphics.clear();
+        // `PreserveCurrent` ranks unconstrained mods by `current`'s own
+        // sequence, so a new sequence over the same ids makes `suggested`
+        // stale. A changed id set still never re-sorts (see above: a
+        // just-written id is not in the report yet).
+        if is_reorder_of_same_ids && self.rules.settings.tie_break == TieBreak::PreserveCurrent {
+            self.recompute_sort();
+        }
+    }
+
+    /// Keeps the invariant *working set == current set implies working
+    /// sequence == current sequence*: when both hold exactly the same ids
+    /// (duplicates respected), `working` takes `orders.current`'s
+    /// sequence. A rescan scans `working`'s sequence, so without this a
+    /// rescan right after an `Apply` would scan the pre-apply order and
+    /// revert Current. A `working` with pending membership edits keeps its
+    /// own sequence: nothing was settled yet.
+    pub(crate) fn settle_working(&mut self) {
+        let mut working_ids = self.working.ids().to_vec();
+        let mut current_ids = self.orders.current.as_slice().to_vec();
+        working_ids.sort();
+        current_ids.sort();
+        if working_ids == current_ids {
+            self.working = ActiveSet::trusted(self.orders.current.as_slice().to_vec());
+        }
+    }
+
+    /// How many mods the suggested order places differently from the
+    /// current one, measured over the live orders — never a snapshot from
+    /// the last sort, which goes stale the moment `Apply` calls
+    /// [`Self::set_current_order`].
+    #[must_use]
+    pub fn moved_mods(&self) -> usize {
+        compute_disturbance(&self.orders.suggested, &self.orders.current).positions_changed
     }
 
     /// Which order is currently selected for ledger/finding queries.

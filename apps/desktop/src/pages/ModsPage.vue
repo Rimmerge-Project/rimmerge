@@ -15,11 +15,11 @@ import DefSearchBox from "@/components/mods/DefSearchBox.vue";
 import ModFilterBar from "@/components/mods/ModFilterBar.vue";
 import ModInfoPanel from "@/components/mods/ModInfoPanel.vue";
 import ModListPane from "@/components/mods/ModListPane.vue";
+import ModsRescanButton from "@/components/mods/ModsRescanButton.vue";
 import { useModActivation } from "@/composables/useModActivation";
 import { useModDeactivation } from "@/composables/useModDeactivation";
 import { useModListFilters } from "@/composables/useModListFilters";
-import { useInactiveModsQuery } from "@/queries/activeSet";
-import { useModsQuery } from "@/queries/mods";
+import { useInactiveModsQuery, useWorkingModsQuery } from "@/queries/activeSet";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -37,19 +37,20 @@ function closePanel(): void {
 /** Which of the two tabs is showing. */
 const tab = ref<"active" | "inactive">("active");
 
-const { search, source, tag, activeFilter, inactiveFilter } = useModListFilters();
+const { search, source, tag, activeQuery, inactiveQuery, isActiveFiltered, isInactiveFiltered } =
+  useModListFilters();
 
 const {
   data: activeData,
   isPending: activePending,
   error: activeError,
-} = useModsQuery(activeFilter, () => tab.value === "active");
+} = useWorkingModsQuery(activeQuery, () => tab.value === "active");
 
 const {
   data: inactiveData,
   isPending: inactivePending,
   error: inactiveError,
-} = useInactiveModsQuery(inactiveFilter, () => tab.value === "inactive");
+} = useInactiveModsQuery(inactiveQuery, () => tab.value === "inactive");
 
 const selectedActiveIds = ref<string[]>([]);
 const selectedInactiveIds = ref<string[]>([]);
@@ -106,11 +107,14 @@ const followFocus = useDebounceFn((modId: string) => {
 <template>
   <div class="flex h-full min-h-0 gap-4 p-4">
     <section class="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
-      <div class="flex shrink-0 items-center justify-between gap-2">
+      <div class="flex shrink-0 items-start justify-between gap-2">
         <h1 class="text-text text-xl font-semibold">
           {{ t("mods.page.heading") }}
         </h1>
-        <DefSearchBox />
+        <div class="flex items-start gap-2">
+          <ModsRescanButton />
+          <DefSearchBox />
+        </div>
       </div>
 
       <Tabs
@@ -144,9 +148,10 @@ const followFocus = useDebounceFn((modId: string) => {
       <ModListPane
         v-if="tab === 'active'"
         v-model:selected-ids="selectedActiveIds"
-        :mod-page="activeData"
+        :mod-list="activeData"
         :is-pending="activePending"
         :error="activeError"
+        :is-filtered="isActiveFiltered"
         @select-mod="openMod"
         @focus-mod="followFocus"
       >
@@ -166,9 +171,10 @@ const followFocus = useDebounceFn((modId: string) => {
       <ModListPane
         v-else
         v-model:selected-ids="selectedInactiveIds"
-        :mod-page="inactiveData"
+        :mod-list="inactiveData"
         :is-pending="inactivePending"
         :error="inactiveError"
+        :is-filtered="isInactiveFiltered"
         :show-active-columns="false"
         @select-mod="openMod"
         @focus-mod="followFocus"

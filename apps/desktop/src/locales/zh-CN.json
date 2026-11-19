@@ -1240,7 +1240,8 @@
         "local": "本地 Mod",
         "workshop": "Steam 创意工坊"
       },
-      "rovingHint": "使用方向键移动，Enter 键打开，空格键切换"
+      "rovingHint": "使用方向键移动，Enter 键打开，空格键切换",
+      "pendingScan": "尚未扫描"
     },
     "pendingChanges": {
       "unscanned": "{count} 项待定更改——重新扫描以更新分析",
@@ -1302,11 +1303,19 @@
       "refusedHeading": "已拒绝（被依赖）：",
       "dependentsStillActive": "{count} 个已启用的 Mod 仍依赖 {mod}：{deps}。",
       "deactivatedToast": "已禁用",
-      "deactivateButton": "禁用"
+      "deactivateButton": "禁用",
+      "rescanButton": "重新扫描 Mod"
     },
     "defSearch": {
       "ariaLabel": "跳转到 Def",
       "placeholder": "跳转到 Def…"
+    },
+    "selection": {
+      "selectAllShown": "全选当前显示的 {count} 个",
+      "selectAllEmpty": "全选",
+      "selectedCount": "已选 {count} 个",
+      "notShown": "{count} 个未显示",
+      "clear": "清除选择"
     }
   },
   "rules": {

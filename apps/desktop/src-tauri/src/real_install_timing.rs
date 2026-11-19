@@ -1016,3 +1016,101 @@ async fn contributes_nothing_against_the_real_install() {
         );
     }
 }
+
+/// The Mods page's two lists against the real install: Active returns the
+/// whole working set (the real tier has at least 200 active mods, which the
+/// old 200-row page silently cut), deterministically, and Inactive shares no
+/// base id with it. Read-only; budgets are generous (it guards against an
+/// accidentally quadratic list, not against a few milliseconds).
+#[tokio::test]
+#[ignore = "needs the real install plus RIMMERGE_PERF_PROFILE_DIR pointing at a scratch profile copy"]
+async fn mod_lists_against_the_real_install() {
+    use std::collections::BTreeSet;
+
+    use crate::commands::active_set::list_inactive_mods_inner;
+    use crate::commands::mods::list_working_mods_inner;
+    use crate::dto::mod_lists::ModListQueryDto;
+
+    const LIST_BUDGET: Duration = Duration::from_secs(2);
+
+    let Some(profile_dir) = crate::real_install_support::require_profile_dir(RERUN_COMMAND) else {
+        return;
+    };
+    let paths = crate::real_install_support::real_install_paths(profile_dir, RERUN_COMMAND);
+    let state = AppState::default();
+    let adapters = state.adapters.clone();
+    let use_case = rim_session::use_cases::LoadProject::new(
+        adapters.scanner,
+        adapters.config_store,
+        adapters.decision_store,
+        adapters.rule_store,
+        adapters.patch_store,
+        adapters.assignment_store,
+        rim_io::FsModKnowledgeStore::vendored(),
+        true,
+    );
+    let session = use_case.execute(paths, &mut |_| {}).expect("load project");
+    let working_len = session.working().ids().len();
+    *state.session.write().expect("lock") = Some(session);
+
+    let start = Instant::now();
+    let first = list_working_mods_inner(&state, ModListQueryDto::default())
+        .await
+        .expect("working list");
+    let active_elapsed = start.elapsed();
+    let second = list_working_mods_inner(&state, ModListQueryDto::default())
+        .await
+        .expect("working list again");
+    let start = Instant::now();
+    let inactive = list_inactive_mods_inner(&state, ModListQueryDto::default())
+        .await
+        .expect("inactive list");
+    let inactive_elapsed = start.elapsed();
+
+    eprintln!(
+        "list_working_mods: {} rows in {:.1} ms; list_inactive_mods: {} rows in {:.1} ms",
+        first.total,
+        active_elapsed.as_secs_f64() * 1e3,
+        inactive.total,
+        inactive_elapsed.as_secs_f64() * 1e3
+    );
+    assert_eq!(
+        first.total, working_len,
+        "Active lists the whole working set"
+    );
+    assert!(
+        first.total >= 200,
+        "the real-install floor is 200 active mods, which the old page cut"
+    );
+    assert_eq!(
+        first.items.len(),
+        first.total.min(rim_session::MAX_MOD_LIST_ROWS)
+    );
+    assert_eq!(first, second, "the list is deterministic across two calls");
+    let active_bases: BTreeSet<String> = first
+        .items
+        .iter()
+        .map(|row| {
+            rim_analyzer::domain::ModId::new(&row.mod_id)
+                .base()
+                .as_str()
+                .to_string()
+        })
+        .collect();
+    assert!(
+        inactive.items.iter().all(|row| !active_bases.contains(
+            rim_analyzer::domain::ModId::new(&row.mod_id)
+                .base()
+                .as_str()
+        )),
+        "Inactive shares no base id with Active"
+    );
+    assert!(
+        active_elapsed < LIST_BUDGET,
+        "Active took {active_elapsed:?}"
+    );
+    assert!(
+        inactive_elapsed < LIST_BUDGET,
+        "Inactive took {inactive_elapsed:?}"
+    );
+}

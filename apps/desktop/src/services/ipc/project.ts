@@ -22,6 +22,8 @@ import type { ModDetailDto } from "@/types/generated/ModDetailDto";
 import type { ModFilterDto } from "@/types/generated/ModFilterDto";
 import type { ModInfoDto } from "@/types/generated/ModInfoDto";
 import type { ModLinkKindDto } from "@/types/generated/ModLinkKindDto";
+import type { ModListDto } from "@/types/generated/ModListDto";
+import type { ModListQueryDto } from "@/types/generated/ModListQueryDto";
 import type { ModNamesDto } from "@/types/generated/ModNamesDto";
 import type { ModPageDto } from "@/types/generated/ModPageDto";
 import type { ModPreviewDto } from "@/types/generated/ModPreviewDto";
@@ -107,9 +109,20 @@ export function listModNames(): Promise<ModNamesDto> {
   return call("list_mod_names");
 }
 
-/** Searches and pages the inactive mod list — the Mods page's Inactive tab. */
-export function listInactiveMods(filter: ModFilterDto): Promise<ModPageDto> {
-  return call("list_inactive_mods", { filter });
+/**
+ * The Mods page's Active list: the working set in its own order, every
+ * matching row (the backend bounds it, `total` says when it cut).
+ */
+export function listWorkingMods(query: ModListQueryDto): Promise<ModListDto> {
+  return call("list_working_mods", { query });
+}
+
+/**
+ * The Mods page's Inactive list: every mod on disk whose base id is not in
+ * the working set, so a mod deactivated since the last scan is already here.
+ */
+export function listInactiveMods(query: ModListQueryDto): Promise<ModListDto> {
+  return call("list_inactive_mods", { query });
 }
 
 /**

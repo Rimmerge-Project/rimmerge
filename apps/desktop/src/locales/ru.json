@@ -1240,7 +1240,8 @@
         "local": "Локальный мод",
         "workshop": "Мастерская Steam"
       },
-      "rovingHint": "Стрелки — перемещение, Enter — открыть, пробел — переключить"
+      "rovingHint": "Стрелки — перемещение, Enter — открыть, пробел — переключить",
+      "pendingScan": "ещё не отсканирован"
     },
     "pendingChanges": {
       "unscanned": "{count} ожидающее изменение — пересканируйте, чтобы обновить анализ | {count} ожидающих изменения — пересканируйте, чтобы обновить анализ | {count} ожидающих изменений — пересканируйте, чтобы обновить анализ",
@@ -1302,11 +1303,19 @@
       "refusedHeading": "Отказано (обязательные):",
       "dependentsStillActive": "От мода {mod} всё ещё зависит {count} активный мод: {deps}. | От мода {mod} всё ещё зависят {count} активных мода: {deps}. | От мода {mod} всё ещё зависят {count} активных модов: {deps}.",
       "deactivatedToast": "Отключено",
-      "deactivateButton": "Отключить"
+      "deactivateButton": "Отключить",
+      "rescanButton": "Пересканировать моды"
     },
     "defSearch": {
       "ariaLabel": "Перейти к Def",
       "placeholder": "Перейти к Def…"
+    },
+    "selection": {
+      "selectAllShown": "Выбрать все показанные ({count}) | Выбрать все показанные ({count}) | Выбрать все показанные ({count})",
+      "selectAllEmpty": "Выбрать все",
+      "selectedCount": "{count} выбран | {count} выбрано | {count} выбрано",
+      "notShown": "{count} не показан | {count} не показано | {count} не показано",
+      "clear": "Сбросить выбор"
     }
   },
   "rules": {

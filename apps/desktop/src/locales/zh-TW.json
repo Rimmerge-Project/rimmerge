@@ -1240,7 +1240,8 @@
         "local": "本機模組",
         "workshop": "Steam 創意工坊"
       },
-      "rovingHint": "使用方向鍵移動，Enter 開啟，空白鍵切換"
+      "rovingHint": "使用方向鍵移動，Enter 開啟，空白鍵切換",
+      "pendingScan": "尚未掃描"
     },
     "pendingChanges": {
       "unscanned": "{count} 項尚未掃描的變更：重新掃描以更新分析",
@@ -1302,11 +1303,19 @@
       "refusedHeading": "已拒絕（仍被需要）：",
       "dependentsStillActive": "{count} 個已啟用的模組仍依賴 {mod}：{deps}。",
       "deactivatedToast": "已停用",
-      "deactivateButton": "停用"
+      "deactivateButton": "停用",
+      "rescanButton": "重新掃描模組"
     },
     "defSearch": {
       "ariaLabel": "跳至 Def",
       "placeholder": "跳至 Def…"
+    },
+    "selection": {
+      "selectAllShown": "全選顯示中的 {count} 個",
+      "selectAllEmpty": "全選",
+      "selectedCount": "已選取 {count} 個",
+      "notShown": "{count} 個未顯示",
+      "clear": "清除選取"
     }
   },
   "rules": {
