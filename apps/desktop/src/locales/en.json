@@ -1193,6 +1193,7 @@
       "installCheckboxLabel": "Install into Mods and activate",
       "staleActiveSetNote": "Pending activation changes are not included. Rescan first if you want them in this install.",
       "unappliedOrderNote": "Install writes your current order, which is not applied yet.",
+      "outsideChangeNote": "Your active mod list was changed outside Rimmerge. Installing writes your Current order over those changes.",
       "forceWarning": "RimWorldWin64.exe looks like it's running. Installing now writes your active mod list, which the game overwrites when it exits, so the change may be lost. Export anyway?",
       "exportAnyway": "Export anyway",
       "export": "Export",
@@ -1256,7 +1257,13 @@
       },
       "rovingHint": "Use the arrow keys to move, Enter to open, Space to toggle",
       "pendingScan": "not scanned yet",
-      "loadOrderPosition": "Load order position {position}"
+      "loadOrderPosition": "Load order position {position}",
+      "membership": {
+        "added": "Added",
+        "removed": "Removed",
+        "addedTitle": "Not in your saved active mod list yet. Applying adds it.",
+        "removedTitle": "In your saved active mod list. Applying removes it."
+      }
     },
     "sort": {
       "groupLabel": "Sort order",
@@ -1297,6 +1304,19 @@
       "rescanFinishedToast": "Rescan finished with {count} note | Rescan finished with {count} notes",
       "rescannedWithWarningsToast": "Rescanned with warnings",
       "discardButton": "Discard pending changes"
+    },
+    "fileChange": {
+      "outside": "Your active mod list was changed outside Rimmerge (+{added}, -{removed}). Your pending changes are kept. Applying would overwrite those outside changes.",
+      "reordered": "Your active order was changed outside Rimmerge. Your pending changes are kept. Applying would overwrite that order.",
+      "outsideNoPending": "Your active mod list was changed outside Rimmerge (+{added}, -{removed}). Applying would overwrite those outside changes.",
+      "reorderedNoPending": "Your active order was changed outside Rimmerge. Applying would overwrite that order.",
+      "useFile": "Use the list from the file",
+      "useFileTitle": "Opens a preview first. Nothing changes until you confirm.",
+      "stale": {
+        "missing": "ModsConfig.xml is missing. The Added and Removed marks use the last list Rimmerge could read.",
+        "unreadable": "Rimmerge can't read ModsConfig.xml right now. The Added and Removed marks use the last list it could read.",
+        "malformed": "ModsConfig.xml can't be understood right now, possibly because it is being written. The Added and Removed marks use the last list Rimmerge could read."
+      }
     },
     "closeGuard": {
       "header": "Unsaved active-mod changes",
@@ -1814,7 +1834,7 @@
       "notYetInjectedCount": "Not yet injected: {count}",
       "deadTargetCount": "Dead target: {count}",
       "unknownCount": "Unknown: {count}",
-      "orderFixableHeading": "Order-fixable: reordering the named mod may resolve these:",
+      "orderFixableHeading": "Fixable by order (reordering the named mod may resolve these):",
       "cosmeticText": "cosmetic: the final def is the same in either order, so no reorder is offered.",
       "mergeInsteadLink": "Merge instead",
       "mergeInstead": "{link} keeps the losing mod's own intent.",
@@ -2040,6 +2060,7 @@
       "installCheckboxLabel": "Install into Mods and activate",
       "staleActiveSetNote": "Pending activation changes are not included. Rescan first if you want them in this install.",
       "unappliedOrderNote": "Install writes your current order, which is not applied yet.",
+      "outsideChangeNote": "Your active mod list was changed outside Rimmerge. Installing writes your Current order over those changes.",
       "forceWarning": "RimWorldWin64.exe looks like it's running. Installing now writes your active mod list, which the game overwrites when it exits, so the change may be lost. Export anyway?",
       "exportAnyway": "Export anyway",
       "export": "Export",

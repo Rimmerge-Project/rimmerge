@@ -1193,6 +1193,7 @@
       "installCheckboxLabel": "Instalar em Mods e ativar",
       "staleActiveSetNote": "Alterações de ativação pendentes não estão incluídas. Escaneie novamente antes, se quiser incluí-las nesta instalação.",
       "unappliedOrderNote": "Instalar escreve sua ordem atual, que ainda não foi aplicada.",
+      "outsideChangeNote": "Sua lista de mods ativos foi alterada fora do Rimmerge. Instalar escreve sua ordem atual por cima dessas alterações.",
       "forceWarning": "O RimWorldWin64.exe parece estar em execução. Instalar agora escreve sua lista de mods ativos, que o jogo sobrescreve ao fechar, então a alteração pode se perder. Exportar mesmo assim?",
       "exportAnyway": "Exportar mesmo assim",
       "export": "Exportar",
@@ -1256,7 +1257,13 @@
       },
       "rovingHint": "Use as setas para mover, Enter para abrir e Espaço para marcar/desmarcar",
       "pendingScan": "ainda não escaneado",
-      "loadOrderPosition": "Posição {position} na ordem de carregamento"
+      "loadOrderPosition": "Posição {position} na ordem de carregamento",
+      "membership": {
+        "added": "Adicionado",
+        "removed": "Removido",
+        "addedTitle": "Ainda não está na sua lista de mods ativos salva. Aplicar o adiciona.",
+        "removedTitle": "Está na sua lista de mods ativos salva. Aplicar o remove."
+      }
     },
     "sort": {
       "groupLabel": "Ordem de classificação",
@@ -1297,6 +1304,19 @@
       "rescanFinishedToast": "Escaneamento concluído com {count} nota | Escaneamento concluído com {count} notas",
       "rescannedWithWarningsToast": "Novo escaneamento concluído com avisos",
       "discardButton": "Descartar alterações pendentes"
+    },
+    "fileChange": {
+      "outside": "Sua lista de mods ativos foi alterada fora do Rimmerge (+{added}, -{removed}). Suas alterações pendentes foram mantidas. Aplicar sobrescreveria essas alterações externas.",
+      "reordered": "Sua ordem ativa foi alterada fora do Rimmerge. Suas alterações pendentes foram mantidas. Aplicar sobrescreveria essa ordem.",
+      "outsideNoPending": "Sua lista de mods ativos foi alterada fora do Rimmerge (+{added}, -{removed}). Aplicar sobrescreveria essas alterações externas.",
+      "reorderedNoPending": "Sua ordem ativa foi alterada fora do Rimmerge. Aplicar sobrescreveria essa ordem.",
+      "useFile": "Usar a lista do arquivo",
+      "useFileTitle": "Abre uma prévia antes. Nada muda até você confirmar.",
+      "stale": {
+        "missing": "O ModsConfig.xml está ausente. As marcas Adicionado e Removido usam a última lista que o Rimmerge conseguiu ler.",
+        "unreadable": "O Rimmerge não consegue ler o ModsConfig.xml agora. As marcas Adicionado e Removido usam a última lista que ele conseguiu ler.",
+        "malformed": "O ModsConfig.xml não pode ser interpretado agora, talvez porque esteja sendo escrito. As marcas Adicionado e Removido usam a última lista que o Rimmerge conseguiu ler."
+      }
     },
     "closeGuard": {
       "header": "Alterações de mods ativos não salvas",
@@ -1814,7 +1834,7 @@
       "notYetInjectedCount": "Ainda não injetado: {count}",
       "deadTargetCount": "Alvo inexistente: {count}",
       "unknownCount": "Desconhecido: {count}",
-      "orderFixableHeading": "Corrigíveis pela ordem. Reordenar o mod indicado pode resolver estas operações:",
+      "orderFixableHeading": "Corrigíveis pela ordem (reordenar o mod indicado pode resolver estas operações):",
       "cosmeticText": "cosmético: a def final é a mesma em qualquer ordem, então nenhuma reordenação é oferecida.",
       "mergeInsteadLink": "Mesclar em vez disso",
       "mergeInstead": "{link} preserva a intenção do próprio mod perdedor.",
@@ -2040,6 +2060,7 @@
       "installCheckboxLabel": "Instalar em Mods e ativar",
       "staleActiveSetNote": "Alterações de ativação pendentes não estão incluídas. Escaneie novamente antes, se quiser incluí-las nesta instalação.",
       "unappliedOrderNote": "Instalar escreve sua ordem atual, que ainda não foi aplicada.",
+      "outsideChangeNote": "Sua lista de mods ativos foi alterada fora do Rimmerge. Instalar escreve sua ordem atual por cima dessas alterações.",
       "forceWarning": "O RimWorldWin64.exe parece estar em execução. Instalar agora escreve sua lista de mods ativos, que o jogo sobrescreve ao fechar, então a alteração pode se perder. Exportar mesmo assim?",
       "exportAnyway": "Exportar mesmo assim",
       "export": "Exportar",

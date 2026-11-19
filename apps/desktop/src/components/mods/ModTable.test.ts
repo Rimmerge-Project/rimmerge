@@ -121,6 +121,27 @@ describe("ModTable", () => {
     expect(wrapper.emitted("selectMod")).toBeUndefined();
   });
 
+  it("shows the membership mark beside the source badge, and nothing on a row that matches the file", async () => {
+    const wrapper = mountTable({
+      mods: [
+        modRow({ modId: "a", source: "workshop", membership: "added" }),
+        modRow({ modId: "b", membership: "removed" }),
+        modRow({ modId: "c" }),
+      ],
+    });
+    await flushPromises();
+
+    const rowA = wrapper.get('[data-testid="mod-row-a"]');
+    expect(rowA.get('[data-testid="membership-badge"]').attributes("data-mark")).toBe("added");
+    expect(rowA.find('[data-testid="source-badge"]').exists()).toBe(true);
+    expect(
+      wrapper.get('[data-testid="mod-row-b"]').get('[data-testid="membership-badge"]').text(),
+    ).toContain("Removed");
+    expect(
+      wrapper.get('[data-testid="mod-row-c"]').find('[data-testid="membership-badge"]').exists(),
+    ).toBe(false);
+  });
+
   it("renders a missing pill only for rows whose own missing field is true", async () => {
     const wrapper = mountTable({
       mods: [modRow({ modId: "a", missing: true, source: null }), modRow({ modId: "b" })],

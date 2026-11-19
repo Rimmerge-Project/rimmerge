@@ -61,6 +61,8 @@ export const queryKeys = {
   workingMods: (query: ModListQueryDto) => ["mods", "working", query] as const,
   /** `list_inactive_mods`'s result for one query — the Inactive tab. */
   inactiveMods: (query: ModListQueryDto) => ["mods", "inactive", query] as const,
+  /** `get_mods_config_baseline`'s result: the live file baseline's status and outside change. */
+  fileBaseline: () => ["mods", "fileBaseline"] as const,
   /** `get_pending_active_changes`'s result. */
   pendingActiveChanges: () => ["mods", "pendingActiveChanges"] as const,
   /** `get_mod_info`'s result for one mod — the mod info panel. */

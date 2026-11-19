@@ -9,6 +9,7 @@ import { useRoute, useRouter } from "vue-router";
 import ActivateDialog from "@/components/mods/ActivateDialog.vue";
 import DeactivateDialog from "@/components/mods/DeactivateDialog.vue";
 import DefSearchBox from "@/components/mods/DefSearchBox.vue";
+import FileChangeNote from "@/components/mods/FileChangeNote.vue";
 import ModFilterBar from "@/components/mods/ModFilterBar.vue";
 import ModInfoPanel from "@/components/mods/ModInfoPanel.vue";
 import ModListPane from "@/components/mods/ModListPane.vue";
@@ -184,6 +185,8 @@ const followFocus = useDebounceFn((modId: string) => {
           <DefSearchBox />
         </div>
       </div>
+
+      <FileChangeNote />
 
       <!-- A move settles into Current without writing the file: say so, with the Apply path. -->
       <OrderNotInFileNote allow-revert />

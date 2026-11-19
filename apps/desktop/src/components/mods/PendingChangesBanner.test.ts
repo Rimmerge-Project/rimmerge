@@ -24,7 +24,7 @@ vi.mock("primevue/usetoast", () => ({
 const EMPTY: PendingActiveChangesDto = {
   unscanned: { added: [], removed: [] },
   unapplied: { added: [], removed: [] },
-  orderDiffersFromFile: false,
+  orderUnapplied: false,
 };
 
 function mountBanner(
@@ -61,7 +61,7 @@ describe("PendingChangesBanner", () => {
     const wrapper = mountBanner({
       unscanned: { added: ["a.mod", "b.mod"], removed: [] },
       unapplied: { added: ["c.mod"], removed: [] },
-      orderDiffersFromFile: false,
+      orderUnapplied: false,
     });
     await flushPromises();
 
@@ -73,7 +73,7 @@ describe("PendingChangesBanner", () => {
     const wrapper = mountBanner({
       unscanned: { added: ["a.mod"], removed: [] },
       unapplied: { added: [], removed: [] },
-      orderDiffersFromFile: false,
+      orderUnapplied: false,
     });
     await flushPromises();
 
@@ -86,7 +86,7 @@ describe("PendingChangesBanner", () => {
       {
         unscanned: { added: ["a.mod"], removed: [] },
         unapplied: EMPTY.unapplied,
-        orderDiffersFromFile: false,
+        orderUnapplied: false,
       },
       () => {
         calls += 1;
@@ -144,7 +144,7 @@ describe("PendingChangesBanner", () => {
       {
         unscanned: { added: ["a.mod"], removed: [] },
         unapplied: EMPTY.unapplied,
-        orderDiffersFromFile: false,
+        orderUnapplied: false,
       },
       () => ({
         modCount: 1,
@@ -178,7 +178,7 @@ describe("PendingChangesBanner", () => {
       {
         unscanned: { added: ["a.mod"], removed: [] },
         unapplied: EMPTY.unapplied,
-        orderDiffersFromFile: false,
+        orderUnapplied: false,
       },
       () => {
         throw { code: "internal", message: "the scan task panicked" };
@@ -200,7 +200,7 @@ describe("PendingChangesBanner", () => {
       {
         unscanned: { added: ["a.mod"], removed: [] },
         unapplied: EMPTY.unapplied,
-        orderDiffersFromFile: false,
+        orderUnapplied: false,
       },
       {},
       {
@@ -232,7 +232,7 @@ describe("PendingChangesBanner", () => {
       {
         unscanned: { added: ["a.mod"], removed: [] },
         unapplied: EMPTY.unapplied,
-        orderDiffersFromFile: false,
+        orderUnapplied: false,
       },
       {},
       {

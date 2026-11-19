@@ -46,19 +46,23 @@ impl From<&ActiveSetDiff> for ActiveSetDiffDto {
 /// result, and `activate_mods`/`deactivate_mods`/`rescan_project`'s own
 /// updated reading of it — a non-empty `unscanned` is what the Rescan
 /// banner reads, a non-empty `unapplied` is what the apply dialog warns
-/// about.
+/// about. Everything here is the user's own unsaved work: `unapplied` and
+/// `order_unapplied` compare with what Rimmerge last loaded or wrote, so an
+/// outside edit of the file never shows up in them.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export, export_to = "../../src/types/generated/")]
 pub struct PendingActiveChangesDto {
     /// The working set vs. the last scan's own active list.
     pub unscanned: ActiveSetDiffDto,
-    /// The last scan's own active list vs. `ModsConfig.xml` on disk.
+    /// The last scan's own active list vs. the list Rimmerge last loaded
+    /// or wrote.
     pub unapplied: ActiveSetDiffDto,
-    /// The current order lists the file's mods in another sequence: a
-    /// settled reorder that an Apply would write. `unapplied` is a
+    /// The current order differs from the list Rimmerge last loaded or
+    /// wrote (a settled reorder, or any membership change) and an Apply
+    /// would write it. `unapplied` is a
     /// membership diff and stays empty for it.
-    pub order_differs_from_file: bool,
+    pub order_unapplied: bool,
 }
 
 impl From<&PendingActiveChanges> for PendingActiveChangesDto {
@@ -66,7 +70,7 @@ impl From<&PendingActiveChanges> for PendingActiveChangesDto {
         Self {
             unscanned: (&value.unscanned).into(),
             unapplied: (&value.unapplied).into(),
-            order_differs_from_file: value.order_differs_from_file,
+            order_unapplied: value.order_unapplied,
         }
     }
 }

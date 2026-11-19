@@ -10,6 +10,7 @@ import { useExportFlow } from "@/composables/useExportFlow";
 import { useTranslateMessage } from "@/composables/useTranslateMessage";
 import { usePendingActiveChangesQuery } from "@/queries/activeSet";
 import { useExportAssignmentMutation } from "@/queries/assignments";
+import { useFileBaselineQuery } from "@/queries/fileBaseline";
 import { pickFolder } from "@/services/dialogs";
 import type { AssignmentSkipDto } from "@/types/generated/AssignmentSkipDto";
 import type { ExportAssignmentReportDto } from "@/types/generated/ExportAssignmentReportDto";
@@ -72,8 +73,11 @@ const hasUnscannedActiveChanges = computed(() => {
 });
 // Install writes `orders.current`, the order the user is looking at, not the file's own list:
 // a move or an import that no Apply has written yet reaches `ModsConfig.xml` with the install.
-const isCurrentOrderUnapplied = computed(
-  () => pendingActiveChanges.value?.orderDiffersFromFile === true,
+const isCurrentOrderUnapplied = computed(() => pendingActiveChanges.value?.orderUnapplied === true);
+// Install writes Current over the file, so an edit made outside Rimmerge is overwritten too.
+const { data: fileBaseline } = useFileBaselineQuery();
+const hasOutsideChange = computed(
+  () => fileBaseline.value !== undefined && fileBaseline.value.externalChange.kind !== "none",
 );
 
 async function choose(): Promise<void> {
@@ -134,6 +138,14 @@ const canExport = computed(() => outDir.value.trim().length > 0);
       data-testid="assignment-export-unapplied-order-note"
     >
       {{ t("assignments.exportPanel.unappliedOrderNote") }}
+    </Message>
+
+    <Message
+      v-if="install && hasOutsideChange"
+      severity="warn"
+      data-testid="assignment-export-outside-change-note"
+    >
+      {{ t("assignments.exportPanel.outsideChangeNote") }}
     </Message>
 
     <Message

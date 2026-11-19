@@ -89,6 +89,8 @@ pub fn run() {
             commands::mods::read_mod_preview,
             commands::mods::read_mod_icon,
             commands::mods::open_mod_link,
+            commands::file_baseline::get_mods_config_baseline,
+            commands::file_baseline::refresh_mods_config_baseline,
             commands::game_launch::get_game_launch_status,
             commands::game_launch::launch_game,
             commands::links::open_app_link,

@@ -1193,6 +1193,7 @@
       "installCheckboxLabel": "Mods klasörüne kur ve etkinleştir",
       "staleActiveSetNote": "Bekleyen etkinleştirme değişiklikleri dahil değil. Bu kuruluma girmelerini istiyorsan önce yeniden tara.",
       "unappliedOrderNote": "Kurulum mevcut sıranı yazar; bu sıra henüz uygulanmadı.",
+      "outsideChangeNote": "Etkin mod listen Rimmerge dışında değiştirildi. Kurulum, Mevcut sıranı bu değişikliklerin üzerine yazar.",
       "forceWarning": "RimWorldWin64.exe çalışıyor görünüyor. Şimdi kurmak etkin mod listene yazar; oyun kapanırken bu listenin üzerine yazdığı için değişiklik kaybolabilir. Yine de dışa aktarılsın mı?",
       "exportAnyway": "Yine de dışa aktar",
       "export": "Dışa aktar",
@@ -1256,7 +1257,13 @@
       },
       "rovingHint": "Gezinmek için ok tuşlarını, açmak için Enter'ı, seçimi değiştirmek için Boşluk'u kullan",
       "pendingScan": "henüz taranmadı",
-      "loadOrderPosition": "Yükleme sırasındaki yeri: {position}"
+      "loadOrderPosition": "Yükleme sırasındaki yeri: {position}",
+      "membership": {
+        "added": "Eklendi",
+        "removed": "Kaldırıldı",
+        "addedTitle": "Kayıtlı etkin mod listende henüz yok. Uygula'ya bastığında eklenir.",
+        "removedTitle": "Kayıtlı etkin mod listende var. Uygula'ya bastığında kaldırılır."
+      }
     },
     "sort": {
       "groupLabel": "Sıralama düzeni",
@@ -1297,6 +1304,19 @@
       "rescanFinishedToast": "Yeniden tarama tamamlandı: {count} not | Yeniden tarama tamamlandı: {count} not",
       "rescannedWithWarningsToast": "Yeniden tarama uyarılarla tamamlandı",
       "discardButton": "Bekleyen değişiklikleri at"
+    },
+    "fileChange": {
+      "outside": "Etkin mod listen Rimmerge dışında değiştirildi (+{added}, -{removed}). Bekleyen değişikliklerin korunuyor. Uygula'ya basarsan bu dış değişikliklerin üzerine yazılır.",
+      "reordered": "Etkin sıran Rimmerge dışında değiştirildi. Bekleyen değişikliklerin korunuyor. Uygula'ya basarsan bu sıranın üzerine yazılır.",
+      "outsideNoPending": "Etkin mod listen Rimmerge dışında değiştirildi (+{added}, -{removed}). Uygula'ya basarsan bu dış değişikliklerin üzerine yazılır.",
+      "reorderedNoPending": "Etkin sıran Rimmerge dışında değiştirildi. Uygula'ya basarsan bu sıranın üzerine yazılır.",
+      "useFile": "Dosyadaki listeyi kullan",
+      "useFileTitle": "Önce bir önizleme açar. Onaylayana kadar hiçbir şey değişmez.",
+      "stale": {
+        "missing": "ModsConfig.xml dosyası bulunamıyor. Eklendi ve Kaldırıldı işaretleri, okunabilen son listeye göre gösterilir.",
+        "unreadable": "Rimmerge şu anda ModsConfig.xml dosyasını okuyamıyor. Eklendi ve Kaldırıldı işaretleri, okuyabildiği son listeye göre gösterilir.",
+        "malformed": "ModsConfig.xml dosyası şu anda anlaşılamıyor; yazılıyor olabilir. Eklendi ve Kaldırıldı işaretleri, okunabilen son listeye göre gösterilir."
+      }
     },
     "closeGuard": {
       "header": "Kaydedilmemiş etkin mod değişiklikleri",
@@ -1814,7 +1834,7 @@
       "notYetInjectedCount": "Henüz eklenmedi: {count}",
       "deadTargetCount": "Ölü hedef: {count}",
       "unknownCount": "Bilinmeyen: {count}",
-      "orderFixableHeading": "Sırayla düzeltilebilir: adı geçen modu yeniden sıralamak bunları çözebilir:",
+      "orderFixableHeading": "Sırayla düzeltilebilir (adı geçen modu yeniden sıralamak bunları çözebilir):",
       "cosmeticText": "kozmetik: nihai Def her iki sırada da aynı, bu yüzden yeniden sıralama önerilmez.",
       "mergeInsteadLink": "Bunun yerine birleştirmek",
       "mergeInstead": "{link}, kaybeden modun kendi amacını korur.",
@@ -2040,6 +2060,7 @@
       "installCheckboxLabel": "Mods klasörüne kur ve etkinleştir",
       "staleActiveSetNote": "Bekleyen etkinleştirme değişiklikleri dahil değil. Bu kuruluma girmelerini istiyorsan önce yeniden tara.",
       "unappliedOrderNote": "Kurulum mevcut sıranı yazar; bu sıra henüz uygulanmadı.",
+      "outsideChangeNote": "Etkin mod listen Rimmerge dışında değiştirildi. Kurulum, Mevcut sıranı bu değişikliklerin üzerine yazar.",
       "forceWarning": "RimWorldWin64.exe çalışıyor görünüyor. Şimdi kurmak etkin mod listene yazar; oyun kapanırken bu listenin üzerine yazdığı için değişiklik kaybolabilir. Yine de dışa aktarılsın mı?",
       "exportAnyway": "Yine de dışa aktar",
       "export": "Dışa aktar",

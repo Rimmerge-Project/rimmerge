@@ -15,6 +15,7 @@ use rim_analyzer::domain::{GeneratedMarker, ModId, Report, Source};
 use rim_resolve::domain::{Tag, Tagging};
 
 use crate::active_set::ActiveSet;
+use crate::file_baseline::{FileMembership, MembershipMark};
 use crate::mod_times::{ModUpdateTimes, UpdateTime};
 
 /// The most rows either list returns. Real installs hold a few thousand
@@ -137,6 +138,10 @@ pub struct ModListRow {
     pub generated: Option<GeneratedMarker>,
     /// When it was last updated, or why that is unknown.
     pub updated: UpdateTime,
+    /// How its membership differs from the file's active list, by base
+    /// id: `Added` on an Active row the file lacks, `Removed` on an
+    /// Inactive row the file lists. Order never makes a mark.
+    pub membership: MembershipMark,
 }
 
 /// One list: `total` rows matched the query, `items` holds at most
@@ -186,6 +191,7 @@ fn scanned_row(
     tagging: &Tagging,
     times: &ModUpdateTimes,
     position: Option<usize>,
+    membership: MembershipMark,
 ) -> ModListRow {
     ModListRow {
         mod_id: mod_entry.id.clone(),
@@ -199,6 +205,7 @@ fn scanned_row(
         workshop_id: mod_entry.workshop_id,
         generated: mod_entry.generated.clone(),
         updated: times.get(&mod_entry.id),
+        membership,
     }
 }
 
@@ -206,6 +213,7 @@ fn pending_row(
     mod_entry: &rim_analyzer::domain::InactiveMod,
     times: &ModUpdateTimes,
     position: Option<usize>,
+    membership: MembershipMark,
 ) -> ModListRow {
     ModListRow {
         mod_id: mod_entry.id.clone(),
@@ -216,6 +224,7 @@ fn pending_row(
         workshop_id: mod_entry.workshop_id,
         generated: mod_entry.generated.clone(),
         updated: times.get(&mod_entry.id),
+        membership,
     }
 }
 
@@ -288,6 +297,7 @@ pub(crate) fn working_list(
     tagging: &Tagging,
     working: &ActiveSet,
     times: &ModUpdateTimes,
+    file: &FileMembership,
     query: &ModListQuery,
 ) -> ModList {
     let needle = query.search.as_deref().map(str::to_lowercase);
@@ -296,11 +306,12 @@ pub(crate) fn working_list(
     let unscanned: BTreeMap<&ModId, &rim_analyzer::domain::InactiveMod> =
         report.inactive_mods.iter().map(|m| (&m.id, m)).collect();
     let rows = working.ids().iter().enumerate().map(|(position, id)| {
+        let membership = file.mark_active(id);
         if let Some(mod_entry) = scanned.get(id) {
-            return scanned_row(mod_entry, tagging, times, Some(position));
+            return scanned_row(mod_entry, tagging, times, Some(position), membership);
         }
         if let Some(mod_entry) = unscanned.get(id) {
-            return pending_row(mod_entry, times, Some(position));
+            return pending_row(mod_entry, times, Some(position), membership);
         }
         ModListRow {
             mod_id: id.clone(),
@@ -311,6 +322,7 @@ pub(crate) fn working_list(
             workshop_id: None,
             generated: None,
             updated: times.get(id),
+            membership,
         }
     });
     let mut rows: Vec<ModListRow> = rows
@@ -339,6 +351,7 @@ pub(crate) fn inactive_list(
     tagging: &Tagging,
     working: &ActiveSet,
     times: &ModUpdateTimes,
+    file: &FileMembership,
     query: &ModListQuery,
 ) -> ModList {
     let needle = query.search.as_deref().map(str::to_lowercase);
@@ -349,13 +362,13 @@ pub(crate) fn inactive_list(
         .mods
         .iter()
         .filter(|m| is_inactive(&m.id))
-        .map(|m| scanned_row(m, tagging, times, None))
+        .map(|m| scanned_row(m, tagging, times, None, file.mark_inactive(&m.id)))
         .chain(
             report
                 .inactive_mods
                 .iter()
                 .filter(|m| is_inactive(&m.id))
-                .map(|m| pending_row(m, times, None)),
+                .map(|m| pending_row(m, times, None, file.mark_inactive(&m.id))),
         )
         .filter(|row| matches(row, query, needle.as_deref()))
         .collect();
@@ -383,7 +396,14 @@ mod tests {
         working: &ActiveSet,
         query: &ModListQuery,
     ) -> ModList {
-        super::working_list(report, tagging, working, &ModUpdateTimes::default(), query)
+        super::working_list(
+            report,
+            tagging,
+            working,
+            &ModUpdateTimes::default(),
+            &FileMembership::of(working.ids()),
+            query,
+        )
     }
 
     fn inactive_list(
@@ -392,7 +412,14 @@ mod tests {
         working: &ActiveSet,
         query: &ModListQuery,
     ) -> ModList {
-        super::inactive_list(report, tagging, working, &ModUpdateTimes::default(), query)
+        super::inactive_list(
+            report,
+            tagging,
+            working,
+            &ModUpdateTimes::default(),
+            &FileMembership::of(working.ids()),
+            query,
+        )
     }
 
     fn ids(list: &ModList) -> Vec<&str> {
@@ -660,11 +687,19 @@ mod tests {
         times: &ModUpdateTimes,
         query: &ModListQuery,
     ) -> Vec<String> {
-        super::working_list(report, &Tagging::default(), &working(active), times, query)
-            .items
-            .iter()
-            .map(|row| row.mod_id.to_string())
-            .collect()
+        let set = working(active);
+        super::working_list(
+            report,
+            &Tagging::default(),
+            &set,
+            times,
+            &FileMembership::of(set.ids()),
+            query,
+        )
+        .items
+        .iter()
+        .map(|row| row.mod_id.to_string())
+        .collect()
     }
 
     #[test]
@@ -886,6 +921,7 @@ mod tests {
             &Tagging::default(),
             &working(&[]),
             &table,
+            &FileMembership::default(),
             &sort(ListSortKey::LastUpdated, SortDirection::Ascending),
         );
         let descending = super::inactive_list(
@@ -893,6 +929,7 @@ mod tests {
             &Tagging::default(),
             &working(&[]),
             &table,
+            &FileMembership::default(),
             &sort(ListSortKey::LastUpdated, SortDirection::Descending),
         );
 
@@ -920,6 +957,7 @@ mod tests {
             &Tagging::default(),
             &working(&["a", "b", "c", "d"]),
             &ModUpdateTimes::default(),
+            &FileMembership::default(),
             &query,
         );
 
@@ -936,6 +974,7 @@ mod tests {
             &Tagging::default(),
             &working(&["b", "a"]),
             &ModUpdateTimes::default(),
+            &FileMembership::default(),
             &sort(ListSortKey::PackageId, SortDirection::Ascending),
         );
 

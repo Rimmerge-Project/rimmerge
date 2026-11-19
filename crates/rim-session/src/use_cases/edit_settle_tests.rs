@@ -159,15 +159,15 @@ fn a_refused_anchored_activation_keeps_a_selected_suggested() {
 #[test]
 fn a_settled_move_makes_the_order_differ_from_the_file_while_the_diffs_stay_empty() {
     let mut session = session_fixture(&["a", "b", "c"]);
-    assert!(!session.pending_changes().order_differs_from_file);
+    assert!(!session.pending_changes().order_unapplied);
 
     MoveMods::execute(&mut session, &mods(&["c"]), &Anchor::Start).expect("valid move");
     let moved = session.pending_changes();
     RevertOrderToFile::execute(&mut session).expect("same mods as the file");
 
-    assert!(moved.order_differs_from_file);
+    assert!(moved.order_unapplied);
     assert!(moved.unscanned.is_empty() && moved.unapplied.is_empty());
-    assert!(!session.pending_changes().order_differs_from_file);
+    assert!(!session.pending_changes().order_unapplied);
 }
 
 #[derive(Debug, Clone)]

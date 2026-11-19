@@ -161,12 +161,12 @@ fn report_unrepresentable(ids: &[ModId]) {
 
 fn import_target(
     paths: &ProjectPaths,
-    file_ids: &[ModId],
+    active_ids: &[ModId],
     inventory: ModInventory,
 ) -> anyhow::Result<ImportTarget> {
     Ok(ImportTarget {
         inventory,
-        file_ids: file_ids.to_vec(),
+        active_ids: active_ids.to_vec(),
         context: ImportContext {
             own_merge_mod: merge_mod_for(paths),
             game_version: game_version(paths),

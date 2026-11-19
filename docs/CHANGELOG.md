@@ -5,6 +5,30 @@ before that point is not summarized here.
 
 ## [Unreleased]
 
+- **New: see what Apply will add or remove.** On the Mods page, an Active mod
+  that your saved active mod list does not have is marked **Added**, and an
+  Inactive mod that the saved list still has is marked **Removed**, so a
+  pending change is visible before you Apply. A mod counts the same with or
+  without its `_steam` suffix, and a reorder alone makes no mark. The saved
+  list is re-read every few seconds while the window is visible and when you
+  switch back to it, so a change made in the game or another mod manager shows
+  up without reloading. A note then tells you what changed outside Rimmerge
+  (and, when you have pending changes, that they are kept), and offers to use
+  the file's list through the usual import preview. An outside edit alone is
+  never counted as your own unsaved work: it does not trip the close and
+  project-switch warning, the pending-changes banner, or the "This isn't your
+  active order yet." note. Installing a patch or assignment export while the
+  list was changed outside Rimmerge warns that it writes your order over those
+  changes. If the file is missing or cannot be read,
+  a note says so and the marks keep using the last list that could be read.
+  A change that only reorders the file has its own note. The import preview
+  now compares the list you import with the active list you have in Rimmerge
+  now, pending changes included, so a mod you just deactivated shows as coming
+  back. Rimmerge only reads the file for this and never writes it. Reading
+  `ModsConfig.xml` is now also capped at 4 MiB.
+- **Fix: one colon in the "fixable by order" heading.** The Apply dialog's
+  heading read "Order-fixable: reordering the named mod may resolve these:".
+  It now reads "Fixable by order (reordering the named mod may resolve these):".
 - **New: Inactive and Active side by side, with drag and drop.** The Mods page
   shows the Inactive list on the left and the Active list on the right
   (stacked on a narrow window), each with its own search, filters, sort and

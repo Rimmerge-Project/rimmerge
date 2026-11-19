@@ -121,7 +121,7 @@ async function mountEditorPage(
     get_pending_active_changes: {
       unscanned: { added: [], removed: [] },
       unapplied: { added: [], removed: [] },
-      orderDiffersFromFile: false,
+      orderUnapplied: false,
     },
     get_assignment: () => detail,
     get_assignment_coverage: () => coverage(),

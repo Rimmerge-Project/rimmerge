@@ -1,5 +1,6 @@
-import { useDocumentVisibility, useIntervalFn, useWindowFocus } from "@vueuse/core";
-import { type Ref, watch } from "vue";
+import type { Ref } from "vue";
+
+import { useVisiblePolling } from "@/composables/useVisiblePolling";
 
 /** How often the game-running fact is re-read while the window is visible. */
 export const GAME_LAUNCH_POLL_MS = 5000;
@@ -20,9 +21,6 @@ type PolledQuery = {
  * `refetch` per tick would start a new backend call each time, all queued on that lock.
  */
 export function useGameLaunchPolling(query: PolledQuery): void {
-  const visibility = useDocumentVisibility();
-  const isFocused = useWindowFocus();
-
   function tick(): void {
     if (query.isLoading.value) {
       return;
@@ -31,21 +29,5 @@ export function useGameLaunchPolling(query: PolledQuery): void {
     query.refetch().catch(() => undefined);
   }
 
-  const { pause, resume } = useIntervalFn(tick, GAME_LAUNCH_POLL_MS, {
-    immediate: visibility.value !== "hidden",
-  });
-
-  watch(visibility, (state) => {
-    if (state === "hidden") {
-      pause();
-      return;
-    }
-    resume();
-    tick();
-  });
-  watch(isFocused, (focused) => {
-    if (focused) {
-      tick();
-    }
-  });
+  useVisiblePolling(tick, GAME_LAUNCH_POLL_MS);
 }

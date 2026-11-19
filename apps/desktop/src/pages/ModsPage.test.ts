@@ -66,7 +66,7 @@ function mountModsPage(fixtureOverrides: Record<string, unknown> = {}, attachTo?
         pending: {
           unscanned: { added: ["inactive.mod"], removed: [] },
           unapplied: { added: [], removed: [] },
-          orderDiffersFromFile: false,
+          orderUnapplied: false,
         },
         selected: "current",
         didSwitchToCurrent: false,
@@ -82,7 +82,7 @@ function mountModsPage(fixtureOverrides: Record<string, unknown> = {}, attachTo?
       return {
         unscanned: { added: [], removed: ["active.mod"] },
         unapplied: { added: [], removed: [] },
-        orderDiffersFromFile: false,
+        orderUnapplied: false,
       };
     },
     ...fixtureOverrides,
@@ -460,8 +460,13 @@ describe("ModsPage", () => {
   });
 
   it("offers Apply for an order that is not your active order yet, such as after a move", async () => {
-    const unapplied = { ...dashboardFixture(0), fileMatchesCurrent: false };
-    const wrapper = await mountAndNavigate({ get_dashboard: unapplied });
+    const wrapper = await mountAndNavigate({
+      get_pending_active_changes: {
+        unscanned: { added: [], removed: [] },
+        unapplied: { added: [], removed: [] },
+        orderUnapplied: true,
+      },
+    });
 
     expect(wrapper.get('[data-testid="order-not-in-file"]').text()).toContain(
       "isn't your active order yet",
@@ -1659,7 +1664,7 @@ describe("ModsPage", () => {
               pending: {
                 unscanned: { added: ["x"], removed: [] },
                 unapplied: { added: [], removed: [] },
-                orderDiffersFromFile: false,
+                orderUnapplied: false,
               },
               selected: "current",
               didSwitchToCurrent: true,

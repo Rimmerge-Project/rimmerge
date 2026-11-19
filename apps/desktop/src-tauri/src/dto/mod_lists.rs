@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use super::common::SourceDto;
+use super::file_baseline::MembershipMarkDto;
 use super::mods::GeneratedMarkerDto;
 use crate::error::CommandError;
 
@@ -189,6 +190,8 @@ pub struct ModListRowDto {
     pub workshop_id: Option<u64>,
     /// When it was last updated, or why that is unknown.
     pub updated: UpdateTimeDto,
+    /// How its membership differs from the file's active list, by base id.
+    pub membership: MembershipMarkDto,
 }
 
 impl From<&ModListRow> for ModListRowDto {
@@ -202,6 +205,7 @@ impl From<&ModListRow> for ModListRowDto {
             generated: value.generated.as_ref().map(Into::into),
             workshop_id: value.workshop_id,
             updated: value.updated.into(),
+            membership: value.membership.into(),
         }
     }
 }

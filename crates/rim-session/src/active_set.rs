@@ -416,19 +416,28 @@ impl ActiveSetDiff {
 
 /// [`crate::Session::pending_changes`]'s own two-diff result: what the
 /// working set has that the last scan hasn't seen yet (`unscanned`), and
-/// what the scanned order has that the file on disk doesn't yet
-/// (`unapplied`).
+/// what the scanned order has that Rimmerge hasn't written to
+/// `ModsConfig.xml` yet (`unapplied`).
+///
+/// Both are facts about the user's own unsaved work, so the `unapplied`
+/// side is measured against the list Rimmerge last loaded or wrote (the
+/// acknowledged list), never against the live file: someone else editing
+/// the file changes neither field, and the outside-change note is the one
+/// place that says so. The launch status and the dashboard's
+/// `file_matches` facts are the live comparison
+/// ([`crate::Session::file_matches`]).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct PendingActiveChanges {
     /// `working` vs. the scanned `orders().current`.
     pub unscanned: ActiveSetDiff,
-    /// The scanned `orders().current` vs. `file_active_mods`.
+    /// The scanned `orders().current` vs. the acknowledged list: what an
+    /// Apply of the user's own edits would add or remove.
     pub unapplied: ActiveSetDiff,
-    /// `orders().current` lists `ModsConfig.xml`'s mods in another
-    /// sequence (the generated merge mod ignored on both sides), so an
-    /// Apply would write a reorder. `unapplied` is a membership diff and
-    /// cannot see this: a settled move leaves it empty.
-    pub order_differs_from_file: bool,
+    /// `orders().current` differs from the acknowledged list in membership
+    /// or sequence (the generated merge mod ignored on both sides), so an
+    /// Apply would write the user's own edit. `unapplied` is a membership
+    /// diff and cannot see a reorder: a settled move leaves it empty.
+    pub order_unapplied: bool,
 }
 
 /// [`crate::use_cases::ActivateMods`]'s plan — what [`plan_activate`]

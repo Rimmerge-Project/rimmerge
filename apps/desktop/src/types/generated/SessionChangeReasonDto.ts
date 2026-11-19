@@ -12,4 +12,4 @@
  * `rescan_project`/`activate_mods`/`deactivate_mods`) so the frontend
  * invalidates its queries.
  */
-export type SessionChangeReasonDto = "decided" | "reverted" | "ruleUpserted" | "ruleDeleted" | "tagSet" | "imported" | "settingsChanged" | "applied" | "mergeChanged" | "patchCreated" | "patchChanged" | "patchDeleted" | "rescanned" | "activeSetChanged" | "patchDecided" | "patchReverted" | "patchExported" | "assignmentCreated" | "assignmentChanged" | "assignmentDeleted" | "assignmentRowChanged" | "assignmentExported" | "notificationsChanged";
+export type SessionChangeReasonDto = "decided" | "reverted" | "ruleUpserted" | "ruleDeleted" | "tagSet" | "imported" | "settingsChanged" | "applied" | "mergeChanged" | "patchCreated" | "patchChanged" | "patchDeleted" | "rescanned" | "activeSetChanged" | "patchDecided" | "patchReverted" | "patchExported" | "assignmentCreated" | "assignmentChanged" | "assignmentDeleted" | "assignmentRowChanged" | "assignmentExported" | "fileBaselineChanged" | "notificationsChanged";

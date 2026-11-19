@@ -1193,6 +1193,7 @@
       "installCheckboxLabel": "安装到 Mods 文件夹并启用",
       "staleActiveSetNote": "未包含待定的启用状态更改。如果希望本次安装包含它们，请先重新扫描。",
       "unappliedOrderNote": "安装会写入你的当前顺序，而该顺序尚未应用。",
+      "outsideChangeNote": "你的已启用 Mod 列表已在 Rimmerge 之外被更改。安装会用你的当前顺序覆盖这些更改。",
       "forceWarning": "RimWorldWin64.exe 似乎正在运行。现在安装会写入已启用 Mod 列表，而游戏退出时会覆盖它，因此这次更改可能会丢失。仍然导出？",
       "exportAnyway": "仍然导出",
       "export": "导出",
@@ -1256,7 +1257,13 @@
       },
       "rovingHint": "使用方向键移动，Enter 键打开，空格键切换",
       "pendingScan": "尚未扫描",
-      "loadOrderPosition": "加载顺序第 {position} 位"
+      "loadOrderPosition": "加载顺序第 {position} 位",
+      "membership": {
+        "added": "新增",
+        "removed": "移除",
+        "addedTitle": "尚未在你已保存的已启用 Mod 列表中。应用后会添加它。",
+        "removedTitle": "在你已保存的已启用 Mod 列表中。应用后会移除它。"
+      }
     },
     "sort": {
       "groupLabel": "排序方式",
@@ -1297,6 +1304,19 @@
       "rescanFinishedToast": "重新扫描完成，有 {count} 条备注",
       "rescannedWithWarningsToast": "重新扫描完成，但有警告",
       "discardButton": "放弃待定更改"
+    },
+    "fileChange": {
+      "outside": "你的已启用 Mod 列表已在 Rimmerge 之外被更改（+{added}，-{removed}）。你的待定更改已保留。应用会覆盖这些外部更改。",
+      "reordered": "你的已启用的加载顺序已在 Rimmerge 之外被更改。你的待定更改已保留。应用会覆盖该顺序。",
+      "outsideNoPending": "你的已启用 Mod 列表已在 Rimmerge 之外被更改（+{added}，-{removed}）。应用会覆盖这些外部更改。",
+      "reorderedNoPending": "你的已启用的加载顺序已在 Rimmerge 之外被更改。应用会覆盖该顺序。",
+      "useFile": "使用文件中的列表",
+      "useFileTitle": "会先打开预览。在你确认之前不会有任何更改。",
+      "stale": {
+        "missing": "ModsConfig.xml 不存在。“新增”和“移除”标记使用的是 Rimmerge 最后一次能读取的列表。",
+        "unreadable": "Rimmerge 目前无法读取 ModsConfig.xml。“新增”和“移除”标记使用的是它最后一次能读取的列表。",
+        "malformed": "ModsConfig.xml 目前无法解析，可能是因为它正在被写入。“新增”和“移除”标记使用的是 Rimmerge 最后一次能读取的列表。"
+      }
     },
     "closeGuard": {
       "header": "未保存的已启用 Mod 更改",
@@ -1814,7 +1834,7 @@
       "notYetInjectedCount": "尚未注入：{count}",
       "deadTargetCount": "失效目标：{count}",
       "unknownCount": "未知：{count}",
-      "orderFixableHeading": "可通过顺序修复：重新排序所指的 Mod 可能解决以下问题：",
+      "orderFixableHeading": "可通过顺序修复（重新排序所指的 Mod 可能解决以下问题）：",
       "cosmeticText": "无实质影响：无论哪种顺序，最终 Def 都相同，因此不提供重新排序。",
       "mergeInsteadLink": "改为合并",
       "mergeInstead": "{link}可保留落败 Mod 自身的意图。",
@@ -2040,6 +2060,7 @@
       "installCheckboxLabel": "安装到 Mods 文件夹并启用",
       "staleActiveSetNote": "未包含待定的启用状态更改。如果希望本次安装包含它们，请先重新扫描。",
       "unappliedOrderNote": "安装会写入你的当前顺序，而该顺序尚未应用。",
+      "outsideChangeNote": "你的已启用 Mod 列表已在 Rimmerge 之外被更改。安装会用你的当前顺序覆盖这些更改。",
       "forceWarning": "RimWorldWin64.exe 似乎正在运行。现在安装会写入已启用 Mod 列表，而游戏退出时会覆盖它，因此这次更改可能会丢失。仍然导出？",
       "exportAnyway": "仍然导出",
       "export": "导出",

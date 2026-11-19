@@ -35,6 +35,7 @@ describe("handleSessionChanged", () => {
     "applied",
     "rescanned",
     "activeSetChanged",
+    "fileBaselineChanged",
     "patchCreated",
     "patchChanged",
     "patchDeleted",

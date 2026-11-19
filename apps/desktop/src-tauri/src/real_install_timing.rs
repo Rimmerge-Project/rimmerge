@@ -1080,6 +1080,27 @@ async fn mod_lists_against_the_real_install() {
         .expect("inactive list");
     let inactive_elapsed = start.elapsed();
 
+    // A freshly loaded, unedited session matches its file: no row carries a mark. Refreshing the
+    // baseline reads the real file (read-only; nothing here writes) and finds it unchanged.
+    let marks = first.items.iter().chain(&inactive.items);
+    assert!(
+        marks
+            .clone()
+            .all(|row| row.membership == crate::dto::file_baseline::MembershipMarkDto::None),
+        "an unedited session has no Added or Removed mark"
+    );
+    let (baseline, change) = crate::commands::file_baseline::refresh_mods_config_baseline_inner(
+        &state,
+        state.adapters.config_store,
+    )
+    .await
+    .expect("refresh the baseline");
+    assert_eq!(change, rim_session::BaselineChange::Unchanged);
+    assert_eq!(
+        baseline.external_change,
+        crate::dto::file_baseline::ExternalFileChangeDto::None
+    );
+
     eprintln!(
         "list_working_mods: {} rows in {:.1} ms; list_inactive_mods: {} rows in {:.1} ms",
         first.total,
@@ -1228,7 +1249,7 @@ async fn reorder_against_the_real_install_settles_in_memory_only() {
         "a same-set reorder is never a pending scan"
     );
     assert!(
-        pending.order_differs_from_file,
+        pending.order_unapplied,
         "the moved order is not in the file yet"
     );
     {
@@ -1264,7 +1285,7 @@ async fn reorder_against_the_real_install_settles_in_memory_only() {
         move_elapsed.as_secs_f64() * 1e3,
         revert_elapsed.as_secs_f64() * 1e3
     );
-    assert!(!reverted.order_differs_from_file);
+    assert!(!reverted.order_unapplied);
     assert_eq!(restored, before, "the revert restores the original list");
     assert!(
         move_elapsed < COMMAND_BUDGET,

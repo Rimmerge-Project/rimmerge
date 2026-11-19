@@ -7,6 +7,7 @@ import type { MenuItem } from "primevue/menuitem";
 import { computed, nextTick, ref, useTemplateRef, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
+import MembershipBadge from "@/components/mods/MembershipBadge.vue";
 import SourceBadge from "@/components/mods/SourceBadge.vue";
 import { isInert } from "@/composables/shortcutTargets";
 import { useDragAutoScroll } from "@/composables/useDragAutoScroll";
@@ -544,6 +545,7 @@ function rowMenuLabel(modId: string): string {
             class="text-text flex-1 truncate font-medium"
             :title="modLabel.titleFor(mod.modId)"
           >{{ modLabel.label(mod.modId) }}</span>
+          <MembershipBadge :mark="mod.membership" />
           <span
             v-if="mod.state.kind === 'missing'"
             class="bg-status-danger-soft text-status-danger shrink-0 rounded px-1.5 py-0.5 text-xs font-medium"

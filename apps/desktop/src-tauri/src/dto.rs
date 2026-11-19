@@ -20,6 +20,7 @@ pub mod def_conflict;
 pub mod def_graphic;
 pub mod defs;
 pub mod fetch_failure;
+pub mod file_baseline;
 pub mod finding;
 pub mod game_launch;
 pub mod game_log;

@@ -13,6 +13,7 @@ pub mod app_settings;
 mod assignment_refs;
 mod call_reader;
 mod changes;
+mod file_baseline;
 mod finding_index;
 mod game_launch;
 mod import_sources;
@@ -47,6 +48,9 @@ pub use changes::{AssetKind, ChangeFilter, ChangeKind, ChangePage, ChangeRow};
 pub use def_conflict_view::{
     DefConflictKind, DefConflictView, DefConflictViewError, FieldRow, FieldRowKind,
     InjectedNodeRelation, Preference, Problem, Toucher as DefConflictToucher, ToucherRole,
+};
+pub use file_baseline::{
+    BaselineChange, BaselineIssue, ExternalFileChange, FileBaseline, FileProbe, MembershipMark,
 };
 pub use finding_index::{FindingFilter, FindingIndex, FindingKind, FindingPage, MAX_PAGE_SIZE};
 pub use game_launch::{

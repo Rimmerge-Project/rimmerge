@@ -27,7 +27,8 @@ the other way around.
   ids settles Current onto `working`'s sequence
   (`Session::settle_current_onto_working`, through
   `current_order_replaced`), so Current is the second thing a use case
-  changes without persisting. `file_active_mods` stays what the file held.
+  changes without persisting. `file_active_mods` stays what the file held (the live baseline, see
+  "The file baseline is live" below).
 - Declared ids never carry `_steam`; compare through `ModId::base()`.
   `ActiveMods` is the single authority for "is this id active".
 - Ports return typed errors; `Apply` writes `ModsConfig.xml` only when
@@ -61,7 +62,7 @@ the other way around.
   `Session::hard_problems` (the ledger cache is built lazily, hence `&mut`).
   `ApplyPreflight::requires_confirmation` is derived from the items, never
   stored. `Session::file_matches(source)` compares that order with the
-  file's last-known list, ignoring the generated merge mod's package id on
+  file's live baseline list, ignoring the generated merge mod's package id on
   both sides.
 - **Module layout**: a facade file keeps the public API (and usually the
   use case itself) and re-exports its children from a same-named
@@ -676,6 +677,65 @@ probe trait stays in `rim-io`. `GameExecutable` has a private path and one
 constructor, so a route can only name `<game_dir>/RimWorldWin64.exe`. Tests
 use `test_support::FakeGameLauncher`; nothing here starts a process.
 
+## The file baseline is live (`RefreshFileBaseline`)
+
+`Session::file_active_mods` is the **live baseline**: the active list the
+on-disk `ModsConfig.xml` held the last time it was read successfully, not only
+what it held at load. It changes in four places: `Session::new`, the rescan
+correction `set_file_active_mods`, `set_current_order` (the file now is this)
+and `Session::observe_file`, which `use_cases::RefreshFileBaseline` drives. So
+`file_matches`, `order_on_disk` (the launch button), the import diff and the Mods
+page marks follow an outside edit once a refresh has seen it, while
+`pending_changes()` does not (see "Own facts vs live facts" below).
+
+- **Two phases, never one lock.** `RefreshFileBaseline::fetch(FileProbe)` takes
+  no `Session` (the probe is `Session::file_probe()`: the path and an epoch) and
+  reads through `ModsConfigStore`; `FileObservation::commit(&mut Session)` swaps
+  the result in and returns `BaselineChange::{Unchanged, Changed}`. The desktop
+  runs the read in a bare `spawn_blocking` between two short `with_session`
+  calls, the same lock exception as `game_launch`. `execute` does both for a
+  caller that already holds the session (tests).
+- **A failure never empties the baseline.** A read that fails keeps the last
+  valid list and records `FileBaseline::Stale { reason }` with
+  `BaselineIssue::{Missing, Unreadable, Malformed}` (from
+  `ConfigErrorKind`, the typed `ConfigError`; a truncated or partly written file
+  is `Malformed`); the next good read sets `Fresh`. `Changed` means the list or
+  the status differs, so a caller emits its change event only then.
+- **A read overtaken by our own write is dropped.** `FileWatch` (a private
+  field) holds an epoch that `set_file_active_mods` and
+  `set_current_order` bump; `observe_file` ignores a probe from an older epoch,
+  so a read that began before an `Apply` cannot put the pre-apply list back.
+  A session built over an override (`execute_with_active_set`) starts at epoch 1,
+  because `set_file_active_mods` resets the watch once; a plain load starts at 0.
+  The epoch is never compared across sessions: a read probed from the old session
+  can commit into the new one when their epochs match; the path check rejects
+  another file, the window is negligible, and the next poll corrects it.
+  `observe_file` ignores a probe for another path than the session's
+  `mods_config`.
+- **Outside change is derived, not stored**: `FileWatch` remembers the ids
+  Rimmerge itself last loaded or wrote (the **acknowledged** list), and
+  `Session::external_file_change()` is a closed `ExternalFileChange::{None,
+  Membership { added, removed }, Reordered}` of the live baseline against it: the
+  counts are base ids gained or lost, `Reordered` only when the membership is the
+  same but the base-id sequence differs. Rimmerge's own write resets it, so only
+  someone else's edit shows.
+- **Own facts vs live facts.** Anything said about the user's *own unsaved work*
+  compares with the acknowledged list, never the live baseline: an outside edit alone
+  must not read as their pending changes. `pending_changes().unapplied` and
+  `order_unapplied` are own (`orders().current` vs the acknowledged list, merge mod
+  ignored for the sequence); they feed the close and project-switch guard, the pending
+  banner, "This isn't your active order yet", the export panels' note and the import
+  preview's `replacesUnwritten`. `file_matches`/`order_on_disk` (the launch status),
+  `DashboardDto.file_matches_*`, the import diff's file side and the Added/Removed
+  marks are live. The outside-change note is the one explanation of an outside edit.
+- **Marks** (`MembershipMark::{None, Added, Removed}` on `ModListRow`) compare
+  `working` with the baseline by `ModId::base()` (`FileMembership`): `Added` on
+  an Active row the file lacks, `Removed` on an Inactive row the file lists. A
+  reorder alone never marks. A mod the file lists that is not installed has no
+  row in either list, so it has no mark.
+- The refresh only reads: it never touches `working`, the orders or the file,
+  and its tests assert the fake store saw no write.
+
 ## Activating and deactivating mods
 
 `Session.working: ActiveSet` is the working, in-memory, unsaved active-mod
@@ -691,9 +751,10 @@ takes `working`'s sequence (`settle_current_onto_working`), and
 `Session::set_current_order` does the same for a written file. `pending_changes()`/
 `is_stale()` are **two separate diffs**: `unscanned` (`working` vs. the
 scanned `orders().current` — what a rescan would pick up) and
-`unapplied` (`orders().current` vs. `file_active_mods` — what an
-`apply` would write; a membership diff, so a settled reorder leaves it empty
-and shows only in `PendingActiveChanges::order_differs_from_file`). `Apply` refuses to write `ModsConfig.xml`
+`unapplied` (`orders().current` vs. the acknowledged list, what Rimmerge
+last loaded or wrote, so an outside edit of the file never shows here; a
+membership diff, so a settled reorder leaves it empty and shows only in
+`PendingActiveChanges::order_unapplied`). `Apply` refuses to write `ModsConfig.xml`
 (`ApplyError::StaleActiveSet`) while `unscanned` is non-empty; decisions
 and rules still save regardless. `ActiveSet::new` validates every id
 resolves and rejects exact duplicates — **it does not require Core to
@@ -771,9 +832,14 @@ and never an epoch. Fake: `test_support::FakeModTimestampReader`.
   for the caller to report, never dropped silently.
   `ExportSource::from_session` takes `Session::game_version()`, the
   scanned major.minor.
+- **`plan_import` diffs against the active list the user has now**:
+  `ImportTarget::from_session` passes `working` (pending activations,
+  deactivations and moves included, since that is what an import replaces),
+  not the file's list; the CLI has no working set and passes `ModsConfig.xml`'s
+  list, so its output is unchanged. "Active" below means in that list.
 - **`plan_import` resolves an entry in a fixed order**: a sender's
   generated id is `MissingKind::RimmergeMergeMod` and never activated;
-  then a copy of the same base id that is already active in the file wins
+  then a copy of the same base id that is already active wins
   (`AlreadyActive`, or `MatchedOtherCopy` with `Activation::AlreadyActive`),
   so re-importing your own export is an empty diff and never swaps a
   `_steam` copy for a local one; then the exact id on disk (`Activated`);

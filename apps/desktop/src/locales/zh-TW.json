@@ -1193,6 +1193,7 @@
       "installCheckboxLabel": "安裝到 Mods 資料夾並啟用",
       "staleActiveSetNote": "尚未掃描的啟用變更不會包含在內。如果要將它們納入此次安裝，請先重新掃描。",
       "unappliedOrderNote": "安裝會寫入你目前的順序，而該順序尚未套用。",
+      "outsideChangeNote": "你的已啟用模組清單已在 Rimmerge 之外被變更。安裝會以你的「目前」順序覆蓋這些變更。",
       "forceWarning": "RimWorldWin64.exe 似乎正在執行。現在安裝會寫入已啟用模組清單，而遊戲結束時會覆蓋它，因此這項變更可能會遺失。仍要匯出嗎？",
       "exportAnyway": "仍要匯出",
       "export": "匯出",
@@ -1256,7 +1257,13 @@
       },
       "rovingHint": "使用方向鍵移動，Enter 開啟，空白鍵切換",
       "pendingScan": "尚未掃描",
-      "loadOrderPosition": "載入順序第 {position} 位"
+      "loadOrderPosition": "載入順序第 {position} 位",
+      "membership": {
+        "added": "新增",
+        "removed": "移除",
+        "addedTitle": "尚未在你已儲存的已啟用模組清單中。套用後會將其加入。",
+        "removedTitle": "仍在你已儲存的已啟用模組清單中。套用後會將其移除。"
+      }
     },
     "sort": {
       "groupLabel": "排序方式",
@@ -1297,6 +1304,19 @@
       "rescanFinishedToast": "重新掃描完成，有 {count} 則備註",
       "rescannedWithWarningsToast": "已重新掃描，但有警告",
       "discardButton": "捨棄尚未掃描的變更"
+    },
+    "fileChange": {
+      "outside": "你的已啟用模組清單已在 Rimmerge 之外被變更（+{added}，-{removed}）。你在 Rimmerge 中尚未套用的變更會保留。套用會覆蓋這些外部變更。",
+      "reordered": "已啟用模組的順序已在 Rimmerge 之外被變更。你在 Rimmerge 中尚未套用的變更會保留。套用會覆蓋該順序。",
+      "outsideNoPending": "你的已啟用模組清單已在 Rimmerge 之外被變更（+{added}，-{removed}）。套用會覆蓋這些外部變更。",
+      "reorderedNoPending": "已啟用模組的順序已在 Rimmerge 之外被變更。套用會覆蓋該順序。",
+      "useFile": "使用檔案中的清單",
+      "useFileTitle": "會先開啟預覽。在你確認之前不會變更任何內容。",
+      "stale": {
+        "missing": "找不到 ModsConfig.xml。「新增」與「移除」標記使用的是 Rimmerge 最後一次能讀取的清單。",
+        "unreadable": "Rimmerge 目前無法讀取 ModsConfig.xml。「新增」與「移除」標記使用的是它最後一次能讀取的清單。",
+        "malformed": "目前無法解析 ModsConfig.xml，可能是因為它正在寫入中。「新增」與「移除」標記使用的是 Rimmerge 最後一次能讀取的清單。"
+      }
     },
     "closeGuard": {
       "header": "已啟用模組的變更尚未儲存",
@@ -1814,7 +1834,7 @@
       "notYetInjectedCount": "尚未注入：{count}",
       "deadTargetCount": "無效目標：{count}",
       "unknownCount": "未知：{count}",
-      "orderFixableHeading": "可透過順序修正。重新排列指定的模組可能解決這些問題：",
+      "orderFixableHeading": "可透過順序修正（重新排列指定的模組可能解決這些問題）：",
       "cosmeticText": "無實質影響：無論哪種順序，最終的 Def 都相同，因此不提供重新排序。",
       "mergeInsteadLink": "改為合併",
       "mergeInstead": "{link}可保留落敗模組自身的意圖。",
@@ -2040,6 +2060,7 @@
       "installCheckboxLabel": "安裝到 Mods 資料夾並啟用",
       "staleActiveSetNote": "尚未掃描的啟用變更不會包含在內。如果要將它們納入此次安裝，請先重新掃描。",
       "unappliedOrderNote": "安裝會寫入你目前的順序，而該順序尚未套用。",
+      "outsideChangeNote": "你的已啟用模組清單已在 Rimmerge 之外被變更。安裝會以你的「目前」順序覆蓋這些變更。",
       "forceWarning": "RimWorldWin64.exe 似乎正在執行。現在安裝會寫入已啟用模組清單，而遊戲結束時會覆蓋它，因此這項變更可能會遺失。仍要匯出嗎？",
       "exportAnyway": "仍要匯出",
       "export": "匯出",

@@ -121,13 +121,13 @@ test.describe("reorder mocks mirror the backend", () => {
       await call<{
         unscanned: { added: string[]; removed: string[] };
         unapplied: { added: string[]; removed: string[] };
-        orderDiffersFromFile: boolean;
+        orderUnapplied: boolean;
       }>(page, "get_pending_active_changes", {}),
     );
     expect(pending.unscanned).toEqual({ added: [], removed: [] });
     // The membership diffs cannot see a reorder; only this field does (the close guard reads it).
     expect(pending.unapplied).toEqual({ added: [], removed: [] });
-    expect(pending.orderDiffersFromFile).toBe(true);
+    expect(pending.orderUnapplied).toBe(true);
   });
 
   test("a stale anchor, an inactive mover and an anchor inside the moved set are refused", async ({

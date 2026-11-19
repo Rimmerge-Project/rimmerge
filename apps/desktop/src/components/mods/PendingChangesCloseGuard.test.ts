@@ -28,7 +28,7 @@ describe("PendingChangesCloseGuard", () => {
     mountGuard({
       unscanned: { added: ["a.mod"], removed: [] },
       unapplied: { added: [], removed: [] },
-      orderDiffersFromFile: false,
+      orderUnapplied: false,
     });
     await flushPromises();
 
@@ -43,7 +43,7 @@ describe("PendingChangesCloseGuard", () => {
     mountGuard({
       unscanned: { added: [], removed: [] },
       unapplied: { added: ["a.mod"], removed: [] },
-      orderDiffersFromFile: false,
+      orderUnapplied: false,
     });
     await flushPromises();
 
@@ -56,7 +56,7 @@ describe("PendingChangesCloseGuard", () => {
     mountGuard({
       unscanned: { added: [], removed: [] },
       unapplied: { added: [], removed: [] },
-      orderDiffersFromFile: true,
+      orderUnapplied: true,
     });
     await flushPromises();
 
@@ -67,7 +67,7 @@ describe("PendingChangesCloseGuard", () => {
     mountGuard({
       unscanned: { added: [], removed: [] },
       unapplied: { added: [], removed: [] },
-      orderDiffersFromFile: false,
+      orderUnapplied: false,
     });
     await flushPromises();
 
@@ -78,7 +78,7 @@ describe("PendingChangesCloseGuard", () => {
     const wrapper = mountGuard({
       unscanned: { added: ["a.mod"], removed: [] },
       unapplied: { added: [], removed: [] },
-      orderDiffersFromFile: false,
+      orderUnapplied: false,
     });
     await flushPromises();
 
@@ -96,7 +96,7 @@ describe("PendingChangesCloseGuard", () => {
     const wrapper = mountGuard({
       unscanned: { added: ["a.mod"], removed: [] },
       unapplied: { added: [], removed: [] },
-      orderDiffersFromFile: false,
+      orderUnapplied: false,
     });
     await flushPromises();
 

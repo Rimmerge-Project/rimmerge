@@ -7,7 +7,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use rim_analyzer::extract::mods_config::parse_mods_config;
-use rim_session::ports::{ConfigError, ModsConfigFile, ModsConfigStore};
+use rim_analyzer::infra::{ReadError, read_bounded_with_limit};
+use rim_session::ports::{ConfigError, ConfigErrorKind, ModsConfigFile, ModsConfigStore};
 
 use crate::atomic::write_atomically;
 use crate::xml_text::xml_escape;
@@ -25,8 +26,38 @@ impl ModsConfigFileStore {
     }
 }
 
-fn to_config_error(path: &Path, error: impl std::fmt::Display) -> ConfigError {
-    ConfigError(format!("{}: {error}", path.display()))
+/// The largest `ModsConfig.xml` a read accepts. A real file is a few
+/// hundred kilobytes at most (about 50 bytes per mod); the bound keeps a
+/// hostile or runaway file from being held whole, and matters now that the
+/// desktop re-reads the file every few seconds.
+const MAX_MODS_CONFIG_BYTES: u64 = 4 * 1024 * 1024;
+
+fn to_config_error(
+    path: &Path,
+    kind: ConfigErrorKind,
+    error: impl std::fmt::Display,
+) -> ConfigError {
+    ConfigError::new(kind, format!("{}: {error}", path.display()))
+}
+
+/// An I/O failure: a missing file is its own kind, everything else is
+/// unreadable.
+fn io_config_error(path: &Path, error: &std::io::Error) -> ConfigError {
+    let kind = if error.kind() == std::io::ErrorKind::NotFound {
+        ConfigErrorKind::Missing
+    } else {
+        ConfigErrorKind::Unreadable
+    };
+    to_config_error(path, kind, error)
+}
+
+fn read_error(path: &Path, error: ReadError) -> ConfigError {
+    match error {
+        ReadError::Io(io) => io_config_error(path, &io),
+        too_large @ ReadError::TooLarge { .. } => {
+            to_config_error(path, ConfigErrorKind::Malformed, too_large)
+        }
+    }
 }
 
 /// The declaration line RimWorld itself writes on a brand-new
@@ -117,8 +148,10 @@ fn backup_path(path: &Path) -> PathBuf {
 
 impl ModsConfigStore for ModsConfigFileStore {
     fn read(&self, path: &Path) -> Result<ModsConfigFile, ConfigError> {
-        let bytes = fs::read(path).map_err(|e| to_config_error(path, e))?;
-        let document = parse_mods_config(&bytes).map_err(|e| to_config_error(path, e))?;
+        let bytes = read_bounded_with_limit(path, MAX_MODS_CONFIG_BYTES)
+            .map_err(|error| read_error(path, error))?;
+        let document = parse_mods_config(&bytes)
+            .map_err(|error| to_config_error(path, ConfigErrorKind::Malformed, error))?;
         Ok(ModsConfigFile {
             version: document.version,
             active_mods: document.active_mods,
@@ -156,7 +189,7 @@ impl ModsConfigStore for ModsConfigFileStore {
         let existing = match fs::read(path) {
             Ok(bytes) => Some(bytes),
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
-            Err(e) => return Err(to_config_error(path, e)),
+            Err(e) => return Err(io_config_error(path, &e)),
         };
         let eol = existing.as_deref().map_or("\r\n", eol_of);
         let declaration = existing
@@ -165,10 +198,12 @@ impl ModsConfigStore for ModsConfigFileStore {
             .unwrap_or_else(|| DEFAULT_DECLARATION.to_string());
         let backup = backup_path(path);
         if let Some(bytes) = &existing {
-            write_atomically(&backup, bytes).map_err(|e| to_config_error(&backup, e))?;
+            write_atomically(&backup, bytes)
+                .map_err(|e| to_config_error(&backup, ConfigErrorKind::Unreadable, e))?;
         }
         let rendered = render(file, eol, &declaration);
-        write_atomically(path, rendered.as_bytes()).map_err(|e| to_config_error(path, e))?;
+        write_atomically(path, rendered.as_bytes())
+            .map_err(|e| to_config_error(path, ConfigErrorKind::Unreadable, e))?;
         Ok(backup)
     }
 }
@@ -204,6 +239,129 @@ mod tests {
             file.known_expansions,
             vec![ModId::new("ludeon.rimworld.royalty")]
         );
+    }
+
+    fn kind_of_read(path: &Path) -> ConfigErrorKind {
+        ModsConfigFileStore::new()
+            .read(path)
+            .expect_err("the read must fail")
+            .kind()
+    }
+
+    #[test]
+    fn read_reports_a_missing_file_as_missing() {
+        let dir = tempdir().expect("tempdir");
+
+        assert_eq!(
+            kind_of_read(&dir.path().join("ModsConfig.xml")),
+            ConfigErrorKind::Missing
+        );
+    }
+
+    #[test]
+    fn read_reports_a_path_that_cannot_be_read_as_unreadable() {
+        let dir = tempdir().expect("tempdir");
+        let path = dir.path().join("ModsConfig.xml");
+        fs::create_dir(&path).expect("a directory where the file should be");
+
+        assert_eq!(kind_of_read(&path), ConfigErrorKind::Unreadable);
+    }
+
+    #[test]
+    fn read_reports_a_truncated_file_as_malformed() {
+        let dir = tempdir().expect("tempdir");
+        let path = dir.path().join("ModsConfig.xml");
+        let cut = SAMPLE.len() / 2;
+        fs::write(&path, &SAMPLE.as_bytes()[..cut]).expect("write fixture");
+
+        assert_eq!(kind_of_read(&path), ConfigErrorKind::Malformed);
+    }
+
+    #[test]
+    fn read_reports_a_file_without_an_active_mods_list_as_malformed() {
+        let dir = tempdir().expect("tempdir");
+        let path = dir.path().join("ModsConfig.xml");
+        fs::write(
+            &path,
+            "<ModsConfigData><version>1.6</version></ModsConfigData>",
+        )
+        .expect("write fixture");
+
+        assert_eq!(kind_of_read(&path), ConfigErrorKind::Malformed);
+    }
+
+    #[test]
+    fn read_refuses_a_file_over_the_size_bound_without_parsing_it() {
+        let dir = tempdir().expect("tempdir");
+        let path = dir.path().join("ModsConfig.xml");
+        let padding = " ".repeat(usize::try_from(MAX_MODS_CONFIG_BYTES).expect("fits"));
+        fs::write(&path, format!("{SAMPLE}{padding}")).expect("write fixture");
+
+        let error = ModsConfigFileStore::new()
+            .read(&path)
+            .expect_err("over the bound");
+
+        assert_eq!(error.kind(), ConfigErrorKind::Malformed);
+        assert!(error.to_string().contains("read limit"), "{error}");
+    }
+
+    #[test]
+    fn read_accepts_a_file_exactly_at_the_size_bound() {
+        let dir = tempdir().expect("tempdir");
+        let path = dir.path().join("ModsConfig.xml");
+        let room = usize::try_from(MAX_MODS_CONFIG_BYTES).expect("fits") - SAMPLE.len();
+        fs::write(&path, format!("{SAMPLE}{}", " ".repeat(room))).expect("write fixture");
+
+        let file = ModsConfigFileStore::new()
+            .read(&path)
+            .expect("at the bound is fine");
+
+        assert_eq!(file.active_mods.len(), 2);
+    }
+
+    /// A file replaced by Rimmerge's own writer (`write_atomically`) while it
+    /// is being polled reads as one complete list or fails; it is never a
+    /// blend of the two, and a half-written file is never accepted. This pins
+    /// only our writer: another program (RimWorld, RimSort) may write the file
+    /// non-atomically, and a read that lands mid-write sees a truncated
+    /// document, which is `Malformed`. The desktop's baseline refresh absorbs
+    /// that as a stale status and recovers on the next good read.
+    #[test]
+    fn a_file_replaced_while_it_is_read_is_one_whole_list_or_a_failure() {
+        let dir = tempdir().expect("tempdir");
+        let path = dir.path().join("ModsConfig.xml");
+        fs::write(&path, SAMPLE).expect("write fixture");
+        let other = SAMPLE.replace("example.patchlib", "example.other");
+        let writer_path = path.clone();
+        let writer_content = [SAMPLE.to_string(), other.clone()];
+        let writer = std::thread::spawn(move || {
+            for round in 0..200 {
+                // A replacement that loses a race with a reader is retried
+                // by the next round; only what the reader sees matters.
+                let _ = write_atomically(&writer_path, writer_content[round % 2].as_bytes());
+            }
+        });
+
+        let first = vec![
+            ModId::new("ludeon.rimworld"),
+            ModId::new("example.patchlib"),
+        ];
+        let second = vec![ModId::new("ludeon.rimworld"), ModId::new("example.other")];
+        for _ in 0..200 {
+            match ModsConfigFileStore::new().read(&path) {
+                Ok(file) => assert!(
+                    file.active_mods == first || file.active_mods == second,
+                    "a blend: {:?}",
+                    file.active_mods
+                ),
+                Err(error) => assert_ne!(
+                    error.kind(),
+                    ConfigErrorKind::Malformed,
+                    "a partial file was seen: {error}"
+                ),
+            }
+        }
+        writer.join().expect("writer thread");
     }
 
     #[test]

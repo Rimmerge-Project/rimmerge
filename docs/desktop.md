@@ -193,8 +193,9 @@ and the toast says how many.
 
 **Import** takes a `.rml`, a `ModsConfig.xml`-shaped file or a text list,
 from a file or a paste, and always shows a preview first. The preview names
-what will be activated and deactivated (the list is the whole active set;
-Core is never deactivated), the mods that aren't installed (with an *Open on
+what will be activated and deactivated, measured against the active list you have
+in Rimmerge now (the Mods page's Active list, pending changes included; the list is
+the whole active set; Core is never deactivated), the mods that aren't installed (with an *Open on
 Steam Workshop* button where the list knows the item; Rimmerge never
 downloads anything, and *Copy the missing list* gives you the text to ask a
 friend), mods listed twice, mods matched to another copy of themselves, and
@@ -340,8 +341,45 @@ the activations and deactivations that no rescan has picked up (no scan is
 needed; a reorder that already took effect stays). In the "This isn't your
 active order yet." note, **Revert to your saved active order** puts your order
 back to the sequence saved in `ModsConfig.xml`; it is offered only when the file lists the same
-mods as your order and nothing waits for a rescan. See
+mods as your order, nothing waits for a rescan, and the file was not changed
+outside Rimmerge (the outside-change note's own action covers that case). See
 [load-order.md](concepts/load-order.md).
+
+**Added and Removed marks.** A row that differs from the active mod list saved
+on your computer carries a small mark. An Active row the saved list does not
+have is **Added** (Apply will add it), and an Inactive row the saved list still
+has is **Removed** (Apply will remove it). The mark has an icon and a word, and
+its tooltip says what Apply does, so it is never colour alone; it sits beside
+the source icon. A mod counts as the same mod with or without its `_steam`
+suffix, and a reorder alone never makes a mark. "Removed" means a mod that is
+installed and still in the saved list: it stays easy to find in Inactive until
+you Apply or activate it again. A mod that is in the saved list but not
+installed has no row in either list, so it has no mark. Undoing a change, or
+Apply, clears its mark.
+
+**The saved list stays current.** The marks are measured against the file as it
+is now, not as it was when you opened the project. While the window is visible
+the app re-reads the file every 5 seconds, and once when you switch back to the
+window (the usual case: you changed the list in the game or another mod
+manager and came back). The read only looks: it never writes the file, and it
+never touches your pending changes or your order. When nothing changed it does
+nothing visible. If the list was changed outside Rimmerge, a note above the
+lists says so: "Your active mod list was changed outside Rimmerge (+2, -1).
+Applying would overwrite those outside changes." (When you have pending
+changes of your own, it adds "Your pending changes are kept.") An outside edit
+is explained by this note alone. It is never counted as your own unsaved work:
+the warning when you close the window or switch project, the pending-changes
+banner, the "This isn't your active order yet." note and the import
+preview's "replaces your Current order" warning only look at what you changed
+since Rimmerge last loaded or wrote the list. Its **Use the list from the file** button opens the same import
+preview as the Load order page's Import menu, with the file's list; nothing is
+replaced until you confirm there. A change that only reorders the file's mods
+raises its own note without a count: "Your active order was changed outside
+Rimmerge. Applying would overwrite that order." (with the same "Your pending
+changes are kept." sentence when you have some). If the file is missing, cannot be read, or is only
+partly written, a note says which, and the marks keep using the last list that
+could be read; the next good read clears the note. Rescan and an import read the file fresh as well, and after an Apply the
+saved list is what Rimmerge wrote.
 
 **Rescan mods** (top right of the page, always available) re-scans the
 mods in the active list in their current order, exactly as the pending
@@ -713,9 +751,15 @@ generated mod to the list). The Mods page's activate/deactivate actions
 and reorders only stage a change in the app; it reaches the file when you
 Apply. An install export writes your current order, so an order you have not
 applied yet (a move, an import) goes into the file with it; the export panel
-warns when that is the case. Every
+warns when that is the case, and warns too when the active mod list was
+changed outside Rimmerge, since the install writes your order over those
+changes. Every
 write takes a timestamped backup first, and each refuses to write while
 RimWorld looks like it is running unless you confirm the override.
+
+Keeping the Mods page's Added and Removed marks current reads `ModsConfig.xml`
+every few seconds but never writes it, and reads nothing else. It uses no
+network.
 
 Launching RimWorld writes nothing; the Apply its prompt may offer is the
 ordinary Apply above. Exporting a load order writes one `.rml` file where you

@@ -100,10 +100,46 @@ pub struct ModsConfigFile {
     pub known_expansions: Vec<ModId>,
 }
 
+/// Why a `ModsConfig.xml` read or write failed, as a closed kind a caller
+/// can branch on without parsing the message.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ConfigErrorKind {
+    /// The file does not exist.
+    Missing,
+    /// The file exists but could not be opened or read (permissions, a
+    /// sharing violation), or a write or backup failed.
+    Unreadable,
+    /// The file was read but is not a usable `ModsConfig.xml`: not XML
+    /// (a truncated, partly written file included), the wrong root, no
+    /// `<activeMods>`, or over the size bound.
+    Malformed,
+}
+
 /// A `ModsConfig.xml` read/write failure.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
-#[error("{0}")]
-pub struct ConfigError(pub String);
+#[error("{message}")]
+pub struct ConfigError {
+    kind: ConfigErrorKind,
+    message: String,
+}
+
+impl ConfigError {
+    /// A failure of `kind`, described by `message` for logs and the
+    /// generic error text.
+    #[must_use]
+    pub fn new(kind: ConfigErrorKind, message: impl Into<String>) -> Self {
+        Self {
+            kind,
+            message: message.into(),
+        }
+    }
+
+    /// What went wrong, as a closed kind.
+    #[must_use]
+    pub fn kind(&self) -> ConfigErrorKind {
+        self.kind
+    }
+}
 
 /// Reads and writes `ModsConfig.xml`.
 pub trait ModsConfigStore {
@@ -120,6 +156,23 @@ pub trait ModsConfigStore {
     /// Returns [`ConfigError`] when the backup or write fails.
     fn write_with_backup(&self, path: &Path, file: &ModsConfigFile)
     -> Result<PathBuf, ConfigError>;
+}
+
+/// A shared reference reads and writes through the store it points at, so
+/// a caller can keep using the store (a test's fake, say) after handing a
+/// use case a borrow of it.
+impl<T: ModsConfigStore + ?Sized> ModsConfigStore for &T {
+    fn read(&self, path: &Path) -> Result<ModsConfigFile, ConfigError> {
+        (**self).read(path)
+    }
+
+    fn write_with_backup(
+        &self,
+        path: &Path,
+        file: &ModsConfigFile,
+    ) -> Result<PathBuf, ConfigError> {
+        (**self).write_with_backup(path, file)
+    }
 }
 
 /// A decisions/rules file read/write failure, including an unrecognized

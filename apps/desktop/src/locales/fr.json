@@ -1193,6 +1193,7 @@
       "installCheckboxLabel": "Installer dans Mods et activer",
       "staleActiveSetNote": "Les modifications d’activation en attente ne sont pas incluses. Réanalysez d’abord si vous voulez qu’elles figurent dans cette installation.",
       "unappliedOrderNote": "L’installation écrit votre ordre actuel, qui n’est pas encore appliqué.",
+      "outsideChangeNote": "Votre liste des mods actifs a été modifiée hors de Rimmerge. L’installation écrit votre ordre « Actuel » par-dessus ces modifications.",
       "forceWarning": "RimWorldWin64.exe semble être en cours d’exécution. Si vous installez maintenant, la liste des mods actifs sera écrite, or le jeu l’écrase en quittant : la modification risque donc d’être perdue. Exporter malgré tout ?",
       "exportAnyway": "Exporter malgré tout",
       "export": "Exporter",
@@ -1256,7 +1257,13 @@
       },
       "rovingHint": "Flèches pour se déplacer, Entrée pour ouvrir, Espace pour cocher ou décocher",
       "pendingScan": "pas encore analysé",
-      "loadOrderPosition": "Position {position} dans l’ordre de chargement"
+      "loadOrderPosition": "Position {position} dans l’ordre de chargement",
+      "membership": {
+        "added": "Ajouté",
+        "removed": "Retiré",
+        "addedTitle": "Pas encore dans votre liste enregistrée des mods actifs. Il y sera ajouté à l’application.",
+        "removedTitle": "Dans votre liste enregistrée des mods actifs. Il en sera retiré à l’application."
+      }
     },
     "sort": {
       "groupLabel": "Ordre de tri",
@@ -1297,6 +1304,19 @@
       "rescanFinishedToast": "Nouvelle analyse terminée avec {count} remarque | Nouvelle analyse terminée avec {count} remarques",
       "rescannedWithWarningsToast": "Réanalysé avec des avertissements",
       "discardButton": "Annuler les modifications en attente"
+    },
+    "fileChange": {
+      "outside": "Votre liste des mods actifs a été modifiée hors de Rimmerge (+{added}, -{removed}). Vos modifications en attente sont conservées. Appliquer écraserait ces modifications extérieures.",
+      "reordered": "L’ordre de vos mods actifs a été modifié hors de Rimmerge. Vos modifications en attente sont conservées. Appliquer écraserait cet ordre.",
+      "outsideNoPending": "Votre liste des mods actifs a été modifiée hors de Rimmerge (+{added}, -{removed}). Appliquer écraserait ces modifications extérieures.",
+      "reorderedNoPending": "L’ordre de vos mods actifs a été modifié hors de Rimmerge. Appliquer écraserait cet ordre.",
+      "useFile": "Utiliser la liste du fichier",
+      "useFileTitle": "Ouvre d’abord un aperçu. Rien ne change tant que vous n’avez pas confirmé.",
+      "stale": {
+        "missing": "ModsConfig.xml est introuvable. Les marqueurs « Ajouté » et « Retiré » reposent sur la dernière liste que Rimmerge a pu lire.",
+        "unreadable": "Rimmerge ne peut pas lire ModsConfig.xml pour le moment. Les marqueurs « Ajouté » et « Retiré » reposent sur la dernière liste qu’il a pu lire.",
+        "malformed": "ModsConfig.xml ne peut pas être interprété pour le moment, peut-être parce qu’il est en cours d’écriture. Les marqueurs « Ajouté » et « Retiré » reposent sur la dernière liste que Rimmerge a pu lire."
+      }
     },
     "closeGuard": {
       "header": "Modifications des mods actifs non enregistrées",
@@ -1814,7 +1834,7 @@
       "notYetInjectedCount": "Pas encore injecté : {count}",
       "deadTargetCount": "Cible morte : {count}",
       "unknownCount": "Inconnu : {count}",
-      "orderFixableHeading": "Corrigeable par l’ordre : réordonner le mod indiqué peut les résoudre :",
+      "orderFixableHeading": "Corrigeable par l’ordre (réordonner le mod indiqué peut les résoudre) :",
       "cosmeticText": "cosmétique : la def finale est la même dans les deux ordres, aucun réordonnancement n’est donc proposé.",
       "mergeInsteadLink": "Fusionner plutôt",
       "mergeInstead": "{link} pour préserver l’intention propre du mod perdant.",
@@ -2040,6 +2060,7 @@
       "installCheckboxLabel": "Installer dans Mods et activer",
       "staleActiveSetNote": "Les modifications d’activation en attente ne sont pas incluses. Réanalysez d’abord si vous voulez qu’elles figurent dans cette installation.",
       "unappliedOrderNote": "L’installation écrit votre ordre actuel, qui n’est pas encore appliqué.",
+      "outsideChangeNote": "Votre liste des mods actifs a été modifiée hors de Rimmerge. L’installation écrit votre ordre « Actuel » par-dessus ces modifications.",
       "forceWarning": "RimWorldWin64.exe semble être en cours d’exécution. Si vous installez maintenant, la liste des mods actifs sera écrite, or le jeu l’écrase en quittant : la modification risque donc d’être perdue. Exporter malgré tout ?",
       "exportAnyway": "Exporter malgré tout",
       "export": "Exporter",

@@ -277,7 +277,9 @@ order* turns it into the **Current** order like this:
   the ledger, the preflight, or the Suggested order say anything about
   them. The scan's result is selected as Current. If the scan fails,
   nothing changes.
-- **A mod you already have active is kept as is.** When the list names a
+- **A mod you already have active is kept as is.** "Active" is the list you have in
+  Rimmerge now, pending changes included, so a mod you just deactivated reads as
+  inactive and the import brings it back. When the list names a
   package (with or without `_steam`) whose copy is already active here,
   that copy stays, so re-importing your own export changes nothing.
   Otherwise the exact id is activated, or another installed copy of the

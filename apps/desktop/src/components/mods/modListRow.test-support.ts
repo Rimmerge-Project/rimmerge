@@ -1,3 +1,4 @@
+import type { MembershipMarkDto } from "@/types/generated/MembershipMarkDto";
 import type { ModListDto } from "@/types/generated/ModListDto";
 import type { ModListRowDto } from "@/types/generated/ModListRowDto";
 import type { SourceDto } from "@/types/generated/SourceDto";
@@ -16,6 +17,8 @@ export interface ModRowOverrides {
   /** Activated since the last scan. */
   pendingScan?: boolean;
   updated?: UpdateTimeDto;
+  /** How the row differs from the saved active mod list; none unless said. */
+  membership?: MembershipMarkDto;
 }
 
 /** One `ModListRowDto`: a scanned local mod unless the overrides say otherwise. */
@@ -38,6 +41,7 @@ export function modRow(overrides: ModRowOverrides = {}): ModListRowDto {
     generated: null,
     workshopId: null,
     updated: overrides.updated ?? { kind: "unknown" },
+    membership: overrides.membership ?? "none",
   };
 }
 

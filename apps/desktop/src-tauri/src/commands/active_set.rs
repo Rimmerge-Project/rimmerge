@@ -1437,13 +1437,13 @@ mod tests {
             .await
             .expect("same mods as the file");
 
-        assert!(!before.order_differs_from_file);
-        assert!(moved.order_differs_from_file);
+        assert!(!before.order_unapplied);
+        assert!(moved.order_unapplied);
         assert!(
             moved.unapplied.added.is_empty() && moved.unapplied.removed.is_empty(),
             "the membership diff cannot see a reorder"
         );
-        assert!(!reverted.order_differs_from_file);
+        assert!(!reverted.order_unapplied);
     }
 
     #[tokio::test]

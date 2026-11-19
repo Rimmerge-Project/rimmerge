@@ -1193,6 +1193,7 @@
       "installCheckboxLabel": "Modsフォルダーにインストールして有効化",
       "staleActiveSetNote": "保留中の有効化／無効化の変更は含まれません。このインストールに反映したい場合は、先に再スキャンしてください。",
       "unappliedOrderNote": "インストールすると現在の順序が書き込まれますが、この順序はまだ適用されていません。",
+      "outsideChangeNote": "有効なMODリストがRimmerge以外で変更されました。インストールすると「現在」の順序が書き込まれ、その変更は上書きされます。",
       "forceWarning": "RimWorldWin64.exeが実行中のようです。今インストールすると有効なMODリストに書き込みますが、ゲームは終了時にこのリストを上書きするため、変更が失われるおそれがあります。それでもエクスポートしますか？",
       "exportAnyway": "それでもエクスポート",
       "export": "エクスポート",
@@ -1256,7 +1257,13 @@
       },
       "rovingHint": "矢印キーで移動、Enterで開く、Spaceで切り替え",
       "pendingScan": "未スキャン",
-      "loadOrderPosition": "ロード順{position}番目"
+      "loadOrderPosition": "ロード順{position}番目",
+      "membership": {
+        "added": "追加",
+        "removed": "除外",
+        "addedTitle": "保存済みの有効なMODリストにはまだありません。適用すると追加されます。",
+        "removedTitle": "保存済みの有効なMODリストにあります。適用すると外されます。"
+      }
     },
     "sort": {
       "groupLabel": "並べ替え順",
@@ -1297,6 +1304,19 @@
       "rescanFinishedToast": "再スキャン完了（メモ{count}件）",
       "rescannedWithWarningsToast": "再スキャンしました（警告あり）",
       "discardButton": "保留中の変更を破棄"
+    },
+    "fileChange": {
+      "outside": "有効なMODリストがRimmerge以外で変更されました（+{added}、-{removed}）。保留中の変更は保持されています。適用すると、この外部での変更は上書きされます。",
+      "reordered": "有効なMODの順序がRimmerge以外で変更されました。保留中の変更は保持されています。適用すると、その順序は上書きされます。",
+      "outsideNoPending": "有効なMODリストがRimmerge以外で変更されました（+{added}、-{removed}）。適用すると、この外部での変更は上書きされます。",
+      "reorderedNoPending": "有効なMODの順序がRimmerge以外で変更されました。適用すると、その順序は上書きされます。",
+      "useFile": "ファイルのリストを使用",
+      "useFileTitle": "先にプレビューを開きます。確認するまで何も変更されません。",
+      "stale": {
+        "missing": "ModsConfig.xmlが見つかりません。「追加」と「除外」の印には、Rimmergeが最後に読み込めたリストが使われています。",
+        "unreadable": "RimmergeはModsConfig.xmlを今は読み込めません。「追加」と「除外」の印には、最後に読み込めたリストが使われています。",
+        "malformed": "ModsConfig.xmlを今は解釈できません。書き込み中の可能性があります。「追加」と「除外」の印には、Rimmergeが最後に読み込めたリストが使われています。"
+      }
     },
     "closeGuard": {
       "header": "有効なMODへの未保存の変更",
@@ -1814,7 +1834,7 @@
       "notYetInjectedCount": "まだ挿入されていない：{count}",
       "deadTargetCount": "存在しない対象：{count}",
       "unknownCount": "不明：{count}",
-      "orderFixableHeading": "順序で修正可能。指定されたMODを並べ替えると解決する場合があります：",
+      "orderFixableHeading": "順序で修正可能（指定されたMODの順序を変更すると解決する場合があります）：",
       "cosmeticText": "見た目のみ：どちらの順序でも最終的なDefは同じなので、並べ替えは提案しません。",
       "mergeInsteadLink": "代わりにマージ",
       "mergeInstead": "{link}すると、優先されない側のMOD自身の意図が保たれます。",
@@ -2040,6 +2060,7 @@
       "installCheckboxLabel": "Modsフォルダーにインストールして有効化",
       "staleActiveSetNote": "保留中の有効化／無効化の変更は含まれません。このインストールに反映したい場合は、先に再スキャンしてください。",
       "unappliedOrderNote": "インストールすると現在の順序が書き込まれますが、この順序はまだ適用されていません。",
+      "outsideChangeNote": "有効なMODリストがRimmerge以外で変更されました。インストールすると「現在」の順序が書き込まれ、その変更は上書きされます。",
       "forceWarning": "RimWorldWin64.exeが実行中のようです。今インストールすると有効なMODリストに書き込みますが、ゲームは終了時にこのリストを上書きするため、変更が失われるおそれがあります。それでもエクスポートしますか？",
       "exportAnyway": "それでもエクスポート",
       "export": "エクスポート",

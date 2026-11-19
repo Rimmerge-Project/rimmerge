@@ -35,7 +35,7 @@ describe("ApplyDialog", () => {
         get_pending_active_changes: {
           unscanned: { added: ["a.mod"], removed: [] },
           unapplied: { added: [], removed: [] },
-          orderDiffersFromFile: false,
+          orderUnapplied: false,
         },
         get_dashboard: dashboardFixture(0),
         get_apply_preflight: preflightFixture(),
@@ -87,7 +87,7 @@ describe("ApplyDialog", () => {
         get_pending_active_changes: {
           unscanned: { added: [], removed: [] },
           unapplied: { added: ["a.mod"], removed: ["b.mod"] },
-          orderDiffersFromFile: false,
+          orderUnapplied: false,
         },
         get_dashboard: dashboardFixture(0),
         get_apply_preflight: preflightFixture(),
@@ -114,7 +114,7 @@ describe("ApplyDialog", () => {
             ? {
                 unscanned: { added: ["a.mod"], removed: [] },
                 unapplied: { added: [], removed: [] },
-                orderDiffersFromFile: false,
+                orderUnapplied: false,
               }
             : EMPTY_PENDING_ACTIVE_CHANGES,
         get_dashboard: dashboardFixture(0),
@@ -162,7 +162,7 @@ describe("ApplyDialog", () => {
             : {
                 unscanned: { added: ["a.mod"], removed: [] },
                 unapplied: { added: [], removed: [] },
-                orderDiffersFromFile: false,
+                orderUnapplied: false,
               },
         rescan_project: () => {
           scanned = true;
@@ -223,7 +223,7 @@ describe("ApplyDialog", () => {
             : {
                 unscanned: { added: ["a.mod"], removed: [] },
                 unapplied: { added: [], removed: [] },
-                orderDiffersFromFile: false,
+                orderUnapplied: false,
               },
         rescan_project: () => {
           scanned = true;
@@ -290,7 +290,7 @@ describe("ApplyDialog", () => {
         get_pending_active_changes: {
           unscanned: { added: ["a.mod"], removed: [] },
           unapplied: { added: [], removed: [] },
-          orderDiffersFromFile: false,
+          orderUnapplied: false,
         },
         rescan_project: () => {
           throw { code: "internal", message: "the scan task panicked" };
@@ -326,7 +326,7 @@ describe("ApplyDialog", () => {
             : {
                 unscanned: { added: ["a.mod"], removed: [] },
                 unapplied: { added: [], removed: [] },
-                orderDiffersFromFile: false,
+                orderUnapplied: false,
               },
         rescan_project: () => {
           scanned = true;

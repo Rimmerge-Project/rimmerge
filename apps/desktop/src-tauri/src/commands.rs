@@ -16,6 +16,7 @@ pub mod def_cache;
 pub mod def_conflict;
 pub mod def_graphics;
 pub mod defs;
+pub mod file_baseline;
 pub mod findings;
 pub mod game_launch;
 pub mod game_log;

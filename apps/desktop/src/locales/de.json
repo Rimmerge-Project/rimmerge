@@ -1193,6 +1193,7 @@
       "installCheckboxLabel": "In den Mods-Ordner installieren und aktivieren",
       "staleActiveSetNote": "Ausstehende Aktivierungsänderungen sind nicht enthalten. Scanne zuerst erneut, wenn sie in diese Installation sollen.",
       "unappliedOrderNote": "Die Installation schreibt deine aktuelle Reihenfolge, die noch nicht angewendet ist.",
+      "outsideChangeNote": "Deine aktive Mod-Liste wurde außerhalb von Rimmerge geändert. Die Installation schreibt deine aktuelle Reihenfolge über diese Änderungen.",
       "forceWarning": "RimWorldWin64.exe scheint zu laufen. Eine Installation schreibt jetzt deine aktive Mod-Liste, und das Spiel überschreibt sie beim Beenden, daher kann die Änderung verloren gehen. Trotzdem exportieren?",
       "exportAnyway": "Trotzdem exportieren",
       "export": "Exportieren",
@@ -1256,7 +1257,13 @@
       },
       "rovingHint": "Pfeiltasten zum Bewegen, Enter zum Öffnen, Leertaste zum Umschalten",
       "pendingScan": "noch nicht gescannt",
-      "loadOrderPosition": "Position {position} in der Ladereihenfolge"
+      "loadOrderPosition": "Position {position} in der Ladereihenfolge",
+      "membership": {
+        "added": "Hinzugefügt",
+        "removed": "Entfernt",
+        "addedTitle": "Noch nicht in deiner gespeicherten aktiven Mod-Liste. Beim Anwenden wird sie hinzugefügt.",
+        "removedTitle": "In deiner gespeicherten aktiven Mod-Liste. Beim Anwenden wird sie entfernt."
+      }
     },
     "sort": {
       "groupLabel": "Sortierung",
@@ -1297,6 +1304,19 @@
       "rescanFinishedToast": "Erneuter Scan mit {count} Hinweis abgeschlossen | Erneuter Scan mit {count} Hinweisen abgeschlossen",
       "rescannedWithWarningsToast": "Mit Warnungen erneut gescannt",
       "discardButton": "Ausstehende Änderungen verwerfen"
+    },
+    "fileChange": {
+      "outside": "Deine aktive Mod-Liste wurde außerhalb von Rimmerge geändert (+{added}, -{removed}). Deine ausstehenden Änderungen bleiben erhalten. Anwenden würde diese Änderungen von außen überschreiben.",
+      "reordered": "Deine aktive Reihenfolge wurde außerhalb von Rimmerge geändert. Deine ausstehenden Änderungen bleiben erhalten. Anwenden würde diese Reihenfolge überschreiben.",
+      "outsideNoPending": "Deine aktive Mod-Liste wurde außerhalb von Rimmerge geändert (+{added}, -{removed}). Anwenden würde diese Änderungen von außen überschreiben.",
+      "reorderedNoPending": "Deine aktive Reihenfolge wurde außerhalb von Rimmerge geändert. Anwenden würde diese Reihenfolge überschreiben.",
+      "useFile": "Liste aus der Datei verwenden",
+      "useFileTitle": "Öffnet zuerst eine Vorschau. Nichts ändert sich, bis du bestätigst.",
+      "stale": {
+        "missing": "ModsConfig.xml fehlt. Die Markierungen „Hinzugefügt“ und „Entfernt“ beruhen auf der letzten Liste, die Rimmerge lesen konnte.",
+        "unreadable": "Rimmerge kann ModsConfig.xml gerade nicht lesen. Die Markierungen „Hinzugefügt“ und „Entfernt“ beruhen auf der letzten Liste, die es lesen konnte.",
+        "malformed": "ModsConfig.xml ist gerade nicht verständlich, möglicherweise weil die Datei gerade geschrieben wird. Die Markierungen „Hinzugefügt“ und „Entfernt“ beruhen auf der letzten Liste, die Rimmerge lesen konnte."
+      }
     },
     "closeGuard": {
       "header": "Ungespeicherte Änderungen an aktiven Mods",
@@ -1814,7 +1834,7 @@
       "notYetInjectedCount": "Noch nicht eingefügt: {count}",
       "deadTargetCount": "Totes Ziel: {count}",
       "unknownCount": "Unbekannt: {count}",
-      "orderFixableHeading": "Durch Reihenfolge behebbar: Das Umsortieren der genannten Mod kann diese lösen:",
+      "orderFixableHeading": "Durch Reihenfolge behebbar (das Umsortieren der genannten Mod kann diese lösen):",
       "cosmeticText": "kosmetisch: Die fertige Def ist in beiden Reihenfolgen dieselbe, daher wird keine Umsortierung angeboten.",
       "mergeInsteadLink": "Stattdessen zusammenführen",
       "mergeInstead": "{link}: Das bewahrt die eigene Absicht der unterlegenen Mod.",
@@ -2040,6 +2060,7 @@
       "installCheckboxLabel": "In den Mods-Ordner installieren und aktivieren",
       "staleActiveSetNote": "Ausstehende Aktivierungsänderungen sind nicht enthalten. Scanne zuerst erneut, wenn sie in diese Installation sollen.",
       "unappliedOrderNote": "Die Installation schreibt deine aktuelle Reihenfolge, die noch nicht angewendet ist.",
+      "outsideChangeNote": "Deine aktive Mod-Liste wurde außerhalb von Rimmerge geändert. Die Installation schreibt deine aktuelle Reihenfolge über diese Änderungen.",
       "forceWarning": "RimWorldWin64.exe scheint zu laufen. Eine Installation schreibt jetzt deine aktive Mod-Liste, und das Spiel überschreibt sie beim Beenden, daher kann die Änderung verloren gehen. Trotzdem exportieren?",
       "exportAnyway": "Trotzdem exportieren",
       "export": "Exportieren",

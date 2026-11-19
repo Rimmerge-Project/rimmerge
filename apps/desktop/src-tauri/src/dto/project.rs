@@ -473,6 +473,10 @@ pub enum SessionChangeReasonDto {
     AssignmentRowChanged,
     /// An assignment project was exported.
     AssignmentExported,
+    /// The refresh of the on-disk active list found it changed, or found
+    /// it unreadable or readable again (`refresh_mods_config_baseline`).
+    /// Emitted only when something differs, never on a quiet poll.
+    FileBaselineChanged,
     /// A notification was dismissed, muted, unmuted, or the first-run
     /// notice was completed (`dismiss_notification`/
     /// `mute_notification_kind`/`unmute_notification_kind`/

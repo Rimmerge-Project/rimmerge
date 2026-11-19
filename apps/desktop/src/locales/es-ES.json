@@ -1193,6 +1193,7 @@
       "installCheckboxLabel": "Instalar en Mods y activar",
       "staleActiveSetNote": "Los cambios de activación pendientes no se incluyen. Vuelve a escanear primero si quieres que entren en esta instalación.",
       "unappliedOrderNote": "Instalar escribe tu orden actual, que aún no se ha aplicado.",
+      "outsideChangeNote": "Tu lista de mods activos se modificó fuera de Rimmerge. Instalar escribe tu orden actual sobre esos cambios.",
       "forceWarning": "Parece que RimWorldWin64.exe se está ejecutando. Instalar ahora escribe tu lista de mods activos, que el juego sobreescribe al cerrarse, así que el cambio puede perderse. ¿Exportar de todos modos?",
       "exportAnyway": "Exportar de todos modos",
       "export": "Exportar",
@@ -1256,7 +1257,13 @@
       },
       "rovingHint": "Usa las flechas para moverte, Intro para abrir y Espacio para alternar",
       "pendingScan": "aún sin escanear",
-      "loadOrderPosition": "Posición {position} en el orden de carga"
+      "loadOrderPosition": "Posición {position} en el orden de carga",
+      "membership": {
+        "added": "Añadido",
+        "removed": "Quitado",
+        "addedTitle": "Aún no está en tu lista de mods activos guardada. Al aplicar, se añade.",
+        "removedTitle": "Está en tu lista de mods activos guardada. Al aplicar, se quita."
+      }
     },
     "sort": {
       "groupLabel": "Criterio de ordenación",
@@ -1297,6 +1304,19 @@
       "rescanFinishedToast": "Nuevo escaneo terminado con {count} nota | Nuevo escaneo terminado con {count} notas",
       "rescannedWithWarningsToast": "Escaneado de nuevo con advertencias",
       "discardButton": "Descartar cambios pendientes"
+    },
+    "fileChange": {
+      "outside": "Tu lista de mods activos se modificó fuera de Rimmerge (+{added}, -{removed}). Tus cambios pendientes se conservan. Aplicar sobreescribiría esos cambios externos.",
+      "reordered": "Tu orden activo se modificó fuera de Rimmerge. Tus cambios pendientes se conservan. Aplicar sobreescribiría ese orden.",
+      "outsideNoPending": "Tu lista de mods activos se modificó fuera de Rimmerge (+{added}, -{removed}). Aplicar sobreescribiría esos cambios externos.",
+      "reorderedNoPending": "Tu orden activo se modificó fuera de Rimmerge. Aplicar sobreescribiría ese orden.",
+      "useFile": "Usar la lista del archivo",
+      "useFileTitle": "Primero abre una vista previa. No cambia nada hasta que confirmes.",
+      "stale": {
+        "missing": "Falta ModsConfig.xml. Las marcas «Añadido» y «Quitado» usan la última lista que Rimmerge pudo leer.",
+        "unreadable": "Rimmerge no puede leer ModsConfig.xml en este momento. Las marcas «Añadido» y «Quitado» usan la última lista que pudo leer.",
+        "malformed": "No se puede interpretar ModsConfig.xml en este momento, posiblemente porque se está escribiendo. Las marcas «Añadido» y «Quitado» usan la última lista que Rimmerge pudo leer."
+      }
     },
     "closeGuard": {
       "header": "Cambios de mods activos sin guardar",
@@ -2040,6 +2060,7 @@
       "installCheckboxLabel": "Instalar en Mods y activar",
       "staleActiveSetNote": "Los cambios de activación pendientes no se incluyen. Vuelve a escanear primero si quieres que entren en esta instalación.",
       "unappliedOrderNote": "Instalar escribe tu orden actual, que aún no se ha aplicado.",
+      "outsideChangeNote": "Tu lista de mods activos se modificó fuera de Rimmerge. Instalar escribe tu orden actual sobre esos cambios.",
       "forceWarning": "Parece que RimWorldWin64.exe se está ejecutando. Instalar ahora escribe tu lista de mods activos, que el juego sobreescribe al cerrarse, así que el cambio puede perderse. ¿Exportar de todos modos?",
       "exportAnyway": "Exportar de todos modos",
       "export": "Exportar",

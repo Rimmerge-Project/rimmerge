@@ -157,23 +157,24 @@ pub enum VersionCheck {
     },
 }
 
-/// Diffs `list` against this install. `file_ids` is `ModsConfig.xml`'s
-/// active list, by exact ids, in file order.
+/// Diffs `list` against this install. `active_ids` is the active list the
+/// import replaces (the session's working list on the desktop,
+/// `ModsConfig.xml`'s list in the CLI), by exact ids, in order.
 #[must_use]
 pub fn plan_import(
     list: &SharedModList,
     inventory: &ModInventory,
-    file_ids: &[ModId],
+    active_ids: &[ModId],
     context: ImportContext,
 ) -> ImportPlan {
-    let active = ActiveIndex::new(file_ids, inventory);
+    let active = ActiveIndex::new(active_ids, inventory);
     let (entries, mut order) = resolve_entries(list, inventory, &active);
     let core = place_core(&mut order, inventory);
-    let deactivated = deactivated_ids(file_ids, &order, &context.own_merge_mod);
+    let deactivated = deactivated_ids(active_ids, &order, &context.own_merge_mod);
     // Counted before the merge mod is re-added: it is not the list's to
     // place, so it never counts as moved.
-    let moved = count_moved(file_ids, &order);
-    keep_own_merge_mod(&mut order, file_ids, inventory, &context.own_merge_mod);
+    let moved = count_moved(active_ids, &order);
+    keep_own_merge_mod(&mut order, active_ids, inventory, &context.own_merge_mod);
     ImportPlan {
         moved,
         version: check_version(list, context.game_version.as_deref()),
@@ -193,15 +194,15 @@ struct ActiveIndex<'a> {
 }
 
 impl<'a> ActiveIndex<'a> {
-    fn new(file_ids: &'a [ModId], inventory: &ModInventory) -> Self {
+    fn new(active_ids: &'a [ModId], inventory: &ModInventory) -> Self {
         let mut present_by_base = BTreeMap::new();
-        for id in file_ids {
+        for id in active_ids {
             if inventory.entry(id).is_some_and(|e| e.present_on_disk) {
                 present_by_base.entry(id.base()).or_insert(id);
             }
         }
         Self {
-            ids: file_ids.iter().collect(),
+            ids: active_ids.iter().collect(),
             present_by_base,
         }
     }
@@ -316,7 +317,7 @@ fn place_core(order: &mut Vec<ModId>, inventory: &ModInventory) -> CorePlacement
 /// puts it.
 fn keep_own_merge_mod(
     order: &mut Vec<ModId>,
-    file_ids: &[ModId],
+    active_ids: &[ModId],
     inventory: &ModInventory,
     own_merge_mod: &ModId,
 ) {
@@ -325,17 +326,17 @@ fn keep_own_merge_mod(
     if already_kept {
         return;
     }
-    let in_file = file_ids
+    let in_file = active_ids
         .iter()
         .find(|id| id.base() == own_base && inventory.entry(id).is_some_and(|e| e.present_on_disk));
     order.extend(in_file.cloned());
 }
 
-fn deactivated_ids(file_ids: &[ModId], order: &[ModId], own_merge_mod: &ModId) -> Vec<ModId> {
+fn deactivated_ids(active_ids: &[ModId], order: &[ModId], own_merge_mod: &ModId) -> Vec<ModId> {
     let kept: BTreeSet<&ModId> = order.iter().collect();
     let own_base = own_merge_mod.base();
     let mut seen: BTreeSet<&ModId> = BTreeSet::new();
-    file_ids
+    active_ids
         .iter()
         .filter(|id| !is_core(id) && id.base() != own_base && !kept.contains(id))
         .filter(|id| seen.insert(id))
@@ -345,9 +346,9 @@ fn deactivated_ids(file_ids: &[ModId], order: &[ModId], own_merge_mod: &ModId) -
 
 /// The kept mods (in both the file and the order) that fall outside the
 /// longest run keeping the file's relative order.
-fn count_moved(file_ids: &[ModId], order: &[ModId]) -> u32 {
+fn count_moved(active_ids: &[ModId], order: &[ModId]) -> u32 {
     let mut file_index: BTreeMap<&ModId, usize> = BTreeMap::new();
-    for (index, id) in file_ids.iter().enumerate() {
+    for (index, id) in active_ids.iter().enumerate() {
         file_index.entry(id).or_insert(index);
     }
     let kept_in_order: Vec<usize> = order

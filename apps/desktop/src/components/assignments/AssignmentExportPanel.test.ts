@@ -10,6 +10,7 @@ import AssignmentExportPanel from "@/components/assignments/AssignmentExportPane
 import { installMockIpc } from "@/services/ipc.mock";
 import type { ExportAssignmentReportDto } from "@/types/generated/ExportAssignmentReportDto";
 import type { ExportAssignmentRequestDto } from "@/types/generated/ExportAssignmentRequestDto";
+import type { ExternalFileChangeDto } from "@/types/generated/ExternalFileChangeDto";
 import type { PendingActiveChangesDto } from "@/types/generated/PendingActiveChangesDto";
 
 const { pickFolderMock } = vi.hoisted(() => ({ pickFolderMock: vi.fn() }));
@@ -20,13 +21,15 @@ const ASSIGNMENT_ID = "abc123def456";
 function mountPanel(
   exportAssignment?: (payload: unknown) => unknown,
   pendingActiveChanges?: PendingActiveChangesDto,
+  externalChange: ExternalFileChangeDto = { kind: "none" },
 ) {
   const calls: ExportAssignmentRequestDto[] = [];
   installMockIpc({
+    get_mods_config_baseline: { state: { kind: "fresh" }, externalChange },
     get_pending_active_changes: pendingActiveChanges ?? {
       unscanned: { added: [], removed: [] },
       unapplied: { added: [], removed: [] },
-      orderDiffersFromFile: false,
+      orderUnapplied: false,
     },
     export_assignment: (payload: unknown) => {
       const request = (payload as { request: ExportAssignmentRequestDto }).request;
@@ -60,7 +63,7 @@ describe("AssignmentExportPanel", () => {
     const { wrapper } = mountPanel(undefined, {
       unscanned: { added: ["a.mod"], removed: [] },
       unapplied: { added: [], removed: [] },
-      orderDiffersFromFile: false,
+      orderUnapplied: false,
     });
     await flushPromises();
 
@@ -80,7 +83,7 @@ describe("AssignmentExportPanel", () => {
     const { wrapper } = mountPanel(undefined, {
       unscanned: { added: [], removed: [] },
       unapplied: { added: [], removed: [] },
-      orderDiffersFromFile: true,
+      orderUnapplied: true,
     });
     await flushPromises();
 
@@ -95,6 +98,42 @@ describe("AssignmentExportPanel", () => {
 
     expect(wrapper.get('[data-testid="assignment-export-unapplied-order-note"]').text()).toContain(
       "not applied yet",
+    );
+  });
+
+  it("warns that Install writes over an outside change of the list, only once Install is checked", async () => {
+    const { wrapper } = mountPanel(undefined, undefined, {
+      kind: "membership",
+      added: 1,
+      removed: 0,
+    });
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="assignment-export-outside-change-note"]').exists()).toBe(
+      false,
+    );
+
+    await wrapper
+      .get('[data-testid="assignment-export-install-checkbox"]')
+      .find("input")
+      .setValue(true);
+
+    expect(wrapper.get('[data-testid="assignment-export-outside-change-note"]').text()).toBe(
+      "Your active mod list was changed outside Rimmerge. Installing writes your Current order over those changes.",
+    );
+  });
+
+  it("shows no outside-change note when nobody else changed the list", async () => {
+    const { wrapper } = mountPanel();
+    await flushPromises();
+
+    await wrapper
+      .get('[data-testid="assignment-export-install-checkbox"]')
+      .find("input")
+      .setValue(true);
+
+    expect(wrapper.find('[data-testid="assignment-export-outside-change-note"]').exists()).toBe(
+      false,
     );
   });
 

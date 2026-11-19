@@ -18,6 +18,7 @@ export {
   updateAssignment,
 } from "./ipc/assignments";
 export { RimmergeError, setSessionLostHandler } from "./ipc/core";
+export { getModsConfigBaseline, refreshModsConfigBaseline } from "./ipc/fileBaseline";
 export {
   decide,
   getDefConflictView,

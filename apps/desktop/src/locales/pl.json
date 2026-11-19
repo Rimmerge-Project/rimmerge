@@ -1193,6 +1193,7 @@
       "installCheckboxLabel": "Zainstaluj w folderze Mods i włącz",
       "staleActiveSetNote": "Oczekujące zmiany włączenia i wyłączenia modów nie są uwzględnione. Jeśli mają trafić do tej instalacji, najpierw przeskanuj ponownie.",
       "unappliedOrderNote": "Instalacja zapisuje twoją bieżącą kolejność, która nie jest jeszcze zastosowana.",
+      "outsideChangeNote": "Lista aktywnych modów została zmieniona poza Rimmerge. Instalacja nadpisze te zmiany bieżącą kolejnością.",
       "forceWarning": "Wygląda na to, że RimWorldWin64.exe jest uruchomiony. Instalacja w tej chwili zapisuje listę aktywnych modów, którą gra nadpisuje przy zamykaniu, więc zmiana może zostać utracona. Wyeksportować mimo to?",
       "exportAnyway": "Eksportuj mimo to",
       "export": "Eksportuj",
@@ -1256,7 +1257,13 @@
       },
       "rovingHint": "Strzałki: przechodzenie, Enter: otwieranie, Spacja: przełączanie",
       "pendingScan": "jeszcze nie zeskanowano",
-      "loadOrderPosition": "Pozycja w kolejności ładowania: {position}"
+      "loadOrderPosition": "Pozycja w kolejności ładowania: {position}",
+      "membership": {
+        "added": "Dodany",
+        "removed": "Usunięty",
+        "addedTitle": "Tego moda nie ma jeszcze na zapisanej liście aktywnych modów. Zastosowanie go doda.",
+        "removedTitle": "Ten mod jest na zapisanej liście aktywnych modów. Zastosowanie go z niej usunie."
+      }
     },
     "sort": {
       "groupLabel": "Kolejność sortowania",
@@ -1297,6 +1304,19 @@
       "rescanFinishedToast": "Ponowne skanowanie zakończone z {count} uwagą | Ponowne skanowanie zakończone z {count} uwagami | Ponowne skanowanie zakończone z {count} uwagami",
       "rescannedWithWarningsToast": "Przeskanowano ponownie z ostrzeżeniami",
       "discardButton": "Odrzuć oczekujące zmiany"
+    },
+    "fileChange": {
+      "outside": "Lista aktywnych modów została zmieniona poza Rimmerge (+{added}, -{removed}). Twoje oczekujące zmiany zostają zachowane. Zastosowanie nadpisałoby te zewnętrzne zmiany.",
+      "reordered": "Kolejność aktywnych modów została zmieniona poza Rimmerge. Twoje oczekujące zmiany zostają zachowane. Zastosowanie nadpisałoby tę kolejność.",
+      "outsideNoPending": "Lista aktywnych modów została zmieniona poza Rimmerge (+{added}, -{removed}). Zastosowanie nadpisałoby te zewnętrzne zmiany.",
+      "reorderedNoPending": "Kolejność aktywnych modów została zmieniona poza Rimmerge. Zastosowanie nadpisałoby tę kolejność.",
+      "useFile": "Użyj listy z pliku",
+      "useFileTitle": "Najpierw otwiera podgląd. Nic się nie zmieni, dopóki nie potwierdzisz.",
+      "stale": {
+        "missing": "Brak pliku ModsConfig.xml. Oznaczenia „Dodany” i „Usunięty” opierają się na ostatniej liście, którą Rimmerge zdołał odczytać.",
+        "unreadable": "Rimmerge nie może teraz odczytać pliku ModsConfig.xml. Oznaczenia „Dodany” i „Usunięty” opierają się na ostatniej liście, którą zdołał odczytać.",
+        "malformed": "Nie można teraz zinterpretować pliku ModsConfig.xml, być może dlatego, że trwa jego zapisywanie. Oznaczenia „Dodany” i „Usunięty” opierają się na ostatniej liście, którą Rimmerge zdołał odczytać."
+      }
     },
     "closeGuard": {
       "header": "Niezapisane zmiany aktywnych modów",
@@ -1814,7 +1834,7 @@
       "notYetInjectedCount": "Jeszcze niewstrzyknięte: {count}",
       "deadTargetCount": "Martwy cel: {count}",
       "unknownCount": "Nieznane: {count}",
-      "orderFixableHeading": "Do naprawienia zmianą kolejności: przesunięcie wskazanego moda może je rozwiązać:",
+      "orderFixableHeading": "Do naprawienia zmianą kolejności (przesunięcie wskazanego moda może je rozwiązać):",
       "cosmeticText": "kosmetyczne: końcowy def jest taki sam w obu kolejnościach, więc nie proponuje się zmiany kolejności.",
       "mergeInsteadLink": "Zamiast tego scal",
       "mergeInstead": "{link}, aby zachować intencję przegrywającego moda.",
@@ -2040,6 +2060,7 @@
       "installCheckboxLabel": "Zainstaluj w folderze Mods i włącz",
       "staleActiveSetNote": "Oczekujące zmiany włączenia i wyłączenia modów nie są uwzględnione. Jeśli mają trafić do tej instalacji, najpierw przeskanuj ponownie.",
       "unappliedOrderNote": "Instalacja zapisuje twoją bieżącą kolejność, która nie jest jeszcze zastosowana.",
+      "outsideChangeNote": "Lista aktywnych modów została zmieniona poza Rimmerge. Instalacja nadpisze te zmiany bieżącą kolejnością.",
       "forceWarning": "Wygląda na to, że RimWorldWin64.exe jest uruchomiony. Instalacja w tej chwili zapisuje listę aktywnych modów, którą gra nadpisuje przy zamykaniu, więc zmiana może zostać utracona. Wyeksportować mimo to?",
       "exportAnyway": "Eksportuj mimo to",
       "export": "Eksportuj",

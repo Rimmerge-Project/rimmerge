@@ -318,6 +318,18 @@ gate block in the root `CLAUDE.md`.
   `stamp_checks` counter, never by timing. The cache lock is held for map
   operations only, never across a read or a parse: the replay pool reads
   through one reader (or one view) from four threads.
+- **`ModsConfigFileStore::read` is bounded and typed.** It reads through
+  `read_bounded_with_limit` at 4 MiB (`MAX_MODS_CONFIG_BYTES`; a real file is a few
+  hundred kilobytes), because the desktop re-reads it every few seconds, and every
+  failure is a `ConfigError` with a `ConfigErrorKind`: `Missing` (not found),
+  `Unreadable` (any other I/O failure, including a failed write or backup),
+  `Malformed` (not parseable as a `ModsConfigData` document, truncated or partly
+  written files and an over-limit file included). Replacement is atomic only for
+  Rimmerge's own writers (`write_atomically`), so a read that races one of those is
+  one whole list or a failure, never a blend. Another program may write the file
+  non-atomically: a read that lands mid-write sees a truncated document and reads as
+  `Malformed`, which the desktop's baseline refresh absorbs as a stale status (the last
+  good list stays the baseline) until the next good read.
 - **`ModsConfigFileStore`** backs up first
   (`ModsConfig.xml.bak-<timestamp>`), refuses to proceed on any read
   error other than NotFound, and preserves `version`, `knownExpansions`,

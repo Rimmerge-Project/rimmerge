@@ -208,6 +208,22 @@ declare global {
     __DEACTIVATE_CALLS__?: DeactivateRequestDto[];
     /** Every `move_mods` payload the mock received, in order — for the reorder specs. */
     __MOVE_MODS_CALLS__?: MoveRequestDto[];
+    /**
+     * What the mock's on-disk active mod list is, as an outside editor leaves it: a valid list
+     * (`ok`, in file order) or a file the next baseline refresh cannot read. Unset means the file
+     * is whatever the session last loaded or wrote. Never reset by the scenario, so a spec can set
+     * it before load; the mock reads it only when `refresh_mods_config_baseline`, a rescan or an
+     * import runs, like the real refresh reads the file.
+     */
+    __MODS_CONFIG_FILE__?:
+      | { status: "ok"; activeMods: string[] }
+      | { status: "missing" | "unreadable" | "malformed" };
+    /** How many `refresh_mods_config_baseline` calls the mock received. */
+    __REFRESH_BASELINE_CALLS__?: number;
+    /** How many of them have finished, the optional change event included: a positive end-of-call signal. */
+    __REFRESH_BASELINE_DONE__?: number;
+    /** How many `session://changed` events (reason `fileBaselineChanged`) the refresh emitted. */
+    __BASELINE_CHANGED_EMITS__?: number;
     /** How many times `discard_pending_changes` was called. */
     __DISCARD_PENDING_CALLS__?: number;
     /** How many times `revert_order_to_file` was called. */
@@ -3200,6 +3216,16 @@ export function installScenario(): void {
   // current order and becomes whichever order a successful
   // `apply { writeModsConfig: true }` wrote.
   let fileOrder = [...currentOrder];
+  // The live file baseline (`Session::file_watch`): the base ids the session itself last loaded or
+  // wrote (to tell an outside change from its own), and why the latest read of the file failed.
+  // `fileActiveIds`/`fileOrder` above are the baseline's list, the last one that read fine.
+  let acknowledgedFileBases = new Set([...fileActiveIds].map((id) => baseOf(id)));
+  let acknowledgedFileSequence = [...fileActiveIds].map((id) => baseOf(id));
+  // The same acknowledged list by exact id: "your own unsaved work" (`pendingActiveChanges`) is
+  // measured against it, never against the live `fileActiveIds`/`fileOrder`.
+  let acknowledgedFileIds = new Set(fileActiveIds);
+  let acknowledgedFileOrder = [...fileOrder];
+  let baselineIssue: "missing" | "unreadable" | "malformed" | null = null;
 
   // The mock's `currentOrder` lists only the fixture's own mods, while the working/scanned sets
   // also hold fixture-only owners and missing mods. The real Current is exactly the scanned
@@ -3713,6 +3739,8 @@ export function installScenario(): void {
   const MAX_ORDER_SKIPPED_REPORTED = 500;
   const MOCK_CORE_ID = modId(0);
   const MOCK_GAME_VERSION = "1.6.4871";
+  /** The ModsConfig.xml the mock setup page fills in, and the session is loaded from. */
+  const MODS_CONFIG_PATH = "C:/Profile/ModsConfig.xml";
   const GENERATED_MOD_PREFIX = "rimmerge.merge.";
 
   function baseOf(id: string): string {
@@ -3950,15 +3978,18 @@ export function installScenario(): void {
     }
   }
 
-  /** Mirrors `plan_import` over the mock inventory, diffing against the file's order. */
+  /** Mirrors `plan_import` over the mock inventory, diffing against the working list. */
   function planOrderImport(parsed: Extract<ParsedOrderList, { kind: "parsed" }>) {
+    // `ImportTarget::from_session`: the diff is against the working list (pending edits included), the
+    // mock's own fixture-only owners left out like `currentOrder` leaves them out.
+    const activeList = [...workingActiveIds].filter((id) => !omittedFromCurrentOrder.includes(id));
     const inventory = installedInventory();
     const nameOf = (id: string): string => inventory.find((row) => row.modId === id)?.name ?? id;
     const present = new Set(inventory.map((row) => row.modId));
-    const fileSet = new Set(fileOrder);
+    const fileSet = new Set(activeList);
     // `ActiveIndex`: the first active copy that is on disk, per base id, in file order.
     const activeCopies = new Map<string, string>();
-    for (const id of fileOrder) {
+    for (const id of activeList) {
       if (present.has(id) && !activeCopies.has(baseOf(id))) activeCopies.set(baseOf(id), id);
     }
     const order: string[] = [];
@@ -4036,7 +4067,7 @@ export function installScenario(): void {
       }
     }
     const kept = new Set(order);
-    const deactivated = [...new Set(fileOrder)]
+    const deactivated = [...new Set(activeList)]
       .filter(
         (id) =>
           !kept.has(id) &&
@@ -4046,10 +4077,10 @@ export function installScenario(): void {
       .map((id) => ({ modId: id, name: nameOf(id) }));
     // Counted before the merge mod is re-added: it is not the list's to place.
     const moved = movedCount(
-      fileOrder.filter((id) => kept.has(id)),
+      activeList.filter((id) => kept.has(id)),
       order.filter((id) => fileSet.has(id)),
     );
-    keepOwnMergeMod(order, inventory);
+    keepOwnMergeMod(order, inventory, activeList);
     const { unscanned } = pendingActiveChanges();
     return {
       listed: parsed.entries.length,
@@ -4068,15 +4099,19 @@ export function installScenario(): void {
 
   /**
    * `keep_own_merge_mod`: a list never carries this profile's own merge mod, but an import must
-   * not drop it, so it is appended last when the file holds it and it is on disk.
+   * not drop it, so it is appended last when the active list holds it and it is on disk.
    */
-  function keepOwnMergeMod(order: string[], inventory: { modId: string }[]): void {
+  function keepOwnMergeMod(
+    order: string[],
+    inventory: { modId: string }[],
+    activeList: string[],
+  ): void {
     const ownBase = baseOf(MERGE_MOD_PACKAGE_ID);
     if (order.some((id) => baseOf(id) === ownBase)) return;
-    const inFile = fileOrder.find(
+    const inActive = activeList.find(
       (id) => baseOf(id) === ownBase && inventory.some((row) => row.modId === id),
     );
-    if (inFile !== undefined) order.push(inFile);
+    if (inActive !== undefined) order.push(inActive);
   }
 
   function previewOrderDocument(text: string): OrderImportOutcomeDto {
@@ -4125,6 +4160,7 @@ export function installScenario(): void {
         window.__RELEASE_IMPORT_ORDER__ = resolve;
       });
     }
+    resetFileWatch();
     // The whole import lands at once: Current is the order, the working and scanned sets are its
     // ids, and the mock sorter's Suggested over that set is the same sequence. `fileOrder` is
     // untouched: nothing is written until Apply.
@@ -4638,7 +4674,17 @@ export function installScenario(): void {
     generated: null;
     workshopId: number | null;
     updated: UpdateTimeMock;
+    membership: MembershipMock;
   };
+
+  type MembershipMock = "none" | "added" | "removed";
+
+  /** `file_baseline::FileMembership`: a row's mark against the file's base ids. */
+  function membershipOf(id: string, isActiveRow: boolean): MembershipMock {
+    const isInFile = [...fileActiveIds].some((fileId) => baseOf(fileId) === baseOf(id));
+    if (isActiveRow) return isInFile ? "none" : "added";
+    return isInFile ? "removed" : "none";
+  }
 
   /** A pool row (`mods`, fixture owners, `inactiveModRow`) shaped as a `ModListRowDto`. */
   function modListRow(
@@ -4655,6 +4701,7 @@ export function installScenario(): void {
       generated: row.generated,
       workshopId: workshopIdOf(row),
       updated: updateTimeOf(row),
+      membership: membershipOf(row.modId, position !== null),
     };
   }
 
@@ -4698,6 +4745,7 @@ export function installScenario(): void {
           generated: null,
           workshopId: null,
           updated: updateTimeOf({ modId: id, source: null }),
+          membership: membershipOf(id, true),
         };
       });
     } else {
@@ -4761,12 +4809,91 @@ export function installScenario(): void {
     };
   }
 
+  /** Rimmerge itself loaded or wrote the file: its mods and their order are what an outside change is measured from. */
+  function acknowledgeFile(): void {
+    acknowledgedFileBases = new Set([...fileActiveIds].map((id) => baseOf(id)));
+    acknowledgedFileSequence = [...fileActiveIds].map((id) => baseOf(id));
+    acknowledgedFileIds = new Set(fileActiveIds);
+    acknowledgedFileOrder = [...fileOrder];
+  }
+
+  /** `ExternalFileChangeDto`: a membership change first, else the same mods in another order, else none. */
+  function externalChange(added: number, removed: number, fileSequence: string[]) {
+    if (added > 0 || removed > 0) {
+      return { kind: "membership" as const, added, removed };
+    }
+    if (fileSequence.join(",") !== acknowledgedFileSequence.join(",")) {
+      return { kind: "reordered" as const };
+    }
+    return { kind: "none" as const };
+  }
+
+  /** `FileBaselineDto`: the baseline's status and what someone else changed in the file's membership. */
+  function fileBaselineDto() {
+    const fileBases = new Set([...fileActiveIds].map((id) => baseOf(id)));
+    const added = [...fileBases].filter((id) => !acknowledgedFileBases.has(id)).length;
+    const removed = [...acknowledgedFileBases].filter((id) => !fileBases.has(id)).length;
+    const fileSequence = [...fileActiveIds].map((id) => baseOf(id));
+    return {
+      state:
+        baselineIssue === null
+          ? { kind: "fresh" as const }
+          : { kind: "stale" as const, reason: baselineIssue },
+      externalChange: externalChange(added, removed, fileSequence),
+    };
+  }
+
+  /**
+   * `Session::observe_file`: reads `window.__MODS_CONFIG_FILE__` (unset: the file is as the session
+   * last left it). A valid list replaces the baseline list; a failure keeps the last valid list and
+   * records why. Returns whether the list or the status changed. Never touches working, Current
+   * or the scanned set.
+   */
+  function observeModsConfigFile(): boolean {
+    const file = window.__MODS_CONFIG_FILE__;
+    if (file === undefined) {
+      const wasStale = baselineIssue !== null;
+      baselineIssue = null;
+      return wasStale;
+    }
+    if (file.status !== "ok") {
+      const changed = baselineIssue !== file.status;
+      baselineIssue = file.status;
+      return changed;
+    }
+    const wasStale = baselineIssue !== null;
+    baselineIssue = null;
+    const isListChanged = file.activeMods.join(",") !== [...fileActiveIds].join(",");
+    fileActiveIds = new Set(file.activeMods);
+    fileOrder = [...file.activeMods];
+    return isListChanged || wasStale;
+  }
+
+  /**
+   * A load, rescan or import of the session's own: the file is read fresh (a file that cannot be
+   * read fails the way the real `LoadProject::load` does) and acknowledged.
+   */
+  function resetFileWatch(): void {
+    const file = window.__MODS_CONFIG_FILE__;
+    if (file !== undefined && file.status !== "ok") {
+      throw {
+        code: "mods_config_io_failed",
+        message: `ModsConfig.xml cannot be read (${file.status})`,
+      };
+    }
+    observeModsConfigFile();
+    baselineIssue = null;
+    acknowledgeFile();
+  }
+
   function pendingActiveChanges() {
     return {
       unscanned: activeSetDiff(workingActiveIds, scannedActiveIds),
-      unapplied: activeSetDiff(scannedActiveIds, fileActiveIds),
+      // Your own unsaved work: measured against what Rimmerge last loaded or wrote, so an outside
+      // edit of the file moves neither of these (the outside-change note explains it).
+      unapplied: activeSetDiff(scannedActiveIds, acknowledgedFileIds),
       // A settled reorder changes no membership: only the sequence differs from the file.
-      orderDiffersFromFile: !sameOrderIgnoringMergeMod(currentOrder, fileOrder),
+      orderUnapplied: !sameOrderIgnoringMergeMod(currentOrder, acknowledgedFileOrder),
     };
   }
 
@@ -6405,6 +6532,9 @@ export function installScenario(): void {
   window.__DEACTIVATE_CALLS__ = [];
   window.__MOVE_MODS_CALLS__ = [];
   window.__DISCARD_PENDING_CALLS__ = 0;
+  window.__REFRESH_BASELINE_CALLS__ = 0;
+  window.__REFRESH_BASELINE_DONE__ = 0;
+  window.__BASELINE_CHANGED_EMITS__ = 0;
   window.__REVERT_ORDER_CALLS__ = 0;
   window.__RESCAN_CALLS__ = 0;
   window.__OPEN_MOD_LINK_CALLS__ = [];
@@ -6671,7 +6801,7 @@ export function installScenario(): void {
       return {
         gameDir,
         workshopDir,
-        modsConfig: "C:/Profile/ModsConfig.xml",
+        modsConfig: MODS_CONFIG_PATH,
         profileDir: "C:/Profile/rimmerge",
         warningCode: null,
         errorCode: null,
@@ -6773,6 +6903,8 @@ export function installScenario(): void {
         // Mirrors `Session::file_matches`: same sequence, with the
         // generated merge mod's package id ignored on both sides.
         fileMatchesSuggested: sameOrderIgnoringMergeMod(suggestedOrder, fileOrder),
+        // The live comparison with the file, for the launch status. The "not applied yet" notes read
+        // `get_pending_active_changes` instead: an outside edit is not your own unsaved work.
         fileMatchesCurrent: sameOrderIgnoringMergeMod(currentOrder, fileOrder),
         sortProvenance: {
           tieBreak: settings.tieBreak,
@@ -7497,6 +7629,9 @@ export function installScenario(): void {
       // `Session::set_current_order(file sequence)`: Current, then working, take the file's order.
       currentOrder.splice(0, currentOrder.length, ...fileOrder);
       settleWorking();
+      // `Session::set_current_order` resets the file watch, like an Apply does.
+      acknowledgeFile();
+      baselineIssue = null;
       return pendingActiveChanges();
     },
     plan_deactivate_mods: (payload: unknown) => {
@@ -7514,6 +7649,21 @@ export function installScenario(): void {
       return pendingActiveChanges();
     },
     get_pending_active_changes: () => pendingActiveChanges(),
+    get_mods_config_baseline: () => fileBaselineDto(),
+    // `refresh_mods_config_baseline`: reads the file, and tells every query to refetch only when
+    // the list or the status changed (a quiet poll invalidates nothing), as the real command does.
+    refresh_mods_config_baseline: async () => {
+      window.__REFRESH_BASELINE_CALLS__ = (window.__REFRESH_BASELINE_CALLS__ ?? 0) + 1;
+      if (observeModsConfigFile()) {
+        window.__BASELINE_CHANGED_EMITS__ = (window.__BASELINE_CHANGED_EMITS__ ?? 0) + 1;
+        await window.__TAURI_INTERNALS__.invoke("plugin:event|emit", {
+          event: "session://changed",
+          payload: { reason: "fileBaselineChanged" },
+        });
+      }
+      window.__REFRESH_BASELINE_DONE__ = (window.__REFRESH_BASELINE_DONE__ ?? 0) + 1;
+      return fileBaselineDto();
+    },
     get_game_launch_status: gameLaunchStatusMock,
     launch_game: (payload: unknown) =>
       launchGameMock((payload as { request: LaunchGameRequestDto }).request),
@@ -7537,7 +7687,11 @@ export function installScenario(): void {
     preview_order_import_file: (payload: unknown): OrderImportOutcomeDto => {
       const request = (payload as { request: PreviewOrderImportFileRequestDto }).request;
       window.__PREVIEW_ORDER_IMPORT_FILE_CALLS__?.push(request);
-      const content = window.__ORDER_FILES__?.[request.path];
+      // The session's own ModsConfig.xml reads as the file's current list (what the real backend
+      // would parse), one package id per line, so "Use the list from the file" previews it.
+      const content =
+        window.__ORDER_FILES__?.[request.path] ??
+        (request.path === MODS_CONFIG_PATH ? [...fileActiveIds].join("\n") : undefined);
       if (content === undefined) {
         throw { code: "mod_list_io_failed", message: `${request.path}: the file was not found` };
       }
@@ -7560,6 +7714,7 @@ export function installScenario(): void {
     },
     rescan_project: () => {
       window.__RESCAN_CALLS__ = (window.__RESCAN_CALLS__ ?? 0) + 1;
+      resetFileWatch();
       scannedActiveIds = new Set(workingActiveIds);
       // The real rescan scans working's sequence and the new session's Current is that scan.
       // The ids the mock keeps out of `currentOrder` (see `omittedFromCurrentOrder`) stay out: `fileOrder` lacks them too.
@@ -7935,6 +8090,11 @@ export function installScenario(): void {
         }
         currentOrder.splice(0, currentOrder.length, ...fileOrder);
         settleWorking();
+        // `Session::set_current_order` resets the file watch: the file is now what Rimmerge wrote,
+        // and whatever an outside editor left in it is overwritten.
+        acknowledgeFile();
+        delete window.__MODS_CONFIG_FILE__;
+        baselineIssue = null;
       }
       const hasMergeContent = mergeModFiles().length > 0;
       const mergeModPath = request.writeMergeMod && hasMergeContent ? MERGE_MOD_PATH : null;

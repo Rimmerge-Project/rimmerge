@@ -20,18 +20,18 @@ use crate::mod_list::{ParsedModList, SharedModList};
 use crate::mod_times::{ModTimeSubject, UpdateTime, UpdateUnavailable};
 use crate::ports::{
     AboutImage, AboutReadError, AppSettingsLoad, AppSettingsStore, AssetLocator,
-    AssignmentProjectStore, BackReferenceShape, CachedDatabase, ConfigError, DatabaseStatus,
-    DecisionStore, DefCacheCarrier, DefCacheCarrierProbe, DefSourceCallView, DefSourceError,
-    DefSourceReader, ElementExpectation, GameExecutable, GameLauncher, GameLogError, GameLogReader,
-    ImportError, ImportManifestStore, ImportRecord, ImportedRules, KindChoice, LaunchFailure,
-    LaunchRoute, LoadedModKnowledge, LoadedRules, LogFormats, LogShapes, MergeModError,
-    MergeModWriteReport, MergeModWriter, ModAboutReader, ModKnowledgeStore, ModListFileError,
-    ModListFileStore, ModListRead, ModScanner, ModTimestampReader, ModsConfigFile, ModsConfigStore,
-    ParsedGameLog, PatchProjectStore, PatchStackBlockShape, ProfileNotificationState,
-    ProfileNotificationStateStore, RefreshOutcome, RimSortImporter, RimSortPaths, RuleDatabase,
-    RuleDatabaseFetcher, RuleStore, RulesLoadWarning, ScanArtifacts, ScanError, ScanProgress,
-    ScanProgressStage, StackBlockSource, StoreError, StoredRules, TextureBytes,
-    TextureFallbackShape, TextureFallbackSource,
+    AssignmentProjectStore, BackReferenceShape, CachedDatabase, ConfigError, ConfigErrorKind,
+    DatabaseStatus, DecisionStore, DefCacheCarrier, DefCacheCarrierProbe, DefSourceCallView,
+    DefSourceError, DefSourceReader, ElementExpectation, GameExecutable, GameLauncher,
+    GameLogError, GameLogReader, ImportError, ImportManifestStore, ImportRecord, ImportedRules,
+    KindChoice, LaunchFailure, LaunchRoute, LoadedModKnowledge, LoadedRules, LogFormats, LogShapes,
+    MergeModError, MergeModWriteReport, MergeModWriter, ModAboutReader, ModKnowledgeStore,
+    ModListFileError, ModListFileStore, ModListRead, ModScanner, ModTimestampReader,
+    ModsConfigFile, ModsConfigStore, ParsedGameLog, PatchProjectStore, PatchStackBlockShape,
+    ProfileNotificationState, ProfileNotificationStateStore, RefreshOutcome, RimSortImporter,
+    RimSortPaths, RuleDatabase, RuleDatabaseFetcher, RuleStore, RulesLoadWarning, ScanArtifacts,
+    ScanError, ScanProgress, ScanProgressStage, StackBlockSource, StoreError, StoredRules,
+    TextureBytes, TextureFallbackShape, TextureFallbackSource,
 };
 use crate::ports::{
     IMPORT_SOURCE_COMMUNITY_RULES, IMPORT_SOURCE_STEAM_DEPENDENCIES, IMPORT_SOURCE_USER_RULES,
@@ -599,6 +599,7 @@ impl MergeModWriter for InMemoryMergeModWriter {
 pub struct InMemoryModsConfigStore {
     file: RefCell<Option<ModsConfigFile>>,
     writes: RefCell<Vec<ModsConfigFile>>,
+    read_failure: Cell<Option<ConfigErrorKind>>,
 }
 
 impl InMemoryModsConfigStore {
@@ -608,7 +609,21 @@ impl InMemoryModsConfigStore {
         Self {
             file: RefCell::new(Some(file)),
             writes: RefCell::new(Vec::new()),
+            read_failure: Cell::new(None),
         }
+    }
+
+    /// Replaces what the file holds, as an outside editor would: not
+    /// recorded as a write, and any failure set by [`Self::fail_reads`]
+    /// is cleared.
+    pub fn set_file(&self, file: ModsConfigFile) {
+        *self.file.borrow_mut() = Some(file);
+        self.read_failure.set(None);
+    }
+
+    /// Makes every read fail with `kind` until [`Self::set_file`].
+    pub fn fail_reads(&self, kind: ConfigErrorKind) {
+        self.read_failure.set(Some(kind));
     }
 
     /// Every file this fake was asked to write, in order.
@@ -620,10 +635,15 @@ impl InMemoryModsConfigStore {
 
 impl ModsConfigStore for InMemoryModsConfigStore {
     fn read(&self, _path: &Path) -> Result<ModsConfigFile, ConfigError> {
-        self.file
-            .borrow()
-            .clone()
-            .ok_or_else(|| ConfigError("no ModsConfig.xml set on this fake".to_string()))
+        if let Some(kind) = self.read_failure.get() {
+            return Err(ConfigError::new(kind, "this fake was told to fail"));
+        }
+        self.file.borrow().clone().ok_or_else(|| {
+            ConfigError::new(
+                ConfigErrorKind::Missing,
+                "no ModsConfig.xml set on this fake",
+            )
+        })
     }
 
     fn write_with_backup(

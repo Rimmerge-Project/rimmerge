@@ -158,7 +158,7 @@ export const EMPTY_RULE_SET: RuleSetDto = {
 export const EMPTY_PENDING_ACTIVE_CHANGES: PendingActiveChangesDto = {
   unscanned: { added: [], removed: [] },
   unapplied: { added: [], removed: [] },
-  orderDiffersFromFile: false,
+  orderUnapplied: false,
 };
 
 export async function flush(): Promise<void> {

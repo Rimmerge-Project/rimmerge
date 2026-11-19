@@ -64,7 +64,7 @@ async function mountDetailPage(patch: PatchDetailDto, extraFixtures: Record<stri
     get_pending_active_changes: {
       unscanned: { added: [], removed: [] },
       unapplied: { added: [], removed: [] },
-      orderDiffersFromFile: false,
+      orderUnapplied: false,
     },
     get_patch_render: () => renderFixture(),
     list_patch_findings: () => ({ total: 0, items: [] }),

@@ -167,13 +167,21 @@ of that command surface — no direct filesystem or process access outside
   `utils/orderShare.ts`; a sender's name and a skipped excerpt are untrusted
   and render as text only. The two replace warnings are separate facts:
   `replacesPendingChanges` (from the preview: unrescanned activation edits) and
-  `DashboardDto.fileMatchesCurrent === false` (the Current order is not in the
+  `PendingActiveChangesDto.orderUnapplied` (the Current order is not in the
   file yet, e.g. an earlier import not applied), which the page passes down as
   `replacesUnwritten`. The "This isn't your active order yet" note
   (`OrderNotInFileNote.vue`) shows only while Current is selected and
-  `fileMatchesCurrent` is false, with its own `ApplyDialog`. The mock
+  `orderUnapplied` is true, with its own `ApplyDialog`. **Own facts vs live
+  facts:** `PendingActiveChangesDto` (`unapplied`, `orderUnapplied`) compares with what
+  Rimmerge last loaded or wrote, never the live file, so an outside edit of
+  `ModsConfig.xml` alone trips none of the close and project-switch guard, the
+  pending banner, this note, the export panels' note or `replacesUnwritten`;
+  `FileChangeNote` is the one place that explains an outside edit. The live
+  comparison (`DashboardDto.fileMatchesCurrent`/`fileMatchesSuggested`, the launch
+  status, the Added/Removed marks) follows the file; no "unsaved work" copy reads it. The mock
   (`planOrderImport`/`importOrderMock` in `scenario.ts`) computes the diff
-  against `fileOrder`, the `import_blocker` rule and the rejections, accepts a `.rml`
+  against the working list (`ImportTarget::from_session` passes `working`, so pending edits
+  show as changes; the CLI keeps the file's list), the `import_blocker` rule and the rejections, accepts a `.rml`
   export path only, swaps Current on import and leaves `fileOrder` alone. It mirrors
   the planner's details: the first active on-disk copy per base id wins, the list's
   `# RimWorld X` header is parsed and compared by numeric major.minor (`unknown` when
@@ -207,7 +215,8 @@ of that command surface — no direct filesystem or process access outside
   rule pickers; the Mods page's `list_working_mods`/`list_inactive_mods`
   read `working`, so an activated mod is in Active at once as a
   `pendingScan` row and a deactivated one is in Inactive at once), and `file` (what's actually on disk
-  in `ModsConfig.xml` — what a real, non-dry-run `apply` writes).
+  in `ModsConfig.xml` — what a real, non-dry-run `apply` writes; since 1.2.4 a **live
+  baseline**, re-read by the poller below, not only what the file held at load).
   `activate_mods`/`deactivate_mods` re-plan against the session's
   current report inside the same call rather than trusting whatever
   plan the frontend displayed a moment earlier, so the two can never
@@ -230,7 +239,7 @@ of that command surface — no direct filesystem or process access outside
   follow Current, while an edit from the Mods page (`move_mods`,
   `activate_mods`, `deactivate_mods`) that leaves the same ids makes Current
   follow `working`, writing nothing; the file tier is untouched, so
-  `fileMatchesCurrent` turns false until an Apply. The commands
+  `orderUnapplied` turns true (and the live `fileMatchesCurrent` false) until an Apply. The commands
   `move_mods`, `discard_pending_changes` and `revert_order_to_file` all emit
   `session://changed` with `activeSetChanged`; `move_mods` also returns the
   selection it left (`MoveModsResultDto`), because the first reorder while
@@ -238,7 +247,8 @@ of that command surface — no direct filesystem or process access outside
   says so. An *anchored* `activate_mods` (an explicit drop position) switches
   the same way and so returns `ActivateModsResultDto { pending, selected,
   didSwitchToCurrent }`; an un-anchored one (the button) never switches.
-  `PendingActiveChangesDto.orderDiffersFromFile` is `!file_matches(Current)`: a
+  `PendingActiveChangesDto.orderUnapplied` is Current differing from the list Rimmerge
+  last loaded or wrote (the acknowledged list), not from the live file: a
   settled reorder changes no membership, so `unscanned`/`unapplied` are empty
   for it and only this field (read by the close/project-switch guard, the
   `OrderNotInFileNote` on the Mods page, and the export panels' install note)
@@ -247,6 +257,39 @@ of that command surface — no direct filesystem or process access outside
   never restates it from the sort. `ActivateRequestDto.anchor` is `null` for
   the default placement. The mock (`scenario.ts`) mirrors all of it, except the `PreserveCurrent` re-sort of Suggested and a
   mid-scan refusal, and is pinned by `e2e/specs/mods-reorder-mock.spec.ts`.
+- **The file tier is live, and one poller keeps it so.** `refresh_mods_config_baseline`
+  (`commands/file_baseline.rs`) has the `game_launch` lock exception: a short
+  `with_session` for `Session::file_probe()`, the read and parse in a bare
+  `spawn_blocking` (generic over the `ModsConfigStore`, so a test can slow it down),
+  then a short `with_session` to `FileObservation::commit`. It only reads, and emits
+  `session://changed` with `fileBaselineChanged` **only when `BaselineChange::Changed`**
+  (the list or the status differs), so a quiet poll invalidates nothing; the reason is
+  deliberately not in `HANDLED_BY_MERGE_MUTATION`, so it invalidates everything like any
+  other change. `get_mods_config_baseline` is the pure read behind
+  `useFileBaselineQuery` (`FileBaselineDto`: `state` fresh or stale with a reason code,
+  and `externalChange`, a `kind`-tagged union: `none`, `membership` with `added`/`removed`
+  counts, or `reordered`). `composables/useFileBaselinePolling.ts`, called once
+  in `TheShell.vue`, polls every 5 s while the document is visible and on window focus
+  (`useVisiblePolling`, shared with the launch poller) and **skips a tick while its call is
+  pending** (the call can wait behind a long command such as verify, and a tick per
+  interval would queue). A failed poll is ignored. Each `ModListRowDto` carries
+  `membership` (`none`/`added`/`removed`, by base id), drawn by `MembershipBadge.vue`
+  beside the source badge (icon, word and tooltip, never colour alone). `FileChangeNote.vue`
+  on the Mods page shows two notes: the outside change (plain words, no file name; a
+  membership change is the `(+N, -M)` sentence, a `reordered` change its own; each has a
+  whole-sentence key with and without "Your pending changes are kept.", chosen by
+  `hasOwnPendingChanges`, never concatenated;
+  its action runs `useOrderShare().previewModsConfig`, the existing
+  `preview_order_import_file` preview on the session's own file path, so the existing
+  import confirm and replace warnings apply) and the stale-baseline failure (this one may
+  name ModsConfig.xml, per reason code through `staleBaselineMessage`). The mock mirrors it:
+  `window.__MODS_CONFIG_FILE__` (`{ status: "ok", activeMods }` or a failure status) is what
+  the next refresh, rescan or import reads (a failure status makes the rescan or import fail
+  with `mods_config_io_failed`, as the real load does; an Apply clears it, as the
+  real write replaces the file), `__REFRESH_BASELINE_CALLS__` counts calls,
+  `__REFRESH_BASELINE_DONE__` finished ones and `__BASELINE_CHANGED_EMITS__` the change
+  events it emitted (the end-of-handler signal a "quiet poll" spec waits for), and
+  `e2e/specs/mods-file-baseline.spec.ts` pins the behaviour.
 - **The Apply dialog reads the merge mod only while it is open, gated by mounting.** Every page
   mounts an `ApplyDialog`, and on a freshly swapped session the `get_merge_mod` render replays
   every ledger entry (seconds) under the session lock. The query lives in children of the
@@ -362,8 +405,10 @@ of that command surface — no direct filesystem or process access outside
   `OrderSwitchedNote` ("Now using your own order. The suggested order is unchanged.
   [View suggested]", gone once Suggested is selected again). `OrderNotInFileNote
   allow-revert` adds "Revert to your saved active order" (ModsConfig.xml named only in its tooltip) on the Mods page (only for a
-  pure reorder: `orderDiffersFromFile` with nothing unscanned or unapplied by
-  membership); `PendingChangesBanner` carries "Discard pending changes". Their
+  pure reorder: `orderUnapplied` with nothing unscanned or unapplied by
+  membership, and no outside change of the file: `RevertOrderToFile` compares with the live
+  file, so beside an outside edit it would be refused or would adopt the outside order, and
+  `FileChangeNote`'s own action covers that case); `PendingChangesBanner` carries "Discard pending changes". Their
   refusals go through `utils/errors.ts` like every other command error.
 - **The mod info panel is a drawer unless the window is very wide.**
   `ModsPage.vue` reads `useMediaQuery("(min-width: 1800px)")`: below it
@@ -444,11 +489,14 @@ of that command surface — no direct filesystem or process access outside
   install-time export still writes the session's *Current* order (the
   analysed one, not the working one) plus the new package id, silently
   omitting pending activation changes rather than refusing. They also warn,
-  with their own `unappliedOrderNote`, when `PendingActiveChangesDto.orderDiffersFromFile`
-  is true: Current is not in the file yet (a settled move, an import), and
+  with their own `unappliedOrderNote`, when `PendingActiveChangesDto.orderUnapplied`
+  is true: Current is not in the file yet (a settled move, an import; an outside edit
+  alone does not count), and
   install writes it, so an unapplied reorder reaches `ModsConfig.xml` with the
   export. That is kept on purpose, as for an unapplied import; the warning is
-  the mitigation.
+  the mitigation. A third note (`outsideChangeNote`, from `useFileBaselineQuery`'s
+  `externalChange.kind !== "none"`) says install writes Current over an outside change of
+  the list.
 - **The selected order is backend-led.** `load_project_inner` selects
   `INITIAL_ORDER_SOURCE` (Suggested, the desktop's own presentation
   default; `Session::new` stays on Current for the CLI) before the
@@ -485,18 +533,6 @@ of that command surface — no direct filesystem or process access outside
   `mutateAsync`).
 - **`session://changed` fires after any mutating command and invalidates
   every query by default.** `useSessionEvents`'s
-- **A background invalidation goes through `startInvalidation(queryCache, filters?)`
-  (`queries/invalidation.ts`), never `void queryCache.invalidateQueries(...)`.** Colada's
-  `invalidateQueries` is a `Promise.all` over the refetches and each refetch rethrows its
-  query's error (1.4.5 `fetch`), so a failing query under a bare `void` is an unhandled
-  rejection. The helper swallows it on purpose: the failed query already carries the error
-  in its own state. A caller that needs the refetch to land first (a mutation's `onSuccess`)
-  uses `awaitInvalidation(queryCache, ...filters)` from the same module, which resolves when
-  every refetch has settled and never rejects (no filters means every query). Never return or
-  await a raw `invalidateQueries` from `onSuccess`/`onSettled`: Colada awaits those inside
-  `mutate`, so one unrelated query's failed refetch would fail a mutation whose write already
-  committed (status `error`, the app-wide `onError` toast for the wrong operation, a rejected
-  `mutateAsync`).
   `HANDLED_BY_MERGE_MUTATION` is a skip-list of reasons already handled
   by a mutation's own targeted invalidation (`mergeChanged`,
   `patchDecided` — `useSetMergeChoicesMutation`'s own `onSuccess`), not

@@ -693,4 +693,61 @@ mod tests {
         );
         assert_eq!(session.orders().current.as_slice(), working_set.as_slice());
     }
+
+    /// A rescan builds its session from the working set, but the file still
+    /// holds its own list: that list is what Rimmerge last loaded, so the
+    /// file is neither an outside change nor stale. Without the reset in
+    /// `set_file_active_mods` the working set would be read as the file's
+    /// list and every rescan would look like an outside edit.
+    #[test]
+    fn a_rescanned_session_treats_the_files_own_list_as_acknowledged() {
+        let use_case = LoadProject::new(
+            FakeScanner::new(report_fixture(&["a", "b"]), Vec::new()),
+            InMemoryModsConfigStore::new(crate::ports::ModsConfigFile {
+                version: "1.6".to_string(),
+                active_mods: vec![ModId::new("a")],
+                known_expansions: Vec::new(),
+            }),
+            InMemoryDecisionStore::new(),
+            InMemoryRuleStore::new(),
+            InMemoryPatchProjectStore::new(),
+            InMemoryAssignmentProjectStore::new(),
+            FakeModKnowledgeStore::empty(),
+            true,
+        );
+        let working_set = vec![ModId::new("a"), ModId::new("b")];
+
+        let session = use_case
+            .execute_with_active_set(paths(), working_set, &mut |_| {})
+            .expect("load must succeed");
+
+        assert_eq!(
+            session.external_file_change(),
+            crate::ExternalFileChange::None
+        );
+        assert_eq!(session.file_baseline(), crate::FileBaseline::Fresh);
+        assert_eq!(session.file_active_mods(), [ModId::new("a")].as_slice());
+        let mut session = session;
+        assert_eq!(
+            session.pending_changes().unapplied.added,
+            [ModId::new("b")],
+            "the rescanned working set is unapplied work of our own"
+        );
+
+        use_case
+            .config_store
+            .set_file(crate::ports::ModsConfigFile {
+                version: "1.6".to_string(),
+                active_mods: vec![ModId::new("a"), ModId::new("z")],
+                known_expansions: Vec::new(),
+            });
+        crate::use_cases::RefreshFileBaseline::new(&use_case.config_store).execute(&mut session);
+        let pending = session.pending_changes();
+
+        assert_eq!(pending.unapplied.added, [ModId::new("b")]);
+        assert!(
+            pending.unapplied.removed.is_empty(),
+            "the outside z is not ours"
+        );
+    }
 }
