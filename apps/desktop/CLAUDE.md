@@ -202,7 +202,7 @@ of that command surface — no direct filesystem or process access outside
   (`apps/cli/tests/db_cli.rs`'s `seed_settings_every_source_disabled`
   is the established pattern this mirrors), never by faking the port.
 - **The working active-mod set has three tiers.** `working`
-  (uncommitted activate/deactivate edits), `scanned` (what the last
+  (uncommitted activate/deactivate/move edits), `scanned` (what the last
   `Rescan`/`load` saw — `list_mods` reads this tier, for patch scopes and
   rule pickers; the Mods page's `list_working_mods`/`list_inactive_mods`
   read `working`, so an activated mod is in Active at once as a
@@ -224,7 +224,29 @@ of that command surface — no direct filesystem or process access outside
   (`activate_mods`/`deactivate_mods`) changed the working set while the
   scan was running, and it refuses rather than silently discarding that
   change: `"the working active-mod set changed during the rescan;
-  rescan again"`.
+  rescan again"`. A `move_mods` during a scan changes that sequence, so it
+  makes the rescan refuse too. The tiers settle in two directions
+  (`crates/rim-session/CLAUDE.md`): an Apply (and a revert) makes `working`
+  follow Current, while an edit from the Mods page (`move_mods`,
+  `activate_mods`, `deactivate_mods`) that leaves the same ids makes Current
+  follow `working`, writing nothing; the file tier is untouched, so
+  `fileMatchesCurrent` turns false until an Apply. The commands
+  `move_mods`, `discard_pending_changes` and `revert_order_to_file` all emit
+  `session://changed` with `activeSetChanged`; `move_mods` also returns the
+  selection it left (`MoveModsResultDto`), because the first reorder while
+  Suggested is selected switches to Current, and the caller adopts it and
+  says so. An *anchored* `activate_mods` (an explicit drop position) switches
+  the same way and so returns `ActivateModsResultDto { pending, selected,
+  didSwitchToCurrent }`; an un-anchored one (the button) never switches.
+  `PendingActiveChangesDto.orderDiffersFromFile` is `!file_matches(Current)`: a
+  settled reorder changes no membership, so `unscanned`/`unapplied` are empty
+  for it and only this field (read by the close/project-switch guard, the
+  `OrderNotInFileNote` on the Mods page, and the export panels' install note)
+  shows it. `ModListDto.reorderable` is the backend's answer to "may this
+  list be reordered" (Active in load order, filters allowed); the frontend
+  never restates it from the sort. `ActivateRequestDto.anchor` is `null` for
+  the default placement. The mock (`scenario.ts`) mirrors all of it, except the `PreserveCurrent` re-sort of Suggested and a
+  mid-scan refusal, and is pinned by `e2e/specs/mods-reorder-mock.spec.ts`.
 - **The Apply dialog reads the merge mod only while it is open, gated by mounting.** Every page
   mounts an `ApplyDialog`, and on a freshly swapped session the `get_merge_mod` render replays
   every ledger entry (seconds) under the session lock. The query lives in children of the
@@ -270,12 +292,80 @@ of that command surface — no direct filesystem or process access outside
   all N shown" never re-implements a filter in Vue. A selected id a later filter
   hides stays selected and is counted ("N not shown"); Clear removes all. An
   *unfiltered* response is the whole list, so a selected id missing from it is
-  pruned (`ModListPane`'s watcher); under a filter it is only hidden. Selecting
+  pruned (`ModListPane`'s watcher); under a filter it is only hidden. The "(N not
+  shown)" brackets are part of the `mods.selection.notShown` message, never the
+  template, so a CJK locale can use full-width ones. Selecting
   writes nothing: the activate/deactivate plan and confirm dialogs are unchanged,
   and a failed plan opens the dialog with the error and no plan (Confirm
   disabled). The always-visible "Rescan mods" button (`ModsRescanButton.vue`) is
   `useRescanMutation`, so the `rescan_project` lock protocol and its refusal
   ("working set changed during the rescan") are unchanged.
+- **The Mods page is two side-by-side `ModListPane`s, and every position change
+  ends in an anchor.** Inactive left, Active right (`lg:` and up; stacked
+  below), each pane with its own filter (`useModListFilters`, one per list), sort
+  and selection, in a `grid` whose cells are `min-h-0` so each `ModTable` scroller
+  keeps the definite height the virtualizer needs. The list-level `data-testid`s
+  (`mod-table`, `mods-total`, `mods-search`, `mods-sort-*`, ...) now exist twice, so
+  tests scope them through the pane's `mods-pane-active|inactive` (`modsPane(page,
+  kind)` in `e2e/specs/support.ts`). *Anchors name a neighbour by id, never an index*
+  (`AnchorDto`, `utils/modMove.ts`): a drop gap, a one-step move and a "Move
+  after…" choice are all turned into `before`/`after` a **shown** row that is not
+  itself moving (`anchorForSlot`, `anchorForStep`), so a filtered view stays exact
+  and the backend refuses a stale neighbour (`move_anchor_not_active`: the page
+  toasts it and refreshes the lists). Never send a row index or a sorted-view
+  position. A reorder is gated on `ModListDto.reorderable` alone (the sort is never
+  re-checked in TypeScript): when it is false, drag over Active is refused, the Move
+  menu items are disabled with the reason in the menu, Alt+Arrow announces the
+  reason, and a note above the list says why. A mod dragged in from Inactive
+  still activates, with `anchor: null`.
+- **Drag and drop is native HTML5, with no dependency, and the page owns the
+  drag.** `useModReorder` holds the one `DragState` (source list, moving ids,
+  whether Core is among them) and answers `dropModeFor(list)`: `position` (a line
+  between rows, accepts), `pane` (accepts anywhere), `refused` (no `preventDefault`
+  on `dragover`, so the not-allowed cursor shows, plus the reason over the list) or
+  `off`. `ModTable` only reports `dragStart`/`dragEnd`/`drop(slot)` and draws the line
+  (a gap is `round(offsetY / 40)`, rows being a fixed 40px); it never decides what a
+  drop means. SortableJS-style libraries move DOM nodes the virtualizer owns, which is
+  why none is used. Edge auto-scroll is `useDragAutoScroll` (a frame loop fed by
+  `dragover`, `utils/dragScroll.ts` for the speed). The dragged set is the whole
+  selection when the dragged row is selected (`moveSetFor`), else that row. A drop
+  commits without a dialog only when the plan is exactly the dropped mods with no
+  warning (`isPlainActivation`/`isPlainDeactivation`); otherwise the same
+  Activate/Deactivate dialog opens and its confirm commits the same anchored
+  request (`useModActivation.activateAt`, `useModDeactivation.deactivateDropped`).
+  The buttons always open the dialog. Core is refused for Inactive by `source ===
+  "core"` of a shown dragged row; the backend plan refuses it too.
+- **Every move is announced through one always-mounted `role="status"` region**
+  (`mods-move-status` in `ModsPage.vue`), never a toast: "Moved X to position 14 of
+  312", read from the refreshed Active list after the mutation's invalidation has
+  landed (the position is the row's unfiltered `position`; the total is left out
+  under a filter, where `total` counts only the matches). Edge and
+  reorder-blocked answers use the same region. Keyboard: `Alt+ArrowUp/Down` on an
+  Active row goes through `ModTable.onMoveKey`, which checks `isInert` first
+  (`shortcutTargets.ts`: dialogs and text fields keep their keys) and runs *before* the
+  roving arrow handling, so a plain arrow still moves focus and an Alt+arrow never
+  does; after a keyboard or menu move the page puts focus back on the row
+  (`ModTable.focusRow`, exposed through `ModListPane`). The row's Move button
+  and the position picker (`ModPositionDialog`: "Move after…" and "Activate at…")
+  search the **working** list (`useWorkingModsQuery`), not `useModsQuery`
+  (`ModPicker`'s scanned tier), so a just-activated mod can be picked.
+- **A move adopts the backend's selection, and the page says so.** `useMoveModsMutation`
+  and `useActivateModsMutation` call `session.setSelected(result.selected)` the way
+  `useAdoptImportedSession` does, and `didSwitchToCurrent` raises
+  `OrderSwitchedNote` ("Now using your own order — the suggested order is unchanged
+  [View suggested]", gone once Suggested is selected again). `OrderNotInFileNote
+  allow-revert` adds "Revert order to ModsConfig.xml" on the Mods page (only for a
+  pure reorder: `orderDiffersFromFile` with nothing unscanned or unapplied by
+  membership); `PendingChangesBanner` carries "Discard pending changes". Their
+  refusals go through `utils/errors.ts` like every other command error.
+- **The mod info panel is a drawer unless the window is very wide.**
+  `ModsPage.vue` reads `useMediaQuery("(min-width: 1800px)")`: below it
+  `ModInfoPanel` is `fixed` over the right edge (`isOverlay`; Escape closes it from
+  anywhere except dialogs and text fields) and `followFocus` is off, since an arrow
+  key through a list must not pop a drawer over it; at or above it the panel is a
+  third column and follows focus as before. `SourceBadge`'s visible label is a
+  container query (`@lg:`) on the table, not a viewport breakpoint, because two lists
+  share the window.
 - **The Dashboard strip is derived, never stored.** `GuidedFlowStrip.vue`
   reads `utils/guidedFlow.ts`'s `guidedStep()` over five facts (the
   recommended-rules step's `rules` state, `selected`,
@@ -344,10 +434,14 @@ of that command surface — no direct filesystem or process access outside
   `PatchExportPanel.vue`/`AssignmentExportPanel.vue`
   both warn, once `install` is checked and the working set is
   unscanned-stale, that pending activation changes are not included: an
-  install-time export still writes `ModsConfig.xml`'s current order plus
-  the new package id while stale, silently omitting pending activation
-  changes rather than refusing — because install writes the *analysed*
-  order, not the working one.
+  install-time export still writes the session's *Current* order (the
+  analysed one, not the working one) plus the new package id, silently
+  omitting pending activation changes rather than refusing. They also warn,
+  with their own `unappliedOrderNote`, when `PendingActiveChangesDto.orderDiffersFromFile`
+  is true: Current is not in the file yet (a settled move, an import), and
+  install writes it, so an unapplied reorder reaches `ModsConfig.xml` with the
+  export. That is kept on purpose, as for an unapplied import; the warning is
+  the mitigation.
 - **The selected order is backend-led.** `load_project_inner` selects
   `INITIAL_ORDER_SOURCE` (Suggested, the desktop's own presentation
   default; `Session::new` stays on Current for the CLI) before the

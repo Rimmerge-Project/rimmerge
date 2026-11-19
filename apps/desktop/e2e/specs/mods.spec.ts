@@ -1,20 +1,23 @@
 import { expect, type Page, test } from "@playwright/test";
 // Type-only: pulls in `Window.__E2E_MOCK_IPC__`'s ambient declaration.
 import type {} from "../../src/e2e-mock-bootstrap";
-import { loadScenario } from "./support";
+import { loadScenario, modsPane } from "./support";
 
 type Ipc = Record<string, (payload?: unknown) => Promise<unknown>>;
 
 async function openModInfo(page: Page, modId: string): Promise<void> {
   await page.getByTestId("nav-mods").click();
-  await page.getByTestId("mods-search").fill(modId);
+  await modsPane(page, "active").getByTestId("mods-search").fill(modId);
   await page.getByTestId(`mod-row-${modId}`).click();
   await expect(page.getByTestId("mod-description")).toBeVisible();
 }
 
 /** The mod ids of the rendered (virtualized) table rows, in DOM order. */
-async function renderedRowIds(page: Page): Promise<string[]> {
-  return page
+async function renderedRowIds(
+  page: Page,
+  kind: "active" | "inactive" = "active",
+): Promise<string[]> {
+  return modsPane(page, kind)
     .getByTestId("mod-table")
     .locator('[role="row"]')
     .evaluateAll((rows) =>
@@ -35,9 +38,8 @@ test.describe("mods", () => {
     // Only the viewport is rendered, so assert the leading working-order prefix, not absence.
     expect(activeIds.slice(0, 3)).toEqual(["mod.000", "mod.001", "mod.002"]);
 
-    await page.getByTestId("mods-tab-inactive").click();
     await expect(page.getByTestId("mod-row-mod.901")).toBeVisible();
-    const inactiveIds = await renderedRowIds(page);
+    const inactiveIds = await renderedRowIds(page, "inactive");
     // Name order, A to Z: "Inactive Mod 10" sorts before "Inactive Mod 2", so it is not id order.
     expect(inactiveIds.slice(0, 3)).toEqual(["mod.901", "mod.910", "mod.902"]);
   });
@@ -63,7 +65,6 @@ test.describe("mods", () => {
       page.getByTestId("mod-row-mod.002").getByText("workshop", { exact: true }),
     ).toHaveCount(0);
 
-    await page.getByTestId("mods-tab-inactive").click();
     await expect(page.getByTestId("mod-row-mod.901")).toBeVisible();
     const inactiveBadge = (id: string) =>
       page.getByTestId(`mod-row-${id}`).getByTestId("source-badge");
@@ -75,10 +76,10 @@ test.describe("mods", () => {
     await loadScenario(page);
     await page.getByTestId("nav-mods").click();
     await expect(page).toHaveURL(/\/mods$/);
-    await expect(page.getByTestId("mod-table")).toBeVisible();
+    await expect(modsPane(page, "active").getByTestId("mod-table")).toBeVisible();
 
-    await page.getByTestId("mods-search").fill("Mod 20");
-    await expect(page.getByTestId("mods-total")).toHaveText("1 mod");
+    await modsPane(page, "active").getByTestId("mods-search").fill("Mod 20");
+    await expect(modsPane(page, "active").getByTestId("mods-total")).toHaveText("1 mod");
 
     await page.getByTestId("mod-row-mod.020").click();
 
@@ -114,7 +115,6 @@ test.describe("mods", () => {
   test("the Inactive tab resolves real names, not raw ids, and opens too", async ({ page }) => {
     await loadScenario(page);
     await page.getByTestId("nav-mods").click();
-    await page.getByTestId("mods-tab-inactive").click();
 
     const row = page.getByTestId("mod-row-mod.901");
     await expect(row).toContainText("Inactive Mod 1");
@@ -135,7 +135,7 @@ test.describe("mods", () => {
     // router guard back to `/setup`.
     await loadScenario(page);
     await page.getByTestId("nav-mods").click();
-    await page.getByTestId("mods-search").fill("Mod 0");
+    await modsPane(page, "active").getByTestId("mods-search").fill("Mod 0");
     await page.getByTestId("mod-row-mod.000").click();
     await expect(page).toHaveURL(/\/mods\/mod\.000$/);
 
@@ -153,7 +153,7 @@ test.describe("mods", () => {
   test("the panel's all-details link opens the full mod detail page", async ({ page }) => {
     await loadScenario(page);
     await page.getByTestId("nav-mods").click();
-    await page.getByTestId("mods-search").fill("Mod 0");
+    await modsPane(page, "active").getByTestId("mods-search").fill("Mod 0");
     await page.getByTestId("mod-row-mod.000").click();
     await expect(page).toHaveURL(/\/mods\/mod\.000$/);
 
@@ -168,7 +168,7 @@ test.describe("mods", () => {
   }) => {
     await loadScenario(page);
     await page.getByTestId("nav-mods").click();
-    await page.getByTestId("mods-search").fill("Mod 0");
+    await modsPane(page, "active").getByTestId("mods-search").fill("Mod 0");
     await page.getByTestId("mod-row-mod.000").click();
     await expect(page).toHaveURL(/\/mods\/mod\.000$/);
 
@@ -182,7 +182,7 @@ test.describe("mods", () => {
   test("closing the panel with Escape returns to the plain /mods list", async ({ page }) => {
     await loadScenario(page);
     await page.getByTestId("nav-mods").click();
-    await page.getByTestId("mods-search").fill("Mod 0");
+    await modsPane(page, "active").getByTestId("mods-search").fill("Mod 0");
     await page.getByTestId("mod-row-mod.000").click();
     await expect(page.getByTestId("mod-info-panel")).toBeVisible();
 
@@ -249,13 +249,11 @@ test.describe("mods", () => {
     await page.getByTestId("deactivate-confirm-submit").click();
     await expect(page.getByTestId("deactivate-confirm-dialog")).toBeHidden();
 
-    await page.getByTestId("mods-tab-inactive").click();
     await page.getByTestId("mod-row-select-mod.002").locator('input[type="checkbox"]').check();
     await page.getByTestId("activate-selected-button").click();
     await page.getByTestId("activate-confirm-submit").click();
     await expect(page.getByTestId("activate-confirm-dialog")).toBeHidden();
 
-    await page.getByTestId("mods-tab-active").click();
     await expect(page.getByTestId("mod-row-mod.002")).toBeVisible();
     expect((await renderedRowIds(page)).slice(0, 5)).toEqual(before);
     await expect(page.getByTestId("pending-changes-banner")).toHaveCount(0);

@@ -25,7 +25,11 @@ function mountTable(props: InstanceType<typeof ModTable>["$props"]) {
     // are actually in the document, which `moveFocus`'s own roving-focus
     // tests below rely on.
     attachTo: document.body,
-    global: { plugins: [createPinia(), PiniaColada, [PrimeVue, { theme: { preset: Aura } }]] },
+    global: {
+      plugins: [createPinia(), PiniaColada, [PrimeVue, { theme: { preset: Aura } }]],
+      // The row Move menu is a popup PrimeVue teleports to the body.
+      stubs: { teleport: true },
+    },
   });
   mountedWrappers.push(wrapper);
   return wrapper;
@@ -248,5 +252,307 @@ describe("ModTable", () => {
     await wrapper.get('[data-testid="mod-row-a"]').trigger("keydown", { key: " " });
 
     expect(wrapper.emitted("update:selectedIds")?.at(-1)).toEqual([["a"]]);
+  });
+
+  describe("dragging and dropping", () => {
+    const FOUR = ["a", "b", "c", "d"].map((modId) => modRow({ modId }));
+
+    /** A cancelable drag event at `clientY`, dispatched on `element`; returned to read `defaultPrevented`. */
+    function dragEvent(element: Element, type: string, clientY: number): Event {
+      const event = new Event(type, { bubbles: true, cancelable: true });
+      Object.defineProperty(event, "clientY", { value: clientY });
+      element.dispatchEvent(event);
+      return event;
+    }
+
+    it("makes rows draggable only when asked", async () => {
+      const off = mountTable({ mods: FOUR });
+      const on = mountTable({ mods: FOUR, draggable: true });
+      await flushPromises();
+
+      expect(off.get('[data-testid="mod-row-a"]').attributes("draggable")).toBe("false");
+      expect(on.get('[data-testid="mod-row-a"]').attributes("draggable")).toBe("true");
+    });
+
+    it("emits dragStart with the row's id and dragEnd when it ends", async () => {
+      const wrapper = mountTable({ mods: FOUR, draggable: true });
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-row-b"]').trigger("dragstart");
+      await wrapper.get('[data-testid="mod-row-b"]').trigger("dragend");
+
+      expect(wrapper.emitted("dragStart")).toEqual([["b"]]);
+      expect(wrapper.emitted("dragEnd")).toHaveLength(1);
+    });
+
+    it("shows a drop line in the gap nearest the pointer and accepts the drop there", async () => {
+      const wrapper = mountTable({ mods: FOUR, dropMode: "position" });
+      await flushPromises();
+      const table = wrapper.get('[data-testid="mod-table"]').element;
+
+      // 40px rows: y = 61 is nearest the gap after row 1 (slot 2).
+      const over = dragEvent(table, "dragover", 61);
+      await flushPromises();
+
+      expect(over.defaultPrevented).toBe(true);
+      expect(wrapper.get('[data-testid="mod-table-drop-indicator"]').attributes("data-slot")).toBe(
+        "2",
+      );
+
+      dragEvent(table, "drop", 61);
+      await flushPromises();
+      expect(wrapper.emitted("drop")).toEqual([[2]]);
+      expect(wrapper.find('[data-testid="mod-table-drop-indicator"]').exists()).toBe(false);
+    });
+
+    it("rounds the pointer to the gap above a row's top half and below its bottom half", async () => {
+      const wrapper = mountTable({ mods: FOUR, dropMode: "position" });
+      await flushPromises();
+      const table = wrapper.get('[data-testid="mod-table"]').element;
+
+      dragEvent(table, "drop", 19);
+      dragEvent(table, "drop", 21);
+      dragEvent(table, "drop", 9999);
+
+      expect(wrapper.emitted("drop")).toEqual([[0], [1], [4]]);
+    });
+
+    it("accepts a drop anywhere on a pane that has no order of its own, with no line", async () => {
+      const wrapper = mountTable({ mods: FOUR, dropMode: "pane" });
+      await flushPromises();
+      const table = wrapper.get('[data-testid="mod-table"]').element;
+
+      const over = dragEvent(table, "dragover", 50);
+      dragEvent(table, "drop", 50);
+
+      expect(over.defaultPrevented).toBe(true);
+      expect(wrapper.find('[data-testid="mod-table-drop-indicator"]').exists()).toBe(false);
+      expect(wrapper.emitted("drop")).toEqual([[4]]);
+    });
+
+    it("refuses a drag it must not take: no cancel, no drop, the reason shown", async () => {
+      const wrapper = mountTable({
+        mods: FOUR,
+        dropMode: "refused",
+        refusedText: "Core can't be deactivated.",
+      });
+      await flushPromises();
+      const table = wrapper.get('[data-testid="mod-table"]').element;
+
+      const over = dragEvent(table, "dragover", 50);
+      await flushPromises();
+      dragEvent(table, "drop", 50);
+
+      expect(over.defaultPrevented).toBe(false);
+      expect(wrapper.emitted("drop")).toBeUndefined();
+      expect(wrapper.get('[data-testid="mod-table-refused-text"]').text()).toBe(
+        "Core can't be deactivated.",
+      );
+    });
+
+    it("ignores a drag while none is in progress", async () => {
+      const wrapper = mountTable({ mods: FOUR, dropMode: "off" });
+      await flushPromises();
+      const table = wrapper.get('[data-testid="mod-table"]').element;
+
+      const over = dragEvent(table, "dragover", 50);
+      dragEvent(table, "drop", 50);
+
+      expect(over.defaultPrevented).toBe(false);
+      expect(wrapper.emitted("drop")).toBeUndefined();
+    });
+  });
+
+  describe("moving a row from the keyboard and the row menu", () => {
+    /** PrimeVue puts `aria-disabled` on the menu item the entry's link sits in. */
+    function isMenuItemDisabled(wrapper: ReturnType<typeof mountTable>, id: string): boolean {
+      const link = wrapper.get(`[data-testid="mod-move-${id}"]`).element;
+      return link.closest("li")?.getAttribute("aria-disabled") === "true";
+    }
+
+    const THREE = ["a", "b", "c"].map((modId) => modRow({ modId }));
+
+    it("Alt+ArrowUp and Alt+ArrowDown ask to move the row, and leave the roving focus alone", async () => {
+      const wrapper = mountTable({ mods: THREE, rowMenu: "move", selectable: true });
+      await flushPromises();
+
+      await wrapper
+        .get('[data-testid="mod-row-b"]')
+        .trigger("keydown", { key: "ArrowUp", altKey: true });
+      await wrapper
+        .get('[data-testid="mod-row-b"]')
+        .trigger("keydown", { key: "ArrowDown", altKey: true });
+
+      expect(wrapper.emitted("moveStep")).toEqual([
+        ["b", "up"],
+        ["b", "down"],
+      ]);
+      expect(wrapper.emitted("focusMod")).toBeUndefined();
+    });
+
+    it("plain arrows still move the roving focus and never ask to move the row", async () => {
+      const wrapper = mountTable({ mods: THREE, rowMenu: "move" });
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-row-a"]').trigger("keydown", { key: "ArrowDown" });
+
+      expect(wrapper.emitted("moveStep")).toBeUndefined();
+      expect(wrapper.emitted("focusMod")).toEqual([["b"]]);
+    });
+
+    it("does nothing on Alt+Arrow in a list with no Move menu", async () => {
+      const wrapper = mountTable({ mods: THREE, rowMenu: "activate" });
+      await flushPromises();
+
+      await wrapper
+        .get('[data-testid="mod-row-b"]')
+        .trigger("keydown", { key: "ArrowUp", altKey: true });
+
+      expect(wrapper.emitted("moveStep")).toBeUndefined();
+      expect(wrapper.emitted("focusMod")).toBeUndefined();
+    });
+
+    it("leaves Alt+Arrow to a text field or dialog inside the row (the inert rule)", async () => {
+      const wrapper = mountTable({ mods: THREE, rowMenu: "move", selectable: true });
+      await flushPromises();
+
+      await wrapper
+        .get('[data-testid="mod-row-select-b"] input[type="checkbox"]')
+        .trigger("keydown", { key: "ArrowUp", altKey: true });
+
+      expect(wrapper.emitted("moveStep")).toBeUndefined();
+    });
+
+    it("goes straight to Activate at from an inactive row's button", async () => {
+      const wrapper = mountTable({ mods: THREE, rowMenu: "activate" });
+      await flushPromises();
+
+      const button = wrapper.get('[data-testid="mod-row-menu-b"]');
+      expect(button.attributes("aria-label")).toBe("Activate b at…");
+      await button.trigger("click");
+
+      expect(wrapper.emitted("menuAction")).toEqual([["b", "activateAt"]]);
+      expect(wrapper.emitted("selectMod")).toBeUndefined();
+    });
+
+    it("opens a Move menu from an active row's button without opening the mod", async () => {
+      const wrapper = mountTable({ mods: THREE, rowMenu: "move" });
+      await flushPromises();
+
+      expect(wrapper.get('[data-testid="mod-row-menu-b"]').attributes("aria-label")).toBe("Move b");
+      await wrapper.get('[data-testid="mod-row-menu-b"]').trigger("click");
+      await flushPromises();
+
+      const texts = wrapper.findAll('[data-testid^="mod-move-"]').map((item) => item.text());
+      expect(texts).toEqual(
+        expect.arrayContaining([
+          "Move up",
+          "Move down",
+          "Move to top",
+          "Move to bottom",
+          "Move after…",
+        ]),
+      );
+      expect(wrapper.emitted("selectMod")).toBeUndefined();
+    });
+
+    it("emits the chosen menu entry", async () => {
+      const wrapper = mountTable({ mods: THREE, rowMenu: "move" });
+      await flushPromises();
+      await wrapper.get('[data-testid="mod-row-menu-b"]').trigger("click");
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-move-top"]').trigger("click");
+      await wrapper.get('[data-testid="mod-row-menu-b"]').trigger("click");
+      await flushPromises();
+      await wrapper.get('[data-testid="mod-move-up"]').trigger("click");
+
+      expect(wrapper.emitted("menuAction")).toEqual([["b", "top"]]);
+      expect(wrapper.emitted("moveStep")).toEqual([["b", "up"]]);
+    });
+
+    it("keeps the row buttons out of the Tab order, one stop per row", async () => {
+      const wrapper = mountTable({ mods: THREE, rowMenu: "move" });
+      await flushPromises();
+
+      expect(wrapper.get('[data-testid="mod-row-menu-b"]').attributes("tabindex")).toBe("-1");
+    });
+
+    it.each([
+      ["ContextMenu", { key: "ContextMenu" }],
+      ["Shift+F10", { key: "F10", shiftKey: true }],
+    ])("opens a row's Move menu from the %s key", async (_name, key) => {
+      const wrapper = mountTable({ mods: THREE, rowMenu: "move" });
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-row-b"]').trigger("keydown", key);
+      await flushPromises();
+
+      expect(wrapper.find('[data-testid="mod-move-top"]').exists()).toBe(true);
+      await wrapper.get('[data-testid="mod-move-top"]').trigger("click");
+      expect(wrapper.emitted("menuAction")).toEqual([["b", "top"]]);
+    });
+
+    it("goes to Activate at from the menu key on an inactive row", async () => {
+      const wrapper = mountTable({ mods: THREE, rowMenu: "activate" });
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-row-b"]').trigger("keydown", { key: "ContextMenu" });
+
+      expect(wrapper.emitted("menuAction")).toEqual([["b", "activateAt"]]);
+    });
+
+    it("leaves a plain F10 and a list with no row menu alone", async () => {
+      const wrapper = mountTable({ mods: THREE, rowMenu: "move" });
+      const bare = mountTable({ mods: THREE });
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-row-b"]').trigger("keydown", { key: "F10" });
+      await bare.get('[data-testid="mod-row-b"]').trigger("keydown", { key: "ContextMenu" });
+      await flushPromises();
+
+      expect(wrapper.find('[data-testid="mod-move-top"]').exists()).toBe(false);
+      expect(bare.emitted("menuAction")).toBeUndefined();
+    });
+
+    it("leaves the menu key to a text field or dialog inside the row (the inert rule)", async () => {
+      const wrapper = mountTable({ mods: THREE, rowMenu: "activate", selectable: true });
+      await flushPromises();
+
+      await wrapper
+        .get('[data-testid="mod-row-select-b"] input[type="checkbox"]')
+        .trigger("keydown", { key: "ContextMenu" });
+
+      expect(wrapper.emitted("menuAction")).toBeUndefined();
+    });
+
+    it("disables a step off the first row", async () => {
+      const wrapper = mountTable({ mods: THREE, rowMenu: "move" });
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-row-menu-a"]').trigger("click");
+      await flushPromises();
+
+      expect(isMenuItemDisabled(wrapper, "up")).toBe(true);
+      expect(isMenuItemDisabled(wrapper, "down")).toBe(false);
+    });
+
+    it("disables every move and says why while reordering is off", async () => {
+      const wrapper = mountTable({
+        mods: THREE,
+        rowMenu: "move",
+        reorderBlockedReason: "Sort by load order to move mods.",
+      });
+      await flushPromises();
+      await wrapper.get('[data-testid="mod-row-menu-b"]').trigger("click");
+      await flushPromises();
+
+      for (const id of ["up", "down", "top", "bottom", "after"]) {
+        expect(isMenuItemDisabled(wrapper, id)).toBe(true);
+      }
+      expect(wrapper.get('[data-testid="mod-move-menu-reason"]').text()).toBe(
+        "Sort by load order to move mods.",
+      );
+    });
   });
 });

@@ -7,8 +7,10 @@
 import type {} from "../../src/e2e-mock-bootstrap";
 import type { IpcFixtures } from "../../src/services/ipc.mock";
 import type { ActionDto } from "../../src/types/generated/ActionDto";
+import type { ActivateModsResultDto } from "../../src/types/generated/ActivateModsResultDto";
 import type { ActivateRequestDto } from "../../src/types/generated/ActivateRequestDto";
 import type { AddAssignmentSectionRequestDto } from "../../src/types/generated/AddAssignmentSectionRequestDto";
+import type { AnchorDto } from "../../src/types/generated/AnchorDto";
 import type { AppConfigDto } from "../../src/types/generated/AppConfigDto";
 import type { AppLinkTargetDto } from "../../src/types/generated/AppLinkTargetDto";
 import type { ApplyPreflightDto } from "../../src/types/generated/ApplyPreflightDto";
@@ -65,6 +67,8 @@ import type { MergeStateDto } from "../../src/types/generated/MergeStateDto";
 import type { MissingKindDto } from "../../src/types/generated/MissingKindDto";
 import type { ModCostRowDto } from "../../src/types/generated/ModCostRowDto";
 import type { ModLinkKindDto } from "../../src/types/generated/ModLinkKindDto";
+import type { MoveModsResultDto } from "../../src/types/generated/MoveModsResultDto";
+import type { MoveRequestDto } from "../../src/types/generated/MoveRequestDto";
 import type { NotificationDto } from "../../src/types/generated/NotificationDto";
 import type { NotificationKeyDto } from "../../src/types/generated/NotificationKeyDto";
 import type { NotificationKindDto } from "../../src/types/generated/NotificationKindDto";
@@ -202,6 +206,12 @@ declare global {
     __ACTIVATE_CALLS__?: ActivateRequestDto[];
     /** Every `deactivate_mods` payload the mock received, in order — for the active-set spec. */
     __DEACTIVATE_CALLS__?: DeactivateRequestDto[];
+    /** Every `move_mods` payload the mock received, in order — for the reorder specs. */
+    __MOVE_MODS_CALLS__?: MoveRequestDto[];
+    /** How many times `discard_pending_changes` was called. */
+    __DISCARD_PENDING_CALLS__?: number;
+    /** How many times `revert_order_to_file` was called. */
+    __REVERT_ORDER_CALLS__?: number;
     /** Every `list_working_mods` query the mock received, in order — for the mods sort spec. */
     __LIST_WORKING_MODS_CALLS__?: RecordedModListQuery[];
     /** Every `list_inactive_mods` query the mock received, in order — for the mods sort spec. */
@@ -3204,22 +3214,111 @@ export function installScenario(): void {
     ]);
   }
 
+  /** Whether working and Current hold exactly the same ids. */
+  function workingHasCurrentMembers(): boolean {
+    const current = currentIdSet();
+    return (
+      current.size === workingActiveIds.size && [...current].every((id) => workingActiveIds.has(id))
+    );
+  }
+
+  /** Replaces the working set's sequence (a `Set` keeps insertion order). */
+  function setWorkingOrder(ids: readonly string[]): void {
+    workingActiveIds.clear();
+    for (const id of ids) workingActiveIds.add(id);
+  }
+
   /**
-   * `Session::settle_working`: when working and Current hold the same ids, working takes
-   * Current's sequence. A working set with pending membership edits keeps its own.
+   * `Session::settle_current_onto_working`, the edit direction: after a Mods-page edit, when
+   * working and Current hold the same ids, Current takes working's sequence. Nothing is written
+   * (`fileOrder` is untouched). The mock does not mirror the `PreserveCurrent` re-sort of Suggested, as its fixed Suggested
+   * order stands in for the sorter.
+   */
+  function settleCurrentOntoWorking(): void {
+    if (!workingHasCurrentMembers()) return;
+    const next = [...workingActiveIds].filter((id) => !omittedFromCurrentOrder.includes(id));
+    currentOrder.splice(0, currentOrder.length, ...next);
+  }
+
+  /**
+   * `Session::settle_working_onto_current`, the file-truth direction (Apply, a revert): when
+   * working and Current hold the same ids, working takes Current's sequence. A working set with
+   * pending membership edits keeps its own.
    */
   function settleWorking(): void {
-    const current = currentIdSet();
-    const hasSameIds =
-      current.size === workingActiveIds.size &&
-      [...current].every((id) => workingActiveIds.has(id));
-    if (!hasSameIds) return;
+    if (!workingHasCurrentMembers()) return;
     const settled = [
       ...currentOrder,
       ...[...workingActiveIds].filter((id) => !currentOrder.includes(id)),
     ];
-    workingActiveIds.clear();
-    for (const id of settled) workingActiveIds.add(id);
+    setWorkingOrder(settled);
+  }
+
+  /**
+   * `insertion_index`: where a block placed at `anchor` starts among `ids`. A neighbour no longer
+   * in the list is refused with its own code, never clamped.
+   */
+  function anchorIndex(ids: readonly string[], anchor: AnchorDto): number {
+    switch (anchor.kind) {
+      case "start":
+        return 0;
+      case "end":
+        return ids.length;
+      case "before":
+      case "after": {
+        const at = ids.indexOf(anchor.modId);
+        if (at === -1) {
+          throw {
+            code: "move_anchor_not_active",
+            message: `${anchor.modId} is not active, so nothing can be placed next to it`,
+          };
+        }
+        return anchor.kind === "before" ? at : at + 1;
+      }
+      default: {
+        const unreachable: never = anchor;
+        throw new Error(`unhandled anchor ${JSON.stringify(unreachable)}`);
+      }
+    }
+  }
+
+  /**
+   * `ActivateMods::execute` / `execute_at`: with an anchor the whole plan goes in as one block
+   * there; without one a mod that has a slot in Current goes right after its nearest Current
+   * predecessor that is active (or at the start), any other mod to the end. A mod whose declared
+   * dependency the same plan placed never lands before it (it goes right after the dependency).
+   */
+  function placeActivated(toAdd: readonly string[], anchor: AnchorDto | null): void {
+    const working = [...workingActiveIds];
+    if (anchor !== null) {
+      working.splice(anchorIndex(working, anchor), 0, ...toAdd);
+    } else {
+      toAdd.forEach((id) => {
+        const slot = currentOrder.indexOf(id);
+        let at = working.length;
+        if (slot !== -1) {
+          const predecessors = currentOrder
+            .slice(0, slot)
+            .reverse()
+            .map((candidate) => working.indexOf(candidate))
+            .filter((index) => index !== -1);
+          at = predecessors.length === 0 ? 0 : (predecessors[0] ?? 0) + 1;
+        }
+        const dependencies = inactiveMods.find((mod) => mod.modId === id)?.dependsOn ?? [];
+        // The floor is after every declared dependency in the list by now: one this call
+        // placed earlier or one that was already active (`after_declared_dependencies`).
+        const floor = Math.max(
+          0,
+          ...dependencies
+            .map((dependency) => working.indexOf(dependency))
+            .filter((position) => position !== -1)
+            .map((position) => position + 1),
+        );
+        working.splice(Math.max(at, floor), 0, id);
+      });
+    }
+    setWorkingOrder(working);
+    settleCurrentOntoWorking();
   }
 
   // The Databases
@@ -4633,7 +4732,12 @@ export function installScenario(): void {
           : requested;
     const isLoadOrder = sort.key === "loadOrder" && sort.direction === "ascending";
     const ordered = isLoadOrder ? matching : sortModListRows(matching, sort);
-    return { total: ordered.length, items: ordered.slice(0, MAX_MOD_LIST_ROWS) };
+    return {
+      total: ordered.length,
+      items: ordered.slice(0, MAX_MOD_LIST_ROWS),
+      // `ModList::reorderable`: the Active list in its own load order; a filter keeps it on.
+      reorderable: which === "working" && isLoadOrder,
+    };
   }
 
   /**
@@ -4661,6 +4765,8 @@ export function installScenario(): void {
     return {
       unscanned: activeSetDiff(workingActiveIds, scannedActiveIds),
       unapplied: activeSetDiff(scannedActiveIds, fileActiveIds),
+      // A settled reorder changes no membership: only the sequence differs from the file.
+      orderDiffersFromFile: !sameOrderIgnoringMergeMod(currentOrder, fileOrder),
     };
   }
 
@@ -6297,6 +6403,9 @@ export function installScenario(): void {
   window.__LIST_WORKING_MODS_CALLS__ = [];
   window.__LIST_INACTIVE_MODS_CALLS__ = [];
   window.__DEACTIVATE_CALLS__ = [];
+  window.__MOVE_MODS_CALLS__ = [];
+  window.__DISCARD_PENDING_CALLS__ = 0;
+  window.__REVERT_ORDER_CALLS__ = 0;
   window.__RESCAN_CALLS__ = 0;
   window.__OPEN_MOD_LINK_CALLS__ = [];
   window.__OPEN_APP_LINK_CALLS__ = [];
@@ -7307,15 +7416,86 @@ export function installScenario(): void {
     },
     plan_activate_mods: (payload: unknown) => {
       const request = (payload as { request: ActivateRequestDto }).request;
+      // A stale anchor is refused at plan time too, as the real command does.
+      if (request.anchor !== null) anchorIndex([...workingActiveIds], request.anchor);
       return planActivateMods(request.ids, request.withDependencies);
     },
-    activate_mods: (payload: unknown) => {
+    activate_mods: (payload: unknown): ActivateModsResultDto => {
       const request = (payload as { request: ActivateRequestDto }).request;
       window.__ACTIVATE_CALLS__?.push(request);
       const plan = planActivateMods(request.ids, request.withDependencies);
-      for (const id of plan.toAdd) {
-        workingActiveIds.add(id);
+      placeActivated(plan.toAdd, request.anchor);
+      // `ActivateMods::execute_at`: an explicit drop position, like a move, switches a selected
+      // Suggested to Current when it added something. An un-anchored activation never does.
+      const didSwitchToCurrent =
+        request.anchor !== null && plan.toAdd.length > 0 && selected === "suggested";
+      if (didSwitchToCurrent) selected = "current";
+      return { pending: pendingActiveChanges(), selected, didSwitchToCurrent };
+    },
+    move_mods: (payload: unknown): MoveModsResultDto => {
+      const request = (payload as { request: MoveRequestDto }).request;
+      window.__MOVE_MODS_CALLS__?.push(request);
+      const requested = new Set<string>();
+      for (const id of request.ids) {
+        if (requested.has(id)) {
+          throw { code: "invalid_input", message: `${id} was listed more than once` };
+        }
+        if (!workingActiveIds.has(id)) {
+          throw { code: "invalid_input", message: `${id} is not active, so it cannot be moved` };
+        }
+        requested.add(id);
       }
+      const { anchor } = request;
+      if ((anchor.kind === "before" || anchor.kind === "after") && requested.has(anchor.modId)) {
+        throw {
+          code: "invalid_input",
+          message: `${anchor.modId} is one of the mods being moved, so it cannot be the anchor`,
+        };
+      }
+      // `ActiveSet::move_to`: the moved block keeps the ids' relative order in the list.
+      const working = [...workingActiveIds];
+      const moved = working.filter((id) => requested.has(id));
+      const remaining = working.filter((id) => !requested.has(id));
+      const at = anchorIndex(remaining, anchor);
+      const next = [...remaining.slice(0, at), ...moved, ...remaining.slice(at)];
+      const hasChanged = next.some((id, index) => id !== working[index]);
+      if (!hasChanged) return { selected, didSwitchToCurrent: false };
+      setWorkingOrder(next);
+      settleCurrentOntoWorking();
+      // `MoveMods`: the first reorder while Suggested is selected switches to Current.
+      const didSwitchToCurrent = selected === "suggested";
+      if (didSwitchToCurrent) selected = "current";
+      return { selected, didSwitchToCurrent };
+    },
+    discard_pending_changes: () => {
+      window.__DISCARD_PENDING_CALLS__ = (window.__DISCARD_PENDING_CALLS__ ?? 0) + 1;
+      // `working := Current`: Current's ids in Current's sequence (its scanned omissions last).
+      setWorkingOrder([
+        ...currentOrder,
+        ...omittedFromCurrentOrder.filter((id) => scannedActiveIds.has(id)),
+      ]);
+      return pendingActiveChanges();
+    },
+    revert_order_to_file: () => {
+      window.__REVERT_ORDER_CALLS__ = (window.__REVERT_ORDER_CALLS__ ?? 0) + 1;
+      const { unscanned } = pendingActiveChanges();
+      if (unscanned.added.length > 0 || unscanned.removed.length > 0) {
+        throw {
+          code: "revert_order_pending_changes",
+          message: "the active list has changes that were not scanned yet",
+        };
+      }
+      const hasSameMods =
+        currentOrder.length === fileOrder.length &&
+        currentOrder.every((id) => fileOrder.includes(id));
+      if (!hasSameMods) {
+        throw {
+          code: "revert_order_membership_differs",
+          message: "the file lists different mods than the current order",
+        };
+      }
+      // `Session::set_current_order(file sequence)`: Current, then working, take the file's order.
+      currentOrder.splice(0, currentOrder.length, ...fileOrder);
       settleWorking();
       return pendingActiveChanges();
     },
@@ -7330,7 +7510,7 @@ export function installScenario(): void {
       for (const id of plan.toRemove) {
         workingActiveIds.delete(id);
       }
-      settleWorking();
+      settleCurrentOntoWorking();
       return pendingActiveChanges();
     },
     get_pending_active_changes: () => pendingActiveChanges(),

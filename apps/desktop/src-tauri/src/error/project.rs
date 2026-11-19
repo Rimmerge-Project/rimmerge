@@ -38,6 +38,38 @@ impl From<rim_session::ActiveSetError> for CommandError {
     }
 }
 
+impl From<rim_session::MoveError> for CommandError {
+    /// A stale anchor is the one refusal the interface can recover from
+    /// (show the list again), so it has its own code. Every other variant
+    /// is a request that no screen can build (a repeated id, a mover that
+    /// is not active, an unknown mod): `invalid_input`.
+    fn from(error: rim_session::MoveError) -> Self {
+        use rim_session::MoveError as E;
+        let message = error.to_string();
+        match error {
+            E::AnchorNotActive(_) => Self::new(CommandErrorCode::MoveAnchorNotActive, message),
+            E::AnchorInMovedSet(_) | E::NotActive(_) | E::Duplicate(_) | E::Unknown(_) => {
+                Self::invalid_input(message)
+            }
+        }
+    }
+}
+
+impl From<rim_session::use_cases::RevertOrderError> for CommandError {
+    fn from(error: rim_session::use_cases::RevertOrderError) -> Self {
+        use rim_session::use_cases::RevertOrderError as E;
+        let message = error.to_string();
+        match error {
+            E::PendingScanChanges => {
+                Self::new(CommandErrorCode::RevertOrderPendingChanges, message)
+            }
+            E::MembershipDiffers => {
+                Self::new(CommandErrorCode::RevertOrderMembershipDiffers, message)
+            }
+        }
+    }
+}
+
 impl From<rim_session::use_cases::LoadProjectError> for CommandError {
     fn from(error: rim_session::use_cases::LoadProjectError) -> Self {
         use rim_session::use_cases::LoadProjectError as E;

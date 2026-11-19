@@ -27,6 +27,7 @@ import type { RecommendedRulesStepDto } from "@/types/generated/RecommendedRules
 const STALE: PendingActiveChangesDto = {
   unscanned: { added: ["new.mod"], removed: [] },
   unapplied: { added: [], removed: [] },
+  orderDiffersFromFile: false,
 };
 
 function dashboard(overrides: Partial<DashboardDto> = {}): DashboardDto {

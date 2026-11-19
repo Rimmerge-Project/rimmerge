@@ -16,4 +16,10 @@ unscanned: ActiveSetDiffDto,
 /**
  * The last scan's own active list vs. `ModsConfig.xml` on disk.
  */
-unapplied: ActiveSetDiffDto, };
+unapplied: ActiveSetDiffDto, 
+/**
+ * The current order lists the file's mods in another sequence: a
+ * settled reorder that an Apply would write. `unapplied` is a
+ * membership diff and stays empty for it.
+ */
+orderDiffersFromFile: boolean, };

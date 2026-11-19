@@ -147,10 +147,16 @@ pub struct ModList {
     pub total: usize,
     /// The rows, in list order.
     pub items: Vec<ModListRow>,
+    /// Whether the rows may be reordered through this view: the Active list
+    /// shown in its own load order. A search or filter keeps it on (a move
+    /// is anchored to a visible neighbour's id, so it stays exact); another
+    /// sort turns it off, since a row's place on screen is then not its
+    /// place in the load order. Always `false` for the Inactive list.
+    pub reorderable: bool,
 }
 
 impl ModList {
-    fn from_rows(rows: impl Iterator<Item = ModListRow>) -> Self {
+    fn from_rows(rows: impl Iterator<Item = ModListRow>, reorderable: bool) -> Self {
         let mut total = 0;
         let mut items = Vec::new();
         for row in rows {
@@ -159,7 +165,11 @@ impl ModList {
                 items.push(row);
             }
         }
-        Self { total, items }
+        Self {
+            total,
+            items,
+            reorderable,
+        }
     }
 }
 
@@ -318,7 +328,7 @@ pub(crate) fn working_list(
     if !sort.is_load_order() {
         sort_rows(&mut rows, sort);
     }
-    ModList::from_rows(rows.into_iter())
+    ModList::from_rows(rows.into_iter(), sort.is_load_order())
 }
 
 /// The Inactive list: every mod found on disk whose base id is not in
@@ -356,7 +366,7 @@ pub(crate) fn inactive_list(
         Some(_) | None => ListSort::INACTIVE_DEFAULT,
     };
     sort_rows(&mut rows, sort);
-    ModList::from_rows(rows.into_iter())
+    ModList::from_rows(rows.into_iter(), false)
 }
 
 #[cfg(test)]
@@ -391,6 +401,51 @@ mod tests {
 
     fn working(ids: &[&str]) -> ActiveSet {
         ActiveSet::trusted(ids.iter().map(|id| ModId::new(*id)).collect())
+    }
+
+    #[test]
+    fn the_active_list_is_reorderable_only_in_load_order_and_filters_keep_it_on() {
+        let report = ReportBuilder::new().mod_("a").mod_("b").build();
+        let tagging = Tagging::default();
+        let set = working(&["a", "b"]);
+        let by_name = ModListQuery {
+            sort: Some(ListSort {
+                key: ListSortKey::Name,
+                direction: SortDirection::Ascending,
+            }),
+            ..ModListQuery::default()
+        };
+        let descending_load_order = ModListQuery {
+            sort: Some(ListSort {
+                key: ListSortKey::LoadOrder,
+                direction: SortDirection::Descending,
+            }),
+            ..ModListQuery::default()
+        };
+        let searching = ModListQuery {
+            search: Some("a".to_string()),
+            ..ModListQuery::default()
+        };
+
+        assert!(working_list(&report, &tagging, &set, &ModListQuery::default()).reorderable);
+        assert!(working_list(&report, &tagging, &set, &searching).reorderable);
+        assert!(!working_list(&report, &tagging, &set, &by_name).reorderable);
+        assert!(!working_list(&report, &tagging, &set, &descending_load_order).reorderable);
+    }
+
+    #[test]
+    fn the_inactive_list_is_never_reorderable() {
+        let report = ReportBuilder::new().mod_("a").inactive("x").build();
+        let tagging = Tagging::default();
+
+        let list = inactive_list(
+            &report,
+            &tagging,
+            &working(&["a"]),
+            &ModListQuery::default(),
+        );
+
+        assert!(!list.reorderable);
     }
 
     #[test]

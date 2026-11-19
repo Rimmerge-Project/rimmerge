@@ -30,7 +30,7 @@ impl DeactivateMods {
     /// what was actually removed.
     pub fn execute(session: &mut Session, plan: &DeactivatePlan) -> Vec<ModId> {
         let removed = session.working_mut().deactivate(&plan.to_remove);
-        session.settle_working();
+        session.settle_current_onto_working();
         removed
     }
 }

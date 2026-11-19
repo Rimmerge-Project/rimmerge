@@ -6,8 +6,20 @@
 use rim_analyzer::domain::ModId;
 
 use crate::Session;
-use crate::active_set::{ActivatePlan, ActiveSetError, plan_activate};
+use crate::active_set::{ActivatePlan, ActiveSetError, Anchor, MoveError, plan_activate};
 use crate::mod_inventory::ModInventory;
+
+/// What a successful [`ActivateMods::execute_at`] did.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ActivateOutcome {
+    /// The ids inserted, dependencies first.
+    pub activated: Vec<ModId>,
+    /// The drop changed the working sequence while Suggested was selected,
+    /// so the selection is now Current, exactly as for a
+    /// [`crate::use_cases::MoveMods`]: an explicit drop position is the
+    /// user's own order. The caller tells the user.
+    pub did_switch_to_current: bool,
+}
 
 /// Plans and commits activating one or more mods onto
 /// [`Session::working`].
@@ -25,12 +37,16 @@ impl ActivateMods {
         plan_activate(session.working(), &inventory, ids, with_dependencies)
     }
 
-    /// Commits `plan.to_add` onto `session`'s working set. Validates every
-    /// id against the current report before mutating anything (via
-    /// [`crate::ActiveSet::activate`]), so an id that has gone unknown
-    /// since [`Self::plan`] built this plan (a stale plan reused after a
-    /// rescan, say) leaves the working set untouched rather than partially
-    /// applied.
+    /// Commits `plan.to_add` onto `session`'s working set with no anchor: a
+    /// mod that has a slot in Current goes back to it (right after its
+    /// nearest Current predecessor that is active, or at the start), any
+    /// other mod goes to the end. Deactivating a mod and activating it again
+    /// therefore leaves Current as it was. Validates every id against the
+    /// current report before mutating anything, so an id that has gone
+    /// unknown since [`Self::plan`] built this plan (a stale plan reused
+    /// after a rescan, say) leaves the working set untouched rather than
+    /// partially applied. Then settles Current onto `working` when their
+    /// ids are equal (`Session::settle_current_onto_working`).
     ///
     /// # Errors
     ///
@@ -41,11 +57,43 @@ impl ActivateMods {
         plan: &ActivatePlan,
     ) -> Result<Vec<ModId>, ActiveSetError> {
         let inventory = ModInventory::from_report(session.report());
-        let activated = session
-            .working_mut()
-            .activate(plan.to_add.clone(), &inventory)?;
-        session.settle_working();
+        let reference = session.orders().current.as_slice().to_vec();
+        let activated = session.working_mut().activate_at_reference_slots(
+            plan.to_add.clone(),
+            &reference,
+            &inventory,
+        )?;
+        session.settle_current_onto_working();
         Ok(activated)
+    }
+
+    /// [`Self::execute`] with an anchor: `plan.to_add` goes in as one block
+    /// (dependencies first) at `anchor`. Validated before anything changes.
+    /// Unlike [`Self::execute`], an explicit position also switches a
+    /// selected Suggested to Current when the working sequence changed (see
+    /// [`ActivateOutcome::did_switch_to_current`]).
+    ///
+    /// # Errors
+    ///
+    /// [`MoveError::Unknown`] for an id the report does not know,
+    /// [`MoveError::AnchorNotActive`] for a stale anchor.
+    pub fn execute_at(
+        session: &mut Session,
+        plan: &ActivatePlan,
+        anchor: &Anchor,
+    ) -> Result<ActivateOutcome, MoveError> {
+        let inventory = ModInventory::from_report(session.report());
+        let activated =
+            session
+                .working_mut()
+                .activate_at(plan.to_add.clone(), anchor, &inventory)?;
+        session.settle_current_onto_working();
+        let did_switch_to_current =
+            !activated.is_empty() && session.switch_to_current_after_reorder();
+        Ok(ActivateOutcome {
+            activated,
+            did_switch_to_current,
+        })
     }
 }
 

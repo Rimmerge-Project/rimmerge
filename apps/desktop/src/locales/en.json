@@ -575,6 +575,18 @@
       "nothing_to_export": {
         "title": "Nothing to export",
         "detail": "No active mod could be listed. Check the active mods in ModsConfig.xml."
+      },
+      "move_anchor_not_active": {
+        "title": "That mod is no longer in the active list",
+        "detail": "The mod you dropped next to was deactivated or moved away, so nothing was changed. The list has been refreshed; try the move again."
+      },
+      "revert_order_pending_changes": {
+        "title": "Discard your pending changes first",
+        "detail": "The active list has changes that haven't been scanned yet. Discard them or rescan, then revert the order."
+      },
+      "revert_order_membership_differs": {
+        "title": "The file lists different mods",
+        "detail": "ModsConfig.xml lists other mods than the current order, so there is no order to go back to. Use the file's list instead, or apply your own."
       }
     }
   },
@@ -1180,6 +1192,7 @@
       "chooseButton": "Choose…",
       "installCheckboxLabel": "Install into Mods and activate",
       "staleActiveSetNote": "Pending activation changes are not included — rescan first if you want them in this install.",
+      "unappliedOrderNote": "Install writes your current order, which is not applied yet.",
       "forceWarning": "RimWorldWin64.exe looks like it's running. Installing now writes ModsConfig.xml, which the game overwrites when it exits, so the change may be lost. Export anyway?",
       "exportAnyway": "Export anyway",
       "export": "Export",
@@ -1276,7 +1289,8 @@
       "unapplied": "{count} change not yet applied to ModsConfig.xml | {count} changes not yet applied to ModsConfig.xml",
       "rescanButton": "Rescan",
       "rescanFinishedToast": "Rescan finished with {count} note | Rescan finished with {count} notes",
-      "rescannedWithWarningsToast": "Rescanned with warnings"
+      "rescannedWithWarningsToast": "Rescanned with warnings",
+      "discardButton": "Discard pending changes"
     },
     "closeGuard": {
       "header": "Unsaved active-mod changes",
@@ -1308,8 +1322,8 @@
     },
     "page": {
       "heading": "Mods",
-      "activeTab": "Active",
-      "inactiveTab": "Inactive",
+      "activeHeading": "Active",
+      "inactiveHeading": "Inactive",
       "searchPlaceholder": "Search mods…",
       "tagFilterPlaceholder": "Filter by tag…",
       "sourcePlaceholder": "Source",
@@ -1332,7 +1346,9 @@
       "dependentsStillActive": "{count} active mod still depends on {mod}: {deps}. | {count} active mods still depend on {mod}: {deps}.",
       "deactivatedToast": "Deactivated",
       "deactivateButton": "Deactivate",
-      "rescanButton": "Rescan mods"
+      "rescanButton": "Rescan mods",
+      "searchActiveLabel": "Search the active mods",
+      "searchInactiveLabel": "Search the inactive mods"
     },
     "defSearch": {
       "ariaLabel": "Jump to a def",
@@ -1342,8 +1358,37 @@
       "selectAllShown": "Select all {count} shown | Select all {count} shown",
       "selectAllEmpty": "Select all",
       "selectedCount": "{count} selected | {count} selected",
-      "notShown": "{count} not shown | {count} not shown",
+      "notShown": "({count} not shown) | ({count} not shown)",
       "clear": "Clear selection"
+    },
+    "move": {
+      "up": "Move up",
+      "down": "Move down",
+      "top": "Move to top",
+      "bottom": "Move to bottom",
+      "after": "Move after…",
+      "menuButton": "Move {name}",
+      "activateAtButton": "Activate {name} at…",
+      "afterDialogHeader": "Move after another mod",
+      "activateAtDialogHeader": "Activate at a position",
+      "pickHelp": "Choose the mod to place the selection right after.",
+      "atStart": "At the start of the list",
+      "atEnd": "At the end of the list",
+      "pickCapped": "Showing the first {count} matches. Narrow the search to see others.",
+      "blockedReason": "Reordering is off because this list isn't sorted by load order, first to last. Sort by load order to move mods.",
+      "edgeTop": "Already at the top of this list",
+      "edgeBottom": "Already at the bottom of this list",
+      "announced": "Moved {name} to position {position}",
+      "announcedOf": "Moved {name} to position {position} of {total}",
+      "announcedMany": "Moved {count} mod, starting at position {position} | Moved {count} mods, starting at position {position}",
+      "announcedManyOf": "Moved {count} mod, starting at position {position} of {total} | Moved {count} mods, starting at position {position} of {total}",
+      "announcedManyHidden": "Moved {count} mod ({hidden} not shown), starting at position {position} | Moved {count} mods ({hidden} not shown), starting at position {position}",
+      "announcedManyHiddenOf": "Moved {count} mod ({hidden} not shown), starting at position {position} of {total} | Moved {count} mods ({hidden} not shown), starting at position {position} of {total}",
+      "switchedNote": "Now using your own order — the suggested order is unchanged.",
+      "viewSuggested": "View suggested",
+      "suggestedNote": "Apply will write the suggested order. Moving a mod switches to your own order.",
+      "coreStaysActive": "Core can't be deactivated.",
+      "inactiveNotOrdered": "This list has no order of its own. Drag mods to the Active list to activate them."
     }
   },
   "rules": {
@@ -1712,7 +1757,8 @@
       "noEntries": "No package ids were found."
     },
     "importedWithWarnings": "The scan reported {count} warning. | The scan reported {count} warnings.",
-    "importedRuleWarnings": "Imported, with rules that couldn't be loaded"
+    "importedRuleWarnings": "Imported, with rules that couldn't be loaded",
+    "revertOrder": "Revert order to ModsConfig.xml"
   },
   "apply": {
     "dialog": {
@@ -1986,6 +2032,7 @@
       "chooseButton": "Choose…",
       "installCheckboxLabel": "Install into Mods and activate",
       "staleActiveSetNote": "Pending activation changes are not included — rescan first if you want them in this install.",
+      "unappliedOrderNote": "Install writes your current order, which is not applied yet.",
       "forceWarning": "RimWorldWin64.exe looks like it's running. Installing now writes ModsConfig.xml, which the game overwrites when it exits, so the change may be lost. Export anyway?",
       "exportAnyway": "Export anyway",
       "export": "Export",

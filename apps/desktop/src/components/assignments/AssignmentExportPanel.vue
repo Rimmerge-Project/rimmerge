@@ -70,6 +70,11 @@ const hasUnscannedActiveChanges = computed(() => {
   const diff = pendingActiveChanges.value?.unscanned;
   return diff !== undefined && (diff.added.length > 0 || diff.removed.length > 0);
 });
+// Install writes `orders.current`, the order the user is looking at, not the file's own list:
+// a move or an import that no Apply has written yet reaches `ModsConfig.xml` with the install.
+const isCurrentOrderUnapplied = computed(
+  () => pendingActiveChanges.value?.orderDiffersFromFile === true,
+);
 
 async function choose(): Promise<void> {
   const picked = await pickFolder(outDir.value.length > 0 ? outDir.value : undefined);
@@ -121,6 +126,14 @@ const canExport = computed(() => outDir.value.trim().length > 0);
       data-testid="assignment-export-stale-note"
     >
       {{ t("assignments.exportPanel.staleActiveSetNote") }}
+    </Message>
+
+    <Message
+      v-if="install && isCurrentOrderUnapplied"
+      severity="warn"
+      data-testid="assignment-export-unapplied-order-note"
+    >
+      {{ t("assignments.exportPanel.unappliedOrderNote") }}
     </Message>
 
     <Message

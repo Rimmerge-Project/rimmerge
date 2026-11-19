@@ -34,7 +34,7 @@ const icon = computed(() => (source === null ? UNKNOWN_ICON : ICON_BY_SOURCE[sou
 <template>
   <span
     role="img"
-    class="text-text-muted inline-flex w-5 shrink-0 items-center justify-center gap-1.5 text-sm xl:w-36 xl:justify-start"
+    class="text-text-muted inline-flex w-5 shrink-0 items-center justify-center gap-1.5 text-sm @lg:w-36 @lg:justify-start"
     :aria-label="label"
     :title="label"
     :data-source="source ?? 'unknown'"
@@ -45,9 +45,9 @@ const icon = computed(() => (source === null ? UNKNOWN_ICON : ICON_BY_SOURCE[sou
       :class="['pi', icon]"
       aria-hidden="true"
     />
-    <!-- Visible at wide widths so a keyboard user (no hover tooltip) sees the label too; aria-hidden as the wrapper already names it. -->
+    <!-- Visible once the list itself is wide enough (a container query on the table: two lists share the window, so the window width says nothing) so a keyboard user, with no hover tooltip, sees the label too; aria-hidden as the wrapper already names it. -->
     <span
-      class="hidden truncate text-xs xl:inline"
+      class="hidden truncate text-xs @lg:inline"
       aria-hidden="true"
       data-testid="source-badge-label"
     >{{ label }}</span>

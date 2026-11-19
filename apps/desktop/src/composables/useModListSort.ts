@@ -1,8 +1,8 @@
-import { computed, ref, watch } from "vue";
+import { ref, watch } from "vue";
 
 import { useSessionStore } from "@/stores/session";
 import type { ListSortDto } from "@/types/generated/ListSortDto";
-import { ACTIVE_DEFAULT_SORT, INACTIVE_DEFAULT_SORT, isLoadOrderSort } from "@/utils/modListSort";
+import { ACTIVE_DEFAULT_SORT, INACTIVE_DEFAULT_SORT } from "@/utils/modListSort";
 
 /**
  * The Mods page's display sort, one per list. Page-local: it lives while the
@@ -10,13 +10,12 @@ import { ACTIVE_DEFAULT_SORT, INACTIVE_DEFAULT_SORT, isLoadOrderSort } from "@/u
  * written anywhere. Sorting only changes the query sent to the backend; it
  * never edits the load order or any pending change.
  *
- * `isActiveInLoadOrder` is the fact the reordering controls must gate on:
- * reordering the Active list is meaningful only while it shows the load order.
+ * Whether the Active list may be reordered is not decided here: the backend
+ * answers it on every list (`ModListDto.reorderable`), so the rule has one home.
  */
 export function useModListSort() {
   const activeSort = ref<ListSortDto>(ACTIVE_DEFAULT_SORT);
   const inactiveSort = ref<ListSortDto>(INACTIVE_DEFAULT_SORT);
-  const isActiveInLoadOrder = computed(() => isLoadOrderSort(activeSort.value));
 
   function reset(): void {
     activeSort.value = ACTIVE_DEFAULT_SORT;
@@ -28,5 +27,5 @@ export function useModListSort() {
   const session = useSessionStore();
   watch(() => session.paths?.profileDir ?? null, reset);
 
-  return { activeSort, inactiveSort, isActiveInLoadOrder, reset };
+  return { activeSort, inactiveSort, reset };
 }

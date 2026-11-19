@@ -22,15 +22,6 @@ export const ACTIVE_SORT_KEYS: readonly ListSortKeyDto[] = [
 /** The Inactive list has no load order to sort by. */
 export const INACTIVE_SORT_KEYS: readonly ListSortKeyDto[] = ["name", "packageId", "lastUpdated"];
 
-/**
- * Whether `sort` shows the working set in its own order, the only view in
- * which reordering the Active list is meaningful. Mirrors the backend's
- * `ListSort::is_load_order`.
- */
-export function isLoadOrderSort(sort: ListSortDto): boolean {
-  return sort.key === "loadOrder" && sort.direction === "ascending";
-}
-
 /** A criterion's own name ("Name", "Last updated", ...). */
 export function sortKeyLabel(key: ListSortKeyDto): MessageDescriptor {
   switch (key) {

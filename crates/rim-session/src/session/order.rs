@@ -88,6 +88,20 @@ impl Session {
         self.selected = source;
     }
 
+    /// The selection rule of a manual reorder: a user who places mods
+    /// means their own order, so a selected Suggested becomes Current
+    /// (Apply writes the selected order). Returns whether it switched.
+    /// Used by [`crate::use_cases::MoveMods`] and an anchored
+    /// [`crate::use_cases::ActivateMods::execute_at`], never by an
+    /// un-anchored activation.
+    pub(crate) fn switch_to_current_after_reorder(&mut self) -> bool {
+        let is_suggested = self.selected == OrderSource::Suggested;
+        if is_suggested {
+            self.selected = OrderSource::Current;
+        }
+        is_suggested
+    }
+
     /// The [`ModsConfigFile`] to write for `order`, preserving the
     /// original file's `version`/`known_expansions`.
     #[must_use]
@@ -145,7 +159,7 @@ impl Session {
     /// over the *same* ids under [`TieBreak::PreserveCurrent`], where
     /// `suggested` ranks by `current`'s positions and is re-sorted. The
     /// working set also follows `current`'s sequence whenever both hold the
-    /// same ids ([`Self::settle_working`]).
+    /// same ids (`Self::settle_working_onto_current`).
     ///
     /// [`Self::file_active_mods`] is reset to `order` here too —
     /// this method's own contract is "the file now *is* this", and that
@@ -173,8 +187,20 @@ impl Session {
         let is_reorder_of_same_ids =
             previous == next && self.orders.current.as_slice() != order.as_slice();
         self.orders.current = order;
-        self.settle_working();
+        self.settle_working_onto_current();
         self.file_active_mods = self.orders.current.as_slice().to_vec();
+        self.current_order_replaced(is_reorder_of_same_ids);
+    }
+
+    /// What every replacement of `orders.current` after load must do:
+    /// invalidate the ledger family and the selected-order caches, and
+    /// re-sort when Suggested ranks by Current's own sequence.
+    ///
+    /// `PreserveCurrent` ranks unconstrained mods by `current`'s own
+    /// sequence, so a new sequence over the same ids makes `suggested`
+    /// stale. A changed id set never re-sorts (a just-written id is not in
+    /// the report yet).
+    fn current_order_replaced(&mut self, is_reorder_of_same_ids: bool) {
         self.invalidate_ledgers();
         // `orders.current` just got a new value — same reasoning as
         // `Self::recompute_sort`'s own clear.
@@ -182,30 +208,52 @@ impl Session {
         self.assignment_instances.clear();
         self.assignment_coverage.clear();
         self.def_graphics.clear();
-        // `PreserveCurrent` ranks unconstrained mods by `current`'s own
-        // sequence, so a new sequence over the same ids makes `suggested`
-        // stale. A changed id set still never re-sorts (see above: a
-        // just-written id is not in the report yet).
         if is_reorder_of_same_ids && self.rules.settings.tie_break == TieBreak::PreserveCurrent {
             self.recompute_sort();
         }
     }
 
-    /// Keeps the invariant *working set == current set implies working
-    /// sequence == current sequence*: when both hold exactly the same ids
-    /// (duplicates respected), `working` takes `orders.current`'s
-    /// sequence. A rescan scans `working`'s sequence, so without this a
-    /// rescan right after an `Apply` would scan the pre-apply order and
-    /// revert Current. A `working` with pending membership edits keeps its
-    /// own sequence: nothing was settled yet.
-    pub(crate) fn settle_working(&mut self) {
+    /// The file-truth direction of the settle rule: when `working` and
+    /// `orders.current` hold exactly the same ids (duplicates respected),
+    /// `working` takes Current's sequence. Runs at the end of
+    /// [`Self::set_current_order`] (Apply, an install export, a revert),
+    /// where the file is the truth. A rescan scans `working`'s sequence, so
+    /// without this a rescan right after an `Apply` would scan the
+    /// pre-apply order and revert Current. A `working` with pending
+    /// membership edits keeps its own sequence: nothing was settled yet.
+    fn settle_working_onto_current(&mut self) {
+        if self.working_has_current_members() {
+            self.working = ActiveSet::trusted(self.orders.current.as_slice().to_vec());
+        }
+    }
+
+    /// The edit direction of the settle rule: after an edit to `working`
+    /// made from the Mods page (a move, an activation, a deactivation),
+    /// when `working` and `orders.current` hold exactly the same ids,
+    /// Current takes `working`'s sequence. The edit is the user's intent,
+    /// so it is not undone. Nothing is written: `file_active_mods` stays
+    /// what the file held, so the order shows as not yet in the file until
+    /// an Apply. Invalidates exactly what [`Self::set_current_order`]
+    /// does. With pending membership edits nothing is settled, and the
+    /// next rescan carries the sequence.
+    pub(crate) fn settle_current_onto_working(&mut self) {
+        if !self.working_has_current_members()
+            || self.working.ids() == self.orders.current.as_slice()
+        {
+            return;
+        }
+        self.orders.current = LoadOrder::new(self.working.ids().to_vec());
+        self.current_order_replaced(true);
+    }
+
+    /// Whether `working` and `orders.current` hold the same ids, duplicates
+    /// respected, in any sequence.
+    fn working_has_current_members(&self) -> bool {
         let mut working_ids = self.working.ids().to_vec();
         let mut current_ids = self.orders.current.as_slice().to_vec();
         working_ids.sort();
         current_ids.sort();
-        if working_ids == current_ids {
-            self.working = ActiveSet::trusted(self.orders.current.as_slice().to_vec());
-        }
+        working_ids == current_ids
     }
 
     /// How many mods the suggested order places differently from the
@@ -269,9 +317,10 @@ impl Session {
         &self.working
     }
 
-    /// `pub(crate)`: only [`crate::use_cases::ActivateMods`]/
-    /// [`crate::use_cases::DeactivateMods`] (in this crate) mutate the
-    /// working set directly.
+    /// `pub(crate)`: only the use cases in this crate
+    /// ([`crate::use_cases::ActivateMods`], [`crate::use_cases::DeactivateMods`],
+    /// [`crate::use_cases::MoveMods`], [`crate::use_cases::DiscardPendingChanges`])
+    /// mutate the working set directly.
     pub(crate) fn working_mut(&mut self) -> &mut ActiveSet {
         &mut self.working
     }
@@ -280,8 +329,10 @@ impl Session {
     /// `unscanned` is [`Self::working`] against the scanned
     /// `orders().current` (what a [`crate::use_cases::Rescan`] would pick
     /// up), `unapplied` is `orders().current` against the file's own
-    /// last-known list (what an `apply` would write). Both empty for a
-    /// freshly loaded, unedited session.
+    /// last-known list (what an `apply` would write), and
+    /// `order_differs_from_file` is the same comparison by sequence, which
+    /// is what a settled reorder changes. All empty/false for a freshly
+    /// loaded, unedited session.
     #[must_use]
     pub fn pending_changes(&self) -> PendingActiveChanges {
         let current = ActiveSet::trusted(self.orders.current.as_slice().to_vec());
@@ -289,6 +340,7 @@ impl Session {
         PendingActiveChanges {
             unscanned: self.working.diff(&current),
             unapplied: current.diff(&file),
+            order_differs_from_file: !self.file_matches(OrderSource::Current),
         }
     }
 

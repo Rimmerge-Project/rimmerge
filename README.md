@@ -21,7 +21,7 @@ shells over the same engine.
 
 *The dashboard on a synthetic mod list: the recommended rules imported, Suggested selected, Apply is the current step, and the tiles compare it with Current.*
 
-![Mods page: selecting inactive mods to activate](docs/screenshots/mods-page/inactive-tab-selection.png)
+![Mods page: selecting inactive mods to activate](docs/screenshots/mods-page/inactive-selection.png)
 
 ## Install
 

@@ -166,6 +166,18 @@ const ERROR_CODE_KEYS = {
     title: "error.code.nothing_to_export.title",
     detail: "error.code.nothing_to_export.detail",
   },
+  move_anchor_not_active: {
+    title: "error.code.move_anchor_not_active.title",
+    detail: "error.code.move_anchor_not_active.detail",
+  },
+  revert_order_pending_changes: {
+    title: "error.code.revert_order_pending_changes.title",
+    detail: "error.code.revert_order_pending_changes.detail",
+  },
+  revert_order_membership_differs: {
+    title: "error.code.revert_order_membership_differs.title",
+    detail: "error.code.revert_order_membership_differs.detail",
+  },
 } satisfies Record<CommandErrorCode, { title: string; detail: string }>;
 
 /**

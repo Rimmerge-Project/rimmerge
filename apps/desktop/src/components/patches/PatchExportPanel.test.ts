@@ -62,6 +62,7 @@ function mountPanel(
     get_pending_active_changes: options.pendingActiveChanges ?? {
       unscanned: { added: [], removed: [] },
       unapplied: { added: [], removed: [] },
+      orderDiffersFromFile: false,
     },
     get_patch_render: () => render,
     preview_patch_file: () => ({ content: "<ModMetaData></ModMetaData>" }),
@@ -207,6 +208,7 @@ describe("PatchExportPanel", () => {
       pendingActiveChanges: {
         unscanned: { added: ["a.mod"], removed: [] },
         unapplied: { added: [], removed: [] },
+        orderDiffersFromFile: false,
       },
     });
     await flushPromises();
@@ -216,6 +218,34 @@ describe("PatchExportPanel", () => {
     await wrapper.get('[data-testid="patch-export-install-checkbox"]').find("input").setValue(true);
 
     expect(wrapper.get('[data-testid="patch-export-stale-note"]').text()).toContain("not included");
+  });
+
+  it("warns that Install writes an order that is not applied yet, only once Install is checked", async () => {
+    const { wrapper } = mountPanel(renderFixture(), {
+      pendingActiveChanges: {
+        unscanned: { added: [], removed: [] },
+        unapplied: { added: [], removed: [] },
+        orderDiffersFromFile: true,
+      },
+    });
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="patch-export-unapplied-order-note"]').exists()).toBe(false);
+
+    await wrapper.get('[data-testid="patch-export-install-checkbox"]').find("input").setValue(true);
+
+    expect(wrapper.get('[data-testid="patch-export-unapplied-order-note"]').text()).toContain(
+      "not applied yet",
+    );
+  });
+
+  it("shows no unapplied-order note when the file already holds the current order", async () => {
+    const { wrapper } = mountPanel(renderFixture());
+    await flushPromises();
+
+    await wrapper.get('[data-testid="patch-export-install-checkbox"]').find("input").setValue(true);
+
+    expect(wrapper.find('[data-testid="patch-export-unapplied-order-note"]').exists()).toBe(false);
   });
 
   it("stores the export report's own decisionsSha256, not the sibling render query's cached value", async () => {

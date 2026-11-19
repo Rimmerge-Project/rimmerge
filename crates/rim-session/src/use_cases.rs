@@ -24,6 +24,9 @@ mod def_sources;
 mod delete_assignment;
 mod delete_patch;
 mod delete_rule;
+mod discard_pending_changes;
+#[cfg(test)]
+mod edit_settle_tests;
 mod export_assignment;
 mod export_folder;
 mod export_order;
@@ -39,6 +42,7 @@ mod launch_game;
 mod list_items;
 mod load_project;
 mod merge_coverage;
+mod move_mods;
 mod notifications;
 mod plan_merge;
 mod preflight_apply;
@@ -54,6 +58,7 @@ mod render_merge_mod;
 mod render_patch;
 mod rescan;
 mod revert_decision;
+mod revert_order_to_file;
 mod revert_patch_decision;
 mod run_launch_network_checks;
 mod select_order;
@@ -67,7 +72,7 @@ mod update_settings;
 mod upsert_rule;
 mod verify_order;
 
-pub use activate_mods::ActivateMods;
+pub use activate_mods::{ActivateMods, ActivateOutcome};
 pub use add_assignment_section::{AddAssignmentSection, AddAssignmentSectionError};
 pub use apply::{Apply, ApplyError, ApplyOptions, ApplyOutcome};
 pub use assignment_coverage::{AssignmentCoverage, AssignmentCoverageError};
@@ -103,6 +108,7 @@ pub(crate) use def_sources::read_owner_def_raw;
 pub use delete_assignment::{DeleteAssignment, DeleteAssignmentError};
 pub use delete_patch::{DeletePatch, DeletePatchError};
 pub use delete_rule::DeleteRule;
+pub use discard_pending_changes::DiscardPendingChanges;
 pub use export_assignment::{
     AssignmentExportOptions, AssignmentExportOutcome, AssignmentSkip, ExportAssignment,
     ExportAssignmentError,
@@ -134,6 +140,7 @@ pub use merge_coverage::{
     DefOverrideCoverage, MergeCoverage, MergeCoverageReport, PatchCollisionCoverage,
     PreviewStateTally, SuggestionOutcome, SuggestionOutcomeTally,
 };
+pub use move_mods::{MoveMods, MoveOutcome};
 pub use notifications::{
     AcknowledgeGameVersion, CompleteWelcome, DismissNotification, ListNotifications,
     MuteNotificationKind, ProfileNotificationFacts, SyncGameVersionAcknowledgement,
@@ -161,6 +168,7 @@ pub use render_merge_mod::{
 pub use render_patch::{RenderPatch, RenderPatchError};
 pub use rescan::Rescan;
 pub use revert_decision::RevertDecision;
+pub use revert_order_to_file::{RevertOrderError, RevertOrderToFile};
 pub use revert_patch_decision::{RevertPatchDecision, RevertPatchDecisionError};
 pub use run_launch_network_checks::{LaunchNetworkChecksOutcome, RunLaunchNetworkChecks};
 pub use select_order::SelectOrder;

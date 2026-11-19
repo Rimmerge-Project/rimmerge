@@ -1,7 +1,7 @@
 import path from "node:path";
 
 import { expect, type Page, test } from "@playwright/test";
-import { loadScenario } from "../specs/support";
+import { loadScenario, modsPane } from "../specs/support";
 import { waitForQuietMain } from "./settle";
 
 /**
@@ -102,9 +102,8 @@ async function selectModRow(page: Page, modId: string): Promise<void> {
   await page.getByTestId(`mod-row-select-${modId}`).locator('input[type="checkbox"]').check();
 }
 
-async function openInactiveTab(page: Page): Promise<void> {
+async function openMods(page: Page): Promise<void> {
   await page.getByTestId("nav-mods").click();
-  await page.getByTestId("mods-tab-inactive").click();
   await expect(page.getByTestId("mod-row-select-mod.905")).toBeVisible();
 }
 
@@ -138,14 +137,12 @@ test.describe("docs screenshots", () => {
 
   test("mods page: select, activate, pending banners, deactivate", async ({ page }) => {
     await startScenario(page, "dark");
-    await page.getByTestId("nav-mods").click();
-    await expect(page.getByTestId("mod-table")).toBeVisible();
-    await capture(page, path.join(MODS_PAGE_DIR, "active-tab.png"));
+    await openMods(page);
+    await capture(page, path.join(MODS_PAGE_DIR, "lists.png"));
 
-    await openInactiveTab(page);
     await selectModRow(page, "mod.902");
     await selectModRow(page, "mod.905");
-    await capture(page, path.join(MODS_PAGE_DIR, "inactive-tab-selection.png"));
+    await capture(page, path.join(MODS_PAGE_DIR, "inactive-selection.png"));
 
     await page.getByTestId("activate-with-dependencies-checkbox").locator("input").check();
     await page.getByTestId("activate-selected-button").click();
@@ -160,8 +157,7 @@ test.describe("docs screenshots", () => {
     // stacks a second kind of pending change into the same banner.
     await page.getByTestId("pending-changes-rescan-button").click();
     await expect(page.getByTestId("pending-changes-banner")).toBeHidden();
-    await page.getByTestId("mods-tab-active").click();
-    await page.getByTestId("mods-search").fill("mod.90");
+    await modsPane(page, "active").getByTestId("mods-search").fill("mod.90");
     await selectModRow(page, "mod.906");
     await page.getByTestId("deactivate-selected-button").click();
     await expect(page.getByTestId("deactivate-plan-dependents")).toBeVisible();
@@ -173,9 +169,19 @@ test.describe("docs screenshots", () => {
     await capture(page, path.join(MODS_PAGE_DIR, "pending-changes-banner-two-lines.png"));
   });
 
+  test("mods page: moving a mod leaves an order to apply", async ({ page }) => {
+    await startScenario(page, "dark");
+    await openMods(page);
+    await page.getByTestId("mod-row-menu-mod.004").click();
+    await page.getByTestId("mod-move-top").click();
+    await expect(page.getByTestId("order-not-in-file")).toBeVisible();
+    await expect(page.getByTestId("order-switched-note")).toBeVisible();
+    await capture(page, path.join(MODS_PAGE_DIR, "moved-order.png"));
+  });
+
   test("mods page: the Apply dialog before and after a rescan", async ({ page }) => {
     await startScenario(page, "dark");
-    await openInactiveTab(page);
+    await openMods(page);
     await activateWithDependency(page);
 
     await page.getByTestId("shell-apply-button").click();

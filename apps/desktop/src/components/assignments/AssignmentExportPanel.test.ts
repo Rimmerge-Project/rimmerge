@@ -26,6 +26,7 @@ function mountPanel(
     get_pending_active_changes: pendingActiveChanges ?? {
       unscanned: { added: [], removed: [] },
       unapplied: { added: [], removed: [] },
+      orderDiffersFromFile: false,
     },
     export_assignment: (payload: unknown) => {
       const request = (payload as { request: ExportAssignmentRequestDto }).request;
@@ -59,6 +60,7 @@ describe("AssignmentExportPanel", () => {
     const { wrapper } = mountPanel(undefined, {
       unscanned: { added: ["a.mod"], removed: [] },
       unapplied: { added: [], removed: [] },
+      orderDiffersFromFile: false,
     });
     await flushPromises();
 
@@ -71,6 +73,28 @@ describe("AssignmentExportPanel", () => {
 
     expect(wrapper.get('[data-testid="assignment-export-stale-note"]').text()).toContain(
       "not included",
+    );
+  });
+
+  it("warns that Install writes an order that is not applied yet, only once Install is checked", async () => {
+    const { wrapper } = mountPanel(undefined, {
+      unscanned: { added: [], removed: [] },
+      unapplied: { added: [], removed: [] },
+      orderDiffersFromFile: true,
+    });
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="assignment-export-unapplied-order-note"]').exists()).toBe(
+      false,
+    );
+
+    await wrapper
+      .get('[data-testid="assignment-export-install-checkbox"]')
+      .find("input")
+      .setValue(true);
+
+    expect(wrapper.get('[data-testid="assignment-export-unapplied-order-note"]').text()).toContain(
+      "not applied yet",
     );
   });
 

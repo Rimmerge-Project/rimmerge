@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import { installScenario } from "../fixtures/scenario";
 
@@ -12,4 +12,9 @@ export async function loadScenario(page: Page): Promise<void> {
   await page.goto("/");
   await page.getByTestId("load-project-button").click();
   await page.waitForURL(/\/$/);
+}
+
+/** One of the Mods page's two side-by-side lists, to scope a locator to its own controls and rows. */
+export function modsPane(page: Page, kind: "active" | "inactive"): Locator {
+  return page.getByTestId(`mods-pane-${kind}`);
 }

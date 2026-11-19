@@ -13,4 +13,10 @@ total: number,
 /**
  * The rows, in list order.
  */
-items: Array<ModListRowDto>, };
+items: Array<ModListRowDto>, 
+/**
+ * Whether the rows may be reordered through this view: the Active list
+ * in its own load order. A search or filter keeps it on (a move is
+ * anchored to a neighbour's id); another sort turns it off.
+ */
+reorderable: boolean, };

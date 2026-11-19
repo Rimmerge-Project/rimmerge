@@ -66,6 +66,9 @@ describe("describeCommandError", () => {
       "game_start_failed",
       "mod_list_io_failed",
       "nothing_to_export",
+      "move_anchor_not_active",
+      "revert_order_pending_changes",
+      "revert_order_membership_differs",
     ] as const;
 
     const keys = codes.map((code) => {

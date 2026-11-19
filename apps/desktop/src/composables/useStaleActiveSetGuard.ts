@@ -18,7 +18,8 @@ let resolveConfirm: ((leave: boolean) => void) | null = null;
 
 /**
  * Whether the working active-mod set currently has pending changes a
- * rescan hasn't picked up, or a scanned order hasn't yet been applied to
+ * rescan hasn't picked up, or a scanned order (a different membership or only
+ * a different sequence, as after a move) hasn't yet been applied to
  * `ModsConfig.xml` — the "warn on close/switch" check. Safe to call
  * from outside a component.
  */
@@ -66,7 +67,9 @@ export function useStaleActiveSetGuard() {
       diff.unscanned.added.length > 0 ||
       diff.unscanned.removed.length > 0 ||
       diff.unapplied.added.length > 0 ||
-      diff.unapplied.removed.length > 0
+      diff.unapplied.removed.length > 0 ||
+      // A settled reorder changes no membership, so the diffs above are empty for it.
+      diff.orderDiffersFromFile
     );
   });
   watch(staleOrUnapplied, (value) => (isStale.value = value), { immediate: true });

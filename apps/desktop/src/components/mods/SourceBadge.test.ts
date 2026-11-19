@@ -41,6 +41,15 @@ describe("SourceBadge", () => {
     expect(visible.attributes("aria-hidden")).toBe("true");
   });
 
+  it("widens by the width of its list (a container query), not of the window", () => {
+    const wrapper = mount(SourceBadge, { props: { source: "workshop" } });
+
+    // Two lists sit side by side, so the window width says nothing about the room one has.
+    expect(wrapper.get('[data-testid="source-badge-label"]').classes()).toContain("@lg:inline");
+    expect(wrapper.classes()).toContain("@lg:w-36");
+    expect(wrapper.classes().some((name) => name.startsWith("xl:"))).toBe(false);
+  });
+
   it("shows an explicit origin-unknown state for a missing mod, not a known source", () => {
     const wrapper = mount(SourceBadge, { props: { source: null } });
 

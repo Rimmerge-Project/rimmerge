@@ -8,15 +8,21 @@ import type { SourceDto } from "@/types/generated/SourceDto";
 const SEARCH_DEBOUNCE_MS = 300;
 
 /**
- * The Mods page's search/tag/source filter state and the two list queries
- * derived from it. The Inactive query never carries a tag: the backend
- * ignores it there, and the tag input is hidden on that tab. `isFiltered`
- * says whether the lists are showing less than everything, which is what
- * lets a selection tell "hidden by a filter" from "gone from the list".
- * Each query also carries its list's display sort; a sort is not a filter, so
- * it never counts toward `isFiltered`.
+ * One Mods list's search/tag/source filter state and the list query derived from it. Each list
+ * has its own, so searching one never changes the other. The Inactive list has no tag filter
+ * (`hasTag: false`): the backend ignores a tag there, so the query never carries one.
+ * `isFiltered` says whether the list is showing less than everything, which is what lets a
+ * selection tell "hidden by a filter" from "gone from the list". The query also carries the
+ * list's display sort; a sort is not a filter, so it never counts toward `isFiltered`.
  */
-export function useModListFilters(sorts: { active: Ref<ListSortDto>; inactive: Ref<ListSortDto> }) {
+export function useModListFilters({
+  sort,
+  hasTag,
+}: {
+  sort: Ref<ListSortDto>;
+  /** Whether this list offers a tag filter (only the Active list's mods carry tags). */
+  hasTag: boolean;
+}) {
   // The input stays responsive on every keystroke; only the value that
   // actually drives the query is debounced, so typing a search term
   // doesn't fire a list query per character.
@@ -25,33 +31,16 @@ export function useModListFilters(sorts: { active: Ref<ListSortDto>; inactive: R
   const source = ref<SourceDto | null>(null);
   const tag = ref("");
 
-  const searchTerm = computed(() =>
-    debouncedSearch.value.length > 0 ? debouncedSearch.value : null,
-  );
-
-  const activeQuery = computed<ModListQueryDto>(() => ({
-    search: searchTerm.value,
-    tag: tag.value.length > 0 ? tag.value : null,
+  const query = computed<ModListQueryDto>(() => ({
+    search: debouncedSearch.value.length > 0 ? debouncedSearch.value : null,
+    tag: hasTag && tag.value.length > 0 ? tag.value : null,
     source: source.value,
-    sort: sorts.active.value,
+    sort: sort.value,
   }));
 
-  const inactiveQuery = computed<ModListQueryDto>(() => ({
-    search: searchTerm.value,
-    tag: null,
-    source: source.value,
-    sort: sorts.inactive.value,
-  }));
-
-  const isActiveFiltered = computed(
-    () =>
-      activeQuery.value.search !== null ||
-      activeQuery.value.tag !== null ||
-      activeQuery.value.source !== null,
-  );
-  const isInactiveFiltered = computed(
-    () => inactiveQuery.value.search !== null || inactiveQuery.value.source !== null,
+  const isFiltered = computed(
+    () => query.value.search !== null || query.value.tag !== null || query.value.source !== null,
   );
 
-  return { search, source, tag, activeQuery, inactiveQuery, isActiveFiltered, isInactiveFiltered };
+  return { search, source, tag, query, isFiltered };
 }

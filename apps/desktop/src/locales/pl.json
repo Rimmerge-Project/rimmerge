@@ -575,6 +575,18 @@
       "nothing_to_export": {
         "title": "Nie ma nic do eksportu",
         "detail": "Nie udało się umieścić na liście żadnego aktywnego moda. Sprawdź aktywne mody w ModsConfig.xml."
+      },
+      "move_anchor_not_active": {
+        "title": "Tego moda nie ma już na liście aktywnych",
+        "detail": "Mod, obok którego upuszczono wybór, został wyłączony lub przeniesiony, więc niczego nie zmieniono. Lista została odświeżona; spróbuj przenieść ponownie."
+      },
+      "revert_order_pending_changes": {
+        "title": "Najpierw odrzuć oczekujące zmiany",
+        "detail": "Lista aktywnych ma zmiany, które nie zostały jeszcze przeskanowane. Odrzuć je lub przeskanuj ponownie, a potem przywróć kolejność."
+      },
+      "revert_order_membership_differs": {
+        "title": "Plik zawiera inne mody",
+        "detail": "ModsConfig.xml zawiera inne mody niż bieżąca kolejność, więc nie ma kolejności, do której można wrócić. Użyj zamiast tego listy z pliku albo zastosuj własną."
       }
     }
   },
@@ -1180,6 +1192,7 @@
       "chooseButton": "Wybierz…",
       "installCheckboxLabel": "Zainstaluj w folderze Mods i włącz",
       "staleActiveSetNote": "Oczekujące zmiany włączenia i wyłączenia modów nie są uwzględnione — jeśli mają trafić do tej instalacji, najpierw przeskanuj ponownie.",
+      "unappliedOrderNote": "Instalacja zapisuje twoją bieżącą kolejność, która nie jest jeszcze zastosowana.",
       "forceWarning": "Wygląda na to, że RimWorldWin64.exe jest uruchomiony. Instalacja w tej chwili zapisuje ModsConfig.xml, który gra nadpisuje przy zamykaniu, więc zmiana może zostać utracona. Wyeksportować mimo to?",
       "exportAnyway": "Eksportuj mimo to",
       "export": "Eksportuj",
@@ -1276,7 +1289,8 @@
       "unapplied": "{count} zmiana jeszcze niezastosowana w ModsConfig.xml | {count} zmiany jeszcze niezastosowane w ModsConfig.xml | {count} zmian jeszcze niezastosowanych w ModsConfig.xml",
       "rescanButton": "Skanuj ponownie",
       "rescanFinishedToast": "Ponowne skanowanie zakończone z {count} uwagą | Ponowne skanowanie zakończone z {count} uwagami | Ponowne skanowanie zakończone z {count} uwagami",
-      "rescannedWithWarningsToast": "Przeskanowano ponownie z ostrzeżeniami"
+      "rescannedWithWarningsToast": "Przeskanowano ponownie z ostrzeżeniami",
+      "discardButton": "Odrzuć oczekujące zmiany"
     },
     "closeGuard": {
       "header": "Niezapisane zmiany aktywnych modów",
@@ -1308,8 +1322,8 @@
     },
     "page": {
       "heading": "Mody",
-      "activeTab": "Aktywne",
-      "inactiveTab": "Nieaktywne",
+      "activeHeading": "Aktywne",
+      "inactiveHeading": "Nieaktywne",
       "searchPlaceholder": "Szukaj modów…",
       "tagFilterPlaceholder": "Filtruj według tagu…",
       "sourcePlaceholder": "Źródło",
@@ -1332,7 +1346,9 @@
       "dependentsStillActive": "{count} aktywny mod nadal zależy od moda {mod}: {deps}. | {count} aktywne mody nadal zależą od moda {mod}: {deps}. | {count} aktywnych modów nadal zależy od moda {mod}: {deps}.",
       "deactivatedToast": "Wyłączono",
       "deactivateButton": "Wyłącz",
-      "rescanButton": "Skanuj mody ponownie"
+      "rescanButton": "Skanuj mody ponownie",
+      "searchActiveLabel": "Szukaj wśród aktywnych modów",
+      "searchInactiveLabel": "Szukaj wśród nieaktywnych modów"
     },
     "defSearch": {
       "ariaLabel": "Przejdź do defu",
@@ -1342,8 +1358,37 @@
       "selectAllShown": "Zaznacz widoczny mod ({count}) | Zaznacz widoczne mody ({count}) | Zaznacz widoczne mody ({count})",
       "selectAllEmpty": "Zaznacz wszystkie",
       "selectedCount": "{count} zaznaczony | {count} zaznaczone | {count} zaznaczonych",
-      "notShown": "{count} niewidoczny | {count} niewidoczne | {count} niewidocznych",
+      "notShown": "({count} niewidoczny) | ({count} niewidoczne) | ({count} niewidocznych)",
       "clear": "Odznacz wszystkie"
+    },
+    "move": {
+      "up": "Przenieś wyżej",
+      "down": "Przenieś niżej",
+      "top": "Przenieś na górę",
+      "bottom": "Przenieś na dół",
+      "after": "Przenieś za…",
+      "menuButton": "Przenieś mod {name}",
+      "activateAtButton": "Włącz mod {name} na pozycji…",
+      "afterDialogHeader": "Przenieś za inny mod",
+      "activateAtDialogHeader": "Włącz na wybranej pozycji",
+      "pickHelp": "Wybierz mod, bezpośrednio za którym ma trafić zaznaczenie.",
+      "atStart": "Na początku listy",
+      "atEnd": "Na końcu listy",
+      "pickCapped": "Pokazano tylko pierwsze dopasowania ({count}). Zawęź wyszukiwanie, aby zobaczyć pozostałe.",
+      "blockedReason": "Zmiana kolejności jest wyłączona, bo ta lista nie jest posortowana według kolejności ładowania, od pierwszego do ostatniego. Posortuj według kolejności ładowania, aby przenosić mody.",
+      "edgeTop": "Już na górze tej listy",
+      "edgeBottom": "Już na dole tej listy",
+      "announced": "Przeniesiono mod {name} na pozycję {position}",
+      "announcedOf": "Przeniesiono mod {name} na pozycję {position} z {total}",
+      "announcedMany": "Przeniesiono {count} mod, od pozycji {position} | Przeniesiono {count} mody, od pozycji {position} | Przeniesiono {count} modów, od pozycji {position}",
+      "announcedManyOf": "Przeniesiono {count} mod, od pozycji {position} z {total} | Przeniesiono {count} mody, od pozycji {position} z {total} | Przeniesiono {count} modów, od pozycji {position} z {total}",
+      "announcedManyHidden": "Przeniesiono {count} mod (niewidoczne: {hidden}), od pozycji {position} | Przeniesiono {count} mody (niewidoczne: {hidden}), od pozycji {position} | Przeniesiono {count} modów (niewidoczne: {hidden}), od pozycji {position}",
+      "announcedManyHiddenOf": "Przeniesiono {count} mod (niewidoczne: {hidden}), od pozycji {position} z {total} | Przeniesiono {count} mody (niewidoczne: {hidden}), od pozycji {position} z {total} | Przeniesiono {count} modów (niewidoczne: {hidden}), od pozycji {position} z {total}",
+      "switchedNote": "Używasz teraz własnej kolejności — sugerowana kolejność się nie zmieniła.",
+      "viewSuggested": "Pokaż sugerowaną",
+      "suggestedNote": "„Zastosuj” zapisze sugerowaną kolejność. Przeniesienie moda przełączy na twoją własną kolejność.",
+      "coreStaysActive": "Modu Core nie można wyłączyć.",
+      "inactiveNotOrdered": "Ta lista nie ma własnej kolejności. Przeciągnij mody na listę aktywnych, aby je włączyć."
     }
   },
   "rules": {
@@ -1712,7 +1757,8 @@
       "noEntries": "Nie znaleziono żadnego ID pakietu."
     },
     "importedWithWarnings": "Skanowanie zgłosiło {count} ostrzeżenie. | Skanowanie zgłosiło {count} ostrzeżenia. | Skanowanie zgłosiło {count} ostrzeżeń.",
-    "importedRuleWarnings": "Zaimportowano, ale części reguł nie udało się wczytać"
+    "importedRuleWarnings": "Zaimportowano, ale części reguł nie udało się wczytać",
+    "revertOrder": "Przywróć kolejność z ModsConfig.xml"
   },
   "apply": {
     "dialog": {
@@ -1986,6 +2032,7 @@
       "chooseButton": "Wybierz…",
       "installCheckboxLabel": "Zainstaluj w folderze Mods i włącz",
       "staleActiveSetNote": "Oczekujące zmiany włączenia i wyłączenia modów nie są uwzględnione — jeśli mają trafić do tej instalacji, najpierw przeskanuj ponownie.",
+      "unappliedOrderNote": "Instalacja zapisuje twoją bieżącą kolejność, która nie jest jeszcze zastosowana.",
       "forceWarning": "Wygląda na to, że RimWorldWin64.exe jest uruchomiony. Instalacja w tej chwili zapisuje ModsConfig.xml, który gra nadpisuje przy zamykaniu, więc zmiana może zostać utracona. Wyeksportować mimo to?",
       "exportAnyway": "Eksportuj mimo to",
       "export": "Eksportuj",

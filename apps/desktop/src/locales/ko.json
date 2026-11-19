@@ -575,6 +575,18 @@
       "nothing_to_export": {
         "title": "내보낼 것이 없음",
         "detail": "목록에 넣을 수 있는 활성 모드가 없습니다. ModsConfig.xml의 활성 모드를 확인하세요."
+      },
+      "move_anchor_not_active": {
+        "title": "해당 모드가 더 이상 활성 목록에 없음",
+        "detail": "옆에 놓으려던 모드가 비활성화되었거나 다른 곳으로 이동되어 아무것도 변경하지 않았습니다. 목록을 새로 고쳤으니 다시 이동해 보세요."
+      },
+      "revert_order_pending_changes": {
+        "title": "대기 중인 변경 사항을 먼저 취소하세요",
+        "detail": "활성 목록에 아직 스캔되지 않은 변경 사항이 있습니다. 변경 사항을 취소하거나 다시 스캔한 뒤 순서를 되돌리세요."
+      },
+      "revert_order_membership_differs": {
+        "title": "파일에 다른 모드가 나열되어 있음",
+        "detail": "ModsConfig.xml에 현재 순서와 다른 모드가 나열되어 있으므로 되돌아갈 순서가 없습니다. 대신 파일의 목록을 사용하거나, 직접 정한 순서를 적용하세요."
       }
     }
   },
@@ -1180,6 +1192,7 @@
       "chooseButton": "선택…",
       "installCheckboxLabel": "Mods 폴더에 설치하고 활성화",
       "staleActiveSetNote": "대기 중인 활성화 변경 사항은 포함되지 않습니다. 이번 설치에 포함하려면 먼저 다시 스캔하세요.",
+      "unappliedOrderNote": "설치하면 아직 적용되지 않은 현재 순서가 기록됩니다.",
       "forceWarning": "RimWorldWin64.exe가 실행 중인 것으로 보입니다. 지금 설치하면 ModsConfig.xml에 기록하게 되며, 게임은 종료할 때 이 파일을 덮어쓰므로 변경 내용이 사라질 수 있습니다. 그래도 내보낼까요?",
       "exportAnyway": "그래도 내보내기",
       "export": "내보내기",
@@ -1276,7 +1289,8 @@
       "unapplied": "ModsConfig.xml에 아직 적용되지 않은 변경 {count}개",
       "rescanButton": "다시 스캔",
       "rescanFinishedToast": "다시 스캔 완료 (참고 사항 {count}개)",
-      "rescannedWithWarningsToast": "다시 스캔했습니다 (경고 있음)"
+      "rescannedWithWarningsToast": "다시 스캔했습니다 (경고 있음)",
+      "discardButton": "대기 중인 변경 사항 취소"
     },
     "closeGuard": {
       "header": "저장되지 않은 활성 모드 변경",
@@ -1308,8 +1322,8 @@
     },
     "page": {
       "heading": "모드",
-      "activeTab": "활성",
-      "inactiveTab": "비활성",
+      "activeHeading": "활성",
+      "inactiveHeading": "비활성",
       "searchPlaceholder": "모드 검색…",
       "tagFilterPlaceholder": "태그로 필터…",
       "sourcePlaceholder": "출처",
@@ -1332,7 +1346,9 @@
       "dependentsStillActive": "활성 모드 {count}개가 아직 {mod} 모드에 종속되어 있습니다: {deps}.",
       "deactivatedToast": "비활성화했습니다",
       "deactivateButton": "비활성화",
-      "rescanButton": "모드 다시 스캔"
+      "rescanButton": "모드 다시 스캔",
+      "searchActiveLabel": "활성 모드 검색",
+      "searchInactiveLabel": "비활성 모드 검색"
     },
     "defSearch": {
       "ariaLabel": "Def로 이동",
@@ -1342,8 +1358,37 @@
       "selectAllShown": "표시된 {count}개 모두 선택",
       "selectAllEmpty": "모두 선택",
       "selectedCount": "{count}개 선택됨",
-      "notShown": "{count}개 표시되지 않음",
+      "notShown": "({count}개 표시되지 않음)",
       "clear": "선택 해제"
+    },
+    "move": {
+      "up": "위로 이동",
+      "down": "아래로 이동",
+      "top": "맨 위로 이동",
+      "bottom": "맨 아래로 이동",
+      "after": "다른 모드 뒤로 이동…",
+      "menuButton": "{name} 이동",
+      "activateAtButton": "{name} 활성화 위치 선택…",
+      "afterDialogHeader": "다른 모드 뒤로 이동",
+      "activateAtDialogHeader": "지정한 위치에 활성화",
+      "pickHelp": "선택 항목을 어느 모드 바로 뒤에 놓을지 고르세요.",
+      "atStart": "목록의 맨 처음",
+      "atEnd": "목록의 맨 끝",
+      "pickCapped": "일치 항목 중 처음 {count}개를 표시 중입니다. 다른 항목을 보려면 검색 범위를 좁히세요.",
+      "blockedReason": "이 목록이 로드 순서(처음부터 끝까지)로 정렬되어 있지 않아 순서 변경이 꺼져 있습니다. 모드를 이동하려면 로드 순서로 정렬하세요.",
+      "edgeTop": "이미 이 목록의 맨 위에 있음",
+      "edgeBottom": "이미 이 목록의 맨 아래에 있음",
+      "announced": "{name} 모드를 {position}번째 위치로 이동했습니다",
+      "announcedOf": "{name} 모드를 {total}개 중 {position}번째 위치로 이동했습니다",
+      "announcedMany": "모드 {count}개를 이동했습니다. {position}번째 위치부터 배치되었습니다",
+      "announcedManyOf": "모드 {count}개를 이동했습니다. {total}개 중 {position}번째 위치부터 배치되었습니다",
+      "announcedManyHidden": "모드 {count}개({hidden}개 표시되지 않음)를 이동했습니다. {position}번째 위치부터 배치되었습니다",
+      "announcedManyHiddenOf": "모드 {count}개({hidden}개 표시되지 않음)를 이동했습니다. {total}개 중 {position}번째 위치부터 배치되었습니다",
+      "switchedNote": "이제 직접 정한 순서를 사용합니다 — 제안된 순서는 바뀌지 않았습니다.",
+      "viewSuggested": "제안된 순서 보기",
+      "suggestedNote": "적용하면 제안된 순서가 기록됩니다. 모드를 이동하면 직접 정한 순서로 전환됩니다.",
+      "coreStaysActive": "코어는 비활성화할 수 없습니다.",
+      "inactiveNotOrdered": "이 목록에는 자체 순서가 없습니다. 모드를 활성화하려면 활성 목록으로 끌어다 놓으세요."
     }
   },
   "rules": {
@@ -1712,7 +1757,8 @@
       "noEntries": "패키지 ID를 찾지 못했습니다."
     },
     "importedWithWarnings": "스캔에서 경고 {count}개가 보고되었습니다.",
-    "importedRuleWarnings": "가져왔지만 불러오지 못한 규칙이 있음"
+    "importedRuleWarnings": "가져왔지만 불러오지 못한 규칙이 있음",
+    "revertOrder": "ModsConfig.xml 순서로 되돌리기"
   },
   "apply": {
     "dialog": {
@@ -1986,6 +2032,7 @@
       "chooseButton": "선택…",
       "installCheckboxLabel": "Mods 폴더에 설치하고 활성화",
       "staleActiveSetNote": "대기 중인 활성화 변경 사항은 포함되지 않습니다. 이번 설치에 포함하려면 먼저 다시 스캔하세요.",
+      "unappliedOrderNote": "설치하면 아직 적용되지 않은 현재 순서가 기록됩니다.",
       "forceWarning": "RimWorldWin64.exe가 실행 중인 것으로 보입니다. 지금 설치하면 ModsConfig.xml에 기록하게 되며, 게임은 종료할 때 이 파일을 덮어쓰므로 변경 내용이 사라질 수 있습니다. 그래도 내보낼까요?",
       "exportAnyway": "그래도 내보내기",
       "export": "내보내기",

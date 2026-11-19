@@ -575,6 +575,18 @@
       "nothing_to_export": {
         "title": "没有可导出的内容",
         "detail": "没有可列出的已启用 Mod。请检查 ModsConfig.xml 中的已启用 Mod。"
+      },
+      "move_anchor_not_active": {
+        "title": "该 Mod 已不在已启用列表中",
+        "detail": "你拖放时所靠近的 Mod 已被禁用或移到别处，因此没有做任何更改。列表已刷新；请重新移动一次。"
+      },
+      "revert_order_pending_changes": {
+        "title": "请先放弃待定更改",
+        "detail": "已启用列表中有尚未扫描的更改。请放弃这些更改或重新扫描，然后再恢复顺序。"
+      },
+      "revert_order_membership_differs": {
+        "title": "该文件列出的 Mod 不同",
+        "detail": "ModsConfig.xml 列出的 Mod 与当前顺序中的不同，因此没有可恢复的顺序。请改用该文件中的列表，或应用你自己的顺序。"
       }
     }
   },
@@ -1180,6 +1192,7 @@
       "chooseButton": "选择…",
       "installCheckboxLabel": "安装到 Mods 文件夹并启用",
       "staleActiveSetNote": "未包含待定的启用状态更改——如果希望本次安装包含它们，请先重新扫描。",
+      "unappliedOrderNote": "安装会写入你的当前顺序，而该顺序尚未应用。",
       "forceWarning": "RimWorldWin64.exe 似乎正在运行。现在安装会写入 ModsConfig.xml，而游戏退出时会覆盖该文件，因此这次更改可能会丢失。仍然导出？",
       "exportAnyway": "仍然导出",
       "export": "导出",
@@ -1276,7 +1289,8 @@
       "unapplied": "{count} 项更改尚未应用到 ModsConfig.xml",
       "rescanButton": "重新扫描",
       "rescanFinishedToast": "重新扫描完成，有 {count} 条备注",
-      "rescannedWithWarningsToast": "重新扫描完成，但有警告"
+      "rescannedWithWarningsToast": "重新扫描完成，但有警告",
+      "discardButton": "放弃待定更改"
     },
     "closeGuard": {
       "header": "未保存的已启用 Mod 更改",
@@ -1308,8 +1322,8 @@
     },
     "page": {
       "heading": "Mod",
-      "activeTab": "已启用",
-      "inactiveTab": "未启用",
+      "activeHeading": "已启用",
+      "inactiveHeading": "未启用",
       "searchPlaceholder": "搜索 Mod…",
       "tagFilterPlaceholder": "按标签筛选…",
       "sourcePlaceholder": "来源",
@@ -1332,7 +1346,9 @@
       "dependentsStillActive": "{count} 个已启用的 Mod 仍依赖 {mod}：{deps}。",
       "deactivatedToast": "已禁用",
       "deactivateButton": "禁用",
-      "rescanButton": "重新扫描 Mod"
+      "rescanButton": "重新扫描 Mod",
+      "searchActiveLabel": "搜索已启用的 Mod",
+      "searchInactiveLabel": "搜索未启用的 Mod"
     },
     "defSearch": {
       "ariaLabel": "跳转到 Def",
@@ -1342,8 +1358,37 @@
       "selectAllShown": "全选当前显示的 {count} 个",
       "selectAllEmpty": "全选",
       "selectedCount": "已选 {count} 个",
-      "notShown": "{count} 个未显示",
+      "notShown": "（{count} 个未显示）",
       "clear": "清除选择"
+    },
+    "move": {
+      "up": "上移",
+      "down": "下移",
+      "top": "移到顶部",
+      "bottom": "移到底部",
+      "after": "移到指定 Mod 之后…",
+      "menuButton": "移动 {name}",
+      "activateAtButton": "在指定位置启用 {name}…",
+      "afterDialogHeader": "移到另一个 Mod 之后",
+      "activateAtDialogHeader": "在指定位置启用",
+      "pickHelp": "选择一个 Mod，所选项将紧接着放在它之后。",
+      "atStart": "列表开头",
+      "atEnd": "列表末尾",
+      "pickCapped": "仅显示前 {count} 个匹配项。缩小搜索范围即可查看其他项。",
+      "blockedReason": "此列表未按加载顺序从先到后排序，因此已关闭调整顺序。请按加载顺序从先到后排序，即可移动 Mod。",
+      "edgeTop": "已在此列表顶部",
+      "edgeBottom": "已在此列表底部",
+      "announced": "已将 {name} 移到第 {position} 位",
+      "announcedOf": "已将 {name} 移到第 {position} 位（共 {total} 位）",
+      "announcedMany": "已移动 {count} 个 Mod，从第 {position} 位开始",
+      "announcedManyOf": "已移动 {count} 个 Mod，从第 {position} 位（共 {total} 位）开始",
+      "announcedManyHidden": "已移动 {count} 个 Mod（其中 {hidden} 个未显示），从第 {position} 位开始",
+      "announcedManyHiddenOf": "已移动 {count} 个 Mod（其中 {hidden} 个未显示），从第 {position} 位（共 {total} 位）开始",
+      "switchedNote": "现在使用的是你自己的顺序——建议顺序保持不变。",
+      "viewSuggested": "查看建议顺序",
+      "suggestedNote": "点击应用将写入建议顺序。移动任意 Mod 即会切换到你自己的顺序。",
+      "coreStaysActive": "Core 无法禁用。",
+      "inactiveNotOrdered": "此列表没有自己的顺序。将 Mod 拖到已启用列表即可启用它们。"
     }
   },
   "rules": {
@@ -1712,7 +1757,8 @@
       "noEntries": "未找到任何 ID。"
     },
     "importedWithWarnings": "扫描报告了 {count} 条警告。",
-    "importedRuleWarnings": "已导入，但有规则无法载入"
+    "importedRuleWarnings": "已导入，但有规则无法载入",
+    "revertOrder": "恢复为 ModsConfig.xml 中的顺序"
   },
   "apply": {
     "dialog": {
@@ -1986,6 +2032,7 @@
       "chooseButton": "选择…",
       "installCheckboxLabel": "安装到 Mods 文件夹并启用",
       "staleActiveSetNote": "未包含待定的启用状态更改——如果希望本次安装包含它们，请先重新扫描。",
+      "unappliedOrderNote": "安装会写入你的当前顺序，而该顺序尚未应用。",
       "forceWarning": "RimWorldWin64.exe 似乎正在运行。现在安装会写入 ModsConfig.xml，而游戏退出时会覆盖该文件，因此这次更改可能会丢失。仍然导出？",
       "exportAnyway": "仍然导出",
       "export": "导出",

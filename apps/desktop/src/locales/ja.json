@@ -575,6 +575,18 @@
       "nothing_to_export": {
         "title": "エクスポートするものがありません",
         "detail": "リストに含められる有効なMODがありませんでした。ModsConfig.xmlの有効なMODを確認してください。"
+      },
+      "move_anchor_not_active": {
+        "title": "そのMODはもう有効なMODリストにありません",
+        "detail": "ドロップ先として指定したMODが無効化されたか別の位置に移動されたため、何も変更されませんでした。リストを最新の状態に更新しました。もう一度移動してください。"
+      },
+      "revert_order_pending_changes": {
+        "title": "先に保留中の変更を破棄してください",
+        "detail": "有効なMODリストに、まだスキャンされていない変更があります。変更を破棄するか再スキャンしてから、順序を元に戻してください。"
+      },
+      "revert_order_membership_differs": {
+        "title": "ファイルに記載されたMODが異なります",
+        "detail": "ModsConfig.xmlには現在の順序とは異なるMODが記載されているため、戻せる順序がありません。代わりにファイルのリストを使用するか、独自の順序を適用してください。"
       }
     }
   },
@@ -1180,6 +1192,7 @@
       "chooseButton": "選択…",
       "installCheckboxLabel": "Modsフォルダーにインストールして有効化",
       "staleActiveSetNote": "保留中の有効化の変更は含まれません。このインストールに反映したい場合は、先に再スキャンしてください。",
+      "unappliedOrderNote": "インストールすると現在の順序が書き込まれますが、この順序はまだ適用されていません。",
       "forceWarning": "RimWorldWin64.exeが実行中のようです。今インストールするとModsConfig.xmlに書き込みますが、ゲームは終了時にこのファイルを上書きするため、変更が失われるおそれがあります。それでもエクスポートしますか？",
       "exportAnyway": "それでもエクスポート",
       "export": "エクスポート",
@@ -1276,7 +1289,8 @@
       "unapplied": "ModsConfig.xmlにまだ適用されていない変更{count}件",
       "rescanButton": "再スキャン",
       "rescanFinishedToast": "再スキャン完了（メモ{count}件）",
-      "rescannedWithWarningsToast": "再スキャンしました（警告あり）"
+      "rescannedWithWarningsToast": "再スキャンしました（警告あり）",
+      "discardButton": "保留中の変更を破棄"
     },
     "closeGuard": {
       "header": "有効なMODへの未保存の変更",
@@ -1308,8 +1322,8 @@
     },
     "page": {
       "heading": "MOD",
-      "activeTab": "有効",
-      "inactiveTab": "無効",
+      "activeHeading": "有効",
+      "inactiveHeading": "無効",
       "searchPlaceholder": "MODを検索…",
       "tagFilterPlaceholder": "タグで絞り込む…",
       "sourcePlaceholder": "入手元",
@@ -1332,7 +1346,9 @@
       "dependentsStillActive": "{count}個の有効なMODが、まだ{mod}に依存しています：{deps}。",
       "deactivatedToast": "無効化しました",
       "deactivateButton": "無効化",
-      "rescanButton": "MODを再スキャン"
+      "rescanButton": "MODを再スキャン",
+      "searchActiveLabel": "有効なMODを検索",
+      "searchInactiveLabel": "無効なMODを検索"
     },
     "defSearch": {
       "ariaLabel": "Defへ移動",
@@ -1342,8 +1358,37 @@
       "selectAllShown": "表示中の{count}個をすべて選択",
       "selectAllEmpty": "すべて選択",
       "selectedCount": "{count}個を選択中",
-      "notShown": "{count}個は非表示",
+      "notShown": "（{count}個は非表示）",
       "clear": "選択を解除"
+    },
+    "move": {
+      "up": "上へ移動",
+      "down": "下へ移動",
+      "top": "一番上へ移動",
+      "bottom": "一番下へ移動",
+      "after": "別のMODの後へ移動…",
+      "menuButton": "{name}を移動",
+      "activateAtButton": "位置を指定して{name}を有効化…",
+      "afterDialogHeader": "別のMODの後へ移動",
+      "activateAtDialogHeader": "位置を指定して有効化",
+      "pickHelp": "選択したMODをどのMODの直後に置くかを選んでください。",
+      "atStart": "リストの最初",
+      "atEnd": "リストの最後",
+      "pickCapped": "一致した最初の{count}個を表示しています。ほかのMODを表示するには、検索を絞り込んでください。",
+      "blockedReason": "このリストがロード順（最初から最後へ）で並べ替えられていないため、MODを移動できません。MODを移動するには、ロード順（最初から最後へ）で並べ替えてください。",
+      "edgeTop": "すでにこのリストの一番上にあります",
+      "edgeBottom": "すでにこのリストの一番下にあります",
+      "announced": "{name}を{position}番目に移動しました",
+      "announcedOf": "{name}を{position}番目（全{total}個中）に移動しました",
+      "announcedMany": "{count}個のMODを{position}番目以降に移動しました",
+      "announcedManyOf": "{count}個のMODを{position}番目以降に移動しました（全{total}個中）",
+      "announcedManyHidden": "{count}個のMOD（うち{hidden}個は非表示）を{position}番目以降に移動しました",
+      "announcedManyHiddenOf": "{count}個のMOD（うち{hidden}個は非表示）を{position}番目以降に移動しました（全{total}個中）",
+      "switchedNote": "独自の順序を使用しています。提案された順序は変わっていません。",
+      "viewSuggested": "提案を表示",
+      "suggestedNote": "「適用」すると提案された順序が書き込まれます。MODを移動すると、独自の順序に切り替わります。",
+      "coreStaysActive": "Coreは無効化できません。",
+      "inactiveNotOrdered": "このリストに順序はありません。MODを有効化するには、「有効」リストへドラッグしてください。"
     }
   },
   "rules": {
@@ -1712,7 +1757,8 @@
       "noEntries": "パッケージIDが見つかりませんでした。"
     },
     "importedWithWarnings": "スキャンで{count}件の警告が報告されました。",
-    "importedRuleWarnings": "インポートしましたが、読み込めなかったルールがあります"
+    "importedRuleWarnings": "インポートしましたが、読み込めなかったルールがあります",
+    "revertOrder": "ModsConfig.xmlの順序に戻す"
   },
   "apply": {
     "dialog": {
@@ -1986,6 +2032,7 @@
       "chooseButton": "選択…",
       "installCheckboxLabel": "Modsフォルダーにインストールして有効化",
       "staleActiveSetNote": "保留中の有効化の変更は含まれません。このインストールに反映したい場合は、先に再スキャンしてください。",
+      "unappliedOrderNote": "インストールすると現在の順序が書き込まれますが、この順序はまだ適用されていません。",
       "forceWarning": "RimWorldWin64.exeが実行中のようです。今インストールするとModsConfig.xmlに書き込みますが、ゲームは終了時にこのファイルを上書きするため、変更が失われるおそれがあります。それでもエクスポートしますか？",
       "exportAnyway": "それでもエクスポート",
       "export": "エクスポート",

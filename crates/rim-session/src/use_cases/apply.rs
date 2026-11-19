@@ -795,4 +795,40 @@ mod tests {
 
         assert!(session.file_matches(OrderSource::Suggested));
     }
+
+    /// After a settled move, Current is the moved order: an Apply of Current
+    /// writes it, never the pre-move list.
+    #[test]
+    fn apply_after_a_move_writes_the_moved_order() {
+        let mut session = session_fixture(&["a", "b", "c"]);
+        crate::use_cases::MoveMods::execute(
+            &mut session,
+            &[ModId::new("c")],
+            &crate::active_set::Anchor::Start,
+        )
+        .expect("valid move");
+        let use_case = use_case(config_store());
+
+        use_case
+            .execute(
+                &mut session,
+                ApplyOptions {
+                    source: OrderSource::Current,
+                    write_mods_config: true,
+                    write_merge_mod: false,
+                },
+            )
+            .expect("a settled move is not stale");
+
+        let writes = use_case.config_store.writes();
+        assert_eq!(
+            writes[0].active_mods,
+            [ModId::new("c"), ModId::new("a"), ModId::new("b")]
+        );
+        assert!(session.file_matches(OrderSource::Current));
+        assert_eq!(
+            session.working().ids(),
+            [ModId::new("c"), ModId::new("a"), ModId::new("b")]
+        );
+    }
 }

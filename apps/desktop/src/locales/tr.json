@@ -575,6 +575,18 @@
       "nothing_to_export": {
         "title": "Dışa aktarılacak bir şey yok",
         "detail": "Hiçbir etkin mod listelenemedi. ModsConfig.xml dosyasındaki etkin modları denetle."
+      },
+      "move_anchor_not_active": {
+        "title": "Bu mod artık etkin listede değil",
+        "detail": "Yanına bıraktığın mod devre dışı bırakıldı ya da başka bir yere taşındı, bu yüzden hiçbir şey değiştirilmedi. Liste yenilendi; taşımayı yeniden dene."
+      },
+      "revert_order_pending_changes": {
+        "title": "Önce bekleyen değişikliklerini at",
+        "detail": "Etkin listede henüz taranmamış değişiklikler var. Bunları at ya da yeniden tara, sonra ModsConfig.xml sırasına geri dön."
+      },
+      "revert_order_membership_differs": {
+        "title": "Dosyada farklı modlar listeleniyor",
+        "detail": "ModsConfig.xml dosyasında mevcut sıradakinden farklı modlar listeleniyor, bu yüzden geri dönülecek bir sıra yok. Bunun yerine dosyadaki listeyi kullan ya da kendi sıranı uygula."
       }
     }
   },
@@ -1180,6 +1192,7 @@
       "chooseButton": "Seç…",
       "installCheckboxLabel": "Mods klasörüne kur ve etkinleştir",
       "staleActiveSetNote": "Bekleyen etkinleştirme değişiklikleri dahil değil — bu kuruluma girmelerini istiyorsan önce yeniden tara.",
+      "unappliedOrderNote": "Kurulum mevcut sıranı yazar; bu sıra henüz uygulanmadı.",
       "forceWarning": "RimWorldWin64.exe çalışıyor görünüyor. Şimdi kurmak ModsConfig.xml dosyasına yazar; oyun kapanırken bu dosyanın üzerine yazdığı için değişiklik kaybolabilir. Yine de dışa aktarılsın mı?",
       "exportAnyway": "Yine de dışa aktar",
       "export": "Dışa aktar",
@@ -1276,7 +1289,8 @@
       "unapplied": "{count} değişiklik henüz ModsConfig.xml dosyasına uygulanmadı | {count} değişiklik henüz ModsConfig.xml dosyasına uygulanmadı",
       "rescanButton": "Yeniden tara",
       "rescanFinishedToast": "Yeniden tarama tamamlandı: {count} not | Yeniden tarama tamamlandı: {count} not",
-      "rescannedWithWarningsToast": "Yeniden tarama uyarılarla tamamlandı"
+      "rescannedWithWarningsToast": "Yeniden tarama uyarılarla tamamlandı",
+      "discardButton": "Bekleyen değişiklikleri at"
     },
     "closeGuard": {
       "header": "Kaydedilmemiş etkin mod değişiklikleri",
@@ -1308,8 +1322,8 @@
     },
     "page": {
       "heading": "Modlar",
-      "activeTab": "Etkin",
-      "inactiveTab": "Etkin olmayan",
+      "activeHeading": "Etkin",
+      "inactiveHeading": "Etkin olmayan",
       "searchPlaceholder": "Modlarda ara…",
       "tagFilterPlaceholder": "Etikete göre filtrele…",
       "sourcePlaceholder": "Kaynak",
@@ -1332,7 +1346,9 @@
       "dependentsStillActive": "{count} etkin mod hâlâ {mod} moduna bağımlı: {deps}. | {count} etkin mod hâlâ {mod} moduna bağımlı: {deps}.",
       "deactivatedToast": "Devre dışı bırakıldı",
       "deactivateButton": "Devre dışı bırak",
-      "rescanButton": "Modları yeniden tara"
+      "rescanButton": "Modları yeniden tara",
+      "searchActiveLabel": "Etkin modlarda ara",
+      "searchInactiveLabel": "Etkin olmayan modlarda ara"
     },
     "defSearch": {
       "ariaLabel": "Bir Def'e git",
@@ -1342,8 +1358,37 @@
       "selectAllShown": "Gösterilen {count} modun tümünü seç | Gösterilen {count} modun tümünü seç",
       "selectAllEmpty": "Tümünü seç",
       "selectedCount": "{count} seçili | {count} seçili",
-      "notShown": "{count} gösterilmiyor | {count} gösterilmiyor",
+      "notShown": "({count} gösterilmiyor) | ({count} gösterilmiyor)",
       "clear": "Seçimi temizle"
+    },
+    "move": {
+      "up": "Yukarı taşı",
+      "down": "Aşağı taşı",
+      "top": "En üste taşı",
+      "bottom": "En alta taşı",
+      "after": "Bir modun ardına taşı…",
+      "menuButton": "{name} modunu taşı",
+      "activateAtButton": "{name} modunu belirli bir konumda etkinleştir…",
+      "afterDialogHeader": "Başka bir modun ardına taşı",
+      "activateAtDialogHeader": "Belirli bir konumda etkinleştir",
+      "pickHelp": "Seçimin hemen ardına yerleştirileceği modu seç.",
+      "atStart": "Listenin başına",
+      "atEnd": "Listenin sonuna",
+      "pickCapped": "İlk {count} eşleşme gösteriliyor. Diğerlerini görmek için aramayı daralt.",
+      "blockedReason": "Bu liste yükleme sırasına göre ilkten sona sıralanmadığı için yeniden sıralama kapalı. Modları taşımak için yükleme sırasına göre sırala.",
+      "edgeTop": "Zaten bu listenin en üstünde",
+      "edgeBottom": "Zaten bu listenin en altında",
+      "announced": "{name} modu {position}. konuma taşındı",
+      "announcedOf": "{name} modu {position}. konuma taşındı (toplam {total})",
+      "announcedMany": "{count} mod {position}. konumdan başlayarak taşındı | {count} mod {position}. konumdan başlayarak taşındı",
+      "announcedManyOf": "{count} mod {position}. konumdan başlayarak taşındı (toplam {total}) | {count} mod {position}. konumdan başlayarak taşındı (toplam {total})",
+      "announcedManyHidden": "{count} mod ({hidden} tanesi gösterilmiyor) {position}. konumdan başlayarak taşındı | {count} mod ({hidden} tanesi gösterilmiyor) {position}. konumdan başlayarak taşındı",
+      "announcedManyHiddenOf": "{count} mod ({hidden} tanesi gösterilmiyor) {position}. konumdan başlayarak taşındı (toplam {total}) | {count} mod ({hidden} tanesi gösterilmiyor) {position}. konumdan başlayarak taşındı (toplam {total})",
+      "switchedNote": "Artık kendi sıranı kullanıyorsun — önerilen sıra değişmedi.",
+      "viewSuggested": "Önerilen sırayı göster",
+      "suggestedNote": "Uygula işlemi önerilen sırayı yazacak. Bir modu taşırsan kendi sırana geçilir.",
+      "coreStaysActive": "Ana İçerik devre dışı bırakılamaz.",
+      "inactiveNotOrdered": "Bu listenin kendine ait bir sırası yok. Modları etkinleştirmek için Etkin listeye sürükle."
     }
   },
   "rules": {
@@ -1712,7 +1757,8 @@
       "noEntries": "Hiç paket ID'si bulunamadı."
     },
     "importedWithWarnings": "Tarama {count} uyarı bildirdi. | Tarama {count} uyarı bildirdi.",
-    "importedRuleWarnings": "İçe aktarıldı, ancak bazı kurallar yüklenemedi"
+    "importedRuleWarnings": "İçe aktarıldı, ancak bazı kurallar yüklenemedi",
+    "revertOrder": "ModsConfig.xml sırasına geri dön"
   },
   "apply": {
     "dialog": {
@@ -1986,6 +2032,7 @@
       "chooseButton": "Seç…",
       "installCheckboxLabel": "Mods klasörüne kur ve etkinleştir",
       "staleActiveSetNote": "Bekleyen etkinleştirme değişiklikleri dahil değil — bu kuruluma girmelerini istiyorsan önce yeniden tara.",
+      "unappliedOrderNote": "Kurulum mevcut sıranı yazar; bu sıra henüz uygulanmadı.",
       "forceWarning": "RimWorldWin64.exe çalışıyor görünüyor. Şimdi kurmak ModsConfig.xml dosyasına yazar; oyun kapanırken bu dosyanın üzerine yazdığı için değişiklik kaybolabilir. Yine de dışa aktarılsın mı?",
       "exportAnyway": "Yine de dışa aktar",
       "export": "Dışa aktar",

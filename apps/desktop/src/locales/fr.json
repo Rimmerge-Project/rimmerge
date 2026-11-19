@@ -575,6 +575,18 @@
       "nothing_to_export": {
         "title": "Rien à exporter",
         "detail": "Aucun mod actif n’a pu être listé. Vérifiez les mods actifs dans ModsConfig.xml."
+      },
+      "move_anchor_not_active": {
+        "title": "Ce mod n’est plus dans la liste des mods actifs",
+        "detail": "Le mod à côté duquel vous avez déposé la sélection a été désactivé ou déplacé, donc rien n’a été modifié. La liste a été actualisée ; réessayez le déplacement."
+      },
+      "revert_order_pending_changes": {
+        "title": "Annulez d’abord vos modifications en attente",
+        "detail": "La liste des mods actifs comporte des modifications qui n’ont pas encore été analysées. Annulez-les ou réanalysez, puis rétablissez l’ordre."
+      },
+      "revert_order_membership_differs": {
+        "title": "Le fichier indique d’autres mods",
+        "detail": "ModsConfig.xml indique d’autres mods que l’ordre actuel : il n’y a donc aucun ordre à rétablir. Utilisez plutôt la liste du fichier, ou appliquez votre propre ordre."
       }
     }
   },
@@ -1180,6 +1192,7 @@
       "chooseButton": "Choisir…",
       "installCheckboxLabel": "Installer dans Mods et activer",
       "staleActiveSetNote": "Les modifications d’activation en attente ne sont pas incluses : réanalysez d’abord si vous voulez qu’elles figurent dans cette installation.",
+      "unappliedOrderNote": "L’installation écrit votre ordre actuel, qui n’est pas encore appliqué.",
       "forceWarning": "RimWorldWin64.exe semble être en cours d’exécution. Si vous installez maintenant, ModsConfig.xml sera écrit, or le jeu l’écrase en quittant : la modification risque donc d’être perdue. Exporter malgré tout ?",
       "exportAnyway": "Exporter malgré tout",
       "export": "Exporter",
@@ -1276,7 +1289,8 @@
       "unapplied": "{count} modification pas encore appliquée à ModsConfig.xml | {count} modifications pas encore appliquées à ModsConfig.xml",
       "rescanButton": "Réanalyser",
       "rescanFinishedToast": "Nouvelle analyse terminée avec {count} remarque | Nouvelle analyse terminée avec {count} remarques",
-      "rescannedWithWarningsToast": "Réanalysé avec des avertissements"
+      "rescannedWithWarningsToast": "Réanalysé avec des avertissements",
+      "discardButton": "Annuler les modifications en attente"
     },
     "closeGuard": {
       "header": "Modifications des mods actifs non enregistrées",
@@ -1308,8 +1322,8 @@
     },
     "page": {
       "heading": "Mods",
-      "activeTab": "Actifs",
-      "inactiveTab": "Inactifs",
+      "activeHeading": "Actifs",
+      "inactiveHeading": "Inactifs",
       "searchPlaceholder": "Rechercher des mods…",
       "tagFilterPlaceholder": "Filtrer par tag…",
       "sourcePlaceholder": "Source",
@@ -1332,7 +1346,9 @@
       "dependentsStillActive": "{count} mod actif dépend encore de {mod} : {deps}. | {count} mods actifs dépendent encore de {mod} : {deps}.",
       "deactivatedToast": "Désactivés",
       "deactivateButton": "Désactiver",
-      "rescanButton": "Réanalyser les mods"
+      "rescanButton": "Réanalyser les mods",
+      "searchActiveLabel": "Rechercher dans les mods actifs",
+      "searchInactiveLabel": "Rechercher dans les mods inactifs"
     },
     "defSearch": {
       "ariaLabel": "Aller à une def",
@@ -1342,8 +1358,37 @@
       "selectAllShown": "Tout sélectionner ({count} affiché) | Tout sélectionner ({count} affichés)",
       "selectAllEmpty": "Tout sélectionner",
       "selectedCount": "{count} sélectionné | {count} sélectionnés",
-      "notShown": "{count} non affiché | {count} non affichés",
+      "notShown": "({count} non affiché) | ({count} non affichés)",
       "clear": "Tout désélectionner"
+    },
+    "move": {
+      "up": "Déplacer vers le haut",
+      "down": "Déplacer vers le bas",
+      "top": "Déplacer tout en haut",
+      "bottom": "Déplacer tout en bas",
+      "after": "Déplacer après…",
+      "menuButton": "Déplacer {name}",
+      "activateAtButton": "Activer {name} à une position…",
+      "afterDialogHeader": "Déplacer après un autre mod",
+      "activateAtDialogHeader": "Activer à une position",
+      "pickHelp": "Choisissez le mod juste après lequel placer la sélection.",
+      "atStart": "Au début de la liste",
+      "atEnd": "À la fin de la liste",
+      "pickCapped": "Affichage des {count} premiers résultats. Affinez la recherche pour voir les autres.",
+      "blockedReason": "Le réordonnancement est désactivé, car cette liste n’est pas triée par ordre de chargement, du premier au dernier. Triez par ordre de chargement pour déplacer des mods.",
+      "edgeTop": "Déjà en haut de cette liste",
+      "edgeBottom": "Déjà en bas de cette liste",
+      "announced": "{name} déplacé en position {position}",
+      "announcedOf": "{name} déplacé en position {position} sur {total}",
+      "announcedMany": "{count} mod déplacé, à partir de la position {position} | {count} mods déplacés, à partir de la position {position}",
+      "announcedManyOf": "{count} mod déplacé, à partir de la position {position} sur {total} | {count} mods déplacés, à partir de la position {position} sur {total}",
+      "announcedManyHidden": "{count} mod déplacé (dont {hidden} hors affichage), à partir de la position {position} | {count} mods déplacés (dont {hidden} hors affichage), à partir de la position {position}",
+      "announcedManyHiddenOf": "{count} mod déplacé (dont {hidden} hors affichage), à partir de la position {position} sur {total} | {count} mods déplacés (dont {hidden} hors affichage), à partir de la position {position} sur {total}",
+      "switchedNote": "Vous utilisez maintenant votre propre ordre ; l’ordre suggéré reste inchangé.",
+      "viewSuggested": "Voir l’ordre suggéré",
+      "suggestedNote": "Appliquer écrira l’ordre suggéré. Déplacer un mod fait passer à votre propre ordre.",
+      "coreStaysActive": "Core ne peut pas être désactivé.",
+      "inactiveNotOrdered": "Cette liste n’a pas d’ordre propre. Faites glisser des mods vers la liste des mods actifs pour les activer."
     }
   },
   "rules": {
@@ -1712,7 +1757,8 @@
       "noEntries": "Aucun ID de paquet n’a été trouvé."
     },
     "importedWithWarnings": "L’analyse a signalé {count} avertissement. | L’analyse a signalé {count} avertissements.",
-    "importedRuleWarnings": "Importé, mais certaines règles n’ont pas pu être chargées"
+    "importedRuleWarnings": "Importé, mais certaines règles n’ont pas pu être chargées",
+    "revertOrder": "Rétablir l’ordre de ModsConfig.xml"
   },
   "apply": {
     "dialog": {
@@ -1986,6 +2032,7 @@
       "chooseButton": "Choisir…",
       "installCheckboxLabel": "Installer dans Mods et activer",
       "staleActiveSetNote": "Les modifications d’activation en attente ne sont pas incluses : réanalysez d’abord si vous voulez qu’elles figurent dans cette installation.",
+      "unappliedOrderNote": "L’installation écrit votre ordre actuel, qui n’est pas encore appliqué.",
       "forceWarning": "RimWorldWin64.exe semble être en cours d’exécution. Si vous installez maintenant, ModsConfig.xml sera écrit, or le jeu l’écrase en quittant : la modification risque donc d’être perdue. Exporter malgré tout ?",
       "exportAnyway": "Exporter malgré tout",
       "export": "Exporter",

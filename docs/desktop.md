@@ -218,13 +218,16 @@ about each.
 
 ## Mods (`/mods`, `/mods/:modId`, `/mods/:modId/details`)
 
-Lists every discovered mod — active, inactive, or both — and lets you
-activate or deactivate mods. A change is staged in the app, not written
-to `ModsConfig.xml`: it reaches the file's `<activeMods>` list only when
-you Rescan and then Apply. Until then a pending-changes banner shows it,
-and a stale-order warning appears once the active set no longer matches
-the order you last built.
-`Activate` can pull in a mod's own declared dependencies first.
+Lists every discovered mod and lets you activate, deactivate and reorder
+them. The **Inactive** list is on the left and the **Active** list on the
+right, side by side on a window about 1,024 pixels wide or more, and stacked
+(Inactive above Active) below that. Each list has its own search, source
+filter (the Active list also a tag filter), sort and selection. A change is
+staged in the app, not written to `ModsConfig.xml`: it reaches the file's
+`<activeMods>` list only when you Apply (after a Rescan, when mods were added
+or removed). Until then a pending-changes banner shows it, and a stale-order
+warning appears once the active set no longer matches the order you last
+built. `Activate` can pull in a mod's own declared dependencies first.
 
 **The lists show the working set.** Active is the active-mod list as you
 have edited it, in its own order, with every mod in it (there is no page
@@ -272,6 +275,72 @@ itself: Activate selected and Deactivate selected still open their plan
 and confirmation first, and if the plan cannot be made the dialog opens
 with the reason and no way to confirm.
 
+**Moving mods.** Three ways move a mod, and all of them end in the same
+thing: the mod is placed next to a neighbour mod, named by its package id,
+never by a row number, so a search or filter on the Active list never changes
+which place is meant.
+
+- *Drag and drop.* Pick up a row (or any selected row: the whole selection
+  moves together, in list order, including selected mods a filter hides) and drop it between two rows of the Active
+  list; a line shows the gap. Dropping a mod from the Inactive list there
+  activates it at that place; dropping an Active row on the Inactive list
+  deactivates it. A drop activates or deactivates straight away when the plan
+  is exactly the mods you dragged and has no warning; if it would also pull in
+  a dependency, or a mod still depends on one you dropped, the same
+  confirmation dialog as the buttons opens first (and an activation keeps the
+  place you chose). Core cannot be dropped on the Inactive list: the pointer
+  shows "not allowed" and the list says why. Dragging near the top or bottom
+  edge of a list scrolls it.
+- *The row menu.* Each Active row has a **Move** menu (the ⋮ button): Move up,
+  Move down, Move to top, Move to bottom, and **Move after…**, which opens a
+  search over the Active mods and puts the row right after the one you pick.
+  Each Inactive row has an **Activate at…** button with the same search, plus
+  "At the start of the list" and "At the end of the list". Up and Down move
+  one shown row, so they follow a filtered view.
+- *The keyboard.* **Alt+Up** and **Alt+Down** on a focused Active row move it
+  one row (with the same selection rule); plain arrow keys still move the
+  focus. **Shift+F10** or the **Menu** key on a focused row opens its row menu
+  (the ⋮ button is left out of the Tab order, so each row is one tab stop).
+  Shortcuts stay quiet inside dialogs and text fields.
+
+Every move is announced in a polite live region that screen readers read:
+"Moved *name* to position 14 of 312" (under a filter, without the total,
+since the list then shows only part of the order). A move carries the
+selected mods a filter hides, and the announcement says how many: "Moved 3
+mods (2 not shown), starting at position 14". A move that cannot happen
+says so instead ("Already at the top of this list").
+
+**When a list cannot be reordered.** Moving within Active is offered only
+while the Active list is sorted by load order, first to last (a search or
+filter is fine). Under any other sort the list's position numbers do not mean
+load order, so drag, the Move menu and Alt+Up/Down are all disabled and a
+note above the list says why; a mod dragged in from the Inactive list is still
+activated, at its default place. Inactive has no order of its own, so nothing
+is ever moved there.
+
+**What a move edits.** Moving mods, or activating a mod at a chosen place,
+edits your own (Current) order. A reorder over the same set of active mods
+takes effect at once and shows a note, "This order isn't in ModsConfig.xml
+yet", with an Apply button; it is not a pending scan, and Rescan is not
+needed. Nothing is written until you Apply. Closing the window or switching
+projects with such an order asks first. The first move (or the first
+activation at a chosen place) while the suggested order is selected switches
+the selection to your own order, and the page says so: "Now using your own
+order — the suggested order is unchanged", with a **View suggested** button.
+While the suggested order is selected and nothing has been moved, the Active
+list says that Apply will write the suggested order. Activating with the
+button, with no place chosen, never switches. A move whose neighbour has left
+the list in the meantime is refused with a message, changes nothing and
+refreshes the lists.
+
+**Undoing.** In the pending-changes banner, **Discard pending changes** drops
+the activations and deactivations that no rescan has picked up (no scan is
+needed; a reorder that already took effect stays). In the "not in
+ModsConfig.xml yet" note, **Revert order to ModsConfig.xml** puts your order
+back to the file's sequence; it is offered only when the file lists the same
+mods as your order and nothing waits for a rescan. See
+[load-order.md](concepts/load-order.md).
+
 **Rescan mods** (top right of the page, always available) re-scans the
 mods in the active list in their current order, exactly as the pending
 changes banner's Rescan does. Use it after changing files on disk.
@@ -280,26 +349,32 @@ recalculated whenever either order changes (an Apply, an import).
 Activating or deactivating mods only changes the pending list, so those
 changes reach it after a rescan.
 
-Opening a row from either tab (`/mods/:modId` — inactive mods can be
-opened too, not just active ones) shows a mod info panel beside the
-list: its preview image and icon when the mod ships one, its `About.xml`
+Opening a row from either list (`/mods/:modId` — inactive mods can be
+opened too, not just active ones) shows a mod info panel: on a very wide
+window (1,800 pixels or more) in a column beside the lists, and on narrower
+ones as a drawer over the right edge, so the two lists keep the width. It
+shows its preview image and icon when the mod ships one, its `About.xml`
 description (rendered as plain text — BBCode and any other markup show
 up literally, exactly as RimWorld itself displays an unrecognized tag),
 workshop and homepage links (opened in your system browser, never
 inside the app), and — for an active mod — its placement, tier, tags,
 dependents, and live findings, with a link into the def inspector for
-what it changes. The panel follows your keyboard focus as you move
-through the list (debounced, so arrowing quickly through rows doesn't
-fire a load per row) and closes when you navigate away. `Esc` or the
-close button also closes it. The panel's own "all details" link opens
+what it changes. In the column layout the panel follows your keyboard
+focus as you move through a list (debounced, so arrowing quickly through rows
+doesn't fire a load per row); the drawer opens only when you click or press
+Enter on a row, since it would otherwise cover the list you are arrowing
+through. When the drawer opens, keyboard focus moves into it; closing it
+with `Esc` or the close button puts focus back on the row that opened it.
+It closes when you navigate away. `Esc` or the close button also
+closes it. The panel's own "all details" link opens
 the same information as a full page (`/mods/:modId/details`) instead,
 for when you want it as the main view rather than a side panel.
 
 Each row has a small source icon after its checkbox: RimWorld Core,
 RimWorld DLC, Local mod (a folder under the game's `Mods/`), or Steam
 Workshop. The icon has a tooltip and screen-reader text with the same
-name, and on wide windows the name also shows beside it, so shape is never
-the only cue. The source is decided by where the scan found the mod's folder, never guessed from its
+name, and when the list is wide enough the name also shows beside it, so
+shape is never the only cue. The source is decided by where the scan found the mod's folder, never guessed from its
 name, package id or a Workshop id. A mod listed in `ModsConfig.xml` but not
 installed has no folder, so its icon reads "Origin unknown (not
 installed)" instead of a source. The icon is display only: it changes
@@ -308,11 +383,15 @@ neither selection, sorting, filtering nor the load order.
 The CLI's `mods show <id>` prints the same information from the command
 line — see [cli.md](cli.md).
 
-![Mods page, active tab](screenshots/mods-page/active-tab.png)
+![Mods page: Inactive and Active side by side](screenshots/mods-page/lists.png)
 
 Selecting inactive mods to activate:
 
-![Selecting inactive mods](screenshots/mods-page/inactive-tab-selection.png)
+![Selecting inactive mods](screenshots/mods-page/inactive-selection.png)
+
+A move leaves an order to apply, and says the page now uses your own order:
+
+![After moving a mod](screenshots/mods-page/moved-order.png)
 
 Activating pulls in dependencies on request:
 
@@ -626,7 +705,10 @@ first: the Apply dialog (opened from the sidebar's Apply button or the
 Dashboard strip; it also names any hard problem in the order first), and
 a patch or assignment export with "install" ticked (which also adds the
 generated mod to the list). The Mods page's activate/deactivate actions
-only stage a change in the app; it reaches the file when you Apply. Every
+and reorders only stage a change in the app; it reaches the file when you
+Apply. An install export writes your current order, so an order you have not
+applied yet (a move, an import) goes into the file with it; the export panel
+warns when that is the case. Every
 write takes a timestamped backup first, and each refuses to write while
 RimWorld looks like it is running unless you confirm the override.
 

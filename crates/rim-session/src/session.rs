@@ -334,11 +334,17 @@ pub struct Session {
     /// The working (in-memory, unsaved) active-mod list. Initialised from
     /// `orders.current` at construction (see [`ActiveSet::trusted`]'s own
     /// doc comment for why that's always valid); mutated only by
-    /// [`crate::use_cases::ActivateMods`]/[`crate::use_cases::DeactivateMods`],
-    /// which never touch `orders`, the ledgers, or the sorter — the report
-    /// doesn't know about a pending change yet, so re-sorting would be a
-    /// lie. This is the *only* in-memory-only state a mutating use case in
-    /// this crate carries; see this file's own top-of-file doc comment.
+    /// [`crate::use_cases::ActivateMods`]/[`crate::use_cases::DeactivateMods`]/
+    /// [`crate::use_cases::MoveMods`]. A membership edit never touches
+    /// `orders`, the ledgers, or the sorter — the report doesn't know about
+    /// a pending change yet, so re-sorting would be a lie. The one exception
+    /// is the edit settle: an edit that leaves the ids equal to Current's
+    /// replaces `orders.current` with `working`'s sequence in memory
+    /// ([`Session::settle_current_onto_working`], through
+    /// `current_order_replaced`, which clears the caches that read Current).
+    /// Nothing is persisted. This is the *only* in-memory-only state a
+    /// mutating use case in this crate edits directly; see this file's own
+    /// top-of-file doc comment.
     working: ActiveSet,
     /// The active-mod list `ModsConfig.xml` actually held at load time —
     /// updated by [`Session::set_current_order`] (whose own contract is

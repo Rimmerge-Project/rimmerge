@@ -197,6 +197,52 @@ current order" tie-break, which ranks unconstrained mods by where Current
 puts them, the suggested order is also sorted again whenever Current's
 sequence changes over the same set of mods.
 
+## Reordering by hand
+
+Moving mods in the active list (by drag and drop, the row's Move menu or
+Alt+Up/Down on the Mods page, or activating a mod at a chosen place in it)
+edits your own order, the **Current** order, directly. The edit is staged in
+the app first. When it leaves the set of active mods as it was, it takes
+effect in Current at once: nothing is scanned (the mods are the same), nothing
+is written, and `ModsConfig.xml` still holds the order it held. The order
+reaches the file only through an **Apply** of the Current order, which then
+writes the moved sequence. Until then the app shows the Current order as not
+in the file yet. The suggested order is never changed by a move, apart from the
+"preserve current order" re-sort above, which follows Current's sequence like it
+does after an Apply.
+
+One other write carries it: a patch or assignment export with "install" ticked
+writes the **Current** order to `ModsConfig.xml` (plus the generated mod), so an
+order that no Apply has written yet, a moved one or an imported one, goes into
+the file with the install. The export panels say so when install is ticked and
+Current is not in the file yet. Closing the window or switching projects with
+such an order asks first, the same as for staged activations.
+
+If the edit also adds or removes mods, there is nothing to settle yet: the move
+stays in the staged list, and the next Rescan scans the mods in that order and
+makes it Current. A reorder is a move of already-active mods, so the first one
+made while the suggested order is selected switches the selection to Current:
+Apply writes the selected order, and a manual order means you intend your own.
+Activating a mod at a chosen place (dropping it into the active list) is the
+same kind of act and switches the selection the same way; activating without a
+chosen place, with the button, never does.
+
+Two helpers undo what you staged. **Discard pending changes** puts the staged
+list back to Current, dropping activations and deactivations no rescan has
+picked up (no scan is needed). **Revert order to ModsConfig.xml** puts
+Current's sequence back to what the file holds, and is only possible when the
+file lists the same mods as Current and nothing is waiting for a rescan.
+
+Activating and deactivating follow the same rule in the other direction from
+an Apply: after a deactivation or activation that leaves the active mods equal
+to Current's, Current takes the staged sequence. Without a chosen place, a mod
+you activate goes back to where it sat in Current (right after its nearest
+earlier neighbour that is active), so deactivating a mod and activating it
+again leaves the order unchanged, unless one of the mod's declared
+dependencies is active now and sits after the mod's old place: the mod then
+lands right after that dependency, so it never loads before it. A mod Current
+never held goes to the end.
+
 ## What Rimmerge adds beyond what RimWorld enforces
 
 RimWorld itself never picks an order for you — it just loads whatever

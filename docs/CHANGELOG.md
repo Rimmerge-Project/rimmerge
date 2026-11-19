@@ -6,6 +6,30 @@ maintainer's own checkout for the full record, if you have it.
 
 ## [Unreleased]
 
+- **New: Inactive and Active side by side, with drag and drop.** The Mods page
+  now shows the Inactive list on the left and the Active list on the right
+  (stacked on a narrow window), each with its own search, filters, sort and
+  selection. Drag a row (or all selected rows) within Active to reorder it,
+  from Inactive into Active to activate it at that place, or onto Inactive to
+  deactivate it; a line shows where it will land, and a drop that would pull in
+  a dependency or leave a dependent active asks first, like the buttons do.
+  Without a mouse, every Active row has a Move menu (up, down, top, bottom,
+  after another mod), every Inactive row an Activate at button, and Alt+Up and
+  Alt+Down move the focused row; each move is announced to screen readers.
+  Moving is available while Active is sorted by load order (a search or filter
+  is fine) and is disabled, with the reason shown, under another sort. A reorder
+  over the same set of mods edits your own order at once, without a rescan, and
+  reaches `ModsConfig.xml` when you Apply; the first one while the suggested
+  order is selected switches to your own order and says so. Discard pending
+  changes (in the pending-changes banner) and Revert order to ModsConfig.xml
+  (in the "not in ModsConfig.xml yet" note) undo what you staged. Activating a
+  mod without choosing a place now puts it back where it was in your order,
+  and never ahead of a mod it depends on. The mod info panel is a drawer over
+  the lists on all but very wide windows, and the source label beside a row's
+  icon appears when the list is wide enough, not the window.
+- **Fix: the brackets around "N not shown" follow each language.** They are
+  part of the translated text now, so Chinese and Japanese use their own
+  full-width brackets.
 - **New: sort the Mods lists.** Each list on the Mods page has arrow buttons
   to sort by Load order (Active only), Name, Package ID or Last updated, in
   either direction, each with a tooltip and an accessible name saying which.

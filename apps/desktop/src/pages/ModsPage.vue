@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import { useDebounceFn } from "@vueuse/core";
+import { useDebounceFn, useMediaQuery } from "@vueuse/core";
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
-import Tab from "primevue/tab";
-import TabList from "primevue/tablist";
-import Tabs from "primevue/tabs";
-import { computed, ref } from "vue";
+import { computed, nextTick, ref, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 
@@ -15,12 +12,17 @@ import DefSearchBox from "@/components/mods/DefSearchBox.vue";
 import ModFilterBar from "@/components/mods/ModFilterBar.vue";
 import ModInfoPanel from "@/components/mods/ModInfoPanel.vue";
 import ModListPane from "@/components/mods/ModListPane.vue";
+import ModPositionDialog from "@/components/mods/ModPositionDialog.vue";
 import ModSortBar from "@/components/mods/ModSortBar.vue";
 import ModsRescanButton from "@/components/mods/ModsRescanButton.vue";
+import OrderSwitchedNote from "@/components/mods/OrderSwitchedNote.vue";
+import OrderNotInFileNote from "@/components/order/OrderNotInFileNote.vue";
 import { useModActivation } from "@/composables/useModActivation";
 import { useModDeactivation } from "@/composables/useModDeactivation";
 import { useModListFilters } from "@/composables/useModListFilters";
 import { useModListSort } from "@/composables/useModListSort";
+import { type ListKind, useModReorder } from "@/composables/useModReorder";
+import { useOrderSource } from "@/composables/useOrderSource";
 import { useInactiveModsQuery, useWorkingModsQuery } from "@/queries/activeSet";
 import { ACTIVE_SORT_KEYS, INACTIVE_SORT_KEYS } from "@/utils/modListSort";
 
@@ -33,36 +35,55 @@ const selectedModId = computed(() => {
   return typeof param === "string" ? param : null;
 });
 
-function closePanel(): void {
-  void router.push({ name: "mods" });
+/** The row that opened the drawer, so closing it can hand keyboard focus back there. */
+let drawerOrigin: { readonly from: ListKind; readonly modId: string } | null = null;
+
+async function closePanel(): Promise<void> {
+  const origin = drawerOrigin;
+  drawerOrigin = null;
+  await router.push({ name: "mods" });
+  if (origin === null) {
+    return;
+  }
+  await nextTick();
+  await (origin.from === "active" ? activePane : inactivePane).value?.focusRow(origin.modId);
 }
 
-/** Which of the two tabs is showing. */
-const tab = ref<"active" | "inactive">("active");
+/**
+ * Whether the mod info panel has a column of its own. Only a very wide window has the room: the
+ * two lists share the width otherwise, so the panel floats over them as a drawer, and following
+ * keyboard focus is off (an arrow key through a list must not pop a drawer over it).
+ */
+const hasPanelColumn = useMediaQuery("(min-width: 1800px)");
 
 // The display sort is page-local state and only shapes the list queries; it never
-// touches the load order or a pending change. `isActiveInLoadOrder` is what a
-// reordering control must gate on.
-const { activeSort, inactiveSort, isActiveInLoadOrder } = useModListSort();
+// touches the load order or a pending change. Whether the Active list may be
+// reordered is the backend's answer (`reorderable` on the list), never restated here.
+const { activeSort, inactiveSort } = useModListSort();
 
-const { search, source, tag, activeQuery, inactiveQuery, isActiveFiltered, isInactiveFiltered } =
-  useModListFilters({ active: activeSort, inactive: inactiveSort });
+const activeFilters = useModListFilters({ sort: activeSort, hasTag: true });
+const inactiveFilters = useModListFilters({ sort: inactiveSort, hasTag: false });
 
 const {
   data: activeData,
   isPending: activePending,
   error: activeError,
-} = useWorkingModsQuery(activeQuery, () => tab.value === "active");
+} = useWorkingModsQuery(activeFilters.query);
 
 const {
   data: inactiveData,
   isPending: inactivePending,
   error: inactiveError,
-} = useInactiveModsQuery(inactiveQuery, () => tab.value === "inactive");
+} = useInactiveModsQuery(inactiveFilters.query);
 
 const selectedActiveIds = ref<string[]>([]);
 const selectedInactiveIds = ref<string[]>([]);
 const withDependencies = ref(false);
+const { selected: selectedOrder } = useOrderSource();
+const isSwitchNoteShown = ref(false);
+
+const activePane = useTemplateRef<{ focusRow: (modId: string) => Promise<void> }>("activePane");
+const inactivePane = useTemplateRef<{ focusRow: (modId: string) => Promise<void> }>("inactivePane");
 
 const {
   plan: activatePlan,
@@ -71,8 +92,15 @@ const {
   isPlanning: planningActivate,
   isCommitting: activating,
   openDialog: openActivateDialog,
+  activateAt,
   confirm: confirmActivate,
-} = useModActivation({ selectedIds: selectedInactiveIds, withDependencies });
+} = useModActivation({
+  selectedIds: selectedInactiveIds,
+  withDependencies,
+  onSwitchedToCurrent: () => {
+    isSwitchNoteShown.value = true;
+  },
+});
 
 const {
   plan: deactivatePlan,
@@ -81,10 +109,39 @@ const {
   isPlanning: planningDeactivate,
   isCommitting: deactivating,
   openDialog: openDeactivateDialog,
+  deactivateDropped,
   confirm: confirmDeactivate,
 } = useModDeactivation({ selectedIds: selectedActiveIds });
 
-function openMod(modId: string): void {
+const reorder = useModReorder({
+  activeList: activeData,
+  inactiveList: inactiveData,
+  isActiveFiltered: activeFilters.isFiltered,
+  selectedActiveIds,
+  selectedInactiveIds,
+  activation: { activateAt },
+  deactivation: { deactivateDropped },
+  focusActiveRow: async (modId) => {
+    await nextTick();
+    await activePane.value?.focusRow(modId);
+  },
+  onSwitchedToCurrent: () => {
+    isSwitchNoteShown.value = true;
+  },
+});
+
+const isPositionDialogVisible = computed({
+  get: () => reorder.positionRequest.value !== null,
+  set: (isVisible) => {
+    if (!isVisible) {
+      reorder.positionRequest.value = null;
+    }
+  },
+});
+
+function openMod(modId: string, from: ListKind): void {
+  // Only the drawer covers the lists: a panel with a column of its own leaves focus on the row.
+  drawerOrigin = hasPanelColumn.value ? null : { from, modId };
   void router.push({ name: "mod-detail", params: { modId } });
 }
 
@@ -105,6 +162,9 @@ function openMod(modId: string): void {
  * just-clicked navigation back to this mod's own route.
  */
 const followFocus = useDebounceFn((modId: string) => {
+  if (!hasPanelColumn.value) {
+    return;
+  }
   if (route.name !== "mods" && route.name !== "mod-detail") {
     return;
   }
@@ -125,106 +185,142 @@ const followFocus = useDebounceFn((modId: string) => {
         </div>
       </div>
 
-      <Tabs
-        :value="tab"
-        class="shrink-0"
-        @update:value="(value: string | number) => (tab = value === 'inactive' ? 'inactive' : 'active')"
-      >
-        <TabList>
-          <Tab
-            value="active"
-            data-testid="mods-tab-active"
-          >
-            {{ t("mods.page.activeTab") }}
-          </Tab>
-          <Tab
-            value="inactive"
-            data-testid="mods-tab-inactive"
-          >
-            {{ t("mods.page.inactiveTab") }}
-          </Tab>
-        </TabList>
-      </Tabs>
+      <!-- A move settles into Current without writing the file: say so, with the Apply path. -->
+      <OrderNotInFileNote allow-revert />
+      <OrderSwitchedNote v-model:visible="isSwitchNoteShown" />
 
-      <ModFilterBar
-        v-model:search="search"
-        v-model:tag="tag"
-        v-model:source="source"
-        :has-tag-filter="tab === 'active'"
-      />
-
-      <ModSortBar
-        v-if="tab === 'active'"
-        v-model:sort="activeSort"
-        :keys="ACTIVE_SORT_KEYS"
-      />
-      <ModSortBar
-        v-else
-        v-model:sort="inactiveSort"
-        :keys="INACTIVE_SORT_KEYS"
-      />
-
-      <ModListPane
-        v-if="tab === 'active'"
-        v-model:selected-ids="selectedActiveIds"
-        :mod-list="activeData"
-        :is-pending="activePending"
-        :error="activeError"
-        :is-filtered="isActiveFiltered"
-        :sort-key="activeSort.key"
-        :show-position="!isActiveInLoadOrder"
-        @select-mod="openMod"
-        @focus-mod="followFocus"
+      <div
+        class="grid min-h-0 flex-1 grid-cols-1 grid-rows-2 gap-4 lg:grid-cols-2 lg:grid-rows-1"
+        data-testid="mods-lists"
       >
-        <template #actions>
-          <Button
-            :label="t('mods.page.deactivateSelectedButton')"
-            severity="danger"
-            outlined
-            size="small"
-            :disabled="selectedActiveIds.length === 0"
-            :loading="planningDeactivate"
-            data-testid="deactivate-selected-button"
-            @click="openDeactivateDialog"
-          />
-        </template>
-      </ModListPane>
-      <ModListPane
-        v-else
-        v-model:selected-ids="selectedInactiveIds"
-        :mod-list="inactiveData"
-        :is-pending="inactivePending"
-        :error="inactiveError"
-        :is-filtered="isInactiveFiltered"
-        :sort-key="inactiveSort.key"
-        :show-active-columns="false"
-        @select-mod="openMod"
-        @focus-mod="followFocus"
-      >
-        <template #actions>
-          <label class="flex items-center gap-1.5 text-sm">
-            <Checkbox
-              v-model="withDependencies"
-              binary
-              data-testid="activate-with-dependencies-checkbox"
+        <ModListPane
+          ref="inactivePane"
+          v-model:selected-ids="selectedInactiveIds"
+          kind="inactive"
+          :mod-list="inactiveData"
+          :is-pending="inactivePending"
+          :error="inactiveError"
+          :is-filtered="inactiveFilters.isFiltered.value"
+          :sort-key="inactiveSort.key"
+          :show-active-columns="false"
+          draggable
+          :dragging-ids="reorder.drag.value?.ids ?? []"
+          :drop-mode="reorder.dropModeFor('inactive')"
+          :refused-text="reorder.refusalFor('inactive')"
+          row-menu="activate"
+          @select-mod="(modId: string) => openMod(modId, 'inactive')"
+          @focus-mod="followFocus"
+          @drag-start="(modId: string) => reorder.startDrag('inactive', modId)"
+          @drag-end="reorder.endDrag"
+          @drop="(slot: number) => reorder.drop('inactive', slot)"
+          @menu-action="reorder.menuAction"
+        >
+          <template #toolbar>
+            <ModFilterBar
+              v-model:search="inactiveFilters.search.value"
+              v-model:tag="inactiveFilters.tag.value"
+              v-model:source="inactiveFilters.source.value"
+              :has-tag-filter="false"
+              :search-label="t('mods.page.searchInactiveLabel')"
             />
-            {{ t("mods.page.alsoActivateDependenciesLabel") }}
-          </label>
-          <Button
-            :label="t('mods.page.activateSelectedButton')"
-            size="small"
-            :disabled="selectedInactiveIds.length === 0"
-            :loading="planningActivate"
-            data-testid="activate-selected-button"
-            @click="openActivateDialog"
-          />
-        </template>
-      </ModListPane>
+            <ModSortBar
+              v-model:sort="inactiveSort"
+              :keys="INACTIVE_SORT_KEYS"
+            />
+          </template>
+          <template #actions>
+            <label class="flex items-center gap-1.5 text-sm">
+              <Checkbox
+                v-model="withDependencies"
+                binary
+                data-testid="activate-with-dependencies-checkbox"
+              />
+              {{ t("mods.page.alsoActivateDependenciesLabel") }}
+            </label>
+            <Button
+              :label="t('mods.page.activateSelectedButton')"
+              size="small"
+              :disabled="selectedInactiveIds.length === 0"
+              :loading="planningActivate"
+              data-testid="activate-selected-button"
+              @click="openActivateDialog"
+            />
+          </template>
+        </ModListPane>
+
+        <ModListPane
+          ref="activePane"
+          v-model:selected-ids="selectedActiveIds"
+          kind="active"
+          :mod-list="activeData"
+          :is-pending="activePending"
+          :error="activeError"
+          :is-filtered="activeFilters.isFiltered.value"
+          :sort-key="activeSort.key"
+          :show-position="activeData?.reorderable === false"
+          draggable
+          :dragging-ids="reorder.drag.value?.ids ?? []"
+          :drop-mode="reorder.dropModeFor('active')"
+          :refused-text="reorder.refusalFor('active')"
+          row-menu="move"
+          :reorder-blocked-reason="reorder.reorderBlockedReason.value"
+          @select-mod="(modId: string) => openMod(modId, 'active')"
+          @focus-mod="followFocus"
+          @drag-start="(modId: string) => reorder.startDrag('active', modId)"
+          @drag-end="reorder.endDrag"
+          @drop="(slot: number) => reorder.drop('active', slot)"
+          @move-step="reorder.step"
+          @menu-action="reorder.menuAction"
+        >
+          <template #toolbar>
+            <ModFilterBar
+              v-model:search="activeFilters.search.value"
+              v-model:tag="activeFilters.tag.value"
+              v-model:source="activeFilters.source.value"
+              :has-tag-filter="true"
+              :search-label="t('mods.page.searchActiveLabel')"
+            />
+            <ModSortBar
+              v-model:sort="activeSort"
+              :keys="ACTIVE_SORT_KEYS"
+            />
+          </template>
+          <template #notes>
+            <p
+              v-if="reorder.reorderBlockedReason.value !== null"
+              class="text-text-muted shrink-0 text-xs"
+              data-testid="mods-reorder-blocked"
+            >
+              {{ reorder.reorderBlockedReason.value }}
+            </p>
+            <p
+              v-else-if="selectedOrder === 'suggested'"
+              class="text-text-muted shrink-0 text-xs"
+              data-testid="mods-suggested-note"
+            >
+              {{ t("mods.move.suggestedNote") }}
+            </p>
+          </template>
+          <template #actions>
+            <Button
+              :label="t('mods.page.deactivateSelectedButton')"
+              severity="danger"
+              outlined
+              size="small"
+              :disabled="selectedActiveIds.length === 0"
+              :loading="planningDeactivate"
+              data-testid="deactivate-selected-button"
+              @click="openDeactivateDialog"
+            />
+          </template>
+        </ModListPane>
+      </div>
     </section>
 
     <ModInfoPanel
       :mod-id="selectedModId"
-      @close="closePanel"
+      :is-overlay="!hasPanelColumn"
+      @close="() => void closePanel()"
     />
 
     <ActivateDialog
@@ -242,5 +338,22 @@ const followFocus = useDebounceFn((modId: string) => {
       :is-submitting="deactivating"
       @confirm="confirmDeactivate"
     />
+
+    <ModPositionDialog
+      v-model:visible="isPositionDialogVisible"
+      :mode="reorder.positionRequest.value?.mode ?? 'move'"
+      :exclude-ids="reorder.positionRequest.value?.ids ?? []"
+      @choose="reorder.positionChosen"
+    />
+
+    <!-- One live region for every move, always mounted so a screen reader announces its changes. -->
+    <p
+      class="sr-only"
+      role="status"
+      aria-live="polite"
+      data-testid="mods-move-status"
+    >
+      {{ reorder.announcement.value }}
+    </p>
   </div>
 </template>

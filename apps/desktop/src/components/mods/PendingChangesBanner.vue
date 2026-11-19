@@ -5,13 +5,18 @@ import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 
 import { useTranslateMessage } from "@/composables/useTranslateMessage";
-import { usePendingActiveChangesQuery, useRescanMutation } from "@/queries/activeSet";
+import {
+  useDiscardPendingChangesMutation,
+  usePendingActiveChangesQuery,
+  useRescanMutation,
+} from "@/queries/activeSet";
 import { type CommandErrorDescriptor, describeCommandError } from "@/utils/errors";
 
 const { t } = useI18n();
 const tm = useTranslateMessage();
 const { data: pending } = usePendingActiveChangesQuery();
 const { mutateAsync: rescan, isLoading: rescanning } = useRescanMutation();
+const { mutateAsync: discard, isLoading: discarding } = useDiscardPendingChangesMutation();
 
 const unscannedCount = computed(() => {
   const diff = pending.value?.unscanned;
@@ -23,6 +28,15 @@ const unappliedCount = computed(() => {
 });
 
 const errorMessage = ref<CommandErrorDescriptor | null>(null);
+
+async function discardNow(): Promise<void> {
+  errorMessage.value = null;
+  try {
+    await discard();
+  } catch (error: unknown) {
+    errorMessage.value = describeCommandError(error);
+  }
+}
 
 async function rescanNow(): Promise<void> {
   errorMessage.value = null;
@@ -57,13 +71,25 @@ async function rescanNow(): Promise<void> {
             {{ t("mods.pendingChanges.unapplied", { count: unappliedCount }, unappliedCount) }}
           </span>
         </div>
-        <Button
-          :label="t('mods.pendingChanges.rescanButton')"
-          size="small"
-          :loading="rescanning"
-          data-testid="pending-changes-rescan-button"
-          @click="rescanNow"
-        />
+        <div class="flex items-center gap-2">
+          <Button
+            :label="t('mods.pendingChanges.discardButton')"
+            size="small"
+            severity="secondary"
+            :loading="discarding"
+            :disabled="rescanning"
+            data-testid="pending-changes-discard-button"
+            @click="discardNow"
+          />
+          <Button
+            :label="t('mods.pendingChanges.rescanButton')"
+            size="small"
+            :loading="rescanning"
+            :disabled="discarding"
+            data-testid="pending-changes-rescan-button"
+            @click="rescanNow"
+          />
+        </div>
       </div>
       <div
         v-if="errorMessage"

@@ -1,16 +1,39 @@
 <script setup lang="ts">
 import { useVirtualizer, type VirtualItem } from "@tanstack/vue-virtual";
+import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
-import { computed, nextTick, useTemplateRef } from "vue";
+import Menu, { type MenuMethods } from "primevue/menu";
+import type { MenuItem } from "primevue/menuitem";
+import { computed, nextTick, ref, useTemplateRef, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
 import SourceBadge from "@/components/mods/SourceBadge.vue";
+import { isInert } from "@/composables/shortcutTargets";
+import { useDragAutoScroll } from "@/composables/useDragAutoScroll";
 import { useModLabel } from "@/composables/useModLabel";
 import { useTranslateMessage } from "@/composables/useTranslateMessage";
 import { descriptor } from "@/i18n/messageDescriptor";
 import type { ModListRowDto } from "@/types/generated/ModListRowDto";
 import { assertNever } from "@/utils/assertNever";
 import { updateUnavailableLabel } from "@/utils/modListSort";
+import { anchorForStep, moveSetFor } from "@/utils/modMove";
+
+/** What this table's rows may be dragged to, set by the page from the drag in progress. */
+export type DropMode =
+  /** No drag is in progress. */
+  | "off"
+  /** Accepts the drag at a position between rows (a line shows where). */
+  | "position"
+  /** Accepts the drag anywhere on the list (it has no order of its own to drop into). */
+  | "pane"
+  /** Refuses the drag (the not-allowed cursor shows, with the reason). */
+  | "refused";
+
+/** Which row action button the rows carry. */
+export type RowMenu = "none" | "move" | "activate";
+
+/** A Move menu entry that is not a one-step move. */
+export type MenuAction = "top" | "bottom" | "after" | "activateAt";
 
 const {
   mods,
@@ -18,6 +41,12 @@ const {
   showActiveColumns = true,
   showUpdated = false,
   showPosition = false,
+  draggable = false,
+  draggingIds = [],
+  dropMode = "off",
+  refusedText = "",
+  rowMenu = "none",
+  reorderBlockedReason = null,
 } = defineProps<{
   mods: ModListRowDto[];
   /** Adds a checkbox column bound to {@link selectedIds}. */
@@ -37,8 +66,30 @@ const {
    * by anything but load order: the sort must not be mistaken for the order.
    */
   showPosition?: boolean;
+  /** Whether a row can be picked up with the pointer. */
+  draggable?: boolean;
+  /** The ids being dragged (from this or the other list), drawn dimmed where shown. */
+  draggingIds?: readonly string[];
+  /** What this table does with the drag in progress. */
+  dropMode?: DropMode;
+  /** Why a refused drag is refused, shown over the list while it hovers. */
+  refusedText?: string;
+  /** The per-row action: a Move menu (Active), "Activate at…" (Inactive) or none. */
+  rowMenu?: RowMenu;
+  /** Why moving is off (set while the list is not in load order); `null` when it is on. */
+  reorderBlockedReason?: string | null;
 }>();
-const emit = defineEmits<{ selectMod: [modId: string]; focusMod: [modId: string] }>();
+const emit = defineEmits<{
+  selectMod: [modId: string];
+  focusMod: [modId: string];
+  dragStart: [modId: string];
+  dragEnd: [];
+  /** A drop; `slot` is the gap before that row index (`mods.length` is after the last row). */
+  drop: [slot: number];
+  /** One shown row up or down, from the Move menu or Alt+Arrow. */
+  moveStep: [modId: string, direction: "up" | "down"];
+  menuAction: [modId: string, action: MenuAction];
+}>();
 /** Checked ids, only meaningful while {@link selectable} is set. */
 const selectedIds = defineModel<string[]>("selectedIds", { default: () => [] });
 const { t, locale } = useI18n();
@@ -157,7 +208,7 @@ function onRowFocus(modId: string): void {
   lastFocusedId.value = modId;
 }
 
-/** Moves roving focus by `delta` rows (±1), or to the very first/last row when `toEnd` is given — scrolling the target into view first when it isn't currently rendered. */
+/** Moves roving focus by `delta` rows (±1), or to the very first/last row when `toEnd` is given. */
 async function moveFocus(delta: number, toEnd?: "start" | "end"): Promise<void> {
   if (mods.length === 0) {
     return;
@@ -173,20 +224,70 @@ async function moveFocus(delta: number, toEnd?: "start" | "end"): Promise<void> 
   if (!targetMod) {
     return;
   }
-  virtualizer.value.scrollToIndex(target);
-  lastFocusedId.value = targetMod.modId;
+  await focusRow(targetMod.modId);
+  emit("focusMod", targetMod.modId);
+}
+
+/**
+ * Scrolls the row for `modId` into view and focuses it, whether or not it is rendered yet.
+ * A row that is not in the list is ignored.
+ */
+async function focusRow(modId: string): Promise<void> {
+  const index = mods.findIndex((mod) => mod.modId === modId);
+  if (index === -1) {
+    return;
+  }
+  virtualizer.value.scrollToIndex(index);
+  lastFocusedId.value = modId;
   // The target row may not exist in the DOM yet (virtualization) until
   // the scroll above re-renders `visibleRows` — wait for Vue to flush
   // that render before focusing it.
   await nextTick();
   const element = scrollElementRef.value?.querySelector<HTMLElement>(
-    `[data-testid="mod-row-${targetMod.modId}"]`,
+    `[data-testid="mod-row-${modId}"]`,
   );
   element?.focus();
-  emit("focusMod", targetMod.modId);
+}
+defineExpose({ focusRow });
+
+/**
+ * Alt+ArrowUp/Down moves the row (the Active list only). Text entry and dialogs keep their own
+ * keys (`isInert`); plain arrows stay the roving focus. Returns whether the key was consumed.
+ */
+function onMoveKey(event: KeyboardEvent, modId: string): boolean {
+  if (!event.altKey || (event.key !== "ArrowUp" && event.key !== "ArrowDown")) {
+    return false;
+  }
+  if (isInert(event.target)) {
+    return true;
+  }
+  event.preventDefault();
+  if (rowMenu === "move") {
+    emit("moveStep", modId, event.key === "ArrowUp" ? "up" : "down");
+  }
+  return true;
+}
+
+/**
+ * Shift+F10 or the ContextMenu key on a focused row opens that row's menu, the keyboard route to
+ * the ⋮ button (which is out of the Tab order, so rows stay one tab stop each). The same inert
+ * rules as the other row shortcuts apply. Returns whether the key was consumed.
+ */
+function onMenuKey(event: KeyboardEvent, modId: string): boolean {
+  const isMenuKey = event.key === "ContextMenu" || (event.key === "F10" && event.shiftKey);
+  if (!isMenuKey || rowMenu === "none" || isInert(event.target)) {
+    return false;
+  }
+  // Without this the browser's own context menu opens over ours.
+  event.preventDefault();
+  onRowMenuClick(event, modId);
+  return true;
 }
 
 function onRowKeydown(event: KeyboardEvent, modId: string): void {
+  if (onMoveKey(event, modId) || onMenuKey(event, modId)) {
+    return;
+  }
   switch (event.key) {
     case "Enter":
       openRow(modId);
@@ -217,86 +318,310 @@ function onRowKeydown(event: KeyboardEvent, modId: string): void {
       break;
   }
 }
+
+const draggingSet = computed(() => new Set(draggingIds));
+const autoScroll = useDragAutoScroll(() => scrollElementRef.value);
+/** The gap a position drop would land in (a line shows it); `null` when nothing hovers. */
+const dragSlot = ref<number | null>(null);
+const isHoveringPane = ref(false);
+const isHoveringRefused = ref(false);
+
+function clearHover(): void {
+  dragSlot.value = null;
+  isHoveringPane.value = false;
+  isHoveringRefused.value = false;
+  autoScroll.stop();
+}
+
+watch(
+  () => dropMode,
+  (mode) => {
+    if (mode === "off") {
+      clearHover();
+    }
+  },
+);
+
+function onRowDragStart(event: DragEvent, modId: string): void {
+  if (!draggable) {
+    event.preventDefault();
+    return;
+  }
+  if (event.dataTransfer) {
+    // Some engines refuse to start a drag with no data.
+    event.dataTransfer.setData("text/plain", modId);
+    event.dataTransfer.effectAllowed = "move";
+  }
+  emit("dragStart", modId);
+}
+
+function onRowDragEnd(): void {
+  clearHover();
+  emit("dragEnd");
+}
+
+/** The gap nearest the pointer: the row's top half is the gap before it, the bottom half after. */
+function slotAt(event: DragEvent): number {
+  const scroller = scrollElementRef.value;
+  if (!scroller) {
+    return mods.length;
+  }
+  const offset = event.clientY - scroller.getBoundingClientRect().top + scroller.scrollTop;
+  return Math.min(Math.max(Math.round(offset / ROW_HEIGHT_PX), 0), mods.length);
+}
+
+function onDragOver(event: DragEvent): void {
+  if (dropMode === "off") {
+    return;
+  }
+  if (dropMode === "refused") {
+    // Not cancelling the event leaves the drop refused and shows the not-allowed cursor.
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = "none";
+    }
+    isHoveringRefused.value = true;
+    return;
+  }
+  event.preventDefault();
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = "move";
+  }
+  autoScroll.update(event);
+  if (dropMode === "position") {
+    dragSlot.value = slotAt(event);
+  } else {
+    isHoveringPane.value = true;
+  }
+}
+
+function onDragLeave(event: DragEvent): void {
+  const next = event.relatedTarget;
+  if (next instanceof Node && scrollElementRef.value?.contains(next)) {
+    return;
+  }
+  clearHover();
+}
+
+function onDrop(event: DragEvent): void {
+  if (dropMode !== "position" && dropMode !== "pane") {
+    return;
+  }
+  event.preventDefault();
+  const slot = dropMode === "position" ? slotAt(event) : mods.length;
+  clearHover();
+  emit("drop", slot);
+}
+
+// One popup menu for the whole table: a menu per virtualized row would be a menu per row.
+const menu = useTemplateRef<MenuMethods>("moveMenu");
+const menuModId = ref<string | null>(null);
+
+const menuItems = computed<MenuItem[]>(() => {
+  const modId = menuModId.value;
+  if (modId === null) {
+    return [];
+  }
+  const moving = new Set(moveSetFor(modId, selectedIds.value, mods));
+  const isBlocked = reorderBlockedReason !== null;
+  // `testId` rides along on the item (a MenuItem accepts extra keys) for the item template.
+  return [
+    {
+      label: t("mods.move.up"),
+      testId: "mod-move-up",
+      disabled: isBlocked || anchorForStep(mods, moving, "up") === null,
+      command: () => emit("moveStep", modId, "up"),
+    },
+    {
+      label: t("mods.move.down"),
+      testId: "mod-move-down",
+      disabled: isBlocked || anchorForStep(mods, moving, "down") === null,
+      command: () => emit("moveStep", modId, "down"),
+    },
+    {
+      label: t("mods.move.top"),
+      testId: "mod-move-top",
+      disabled: isBlocked,
+      command: () => emit("menuAction", modId, "top"),
+    },
+    {
+      label: t("mods.move.bottom"),
+      testId: "mod-move-bottom",
+      disabled: isBlocked,
+      command: () => emit("menuAction", modId, "bottom"),
+    },
+    {
+      label: t("mods.move.after"),
+      testId: "mod-move-after",
+      disabled: isBlocked,
+      command: () => emit("menuAction", modId, "after"),
+    },
+  ];
+});
+
+/** The row button: the Active list opens the Move menu, the Inactive list goes straight to "Activate at…". */
+function onRowMenuClick(event: Event, modId: string): void {
+  if (rowMenu === "activate") {
+    emit("menuAction", modId, "activateAt");
+    return;
+  }
+  menuModId.value = modId;
+  menu.value?.toggle(event);
+}
+
+/** The row button's name and tooltip. */
+function rowMenuLabel(modId: string): string {
+  const name = modLabel.label(modId);
+  return rowMenu === "move"
+    ? t("mods.move.menuButton", { name })
+    : t("mods.move.activateAtButton", { name });
+}
 </script>
 
 <template>
-  <div
-    ref="scrollElement"
-    class="surface-card min-h-0 flex-1 overflow-y-auto"
-    role="table"
-    :aria-label="t('mods.table.regionLabel')"
-    data-testid="mod-table"
-  >
-    <span
-      class="sr-only"
-      data-testid="mod-table-roving-hint"
-    >{{ t("mods.table.rovingHint") }}</span>
-    <div :style="{ height: `${totalSize}px`, position: 'relative', width: '100%' }">
-      <div
-        v-for="{ virtualRow, mod } in visibleRows"
-        :key="mod.modId"
-        role="row"
-        :tabindex="rovingIndex === null ? (virtualRow.index === 0 ? 0 : -1) : virtualRow.index === rovingIndex ? 0 : -1"
-        :aria-current="mod.modId === lastFocusedId ? 'true' : undefined"
-        class="border-border-subtle hover:bg-surface-2 focus-visible:bg-accent-soft absolute top-0 left-0 flex w-full cursor-pointer items-center gap-3 border-b px-3 text-sm focus-visible:outline"
-        :style="{
-          height: `${virtualRow.size}px`,
-          transform: `translateY(${virtualRow.start}px)`,
-        }"
-        :data-testid="`mod-row-${mod.modId}`"
-        @click="openRow(mod.modId)"
-        @keydown="onRowKeydown($event, mod.modId)"
-        @focus="onRowFocus(mod.modId)"
-      >
-        <Checkbox
-          v-if="selectable"
-          class="shrink-0"
-          binary
-          :model-value="isSelected(mod.modId)"
-          :data-testid="`mod-row-select-${mod.modId}`"
-          @click.stop
-          @update:model-value="toggleSelected(mod.modId)"
+  <div class="relative flex min-h-0 flex-1 flex-col">
+    <div
+      ref="scrollElement"
+      class="surface-card @container min-h-0 flex-1 overflow-y-auto"
+      :class="isHoveringPane ? 'outline-accent outline-2 -outline-offset-2' : ''"
+      role="table"
+      :aria-label="t('mods.table.regionLabel')"
+      data-testid="mod-table"
+      @dragover="onDragOver"
+      @dragleave="onDragLeave"
+      @drop="onDrop"
+    >
+      <span
+        class="sr-only"
+        data-testid="mod-table-roving-hint"
+      >{{ t("mods.table.rovingHint") }}</span>
+      <div :style="{ height: `${totalSize}px`, position: 'relative', width: '100%' }">
+        <div
+          v-if="dragSlot !== null"
+          class="bg-accent pointer-events-none absolute left-0 z-10 h-0.5 w-full"
+          :style="{ top: `${dragSlot * ROW_HEIGHT_PX - 1}px` }"
+          :data-slot="dragSlot"
+          data-testid="mod-table-drop-indicator"
         />
-        <template v-if="showPosition && mod.position !== null">
-          <span
-            class="text-text-muted w-10 shrink-0 text-right text-xs tabular-nums"
-            aria-hidden="true"
-            :data-testid="`mod-row-position-${mod.modId}`"
-          >#{{ mod.position + 1 }}</span>
-          <span class="sr-only">{{ t("mods.table.loadOrderPosition", { position: mod.position + 1 }) }}</span>
-        </template>
-        <SourceBadge :source="mod.source" />
-        <span
-          class="text-text flex-1 truncate font-medium"
-          :title="modLabel.titleFor(mod.modId)"
-        >{{ modLabel.label(mod.modId) }}</span>
-        <span
-          v-if="mod.state.kind === 'missing'"
-          class="bg-status-danger-soft text-status-danger shrink-0 rounded px-1.5 py-0.5 text-xs font-medium"
-          data-testid="mod-row-missing-pill"
-        >{{ t("mods.table.missing") }}</span>
-        <span
-          v-else-if="showActiveColumns && mod.state.kind === 'pendingScan'"
-          class="bg-surface-2 text-text-muted shrink-0 rounded px-1.5 py-0.5 text-xs font-medium"
-          data-testid="mod-row-pending-scan-pill"
-        >{{ t("mods.table.pendingScan") }}</span>
-        <span
-          v-if="showUpdated"
-          class="text-text-muted w-28 shrink-0 truncate text-right text-xs"
-          :title="updatedText(mod)"
-          :data-testid="`mod-row-updated-${mod.modId}`"
-        >{{ updatedText(mod) }}</span>
-        <template v-if="showActiveColumns">
-          <span class="flex gap-1">
+        <div
+          v-for="{ virtualRow, mod } in visibleRows"
+          :key="mod.modId"
+          role="row"
+          :tabindex="rovingIndex === null ? (virtualRow.index === 0 ? 0 : -1) : virtualRow.index === rovingIndex ? 0 : -1"
+          :aria-current="mod.modId === lastFocusedId ? 'true' : undefined"
+          :draggable="draggable"
+          class="border-border-subtle hover:bg-surface-2 focus-visible:bg-accent-soft absolute top-0 left-0 flex w-full cursor-pointer items-center gap-3 border-b px-3 text-sm focus-visible:outline"
+          :class="draggingSet.has(mod.modId) ? 'opacity-50' : ''"
+          :style="{
+            height: `${virtualRow.size}px`,
+            transform: `translateY(${virtualRow.start}px)`,
+          }"
+          :data-testid="`mod-row-${mod.modId}`"
+          @click="openRow(mod.modId)"
+          @keydown="onRowKeydown($event, mod.modId)"
+          @focus="onRowFocus(mod.modId)"
+          @dragstart="onRowDragStart($event, mod.modId)"
+          @dragend="onRowDragEnd"
+        >
+          <Checkbox
+            v-if="selectable"
+            class="shrink-0"
+            binary
+            :model-value="isSelected(mod.modId)"
+            :data-testid="`mod-row-select-${mod.modId}`"
+            @click.stop
+            @update:model-value="toggleSelected(mod.modId)"
+          />
+          <template v-if="showPosition && mod.position !== null">
             <span
-              v-for="tag in tagsOf(mod)"
-              :key="tag"
-              class="bg-surface-2 text-text-muted rounded px-1.5 py-0.5 text-xs"
-            >{{ tag }}</span>
-          </span>
-          <span class="text-text-muted w-10 text-right text-xs">{{ hardDependentsOf(mod) ?? "—" }}</span>
-        </template>
+              class="text-text-muted w-10 shrink-0 text-right text-xs tabular-nums"
+              aria-hidden="true"
+              :data-testid="`mod-row-position-${mod.modId}`"
+            >#{{ mod.position + 1 }}</span>
+            <span class="sr-only">{{ t("mods.table.loadOrderPosition", { position: mod.position + 1 }) }}</span>
+          </template>
+          <SourceBadge :source="mod.source" />
+          <span
+            class="text-text flex-1 truncate font-medium"
+            :title="modLabel.titleFor(mod.modId)"
+          >{{ modLabel.label(mod.modId) }}</span>
+          <span
+            v-if="mod.state.kind === 'missing'"
+            class="bg-status-danger-soft text-status-danger shrink-0 rounded px-1.5 py-0.5 text-xs font-medium"
+            data-testid="mod-row-missing-pill"
+          >{{ t("mods.table.missing") }}</span>
+          <span
+            v-else-if="showActiveColumns && mod.state.kind === 'pendingScan'"
+            class="bg-surface-2 text-text-muted shrink-0 rounded px-1.5 py-0.5 text-xs font-medium"
+            data-testid="mod-row-pending-scan-pill"
+          >{{ t("mods.table.pendingScan") }}</span>
+          <span
+            v-if="showUpdated"
+            class="text-text-muted w-28 shrink-0 truncate text-right text-xs"
+            :title="updatedText(mod)"
+            :data-testid="`mod-row-updated-${mod.modId}`"
+          >{{ updatedText(mod) }}</span>
+          <template v-if="showActiveColumns">
+            <span class="flex gap-1">
+              <span
+                v-for="tag in tagsOf(mod)"
+                :key="tag"
+                class="bg-surface-2 text-text-muted rounded px-1.5 py-0.5 text-xs"
+              >{{ tag }}</span>
+            </span>
+            <span class="text-text-muted w-10 text-right text-xs">{{ hardDependentsOf(mod) ?? "—" }}</span>
+          </template>
+          <Button
+            v-if="rowMenu !== 'none'"
+            class="shrink-0"
+            icon="pi pi-ellipsis-v"
+            severity="secondary"
+            text
+            rounded
+            size="small"
+            tabindex="-1"
+            :aria-haspopup="rowMenu === 'move' ? 'menu' : 'dialog'"
+            :aria-label="rowMenuLabel(mod.modId)"
+            :title="rowMenuLabel(mod.modId)"
+            :data-testid="`mod-row-menu-${mod.modId}`"
+            @click.stop="onRowMenuClick($event, mod.modId)"
+            @keydown.stop
+          />
+        </div>
       </div>
     </div>
+    <p
+      v-if="isHoveringRefused && refusedText !== ''"
+      class="bg-surface-1 text-status-danger border-border pointer-events-none absolute inset-x-4 top-4 z-20 rounded border px-3 py-2 text-center text-sm shadow"
+      data-testid="mod-table-refused-text"
+    >
+      {{ refusedText }}
+    </p>
+    <Menu
+      v-if="rowMenu === 'move'"
+      ref="moveMenu"
+      popup
+      :model="menuItems"
+      data-testid="mod-move-menu"
+    >
+      <template #item="{ item, props }">
+        <a
+          v-bind="props.action"
+          :data-testid="item['testId']"
+        >
+          {{ item.label }}
+        </a>
+      </template>
+      <template
+        v-if="reorderBlockedReason !== null"
+        #end
+      >
+        <p
+          class="text-text-muted max-w-64 px-3 py-2 text-xs"
+          data-testid="mod-move-menu-reason"
+        >
+          {{ reorderBlockedReason }}
+        </p>
+      </template>
+    </Menu>
   </div>
 </template>

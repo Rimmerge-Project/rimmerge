@@ -51,7 +51,11 @@ describe("useActivateModsMutation", () => {
     });
     await flushPromises();
 
-    const request: ActivateRequestDto = { ids: ["author.mod"], withDependencies: false };
+    const request: ActivateRequestDto = {
+      ids: ["author.mod"],
+      withDependencies: false,
+      anchor: null,
+    };
     await expect(mutation.mutateAsync(request)).resolves.toEqual(EMPTY_PENDING_ACTIVE_CHANGES);
 
     expect(reads).toBe(2);

@@ -43,7 +43,7 @@ test("inspects a def-override def with no live decisions and sees the winner's o
     await expect(page.getByTestId("mod-count")).toHaveText("2", { timeout: 30_000 });
 
     await page.getByTestId("nav-mods").click();
-    await page.getByTestId("mods-search").fill("Fixture Mod A");
+    await page.getByTestId("mods-pane-active").getByTestId("mods-search").fill("Fixture Mod A");
     await page.getByTestId("mod-row-fixture.moda").click();
     await expect(page).toHaveURL(/\/mods\/fixture\.moda$/);
 

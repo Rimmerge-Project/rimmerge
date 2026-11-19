@@ -17,21 +17,10 @@ describe("useModListSort", () => {
   });
 
   it("starts at load order for Active and name A to Z for Inactive", () => {
-    const { activeSort, inactiveSort, isActiveInLoadOrder } = useModListSort();
+    const { activeSort, inactiveSort } = useModListSort();
 
     expect(activeSort.value).toEqual(ACTIVE_DEFAULT_SORT);
     expect(inactiveSort.value).toEqual(INACTIVE_DEFAULT_SORT);
-    expect(isActiveInLoadOrder.value).toBe(true);
-  });
-
-  it("is not in load order for any other criterion, nor for reversed load order", () => {
-    const { activeSort, isActiveInLoadOrder } = useModListSort();
-
-    activeSort.value = { key: "name", direction: "ascending" };
-    expect(isActiveInLoadOrder.value).toBe(false);
-
-    activeSort.value = { key: "loadOrder", direction: "descending" };
-    expect(isActiveInLoadOrder.value).toBe(false);
   });
 
   it("resets both sorts when another project is loaded, but keeps them across a rescan", async () => {

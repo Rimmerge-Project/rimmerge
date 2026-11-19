@@ -960,6 +960,7 @@ mod tests {
             ActivateRequestDto {
                 ids: mod_ids(&["zzz.mod"]),
                 with_dependencies: false,
+                anchor: None,
             },
         )
         .await

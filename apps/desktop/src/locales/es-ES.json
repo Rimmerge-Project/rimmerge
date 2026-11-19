@@ -575,6 +575,18 @@
       "nothing_to_export": {
         "title": "Nada que exportar",
         "detail": "No se pudo incluir ningún mod activo en la lista. Revisa los mods activos de ModsConfig.xml."
+      },
+      "move_anchor_not_active": {
+        "title": "Ese mod ya no está en la lista de activos",
+        "detail": "El mod junto al que lo soltaste se desactivó o cambió de posición, así que no se cambió nada. La lista se ha actualizado; vuelve a intentar el movimiento."
+      },
+      "revert_order_pending_changes": {
+        "title": "Descarta primero tus cambios pendientes",
+        "detail": "La lista de activos tiene cambios que aún no se han escaneado. Descártalos o vuelve a escanear y, después, revierte el orden."
+      },
+      "revert_order_membership_differs": {
+        "title": "El archivo enumera otros mods",
+        "detail": "ModsConfig.xml enumera mods distintos de los del orden actual, así que no hay ningún orden al que volver. Usa la lista del archivo o aplica la tuya."
       }
     }
   },
@@ -1180,6 +1192,7 @@
       "chooseButton": "Elegir…",
       "installCheckboxLabel": "Instalar en Mods y activar",
       "staleActiveSetNote": "Los cambios de activación pendientes no se incluyen: vuelve a escanear primero si quieres que entren en esta instalación.",
+      "unappliedOrderNote": "Instalar escribe tu orden actual, que aún no se ha aplicado.",
       "forceWarning": "Parece que RimWorldWin64.exe se está ejecutando. Instalar ahora escribe ModsConfig.xml, que el juego sobreescribe al cerrarse, así que el cambio puede perderse. ¿Exportar de todos modos?",
       "exportAnyway": "Exportar de todos modos",
       "export": "Exportar",
@@ -1276,7 +1289,8 @@
       "unapplied": "{count} cambio aún no aplicado a ModsConfig.xml | {count} cambios aún no aplicados a ModsConfig.xml",
       "rescanButton": "Volver a escanear",
       "rescanFinishedToast": "Nuevo escaneo terminado con {count} nota | Nuevo escaneo terminado con {count} notas",
-      "rescannedWithWarningsToast": "Escaneado de nuevo con advertencias"
+      "rescannedWithWarningsToast": "Escaneado de nuevo con advertencias",
+      "discardButton": "Descartar cambios pendientes"
     },
     "closeGuard": {
       "header": "Cambios de mods activos sin guardar",
@@ -1308,8 +1322,8 @@
     },
     "page": {
       "heading": "Mods",
-      "activeTab": "Activos",
-      "inactiveTab": "Inactivos",
+      "activeHeading": "Activos",
+      "inactiveHeading": "Inactivos",
       "searchPlaceholder": "Buscar mods…",
       "tagFilterPlaceholder": "Filtrar por etiqueta…",
       "sourcePlaceholder": "Origen",
@@ -1332,7 +1346,9 @@
       "dependentsStillActive": "{count} mod activo todavía depende de {mod}: {deps}. | {count} mods activos todavía dependen de {mod}: {deps}.",
       "deactivatedToast": "Desactivados",
       "deactivateButton": "Desactivar",
-      "rescanButton": "Volver a escanear mods"
+      "rescanButton": "Volver a escanear mods",
+      "searchActiveLabel": "Buscar en los mods activos",
+      "searchInactiveLabel": "Buscar en los mods inactivos"
     },
     "defSearch": {
       "ariaLabel": "Ir a un Def",
@@ -1342,8 +1358,37 @@
       "selectAllShown": "Seleccionar {count} mod mostrado | Seleccionar los {count} mods mostrados",
       "selectAllEmpty": "Seleccionar todo",
       "selectedCount": "{count} seleccionado | {count} seleccionados",
-      "notShown": "{count} no mostrado | {count} no mostrados",
+      "notShown": "({count} no mostrado) | ({count} no mostrados)",
       "clear": "Anular la selección"
+    },
+    "move": {
+      "up": "Subir",
+      "down": "Bajar",
+      "top": "Mover al principio",
+      "bottom": "Mover al final",
+      "after": "Mover después de…",
+      "menuButton": "Mover {name}",
+      "activateAtButton": "Activar {name} en la posición…",
+      "afterDialogHeader": "Mover después de otro mod",
+      "activateAtDialogHeader": "Activar en una posición",
+      "pickHelp": "Elige el mod tras el que se colocará la selección.",
+      "atStart": "Al principio de la lista",
+      "atEnd": "Al final de la lista",
+      "pickCapped": "Se muestran las {count} primeras coincidencias. Acota la búsqueda para ver otras.",
+      "blockedReason": "No se puede reordenar porque esta lista no está ordenada por orden de carga, del primero al último. Ordénala por orden de carga para mover mods.",
+      "edgeTop": "Ya está al principio de esta lista",
+      "edgeBottom": "Ya está al final de esta lista",
+      "announced": "Se movió {name} a la posición {position}",
+      "announcedOf": "Se movió {name} a la posición {position} de {total}",
+      "announcedMany": "Se movió {count} mod a partir de la posición {position} | Se movieron {count} mods a partir de la posición {position}",
+      "announcedManyOf": "Se movió {count} mod a partir de la posición {position} de {total} | Se movieron {count} mods a partir de la posición {position} de {total}",
+      "announcedManyHidden": "Se movió {count} mod ({hidden} sin mostrar) a partir de la posición {position} | Se movieron {count} mods ({hidden} sin mostrar) a partir de la posición {position}",
+      "announcedManyHiddenOf": "Se movió {count} mod ({hidden} sin mostrar) a partir de la posición {position} de {total} | Se movieron {count} mods ({hidden} sin mostrar) a partir de la posición {position} de {total}",
+      "switchedNote": "Ahora usas tu propio orden; el orden sugerido no ha cambiado.",
+      "viewSuggested": "Ver orden sugerido",
+      "suggestedNote": "Al aplicar se escribirá el orden sugerido. Si mueves un mod, pasas a usar tu propio orden.",
+      "coreStaysActive": "Core no se puede desactivar.",
+      "inactiveNotOrdered": "Esta lista no tiene orden propio. Arrastra mods a la lista de activos para activarlos."
     }
   },
   "rules": {
@@ -1712,7 +1757,8 @@
       "noEntries": "No se encontró ningún ID de paquete."
     },
     "importedWithWarnings": "El escaneo informó de {count} advertencia. | El escaneo informó de {count} advertencias.",
-    "importedRuleWarnings": "Importado, con reglas que no se pudieron cargar"
+    "importedRuleWarnings": "Importado, con reglas que no se pudieron cargar",
+    "revertOrder": "Revertir al orden de ModsConfig.xml"
   },
   "apply": {
     "dialog": {
@@ -1986,6 +2032,7 @@
       "chooseButton": "Elegir…",
       "installCheckboxLabel": "Instalar en Mods y activar",
       "staleActiveSetNote": "Los cambios de activación pendientes no se incluyen: vuelve a escanear primero si quieres que entren en esta instalación.",
+      "unappliedOrderNote": "Instalar escribe tu orden actual, que aún no se ha aplicado.",
       "forceWarning": "Parece que RimWorldWin64.exe se está ejecutando. Instalar ahora escribe ModsConfig.xml, que el juego sobreescribe al cerrarse, así que el cambio puede perderse. ¿Exportar de todos modos?",
       "exportAnyway": "Exportar de todos modos",
       "export": "Exportar",

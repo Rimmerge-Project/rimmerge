@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { useEventListener } from "@vueuse/core";
 import Message from "primevue/message";
-import { computed } from "vue";
+import { computed, nextTick, useTemplateRef, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 
@@ -8,6 +9,7 @@ import BaseEmpty from "@/components/base/BaseEmpty.vue";
 import ModDescription from "@/components/mods/ModDescription.vue";
 import ModInfoFacts from "@/components/mods/ModInfoFacts.vue";
 import ModPreview from "@/components/mods/ModPreview.vue";
+import { isInert } from "@/composables/shortcutTargets";
 import { useModLabel } from "@/composables/useModLabel";
 import { useTranslateMessage } from "@/composables/useTranslateMessage";
 import { formatList } from "@/i18n/format";
@@ -21,8 +23,15 @@ import { assertNever } from "@/utils/assertNever";
 import { describeCommandError } from "@/utils/errors";
 import { sourceLabel } from "@/utils/source";
 
-/** `null` closes the panel; a mod id opens it and loads that mod's info. */
-const { modId } = defineProps<{ modId: string | null }>();
+const { modId, isOverlay = false } = defineProps<{
+  /** `null` closes the panel; a mod id opens it and loads that mod's info. */
+  modId: string | null;
+  /**
+   * Whether the panel floats over the page (a drawer on the right edge) instead of taking its own
+   * column: the Mods page does so below very wide windows, where the two lists need the width.
+   */
+  isOverlay?: boolean;
+}>();
 const emit = defineEmits<{ close: [] }>();
 
 const { t, locale } = useI18n();
@@ -85,11 +94,34 @@ function close(): void {
   emit("close");
 }
 
-function onKeydown(event: KeyboardEvent): void {
-  if (event.key === "Escape") {
+const panel = useTemplateRef<HTMLElement>("panel");
+
+// The one Escape handler, so a press closes exactly once. A drawer is not reached by tabbing past
+// the lists, so it closes from anywhere on the page; a panel in its own column only from inside
+// it. Either way a dialog or a text field keeps its own Escape.
+useEventListener(window, "keydown", (event: KeyboardEvent) => {
+  if (modId === null || event.key !== "Escape" || isInert(event.target)) {
+    return;
+  }
+  const isInsidePanel =
+    event.target instanceof Node && panel.value?.contains(event.target) === true;
+  if (isOverlay || isInsidePanel) {
     close();
   }
-}
+});
+
+// A drawer covers the Active list, so opening it moves keyboard focus into it (the page returns
+// focus to the row on close). Only an open from nothing counts: switching the shown mod while the
+// drawer is already open must not pull focus away from the list the user is working in.
+watch(
+  () => modId,
+  async (next, previous) => {
+    if (isOverlay && previous === null && next !== null) {
+      await nextTick();
+      panel.value?.focus();
+    }
+  },
+);
 
 /** Exhaustive over {@link PendingChangeDto} so a third pending state is a compile error here, not a silently-wrong label. */
 function pendingChangeText(pending: PendingChangeDto): string {
@@ -107,10 +139,12 @@ function pendingChangeText(pending: PendingChangeDto): string {
 <template>
   <aside
     v-if="modId !== null"
-    class="surface-card flex min-h-0 w-[26rem] shrink-0 flex-col gap-4 overflow-y-auto p-4"
+    ref="panel"
+    tabindex="-1"
+    class="surface-card flex min-h-0 w-[26rem] flex-col gap-4 overflow-y-auto p-4 focus:outline-none"
+    :class="isOverlay ? 'fixed inset-y-0 right-0 z-30 max-w-full shadow-xl' : 'shrink-0'"
     :aria-label="t('modInfo.panel.regionLabel')"
     data-testid="mod-info-panel"
-    @keydown="onKeydown"
   >
     <div class="flex items-start justify-between gap-2">
       <h2 class="sr-only">

@@ -22,7 +22,12 @@ the other way around.
   one exception, and it must stay one: `Session.working: ActiveSet` (the
   in-memory, unsaved active-mod list — see "Activating and deactivating
   mods" below) is the only mutating state a use case in this crate
-  carries without persisting immediately.
+  carries without persisting immediately. Its edits also reach
+  `orders.current` in memory, never on disk: an edit that leaves the same
+  ids settles Current onto `working`'s sequence
+  (`Session::settle_current_onto_working`, through
+  `current_order_replaced`), so Current is the second thing a use case
+  changes without persisting. `file_active_mods` stays what the file held.
 - Declared ids never carry `_steam`; compare through `ModId::base()`.
   `ActiveMods` is the single authority for "is this id active".
 - Ports return typed errors; `Apply` writes `ModsConfig.xml` only when
@@ -109,8 +114,10 @@ first use and never invalidated.
   invalidate independently, via `DecidePatchMerge`).
 - **The selected-order family** (`Session.inspections`,
   `assignment_instances`, `assignment_coverage`, `def_graphics`): cleared only by
-  `Session::recompute_sort` and `Session::set_current_order` — the only
-  two places `orders` gets a new value — **never** by
+  `Session::recompute_sort` and `Session::current_order_replaced` (the
+  one helper behind every replacement of `orders.current` after load:
+  `set_current_order` and the edit settle `settle_current_onto_working`
+  both call it) — **never** by
   `invalidate_ledgers`, since nothing these caches read (the selected
   order, active mods, raw XML on disk) is touched by a plain decision/
   rule/tag/settings/import change. **Exception**: `DefInspection.findings`
@@ -125,15 +132,66 @@ first use and never invalidated.
   is bounded the same way at `MAX_CACHED_DEF_GRAPHICS` (1,024), so a
   refetch stays cheap after the smaller inspection cache has been thrashed.
 - **Working set == current set implies working sequence == current
-  sequence.** `settle_working` (`pub(crate)`) runs at the end of
-  `set_current_order` and after every production mutation of `working`
-  (`ActivateMods::execute`, `DeactivateMods::execute`): when
-  `working` and the new Current hold exactly the same ids (duplicates
-  respected), `working` takes Current's sequence. A rescan scans
-  `working`'s sequence, so without it an `Apply` followed by a rescan
-  scanned the pre-apply order and reverted Current. A `working` with
-  pending membership edits keeps its own sequence (nothing is settled
-  yet). `is_stale` stays set-based.
+  sequence, and the settle has two directions.** Which one runs depends on
+  who is the truth:
+  - **File truth: `working` takes Current's sequence**
+    (`settle_working_onto_current`, private to `session/order.rs`). It runs
+    at the end of `set_current_order`, i.e. for `Apply`, `ExportPatch`'s
+    install and `RevertOrderToFile`. A rescan scans `working`'s sequence,
+    so without it an `Apply` followed by a rescan scanned the pre-apply
+    order and reverted Current.
+  - **Edit truth: Current takes `working`'s sequence**
+    (`Session::settle_current_onto_working`, `pub(crate)`). It runs after
+    every edit made from the Mods page (`MoveMods`, `ActivateMods`,
+    `DeactivateMods`), because the edit is the user's intent and must not be
+    undone. It writes nothing: `file_active_mods` stays what the file held,
+    so `file_matches(Current)` turns false until an `Apply`. It is
+    `current_order_replaced`'s one caller besides `set_current_order`: both
+    invalidate the ledger family and the selected-order caches and, under
+    `PreserveCurrent`, re-sort (a settled sequence change always keeps the id
+    set). Never duplicate that logic in a use case.
+
+  Both directions do nothing unless the id multisets are equal (duplicates
+  respected). A `working` with pending membership edits keeps its own
+  sequence in both; the next rescan (`execute_with_active_set` over
+  `working().ids()`) carries a staged move into Current, and a move made
+  while a rescan runs makes that rescan refuse (the swap compares the
+  sequence). `is_stale` stays set-based, which is safe now because a
+  same-set reorder settles at once and so is never "pending but invisible".
+- **`ActivateMods::execute` places a mod without an anchor at its Current
+  slot** (`ActiveSet::activate_at_reference_slots`): right after its nearest
+  predecessor in Current that is in `working`, or at the start; a mod Current
+  never held goes to the end. That keeps "deactivate then reactivate puts
+  it back and Current is unchanged", which the edit-direction settle would
+  otherwise turn into an appended order. The one exception is the dependency
+  floor (`after_declared_dependencies`): a reactivated mod lands right after
+  any declared dependency that is active now and sits after its old slot, so
+  the round trip can change Current in that case. `execute_at` takes an `Anchor`
+  instead and inserts the whole plan (dependencies first) as one block. The
+  un-anchored placement keeps dependencies first too: a mod never lands before
+  a declared dependency that is in `working` by then, whether this same call
+  inserted it or it was already active (for example after being moved behind
+  the mod's old slot); it goes right after the dependency when its own slot
+  would put it earlier.
+- **`MoveMods` is the one reorder use case.** `ActiveSet::move_to(ids,
+  anchor)` is a pure permutation with `Anchor::{Before, After, Start, End}`
+  (ids, never indices, so it is exact under a filtered or sorted view); it
+  validates everything before mutating (`MoveError`: a stale anchor, an
+  anchor inside the moved set, an inactive or repeated id) and keeps the
+  moved ids together in their current relative order. `MoveMods::execute`
+  then settles (edit direction) and, when the working sequence really
+  changed while Suggested is selected, `select(Current)`s and says so in
+  `MoveOutcome::did_switch_to_current`: the same switch `ImportOrder::finish`
+  makes, through the one `Session::switch_to_current_after_reorder`. An
+  *anchored* `ActivateMods::execute_at` (an explicit drop position) switches
+  the same way when it added something (`ActivateOutcome::did_switch_to_current`);
+  an un-anchored `execute` never does. `DiscardPendingChanges` is `working := Current` (a settled reorder
+  stays, it lives in Current); `RevertOrderToFile` is `set_current_order(file
+  sequence)` and refuses (`RevertOrderError`) while `is_stale` or when the
+  file and Current hold different ids. None persists anything, in keeping with
+  the `working` exception above. `ModList::reorderable` is derived in
+  `mod_lists` (the Active list in `ListSort::is_load_order`, never Inactive):
+  a filter keeps it on, because a move names a neighbour by id.
 - **"Mods that move" is derived on read.** `Session::moved_mods` measures
   `suggested` against the live `current`
   (`rim_resolve::sort::compute_disturbance`); `SortOutcome.stats` is the
@@ -143,10 +201,13 @@ first use and never invalidated.
   unchanged, Current's sequence changed and `tie_break` is `PreserveCurrent`
   (Suggested ranks by Current's positions there). A changed id set never
   re-sorts: a just-written id is not in the report yet.
-- `Session::set_current_order` is the **one** way anything should change
-  `orders.current` after load — `ExportPatch`'s own `install` and `Apply`
-  both call it right after writing `ModsConfig.xml`. Skipping it is a
-  real bug: a later `Apply` with `selected() == OrderSource::Current`
+- `Session::set_current_order` is the way anything that **wrote**
+  `ModsConfig.xml` changes `orders.current` after load — `ExportPatch`'s
+  own `install` and `Apply` both call it right after writing the file. The
+  one other writer of `orders.current` is the edit settle
+  (`settle_current_onto_working`: a Mods-page edit, nothing written);
+  both go through `current_order_replaced` and neither may skip it.
+  Skipping `set_current_order` after a write is a real bug: a later `Apply` with `selected() == OrderSource::Current`
   and no reload in between would read the stale `current` and silently
   overwrite the just-written file with it.
 
@@ -621,14 +682,18 @@ use `test_support::FakeGameLauncher`; nothing here starts a process.
 list — the sole exception to "every mutating use case persists
 immediately" (see Invariants). Activating/deactivating a mod
 (`ActivateMods`/`DeactivateMods`, wrapping pure `active_set::{plan_activate,
-plan_deactivate}` over a `ModInventory`) never touches `orders`, the
-ledgers, or the sorter — only `Session::set_current_order` and
-`use_cases::Rescan` (a brand-new `Session` via
-`LoadProject::execute_with_active_set`) do. `pending_changes()`/
+plan_deactivate}` over a `ModInventory`) changes membership only: `orders`,
+the ledgers and the sorter stay as they were until `use_cases::Rescan` (a
+brand-new `Session` via `LoadProject::execute_with_active_set`) picks the
+edit up. The one thing that reaches `orders.current` sooner is the edit
+settle: once an edit leaves `working` with the same ids as Current, Current
+takes `working`'s sequence (`settle_current_onto_working`), and
+`Session::set_current_order` does the same for a written file. `pending_changes()`/
 `is_stale()` are **two separate diffs**: `unscanned` (`working` vs. the
 scanned `orders().current` — what a rescan would pick up) and
 `unapplied` (`orders().current` vs. `file_active_mods` — what an
-`apply` would write). `Apply` refuses to write `ModsConfig.xml`
+`apply` would write; a membership diff, so a settled reorder leaves it empty
+and shows only in `PendingActiveChanges::order_differs_from_file`). `Apply` refuses to write `ModsConfig.xml`
 (`ApplyError::StaleActiveSet`) while `unscanned` is non-empty; decisions
 and rules still save regardless. `ActiveSet::new` validates every id
 resolves and rejects exact duplicates — **it does not require Core to
@@ -734,10 +799,12 @@ and never an epoch. Fake: `test_support::FakeModTimestampReader`.
   session's `orders.current` and its `working`; `ImportOrder::finish`
   checks the scanned Current equals the validated order
   (`ScanDidNotMatch` otherwise, selection untouched) and then selects
-  `OrderSource::Current`. Staging a same-set reorder in `working` and
-  rescanning separately would be wrong: `is_stale` is set-based, so a
-  failed or cancelled rescan would leave `Apply` free to write the old
-  order with no warning. Nothing here writes `ModsConfig.xml`; the
+  `OrderSource::Current`. An import does not go through `MoveMods`: it is
+  validated against the inventory first and may change membership, and
+  staging it in `working` and rescanning separately would leave a failed or
+  cancelled rescan with a half-applied order. (A manual same-set reorder is
+  different: it settles into Current at once, so `is_stale` never has to
+  see it.) Nothing here writes `ModsConfig.xml`; the
   ordinary `Apply` with `source: Current` does.
 - **`ImportLoss::of(plan)`** is the CLI's `--yes` rule (something
   deactivated, or a listed mod other than the sender's merge mod not

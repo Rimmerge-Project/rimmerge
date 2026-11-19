@@ -575,6 +575,18 @@
       "nothing_to_export": {
         "title": "沒有可匯出的內容",
         "detail": "沒有任何已啟用的模組可以列出。請檢查 ModsConfig.xml 中的已啟用模組。"
+      },
+      "move_anchor_not_active": {
+        "title": "該模組已不在已啟用清單中",
+        "detail": "你拖放到其旁邊的那個模組已被停用或移到別處，因此未做任何變更。清單已重新整理，請再移動一次。"
+      },
+      "revert_order_pending_changes": {
+        "title": "請先捨棄尚未掃描的變更",
+        "detail": "已啟用清單中有尚未掃描的變更。請先捨棄這些變更或重新掃描，再還原順序。"
+      },
+      "revert_order_membership_differs": {
+        "title": "該檔案列出的模組不同",
+        "detail": "ModsConfig.xml 列出的模組與目前順序不同，因此沒有可還原的順序。請改用該檔案的清單，或套用你自己的順序。"
       }
     }
   },
@@ -1180,6 +1192,7 @@
       "chooseButton": "選擇…",
       "installCheckboxLabel": "安裝到 Mods 資料夾並啟用",
       "staleActiveSetNote": "尚未掃描的啟用變更不會包含在內：如果要將它們納入此次安裝，請先重新掃描。",
+      "unappliedOrderNote": "安裝會寫入你目前的順序，而該順序尚未套用。",
       "forceWarning": "RimWorldWin64.exe 似乎正在執行。現在安裝會寫入 ModsConfig.xml，而遊戲結束時會覆蓋該檔案，因此這項變更可能會遺失。仍要匯出嗎？",
       "exportAnyway": "仍要匯出",
       "export": "匯出",
@@ -1276,7 +1289,8 @@
       "unapplied": "{count} 項變更尚未套用到 ModsConfig.xml",
       "rescanButton": "重新掃描",
       "rescanFinishedToast": "重新掃描完成，有 {count} 則備註",
-      "rescannedWithWarningsToast": "已重新掃描，但有警告"
+      "rescannedWithWarningsToast": "已重新掃描，但有警告",
+      "discardButton": "捨棄尚未掃描的變更"
     },
     "closeGuard": {
       "header": "已啟用模組的變更尚未儲存",
@@ -1308,8 +1322,8 @@
     },
     "page": {
       "heading": "模組",
-      "activeTab": "已啟用",
-      "inactiveTab": "未啟用",
+      "activeHeading": "已啟用",
+      "inactiveHeading": "未啟用",
       "searchPlaceholder": "搜尋模組…",
       "tagFilterPlaceholder": "依標籤篩選…",
       "sourcePlaceholder": "來源",
@@ -1332,7 +1346,9 @@
       "dependentsStillActive": "{count} 個已啟用的模組仍依賴 {mod}：{deps}。",
       "deactivatedToast": "已停用",
       "deactivateButton": "停用",
-      "rescanButton": "重新掃描模組"
+      "rescanButton": "重新掃描模組",
+      "searchActiveLabel": "搜尋已啟用的模組",
+      "searchInactiveLabel": "搜尋未啟用的模組"
     },
     "defSearch": {
       "ariaLabel": "跳至 Def",
@@ -1342,8 +1358,37 @@
       "selectAllShown": "全選顯示中的 {count} 個",
       "selectAllEmpty": "全選",
       "selectedCount": "已選取 {count} 個",
-      "notShown": "{count} 個未顯示",
+      "notShown": "（{count} 個未顯示）",
       "clear": "清除選取"
+    },
+    "move": {
+      "up": "上移",
+      "down": "下移",
+      "top": "移到最上方",
+      "bottom": "移到最下方",
+      "after": "移到指定模組之後…",
+      "menuButton": "移動 {name}",
+      "activateAtButton": "在指定位置啟用 {name}…",
+      "afterDialogHeader": "移到另一個模組之後",
+      "activateAtDialogHeader": "在指定位置啟用",
+      "pickHelp": "選擇一個模組，所選模組會緊接著放在它之後。",
+      "atStart": "在清單開頭",
+      "atEnd": "在清單結尾",
+      "pickCapped": "僅顯示前 {count} 個符合項目。請縮小搜尋範圍以查看其他項目。",
+      "blockedReason": "此清單並非依載入順序排序（先載入的在前），因此已關閉重新排序。請改為依載入順序排序，才能移動模組。",
+      "edgeTop": "已在此清單的最上方",
+      "edgeBottom": "已在此清單的最下方",
+      "announced": "已將 {name} 移到第 {position} 位",
+      "announcedOf": "已將 {name} 移到第 {position} 位，共 {total} 位",
+      "announcedMany": "已移動 {count} 個模組，從第 {position} 位開始",
+      "announcedManyOf": "已移動 {count} 個模組，從第 {position} 位開始，共 {total} 位",
+      "announcedManyHidden": "已移動 {count} 個模組（其中 {hidden} 個未顯示），從第 {position} 位開始",
+      "announcedManyHiddenOf": "已移動 {count} 個模組（其中 {hidden} 個未顯示），從第 {position} 位開始，共 {total} 位",
+      "switchedNote": "現在使用你自己的順序；建議順序維持不變。",
+      "viewSuggested": "檢視建議順序",
+      "suggestedNote": "套用會寫入建議順序。移動模組會切換為你自己的順序。",
+      "coreStaysActive": "Core 無法停用。",
+      "inactiveNotOrdered": "此清單沒有自己的順序。將模組拖曳到「已啟用」清單即可啟用。"
     }
   },
   "rules": {
@@ -1712,7 +1757,8 @@
       "noEntries": "找不到任何 Package ID。"
     },
     "importedWithWarnings": "掃描回報了 {count} 個警告。",
-    "importedRuleWarnings": "已匯入，但有規則無法載入"
+    "importedRuleWarnings": "已匯入，但有規則無法載入",
+    "revertOrder": "還原為 ModsConfig.xml 中的順序"
   },
   "apply": {
     "dialog": {
@@ -1986,6 +2032,7 @@
       "chooseButton": "選擇…",
       "installCheckboxLabel": "安裝到 Mods 資料夾並啟用",
       "staleActiveSetNote": "尚未掃描的啟用變更不會包含在內：如果要將它們納入此次安裝，請先重新掃描。",
+      "unappliedOrderNote": "安裝會寫入你目前的順序，而該順序尚未套用。",
       "forceWarning": "RimWorldWin64.exe 似乎正在執行。現在安裝會寫入 ModsConfig.xml，而遊戲結束時會覆蓋該檔案，因此這項變更可能會遺失。仍要匯出嗎？",
       "exportAnyway": "仍要匯出",
       "export": "匯出",

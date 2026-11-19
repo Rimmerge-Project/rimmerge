@@ -28,6 +28,7 @@ describe("PendingChangesCloseGuard", () => {
     mountGuard({
       unscanned: { added: ["a.mod"], removed: [] },
       unapplied: { added: [], removed: [] },
+      orderDiffersFromFile: false,
     });
     await flushPromises();
 
@@ -42,6 +43,20 @@ describe("PendingChangesCloseGuard", () => {
     mountGuard({
       unscanned: { added: [], removed: [] },
       unapplied: { added: ["a.mod"], removed: [] },
+      orderDiffersFromFile: false,
+    });
+    await flushPromises();
+
+    expect(isStaleOrUnapplied()).toBe(true);
+  });
+
+  it("reads true after a settled move, when both diffs are empty and only the order differs", async () => {
+    // A move changes no membership (`unscanned`/`unapplied` stay empty) and settles into Current,
+    // which the file does not hold yet: closing then would silently drop the user's order.
+    mountGuard({
+      unscanned: { added: [], removed: [] },
+      unapplied: { added: [], removed: [] },
+      orderDiffersFromFile: true,
     });
     await flushPromises();
 
@@ -52,6 +67,7 @@ describe("PendingChangesCloseGuard", () => {
     mountGuard({
       unscanned: { added: [], removed: [] },
       unapplied: { added: [], removed: [] },
+      orderDiffersFromFile: false,
     });
     await flushPromises();
 
@@ -62,6 +78,7 @@ describe("PendingChangesCloseGuard", () => {
     const wrapper = mountGuard({
       unscanned: { added: ["a.mod"], removed: [] },
       unapplied: { added: [], removed: [] },
+      orderDiffersFromFile: false,
     });
     await flushPromises();
 
@@ -79,6 +96,7 @@ describe("PendingChangesCloseGuard", () => {
     const wrapper = mountGuard({
       unscanned: { added: ["a.mod"], removed: [] },
       unapplied: { added: [], removed: [] },
+      orderDiffersFromFile: false,
     });
     await flushPromises();
 

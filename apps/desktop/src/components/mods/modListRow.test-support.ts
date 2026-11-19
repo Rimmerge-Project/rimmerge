@@ -41,7 +41,10 @@ export function modRow(overrides: ModRowOverrides = {}): ModListRowDto {
   };
 }
 
-/** A whole list answer whose `total` is its row count. */
-export function modList(items: ModListRowDto[]): ModListDto {
-  return { total: items.length, items };
+/**
+ * A whole list answer whose `total` is its row count. `reorderable` defaults to
+ * `true`, the Active list in its own load order.
+ */
+export function modList(items: ModListRowDto[], reorderable = true): ModListDto {
+  return { total: items.length, items, reorderable };
 }

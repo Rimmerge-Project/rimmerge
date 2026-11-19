@@ -1,11 +1,14 @@
 import { expect, type Page, test } from "@playwright/test";
 // Type-only: pulls in `Window.__E2E_MOCK_IPC__`'s ambient declaration.
 import type {} from "../../src/e2e-mock-bootstrap";
-import { loadScenario } from "./support";
+import { loadScenario, modsPane } from "./support";
 
 /** The mod ids of the rendered (virtualized) table rows, in DOM order. */
-async function renderedRowIds(page: Page): Promise<string[]> {
-  return page
+async function renderedRowIds(
+  page: Page,
+  kind: "active" | "inactive" = "active",
+): Promise<string[]> {
+  return modsPane(page, kind)
     .getByTestId("mod-table")
     .locator('[role="row"]')
     .evaluateAll((rows) =>
@@ -37,14 +40,14 @@ test.describe("mods display sort", () => {
   }) => {
     await openMods(page);
 
-    const loadOrder = page.getByTestId("mods-sort-loadOrder-ascending");
+    const loadOrder = modsPane(page, "active").getByTestId("mods-sort-loadOrder-ascending");
     await expect(loadOrder).toHaveAccessibleName("Sort by load order, first to last");
     await expect(loadOrder).toHaveAttribute("aria-pressed", "true");
     await expect(loadOrder).toHaveAttribute("title", "Sort by load order, first to last");
-    await expect(page.getByTestId("mods-sort-lastUpdated-descending")).toHaveAccessibleName(
-      "Sort by last updated, newest first",
-    );
-    await expect(page.getByTestId("mods-sort-name-ascending")).toHaveAttribute(
+    await expect(
+      modsPane(page, "active").getByTestId("mods-sort-lastUpdated-descending"),
+    ).toHaveAccessibleName("Sort by last updated, newest first");
+    await expect(modsPane(page, "active").getByTestId("mods-sort-name-ascending")).toHaveAttribute(
       "aria-pressed",
       "false",
     );
@@ -55,12 +58,12 @@ test.describe("mods display sort", () => {
   }) => {
     await openMods(page);
     // Only the generic pool ("Mod 0" ... "Mod 59"), so the fixture owners' names stay out of it.
-    await page.getByTestId("mods-search").fill("mod.0");
-    await expect(page.getByTestId("mods-total")).toHaveText("60 mods");
+    await modsPane(page, "active").getByTestId("mods-search").fill("mod.0");
+    await expect(modsPane(page, "active").getByTestId("mods-total")).toHaveText("60 mods");
 
-    await page.getByTestId("mods-sort-name-ascending").click();
+    await modsPane(page, "active").getByTestId("mods-sort-name-ascending").click();
     // "Mod 0" (Core), "Mod 1" (DLC), "Mod 10", "Mod 11", ... : text order, not id order.
-    await expect(page.getByTestId("mods-sort-name-ascending")).toHaveAttribute(
+    await expect(modsPane(page, "active").getByTestId("mods-sort-name-ascending")).toHaveAttribute(
       "aria-pressed",
       "true",
     );
@@ -72,12 +75,12 @@ test.describe("mods display sort", () => {
       "mod.011",
     ]);
 
-    await page.getByTestId("mods-sort-name-descending").click();
-    await expect(page.getByTestId("mods-sort-name-descending")).toHaveAttribute(
+    await modsPane(page, "active").getByTestId("mods-sort-name-descending").click();
+    await expect(modsPane(page, "active").getByTestId("mods-sort-name-descending")).toHaveAttribute(
       "aria-pressed",
       "true",
     );
-    await expect(page.getByTestId("mods-sort-name-ascending")).toHaveAttribute(
+    await expect(modsPane(page, "active").getByTestId("mods-sort-name-ascending")).toHaveAttribute(
       "aria-pressed",
       "false",
     );
@@ -90,19 +93,18 @@ test.describe("mods display sort", () => {
     page,
   }) => {
     await openMods(page);
-    await page.getByTestId("mods-search").fill("mod.00");
+    await modsPane(page, "active").getByTestId("mods-search").fill("mod.00");
 
-    await page.getByTestId("mods-sort-lastUpdated-ascending").click();
+    await modsPane(page, "active").getByTestId("mods-sort-lastUpdated-ascending").click();
     // mod.000/001 ship with the game, mod.007 has no Steam record; the rest carry a time.
     await expect(page.getByTestId("mod-row-updated-mod.002")).toBeVisible();
     const ascending = await renderedRowIds(page);
     expect(ascending.slice(-3)).toEqual(["mod.000", "mod.001", "mod.007"]);
 
-    await page.getByTestId("mods-sort-lastUpdated-descending").click();
-    await expect(page.getByTestId("mods-sort-lastUpdated-descending")).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    await modsPane(page, "active").getByTestId("mods-sort-lastUpdated-descending").click();
+    await expect(
+      modsPane(page, "active").getByTestId("mods-sort-lastUpdated-descending"),
+    ).toHaveAttribute("aria-pressed", "true");
     const descending = await renderedRowIds(page);
     expect(descending.slice(-3)).toEqual(["mod.000", "mod.001", "mod.007"]);
     // The known ones reverse: the day sets repeat, so equal days keep ascending id order.
@@ -116,8 +118,8 @@ test.describe("mods display sort", () => {
   }) => {
     await openMods(page);
 
-    await page.getByTestId("mods-search").fill("Mod 1");
-    await page.getByTestId("mods-sort-packageId-descending").click();
+    await modsPane(page, "active").getByTestId("mods-search").fill("Mod 1");
+    await modsPane(page, "active").getByTestId("mods-sort-packageId-descending").click();
     await expect
       .poll(() => page.evaluate(() => window.__LIST_WORKING_MODS_CALLS__?.at(-1)))
       .toEqual({
@@ -135,30 +137,28 @@ test.describe("mods display sort", () => {
 
   test("the Inactive list has no load-order arrows and keeps its own sort", async ({ page }) => {
     await openMods(page);
-    await page.getByTestId("mods-sort-packageId-ascending").click();
+    await modsPane(page, "active").getByTestId("mods-sort-packageId-ascending").click();
 
-    await page.getByTestId("mods-tab-inactive").click();
     await expect(page.getByTestId("mod-row-mod.901")).toBeVisible();
 
-    await expect(page.getByTestId("mods-sort-loadOrder-ascending")).toHaveCount(0);
-    await expect(page.getByTestId("mods-sort-name-ascending")).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-    await page.getByTestId("mods-sort-name-descending").click();
+    await expect(
+      modsPane(page, "inactive").getByTestId("mods-sort-loadOrder-ascending"),
+    ).toHaveCount(0);
+    await expect(
+      modsPane(page, "inactive").getByTestId("mods-sort-name-ascending"),
+    ).toHaveAttribute("aria-pressed", "true");
+    await modsPane(page, "inactive").getByTestId("mods-sort-name-descending").click();
     // Name, Z to A: "Inactive Mod 9" first.
     await expect(page.getByTestId("mod-row-mod.909")).toBeVisible();
-    expect((await renderedRowIds(page))[0]).toBe("mod.909");
+    expect((await renderedRowIds(page, "inactive"))[0]).toBe("mod.909");
     expect(await page.evaluate(() => window.__LIST_INACTIVE_MODS_CALLS__?.at(-1)?.sort)).toEqual({
       key: "name",
       direction: "descending",
     });
 
-    await page.getByTestId("mods-tab-active").click();
-    await expect(page.getByTestId("mods-sort-packageId-ascending")).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    await expect(
+      modsPane(page, "active").getByTestId("mods-sort-packageId-ascending"),
+    ).toHaveAttribute("aria-pressed", "true");
   });
 
   test("sorting is display only: it writes nothing and load order returns unchanged", async ({
@@ -168,9 +168,9 @@ test.describe("mods display sort", () => {
     const original = (await renderedRowIds(page)).slice(0, 6);
     const snapshotBefore = await sessionSnapshot(page);
 
-    await page.getByTestId("mods-sort-name-descending").click();
-    await page.getByTestId("mods-sort-lastUpdated-ascending").click();
-    await page.getByTestId("mods-sort-loadOrder-ascending").click();
+    await modsPane(page, "active").getByTestId("mods-sort-name-descending").click();
+    await modsPane(page, "active").getByTestId("mods-sort-lastUpdated-ascending").click();
+    await modsPane(page, "active").getByTestId("mods-sort-loadOrder-ascending").click();
     await expect(page.getByTestId("mod-row-mod.000")).toBeVisible();
 
     expect((await renderedRowIds(page)).slice(0, 6)).toEqual(original);
@@ -186,24 +186,24 @@ test.describe("mods display sort", () => {
     await openMods(page);
     await expect(page.getByTestId("mod-row-position-mod.000")).toHaveCount(0);
 
-    await page.getByTestId("mods-sort-name-ascending").click();
+    await modsPane(page, "active").getByTestId("mods-sort-name-ascending").click();
     await expect(page.getByTestId("mod-row-position-mod.000")).toBeVisible();
     await expect(page.getByTestId("mod-row-position-mod.000")).toHaveText("#1");
     await expect(page.getByTestId("mod-row-mod.000")).toContainText("Load order position 1");
 
-    await page.getByTestId("mods-sort-loadOrder-ascending").click();
+    await modsPane(page, "active").getByTestId("mods-sort-loadOrder-ascending").click();
     await expect(page.getByTestId("mod-row-position-mod.000")).toHaveCount(0);
   });
 
   test("an arrow works from the keyboard", async ({ page }) => {
     await openMods(page);
 
-    const arrow = page.getByTestId("mods-sort-name-ascending");
+    const arrow = modsPane(page, "active").getByTestId("mods-sort-name-ascending");
     await arrow.focus();
     await page.keyboard.press("Enter");
     await expect(arrow).toHaveAttribute("aria-pressed", "true");
 
-    const other = page.getByTestId("mods-sort-name-descending");
+    const other = modsPane(page, "active").getByTestId("mods-sort-name-descending");
     await other.focus();
     await page.keyboard.press("Space");
     await expect(other).toHaveAttribute("aria-pressed", "true");

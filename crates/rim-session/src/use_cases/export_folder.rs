@@ -200,6 +200,55 @@ pub(crate) fn install<Writer: MergeModWriter, Config: ModsConfigStore>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ports::ModsConfigFile;
+    use crate::test_support::{InMemoryMergeModWriter, InMemoryModsConfigStore, session_fixture};
+    use crate::use_cases::MoveMods;
+
+    /// Install writes `orders.current`, not the file's own last-known list,
+    /// so a settled reorder that was never applied reaches `ModsConfig.xml`
+    /// with the export (the same as an imported order not applied yet). The
+    /// desktop warns about it where install is ticked.
+    #[test]
+    fn installing_after_a_settled_move_writes_the_moved_order() {
+        let mut session = session_fixture(&["a", "b", "c"]);
+        let config_store = InMemoryModsConfigStore::new(ModsConfigFile {
+            version: "1.6".to_string(),
+            active_mods: ["a", "b", "c"].map(ModId::new).to_vec(),
+            known_expansions: Vec::new(),
+        });
+        MoveMods::execute(
+            &mut session,
+            &[ModId::new("c")],
+            &crate::active_set::Anchor::Start,
+        )
+        .expect("c is active");
+        assert!(
+            !session.file_matches(rim_resolve::domain::OrderSource::Current),
+            "the move is not in the file yet"
+        );
+        let rendered = RenderedMod {
+            folder_name: "patch".to_string(),
+            files: Vec::new(),
+        };
+
+        install(
+            &InMemoryMergeModWriter::new(),
+            &config_store,
+            &mut session,
+            Path::new("C:/game/Mods"),
+            Path::new("C:/backups"),
+            &rendered,
+            &ModId::new("patch.package"),
+        )
+        .expect("install writes the config");
+
+        let writes = config_store.writes();
+        assert_eq!(writes.len(), 1);
+        assert_eq!(
+            writes[0].active_mods,
+            ["c", "a", "b", "patch.package"].map(ModId::new)
+        );
+    }
 
     #[test]
     fn is_inside_resolves_a_parent_dir_segment_before_comparing() {

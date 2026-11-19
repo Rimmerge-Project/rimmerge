@@ -37,8 +37,8 @@ pub mod ports;
 pub mod use_cases;
 
 pub use active_set::{
-    ActivatePlan, ActiveSet, ActiveSetDiff, ActiveSetError, DeactivatePlan, PendingActiveChanges,
-    plan_activate, plan_deactivate,
+    ActivatePlan, ActiveSet, ActiveSetDiff, ActiveSetError, Anchor, DeactivatePlan, MoveError,
+    PendingActiveChanges, plan_activate, plan_deactivate,
 };
 pub use app_settings::{
     AppSettings, NetworkPolicy, ReminderPolicy, StaleAfterDays, StaleAfterDaysError,

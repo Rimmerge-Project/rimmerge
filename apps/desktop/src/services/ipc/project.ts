@@ -1,5 +1,6 @@
 // Project lifecycle, orders, mods, the active set, apply, startup costs, and settings.
 
+import type { ActivateModsResultDto } from "@/types/generated/ActivateModsResultDto";
 import type { ActivatePlanDto } from "@/types/generated/ActivatePlanDto";
 import type { ActivateRequestDto } from "@/types/generated/ActivateRequestDto";
 import type { AppConfigDto } from "@/types/generated/AppConfigDto";
@@ -28,6 +29,8 @@ import type { ModListQueryDto } from "@/types/generated/ModListQueryDto";
 import type { ModNamesDto } from "@/types/generated/ModNamesDto";
 import type { ModPageDto } from "@/types/generated/ModPageDto";
 import type { ModPreviewDto } from "@/types/generated/ModPreviewDto";
+import type { MoveModsResultDto } from "@/types/generated/MoveModsResultDto";
+import type { MoveRequestDto } from "@/types/generated/MoveRequestDto";
 import type { OrderRowDto } from "@/types/generated/OrderRowDto";
 import type { OrderSourceDto } from "@/types/generated/OrderSourceDto";
 import type { PendingActiveChangesDto } from "@/types/generated/PendingActiveChangesDto";
@@ -181,8 +184,27 @@ export function planActivateMods(request: ActivateRequestDto): Promise<ActivateP
 }
 
 /** Commits an activation onto the working (unscanned) active-mod set. */
-export function activateMods(request: ActivateRequestDto): Promise<PendingActiveChangesDto> {
+export function activateMods(request: ActivateRequestDto): Promise<ActivateModsResultDto> {
   return call("activate_mods", { request });
+}
+
+/**
+ * Moves active mods next to an anchor. When the ids then equal Current's, Current takes the
+ * new sequence (nothing is written until Apply); the result says whether the first reorder
+ * switched the selection from Suggested to Current.
+ */
+export function moveMods(request: MoveRequestDto): Promise<MoveModsResultDto> {
+  return call("move_mods", { request });
+}
+
+/** Drops every edit no rescan has picked up (`working := Current`); no rescan is needed. */
+export function discardPendingChanges(): Promise<PendingActiveChangesDto> {
+  return call("discard_pending_changes");
+}
+
+/** Puts Current's sequence back to ModsConfig.xml's, when both list the same mods. */
+export function revertOrderToFile(): Promise<PendingActiveChangesDto> {
+  return call("revert_order_to_file");
 }
 
 /** Plans what {@link deactivateMods} would do. */

@@ -24,15 +24,18 @@ vi.mock("primevue/usetoast", () => ({
 const EMPTY: PendingActiveChangesDto = {
   unscanned: { added: [], removed: [] },
   unapplied: { added: [], removed: [] },
+  orderDiffersFromFile: false,
 };
 
 function mountBanner(
   pending: PendingActiveChangesDto,
   rescan: (() => unknown) | Record<string, never> = {},
+  more: Record<string, unknown> = {},
 ) {
   installMockIpc({
     get_pending_active_changes: pending,
     rescan_project: rescan,
+    ...more,
   });
   return mount(PendingChangesBanner, {
     global: {
@@ -58,6 +61,7 @@ describe("PendingChangesBanner", () => {
     const wrapper = mountBanner({
       unscanned: { added: ["a.mod", "b.mod"], removed: [] },
       unapplied: { added: ["c.mod"], removed: [] },
+      orderDiffersFromFile: false,
     });
     await flushPromises();
 
@@ -69,6 +73,7 @@ describe("PendingChangesBanner", () => {
     const wrapper = mountBanner({
       unscanned: { added: ["a.mod"], removed: [] },
       unapplied: { added: [], removed: [] },
+      orderDiffersFromFile: false,
     });
     await flushPromises();
 
@@ -78,7 +83,11 @@ describe("PendingChangesBanner", () => {
   it("clicking Rescan calls rescan_project", async () => {
     let calls = 0;
     const wrapper = mountBanner(
-      { unscanned: { added: ["a.mod"], removed: [] }, unapplied: EMPTY.unapplied },
+      {
+        unscanned: { added: ["a.mod"], removed: [] },
+        unapplied: EMPTY.unapplied,
+        orderDiffersFromFile: false,
+      },
       () => {
         calls += 1;
         return {
@@ -132,7 +141,11 @@ describe("PendingChangesBanner", () => {
 
   it("toasts the rescan's own scan notes and rule warnings, like SetupPage does", async () => {
     const wrapper = mountBanner(
-      { unscanned: { added: ["a.mod"], removed: [] }, unapplied: EMPTY.unapplied },
+      {
+        unscanned: { added: ["a.mod"], removed: [] },
+        unapplied: EMPTY.unapplied,
+        orderDiffersFromFile: false,
+      },
       () => ({
         modCount: 1,
         gameVersion: "1.6",
@@ -162,7 +175,11 @@ describe("PendingChangesBanner", () => {
 
   it("shows an error message when the rescan fails", async () => {
     const wrapper = mountBanner(
-      { unscanned: { added: ["a.mod"], removed: [] }, unapplied: EMPTY.unapplied },
+      {
+        unscanned: { added: ["a.mod"], removed: [] },
+        unapplied: EMPTY.unapplied,
+        orderDiffersFromFile: false,
+      },
       () => {
         throw { code: "internal", message: "the scan task panicked" };
       },
@@ -174,6 +191,63 @@ describe("PendingChangesBanner", () => {
 
     expect(wrapper.get('[data-testid="pending-changes-rescan-error"]').text()).toContain(
       "the scan task panicked",
+    );
+  });
+
+  it("offers Discard next to Rescan and calls discard_pending_changes", async () => {
+    let calls = 0;
+    const wrapper = mountBanner(
+      {
+        unscanned: { added: ["a.mod"], removed: [] },
+        unapplied: EMPTY.unapplied,
+        orderDiffersFromFile: false,
+      },
+      {},
+      {
+        discard_pending_changes: () => {
+          calls += 1;
+          return EMPTY;
+        },
+      },
+    );
+    await flushPromises();
+
+    const button = wrapper.get('[data-testid="pending-changes-discard-button"]');
+    expect(button.text()).toBe("Discard pending changes");
+    await button.trigger("click");
+    await flushPromises();
+
+    expect(calls).toBe(1);
+  });
+
+  it("shows no Discard while nothing is pending", async () => {
+    const wrapper = mountBanner(EMPTY);
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="pending-changes-discard-button"]').exists()).toBe(false);
+  });
+
+  it("shows a refused discard through the error mapping", async () => {
+    const wrapper = mountBanner(
+      {
+        unscanned: { added: ["a.mod"], removed: [] },
+        unapplied: EMPTY.unapplied,
+        orderDiffersFromFile: false,
+      },
+      {},
+      {
+        discard_pending_changes: () => {
+          throw { code: "no_project_loaded", message: "no project is loaded" };
+        },
+      },
+    );
+    await flushPromises();
+
+    await wrapper.get('[data-testid="pending-changes-discard-button"]').trigger("click");
+    await flushPromises();
+
+    expect(wrapper.get('[data-testid="pending-changes-rescan-error"]').text()).toContain(
+      "No project loaded",
     );
   });
 });

@@ -188,7 +188,6 @@ test.describe("launch RimWorld", () => {
   test("staged activation changes ask first, with their own sentence", async ({ page }) => {
     await loadScenario(page);
     await page.getByTestId("nav-mods").click();
-    await page.getByTestId("mods-tab-inactive").click();
     await page.getByTestId("mod-row-select-mod.905").locator('input[type="checkbox"]').check();
     await page.getByTestId("activate-selected-button").click();
     await page.getByTestId("activate-confirm-submit").click();

@@ -41,8 +41,9 @@ bun run tauri build              # a real release binary: target/release/rimmerg
   searchable.
 - **Order** — the suggested load order, with a why-panel explaining any
   mod's position.
-- **Mods** — every discovered mod, active or inactive, with activate/
-  deactivate actions on `ModsConfig.xml`'s own active-mods list.
+- **Mods** — every discovered mod, Inactive and Active side by side, with
+  activate/deactivate actions and drag-and-drop (or menu and keyboard)
+  reordering of `ModsConfig.xml`'s own active-mods list.
 - **Rules** — every rule feeding the sorter, your own and (if imported)
   RimSort's, with promote/delete actions.
 - **Def inspector** — everything about one def or template: owners,
@@ -60,8 +61,8 @@ bun run tauri build              # a real release binary: target/release/rimmerg
 - **Settings** — every setting, editable, with a note on whether it can
   change what the sorter produces.
 
-Every page above is read-only except the Mods page's activate/deactivate
-actions, the Apply dialog, and the Compatibility patches/Patch maker
+Every page above is read-only except the Mods page's activate/deactivate/
+reorder actions, the Apply dialog, and the Compatibility patches/Patch maker
 export panels' "install" option — every one of them confirms before
 writing. The Mods page and Apply dialog write `ModsConfig.xml`; the
 Apply dialog (with "Write merge mod" checked) and the two export

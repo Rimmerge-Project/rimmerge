@@ -216,6 +216,10 @@ pub struct ModListDto {
     pub total: usize,
     /// The rows, in list order.
     pub items: Vec<ModListRowDto>,
+    /// Whether the rows may be reordered through this view: the Active list
+    /// in its own load order. A search or filter keeps it on (a move is
+    /// anchored to a neighbour's id); another sort turns it off.
+    pub reorderable: bool,
 }
 
 impl From<ModList> for ModListDto {
@@ -223,6 +227,7 @@ impl From<ModList> for ModListDto {
         Self {
             total: value.total,
             items: value.items.iter().map(Into::into).collect(),
+            reorderable: value.reorderable,
         }
     }
 }

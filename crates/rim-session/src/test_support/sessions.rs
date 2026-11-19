@@ -64,6 +64,42 @@ pub fn session_fixture(ids: &[&str]) -> Session {
     )
 }
 
+/// [`session_fixture`], but `ModsConfig.xml` last held `file_active` while the
+/// scan (and so Current) holds `active`, as after an import: Current and the
+/// file differ in membership.
+#[must_use]
+pub fn session_fixture_with_file_mods(active: &[&str], file_active: &[&str]) -> Session {
+    let mut session = session_fixture(active);
+    session.set_file_active_mods(file_active.iter().map(|id| ModId::new(*id)).collect());
+    session
+}
+
+/// [`session_fixture`] over [`report_fixture_with_inactive`]: `active` is
+/// the scanned, written list, `inactive` is installed but not active.
+#[must_use]
+pub fn session_fixture_with_inactive(active: &[&str], inactive: &[&str]) -> Session {
+    Session::new(
+        ProjectPaths {
+            game_dir: "game".into(),
+            workshop_dir: "workshop".into(),
+            mods_config: "ModsConfig.xml".into(),
+            profile_dir: "profile".into(),
+        },
+        report_fixture_with_inactive(active, inactive),
+        Vec::new(),
+        SourceIndex::default(),
+        StoredRules::default(),
+        DecisionSet::new(),
+        ModsConfigFile {
+            version: "1.6".to_string(),
+            active_mods: active.iter().map(|id| ModId::new(*id)).collect(),
+            known_expansions: Vec::new(),
+        },
+        Vec::new(),
+        Vec::new(),
+    )
+}
+
 /// [`session_fixture`], but `generated_id` carries a [`GeneratedMarker`]
 /// (as the profile merge mod, or another patch's export, would) —
 /// [`crate::Session::reserved_package_ids`]'s marker-based half, for

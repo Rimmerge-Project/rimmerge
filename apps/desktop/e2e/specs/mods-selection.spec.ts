@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 // Type-only: pulls in `Window.__E2E_MOCK_IPC__`'s ambient declaration.
 import type {} from "../../src/e2e-mock-bootstrap";
-import { loadScenario } from "./support";
+import { loadScenario, modsPane } from "./support";
 
 const EXTRA_INACTIVE = 250;
 // The scenario's own ten inactive mods plus the extras a spec asks for.
@@ -9,7 +9,7 @@ const INACTIVE_TOTAL = 10 + EXTRA_INACTIVE;
 
 async function openMods(page: Page): Promise<void> {
   await page.getByTestId("nav-mods").click();
-  await expect(page.getByTestId("mod-table")).toBeVisible();
+  await expect(modsPane(page, "active").getByTestId("mod-table")).toBeVisible();
 }
 
 test.describe("mods selection", () => {
@@ -21,16 +21,17 @@ test.describe("mods selection", () => {
     }, EXTRA_INACTIVE);
     await loadScenario(page);
     await openMods(page);
-    await page.getByTestId("mods-tab-inactive").click();
 
-    await expect(page.getByTestId("mods-total")).toContainText(`${INACTIVE_TOTAL} mods`);
-    await expect(page.getByTestId("mods-page-cap-hint")).toHaveCount(0);
-    await expect(page.getByTestId("mods-select-all-label")).toHaveText(
+    await expect(modsPane(page, "inactive").getByTestId("mods-total")).toContainText(
+      `${INACTIVE_TOTAL} mods`,
+    );
+    await expect(modsPane(page, "inactive").getByTestId("mods-page-cap-hint")).toHaveCount(0);
+    await expect(modsPane(page, "inactive").getByTestId("mods-select-all-label")).toHaveText(
       `Select all ${INACTIVE_TOTAL} shown`,
     );
 
-    await page.getByTestId("mods-select-all").locator("input").check();
-    await expect(page.getByTestId("mods-selected-count")).toContainText(
+    await modsPane(page, "inactive").getByTestId("mods-select-all").locator("input").check();
+    await expect(modsPane(page, "inactive").getByTestId("mods-selected-count")).toContainText(
       `${INACTIVE_TOTAL} selected`,
     );
     await page.getByTestId("activate-selected-button").click();
@@ -52,7 +53,7 @@ test.describe("mods selection", () => {
     await loadScenario(page);
     await openMods(page);
 
-    await page.getByTestId("mods-select-all").locator("input").check();
+    await modsPane(page, "active").getByTestId("mods-select-all").locator("input").check();
     await page.getByTestId("deactivate-selected-button").click();
 
     await expect(page.getByTestId("deactivate-confirm-dialog")).toBeVisible();
@@ -69,13 +70,16 @@ test.describe("mods selection", () => {
   test("with a filter, Select all picks only the matching rows and says so", async ({ page }) => {
     await loadScenario(page);
     await openMods(page);
-    await page.getByTestId("mods-tab-inactive").click();
 
-    await page.getByTestId("mods-search").fill("Inactive Mod 1");
+    await modsPane(page, "inactive").getByTestId("mods-search").fill("Inactive Mod 1");
     // "Inactive Mod 1" and "Inactive Mod 10".
-    await expect(page.getByTestId("mods-select-all-label")).toHaveText("Select all 2 shown");
-    await page.getByTestId("mods-select-all").locator("input").check();
-    await expect(page.getByTestId("mods-selected-count")).toContainText("2 selected");
+    await expect(modsPane(page, "inactive").getByTestId("mods-select-all-label")).toHaveText(
+      "Select all 2 shown",
+    );
+    await modsPane(page, "inactive").getByTestId("mods-select-all").locator("input").check();
+    await expect(modsPane(page, "inactive").getByTestId("mods-selected-count")).toContainText(
+      "2 selected",
+    );
     await page.getByTestId("activate-selected-button").click();
 
     await expect(page.getByTestId("activate-plan-to-add")).toHaveCount(2);
@@ -88,18 +92,25 @@ test.describe("mods selection", () => {
   }) => {
     await loadScenario(page);
     await openMods(page);
-    await page.getByTestId("mods-tab-inactive").click();
-    await page.getByTestId("mods-select-all").locator("input").check();
-    await expect(page.getByTestId("mods-selected-count")).toContainText("10 selected");
+    await modsPane(page, "inactive").getByTestId("mods-select-all").locator("input").check();
+    await expect(modsPane(page, "inactive").getByTestId("mods-selected-count")).toContainText(
+      "10 selected",
+    );
 
-    await page.getByTestId("mods-search").fill("Inactive Mod 1");
+    await modsPane(page, "inactive").getByTestId("mods-search").fill("Inactive Mod 1");
 
-    await expect(page.getByTestId("mods-select-all-label")).toHaveText("Select all 2 shown");
-    await expect(page.getByTestId("mods-selected-count")).toContainText("10 selected");
-    await expect(page.getByTestId("mods-selected-hidden")).toHaveText("(8 not shown)");
+    await expect(modsPane(page, "inactive").getByTestId("mods-select-all-label")).toHaveText(
+      "Select all 2 shown",
+    );
+    await expect(modsPane(page, "inactive").getByTestId("mods-selected-count")).toContainText(
+      "10 selected",
+    );
+    await expect(modsPane(page, "inactive").getByTestId("mods-selected-hidden")).toHaveText(
+      "(8 not shown)",
+    );
 
-    await page.getByTestId("mods-clear-selection").click();
-    await expect(page.getByTestId("mods-selected-count")).toHaveText("");
+    await modsPane(page, "inactive").getByTestId("mods-clear-selection").click();
+    await expect(modsPane(page, "inactive").getByTestId("mods-selected-count")).toHaveText("");
     await expect(page.getByTestId("activate-selected-button")).toBeDisabled();
   });
 
@@ -108,10 +119,9 @@ test.describe("mods selection", () => {
   }) => {
     await loadScenario(page);
     await openMods(page);
-    await page.getByTestId("mods-tab-inactive").click();
 
-    await page.getByTestId("mods-select-all").locator("input").check();
-    await page.getByTestId("mods-clear-selection").click();
+    await modsPane(page, "inactive").getByTestId("mods-select-all").locator("input").check();
+    await modsPane(page, "inactive").getByTestId("mods-clear-selection").click();
 
     expect(await page.evaluate(() => window.__ACTIVATE_CALLS__ ?? [])).toEqual([]);
     await expect(page.getByTestId("pending-changes-banner")).toHaveCount(0);
@@ -138,15 +148,13 @@ test.describe("mods page rescan and working-tier lists", () => {
   }) => {
     await loadScenario(page);
     await openMods(page);
-    await page.getByTestId("mods-tab-inactive").click();
     await page.getByTestId("mod-row-select-mod.903").locator("input").check();
     await page.getByTestId("activate-selected-button").click();
     await page.getByTestId("activate-confirm-submit").click();
     await expect(page.getByTestId("activate-confirm-dialog")).toBeHidden();
 
     await expect(page.getByTestId("mod-row-mod.903")).toHaveCount(0);
-    await page.getByTestId("mods-tab-active").click();
-    await page.getByTestId("mods-search").fill("mod.903");
+    await modsPane(page, "active").getByTestId("mods-search").fill("mod.903");
     await expect(page.getByTestId("mod-row-mod.903")).toBeVisible();
     await expect(page.getByTestId("mod-row-pending-scan-pill")).toBeVisible();
 
@@ -164,7 +172,7 @@ test.describe("mods page rescan and working-tier lists", () => {
     await loadScenario(page);
     await openMods(page);
 
-    await page.getByTestId("mods-search").fill("ghost.mod");
+    await modsPane(page, "active").getByTestId("mods-search").fill("ghost.mod");
 
     const row = page.getByTestId("mod-row-ghost.mod");
     await expect(row).toBeVisible();
