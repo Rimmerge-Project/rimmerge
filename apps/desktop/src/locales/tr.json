@@ -1242,7 +1242,34 @@
         "workshop": "Steam Atölyesi"
       },
       "rovingHint": "Gezinmek için ok tuşlarını, açmak için Enter'ı, seçimi değiştirmek için Boşluk'u kullan",
-      "pendingScan": "henüz taranmadı"
+      "pendingScan": "henüz taranmadı",
+      "loadOrderPosition": "Yükleme sırasındaki yeri: {position}"
+    },
+    "sort": {
+      "groupLabel": "Sıralama düzeni",
+      "heading": "Sırala",
+      "key": {
+        "loadOrder": "Yükleme sırası",
+        "name": "Ad",
+        "packageId": "Paket ID'si",
+        "lastUpdated": "Son güncelleme"
+      },
+      "ascending": {
+        "loadOrder": "Yükleme sırasına göre sırala, ilkten sona",
+        "name": "Ada göre sırala, A'dan Z'ye",
+        "packageId": "Paket ID'sine göre sırala, A'dan Z'ye",
+        "lastUpdated": "Son güncellemeye göre sırala, önce en eski"
+      },
+      "descending": {
+        "loadOrder": "Yükleme sırasına göre sırala, sondan ilke",
+        "name": "Ada göre sırala, Z'den A'ya",
+        "packageId": "Paket ID'sine göre sırala, Z'den A'ya",
+        "lastUpdated": "Son güncellemeye göre sırala, önce en yeni"
+      },
+      "updatedUnavailable": {
+        "shippedWithGame": "Oyunla birlikte gelir",
+        "unknown": "Güncelleme zamanı bilinmiyor"
+      }
     },
     "pendingChanges": {
       "unscanned": "{count} bekleyen değişiklik — analizi güncellemek için yeniden tara | {count} bekleyen değişiklik — analizi güncellemek için yeniden tara",

@@ -1048,8 +1048,21 @@ async fn mod_lists_against_the_real_install() {
         adapters.assignment_store,
         rim_io::FsModKnowledgeStore::vendored(),
         true,
-    );
+    )
+    .with_timestamp_reader(adapters.mod_timestamp_reader.clone());
     let session = use_case.execute(paths, &mut |_| {}).expect("load project");
+    let read_start = Instant::now();
+    let subjects = rim_session::ModTimeSubject::all_in(session.report());
+    let _ = rim_session::ports::ModTimestampReader::read_update_times(
+        adapters.mod_timestamp_reader.as_ref(),
+        &session.paths().workshop_dir,
+        &subjects,
+    );
+    eprintln!(
+        "update times for {} mods read in {:.1} ms",
+        subjects.len(),
+        read_start.elapsed().as_secs_f64() * 1e3
+    );
     let working_len = session.working().ids().len();
     *state.session.write().expect("lock") = Some(session);
 
@@ -1105,6 +1118,7 @@ async fn mod_lists_against_the_real_install() {
         )),
         "Inactive shares no base id with Active"
     );
+    assert_last_updated_sort(&state, &first).await;
     assert!(
         active_elapsed < LIST_BUDGET,
         "Active took {active_elapsed:?}"
@@ -1113,4 +1127,113 @@ async fn mod_lists_against_the_real_install() {
         inactive_elapsed < LIST_BUDGET,
         "Inactive took {inactive_elapsed:?}"
     );
+}
+
+/// The LastUpdated sort over the real install: inside the budget, the same
+/// rows as the default list (a sort never adds or drops one), known times
+/// ordered with every unavailable time after them in both directions,
+/// ties in ascending id order, identical across two calls, and the
+/// default list unchanged afterwards.
+async fn assert_last_updated_sort(
+    state: &crate::state::AppState,
+    default_active: &crate::dto::mod_lists::ModListDto,
+) {
+    use crate::commands::active_set::list_inactive_mods_inner;
+    use crate::commands::mods::list_working_mods_inner;
+    use crate::dto::mod_lists::{
+        ListSortDto, ListSortKeyDto, ModListDto, ModListQueryDto, SortDirectionDto, UpdateTimeDto,
+    };
+
+    fn query(direction: SortDirectionDto) -> ModListQueryDto {
+        ModListQueryDto {
+            sort: Some(ListSortDto {
+                key: ListSortKeyDto::LastUpdated,
+                direction,
+            }),
+            ..ModListQueryDto::default()
+        }
+    }
+    fn seconds(row: &crate::dto::mod_lists::ModListRowDto) -> Option<u64> {
+        match row.updated {
+            UpdateTimeDto::Known { seconds } => Some(seconds),
+            UpdateTimeDto::ShippedWithGame | UpdateTimeDto::Unknown => None,
+        }
+    }
+    fn assert_ordered(list: &ModListDto, direction: SortDirectionDto) {
+        let mut previous: Option<&crate::dto::mod_lists::ModListRowDto> = None;
+        for row in &list.items {
+            if let Some(before) = previous {
+                match (seconds(before), seconds(row)) {
+                    (None, Some(_)) => panic!("an unavailable time sorted before a known one"),
+                    (Some(a), Some(b)) => {
+                        let in_order = match direction {
+                            SortDirectionDto::Ascending => a <= b,
+                            SortDirectionDto::Descending => a >= b,
+                        };
+                        assert!(in_order, "known times out of order");
+                        if a == b {
+                            assert!(before.mod_id < row.mod_id, "tie not in ascending id order");
+                        }
+                    }
+                    (Some(_), None) => {}
+                    (None, None) => {
+                        assert!(before.mod_id < row.mod_id, "tie not in ascending id order");
+                    }
+                }
+            }
+            previous = Some(row);
+        }
+    }
+    fn sorted_ids(list: &ModListDto) -> Vec<&str> {
+        let mut ids: Vec<&str> = list.items.iter().map(|row| row.mod_id.as_str()).collect();
+        ids.sort_unstable();
+        ids
+    }
+
+    let start = Instant::now();
+    let descending = list_working_mods_inner(state, query(SortDirectionDto::Descending))
+        .await
+        .expect("sorted working list");
+    let elapsed = start.elapsed();
+    let ascending = list_working_mods_inner(state, query(SortDirectionDto::Ascending))
+        .await
+        .expect("sorted working list");
+    let again = list_working_mods_inner(state, query(SortDirectionDto::Descending))
+        .await
+        .expect("sorted working list again");
+    let inactive = list_inactive_mods_inner(state, query(SortDirectionDto::Descending))
+        .await
+        .expect("sorted inactive list");
+    let known = descending
+        .items
+        .iter()
+        .filter(|row| seconds(row).is_some())
+        .count();
+    eprintln!(
+        "LastUpdated sort: {} rows ({known} with a time) in {:.1} ms",
+        descending.total,
+        elapsed.as_secs_f64() * 1e3
+    );
+
+    assert!(
+        elapsed < Duration::from_secs(2),
+        "sorted Active took {elapsed:?}"
+    );
+    assert_eq!(
+        descending, again,
+        "the sort is deterministic across two calls"
+    );
+    assert_eq!(descending.total, default_active.total);
+    assert_eq!(
+        sorted_ids(&descending),
+        sorted_ids(default_active),
+        "a sort neither adds nor drops a row"
+    );
+    assert_ordered(&descending, SortDirectionDto::Descending);
+    assert_ordered(&ascending, SortDirectionDto::Ascending);
+    assert_ordered(&inactive, SortDirectionDto::Descending);
+    let after = list_working_mods_inner(state, ModListQueryDto::default())
+        .await
+        .expect("default list after sorting");
+    assert_eq!(&after, default_active, "sorting left the load order alone");
 }

@@ -6,13 +6,18 @@ import { useI18n } from "vue-i18n";
 
 import SourceBadge from "@/components/mods/SourceBadge.vue";
 import { useModLabel } from "@/composables/useModLabel";
+import { useTranslateMessage } from "@/composables/useTranslateMessage";
+import { descriptor } from "@/i18n/messageDescriptor";
 import type { ModListRowDto } from "@/types/generated/ModListRowDto";
 import { assertNever } from "@/utils/assertNever";
+import { updateUnavailableLabel } from "@/utils/modListSort";
 
 const {
   mods,
   selectable = false,
   showActiveColumns = true,
+  showUpdated = false,
+  showPosition = false,
 } = defineProps<{
   mods: ModListRowDto[];
   /** Adds a checkbox column bound to {@link selectedIds}. */
@@ -25,11 +30,19 @@ const {
    * open the mod info panel.
    */
   showActiveColumns?: boolean;
+  /** Adds each row's last-updated time (or why it has none), shown while the list is sorted by it. */
+  showUpdated?: boolean;
+  /**
+   * Adds each row's load-order position, for the Active list while it is sorted
+   * by anything but load order: the sort must not be mistaken for the order.
+   */
+  showPosition?: boolean;
 }>();
 const emit = defineEmits<{ selectMod: [modId: string]; focusMod: [modId: string] }>();
 /** Checked ids, only meaningful while {@link selectable} is set. */
 const selectedIds = defineModel<string[]>("selectedIds", { default: () => [] });
-const { t } = useI18n();
+const { t, locale } = useI18n();
+const tm = useTranslateMessage();
 const modLabel = useModLabel();
 
 const scrollElementRef = useTemplateRef<HTMLDivElement>("scrollElement");
@@ -92,6 +105,24 @@ function hardDependentsOf(mod: ModListRowDto): number | null {
     default:
       return assertNever(state);
   }
+}
+
+const dateFormat = computed(() => new Intl.DateTimeFormat(locale.value, { dateStyle: "medium" }));
+
+/** A row's update time as a date in the app language, or the reason it has none. */
+function updatedText(mod: ModListRowDto): string {
+  const updated = mod.updated;
+  if (updated.kind === "known") {
+    const date = new Date(updated.seconds * 1000);
+    // A date past the JS range makes `format` throw during render, which would
+    // blank the whole list; such a time reads as unknown instead.
+    if (Number.isFinite(date.getTime())) {
+      return dateFormat.value.format(date);
+    }
+    return tm(descriptor("mods.sort.updatedUnavailable.unknown"));
+  }
+  const reason = updateUnavailableLabel(updated);
+  return reason === null ? "" : tm(reason);
 }
 
 function isSelected(modId: string): boolean {
@@ -226,6 +257,14 @@ function onRowKeydown(event: KeyboardEvent, modId: string): void {
           @click.stop
           @update:model-value="toggleSelected(mod.modId)"
         />
+        <template v-if="showPosition && mod.position !== null">
+          <span
+            class="text-text-muted w-10 shrink-0 text-right text-xs tabular-nums"
+            aria-hidden="true"
+            :data-testid="`mod-row-position-${mod.modId}`"
+          >#{{ mod.position + 1 }}</span>
+          <span class="sr-only">{{ t("mods.table.loadOrderPosition", { position: mod.position + 1 }) }}</span>
+        </template>
         <SourceBadge :source="mod.source" />
         <span
           class="text-text flex-1 truncate font-medium"
@@ -241,6 +280,12 @@ function onRowKeydown(event: KeyboardEvent, modId: string): void {
           class="bg-surface-2 text-text-muted shrink-0 rounded px-1.5 py-0.5 text-xs font-medium"
           data-testid="mod-row-pending-scan-pill"
         >{{ t("mods.table.pendingScan") }}</span>
+        <span
+          v-if="showUpdated"
+          class="text-text-muted w-28 shrink-0 truncate text-right text-xs"
+          :title="updatedText(mod)"
+          :data-testid="`mod-row-updated-${mod.modId}`"
+        >{{ updatedText(mod) }}</span>
         <template v-if="showActiveColumns">
           <span class="flex gap-1">
             <span

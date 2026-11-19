@@ -23,9 +23,7 @@ async function renderedRowIds(page: Page): Promise<string[]> {
 }
 
 test.describe("mods", () => {
-  test("lists Active in the working set's own order and Inactive in mod-id order", async ({
-    page,
-  }) => {
+  test("lists Active in the working set's own order and Inactive by name", async ({ page }) => {
     await loadScenario(page);
     await page.getByTestId("nav-mods").click();
     // The working set lists the scenario's own mods first, in their order; the fixture owners
@@ -40,8 +38,8 @@ test.describe("mods", () => {
     await page.getByTestId("mods-tab-inactive").click();
     await expect(page.getByTestId("mod-row-mod.901")).toBeVisible();
     const inactiveIds = await renderedRowIds(page);
-    expect(inactiveIds[0]).toBe("mod.901");
-    expect(inactiveIds).toEqual(inactiveIds.toSorted());
+    // Name order, A to Z: "Inactive Mod 10" sorts before "Inactive Mod 2", so it is not id order.
+    expect(inactiveIds.slice(0, 3)).toEqual(["mod.901", "mod.910", "mod.902"]);
   });
 
   test("every row shows its source as a badge with an accessible name, on both tabs", async ({

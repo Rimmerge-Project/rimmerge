@@ -19,6 +19,9 @@ import type { ModListQueryDto } from "@/types/generated/ModListQueryDto";
 const toastAddSpy = vi.hoisted(() => vi.fn());
 vi.mock("primevue/usetoast", () => ({ useToast: () => ({ add: toastAddSpy }) }));
 
+const LOAD_ORDER_SORT = { key: "loadOrder", direction: "ascending" } as const;
+const NAME_SORT = { key: "name", direction: "ascending" } as const;
+
 const activateCalls: ActivateRequestDto[] = [];
 const deactivateCalls: DeactivateRequestDto[] = [];
 const planActivateCalls: ActivateRequestDto[] = [];
@@ -344,7 +347,9 @@ describe("ModsPage", () => {
   it("queries the Active list unfiltered, with no paging", async () => {
     await mountAndNavigate();
 
-    expect(listWorkingModsCalls).toEqual([{ search: null, tag: null, source: null }]);
+    expect(listWorkingModsCalls).toEqual([
+      { search: null, tag: null, source: null, sort: LOAD_ORDER_SORT },
+    ]);
     expect(listInactiveModsCalls).toEqual([]);
   });
 
@@ -363,6 +368,7 @@ describe("ModsPage", () => {
       search: "Some",
       tag: null,
       source: null,
+      sort: LOAD_ORDER_SORT,
     });
   });
 
@@ -377,6 +383,7 @@ describe("ModsPage", () => {
       search: null,
       tag: "framework",
       source: "workshop",
+      sort: LOAD_ORDER_SORT,
     });
   });
 
@@ -406,6 +413,7 @@ describe("ModsPage", () => {
       search: null,
       tag: null,
       source: "local",
+      sort: NAME_SORT,
     });
   });
 
@@ -869,6 +877,81 @@ describe("ModsPage", () => {
       await flushPromises();
 
       expect(router.currentRoute.value.fullPath).toBe("/elsewhere");
+    });
+  });
+  describe("display sort", () => {
+    it("sends the chosen sort with the current filters and keeps them together", async () => {
+      const wrapper = await mountAndNavigate();
+      await wrapper.get('[data-testid="mods-tag-filter"]').setValue("framework");
+
+      await wrapper.get('[data-testid="mods-sort-lastUpdated-descending"]').trigger("click");
+      await flushPromises();
+
+      expect(listWorkingModsCalls.at(-1)).toEqual({
+        search: null,
+        tag: "framework",
+        source: null,
+        sort: { key: "lastUpdated", direction: "descending" },
+      });
+    });
+
+    it("keeps one sort per list and offers no load order on the Inactive list", async () => {
+      const wrapper = await mountAndNavigate();
+      await wrapper.get('[data-testid="mods-sort-packageId-ascending"]').trigger("click");
+
+      await wrapper.get('[data-testid="mods-tab-inactive"]').trigger("click");
+      await flushPromises();
+
+      expect(wrapper.find('[data-testid="mods-sort-loadOrder-ascending"]').exists()).toBe(false);
+      expect(
+        wrapper.get('[data-testid="mods-sort-name-ascending"]').attributes("aria-pressed"),
+      ).toBe("true");
+      expect(listInactiveModsCalls.at(-1)?.sort).toEqual(NAME_SORT);
+
+      await wrapper.get('[data-testid="mods-tab-active"]').trigger("click");
+      await flushPromises();
+      expect(
+        wrapper.get('[data-testid="mods-sort-packageId-ascending"]').attributes("aria-pressed"),
+      ).toBe("true");
+    });
+
+    it("sorting writes nothing: no activate, deactivate or plan call is made", async () => {
+      const wrapper = await mountAndNavigate();
+
+      for (const testId of [
+        "mods-sort-name-descending",
+        "mods-sort-lastUpdated-ascending",
+        "mods-sort-loadOrder-ascending",
+      ]) {
+        await wrapper.get(`[data-testid="${testId}"]`).trigger("click");
+        await flushPromises();
+      }
+
+      expect(activateCalls).toEqual([]);
+      expect(deactivateCalls).toEqual([]);
+      expect(planActivateCalls).toEqual([]);
+    });
+
+    it("shows each row's update time only while sorted by last updated", async () => {
+      const wrapper = await mountAndNavigate({
+        list_working_mods: () =>
+          modList([
+            modRow({
+              modId: "active.mod",
+              updated: { kind: "known", seconds: 1_700_000_000 },
+            }),
+            modRow({ modId: "core.mod", updated: { kind: "shippedWithGame" } }),
+          ]),
+      });
+      expect(wrapper.find('[data-testid="mod-row-updated-active.mod"]').exists()).toBe(false);
+
+      await wrapper.get('[data-testid="mods-sort-lastUpdated-ascending"]').trigger("click");
+      await flushPromises();
+
+      expect(wrapper.get('[data-testid="mod-row-updated-active.mod"]').text()).toMatch(/2023/);
+      expect(wrapper.get('[data-testid="mod-row-updated-core.mod"]').text()).toBe(
+        "Ships with the game",
+      );
     });
   });
 });

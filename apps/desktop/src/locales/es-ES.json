@@ -1242,7 +1242,34 @@
         "workshop": "Steam Workshop"
       },
       "rovingHint": "Usa las flechas para moverte, Intro para abrir y Espacio para alternar",
-      "pendingScan": "aún sin escanear"
+      "pendingScan": "aún sin escanear",
+      "loadOrderPosition": "Posición {position} en el orden de carga"
+    },
+    "sort": {
+      "groupLabel": "Criterio de ordenación",
+      "heading": "Ordenar",
+      "key": {
+        "loadOrder": "Orden de carga",
+        "name": "Nombre",
+        "packageId": "ID de paquete",
+        "lastUpdated": "Actualizado"
+      },
+      "ascending": {
+        "loadOrder": "Ordenar por orden de carga, del primero al último",
+        "name": "Ordenar por nombre, de la A a la Z",
+        "packageId": "Ordenar por ID de paquete, de la A a la Z",
+        "lastUpdated": "Ordenar por última actualización, los más antiguos primero"
+      },
+      "descending": {
+        "loadOrder": "Ordenar por orden de carga, del último al primero",
+        "name": "Ordenar por nombre, de la Z a la A",
+        "packageId": "Ordenar por ID de paquete, de la Z a la A",
+        "lastUpdated": "Ordenar por última actualización, los más recientes primero"
+      },
+      "updatedUnavailable": {
+        "shippedWithGame": "Incluido con el juego",
+        "unknown": "Fecha de actualización desconocida"
+      }
     },
     "pendingChanges": {
       "unscanned": "{count} cambio pendiente: vuelve a escanear para actualizar el análisis | {count} cambios pendientes: vuelve a escanear para actualizar el análisis",

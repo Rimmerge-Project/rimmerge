@@ -230,10 +230,38 @@ the order you last built.
 have edited it, in its own order, with every mod in it (there is no page
 limit; a list is bounded at 5,000 rows, with the full count shown and a
 note when it is cut). Inactive is every mod found on disk that is not in
-it, by id. A mod you just activated is in Active at once, marked "not
+it, by name by default (see Sorting the lists below). A mod you just activated is in Active at once, marked "not
 scanned yet" until you Rescan (its tags and dependents are scan results);
 a mod you just deactivated is in Inactive at once. A mod `ModsConfig.xml`
 lists but that is not installed is in Active with a "missing" mark.
+
+**Sorting the lists.** Above each list, a row of arrow buttons sorts what
+the list shows: for each of Load order (Active only), Name, Package ID and
+Last updated there is one arrow for each direction, each with a tooltip and
+an accessible name that says both (for example "Sort by name, A to Z"), and
+the active one is filled and marked pressed. Active starts at Load order,
+which is the working order itself; Inactive starts at Name, A to Z. Names and
+package ids compare lowercased first, then as written, then by package id, so
+the order never depends on your system language; any tie falls back to the
+package id, A first, in both directions. A sort works together with the
+search, tag and source filters, and it only changes what you see: it never
+changes the load order, a pending edit or `ModsConfig.xml`, and it is not
+saved (it is kept while the page stays open and starts over when another
+project is loaded). While the sort is Last updated, each row also shows its
+date. While Active is sorted by anything other than Load order, each of its
+rows also shows its load-order position (`#12`), so the sort cannot be
+mistaken for the order.
+
+**What "Last updated" means.** It depends on where the mod comes from. A
+Steam Workshop mod uses when the installed version was published on the
+Workshop, as Steam records it (`timeupdated` in Steam's local
+`appworkshop_294100.acf`, read from disk, no network); it is not the time the
+update was downloaded to your machine. A local mod uses when
+its `About/About.xml` was last modified on disk, which is not necessarily when
+its author released it. RimWorld Core and the DLCs ship with the game and
+have no update time of their own. A mod whose time cannot be read (no Steam
+record, a missing, unreadable or implausible file or time) shows "Update time unknown". Mods
+without a time always sort after the ones with one, in either direction.
 
 **Select all and Clear selection.** Each list has a "Select all N shown"
 checkbox that selects the rows matching the current search and filters,

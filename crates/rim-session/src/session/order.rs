@@ -60,14 +60,27 @@ impl Session {
     /// Pure (`&self`).
     #[must_use]
     pub fn working_mod_list(&self, query: &ModListQuery) -> ModList {
-        mod_lists::working_list(&self.report, &self.tagging, &self.working, query)
+        mod_lists::working_list(
+            &self.report,
+            &self.tagging,
+            &self.working,
+            &self.update_times,
+            query,
+        )
     }
 
     /// The Mods page's Inactive list: every mod on disk whose base id is
-    /// not in the working set, sorted by id. Pure (`&self`).
+    /// not in the working set, by name (A first) unless `query.sort` says
+    /// otherwise. Pure (`&self`).
     #[must_use]
     pub fn inactive_mod_list(&self, query: &ModListQuery) -> ModList {
-        mod_lists::inactive_list(&self.report, &self.tagging, &self.working, query)
+        mod_lists::inactive_list(
+            &self.report,
+            &self.tagging,
+            &self.working,
+            &self.update_times,
+            query,
+        )
     }
 
     /// Changes which order is selected for ledger/finding queries.

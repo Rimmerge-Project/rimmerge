@@ -2,7 +2,10 @@
 //! working-tier lists. Distinct from [`super::mods::ModSummaryDto`] (the
 //! scanned tier's row): two DTOs may not share a Rust type name.
 
-use rim_session::{ModList, ModListQuery, ModListRow, RowState};
+use rim_session::{
+    ListSort, ListSortKey, ModList, ModListQuery, ModListRow, RowState, SortDirection, UpdateTime,
+    UpdateUnavailable,
+};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
@@ -24,6 +27,93 @@ pub struct ModListQueryDto {
     pub tag: Option<String>,
     /// Only mods from this source.
     pub source: Option<SourceDto>,
+    /// The display sort; `null` is the list's own default (load order for
+    /// Active, name A to Z for Inactive).
+    pub sort: Option<ListSortDto>,
+}
+
+/// What a list is ordered by. Mirrors [`ListSortKey`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export, export_to = "../../src/types/generated/")]
+pub enum ListSortKeyDto {
+    /// The working set's own order (Active list only).
+    LoadOrder,
+    /// The display name.
+    Name,
+    /// The package id.
+    PackageId,
+    /// When the mod was last updated; unavailable times sort last.
+    LastUpdated,
+}
+
+/// Which way a sort runs. Mirrors [`SortDirection`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export, export_to = "../../src/types/generated/")]
+pub enum SortDirectionDto {
+    /// Smallest / earliest / A first.
+    Ascending,
+    /// Largest / latest / Z first.
+    Descending,
+}
+
+/// A list's display sort. Mirrors [`ListSort`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export, export_to = "../../src/types/generated/")]
+pub struct ListSortDto {
+    /// What to order by.
+    pub key: ListSortKeyDto,
+    /// Which way.
+    pub direction: SortDirectionDto,
+}
+
+impl From<ListSortDto> for ListSort {
+    fn from(value: ListSortDto) -> Self {
+        Self {
+            key: match value.key {
+                ListSortKeyDto::LoadOrder => ListSortKey::LoadOrder,
+                ListSortKeyDto::Name => ListSortKey::Name,
+                ListSortKeyDto::PackageId => ListSortKey::PackageId,
+                ListSortKeyDto::LastUpdated => ListSortKey::LastUpdated,
+            },
+            direction: match value.direction {
+                SortDirectionDto::Ascending => SortDirection::Ascending,
+                SortDirectionDto::Descending => SortDirection::Descending,
+            },
+        }
+    }
+}
+
+/// When a mod was last updated, or why that is unknown. Mirrors
+/// [`UpdateTime`]; the reason is a code the interface words.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+#[ts(export, export_to = "../../src/types/generated/")]
+pub enum UpdateTimeDto {
+    /// The recorded time.
+    Known {
+        /// Seconds since the Unix epoch.
+        #[ts(type = "number")]
+        seconds: u64,
+    },
+    /// Core and the DLCs ship with the game.
+    ShippedWithGame,
+    /// No source could say.
+    Unknown,
+}
+
+impl From<UpdateTime> for UpdateTimeDto {
+    fn from(value: UpdateTime) -> Self {
+        match value {
+            UpdateTime::Known(seconds) => Self::Known {
+                seconds: seconds.get(),
+            },
+            UpdateTime::Unavailable(UpdateUnavailable::ShippedWithGame) => Self::ShippedWithGame,
+            UpdateTime::Unavailable(UpdateUnavailable::Unknown) => Self::Unknown,
+        }
+    }
 }
 
 impl TryFrom<ModListQueryDto> for ModListQuery {
@@ -34,6 +124,7 @@ impl TryFrom<ModListQueryDto> for ModListQuery {
             search: value.search,
             tag: value.tag.map(rim_resolve::domain::Tag::new).transpose()?,
             source: value.source.map(Into::into),
+            sort: value.sort.map(Into::into),
         })
     }
 }
@@ -96,6 +187,8 @@ pub struct ModListRowDto {
     /// Its Steam Workshop published-file id, when it has one.
     #[ts(type = "number | null")]
     pub workshop_id: Option<u64>,
+    /// When it was last updated, or why that is unknown.
+    pub updated: UpdateTimeDto,
 }
 
 impl From<&ModListRow> for ModListRowDto {
@@ -108,6 +201,7 @@ impl From<&ModListRow> for ModListRowDto {
             state: (&value.state).into(),
             generated: value.generated.as_ref().map(Into::into),
             workshop_id: value.workshop_id,
+            updated: value.updated.into(),
         }
     }
 }

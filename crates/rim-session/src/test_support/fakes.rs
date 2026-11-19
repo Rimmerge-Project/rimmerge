@@ -17,6 +17,7 @@ use crate::ProjectPaths;
 use crate::app_settings::AppSettings;
 use crate::game_launch::LaunchUnavailable;
 use crate::mod_list::{ParsedModList, SharedModList};
+use crate::mod_times::{ModTimeSubject, UpdateTime, UpdateUnavailable};
 use crate::ports::{
     AboutImage, AboutReadError, AppSettingsLoad, AppSettingsStore, AssetLocator,
     AssignmentProjectStore, BackReferenceShape, CachedDatabase, ConfigError, DatabaseStatus,
@@ -25,8 +26,8 @@ use crate::ports::{
     ImportError, ImportManifestStore, ImportRecord, ImportedRules, KindChoice, LaunchFailure,
     LaunchRoute, LoadedModKnowledge, LoadedRules, LogFormats, LogShapes, MergeModError,
     MergeModWriteReport, MergeModWriter, ModAboutReader, ModKnowledgeStore, ModListFileError,
-    ModListFileStore, ModListRead, ModScanner, ModsConfigFile, ModsConfigStore, ParsedGameLog,
-    PatchProjectStore, PatchStackBlockShape, ProfileNotificationState,
+    ModListFileStore, ModListRead, ModScanner, ModTimestampReader, ModsConfigFile, ModsConfigStore,
+    ParsedGameLog, PatchProjectStore, PatchStackBlockShape, ProfileNotificationState,
     ProfileNotificationStateStore, RefreshOutcome, RimSortImporter, RimSortPaths, RuleDatabase,
     RuleDatabaseFetcher, RuleStore, RulesLoadWarning, ScanArtifacts, ScanError, ScanProgress,
     ScanProgressStage, StackBlockSource, StoreError, StoredRules, TextureBytes,
@@ -1671,5 +1672,57 @@ impl GameLauncher for FakeGameLauncher {
         }
         self.launched.borrow_mut().push(route.clone());
         Ok(())
+    }
+}
+
+/// A [`ModTimestampReader`] over a fixed table: ids it was given a time
+/// for answer with it, every other subject is
+/// [`UpdateUnavailable::Unknown`]. Remembers the workshop folder it was
+/// asked about, as a wiring assertion.
+#[derive(Debug, Default)]
+pub struct FakeModTimestampReader {
+    times: BTreeMap<ModId, UpdateTime>,
+    last_workshop_dir: std::sync::Mutex<Option<PathBuf>>,
+}
+
+impl FakeModTimestampReader {
+    /// Answers `time` for `id`.
+    #[must_use]
+    pub fn with_time(mut self, id: &str, time: UpdateTime) -> Self {
+        self.times.insert(ModId::new(id), time);
+        self
+    }
+
+    /// The workshop folder the most recent read was given.
+    #[must_use]
+    pub fn last_workshop_dir(&self) -> Option<PathBuf> {
+        self.last_workshop_dir
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .clone()
+    }
+}
+
+impl ModTimestampReader for FakeModTimestampReader {
+    fn read_update_times(
+        &self,
+        workshop_dir: &Path,
+        subjects: &[ModTimeSubject],
+    ) -> BTreeMap<ModId, UpdateTime> {
+        *self
+            .last_workshop_dir
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(workshop_dir.to_path_buf());
+        subjects
+            .iter()
+            .map(|subject| {
+                let time = self
+                    .times
+                    .get(&subject.id)
+                    .copied()
+                    .unwrap_or(UpdateTime::Unavailable(UpdateUnavailable::Unknown));
+                (subject.id.clone(), time)
+            })
+            .collect()
     }
 }

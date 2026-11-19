@@ -2,6 +2,7 @@
 import type { GeneratedMarkerDto } from "./GeneratedMarkerDto";
 import type { ModRowStateDto } from "./ModRowStateDto";
 import type { SourceDto } from "./SourceDto";
+import type { UpdateTimeDto } from "./UpdateTimeDto";
 
 /**
  * One row of `list_working_mods`/`list_inactive_mods`.
@@ -35,4 +36,8 @@ generated: GeneratedMarkerDto | null,
 /**
  * Its Steam Workshop published-file id, when it has one.
  */
-workshopId: number | null, };
+workshopId: number | null, 
+/**
+ * When it was last updated, or why that is unknown.
+ */
+updated: UpdateTimeDto, };

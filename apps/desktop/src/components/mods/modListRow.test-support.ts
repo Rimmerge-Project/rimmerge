@@ -1,6 +1,7 @@
 import type { ModListDto } from "@/types/generated/ModListDto";
 import type { ModListRowDto } from "@/types/generated/ModListRowDto";
 import type { SourceDto } from "@/types/generated/SourceDto";
+import type { UpdateTimeDto } from "@/types/generated/UpdateTimeDto";
 
 /** What a test can say about one list row; the row's `state` is derived from it. */
 export interface ModRowOverrides {
@@ -14,6 +15,7 @@ export interface ModRowOverrides {
   missing?: boolean;
   /** Activated since the last scan. */
   pendingScan?: boolean;
+  updated?: UpdateTimeDto;
 }
 
 /** One `ModListRowDto`: a scanned local mod unless the overrides say otherwise. */
@@ -35,6 +37,7 @@ export function modRow(overrides: ModRowOverrides = {}): ModListRowDto {
     state,
     generated: null,
     workshopId: null,
+    updated: overrides.updated ?? { kind: "unknown" },
   };
 }
 

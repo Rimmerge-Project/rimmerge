@@ -6,6 +6,15 @@ maintainer's own checkout for the full record, if you have it.
 
 ## [Unreleased]
 
+- **New: sort the Mods lists.** Each list on the Mods page has arrow buttons
+  to sort by Load order (Active only), Name, Package ID or Last updated, in
+  either direction, each with a tooltip and an accessible name saying which.
+  Inactive now opens sorted by name instead of by package id. Sorting works
+  with search and the filters, never changes the load order or any pending
+  change, and is not saved. "Last updated" is, for a Workshop mod, when the
+  installed version was published on the Workshop, as Steam records it, and the `About.xml` modification time for a local one; Core and
+  the DLCs have none, and mods without a time sort last either way (see the
+  Mods page in `docs/desktop.md`).
 - **A Steam installed outside Program Files is now found.** Detection
   only looked under `%ProgramFiles(x86)%\Steam` and `%ProgramFiles%\Steam`,
   so a game in a library of a Steam installed elsewhere (for example

@@ -1242,7 +1242,34 @@
         "workshop": "Steam 创意工坊"
       },
       "rovingHint": "使用方向键移动，Enter 键打开，空格键切换",
-      "pendingScan": "尚未扫描"
+      "pendingScan": "尚未扫描",
+      "loadOrderPosition": "加载顺序第 {position} 位"
+    },
+    "sort": {
+      "groupLabel": "排序方式",
+      "heading": "排序",
+      "key": {
+        "loadOrder": "加载顺序",
+        "name": "名称",
+        "packageId": "ID",
+        "lastUpdated": "更新时间"
+      },
+      "ascending": {
+        "loadOrder": "按加载顺序排序，从先到后",
+        "name": "按名称排序，升序",
+        "packageId": "按 ID 排序，升序",
+        "lastUpdated": "按更新时间排序，从旧到新"
+      },
+      "descending": {
+        "loadOrder": "按加载顺序排序，从后到先",
+        "name": "按名称排序，降序",
+        "packageId": "按 ID 排序，降序",
+        "lastUpdated": "按更新时间排序，从新到旧"
+      },
+      "updatedUnavailable": {
+        "shippedWithGame": "游戏自带",
+        "unknown": "更新时间未知"
+      }
     },
     "pendingChanges": {
       "unscanned": "{count} 项待定更改——重新扫描以更新分析",

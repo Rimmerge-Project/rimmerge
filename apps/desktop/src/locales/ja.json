@@ -1242,7 +1242,34 @@
         "workshop": "Steamワークショップ"
       },
       "rovingHint": "矢印キーで移動、Enterで開く、Spaceで切り替え",
-      "pendingScan": "未スキャン"
+      "pendingScan": "未スキャン",
+      "loadOrderPosition": "ロード順{position}番目"
+    },
+    "sort": {
+      "groupLabel": "並べ替え順",
+      "heading": "並べ替え",
+      "key": {
+        "loadOrder": "ロード順",
+        "name": "名前",
+        "packageId": "パッケージID",
+        "lastUpdated": "最終更新"
+      },
+      "ascending": {
+        "loadOrder": "ロード順で並べ替え（最初から最後へ）",
+        "name": "名前で並べ替え（昇順）",
+        "packageId": "パッケージIDで並べ替え（昇順）",
+        "lastUpdated": "最終更新日時で並べ替え（古い順）"
+      },
+      "descending": {
+        "loadOrder": "ロード順で並べ替え（最後から最初へ）",
+        "name": "名前で並べ替え（降順）",
+        "packageId": "パッケージIDで並べ替え（降順）",
+        "lastUpdated": "最終更新日時で並べ替え（新しい順）"
+      },
+      "updatedUnavailable": {
+        "shippedWithGame": "ゲームに同梱",
+        "unknown": "更新日時不明"
+      }
     },
     "pendingChanges": {
       "unscanned": "保留中の変更{count}件。解析を更新するには再スキャンしてください",

@@ -651,7 +651,8 @@ to have read a source from; a fabricated one would be a lie).
 The Mods page reads the **working** tier through `mod_lists`:
 `Session::working_mod_list` (the working set in its own order) and
 `Session::inactive_mod_list` (every discovered mod whose base id is not in
-it, by id). Both take a `ModListQuery` (search, tag, source; no paging) and
+it, by name A first by default; see the display sort below). Both take a
+`ModListQuery` (search, tag, source, sort; no paging) and
 return every matching row up to `MAX_MOD_LIST_ROWS` (5,000) with `total`
 counted before the cut, so a cut is visible. A row's `RowState` is closed:
 `Scanned { tags, hard_dependents }` (in `report.mods`), `PendingScan` (no
@@ -659,6 +660,27 @@ scan facts: in the Active list, activated since the last scan; in the
 Inactive list, an ordinary inactive mod) or `Missing`. Filtering lives
 there, never in a command or in Vue. The tag filter applies to scanned rows
 of the Active list only; a specific source excludes a missing row.
+
+**The display sort is `ModListQuery::sort: Option<ListSort>`** (`ListSortKey`
+`LoadOrder | Name | PackageId | LastUpdated`, `SortDirection`); `None` is the
+list's default (Active: working order; Inactive: Name ascending). Every sort is
+total: the key's comparison runs in the chosen direction, then the exact
+`ModId` ascending, in both directions. Names and ids compare Unicode-lowercased,
+then as written (no locale collation). An unavailable update time sorts after
+every known one in both directions. `LoadOrder` on the Inactive list means its
+default. `ListSort::is_load_order()` (ascending `LoadOrder`) is the one fact
+reordering must gate on. Sorting runs before the `MAX_MOD_LIST_ROWS` cut and
+never touches `working`/`orders`.
+
+**Update times are a session fact, not a report fact.** `ModUpdateTimes`
+(`UpdateTime::Known(UnixSeconds) | Unavailable(ShippedWithGame | Unknown)`)
+hangs off `Session` (`set_update_times`), filled by `LoadProject` when it was
+given a `ModTimestampReader` (`with_timestamp_reader`, optional so the CLI and
+most tests need none; without one every time is `Unknown`), once per load and
+therefore refreshed by every rescan. It is deliberately outside
+`rim_analyzer::Report`, whose JSON is a byte-identical contract. The port is
+infallible: an unreadable source answers `Unavailable(Unknown)`, never an error
+and never an epoch. Fake: `test_support::FakeModTimestampReader`.
 
 ## Sharing a load order (`mod_list`, `ExportOrder`, `PreviewOrderImport`, `ImportOrder`)
 

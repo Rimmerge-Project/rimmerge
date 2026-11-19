@@ -15,11 +15,14 @@ import DefSearchBox from "@/components/mods/DefSearchBox.vue";
 import ModFilterBar from "@/components/mods/ModFilterBar.vue";
 import ModInfoPanel from "@/components/mods/ModInfoPanel.vue";
 import ModListPane from "@/components/mods/ModListPane.vue";
+import ModSortBar from "@/components/mods/ModSortBar.vue";
 import ModsRescanButton from "@/components/mods/ModsRescanButton.vue";
 import { useModActivation } from "@/composables/useModActivation";
 import { useModDeactivation } from "@/composables/useModDeactivation";
 import { useModListFilters } from "@/composables/useModListFilters";
+import { useModListSort } from "@/composables/useModListSort";
 import { useInactiveModsQuery, useWorkingModsQuery } from "@/queries/activeSet";
+import { ACTIVE_SORT_KEYS, INACTIVE_SORT_KEYS } from "@/utils/modListSort";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -37,8 +40,13 @@ function closePanel(): void {
 /** Which of the two tabs is showing. */
 const tab = ref<"active" | "inactive">("active");
 
+// The display sort is page-local state and only shapes the list queries; it never
+// touches the load order or a pending change. `isActiveInLoadOrder` is what a
+// reordering control must gate on.
+const { activeSort, inactiveSort, isActiveInLoadOrder } = useModListSort();
+
 const { search, source, tag, activeQuery, inactiveQuery, isActiveFiltered, isInactiveFiltered } =
-  useModListFilters();
+  useModListFilters({ active: activeSort, inactive: inactiveSort });
 
 const {
   data: activeData,
@@ -145,6 +153,17 @@ const followFocus = useDebounceFn((modId: string) => {
         :has-tag-filter="tab === 'active'"
       />
 
+      <ModSortBar
+        v-if="tab === 'active'"
+        v-model:sort="activeSort"
+        :keys="ACTIVE_SORT_KEYS"
+      />
+      <ModSortBar
+        v-else
+        v-model:sort="inactiveSort"
+        :keys="INACTIVE_SORT_KEYS"
+      />
+
       <ModListPane
         v-if="tab === 'active'"
         v-model:selected-ids="selectedActiveIds"
@@ -152,6 +171,8 @@ const followFocus = useDebounceFn((modId: string) => {
         :is-pending="activePending"
         :error="activeError"
         :is-filtered="isActiveFiltered"
+        :sort-key="activeSort.key"
+        :show-position="!isActiveInLoadOrder"
         @select-mod="openMod"
         @focus-mod="followFocus"
       >
@@ -175,6 +196,7 @@ const followFocus = useDebounceFn((modId: string) => {
         :is-pending="inactivePending"
         :error="inactiveError"
         :is-filtered="isInactiveFiltered"
+        :sort-key="inactiveSort.key"
         :show-active-columns="false"
         @select-mod="openMod"
         @focus-mod="followFocus"

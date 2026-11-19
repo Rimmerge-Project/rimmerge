@@ -68,6 +68,18 @@ here or in the two interface apps; `rim-resolve`/`rim-merge`/
   `TlsConfig::root_certs(RootCerts::PlatformVerifier)` explicitly: ureq's
   own default panics at the first real request without the
   `rustls-webpki-roots` feature backing it.
+- **`mod_timestamps.rs`**: `FileModTimestampReader` implements
+  `rim_session::ports::ModTimestampReader`. Workshop: `timeupdated` (when the installed version was published on the
+  Workshop, as Steam records it; not the download time) under `WorkshopItemsInstalled` in `<library>/steamapps/workshop/appworkshop_294100.acf`
+  (two parents above the workshop `content/294100` folder), read once per call and
+  only when a Workshop mod is asked about. Local: mtime of `About/About.xml`.
+  Core/DLC: `ShippedWithGame`, no IO. The `.acf` is untrusted: `read_bounded_with_limit`
+  at 4 MiB, UTF-8 only, a streaming tokenizer (`Tokens`, an iterator the parse loop drives,
+  so no token vector is ever built) with a depth bound of 16, and a malformed
+  file yields no times at all (never a partial guess). A time of zero or past
+  `MAX_PLAUSIBLE_SECONDS` (9999-12-31, the same bound on the `About.xml` mtime) is no time:
+  the UI's date formatting throws on anything larger. A missing file, an implausible time or
+  a time under the wrong section is `Unavailable(Unknown)`. Local only, no network.
 - Tests only ever touch `tempfile` copies of `tests/fixtures/` — never
   the real install, and never anything "near" it: every path an
   end-to-end test touches, `ModsConfig.xml` included, is a scratch copy

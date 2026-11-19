@@ -201,6 +201,46 @@ describe("ModTable", () => {
     expect(wrapper.emitted("selectMod")).toEqual([["a"]]);
   });
 
+  it("shows an update time past the date range as unknown instead of failing the render", async () => {
+    const wrapper = mountTable({
+      mods: [modRow({ modId: "a", updated: { kind: "known", seconds: 1e19 } })],
+      showUpdated: true,
+    });
+    await flushPromises();
+
+    expect(wrapper.get('[data-testid="mod-row-updated-a"]').text()).toBe("Update time unknown");
+  });
+
+  it("titles the update date so a clipped one can be read", async () => {
+    const wrapper = mountTable({
+      mods: [modRow({ modId: "a", updated: { kind: "known", seconds: 1_700_000_000 } })],
+      showUpdated: true,
+    });
+    await flushPromises();
+
+    const cell = wrapper.get('[data-testid="mod-row-updated-a"]');
+    expect(cell.attributes("title")).toBe(cell.text());
+    expect(cell.text()).not.toBe("");
+  });
+
+  it("labels each row's load-order position when asked to show it", async () => {
+    const wrapper = mountTable({
+      mods: [modRow({ modId: "a", position: 4 })],
+      showPosition: true,
+    });
+    await flushPromises();
+
+    expect(wrapper.get('[data-testid="mod-row-position-a"]').text()).toBe("#5");
+    expect(wrapper.get('[data-testid="mod-row-a"]').text()).toContain("Load order position 5");
+  });
+
+  it("shows no position unless asked", async () => {
+    const wrapper = mountTable({ mods: [modRow({ modId: "a", position: 4 })] });
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="mod-row-position-a"]').exists()).toBe(false);
+  });
+
   it("Space toggles the row's own checkbox when selectable", async () => {
     const wrapper = mountTable({ mods: [modRow({ modId: "a" })], selectable: true });
     await flushPromises();

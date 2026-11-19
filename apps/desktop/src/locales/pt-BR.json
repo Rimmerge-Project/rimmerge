@@ -1242,7 +1242,34 @@
         "workshop": "Oficina Steam"
       },
       "rovingHint": "Use as setas para mover, Enter para abrir e Espaço para marcar/desmarcar",
-      "pendingScan": "ainda não escaneado"
+      "pendingScan": "ainda não escaneado",
+      "loadOrderPosition": "Posição {position} na ordem de carregamento"
+    },
+    "sort": {
+      "groupLabel": "Ordem de classificação",
+      "heading": "Classificar",
+      "key": {
+        "loadOrder": "Ordem de carregamento",
+        "name": "Nome",
+        "packageId": "ID do pacote",
+        "lastUpdated": "Última atualização"
+      },
+      "ascending": {
+        "loadOrder": "Classificar pela ordem de carregamento, do primeiro ao último",
+        "name": "Classificar por nome, de A a Z",
+        "packageId": "Classificar por ID do pacote, de A a Z",
+        "lastUpdated": "Classificar pela última atualização, mais antigos primeiro"
+      },
+      "descending": {
+        "loadOrder": "Classificar pela ordem de carregamento, do último ao primeiro",
+        "name": "Classificar por nome, de Z a A",
+        "packageId": "Classificar por ID do pacote, de Z a A",
+        "lastUpdated": "Classificar pela última atualização, mais recentes primeiro"
+      },
+      "updatedUnavailable": {
+        "shippedWithGame": "Faz parte do jogo",
+        "unknown": "Data de atualização desconhecida"
+      }
     },
     "pendingChanges": {
       "unscanned": "{count} alteração pendente — escaneie novamente para atualizar a análise | {count} alterações pendentes — escaneie novamente para atualizar a análise",

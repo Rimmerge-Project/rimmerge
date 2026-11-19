@@ -407,7 +407,8 @@ async fn scan_detached(
             adapters.assignment_store,
             adapters.mod_knowledge_store.clone(),
             crate::commands::rules_databases::network_policy().fetch_rimmerge_rules,
-        );
+        )
+        .with_timestamp_reader(adapters.mod_timestamp_reader.clone());
 
         let start = Instant::now();
         let def_reader = adapters.def_reader.clone();
@@ -457,7 +458,9 @@ mod tests {
     use rim_session::test_support::report_fixture_with_inactive;
 
     use super::*;
-    use crate::dto::mod_lists::ModListQueryDto;
+    use crate::dto::mod_lists::{
+        ListSortDto, ListSortKeyDto, ModListQueryDto, SortDirectionDto, UpdateTimeDto,
+    };
     use crate::dto::mods::ModFilterDto;
 
     fn state_with(active: &[&str], inactive: &[&str]) -> AppState {
@@ -498,6 +501,95 @@ mod tests {
         assert_eq!(list.total, 2);
         assert_eq!(list.items[0].mod_id, "aaa.mod");
         assert_eq!(list.items[1].mod_id, "zzz.mod");
+    }
+
+    /// Sets the modification time of a sample game local mod's `About.xml`.
+    fn set_about_modified(game_dir: &str, folder: &str, seconds: u64) {
+        use std::time::{Duration, SystemTime};
+
+        let about = std::path::Path::new(game_dir)
+            .join("Mods")
+            .join(folder)
+            .join("About")
+            .join("About.xml");
+        std::fs::File::options()
+            .write(true)
+            .open(about)
+            .expect("sample About.xml")
+            .set_modified(SystemTime::UNIX_EPOCH + Duration::from_secs(seconds))
+            .expect("set mtime");
+    }
+
+    /// Loads the sample game with `ZzzMod`'s `About.xml` older than
+    /// `AaaMod`'s, then returns the scratch folder, its paths and the state.
+    async fn state_with_dated_local_mods() -> (
+        tempfile::TempDir,
+        crate::dto::project::ProjectPathsDto,
+        AppState,
+    ) {
+        let (scratch, paths) = crate::test_support::scratch_sample_game();
+        for (folder, seconds) in [("ZzzMod", 1_000), ("AaaMod", 2_000)] {
+            set_about_modified(&paths.game_dir, folder, seconds);
+        }
+        let state = AppState::default();
+        crate::commands::project::load_project_inner(&state, paths.clone(), |_| {})
+            .await
+            .expect("loading the scratch sample game must succeed");
+        (scratch, paths, state)
+    }
+
+    fn last_updated(direction: SortDirectionDto) -> ModListQueryDto {
+        ModListQueryDto {
+            sort: Some(ListSortDto {
+                key: ListSortKeyDto::LastUpdated,
+                direction,
+            }),
+            ..ModListQueryDto::default()
+        }
+    }
+
+    #[tokio::test]
+    async fn list_inactive_mods_sorts_by_the_about_xml_modification_time() {
+        let (_scratch, _paths, state) = state_with_dated_local_mods().await;
+
+        let ascending = list_inactive_mods_inner(&state, last_updated(SortDirectionDto::Ascending))
+            .await
+            .expect("must succeed");
+        let descending =
+            list_inactive_mods_inner(&state, last_updated(SortDirectionDto::Descending))
+                .await
+                .expect("must succeed");
+
+        let position = |list: &ModListDto, id: &str| {
+            list.items
+                .iter()
+                .position(|row| row.mod_id == id)
+                .expect("the mod is inactive in the sample game")
+        };
+        assert!(position(&ascending, "zzz.mod") < position(&ascending, "aaa.mod"));
+        assert!(position(&descending, "aaa.mod") < position(&descending, "zzz.mod"));
+        let aaa = &descending.items[position(&descending, "aaa.mod")];
+        assert_eq!(aaa.updated, UpdateTimeDto::Known { seconds: 2_000 });
+    }
+
+    #[tokio::test]
+    async fn a_rescan_refreshes_the_update_times() {
+        let (_scratch, paths, state) = state_with_dated_local_mods().await;
+        set_about_modified(&paths.game_dir, "AaaMod", 5_000);
+
+        rescan_project_inner(&state, |_| {})
+            .await
+            .expect("the rescan must succeed");
+
+        let list = list_inactive_mods_inner(&state, last_updated(SortDirectionDto::Descending))
+            .await
+            .expect("must succeed");
+        let aaa = list
+            .items
+            .iter()
+            .find(|row| row.mod_id == "aaa.mod")
+            .expect("the mod is inactive in the sample game");
+        assert_eq!(aaa.updated, UpdateTimeDto::Known { seconds: 5_000 });
     }
 
     #[tokio::test]

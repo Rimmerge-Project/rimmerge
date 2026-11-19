@@ -25,6 +25,7 @@ use rim_resolve::sort::{self, SortInput, SortOutcome};
 use rim_resolve::tags::infer_tags;
 
 use crate::ModKnowledge;
+use crate::ModUpdateTimes;
 use crate::ProjectPaths;
 use crate::active_set::ActiveSet;
 use crate::finding_index::FindingIndex;
@@ -405,6 +406,11 @@ pub struct Session {
     /// for a freshly-built `Session`, which is what most tests want; see
     /// [`ModKnowledge`]'s own doc comment for what that degrades.
     mod_knowledge: ModKnowledge,
+    /// When each mod was last updated, for the Mods page's display sort.
+    /// Set by [`crate::use_cases::LoadProject`] when it has a
+    /// [`crate::ports::ModTimestampReader`]; empty (every time
+    /// unavailable) otherwise. Never part of the report.
+    update_times: ModUpdateTimes,
     selected: OrderSource,
     /// Set by the composition root ([`Session::set_def_source_reader`])
     /// once real XML I/O is available. `None` in most tests (and in a
@@ -610,6 +616,7 @@ impl Session {
             scoped: HashMap::new(),
             rule_load_warnings: Vec::new(),
             mod_knowledge: ModKnowledge::default(),
+            update_times: ModUpdateTimes::default(),
             selected: OrderSource::Current,
             def_source_reader: None,
             inspections: HashMap::new(),
@@ -635,6 +642,19 @@ impl Session {
     /// same way [`Session::set_rule_load_warnings`] is.
     pub fn set_mod_knowledge(&mut self, knowledge: ModKnowledge) {
         self.mod_knowledge = knowledge;
+    }
+
+    /// Records when each mod was last updated. Set by
+    /// [`crate::use_cases::LoadProject`] right after construction, so a
+    /// rescan, which builds a new session, refreshes it.
+    pub fn set_update_times(&mut self, times: ModUpdateTimes) {
+        self.update_times = times;
+    }
+
+    /// When each mod was last updated.
+    #[must_use]
+    pub fn update_times(&self) -> &ModUpdateTimes {
+        &self.update_times
     }
 
     /// This session's own mod-specific knowledge — precedence rules,

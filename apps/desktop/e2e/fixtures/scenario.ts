@@ -112,6 +112,14 @@ import type { VerifyReportDto } from "../../src/types/generated/VerifyReportDto"
 import type { VerifyRequestDto } from "../../src/types/generated/VerifyRequestDto";
 import type { VersionCheckDto } from "../../src/types/generated/VersionCheckDto";
 
+/** A `list_working_mods`/`list_inactive_mods` query as the mock records it (the mock's own loose shape). */
+type RecordedModListQuery = {
+  search: string | null;
+  tag: string | null;
+  source: string | null;
+  sort: { key: string; direction: string } | null;
+};
+
 declare global {
   interface Window {
     /** Tauri's in-page IPC bridge (installed by `mockIPC`) — used to emit mocked events from a fixture. */
@@ -194,6 +202,10 @@ declare global {
     __ACTIVATE_CALLS__?: ActivateRequestDto[];
     /** Every `deactivate_mods` payload the mock received, in order — for the active-set spec. */
     __DEACTIVATE_CALLS__?: DeactivateRequestDto[];
+    /** Every `list_working_mods` query the mock received, in order — for the mods sort spec. */
+    __LIST_WORKING_MODS_CALLS__?: RecordedModListQuery[];
+    /** Every `list_inactive_mods` query the mock received, in order — for the mods sort spec. */
+    __LIST_INACTIVE_MODS_CALLS__?: RecordedModListQuery[];
     /** How many `rescan_project` calls the mock received — for the active-set spec. */
     __RESCAN_CALLS__?: number;
     /**
@@ -4442,7 +4454,72 @@ export function installScenario(): void {
       : null;
   }
 
-  type ModListQueryMock = { search: string | null; tag: string | null; source: string | null };
+  type SortKeyMock = "loadOrder" | "name" | "packageId" | "lastUpdated";
+  type ListSortMock = { key: SortKeyMock; direction: "ascending" | "descending" };
+
+  type ModListQueryMock = {
+    search: string | null;
+    tag: string | null;
+    source: string | null;
+    sort: ListSortMock | null;
+  };
+
+  type UpdateTimeMock =
+    | { kind: "known"; seconds: number }
+    | { kind: "shippedWithGame" }
+    | { kind: "unknown" };
+
+  /**
+   * `ModUpdateTimes::get` over the backend's readers: Core/DLC ship with the game, a missing mod
+   * (no source) has no answer, and the rest get a deterministic time from the digits of their id
+   * (none: unknown; every seventh: unknown, like a Workshop mod Steam has no record of; the others
+   * share eleven distinct days, so equal times, and with them the id tie-break, are exercised).
+   */
+  function updateTimeOf(row: { modId: string; source: string | null }): UpdateTimeMock {
+    if (row.source === "core" || row.source === "dlc") return { kind: "shippedWithGame" };
+    if (row.source === null) return { kind: "unknown" };
+    const digits = row.modId.replace(/\D/g, "");
+    if (digits === "") return { kind: "unknown" };
+    const n = Number.parseInt(digits, 10);
+    if (n % 7 === 0) return { kind: "unknown" };
+    return { kind: "known", seconds: 1_600_000_000 + ((n * 37) % 11) * 86_400 };
+  }
+
+  /** `mod_lists::compare_text`: lowercased first, then as written; no locale collation. */
+  function compareText(a: string, b: string): number {
+    const lowerA = a.toLowerCase();
+    const lowerB = b.toLowerCase();
+    if (lowerA !== lowerB) return lowerA < lowerB ? -1 : 1;
+    return a < b ? -1 : a > b ? 1 : 0;
+  }
+
+  /**
+   * `mod_lists::sort_rows`: the sort key runs in the chosen direction, unavailable update times
+   * go after every known one in both directions, and every tie falls back to the exact id,
+   * ascending.
+   */
+  function sortModListRows(rows: ModListRowMock[], sort: ListSortMock): ModListRowMock[] {
+    const sign = sort.direction === "ascending" ? 1 : -1;
+    const byKey = (a: ModListRowMock, b: ModListRowMock): number => {
+      switch (sort.key) {
+        case "loadOrder":
+          return sign * ((a.position ?? 0) - (b.position ?? 0));
+        case "name":
+          return sign * compareText(a.name, b.name);
+        case "packageId":
+          return sign * compareText(a.modId, b.modId);
+        case "lastUpdated": {
+          const left = a.updated.kind === "known" ? a.updated.seconds : null;
+          const right = b.updated.kind === "known" ? b.updated.seconds : null;
+          if (left !== null && right !== null) return sign * (left - right);
+          if (left !== null) return -1;
+          if (right !== null) return 1;
+          return 0;
+        }
+      }
+    };
+    return rows.toSorted((a, b) => byKey(a, b) || compareByModId(a, b));
+  }
 
   /** `rim_session::MAX_MOD_LIST_ROWS`: the most rows either working-tier list returns. */
   const MAX_MOD_LIST_ROWS = 5_000;
@@ -4461,6 +4538,7 @@ export function installScenario(): void {
     state: ModRowStateMock;
     generated: null;
     workshopId: number | null;
+    updated: UpdateTimeMock;
   };
 
   /** A pool row (`mods`, fixture owners, `inactiveModRow`) shaped as a `ModListRowDto`. */
@@ -4477,6 +4555,7 @@ export function installScenario(): void {
       state,
       generated: row.generated,
       workshopId: workshopIdOf(row),
+      updated: updateTimeOf(row),
     };
   }
 
@@ -4519,6 +4598,7 @@ export function installScenario(): void {
           state: { kind: "missing" },
           generated: null,
           workshopId: null,
+          updated: updateTimeOf({ modId: id, source: null }),
         };
       });
     } else {
@@ -4528,7 +4608,7 @@ export function installScenario(): void {
       const unscanned = [...unscannedById.values()]
         .filter((row) => !workingActiveIds.has(row.modId))
         .map((row) => modListRow(row, null, stateOf(row, scannedActiveIds.has(row.modId))));
-      rows = [...deactivated, ...unscanned].toSorted(compareByModId);
+      rows = [...deactivated, ...unscanned];
     }
     const needle = query.search?.toLowerCase() ?? null;
     const matching = rows
@@ -4542,7 +4622,18 @@ export function installScenario(): void {
         if (which === "inactive" || query.tag === null) return true;
         return row.state.kind === "scanned" && row.state.tags.includes(query.tag);
       });
-    return { total: matching.length, items: matching.slice(0, MAX_MOD_LIST_ROWS) };
+    // The Active default is the working order itself; the Inactive default is name, A to Z, and
+    // an Inactive list has no load order to sort by, so that key means the default there.
+    const requested = query.sort;
+    const sort: ListSortMock =
+      which === "working"
+        ? (requested ?? { key: "loadOrder", direction: "ascending" })
+        : requested === null || requested.key === "loadOrder"
+          ? { key: "name", direction: "ascending" }
+          : requested;
+    const isLoadOrder = sort.key === "loadOrder" && sort.direction === "ascending";
+    const ordered = isLoadOrder ? matching : sortModListRows(matching, sort);
+    return { total: ordered.length, items: ordered.slice(0, MAX_MOD_LIST_ROWS) };
   }
 
   /**
@@ -6203,6 +6294,8 @@ export function installScenario(): void {
   window.__ADD_ASSIGNMENT_SECTION_CALLS__ = [];
   window.__REMOVE_ASSIGNMENT_SECTION_CALLS__ = [];
   window.__ACTIVATE_CALLS__ = [];
+  window.__LIST_WORKING_MODS_CALLS__ = [];
+  window.__LIST_INACTIVE_MODS_CALLS__ = [];
   window.__DEACTIVATE_CALLS__ = [];
   window.__RESCAN_CALLS__ = 0;
   window.__OPEN_MOD_LINK_CALLS__ = [];
@@ -7202,10 +7295,16 @@ export function installScenario(): void {
     },
     list_mod_names: () => allModNames(),
     // The Mods page's two working-tier lists (`rim_session::mod_lists`).
-    list_working_mods: (payload: unknown) =>
-      modListFor("working", (payload as { query: ModListQueryMock }).query),
-    list_inactive_mods: (payload: unknown) =>
-      modListFor("inactive", (payload as { query: ModListQueryMock }).query),
+    list_working_mods: (payload: unknown) => {
+      const query = (payload as { query: ModListQueryMock }).query;
+      window.__LIST_WORKING_MODS_CALLS__?.push(query);
+      return modListFor("working", query);
+    },
+    list_inactive_mods: (payload: unknown) => {
+      const query = (payload as { query: ModListQueryMock }).query;
+      window.__LIST_INACTIVE_MODS_CALLS__?.push(query);
+      return modListFor("inactive", query);
+    },
     plan_activate_mods: (payload: unknown) => {
       const request = (payload as { request: ActivateRequestDto }).request;
       return planActivateMods(request.ids, request.withDependencies);

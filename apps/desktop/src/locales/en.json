@@ -1242,7 +1242,34 @@
         "workshop": "Steam Workshop"
       },
       "rovingHint": "Use the arrow keys to move, Enter to open, Space to toggle",
-      "pendingScan": "not scanned yet"
+      "pendingScan": "not scanned yet",
+      "loadOrderPosition": "Load order position {position}"
+    },
+    "sort": {
+      "groupLabel": "Sort order",
+      "heading": "Sort",
+      "key": {
+        "loadOrder": "Load order",
+        "name": "Name",
+        "packageId": "Package ID",
+        "lastUpdated": "Last updated"
+      },
+      "ascending": {
+        "loadOrder": "Sort by load order, first to last",
+        "name": "Sort by name, A to Z",
+        "packageId": "Sort by package ID, A to Z",
+        "lastUpdated": "Sort by last updated, oldest first"
+      },
+      "descending": {
+        "loadOrder": "Sort by load order, last to first",
+        "name": "Sort by name, Z to A",
+        "packageId": "Sort by package ID, Z to A",
+        "lastUpdated": "Sort by last updated, newest first"
+      },
+      "updatedUnavailable": {
+        "shippedWithGame": "Ships with the game",
+        "unknown": "Update time unknown"
+      }
     },
     "pendingChanges": {
       "unscanned": "{count} pending change — Rescan to update analysis | {count} pending changes — Rescan to update analysis",

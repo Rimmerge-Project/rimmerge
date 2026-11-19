@@ -7,15 +7,15 @@ use std::sync::{Arc, RwLock};
 
 use rim_io::{
     AnalyzerScanner, FileAssetLocator, FileDefSourceReader, FileGameLogReader, FileModAboutReader,
-    FsDefCacheCarrierProbe, FsModKnowledgeStore, GithubReleaseFeed, JsonAssignmentProjectStore,
-    JsonDecisionStore, JsonNotificationStateStore, JsonPatchProjectStore, JsonRuleStore,
-    MergeModFolderWriter, ModsConfigFileStore, RmlFileStore,
+    FileModTimestampReader, FsDefCacheCarrierProbe, FsModKnowledgeStore, GithubReleaseFeed,
+    JsonAssignmentProjectStore, JsonDecisionStore, JsonNotificationStateStore,
+    JsonPatchProjectStore, JsonRuleStore, MergeModFolderWriter, ModsConfigFileStore, RmlFileStore,
 };
 pub use rim_io::{GameProcessProbe, SysinfoGameProcessProbe};
 use rim_session::Session;
 use rim_session::mod_info::ExternalUrl;
 use rim_session::ports::{
-    AssetLocator, DefSourceReader, GameLauncher, ModAboutReader, ReleaseFeed,
+    AssetLocator, DefSourceReader, GameLauncher, ModAboutReader, ModTimestampReader, ReleaseFeed,
 };
 use tauri::async_runtime::spawn_blocking;
 use tokio::sync::Mutex as AsyncMutex;
@@ -80,6 +80,11 @@ pub struct Adapters {
     /// `rim_session::test_support::FakeModAboutReader` instead of the
     /// real [`rim_io::FileModAboutReader`].
     pub mod_about_reader: Arc<dyn ModAboutReader + Send + Sync>,
+    /// Reads each mod's last-updated time (Steam's record for a Workshop
+    /// mod, `About.xml`'s mtime for a local one) for the Mods page's
+    /// display sort. A port so a test can inject
+    /// `rim_session::test_support::FakeModTimestampReader`.
+    pub mod_timestamp_reader: Arc<dyn ModTimestampReader + Send + Sync>,
     /// Reads and parses a `Player.log`.
     /// Stateless (no cache, unlike [`Self::def_reader`]), so it's kept
     /// bare rather than behind an `Arc` — cheap to copy per call.
@@ -121,6 +126,7 @@ impl Default for Adapters {
             def_reader: Arc::new(FileDefSourceReader::new()),
             asset_locator: Arc::new(FileAssetLocator),
             mod_about_reader: Arc::new(FileModAboutReader::new()),
+            mod_timestamp_reader: Arc::new(FileModTimestampReader::new()),
             game_log_reader: FileGameLogReader,
             def_cache_probe: FsDefCacheCarrierProbe::new(),
             mod_knowledge_store: crate::commands::rules_databases::cache_dir().map_or_else(
@@ -147,6 +153,7 @@ impl std::fmt::Debug for Adapters {
             .field("def_reader", &"<dyn DefSourceReader>")
             .field("asset_locator", &"<dyn AssetLocator>")
             .field("mod_about_reader", &"<dyn ModAboutReader>")
+            .field("mod_timestamp_reader", &"<dyn ModTimestampReader>")
             .field("game_log_reader", &self.game_log_reader)
             .field("def_cache_probe", &self.def_cache_probe)
             .field("mod_knowledge_store", &self.mod_knowledge_store)

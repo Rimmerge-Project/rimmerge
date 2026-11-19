@@ -1242,7 +1242,34 @@
         "workshop": "Warsztat Steam"
       },
       "rovingHint": "Strzałki: przechodzenie, Enter: otwieranie, Spacja: przełączanie",
-      "pendingScan": "jeszcze nie zeskanowano"
+      "pendingScan": "jeszcze nie zeskanowano",
+      "loadOrderPosition": "Pozycja w kolejności ładowania: {position}"
+    },
+    "sort": {
+      "groupLabel": "Kolejność sortowania",
+      "heading": "Sortuj",
+      "key": {
+        "loadOrder": "Kolejność ładowania",
+        "name": "Nazwa",
+        "packageId": "ID pakietu",
+        "lastUpdated": "Data aktualizacji"
+      },
+      "ascending": {
+        "loadOrder": "Sortuj według kolejności ładowania, od pierwszego do ostatniego",
+        "name": "Sortuj według nazwy, od A do Z",
+        "packageId": "Sortuj według ID pakietu, od A do Z",
+        "lastUpdated": "Sortuj według daty aktualizacji, od najstarszych"
+      },
+      "descending": {
+        "loadOrder": "Sortuj według kolejności ładowania, od ostatniego do pierwszego",
+        "name": "Sortuj według nazwy, od Z do A",
+        "packageId": "Sortuj według ID pakietu, od Z do A",
+        "lastUpdated": "Sortuj według daty aktualizacji, od najnowszych"
+      },
+      "updatedUnavailable": {
+        "shippedWithGame": "W zestawie z grą",
+        "unknown": "Nieznana data aktualizacji"
+      }
     },
     "pendingChanges": {
       "unscanned": "{count} oczekująca zmiana — przeskanuj ponownie, aby zaktualizować analizę | {count} oczekujące zmiany — przeskanuj ponownie, aby zaktualizować analizę | {count} oczekujących zmian — przeskanuj ponownie, aby zaktualizować analizę",

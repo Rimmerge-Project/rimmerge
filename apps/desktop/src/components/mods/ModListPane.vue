@@ -6,6 +6,7 @@ import { useI18n } from "vue-i18n";
 
 import ModTable from "@/components/mods/ModTable.vue";
 import { useModSelection } from "@/composables/useModSelection";
+import type { ListSortKeyDto } from "@/types/generated/ListSortKeyDto";
 import type { ModListDto } from "@/types/generated/ModListDto";
 import type { ModListRowDto } from "@/types/generated/ModListRowDto";
 
@@ -15,6 +16,8 @@ const {
   error,
   isFiltered,
   showActiveColumns = true,
+  sortKey,
+  showPosition = false,
 } = defineProps<{
   /** The query's current list; `undefined` until the first response. */
   modList: ModListDto | undefined;
@@ -27,6 +30,10 @@ const {
   isFiltered: boolean;
   /** Passed through to {@link ModTable}: off for the Inactive list. */
   showActiveColumns?: boolean;
+  /** The list's display sort criterion; sorting by last updated shows each row's time. */
+  sortKey: ListSortKeyDto;
+  /** Passed through to {@link ModTable}: each row's load-order position, while the Active list is sorted by something else. */
+  showPosition?: boolean;
 }>();
 const emit = defineEmits<{ selectMod: [modId: string]; focusMod: [modId: string] }>();
 const selectedIds = defineModel<string[]>("selectedIds", { required: true });
@@ -168,6 +175,8 @@ function toggleSelectAll(): void {
     :mods="rows"
     selectable
     :show-active-columns="showActiveColumns"
+    :show-updated="sortKey === 'lastUpdated'"
+    :show-position="showPosition"
     @select-mod="(modId: string) => emit('selectMod', modId)"
     @focus-mod="(modId: string) => emit('focusMod', modId)"
   />
