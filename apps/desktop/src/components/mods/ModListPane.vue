@@ -204,9 +204,9 @@ function toggleSelectAll(): void {
         data-testid="mods-selected-count"
       >
         <template v-if="selectedIds.length > 0">
-          {{ t("mods.selection.selectedCount", { count: selectedIds.length }, selectedIds.length) }}
-          <span
+          {{ t("mods.selection.selectedCount", { count: selectedIds.length }, selectedIds.length) }}<span
             v-if="selection.hiddenSelectedCount.value > 0"
+            class="ms-1"
             data-testid="mods-selected-hidden"
           >{{
             t(

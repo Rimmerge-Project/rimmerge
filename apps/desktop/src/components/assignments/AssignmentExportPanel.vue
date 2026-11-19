@@ -214,8 +214,7 @@ const canExport = computed(() => outDir.value.trim().length > 0);
           >
             {{ skip.defType }} {{ formatSkipRow(skip) }}{{
               skip.path ? t("assignments.exportPanel.skippedPath", { path: skip.path }) : ""
-            }}
-            — {{ skip.reason }}
+            }} ({{ skip.reason }})
           </li>
         </ul>
       </div>

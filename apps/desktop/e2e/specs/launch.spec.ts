@@ -51,7 +51,7 @@ test.describe("launch RimWorld", () => {
 
     await expect(page.getByTestId("launch-apply-first")).toBeVisible();
     await expect(page.getByTestId("launch-apply-first-sentence")).toContainText(
-      "ModsConfig.xml doesn't hold the suggested order",
+      "The suggested order isn't saved as your active order yet",
     );
     await expect(page.getByTestId("launch-apply-first-cancel")).toBeFocused();
     await page.getByTestId("launch-apply-first-cancel").click();
@@ -91,7 +91,7 @@ test.describe("launch RimWorld", () => {
 
     await expect(page.getByTestId("apply-dialog")).toBeHidden();
     await expect(
-      page.getByText("ModsConfig.xml wasn't written, so RimWorld wasn't started."),
+      page.getByText("Your active mod list wasn't written, so RimWorld wasn't started."),
     ).toBeVisible();
     expect(await page.evaluate(() => window.__LAUNCH_GAME_CALLS__ ?? [])).toEqual([]);
   });
@@ -196,7 +196,7 @@ test.describe("launch RimWorld", () => {
     await page.getByTestId(SIDEBAR_LAUNCH).click();
 
     await expect(page.getByTestId("launch-apply-first-sentence")).toContainText(
-      "Your pending activation changes aren't in ModsConfig.xml yet.",
+      "Your pending activation changes aren't saved yet.",
     );
     expect(await page.evaluate(() => window.__LAUNCH_GAME_CALLS__ ?? [])).toEqual([]);
   });

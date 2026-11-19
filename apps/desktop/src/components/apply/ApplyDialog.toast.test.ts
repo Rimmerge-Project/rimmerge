@@ -54,7 +54,7 @@ describe("ApplyDialog success toast", () => {
 
     const toast = toastAddSpy.mock.calls.at(-1)?.[0];
     expect(toast.summary).toBe("Applied");
-    expect(toast.detail).toContain("ModsConfig: C:/RimWorld/ModsConfig.xml");
+    expect(toast.detail).toContain("Active mod list: C:/RimWorld/ModsConfig.xml");
     expect(toast.detail).toContain("Backup: C:/RimWorld/ModsConfig.xml.bak-x");
   });
 

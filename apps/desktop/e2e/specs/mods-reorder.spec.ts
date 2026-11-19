@@ -291,7 +291,7 @@ test.describe("moves without dragging", () => {
 test.describe("reordering is off while the Active list is sorted by something else", () => {
   test("drags, the menu and Alt+Arrow are refused with the reason visible", async ({ page }) => {
     await openMods(page);
-    await modsPane(page, "active").getByTestId("mods-sort-name-ascending").click();
+    await modsPane(page, "active").getByTestId("mods-sort-name").click();
     await expect(page.getByTestId("mods-reorder-blocked")).toContainText(
       "isn't sorted by load order",
     );
@@ -315,7 +315,7 @@ test.describe("reordering is off while the Active list is sorted by something el
 
   test("a mod dropped from Inactive is still activated, at its default place", async ({ page }) => {
     await openMods(page);
-    await modsPane(page, "active").getByTestId("mods-sort-name-ascending").click();
+    await modsPane(page, "active").getByTestId("mods-sort-name").click();
 
     await page
       .getByTestId("mod-row-mod.901")

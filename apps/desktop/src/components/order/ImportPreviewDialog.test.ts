@@ -104,7 +104,7 @@ describe("ImportPreviewDialog", () => {
       "Dropped Mod",
     );
     expect(wrapper.get('[data-testid="import-preview-duplicates"]').text()).toContain(
-      "example.kept — the first position (#1) is used.",
+      "example.kept: the first position (#1) is used.",
     );
     expect(wrapper.get('[data-testid="import-preview-other-copies"]').text()).toContain(
       "example.twin → your copy Twin Mod",
@@ -145,7 +145,7 @@ describe("ImportPreviewDialog", () => {
 
     expect(skipped).toContain("Lines not understood (5)");
     expect(skipped).toContain("Line 4: not a mod entry.");
-    expect(skipped).toContain("Entry 5: “not an id” isn't a valid package id.");
+    expect(skipped).toContain('Entry 5: "not an id" isn\'t a valid package id.');
     expect(skipped).toContain("3 more entries not shown.");
   });
 
@@ -213,7 +213,7 @@ describe("ImportPreviewDialog", () => {
     ],
     [
       { kind: "tooMany", limit: 5002 },
-      "This order would hold too many mods; an import can hold at most 5002.",
+      "This order would hold too many mods. An import can hold at most 5002.",
     ],
     [{ kind: "unknown", id: "example.gone" }, "example.gone isn't an installed mod."],
     [

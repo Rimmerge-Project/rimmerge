@@ -175,7 +175,7 @@ function groupedLineText(group: (typeof groupedByModOperations.value)[number]): 
                   : undefined
               "
             >
-              <code>{{ def.defKey.defType }}/{{ def.defKey.defName }}</code> —
+              <code>{{ def.defKey.defType }}/{{ def.defKey.defName }}</code>:
               <template v-if="def.reorderKind?.kind === 'cosmetic'">
                 {{ t("apply.diff.cosmeticText") }}
                 <i18n-t
@@ -332,7 +332,7 @@ function groupedLineText(group: (typeof groupedByModOperations.value)[number]): 
             :key="`${entry.modId}|${entry.operation}`"
             :data-testid="`apply-dialog-pvo-matched-${entry.modId}`"
           >
-            {{ modLabel.label(entry.modId) }} — <code>{{ entry.operation }}</code>
+            {{ modLabel.label(entry.modId) }}: <code>{{ entry.operation }}</code>
           </li>
         </ul>
       </div>
@@ -354,7 +354,7 @@ function groupedLineText(group: (typeof groupedByModOperations.value)[number]): 
             :key="`${entry.modId}|${entry.operation}`"
             :data-testid="`apply-dialog-pvo-predicted-only-${entry.modId}`"
           >
-            {{ modLabel.label(entry.modId) }} — <code>{{ entry.operation }}</code>
+            {{ modLabel.label(entry.modId) }}: <code>{{ entry.operation }}</code>
           </li>
         </ul>
       </div>
@@ -380,8 +380,7 @@ function groupedLineText(group: (typeof groupedByModOperations.value)[number]): 
               entry.attribution.kind === "mod"
                 ? modLabel.label(entry.attribution.modId)
                 : t("apply.diff.unattributedRaw", { raw: entry.attribution.raw })
-            }}
-            — <code>{{ entry.operation }}</code>
+            }}: <code>{{ entry.operation }}</code>
           </li>
         </ul>
       </div>

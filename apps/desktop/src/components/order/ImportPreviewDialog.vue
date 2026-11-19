@@ -19,7 +19,7 @@ import { groupImportEntries, missingListText, rejectionMessage } from "@/utils/o
 const { outcome, isImporting, replacesUnwritten } = defineProps<{
   outcome: OrderImportOutcomeDto | null;
   isImporting: boolean;
-  /** This import replaces the Current order, which is not in ModsConfig.xml yet. */
+  /** This import replaces the Current order, which is not your active order yet. */
   replacesUnwritten: boolean;
 }>();
 const visible = defineModel<boolean>("visible", { required: true });

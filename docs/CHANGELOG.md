@@ -1,104 +1,105 @@
 # Changelog
 
 This changelog starts at the first public release. Development history
-before that point is not summarized here — see `.journal/` in a
-maintainer's own checkout for the full record, if you have it.
+before that point is not summarized here.
 
 ## [Unreleased]
 
 - **New: Inactive and Active side by side, with drag and drop.** The Mods page
-  now shows the Inactive list on the left and the Active list on the right
+  shows the Inactive list on the left and the Active list on the right
   (stacked on a narrow window), each with its own search, filters, sort and
-  selection. Drag a row (or all selected rows) within Active to reorder it,
+  selection. Drag a row (or every selected row) within Active to reorder it,
   from Inactive into Active to activate it at that place, or onto Inactive to
-  deactivate it; a line shows where it will land, and a drop that would pull in
-  a dependency or leave a dependent active asks first, like the buttons do.
+  deactivate it. A line shows where it will land. A drop that would pull in a
+  dependency or leave a dependent active asks first, as the buttons do.
   Without a mouse, every Active row has a Move menu (up, down, top, bottom,
-  after another mod), every Inactive row an Activate at button, and Alt+Up and
-  Alt+Down move the focused row; each move is announced to screen readers.
-  Moving is available while Active is sorted by load order (a search or filter
-  is fine) and is disabled, with the reason shown, under another sort. A reorder
-  over the same set of mods edits your own order at once, without a rescan, and
-  reaches `ModsConfig.xml` when you Apply; the first one while the suggested
-  order is selected switches to your own order and says so. Discard pending
-  changes (in the pending-changes banner) and Revert order to ModsConfig.xml
-  (in the "not in ModsConfig.xml yet" note) undo what you staged. Activating a
-  mod without choosing a place now puts it back where it was in your order,
-  and never ahead of a mod it depends on. The mod info panel is a drawer over
-  the lists on all but very wide windows, and the source label beside a row's
-  icon appears when the list is wide enough, not the window.
+  after another mod), every Inactive row has an Activate at button, and
+  Alt+Up and Alt+Down move the focused row. Screen readers announce each
+  move. Moving works while Active is sorted by load order (a search or filter
+  is fine); under another sort it is disabled, with the reason shown. A
+  reorder over the same set of mods changes your own order at once, without a
+  rescan, and reaches `ModsConfig.xml` when you Apply. The first reorder while
+  the suggested order is selected switches to your own order and says so.
+  Discard pending changes (in the pending-changes banner) and Revert to your
+  saved active order (in the "This isn't your active order yet." note) undo
+  what you staged. Activating a mod without choosing a place now puts it back where it
+  was in your order, and never ahead of a mod it depends on. The mod info
+  panel is a drawer over the lists on all but very wide windows. The source
+  label beside a row's icon appears when the list is wide enough, not the
+  window.
 - **Fix: the brackets around "N not shown" follow each language.** They are
-  part of the translated text now, so Chinese and Japanese use their own
+  now part of the translated text, so Chinese and Japanese use their own
   full-width brackets.
-- **New: sort the Mods lists.** Each list on the Mods page has arrow buttons
-  to sort by Load order (Active only), Name, Package ID or Last updated, in
-  either direction, each with a tooltip and an accessible name saying which.
-  Inactive now opens sorted by name instead of by package id. Sorting works
-  with search and the filters, never changes the load order or any pending
-  change, and is not saved. "Last updated" is, for a Workshop mod, when the
-  installed version was published on the Workshop, as Steam records it, and the `About.xml` modification time for a local one; Core and
-  the DLCs have none, and mods without a time sort last either way (see the
-  Mods page in `docs/desktop.md`).
-- **A Steam installed outside Program Files is now found.** Detection
-  only looked under `%ProgramFiles(x86)%\Steam` and `%ProgramFiles%\Steam`,
-  so a game in a library of a Steam installed elsewhere (for example
-  `Q:\Steam`) was reported as "no RimWorld install found", and Launch started
-  such a copy directly instead of through Steam. Detection and Launch now
-  also use the Steam folders Steam records in the Windows registry (a local,
-  read-only lookup), and read `libraryfolders.vdf` with a size bound.
+- **New: sort the Mods lists.** Each list on the Mods page has one sort
+  button per criterion: Load order (Active only), Name, Package ID or Last
+  updated. Click a button to sort by it, and click it again to flip the
+  direction. Each button has a tooltip and an accessible name that say the
+  current direction and what the next click does. Inactive now opens sorted by name instead of by package id. Sorting
+  works with search and the filters, never changes the load order or any
+  pending change, and is not saved. "Last updated" is, for a Workshop mod,
+  when the installed version was published on the Workshop, as Steam records
+  it; for a local mod it is the `About.xml` modification time. Core and the
+  DLCs have none, and mods without a time sort last in either direction (see
+  the Mods page in `docs/desktop.md`).
+- **A Steam installed outside Program Files is now found.** Detection only
+  looked under `%ProgramFiles(x86)%\Steam` and `%ProgramFiles%\Steam`, so a
+  game in a library of a Steam installed elsewhere (for example `Q:\Steam`)
+  was reported as "no RimWorld install found", and Launch started such a copy
+  directly instead of through Steam. Detection and Launch now also use the
+  Steam folders Steam records in the Windows registry (a local, read-only
+  lookup), and read `libraryfolders.vdf` with a size bound.
 - **The Setup page recovers once you point it at your game folder.** Entering
-  or browsing to the folder now re-checks it: the "no install found" message
-  clears, and the workshop folder, `ModsConfig.xml` and profile folder fill
-  in (a field you changed is kept). `ModsConfig.xml` and the profile folder
-  are shown even while no install is found. Save as defaults refreshes the
-  page's answer.
-- **The "no install found" message is in your language.** It listed the
-  backend's English command-line advice ("see the technical details
-  below"); it now says what to do in the app's language and lists each
+  or browsing to the folder now checks it again: the "no install found"
+  message clears, and the workshop folder, `ModsConfig.xml` and profile
+  folder fill in (a field you changed is kept). `ModsConfig.xml` and the
+  profile folder are shown even while no install is found. Save as defaults
+  refreshes the page's answer.
+- **The "no install found" message is in your language.** It used to show
+  the backend's English command-line advice ("see the technical details
+  below"). It now says what to do in the app's language and lists each
   checked location. The "technical details" label on a load error is
   translated too.
-
-- **Mods that move now follows the orders.** After Apply made the current
+- **Mods that move now follows the orders.** After an Apply made the current
   order the suggested one, the Dashboard, the getting-started strip and the
   Apply dialog kept showing the number measured before the Apply until
-  something re-sorted. It is now measured against the orders as they are, so
-  it reads 0 right after such an Apply.
+  something sorted again. It is now measured against the orders as they are,
+  so it reads 0 right after such an Apply.
 - **Rescan after Apply no longer reverts the current order.** The active-mod
-  list the app rescans kept the order from before the Apply, so a rescan
+  list the app rescans kept the order from before the Apply. A rescan then
   scanned the old order while `ModsConfig.xml` held the new one, and a later
   Apply of Current would have written the old order back. The list now
-  follows the written order, and the suggested order is sorted again when the
-  current order changes over the same mods and the tie-break preserves the
-  current order.
+  follows the written order. When the current order changes over the same
+  mods and the tie-break preserves the current order, the suggested order is
+  sorted again.
 - **The Mods page shows every mod, and has Select all, Clear selection and
-  Rescan mods.** The Active and Inactive lists no longer stop at 200 rows
-  (a list is bounded at 5,000, with the full count shown). They show your
-  edits at once: an activated mod is in Active ("not scanned yet" until a
-  rescan), a deactivated one in Inactive. Each list has a "Select all N
-  shown" checkbox for the rows matching the search and filters, a note for
-  selected rows a filter hides, and Clear selection; the plan and
-  confirmation dialogs are unchanged. Rescan mods is always available in the
-  page header.
+  Rescan mods.** The Active and Inactive lists no longer stop at 200 rows (a
+  list is bounded at 5,000, with the full count shown). They show your edits
+  at once: an activated mod is in Active ("not scanned yet" until a rescan),
+  a deactivated one in Inactive. Each list has a "Select all N shown"
+  checkbox for the rows matching the search and filters, a note for selected
+  rows a filter hides, and Clear selection. The plan and confirmation dialogs
+  are unchanged. Rescan mods is always available in the page header.
 - **A refused activate or deactivate plan is no longer silent.** When the
   plan for Activate selected or Deactivate selected failed, nothing visible
   happened. The dialog now opens with the reason and no way to confirm.
 - **Faster mod scan.** Loading, rescanning and importing a load order start
-  by scanning every active mod's files; that scan now makes far fewer
-  file-system calls and allocations. Each loaded folder is listed once
-  instead of a dozen times (and checking whether an entry is a folder no
-  longer opens it), each folder's `Defs`, `Patches`, `Textures`,
-  `Assemblies` and `AssetBundles` trees are walked once instead of up to
-  four times, the def reader no longer builds a new string for every field
-  it visits, files are read into a buffer sized for them, and each mod's
-  folder is walked once for both the side-loaded assembly check and the
-  later search for definitions in folders that aren't loaded. On a test
-  install of about 1,000 active mods (release build, warm file cache,
-  median of three old and new runs taken alternately), a full analysis went
-  from about 19 s to about 14 s and used about a third less processor time
-  (98 s to 64 s); peak memory is about the same (+10 MB) and results are
-  unchanged. A cold file cache is still dominated by reading the `.dds`
-  texture headers.
+  by scanning every active mod's files. That scan now makes far fewer
+  file-system calls and allocations:
+  - each loaded folder is listed once instead of a dozen times, and checking
+    whether an entry is a folder no longer opens it;
+  - each folder's `Defs`, `Patches`, `Textures`, `Assemblies` and
+    `AssetBundles` trees are walked once instead of up to four times;
+  - the def reader no longer builds a new string for every field it visits;
+  - files are read into a buffer sized for them;
+  - each mod's folder is walked once for both the side-loaded assembly check
+    and the later search for definitions in folders that aren't loaded.
 
+  On a test install of about 1,000 active mods (release build, warm file
+  cache, median of three old and new runs taken alternately), a full
+  analysis went from about 19 s to about 14 s and used about a third less
+  processor time (98 s to 64 s). Peak memory is about the same (+10 MB) and
+  results are unchanged. A cold file cache is still dominated by reading the
+  `.dds` texture headers.
 ## [1.2.3] - 2026-10-09
 
 - **Verify checks each mod file for changes once per run.** Reading a def or

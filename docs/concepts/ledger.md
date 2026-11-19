@@ -1,14 +1,14 @@
 # The ledger
 
-Every thing Rimmerge notices — a sort conflict, two mods editing the
-same def, a dropped dependency edge, an ambiguous template — becomes
+Every thing Rimmerge notices (a sort conflict, two mods editing the
+same def, a dropped dependency edge, an ambiguous template) becomes
 one **finding**. The ledger is the whole set of findings for a report,
 each carrying a suggested action and a confidence score.
 
 ## Findings
 
 A finding is keyed by what it's about (a def, a pair of mods, a
-specific edge) plus its own kind — a `DefOverride`, a
+specific edge) plus its own kind: a `DefOverride`, a
 `PatchCollision`, an `EdgeDropped`, and many more, one kind per
 distinct thing worth surfacing. Each kind has its own logic for what a
 reasonable suggestion looks like, but every finding shares the same
@@ -34,7 +34,7 @@ scores as intentional there and as unexplained under the current one.
 ## Confidence
 
 Confidence is a 0–100 score reflecting how sure Rimmerge is that its
-own suggestion is correct — not how important the finding is. A few
+own suggestion is correct, not how important the finding is. A few
 examples of what drives it up or down:
 
 - A `Hard`-strength engine fact overruling something weaker: very high
@@ -42,23 +42,23 @@ examples of what drives it up or down:
 - The same author owning both sides of a conflict: high confidence
   (one author's own intent rarely contradicts itself).
 - Two independent facts of equal strength contradicting each other with
-  nothing to break the tie except an arbitrary rule: low confidence —
-  this is exactly the shape that should ask you, not guess.
+  nothing to break the tie except an arbitrary rule: low confidence.
+  This is exactly the shape that should ask you, not guess.
 - A dropped rule-origin edge (a rule losing to something stronger) is
   scored a notch more cautiously than a dropped bare engine edge, since
   overruling something you (or a database) explicitly asserted is a
   bigger claim than overruling an inferred fact.
-- A dropped "removed node" edge that's *cosmetic* (see
-  [sorting.md](sorting.md)'s cycle-breaking section — the final defs are
-  identical whichever of the two mods loads last) auto-accepts at 95
-  with no reorder to offer: there's nothing to weigh, since the only
+- A dropped "removed node" edge that's *cosmetic* auto-accepts at 95
+  with no reorder to offer. Cosmetic means the final defs are identical
+  whichever of the two mods loads last (see [sorting.md](sorting.md)'s
+  cycle-breaking section). There's nothing to weigh, since the only
   difference between the two orders is which mod's own op logs the
   failure.
 - A replacer that already declares it loads after the mod whose
   addition it discards (`DiscardedAddition`) scores 80, exactly meeting
   the default `Auto` threshold: the replacer's own author already chose
   this outcome on purpose, so it auto-accepts by default as disclosure
-  rather than a conflict — there's no reorder to offer against a
+  rather than a conflict. There's no reorder to offer against a
   declaration the replacer's own author wrote, only the record of what
   was chosen away.
 - A patch collision where the mod whose operation runs last declares, in
@@ -76,44 +76,44 @@ it waits for you.
 Some findings are **informational**: a plain `Accept` with no
 alternatives, because there's no action this engine can offer that
 fixes the underlying fact. A `.dds` file that fails to decode
-(`UndecodableTexture`) is one — the fix is re-encoding the file outside
-this workspace, so the suggestion just discloses that the base game
+(`UndecodableTexture`) is one. The fix is re-encoding the file outside
+this workspace, so the suggestion only discloses that the base game
 shows the bad-texture placeholder in its place.
 
 **"Content lost at load"** is one such family: a def's `ParentName`
 resolving to nothing, or to a template of a *confirmed*-unrelated
-element type (`BrokenInheritance`), and `UndecodableTexture` above —
-both are proven load-time facts (ground-truthed against the decompiled
+element type (`BrokenInheritance`), and `UndecodableTexture` above.
+Both are proven load-time facts (checked against the decompiled
 engine), scored around 90, with no reorder or merge that changes the
 outcome. The fix in every case is the referencing mod's own authoring.
-A resolved parent whose own element type merely differs in letter case,
-belongs to a vanilla/DLC child, or is a genuine subclass of the asking
-child's own type (a mod framework's `SomeDef : ThingDef`-style
-specialization) is never flagged — none of those actually lose content
+A resolved parent is never flagged when its own element type only
+differs in letter case, when it belongs to a vanilla/DLC child, or when
+it is a real subclass of the asking child's own type (a mod framework's
+`SomeDef : ThingDef`-style specialization). None of those lose content
 at load. When neither a mismatch nor a subclass relationship can be
-confirmed at all, it surfaces as a plain informational note instead of a
+confirmed, it surfaces as a plain informational note instead of a
 ledger finding, rather than guessing.
 
 A **dangling def reference** (`DanglingDefReference`) joins the same
-family: a name written at a recognized reference site — a list item, a
-scalar field, a keyed-dictionary element name, or a
-`descriptionHyperlinks` entry — that no active def of any type actually
-has, and that isn't one of the engine's own generated names either
+family. It is a name written at a recognized reference site (a list
+item, a scalar field, a keyed-dictionary element name, or a
+`descriptionHyperlinks` entry) that no active def of any type has, and
+that isn't one of the engine's own generated names either
 (a blueprint, a frame, a corpse, a psytrainer or neurotrainer, a gene
 generated from a gene template, a carpet, and similar). Reference sites are
 inferred from the data itself, never a hand-written field table: a
 field only counts once enough of its own distinct values resolve to
-some real def. This is diagnostic only, never an ordering fact —
+some real def. This is diagnostic only, never an ordering fact:
 cross-references resolve once, after every mod's defs and patches have
-loaded, so the result never depends on load order. Scored at 85, with
-the cause stated in words: removed by another mod's patch, defined only
-in a folder this install doesn't load, defined only in an installed but
-inactive mod, defined nowhere at all, or — when the byte-bounded search
-for the first three causes ran out of budget — simply undetermined. A
+loaded, so the result never depends on load order. It is scored at 85,
+with the cause stated in words: removed by another mod's patch, defined
+only in a folder this install doesn't load, defined only in an installed
+but inactive mod, defined nowhere at all, or undetermined (when the
+byte-bounded search for the first three causes ran out of budget). A
 name whose resolved sibling values are mostly `SoundDef`s carries a
 note that a missing sound falls back to an undefined one with a
-warning, rather than failing to load. Type-agnostic by design: a name
-that exists under the *wrong* def type reads as resolved, since typing
+warning, rather than failing to load. The check is type-agnostic by
+design: a name that exists under the *wrong* def type reads as resolved, since typing
 a field from the game's own compiled metadata is a larger, later
 undertaking.
 
@@ -121,20 +121,20 @@ A **"possible typo"** finding is a lower-confidence sibling of that
 family: a `PatchOperationFindMod` name or a `MayRequire`/
 `MayRequireAnyOf` id that resolves to no active or installed mod, but
 closely resembles exactly one active mod's own name or package id
-(`NearMissModReference`). This is a guess, not a proven fact — the
+(`NearMissModReference`). This is a guess, not a proven fact. The
 confidence tracks how strong the resemblance is (an exact match apart
 from letter case scores highest; a fuzzy edit-distance or a leading
 extra word scores lowest), and it's always below the default `Auto`
 threshold so it never silently auto-accepts. A name that matches an
 installed-but-inactive mod, that looks like a sequel (a trailing
-number) or a renamed fork (`(Continued)` and similar), is never flagged
-at all — those are real, deliberate references, not typos.
+number) or a renamed fork (`(Continued)` and similar), is never flagged.
+Those are real, deliberate references, not typos.
 
 A later `PatchOperationReplace` silently discarding an earlier active
 mod's own addition inside the replaced node (see
 [load-order.md](load-order.md)) is usually surfaced as an ordinary
 `Inferred` edge, ordering the addition after the replace so it lands
-inside the fresh replacement instead — dropping that edge in a cycle
+inside the fresh replacement instead. Dropping that edge in a cycle
 goes through the same `EdgeDropped` path every other edge kind uses.
 When the replacer's own `About.xml` already declares it loads after
 the mod it discards from, there's nothing to reorder: the author chose
@@ -146,14 +146,14 @@ field without contradicting the replacer's own declared order).
 
 ## Deciding a finding
 
-Every finding's suggested action has one or more alternatives —
+Every finding's suggested action has one or more alternatives:
 accept the suggestion, prefer a specific mod's version, merge the
 contested fields (see [merge.md](merge.md)), or reorder two mods. A
-decision you make is remembered per-profile and re-applied on every
+decision you make is remembered per profile and re-applied on every
 later scan against the same finding key, the same way a version
 control system's conflict-resolution cache (`git rerere`) replays a
-resolution you've already made — a decision survives a rescan as long
-as the finding key it was made against still resolves the same way; if
+resolution you've already made. A decision survives a rescan as long
+as the finding key it was made against still resolves the same way. If
 the underlying facts change enough that the key no longer matches
 cleanly, the finding reopens rather than silently keeping a stale
 decision.
@@ -192,7 +192,7 @@ is unacknowledged.
 
 ## Where decisions feed back in
 
-A decision doesn't just sit in the ledger — it becomes real input
+A decision doesn't only sit in the ledger. It becomes real input
 elsewhere: a "prefer this mod's def" decision changes what
 [merge.md](merge.md)'s merge mod contains; an accepted reorder becomes
 a user-owned rule the sorter (see [sorting.md](sorting.md)) honors on

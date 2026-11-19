@@ -77,20 +77,9 @@ onScopeDispose(() => {
     data-testid="stale-close-confirm-dialog"
     @update:visible="(value: boolean) => !value && resolveConfirmation(false)"
   >
-    <!-- eslint-disable vue/no-bare-strings-in-template -- a literal
-         filename inside `<code>`, never translated, the same category
-         as a keyboard-shortcut label; every other string in this block
-         already goes through `t()`. -->
-    <i18n-t
-      keypath="mods.closeGuard.body"
-      tag="p"
-      class="max-w-sm text-sm"
-    >
-      <template #modsConfig>
-        <code>ModsConfig.xml</code>
-      </template>
-    </i18n-t>
-    <!-- eslint-enable vue/no-bare-strings-in-template -->
+    <p class="max-w-sm text-sm">
+      {{ t("mods.closeGuard.body") }}
+    </p>
     <template #footer>
       <Button
         :label="t('mods.closeGuard.stay')"

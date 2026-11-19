@@ -459,12 +459,12 @@ describe("ModsPage", () => {
     expect(sortedWrapper.get('[data-testid="mod-row-position-active.mod"]').text()).toBe("#5");
   });
 
-  it("offers Apply for an order that is not in ModsConfig.xml yet, such as after a move", async () => {
+  it("offers Apply for an order that is not your active order yet, such as after a move", async () => {
     const unapplied = { ...dashboardFixture(0), fileMatchesCurrent: false };
     const wrapper = await mountAndNavigate({ get_dashboard: unapplied });
 
     expect(wrapper.get('[data-testid="order-not-in-file"]').text()).toContain(
-      "isn't in ModsConfig.xml yet",
+      "isn't your active order yet",
     );
     wrapper.get('[data-testid="order-not-in-file-apply"]');
   });
@@ -489,7 +489,7 @@ describe("ModsPage", () => {
 
     expect(pane(wrapper, "active").get('[data-testid="mods-total"]').text()).toContain("250 mods");
     expect(pane(wrapper, "active").get('[data-testid="mods-page-cap-hint"]').text()).toBe(
-      "(showing first 1 — narrow with search)",
+      "(showing the first 1; narrow the search to see more)",
     );
   });
 
@@ -777,39 +777,50 @@ describe("ModsPage", () => {
       ).toBeDefined();
     });
 
-    it("keeps a row a later filter hides selected and says it is not shown", async () => {
-      vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
-      const wrapper = await mountAndNavigate({
-        list_working_mods: (payload: unknown) => {
-          const { search } = (payload as { query: ModListQueryDto }).query;
-          return modList(
-            [modRow({ modId: "a.mod", name: "A" }), modRow({ modId: "b.mod", name: "B" })].filter(
-              (row) => search === null || row.name === search,
-            ),
-          );
-        },
-      });
-      await pane(wrapper, "active").get('[data-testid="mods-select-all"] input').setValue(true);
-      await flushPromises();
+    it.each([
+      { hidden: 1, text: "(1 not shown)" },
+      { hidden: 2, text: "(2 not shown)" },
+    ])(
+      "keeps rows a later filter hides selected and says $text, spaced by the span, not the message",
+      async ({ hidden, text }) => {
+        vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+        const allRows = [
+          modRow({ modId: "a.mod", name: "A" }),
+          ...Array.from({ length: hidden }, (_, index) =>
+            modRow({ modId: `hidden${index}.mod`, name: `H${index}` }),
+          ),
+        ];
+        const wrapper = await mountAndNavigate({
+          list_working_mods: (payload: unknown) => {
+            const { search } = (payload as { query: ModListQueryDto }).query;
+            return modList(allRows.filter((row) => search === null || row.name === search));
+          },
+        });
+        await pane(wrapper, "active").get('[data-testid="mods-select-all"] input').setValue(true);
+        await flushPromises();
 
-      await pane(wrapper, "active").get('[data-testid="mods-search"]').setValue("A");
-      vi.advanceTimersByTime(300);
-      await flushPromises();
+        await pane(wrapper, "active").get('[data-testid="mods-search"]').setValue("A");
+        vi.advanceTimersByTime(300);
+        await flushPromises();
 
-      expect(pane(wrapper, "active").get('[data-testid="mods-select-all-label"]').text()).toBe(
-        "Select all 1 shown",
-      );
-      expect(pane(wrapper, "active").get('[data-testid="mods-selected-count"]').text()).toContain(
-        "2 selected",
-      );
-      expect(pane(wrapper, "active").get('[data-testid="mods-selected-hidden"]').text()).toBe(
-        "(1 not shown)",
-      );
+        expect(pane(wrapper, "active").get('[data-testid="mods-select-all-label"]').text()).toBe(
+          "Select all 1 shown",
+        );
+        expect(pane(wrapper, "active").get('[data-testid="mods-selected-count"]').text()).toContain(
+          `${hidden + 1} selected`,
+        );
+        const hiddenNote = pane(wrapper, "active").get('[data-testid="mods-selected-hidden"]');
+        // vue-i18n trims whitespace around a plural form, so the gap cannot live in the message
+        // (it would vanish from form 2 on). The span carries it as a logical margin, which also
+        // lets a CJK catalogue write full-width brackets with no gap of its own.
+        expect(hiddenNote.element.textContent).toBe(text);
+        expect(hiddenNote.classes()).toContain("ms-1");
 
-      await pane(wrapper, "active").get('[data-testid="mods-clear-selection"]').trigger("click");
-      await flushPromises();
-      expect(pane(wrapper, "active").get('[data-testid="mods-selected-count"]').text()).toBe("");
-    });
+        await pane(wrapper, "active").get('[data-testid="mods-clear-selection"]').trigger("click");
+        await flushPromises();
+        expect(pane(wrapper, "active").get('[data-testid="mods-selected-count"]').text()).toBe("");
+      },
+    );
 
     it("drops a selected id that left an unfiltered list", async () => {
       let rows = [modRow({ modId: "a.mod", name: "A" }), modRow({ modId: "b.mod", name: "B" })];
@@ -1031,10 +1042,11 @@ describe("ModsPage", () => {
       const wrapper = await mountAndNavigate();
       await pane(wrapper, "active").get('[data-testid="mods-tag-filter"]').setValue("framework");
 
-      await pane(wrapper, "active")
-        .get('[data-testid="mods-sort-lastUpdated-descending"]')
-        .trigger("click");
-      await flushPromises();
+      // First click selects the criterion ascending, the second flips it.
+      for (let click = 0; click < 2; click += 1) {
+        await pane(wrapper, "active").get('[data-testid="mods-sort-lastUpdated"]').trigger("click");
+        await flushPromises();
+      }
 
       expect(listWorkingModsCalls.at(-1)).toEqual({
         search: null,
@@ -1046,37 +1058,32 @@ describe("ModsPage", () => {
 
     it("keeps one sort per list and offers no load order on the Inactive list", async () => {
       const wrapper = await mountAndNavigate();
-      await pane(wrapper, "active")
-        .get('[data-testid="mods-sort-packageId-ascending"]')
-        .trigger("click");
+      await pane(wrapper, "active").get('[data-testid="mods-sort-packageId"]').trigger("click");
 
       await flushPromises();
 
+      expect(pane(wrapper, "inactive").find('[data-testid="mods-sort-loadOrder"]').exists()).toBe(
+        false,
+      );
       expect(
-        pane(wrapper, "inactive").find('[data-testid="mods-sort-loadOrder-ascending"]').exists(),
-      ).toBe(false);
-      expect(
-        pane(wrapper, "inactive")
-          .get('[data-testid="mods-sort-name-ascending"]')
-          .attributes("aria-pressed"),
-      ).toBe("true");
+        pane(wrapper, "inactive").get('[data-testid="mods-sort-name"]').attributes("title"),
+      ).toBe("Sorted by name, A to Z. Click for Z to A.");
       expect(listInactiveModsCalls.at(-1)?.sort).toEqual(NAME_SORT);
 
       await flushPromises();
       expect(
-        pane(wrapper, "active")
-          .get('[data-testid="mods-sort-packageId-ascending"]')
-          .attributes("aria-pressed"),
-      ).toBe("true");
+        pane(wrapper, "active").get('[data-testid="mods-sort-packageId"]').attributes("title"),
+      ).toBe("Sorted by package ID, A to Z. Click for Z to A.");
     });
 
     it("sorting writes nothing: no activate, deactivate or plan call is made", async () => {
       const wrapper = await mountAndNavigate();
 
       for (const testId of [
-        "mods-sort-name-descending",
-        "mods-sort-lastUpdated-ascending",
-        "mods-sort-loadOrder-ascending",
+        "mods-sort-name",
+        "mods-sort-name",
+        "mods-sort-lastUpdated",
+        "mods-sort-loadOrder",
       ]) {
         await wrapper.get(`[data-testid="${testId}"]`).trigger("click");
         await flushPromises();
@@ -1100,9 +1107,7 @@ describe("ModsPage", () => {
       });
       expect(wrapper.find('[data-testid="mod-row-updated-active.mod"]').exists()).toBe(false);
 
-      await pane(wrapper, "active")
-        .get('[data-testid="mods-sort-lastUpdated-ascending"]')
-        .trigger("click");
+      await pane(wrapper, "active").get('[data-testid="mods-sort-lastUpdated"]').trigger("click");
       await flushPromises();
 
       expect(wrapper.get('[data-testid="mod-row-updated-active.mod"]').text()).toMatch(/2023/);

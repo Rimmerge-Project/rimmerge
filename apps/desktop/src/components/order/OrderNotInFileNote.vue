@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// "This order isn't in ModsConfig.xml yet" with an Apply button: shown on the Load order page
+// "This isn't your active order yet" with an Apply button: shown on the Load order page
 // and the Mods page while the Current order is selected and the file does not hold it (after an
 // import, after activation changes were rescanned, or after a move on the Mods page, which
 // settles into Current without writing the file). Apply is the normal dialog; nothing is
@@ -71,6 +71,7 @@ const isShown = computed(
         <Button
           v-if="canRevert"
           :label="t('orderShare.revertOrder')"
+          :title="t('orderShare.revertOrderTitle')"
           size="small"
           severity="secondary"
           :loading="isReverting"

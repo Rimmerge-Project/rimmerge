@@ -1,8 +1,8 @@
 # CLI reference
 
 `rimmerge <command> [subcommand] [flags]`. Every command supports
-`--help` for its own exact flags; this page is the map of what exists
-and why you'd reach for it — regenerate the flag-level detail with
+`--help` for its own exact flags. This page is the map of what exists
+and why you'd reach for it. For flag-level detail, run
 `rimmerge <command> --help` / `rimmerge <command> <subcommand> --help`,
 since flags are more likely to drift than the command list itself.
 
@@ -10,13 +10,13 @@ Most commands take `--profile-dir <path>` (defaulting to a path derived
 from your `ModsConfig.xml`, so it's rarely needed by hand) and honor the
 same `--game-dir`/`--workshop-dir`/`--mods-config` overrides described
 in [install.md](install.md). `sort` and `ledger` are the exception:
-they take `--report <path>` — a JSON report file, either one `load`
+they take `--report <path>`, a JSON report file: either one `load`
 already wrote into a profile (`<profile>/report.json`) or a standalone
 file with no live install or profile involved at all.
 
 ## Report-only (no live install needed)
 
-- **`sort`** — sorts a JSON report and prints the suggested order.
+- **`sort`**: sorts a JSON report and prints the suggested order.
   `--dropped` adds, after the summary, one block per edge the sorter had
   to drop: `after <- before  [layer] kind: detail` (`after` loads after
   `before`), the `cycle:` that edge would have closed, and, for a direct
@@ -25,45 +25,46 @@ file with no live install or profile involved at all.
   is sorted by edge, so it is the same on every run. It sorts the report
   alone, like the rest of `sort`, so an edge dropped because of a rule in
   your profile is not shown; `ledger` and `apply --dry-run` use the profile.
-- **`ledger`** — builds and prints the resolution ledger for a JSON
+- **`ledger`**: builds and prints the resolution ledger for a JSON
   report.
-- **`fixture trim`** — trims a full report into a smaller golden
+- **`fixture trim`**: trims a full report into a smaller golden
   fixture (used by this project's own tests).
-- **`fixture gen`** — generates a complete synthetic RimWorld install
-  from a spec file: mods, defs, patches, assemblies, invented from
-  scratch. See [testing.md](testing.md) for what this is for.
+- **`fixture gen`**: generates a complete synthetic RimWorld install
+  (mods, defs, patches, assemblies, invented from scratch) from a spec
+  file. See [testing.md](testing.md) for what this is for.
 
 ## Install and profile setup
 
-- **`config show` / `config set` / `config clear`** — the app-global
-  path config described in [install.md](install.md): where this
+- **`config show` / `config set` / `config clear`**: the app-global
+  path config described in [install.md](install.md), which says where this
   machine's RimWorld install, workshop folder, and `ModsConfig.xml`
   are, so `--game-dir` and friends stop being needed.
-- **`load`** — scans a RimWorld install and writes the report into the
+- **`load`**: scans a RimWorld install and writes the report into the
   profile.
-- **`mods list` / `mods activate` / `mods deactivate`** — lists,
+- **`mods list` / `mods activate` / `mods deactivate`**: lists,
   activates, and deactivates mods directly in `ModsConfig.xml`'s own
   `<activeMods>` list. `activate --with-dependencies` pulls in a mod's
   declared dependencies first.
-- **`mods show <id>`** — one mod's full information: identity,
-  `About.xml` description and version, and — for an active mod — its
-  placement, tier, tags, dependents, and live findings count. Unlike
+- **`mods show <id>`**: prints one mod's full information (identity,
+  `About.xml` description and version, and, for an active mod, its
+  placement, tier, tags, dependents, and live findings count). Unlike
   `list`/`activate`/`deactivate` (discovery only), `show` runs a full
   scan, the same as `load`/`defs inspect`, since placement and findings
   only exist under a selected order.
 
 ## Ordering
 
-- **`rule set-placement`** — pins a mod to the top or bottom of the
+- **`rule set-placement`**: pins a mod to the top or bottom of the
   load order as your own decision, persisted so it survives re-sorts
   and import toggles.
-- **`rule set-pair` / `rule remove-pair`** — states (or removes) "X
+- **`rule set-pair` / `rule remove-pair`**: states (or removes) "X
   must load after Y" as your own decision.
-- **`promote`** — promotes an imported pair or placement rule (from a
+- **`promote`**: promotes an imported pair or placement rule (from a
   RimSort database) to a user-owned copy that survives both import
   toggles and a re-import.
-- **`order export`** — shares the order in `ModsConfig.xml` (what
-  RimWorld loads now, not the Suggested order), without a scan. With no
+- **`order export`**: shares your active order as `ModsConfig.xml`
+  holds it (what RimWorld loads now, not the Suggested order), without a
+  scan. With no
   `--out` it prints a numbered text list on stdout, ready to paste
   (`1. Name [package.id] <workshop link>`); with `--out <file.rml>` it
   writes a RimWorld mod list instead, and refuses to replace an existing
@@ -71,12 +72,12 @@ file with no live install or profile involved at all.
   `_steam`, your own generated merge mod is left out, and an id that
   cannot go in a list is named on stderr. It never touches
   `ModsConfig.xml`.
-- **`order import <file | ->`** — reads a `.rml`, a `ModsConfig.xml`-shaped
+- **`order import <file | ->`**: reads a `.rml`, a `ModsConfig.xml`-shaped
   file, or the text list (`-` reads text from stdin; input over 4 MiB is
-  rejected), prints what it would change — mods activated and
+  rejected) and prints what it would change: mods activated and
   deactivated, how many move, mods that are not installed (with their
   Steam Workshop link when the list has one), duplicates and lines it
-  could not read — and then writes the list as `<activeMods>` in
+  could not read. It then writes the list as `<activeMods>` in
   `ModsConfig.xml`, taking a backup first. Rimmerge never downloads a
   missing mod. Core is kept in the order, and put first when the list omits
   it (an install with no Core on disk refuses the import, and so does a
@@ -92,15 +93,15 @@ file with no live install or profile involved at all.
   list already matches the file's order, nothing is written. Exit code 0
   on success or a dry run whose order is valid, 1 on a refusal or error (a
   dry run included), 2 on a usage error.
-- **`import`** — imports RimSort's rule databases into the current
+- **`import`**: imports RimSort's rule databases into the current
   profile. See [concepts/rules-databases.md](concepts/rules-databases.md).
-- **`db status` / `db refresh`** — rule-database cache maintenance:
+- **`db status` / `db refresh`**: rule-database cache maintenance.
   `status` reads the cache with no network and names each source
   `automatic`/`manual` (the app-global auto-refresh toggle, never a
-  per-command flag); `refresh` fetches every requested, *enabled*
-  source unconditionally — a manual refresh has no "due" check at all
-  (that cadence only gates the automatic, launch-time refresh); a click
-  is its own consent. With no `--source`, that includes the Steam
+  per-command flag). `refresh` fetches every requested, *enabled*
+  source unconditionally. A manual refresh has no "due" check at all
+  (that cadence only gates the automatic, launch-time refresh); running
+  it is its own consent. With no `--source`, that includes the Steam
   Workshop database (about 49 MB) while its switch is on, which it is by
   default, so a machine that has never saved settings downloads it on the
   first plain `db refresh` (`--source community` or
@@ -110,7 +111,7 @@ file with no live install or profile involved at all.
   one-line notice if `app-settings.json` itself couldn't be read. See
   [privacy-and-network.md](privacy-and-network.md).
 - **`network status` / `network on` / `network off` / `network set` /
-  `network reset`** — the app-global internet-access policy (only the two GitHub
+  `network reset`**: the app-global internet-access policy (only the two GitHub
   hosts, never your local network)
   (`<base>/app-settings.json`): `status` prints the master switch and
   every feature toggle; `set` changes only the switches you name
@@ -124,16 +125,16 @@ file with no live install or profile involved at all.
   own fetch toggle); `reset` restores every one of those switches to its
   default (all on, including Steam Workshop's own fetch toggle: about
   49 MB, downloaded only by `db refresh` from the CLI) while
-  leaving the stale-reminder threshold untouched — the way to recover
-  from a corrupt `app-settings.json`, which fails closed rather than
-  crashing, without hand-editing JSON. A privacy switch shouldn't
+  leaving the stale-reminder threshold untouched. It is the way to
+  recover from a corrupt `app-settings.json`, which fails closed rather
+  than crashing, without hand-editing JSON. A privacy switch shouldn't
   require hand-editing JSON.
-- **`check-update`** — a manual, explicit check for a newer Rimmerge
+- **`check-update`**: a manual, explicit check for a newer Rimmerge
   release. Honours `allow_network` and GitHub's rate limit; never runs
   on its own. Its result is recorded the same way the desktop's own
   "Check now" is, so the desktop's notice reflects a check run from
   here.
-- **`apply`** — writes the order named by `--source` (`suggested` by
+- **`apply`**: writes the order named by `--source` (`suggested` by
   default, or `current`) to `ModsConfig.xml` (or previews it with
   `--dry-run`). Before writing or diffing, it prints the order's hard
   problems (see [concepts/ledger.md](concepts/ledger.md#hard-problems-at-apply)),
@@ -166,24 +167,24 @@ community` to `db refresh` to skip the large download.
 
 ## Verification
 
-- **`verify`** — replays every active patch operation against a
+- **`verify`**: replays every active patch operation against a
   chosen order and predicts which top-level operations RimWorld itself
   would log as failed. Explicit, on demand only. See
   [concepts/verify.md](concepts/verify.md). `--json`'s per-def rows
   carry a `reorder_kind` field (`"content"`, `"cosmetic"`, or `null`
   when the cause offers no reorder at all) and, for a `"cosmetic"` row,
   a `cosmetic_merge_key` naming the existing `PatchCollision` finding to
-  merge instead, if the ledger has one — both additive to the existing
-  shape.
+  merge instead, if the ledger has one. Both fields are additive to the
+  existing shape.
 - **`log import <path>... [--kind auto|player-log|console-snapshot]
-  [--json]`** — imports one or more game logs, each a `Player.log` or an
+  [--json]`**: imports one or more game logs, each a `Player.log` or an
   in-game console snapshot (a copy of the debug console, saved under any
   name), attributes every failure, warning and timer to the active mods,
   and says what each file covers, so a predicted `verify` failure can be
-  checked against what RimWorld actually logged. Read-only: a log is
+  checked against what RimWorld logged. Read-only: a log is
   never modified, moved or copied. See
   [Importing game logs](#importing-game-logs) below.
-- **`startup`** — prints the per-mod startup-cost table (patch op
+- **`startup`**: prints the per-mod startup-cost table (patch op
   counts, slow-shape xpaths, texture/DLL counts and bytes) from a
   report. Static analysis only, no timings.
 
@@ -548,22 +549,22 @@ The coverage and gap objects look like this:
 
 ## Def inspection
 
-- **`defs changes`** — lists what one mod changes: defs/templates it
-  owns, foreign defs it patches, assets it overrides.
-- **`defs inspect`** — everything about one def or template under a
+- **`defs changes`**: lists what one mod changes (defs/templates it
+  owns, foreign defs it patches, assets it overrides).
+- **`defs inspect`**: everything about one def or template under a
   selected order: owners, patchers, template chain, and the effective
   (in-game) merged def.
-- **`defs search`** — finds a def or template by name.
+- **`defs search`**: finds a def or template by name.
 
 ## Merge and compatibility patches
 
-- **`merge plan`** — prints one finding's field-level diff and the
+- **`merge plan`**: prints one finding's field-level diff and the
   merge plan it currently folds to.
-- **`merge coverage`** — tallies contested patch collisions by whether
-  their xpaths parse under Rimmerge's own grammar, and — for the ones
-  that do — by what an actual replay makes of them.
+- **`merge coverage`**: tallies contested patch collisions by whether
+  their xpaths parse under Rimmerge's own grammar, and, for the ones
+  that do, by what a replay makes of them.
 - **`patch new` / `list` / `show` / `plan` / `decide` / `revert` /
-  `import` / `prune` / `export` / `delete`** — a compatibility patch is
+  `import` / `prune` / `export` / `delete`**: a compatibility patch is
   a user-chosen scope of two or more mods with its own decisions,
   exported as a publishable mod. See
   [concepts/merge.md](concepts/merge.md).
@@ -571,25 +572,25 @@ The coverage and gap objects look like this:
 ## The patch maker (assignment projects)
 
 `assign` infers a generic reference-mod-to-target-mod assignment
-schema, then lets you edit and export one `Defs/`-only mod per project
-— e.g. wiring a race-support mod's own fields onto every active race,
-without a human writing that XML by hand.
+schema, then lets you edit and export one `Defs/`-only mod per project.
+For example, it can wire a race-support mod's own fields onto every
+active race, without a human writing that XML by hand.
 
-- **`assign propose`** — infers every assignment-def candidate for a
+- **`assign propose`**: infers every assignment-def candidate for a
   reference/target selection, without persisting anything.
-- **`assign create`** — re-proposes candidates and persists the one
+- **`assign create`**: re-proposes candidates and persists the one
   matching `--def-type`.
-- **`assign list` / `show` / `update` / `delete`** — project
+- **`assign list` / `show` / `update` / `delete`**: project
   management.
-- **`assign set-row` / `clear-row` / `copy-from`** — edits one row,
+- **`assign set-row` / `clear-row` / `copy-from`**: edits one row,
   either target-keyed (`--target`/`--key-field`) or free-standing.
-- **`assign add-section` / `remove-section`** — a project can cover
+- **`assign add-section` / `remove-section`**: a project can cover
   more than one def type at once; a section is one def type's own rows.
-- **`assign items`** — lists defs of one item type across the active
+- **`assign items`**: lists defs of one item type across the active
   list (what a row's own value could point at).
-- **`assign coverage`** — the work queue: every candidate target, what
+- **`assign coverage`**: shows the work queue: every candidate target, what
   already references it, and (under a known rule) who would win.
-- **`assign export`** — renders and writes the assignment into a
+- **`assign export`**: renders and writes the assignment into a
   user-chosen folder, optionally installing it into the game's `Mods/`
   folder.
 

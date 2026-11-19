@@ -292,7 +292,7 @@ describe("DefPage", () => {
 
     const badge = wrapper.get('[data-testid="def-page-source"]');
     expect(badge.text()).toBe("Current");
-    expect(badge.attributes("title")).toBe("Viewed under the current order — click to switch");
+    expect(badge.attributes("title")).toBe("Viewed under the current order. Click to switch");
 
     wrapper.unmount();
   });

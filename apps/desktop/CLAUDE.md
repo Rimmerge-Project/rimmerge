@@ -169,7 +169,7 @@ of that command surface — no direct filesystem or process access outside
   `replacesPendingChanges` (from the preview: unrescanned activation edits) and
   `DashboardDto.fileMatchesCurrent === false` (the Current order is not in the
   file yet, e.g. an earlier import not applied), which the page passes down as
-  `replacesUnwritten`. The "not in ModsConfig.xml yet" note
+  `replacesUnwritten`. The "This isn't your active order yet" note
   (`OrderNotInFileNote.vue`) shows only while Current is selected and
   `fileMatchesCurrent` is false, with its own `ApplyDialog`. The mock
   (`planOrderImport`/`importOrderMock` in `scenario.ts`) computes the diff
@@ -294,7 +294,10 @@ of that command surface — no direct filesystem or process access outside
   *unfiltered* response is the whole list, so a selected id missing from it is
   pruned (`ModListPane`'s watcher); under a filter it is only hidden. The "(N not
   shown)" brackets are part of the `mods.selection.notShown` message, never the
-  template, so a CJK locale can use full-width ones. Selecting
+  template, but the gap before them is the span's `ms-1` margin, not whitespace:
+  vue-i18n trims whitespace around each plural form, so a leading space in the
+  message would vanish from form 2 on. A CJK locale writes full-width brackets and
+  can ignore the small margin. Selecting
   writes nothing: the activate/deactivate plan and confirm dialogs are unchanged,
   and a failed plan opens the dialog with the error and no plan (Confirm
   disabled). The always-visible "Rescan mods" button (`ModsRescanButton.vue`) is
@@ -305,9 +308,13 @@ of that command surface — no direct filesystem or process access outside
   below), each pane with its own filter (`useModListFilters`, one per list), sort
   and selection, in a `grid` whose cells are `min-h-0` so each `ModTable` scroller
   keeps the definite height the virtualizer needs. The list-level `data-testid`s
-  (`mod-table`, `mods-total`, `mods-search`, `mods-sort-*`, ...) now exist twice, so
+  (`mod-table`, `mods-total`, `mods-search`, `mods-sort-<key>`, ...) now exist twice, so
   tests scope them through the pane's `mods-pane-active|inactive` (`modsPane(page,
-  kind)` in `e2e/specs/support.ts`). *Anchors name a neighbour by id, never an index*
+  kind)` in `e2e/specs/support.ts`). The sort bar is one toggle button per criterion (`ModSortBar.vue`): the
+  active one flips its direction, another starts ascending (`nextSort` in
+  `utils/modListSort.ts`). It has no `aria-pressed` (it never un-presses and its
+  name changes); the active state is in its accessible name and title plus an
+  arrow and a thicker border. *Anchors name a neighbour by id, never an index*
   (`AnchorDto`, `utils/modMove.ts`): a drop gap, a one-step move and a "Move
   after…" choice are all turned into `before`/`after` a **shown** row that is not
   itself moving (`anchorForSlot`, `anchorForStep`), so a filtered view stays exact
@@ -352,9 +359,9 @@ of that command surface — no direct filesystem or process access outside
 - **A move adopts the backend's selection, and the page says so.** `useMoveModsMutation`
   and `useActivateModsMutation` call `session.setSelected(result.selected)` the way
   `useAdoptImportedSession` does, and `didSwitchToCurrent` raises
-  `OrderSwitchedNote` ("Now using your own order — the suggested order is unchanged
+  `OrderSwitchedNote` ("Now using your own order. The suggested order is unchanged.
   [View suggested]", gone once Suggested is selected again). `OrderNotInFileNote
-  allow-revert` adds "Revert order to ModsConfig.xml" on the Mods page (only for a
+  allow-revert` adds "Revert to your saved active order" (ModsConfig.xml named only in its tooltip) on the Mods page (only for a
   pure reorder: `orderDiffersFromFile` with nothing unscanned or unapplied by
   membership); `PendingChangesBanner` carries "Discard pending changes". Their
   refusals go through `utils/errors.ts` like every other command error.
@@ -419,7 +426,7 @@ of that command surface — no direct filesystem or process access outside
   sources, as the backend does; `__GET_RECOMMENDED_RULES_CALLS__`,
   `__SKIP_RECOMMENDED_RULES_CALLS__` and `__RECOMMENDED_RULES_PROGRESS__` record
   its calls.
-- **`ApplyDialog.vue` has a positive "Write ModsConfig.xml" checkbox
+- **`ApplyDialog.vue` has a positive "Write your active mod list" checkbox
   (`writeModsConfig`, checked by default; a negative "export only" box was
   misread as the ModsConfig toggle). It forces it off and disables it
   while the active set is stale** (the backend refuses a real write

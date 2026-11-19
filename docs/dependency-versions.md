@@ -7,10 +7,10 @@ snapshot plus the reasoning behind every deliberate pin.
 
 ## Toolchain
 
-`rust-toolchain.toml` pins `channel = "stable"` (resolves to whatever
-stable is installed on the host — every contributor and CI runner is a
-fixed Windows/MSVC host, so a triple-suffixed channel buys nothing
-here). The reference toolchain is `rustc 1.98.1`; `rust-version` in
+`rust-toolchain.toml` pins `channel = "stable"`, which resolves to
+whatever stable is installed on the host. Every contributor and CI
+runner is a fixed Windows/MSVC host, so a triple-suffixed channel buys
+nothing here. The reference toolchain is `rustc 1.98.1`; `rust-version` in
 `Cargo.toml` floors it at `1.98`.
 
 ## Why Windows/MSVC only
@@ -25,7 +25,7 @@ actually ships for, which also keeps `cargo deny check` from flagging
 advisories/licenses in non-Windows branches of Tauri's dependency tree
 (`wry`'s Linux webview backend) that this build never compiles.
 
-## Rust — workspace dependencies (`[workspace.dependencies]`)
+## Rust: workspace dependencies (`[workspace.dependencies]`)
 
 | Crate | Version | Notes |
 | --- | --- | --- |
@@ -42,9 +42,9 @@ advisories/licenses in non-Windows branches of Tauri's dependency tree
 | roxmltree | 0.21.1 | |
 | serde (derive) | 1.0.229 | |
 | serde_json | 1.0.151 | |
-| sha2 | 0.11.0 | a separate transitive `sha2 0.10.9` also resolves via another dependency's own requirement — unrelated to this crate's pin, `bans.multiple-versions` is `warn` not `deny` in `deny.toml` |
+| sha2 | 0.11.0 | a separate transitive `sha2 0.10.9` also resolves via another dependency's own requirement. It is unrelated to this crate's pin; `bans.multiple-versions` is `warn` not `deny` in `deny.toml` |
 | sysinfo | 0.39.6 | `default-features = false`, `features = ["system"]` |
-| tauri | 2.11.6 | manifest range `2.11`; stays on the 2.x line — see "Tauri stays on v2" below |
+| tauri | 2.11.6 | manifest range `2.11`; stays on the 2.x line; see "Tauri stays on v2" below |
 | tauri-build | 2.6.3 | manifest range `2.6` |
 | tauri-plugin-dialog | 2.7.3 | manifest range `2` |
 | tempfile | 3.27.0 | manifest range `3.14` |
@@ -53,9 +53,9 @@ advisories/licenses in non-Windows branches of Tauri's dependency tree
 | tracing | 0.1.44 | manifest range `0.1` |
 | tracing-subscriber | 0.3.23 | manifest range `0.3` |
 | ts-rs | 12.0.1 | on the 12.x line |
-| ureq | 3.4.2 | `default-features = false`, `rustls-no-provider` + `_ring` + `platform-verifier` — see the pin's own comment in `Cargo.toml` for why |
+| ureq | 3.4.2 | `default-features = false`, `rustls-no-provider` + `_ring` + `platform-verifier`; see the pin's own comment in `Cargo.toml` for why |
 
-## Rust — per-crate dependencies (not in `[workspace.dependencies]`)
+## Rust: per-crate dependencies (not in `[workspace.dependencies]`)
 
 | Crate | Version | Used by | Notes |
 | --- | --- | --- | --- |
@@ -67,11 +67,11 @@ advisories/licenses in non-Windows branches of Tauri's dependency tree
 Several crates duplicate a workspace-level pin string directly in
 `crates/rim-analyzer/Cargo.toml` (`anyhow`, `clap`, `jiff`, `roxmltree`,
 `serde`, `serde_json`, `thiserror`) rather than using
-`{ workspace = true }` — a deliberate choice documented in that file's
+`{ workspace = true }`, a deliberate choice documented in that file's
 own closing comment. Their resolved versions match the workspace table
 above.
 
-## Rust — left un-bumped
+## Rust: left un-bumped
 
 - **Tauri stays on v2** (`tauri`/`tauri-build`/`tauri-plugin-dialog`,
   and the JS `@tauri-apps/*` packages below): 3.x is alpha-only on both
@@ -80,19 +80,19 @@ above.
   version (`2.11.6`, `2.6.3`, `2.7.3`); there is nothing older to bump
   within v2.
 
-## JS — `apps/desktop/package.json`
+## JS: `apps/desktop/package.json`
 
 | Package | Version | Notes |
 | --- | --- | --- |
 | @pinia/colada | ^1.4.5 | |
-| @primevue/themes | 4.5.4 | pinned — see "PrimeVue stays on 4.x" below |
+| @primevue/themes | 4.5.4 | pinned; see "PrimeVue stays on 4.x" below |
 | @tanstack/vue-virtual | ^3.13.39 | |
 | @tauri-apps/api | ^2.11.1 | stays on 2.x, see Tauri note above |
 | @tauri-apps/plugin-dialog | ^2.7.3 | |
 | @vueuse/core | ^14.4.0 | 15.0.0 available (major); not a named pinned family, stays on its caret range |
 | pinia | ^4.0.3 | |
 | primeicons | ^8.0.1 | |
-| primevue | 4.5.5 | pinned — see "PrimeVue stays on 4.x" below |
+| primevue | 4.5.5 | pinned; see "PrimeVue stays on 4.x" below |
 | vue | 3.5.43 | pinned to the 3.5.x line |
 | vue-i18n | ^11.4.12 | Composition API (`legacy: false`); pulls in `@intlify/core-base`/`@intlify/shared`/`@intlify/devtools-types` and `@vue/devtools-api`, none tracked separately here |
 | vue-router | ^5.3.1 | |
@@ -115,16 +115,16 @@ above.
 | vitest (dev) | ^5.0.1 | |
 | vue-tsc (dev) | ^3.3.11 | already at the newest published version |
 
-## JS — left un-bumped
+## JS: left un-bumped
 
 - **PrimeVue stays on 4.x** (`primevue` 4.5.5, `@primevue/themes`
-  4.5.4): documented in `apps/desktop/CLAUDE.md` — 4.5.5 is the last
+  4.5.4): documented in `apps/desktop/CLAUDE.md`. 4.5.5 is the last
   MIT-licensed release; 5.x became commercially licensed. Never bump
   past 4.x without checking the license first.
 - **TypeScript stays on the 6.x line** (`typescript` `~6.0.3`, 7.0.2
   available): TypeScript 7 breaks `vue-tsc@3.3.11` (the newest
   published `vue-tsc`), which resolves TypeScript's `./lib/tsc` entry
-  point directly via `require.resolve` — TypeScript 7's restructured
+  point directly via `require.resolve`. TypeScript 7's restructured
   package `exports` no longer publishes that subpath, so
   `vue-tsc -b --noEmit` fails immediately with
   `ERR_PACKAGE_PATH_NOT_EXPORTED`. No `vue-tsc` release fixes this yet;
@@ -134,10 +134,10 @@ above.
   otherwise pin a Node version, so it's left on its caret range rather
   than force-bumped.
 - **`@vueuse/core` stays on the 14.x line** (15.0.0 available): same
-  reasoning as `@types/node` — its caret range already keeps it current
+  reasoning as `@types/node`. Its caret range already keeps it current
   within 14.x, so a major bump isn't forced.
 
 ## `rules/` (the `rimmerge-rules` submodule)
 
-Not tracked here — a separate repository with zero dependencies of its
+Not tracked here. It is a separate repository with zero dependencies of its
 own (`bun scripts/build.mjs --check` has no lockfile to update).

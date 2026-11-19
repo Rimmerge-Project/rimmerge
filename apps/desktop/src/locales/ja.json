@@ -140,13 +140,13 @@
     "thresholdLabel": "信頼度のしきい値（自動／要判断）",
     "tieBreak": {
       "label": "同順位の処理",
-      "description": "ほかのどのMODにも固定されていないMODを、どこから並べ始めるかを決めます。「再構築」はそれらのMODを名前順に並べ、現在の順序は無視します。そのため、RimSortで作ったリストを初めて再構築すると、ほとんどのMODが移動するものと考えてください。「現在を維持」は各MODをModsConfig.xml内の位置から並べ始め、移動するMODをできるだけ少なくします。",
+      "description": "ほかのどのMODにも固定されていないMODを、どこから並べ始めるかを決めます。「再構築」はそれらのMODを名前順に並べ、現在の順序は無視します。そのため、RimSortで作ったリストを初めて再構築すると、ほとんどのMODが移動するものと考えてください。「現在を維持」は各MODを有効なMODの順序での位置から並べ始め、移動するMODをできるだけ少なくします。",
       "rebuild": "再構築",
       "preserveCurrent": "現在を維持"
     },
     "useImportedPairs": {
       "label": "インポートしたペアルールを使用",
-      "description": "RimSort/SteamDBの「前／後にロード」ルールを順序に反映します。既定でオンです。インポートされたペアのほとんどは、ソーターが自力で適用している根拠を言い直したものです。自分で設定したルールはこの切り替えの影響を受けません。"
+      "description": "RimSort/SteamDBの「前／後にロード」ルールを順序に反映します。既定でオンです。インポートされたペアのほとんどは、ソーターが自力で適用している根拠を言い直したものだからです。自分で設定したルールはこの切り替えの影響を受けません。"
     },
     "useImportedPlacements": {
       "label": "インポートした配置ルールを使用",
@@ -169,11 +169,11 @@
       "recoveredWarning": "アプリの設定ファイルを読み取れなかったため、設定を再度保存するまでインターネットアクセスはオフになっています。",
       "allowNetwork": {
         "label": "インターネットアクセスを許可",
-        "description": "Rimmergeがインターネット経由で送信するすべての通信（自動・手動を問わず）の主スイッチです。接続先はGitHubの2つのホストのみで、アップデートの確認にはapi.github.com、ルールデータベースの更新にはraw.githubusercontent.comを使います。ローカルネットワークには一切接続しません。オフにすると、アドレスを組み立てたり接続を開いたりする前の段階で、すべてのリクエストを取りやめます。このPC上のこのアプリ全体に適用され、どのRimWorldのインストールを開いても同じです。"
+        "description": "Rimmergeがインターネット経由で送信するすべての通信（自動・手動を問わず）の主スイッチです。接続先はGitHubの2つのホストのみで（アップデートの確認にはapi.github.com、ルールデータベースの更新にはraw.githubusercontent.com）、ローカルネットワークには一切接続しません。オフにすると、リクエストは一切行われません。このPC上のアプリ全体に適用され、どのRimWorldのインストールを開いても同じです。"
       },
       "autoRefreshRuleDatabases": {
         "label": "ルールデータベースを自動的に更新",
-        "description": "1日1回、起動時に、「ルールデータベース」カードに一覧表示された有効なルールデータベースを取得します。Steamワークショップのデータベースは対象外で、こちらは「更新」をクリックしたときにのみ更新されます。"
+        "description": "1日1回、起動時に、「ルールデータベース」カードに一覧表示された有効なルールデータベースを取得します。Steamワークショップのデータベースはこの方法では取得されず、「更新」をクリックしたときにのみ取得されます。"
       },
       "checkForUpdates": {
         "label": "アップデートを確認",
@@ -206,7 +206,7 @@
     },
     "showDanglingDefReferences": {
       "label": "宙に浮いたDef参照の検出結果を表示",
-      "description": "既知の参照箇所（研究の前提条件や能力値オフセットのキーなど）に書かれた名前のうち、どの種類の有効なDefにも存在しないものを指摘します。既定でオフです。大規模な環境では、無視できない数の誤検出が出ることがあります（例：自身を識別するフィールドを相互参照と取り違える）。ロード順は変更しません。"
+      "description": "既知の参照箇所（研究の前提条件や能力値オフセットのキーなど）に書かれた名前のうち、どの種類の有効なDefにも存在しないものを指摘します。既定でオフです。大規模な環境では、かなりの数の誤検出（例：自身を識別するフィールドを相互参照と取り違える）が出ることがあるためです。ロード順は変更しません。"
     },
     "saveButton": "保存",
     "resetButton": "既定に戻す",
@@ -365,13 +365,13 @@
         "title": "提案された順序を使う",
         "pending": "現在の順序を表示しています。提案された順序では{count}個のMODが移動します。",
         "doneText": "提案された順序を選択済みです。",
-        "doneMatchesFileText": "ModsConfig.xmlはすでに提案された順序と一致しています。",
+        "doneMatchesFileText": "有効なMODの順序はすでに提案された順序と一致しています。",
         "button": "提案された順序を使う",
         "reviewLink": "提案された順序を確認"
       },
       "apply": {
         "title": "適用",
-        "pending": "ModsConfig.xmlに書き込まれる内容を確認します。書き込む前にバックアップを作成します。",
+        "pending": "有効なMODリストに書き込まれる内容を確認します。書き込む前にバックアップを作成します。",
         "button": "適用…",
         "staleBlocked": "前回のスキャン以降、有効なMODが変更されています。適用する前に再スキャンしてください。",
         "rescanButton": "再スキャン"
@@ -380,11 +380,11 @@
         "title": "確認",
         "pending": "概要を確認してから確定します。必須のMODが見つからないなど、何かが壊れる場合は、先に確認を求められます。"
       },
-      "done": "ModsConfig.xmlは提案された順序と一致しています。RimWorldを起動してプレイしてください。",
+      "done": "有効なMODの順序は提案された順序と一致しています。RimWorldを起動してプレイしてください。",
       "asOfLastScan": "前回のスキャンまたは適用の時点の情報です。",
       "needsInputHint": "{count}件の検出結果があなたの判断を待っています（任意）",
       "openInbox": "「検出結果」を開く",
-      "appliedAnnouncement": "適用しました。ModsConfig.xmlは提案された順序と一致しています。"
+      "appliedAnnouncement": "適用しました。有効なMODの順序は提案された順序と一致しています。"
     }
   },
   "notifications": {
@@ -400,7 +400,7 @@
     },
     "welcome": {
       "title": "Rimmergeへようこそ",
-      "body": "Rimmergeは起動時にGitHubに接続することがあります：\n- Rimmergeの新しいバージョンがリリースされているかを確認するため（api.github.com）。起動するたびに行います。\n- 更新されたルールデータベース（コミュニティのロード順ルールと、Rimmerge独自のルールファイル）をダウンロードするため（raw.githubusercontent.com）。多くても1日1回です。更新はローカルに保存され、インポートを選んだときにのみロード順が変わります。\n\nあなた自身、MOD、インストール環境についての情報は一切送信しません。送信するのは単純なリクエストだけで、GitHubからはあなたのIPアドレスが見えます。大きなSteamワークショップのデータベースは自動ではダウンロードされず、「更新」をクリックしたときにのみダウンロードされます。",
+      "body": "Rimmergeは起動時にGitHubに接続することがあります：\n- Rimmergeの新しいバージョンがリリースされているかを確認するため（api.github.com）。起動するたびに行います。\n- 更新されたルールデータベース（コミュニティのロード順ルールと、Rimmerge独自のルールファイル）をダウンロードするため（raw.githubusercontent.com）。多くても1日1回です。更新はローカルに保存され、インポートを選んだときにのみロード順が変わります。\n\n利用者、MOD、インストール環境についての情報は一切送信しません。GitHubから見えるのは、お使いのIPアドレスからの通常のWebリクエストだけです。大きなSteamワークショップのデータベースは自動ではダウンロードされず、「更新」をクリックしたときにのみダウンロードされます。",
       "settingsAlreadyRecommended": "設定はすでに推奨の既定値と一致しています。",
       "steamWorkshopLabel": "Steamワークショップのデータベース（約49 MB、「更新」をクリックしたときにのみダウンロード）"
     },
@@ -532,7 +532,7 @@
       },
       "stale_active_set": {
         "title": "有効なMODのリストが古くなっています",
-        "detail": "ModsConfig.xmlに書き込む前に再スキャンしてください。"
+        "detail": "有効なMODリストに書き込む前に再スキャンしてください。"
       },
       "already_running": {
         "title": "すでに処理中です",
@@ -574,7 +574,7 @@
       },
       "nothing_to_export": {
         "title": "エクスポートするものがありません",
-        "detail": "リストに含められる有効なMODがありませんでした。ModsConfig.xmlの有効なMODを確認してください。"
+        "detail": "リストに含められる有効なMODがありませんでした。有効なMODリストが空でないか確認してください。"
       },
       "move_anchor_not_active": {
         "title": "そのMODはもう有効なMODリストにありません",
@@ -585,8 +585,8 @@
         "detail": "有効なMODリストに、まだスキャンされていない変更があります。変更を破棄するか再スキャンしてから、順序を元に戻してください。"
       },
       "revert_order_membership_differs": {
-        "title": "ファイルに記載されたMODが異なります",
-        "detail": "ModsConfig.xmlには現在の順序とは異なるMODが記載されているため、戻せる順序がありません。代わりにファイルのリストを使用するか、独自の順序を適用してください。"
+        "title": "保存されたリストのMODが異なります",
+        "detail": "保存済みの有効なMODが現在の順序と異なるため、戻せる順序がありません。保存済みのリストを使う場合は、「ロード順」ページの「インポート」から開いてください。それ以外の場合は、独自の順序を適用してください。"
       }
     }
   },
@@ -828,7 +828,7 @@
         "missingParent": "{modId}の{child}は{parentName}を継承していますが、それを定義している有効なMODがないため、その親のフィールドを一切持たずに読み込まれます。",
         "wrongType": "{modId}の{child}は{parentName}を継承していますが、このMOD自身のロード位置では、それは{childDefType}ではなく{parentType}に解決されます。",
         "affectedCount": "影響を受けるDef（{count}個）：",
-        "andMore": "…ほか{count}個",
+        "andMore": "ほか{count}個",
         "truncated": "影響を受ける他の{count}個のDefは表示されていません（表示上限）。"
       },
       "nearMissModReference": {
@@ -982,7 +982,7 @@
     "header": {
       "inspectLink": "詳しく見る",
       "outOfScope": "範囲外のためマージしません：{mods}",
-      "structuralGuardLine": "{field}が{by}とベースのコピーで異なります。このDefではフィールド単位のマージは安全ではありません。「検出結果」ページでこの検出結果を受諾して、ロード順で優先される側を確定してください。マージとして完了することはできません。",
+      "structuralGuardLine": "{field}が{by}とベースのコピーで異なるため、このDefではフィールド単位のマージは安全ではありません。「検出結果」ページでこの検出結果を受諾して、ロード順で優先される側を確定してください。マージとして完了することはできません。",
       "baseTag": "（ベース）",
       "winnerTag": "（優先）",
       "totalsFields": "フィールド{count}個",
@@ -1024,7 +1024,7 @@
     },
     "filePreviewLabel": "ファイルのプレビュー",
     "editor": {
-      "sourceFailedSuffix": "{message}。前回のスキャン以降にプロジェクトのファイルが変更されています。",
+      "sourceFailedSuffix": "前回のスキャン以降にプロジェクトのファイルが変更されています：{message}",
       "reloadProject": "プロジェクトを再読み込み",
       "loadFailed": "マージのプレビューを読み込めませんでした。",
       "showMore": "さらに表示（{loaded}/{total}）",
@@ -1068,7 +1068,7 @@
       "needsInput": "要判断",
       "saving": "保存中…",
       "drop": "破棄",
-      "dropUnavailableTitle": "パッチの衝突では破棄に対応していません。RimWorld自身のパッチは必ず何らかの値にリプレイされます。",
+      "dropUnavailableTitle": "パッチの衝突では破棄に対応していません。RimWorld自身のパッチは必ず何らかの値にリプレイされるためです。",
       "clearChoice": "選択を解除",
       "autoRevert": "自動"
     },
@@ -1183,7 +1183,7 @@
       "searchLabel": "範囲に追加するMODを検索",
       "searchResultsLabel": "検索に一致するMOD",
       "noMatches": "一致するものはありません。",
-      "scopeShrunk": "範囲が縮小されました。{count}件の決定が孤立しました。",
+      "scopeShrunk": "範囲が縮小されました：{count}件の決定が孤立しました。",
       "remainingChoicesNamingRemoved": "残りの選択のうち{count}件が、まだ範囲から削除したMODを指定しています。"
     },
     "exportPanel": {
@@ -1191,9 +1191,9 @@
       "exportDirPlaceholder": "フォルダーを選択…",
       "chooseButton": "選択…",
       "installCheckboxLabel": "Modsフォルダーにインストールして有効化",
-      "staleActiveSetNote": "保留中の有効化の変更は含まれません。このインストールに反映したい場合は、先に再スキャンしてください。",
+      "staleActiveSetNote": "保留中の有効化／無効化の変更は含まれません。このインストールに反映したい場合は、先に再スキャンしてください。",
       "unappliedOrderNote": "インストールすると現在の順序が書き込まれますが、この順序はまだ適用されていません。",
-      "forceWarning": "RimWorldWin64.exeが実行中のようです。今インストールするとModsConfig.xmlに書き込みますが、ゲームは終了時にこのファイルを上書きするため、変更が失われるおそれがあります。それでもエクスポートしますか？",
+      "forceWarning": "RimWorldWin64.exeが実行中のようです。今インストールすると有効なMODリストに書き込みますが、ゲームは終了時にこのリストを上書きするため、変更が失われるおそれがあります。それでもエクスポートしますか？",
       "exportAnyway": "それでもエクスポート",
       "export": "エクスポート",
       "exportedTo": "エクスポート先：{path}",
@@ -1273,11 +1273,17 @@
         "packageId": "パッケージIDで並べ替え（昇順）",
         "lastUpdated": "最終更新日時で並べ替え（古い順）"
       },
-      "descending": {
-        "loadOrder": "ロード順で並べ替え（最後から最初へ）",
-        "name": "名前で並べ替え（降順）",
-        "packageId": "パッケージIDで並べ替え（降順）",
-        "lastUpdated": "最終更新日時で並べ替え（新しい順）"
+      "activeAscending": {
+        "loadOrder": "ロード順で並べ替え中（最初から最後へ）。クリックで「最後から最初へ」に切り替えます。",
+        "name": "名前で並べ替え中（昇順）。クリックで降順に切り替えます。",
+        "packageId": "パッケージIDで並べ替え中（昇順）。クリックで降順に切り替えます。",
+        "lastUpdated": "最終更新日時で並べ替え中（古い順）。クリックで新しい順に切り替えます。"
+      },
+      "activeDescending": {
+        "loadOrder": "ロード順で並べ替え中（最後から最初へ）。クリックで「最初から最後へ」に切り替えます。",
+        "name": "名前で並べ替え中（降順）。クリックで昇順に切り替えます。",
+        "packageId": "パッケージIDで並べ替え中（降順）。クリックで昇順に切り替えます。",
+        "lastUpdated": "最終更新日時で並べ替え中（新しい順）。クリックで古い順に切り替えます。"
       },
       "updatedUnavailable": {
         "shippedWithGame": "ゲームに同梱",
@@ -1285,8 +1291,8 @@
       }
     },
     "pendingChanges": {
-      "unscanned": "保留中の変更{count}件。解析を更新するには再スキャンしてください",
-      "unapplied": "ModsConfig.xmlにまだ適用されていない変更{count}件",
+      "unscanned": "保留中の変更{count}件。解析を更新するには再スキャンしてください。",
+      "unapplied": "まだ適用されていない変更{count}件",
       "rescanButton": "再スキャン",
       "rescanFinishedToast": "再スキャン完了（メモ{count}件）",
       "rescannedWithWarningsToast": "再スキャンしました（警告あり）",
@@ -1294,7 +1300,7 @@
     },
     "closeGuard": {
       "header": "有効なMODへの未保存の変更",
-      "body": "作業中の有効なMODのリストに、まだ再スキャンで反映されていない変更があるか、スキャン済みの順序が{modsConfig}に適用されていません。今離れると、メモリ上のその作業は失われます。いずれの場合もゲーム自体のファイルは変更されません。",
+      "body": "有効なMODに、まだ再スキャンで反映されていない変更があるか、まだ適用されていないスキャン済みの順序があります。今離れると、その作業は失われます。いずれの場合も、ゲーム自体のMODリストは変更されません。",
       "stay": "とどまる",
       "leaveAnyway": "それでも離れる"
     },
@@ -1303,7 +1309,7 @@
     },
     "detail": {
       "loadFailed": "このMODを読み込めませんでした。",
-      "idAndSource": "{modId}：{source}",
+      "idAndSource": "{modId}（{source}）",
       "byAuthors": "作者：{authors}",
       "tagsHeading": "タグ",
       "declaredOrderHeading": "宣言された順序",
@@ -1333,7 +1339,7 @@
       "activateSelectedButton": "選択したMODを有効化",
       "loadFailed": "MODを読み込めませんでした。",
       "totalMods": "{count}個のMOD",
-      "pageCapHint": "（最初の{count}個を表示中。検索で絞り込んでください）",
+      "pageCapHint": "（最初の{count}個を表示中。さらに表示するには検索を絞り込んでください）",
       "activateDialogHeader": "MODの有効化",
       "willActivateHeading": "有効化するMOD：",
       "alreadyActiveHeading": "有効化済みのためスキップ：",
@@ -1553,12 +1559,12 @@
     "sourceTitle": "{source}で表示中。クリックで切り替え",
     "partialBanner": "不完全：{reason}で停止しました。これ以降のフィールドは表示されません。",
     "replayStopper": "{mod}の操作{opIndex}：{error}",
-    "ambiguousTemplateIntro": "曖昧なテンプレート：このNameには{count}件の登録があります。RimWorldは各子Defを、自身と同じ位置かそれより前で最も近くにロードされる登録へ個別に解決するため、単一の優先される側は存在しません。上の「優先」／「最後にロードされた代表」は、特定の子Defを問わない場合にこのアプリが明示的に示す代用にすぎず、答えではありません。",
+    "ambiguousTemplateIntro": "曖昧なテンプレート：このNameには{count}件の登録があります。RimWorldは各子Defを個別に、自身と同じ位置かそれより前で最も近くにロードされる登録へ解決するため、単一の優先される側はありません。上の「優先」と「最後にロードされた代表」は、特定の子Defを問わない場合のこのアプリによる代用にすぎず、答えではありません。",
     "knownChildrenResolve": "既知の子Def{count}個がここに解決されます",
     "ownersHeading": "所有MOD",
     "winnerTag": "（優先）",
     "representativeTag": "（最後にロードされた代表）",
-    "representativeTitle": "代表にすぎません。単一の答えは存在しないため、上の曖昧なテンプレートの注意を参照してください",
+    "representativeTitle": "代表にすぎません。単一の答えは存在しません。上の曖昧なテンプレートの注意を参照してください",
     "generatedTag": "（生成）",
     "patchersHeading": "パッチ適用元",
     "patcherStatusNotReached": "未到達",
@@ -1621,7 +1627,7 @@
       "movedFrom": "#{position}から"
     },
     "whyPanel": {
-      "headerWithMod": "{mod}：なぜこの位置？",
+      "headerWithMod": "なぜ{mod}がこの位置に？",
       "headerFallback": "なぜこの位置？",
       "loadFailed": "説明を読み込めませんでした。",
       "positionHeading": "位置",
@@ -1676,7 +1682,7 @@
   "orderShare": {
     "export": {
       "button": "エクスポート",
-      "hint": "ModsConfig.xmlにある順序（RimWorldがロードする順序）をエクスポートします。",
+      "hint": "有効なMODの順序（RimWorldがロードする順序）をエクスポートします。",
       "saveFile": "RimWorldのMODリスト（.rml）として保存…",
       "copyText": "テキストとしてコピー",
       "fileFilter": "RimWorldのMODリスト",
@@ -1702,7 +1708,7 @@
       "summary": "リスト内のMOD：{count}個",
       "versionDiffers": "RimWorld {listed}で作成されたリストです。お使いのバージョンは{game}です。",
       "replacesPending": "まだ再スキャンしていない保留中の有効化／無効化の変更は置き換えられます。",
-      "replacesUnwritten": "このインポートで、まだModsConfig.xmlに反映されていない「現在」の順序が置き換えられます。",
+      "replacesUnwritten": "このインポートで、まだ適用されていない「現在」の順序が置き換えられます。",
       "moved": "{count}個のMODの位置が変わります。",
       "sameOrder": "インストール済みのMODの順序は変わりません。",
       "coreAdded": "リストにCoreがありませんでした。Coreは引き続き先頭に置かれます。",
@@ -1720,7 +1726,7 @@
       "copyMissing": "未インストールのMODの一覧をコピー",
       "missingCopied": "未インストールのMODの一覧をコピーしました。",
       "duplicatesHeading": "複数回記載されたMOD（{count}）",
-      "duplicateRow": "{id} — 最初の位置（#{position}）を使用します。",
+      "duplicateRow": "{id}：最初の位置（#{position}）を使用します。",
       "otherCopyHeading": "別のコピーと一致（{count}）",
       "otherCopyRow": "{listed} → お使いのコピー：{installed}",
       "skippedHeading": "解釈できなかった行（{count}）",
@@ -1741,8 +1747,8 @@
       "whatHappens": "Rimmergeはこの順序で再スキャンし、「現在」の順序として表示します。適用するまで何も書き込まれません。",
       "confirm": "この順序を使用"
     },
-    "imported": "インポートした順序の準備ができました。内容を確認してから適用し、ModsConfig.xmlに書き込んでください。",
-    "notInFile": "この順序はまだModsConfig.xmlに反映されていません。",
+    "imported": "インポートした順序の準備ができました。内容を確認してから適用し、有効なMODの順序として保存してください。",
+    "notInFile": "この順序はまだ有効なMODの順序に反映されていません。",
     "notInFileApply": "適用",
     "previewOutdated": "プレビューの後にインストール済みのMODが変更されました。もう一度リストをプレビューしてください。",
     "rejected": {
@@ -1758,17 +1764,18 @@
     },
     "importedWithWarnings": "スキャンで{count}件の警告が報告されました。",
     "importedRuleWarnings": "インポートしましたが、読み込めなかったルールがあります",
-    "revertOrder": "ModsConfig.xmlの順序に戻す"
+    "revertOrder": "保存済みの有効なMODの順序に戻す",
+    "revertOrderTitle": "順序を、ModsConfig.xmlに保存されている並びに戻します。"
   },
   "apply": {
     "dialog": {
       "header": "適用",
       "defCacheNote": "有効なDefキャッシュMODはロード順をキーにキャッシュを保持しているため、この適用後の初回起動時にキャッシュが再構築されます{parenthetical}。",
       "defCacheParenthetical": "（前回のログでは約{seconds}秒）",
-      "writeModsConfigLabel": "ModsConfig.xmlに書き込む（RimWorldが読み込むロード順）",
-      "staleActiveSetMessage": "作業中の有効なMODのセットに保留中の変更があります。ModsConfig.xmlに書き込むには再スキャンしてください。",
+      "writeModsConfigLabel": "有効なMODリストに書き込む（RimWorldが読み込むロード順）",
+      "staleActiveSetMessage": "有効なMODに保留中の変更があります。有効なMODリストに書き込む前に再スキャンしてください。",
       "rescanButton": "再スキャン",
-      "writeMergeModLabel": "マージMODを書き込む（生成したMODをMods/に出力。マージ／アセットの決定が残っていない場合は削除）",
+      "writeMergeModLabel": "マージMODを書き込む（生成したMODをMods/に書き出し、マージ／アセットの決定が残っていない場合は削除）",
       "closeButton": "閉じる",
       "cancelButton": "キャンセル",
       "writeAnywayButton": "それでも書き込む",
@@ -1777,11 +1784,11 @@
       "saveDecisionsButton": "決定とルールを保存"
     },
     "preflight": {
-      "unappliedHeading": "スキャン済みだが、まだModsConfig.xmlに適用されていない変更：",
+      "unappliedHeading": "スキャン済みだが、まだ適用されていない変更：",
       "addedLabel": "追加：",
       "removedLabel": "削除：",
       "orderLabel": "順序",
-      "modsConfigLabel": "ModsConfig.xml",
+      "modsConfigLabel": "有効なMODリスト",
       "decisionsLabel": "決定",
       "rulesLabel": "ルール",
       "movedModsLabel": "移動するMOD",
@@ -1794,13 +1801,13 @@
     },
     "progress": {
       "heading": "順序を検証",
-      "description": "他のMODによるパッチ操作をすべてリプレイし、この順序でどれが失敗するかを、RimWorld自身のログに出る形で予測します。実行は要求時のみで、大規模な環境では約1分かかります。",
+      "description": "他のMODによるパッチ操作をすべてリプレイし、この順序でどれが失敗するかを、RimWorld自身のログに出る形で予測します。実行するのは要求したときのみで、大規模な環境では約1分かかります。",
       "verifyingLabel": "順序を検証中",
       "checksCaption": "{checked}/{total}件を確認",
       "startingCaption": "開始しています…"
     },
     "diff": {
-      "summary": "{source}に対して{count}個のDefを確認しました（{list}）。",
+      "summary": "{source}に対して{count}個のDefを確認しました：{list}。",
       "summaryOperations": "失敗が予測される操作{count}件",
       "summaryTargets": "影響を受ける対象Def{count}個",
       "removedByCount": "先にロードされるMODによる削除：{count}",
@@ -1821,14 +1828,14 @@
       "groupedTargets": "対象Def{count}個",
       "partlyFixableHeading": "このうち一部は部分的に順序で修正できます。並べ替えで対象Defの一部が解決します：",
       "skippedCandidates": "{count}個の候補を確認できませんでした。",
-      "pvoMismatchWarning": "インポートしたログは、今検証した順序とは異なるMODの順序で作成されたものです。以下の件数は、無関係な2つの実行を比較しています。",
+      "pvoMismatchWarning": "インポートしたログは、今検証した順序とは異なるMODの順序で作成されたものです。そのため、以下の件数は無関係な2つの実行を比較しています。",
       "pvoHeading": "予測と観測（最後にインポートしたログ）",
       "pvoSnapshotNote": "インポートしたログはコンソールのスナップショットで、1回のゲーム実行全体のログではありません。コンソールで最も古いエントリより前にゲームが記録した失敗は含まれないため、「予測されたが未観測」は失敗が起きなかった根拠にはなりません。",
       "pvoCutOffNote": "インポートしたログは正常終了せず、パッチの結果が記録される前に終わっているため、ゲームはパッチの段階に達しなかった可能性があります。「予測されたが未観測」は失敗が起きなかった根拠にはなりません。",
       "pvoGapsNote": "インポートしたログの途中でゲームがメッセージの記録を停止したため、失敗が記録から漏れている可能性があります。「予測されたが未観測」は失敗が起きなかった根拠にはなりません。",
       "pvoMatchedSummary": "ログで確認済み：{count}",
       "pvoPredictedOnlySummary": "予測されたが、ログでは未観測：{count}",
-      "pvoObservedOnlySummary": "ログで観測されたが、予測されていない：{count}。そのまま一覧表示し、除外はしません：",
+      "pvoObservedOnlySummary": "ログで観測されたが、予測されていない：{count}（そのまま一覧表示し、除外はしません）：",
       "unattributedRaw": "（帰属不明：{raw}）",
       "counterfactualJobsLine": "{count}件の操作を他のロード順で再確認",
       "counterfactualResolvedLine": "{count}件は原因を特定",
@@ -1845,14 +1852,14 @@
       "ruleExists": "ルールはすでに存在します。"
     },
     "result": {
-      "forceWarning": "RimWorldWin64.exeが実行中のようです。ゲームは終了時にModsConfig.xmlを上書きするため、今書き込んだ内容が失われるおそれがあります。それでも書き込みますか？",
+      "forceWarning": "RimWorldWin64.exeが実行中のようです。ゲームは終了時に有効なMODリストを上書きするため、今書き込んだ内容が失われるおそれがあります。それでも書き込みますか？",
       "mergeModPath": "マージMOD：{path}",
       "mergeModRemoved": "マージMOD：削除済み（マージ／アセットの決定が残っていません）",
       "mergeModBackupPath": "マージMODのバックアップ：{path}",
-      "skippedHeading": "スキップ。次の項目を含めずにマージMODを書き込みました：",
+      "skippedHeading": "スキップしました。次の項目を含めずにマージMODを書き込みました：",
       "toastAppliedSummary": "適用しました",
       "toastSavedSummary": "保存しました",
-      "toastModsConfigPath": "ModsConfig：{path}",
+      "toastModsConfigPath": "有効なMODリスト：{path}",
       "toastBackupPath": "バックアップ：{path}",
       "toastDecisionsPath": "決定：{path}",
       "toastRulesPath": "ルール：{path}",
@@ -1887,11 +1894,11 @@
     },
     "launchedSteam": "SteamにRimWorldの起動を依頼しました。",
     "launchedExecutable": "RimWorldを起動しています。",
-    "notStartedAfterApply": "ModsConfig.xmlが書き込まれなかったため、RimWorldを起動しませんでした。",
+    "notStartedAfterApply": "有効なMODリストが書き込まれなかったため、RimWorldを起動しませんでした。",
     "applyFirst": {
       "header": "先に適用しますか？",
-      "orderDiffers": "前回のスキャンまたは適用の時点では、ModsConfig.xmlに{order}が反映されていません。このまま起動すると、RimWorldはこのファイルに記載されているMODと順序で起動します。",
-      "activationChanges": "保留中の有効化／無効化の変更は、まだModsConfig.xmlに反映されていません。このまま起動すると、RimWorldはそれらの変更なしで起動します。",
+      "orderDiffers": "前回のスキャンまたは適用の時点では、{order}はまだ有効なMODの順序として保存されていません。このまま起動すると、RimWorldは保存されているMODと順序で起動します。",
+      "activationChanges": "保留中の有効化／無効化の変更は、まだ保存されていません。このまま起動すると、RimWorldはそれらの変更なしで起動します。",
       "applyButton": "先に適用",
       "launchAnywayButton": "それでも起動"
     }
@@ -1912,7 +1919,7 @@
       "snapshot": {
         "belowCap": "コンソールには{count}件のエントリしかなかったため、このコピーからは、それらのエントリに表れていない段階については何もわかりません",
         "atCap": "コンソールが保持していた{count}件のエントリのみです（コンソールの上限）。それより古いエントリはゲームによって破棄されました",
-        "overCap": "エントリが{count}件あり、1つのコンソールが保持できる数を超えています。単一のコンソールのコピーではなく、複数のコピーを貼り合わせたものか、解析の問題です。ゲームがどれだけ破棄したかはわかりません",
+        "overCap": "エントリが{count}件あり、1つのコンソールが保持できる数を超えているため、単一のコンソールのコピーではありません。複数のコピーが貼り合わされたか、ログの解析が誤っている可能性があります。ゲームがどれだけ破棄したかはわかりません",
         "headTruncated": "コピーがエントリの途中から始まっています。最初のエントリは不完全です。"
       }
     },
@@ -1938,8 +1945,8 @@
   },
   "startup": {
     "heading": "起動コスト",
-    "description": "有効なMODごとに1行で、変更を伴うパッチ操作、低速になりやすい形のxpath、テクスチャ、DLL、Defを示します。所要時間は含みません（Rimmergeはゲームを実行しません）。{playerLog}またはコンソールのスナップショットをインポートすると、不正寸法のDDSと観測タイマーの列が埋まります（コンソールのスナップショットではタイマーは埋まりません）。",
-    "orderMismatchWarning": "インポートしたログは、現在選択中の順序とは異なるMODの順序で作成されたものです。以下の不正寸法のDDSと観測タイマーの列は、今回ではなくその別の実行を反映しています。",
+    "description": "有効なMODごとに1行で、変更を伴うパッチ操作、低速になりやすい形のxpath、テクスチャ、DLL、Defの数を示します。Rimmergeはゲームを実行しないため、所要時間は含みません。{playerLog}またはコンソールのスナップショットをインポートすると、不正寸法のDDSと観測タイマーの列が埋まります（コンソールのスナップショットではタイマーは埋まりません）。",
+    "orderMismatchWarning": "インポートしたログは、現在選択中の順序とは異なるMODの順序で作成されたものです。そのため、以下の不正寸法のDDSと観測タイマーの列は、今回ではなくその別の実行を反映しています。",
     "noOrderBlockWarning": "インポートしたログには有効なMODのリストがまったく含まれていないため、選択中の順序と照合できません。以下の不正寸法のDDSと観測タイマーの列は、今回とは別の実行を反映している可能性があります。",
     "loadFailed": "起動コストの表を読み込めませんでした。",
     "modHeader": "MOD",
@@ -1978,18 +1985,18 @@
         "reclassified": "{count}個のフィールドを再分類"
       },
       "reclassifiedNames": "（{names}）",
-      "strandedValuesLine": "保存されていた値{count}件を破棄しました。再分類されたフィールドの新しい役割では、そこに保存されていた値を受け付けません：",
-      "droppedRowsLine": "{count}行を破棄しました。対象が対象セットから外れました：",
+      "strandedValuesLine": "再分類されたフィールドの新しい役割では、そこに保存されていた値を受け付けないため、保存されていた値{count}件を破棄しました：",
+      "droppedRowsLine": "対象が対象セットから外れたため、{count}行を破棄しました：",
       "clean": "この変更で破棄されたり行き場を失ったりしたものはありません。",
       "closeButton": "閉じる",
       "saveButton": "保存"
     },
     "rowEditor": {
       "copyFrom": "コピー元：",
-      "winnerBadge": "— 優先",
-      "prefillFrom": "— {mod}から",
-      "clampedTo": "— 「{name}」に縮小：この枠には名前を1つしか保持できませんが、この値は{count}個（{joined}）を指定していました",
-      "droppedFromCopy": "— 該当するDefが有効でないため、借用した値{count}件をスキップしました：{names}",
+      "winnerBadge": "（優先）",
+      "prefillFrom": "（{mod}から）",
+      "clampedTo": "「{name}」に縮小しました：この枠には名前を1つしか保持できませんが、この値は{count}個（{joined}）を指定していました",
+      "droppedFromCopy": "該当するDefが有効でないため、借用した値{count}件をスキップしました：{names}",
       "pairedTo": "{slot}と対応",
       "overrideBadge": "上書き：既存の一致{count}件",
       "inspectDefLink": "Defを詳しく見る",
@@ -2005,8 +2012,8 @@
       "coveredByMod": "{mod}が対応済み",
       "coveredByAnotherMod": "別のMODが対応済み",
       "uncovered": "未対応",
-      "wouldWinNoOwner": "— 優先される見込み",
-      "wouldWinWithOwner": "— {mod}が優先される見込み",
+      "wouldWinNoOwner": "（優先される見込み）",
+      "wouldWinWithOwner": "（{mod}が優先される見込み）",
       "noMatches": "一致する対象はありません。"
     },
     "schemaTable": {
@@ -2031,9 +2038,9 @@
       "exportDirPlaceholder": "フォルダーを選択…",
       "chooseButton": "選択…",
       "installCheckboxLabel": "Modsフォルダーにインストールして有効化",
-      "staleActiveSetNote": "保留中の有効化の変更は含まれません。このインストールに反映したい場合は、先に再スキャンしてください。",
+      "staleActiveSetNote": "保留中の有効化／無効化の変更は含まれません。このインストールに反映したい場合は、先に再スキャンしてください。",
       "unappliedOrderNote": "インストールすると現在の順序が書き込まれますが、この順序はまだ適用されていません。",
-      "forceWarning": "RimWorldWin64.exeが実行中のようです。今インストールするとModsConfig.xmlに書き込みますが、ゲームは終了時にこのファイルを上書きするため、変更が失われるおそれがあります。それでもエクスポートしますか？",
+      "forceWarning": "RimWorldWin64.exeが実行中のようです。今インストールすると有効なMODリストに書き込みますが、ゲームは終了時にこのリストを上書きするため、変更が失われるおそれがあります。それでもエクスポートしますか？",
       "exportAnyway": "それでもエクスポート",
       "export": "エクスポート",
       "exportedTo": "エクスポート先：{path}",
@@ -2215,7 +2222,7 @@
     "reorderBeforeRemover": "{modId}を{remover}より前にロードし、ノードがまだ存在するうちに操作が実行されるようにします。",
     "patchWillFailNotYetInjected": "{modId}の「{xpath}」での操作は{injector}が挿入するノードを対象にしていますが、確認に使用した順序では{injector}はその後にロードされます。",
     "reorderAfterInjector": "{modId}を{injector}より後にロードし、ノードが挿入された後に操作が対象を見つけられるようにします。",
-    "patchWillFailDeadTarget": "{modId}の「{xpath}」での操作は、ロード順にかかわらず、優先される所有MODの解決後の構造に存在しないノードを対象にしています。並べ替えでは修正できません。",
+    "patchWillFailDeadTarget": "{modId}の「{xpath}」での操作は、ロード順にかかわらず、優先される所有MODの解決後の構造に存在しないノードを対象にしているため、並べ替えでは修正できません。",
     "patchWillFailUnknownCause": "{modId}の「{xpath}」での操作は失敗すると予測されます。原因は分類できませんでした。",
     "brokenInheritance": "この`ParentName`参照は、子Defの要素の種類が想定するとおりに解決されません。Defは内容が欠けているか誤った状態で読み込まれます。参照しているMODの作者に報告してください。",
     "danglingDefReference": "この名前に該当する有効なDefは、どの種類にもありません。理由：{cause}。{soundCaveat}相互参照は、すべてのMODのDefとパッチが読み込まれた後に解決されるため、これはロード順に左右されません。",
@@ -2243,8 +2250,8 @@
     "likelyDuplicateMod": "この2つのMODは、間に宣言された関係がないまま、同一のDefを多数共有しています。",
     "removeLikelyDuplicateModA": "重複の可能性があるMODの一方を有効なMODリストから外します。",
     "removeLikelyDuplicateModB": "重複の可能性があるMODのもう一方を有効なMODリストから外します。",
-    "missingModNotInstalled": "このMODはModsConfig.xmlでは有効ですが、インストールされていません。いずれにせよ、RimWorldは不明なIDを除外します。",
-    "keepMissingModId": "MODが再び現れる場合に備えて、ModsConfig.xmlにIDを残します。",
+    "missingModNotInstalled": "このMODは有効なMODリストに含まれていますが、インストールされていません。いずれにせよ、RimWorldは不明なIDを除外します。",
+    "keepMissingModId": "MODが再び現れる場合に備えて、有効なMODリストにIDを残します。",
     "missingDependencyNotEnforced": "宣言された依存MODが有効になっていません。RimWorldはこれについて警告するだけで、強制はしません。",
     "incompatiblePair": "これらのMODは互いに非互換であると宣言しています。",
     "removeIncompatibleModA": "非互換のMODの一方を有効なMODリストから外します。",
@@ -2261,7 +2268,7 @@
     "mergeLeadDefOverrideCombine": "MODはそれぞれ異なるフィールドを変更しています。マージすると両方が統合されます。",
     "mergePromotedPatchCollisionKeepsBoth": "MODはそれぞれ異なるフィールドを変更しています。マージすると両方が維持されます。",
     "keepLoadOrderWinner": "ロード順で優先される側を維持します。",
-    "mergeStructuralGuard": "{field}が所有MOD間で異なります。フィールド単位のマージは安全ではありません。ロード順で優先される側を確定してください",
+    "mergeStructuralGuard": "{field}が所有MOD間で異なるため、フィールド単位のマージは安全ではありません。ロード順で優先される側を確定してください",
     "mergeFieldsNeedChoice": "マージ（{unresolved}個のフィールドで選択が必要）。",
     "identicalCopiesOrderIrrelevant": "同一のコピーなので、順序によって結果は変わりません",
     "notAddressedByPatch": "このパッチでは扱いません。現在どおりロード順で決まります。"
@@ -2278,7 +2285,7 @@
       "previewUnsupportedFormat": "プレビューがPNGまたはJPEGではありません",
       "previewUnreadable": "プレビューを読み取れませんでした",
       "missingHeading": "見つからない",
-      "missingBody": "ModsConfig.xmlに記載されていますが、ディスク上に見つかりません",
+      "missingBody": "有効なMODリストに含まれていますが、ディスク上に見つかりません",
       "requiredByHeading": "必要としているMOD",
       "pendingActivation": "有効化を保留中。反映するには適用または再スキャンしてください",
       "pendingDeactivation": "無効化を保留中。反映するには適用または再スキャンしてください",
@@ -2315,7 +2322,7 @@
       "noDescription": "説明はありません。",
       "showMore": "さらに表示",
       "showLess": "折りたたむ",
-      "aboutChanged": "前回のスキャン以降にAbout.xmlが変更されました。再スキャンしてください",
+      "aboutChanged": "前回のスキャン以降にAbout.xmlが変更されました。変更を反映するには再スキャンしてください",
       "aboutUnreadable": "About.xmlを読み取れませんでした：{reason}",
       "aboutUnreadableIoHeadline": "ファイルを読み取れませんでした",
       "aboutUnreadableXmlHeadline": "ファイルが有効なXMLではありません",

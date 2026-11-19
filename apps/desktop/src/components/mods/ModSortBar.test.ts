@@ -12,81 +12,128 @@ function mountBar(keys: readonly ListSortKeyDto[] = ACTIVE_SORT_KEYS, sort = NAM
   return mount(ModSortBar, { props: { keys, sort } });
 }
 
-const NAMES: readonly { key: ListSortKeyDto; asc: string; desc: string }[] = [
+function button(wrapper: ReturnType<typeof mountBar>, key: ListSortKeyDto) {
+  return wrapper.get(`[data-testid="mods-sort-${key}"]`);
+}
+
+const IDLE_NAMES: readonly { key: ListSortKeyDto; label: string }[] = [
+  { key: "loadOrder", label: "Sort by load order, first to last" },
+  { key: "name", label: "Sort by name, A to Z" },
+  { key: "packageId", label: "Sort by package ID, A to Z" },
+  { key: "lastUpdated", label: "Sort by last updated, oldest first" },
+];
+
+const ACTIVE_NAMES: readonly { key: ListSortKeyDto; asc: string; desc: string }[] = [
   {
     key: "loadOrder",
-    asc: "Sort by load order, first to last",
-    desc: "Sort by load order, last to first",
+    asc: "Sorted by load order, first to last. Click for last to first.",
+    desc: "Sorted by load order, last to first. Click for first to last.",
   },
-  { key: "name", asc: "Sort by name, A to Z", desc: "Sort by name, Z to A" },
-  { key: "packageId", asc: "Sort by package ID, A to Z", desc: "Sort by package ID, Z to A" },
+  {
+    key: "name",
+    asc: "Sorted by name, A to Z. Click for Z to A.",
+    desc: "Sorted by name, Z to A. Click for A to Z.",
+  },
+  {
+    key: "packageId",
+    asc: "Sorted by package ID, A to Z. Click for Z to A.",
+    desc: "Sorted by package ID, Z to A. Click for A to Z.",
+  },
   {
     key: "lastUpdated",
-    asc: "Sort by last updated, oldest first",
-    desc: "Sort by last updated, newest first",
+    asc: "Sorted by last updated, oldest first. Click for newest first.",
+    desc: "Sorted by last updated, newest first. Click for oldest first.",
   },
 ];
 
 describe("ModSortBar", () => {
-  it.each(NAMES)("names both the criterion and the direction for $key", ({ key, asc, desc }) => {
-    const wrapper = mountBar();
+  it.each(IDLE_NAMES)("names what a click selects on the idle $key button", ({ key, label }) => {
+    const otherKey: ListSortKeyDto = key === "name" ? "packageId" : "name";
+    const wrapper = mountBar(ACTIVE_SORT_KEYS, { key: otherKey, direction: "descending" });
 
-    const ascending = wrapper.get(`[data-testid="mods-sort-${key}-ascending"]`);
-    const descending = wrapper.get(`[data-testid="mods-sort-${key}-descending"]`);
-
-    expect(ascending.attributes("aria-label")).toBe(asc);
-    expect(ascending.attributes("title")).toBe(asc);
-    expect(descending.attributes("aria-label")).toBe(desc);
-    expect(descending.attributes("title")).toBe(desc);
+    expect(button(wrapper, key).attributes("aria-label")).toBe(label);
+    expect(button(wrapper, key).attributes("title")).toBe(label);
   });
 
-  it("marks exactly the active arrow as pressed", () => {
+  it.each(ACTIVE_NAMES)(
+    "names the direction and the next click on the active $key button",
+    ({ key, asc, desc }) => {
+      const ascending = mountBar(ACTIVE_SORT_KEYS, { key, direction: "ascending" });
+      const descending = mountBar(ACTIVE_SORT_KEYS, { key, direction: "descending" });
+
+      expect(button(ascending, key).attributes("aria-label")).toBe(asc);
+      expect(button(ascending, key).attributes("title")).toBe(asc);
+      expect(button(descending, key).attributes("aria-label")).toBe(desc);
+      expect(button(descending, key).attributes("title")).toBe(desc);
+    },
+  );
+
+  it("names the active criterion in exactly one button and exposes no pressed state", () => {
     const wrapper = mountBar(ACTIVE_SORT_KEYS, { key: "packageId", direction: "descending" });
 
-    const pressed = wrapper
+    const sortedBy = wrapper
       .findAll("button")
-      .filter((button) => button.attributes("aria-pressed") === "true")
-      .map((button) => button.attributes("data-testid"));
+      .filter((candidate) => candidate.attributes("aria-label")?.startsWith("Sorted by"))
+      .map((candidate) => candidate.attributes("data-testid"));
 
-    expect(pressed).toEqual(["mods-sort-packageId-descending"]);
+    expect(sortedBy).toEqual(["mods-sort-packageId"]);
+    for (const candidate of wrapper.findAll("button")) {
+      expect(candidate.attributes("aria-pressed")).toBeUndefined();
+    }
   });
 
-  it("gives the pressed arrow a thicker border, not just a colour", () => {
-    const wrapper = mountBar(ACTIVE_SORT_KEYS, { key: "name", direction: "ascending" });
+  it("gives the active button a thicker border and a direction arrow, not just a colour", () => {
+    const ascending = mountBar(ACTIVE_SORT_KEYS, { key: "name", direction: "ascending" });
+    const descending = mountBar(ACTIVE_SORT_KEYS, { key: "name", direction: "descending" });
 
-    expect(wrapper.get('[data-testid="mods-sort-name-ascending"]').classes()).toContain("border-2");
-    expect(wrapper.get('[data-testid="mods-sort-name-descending"]').classes()).not.toContain(
-      "border-2",
-    );
+    expect(button(ascending, "name").classes()).toContain("border-2");
+    expect(button(ascending, "packageId").classes()).not.toContain("border-2");
+    expect(button(ascending, "name").find("i").classes()).toContain("pi-arrow-up");
+    expect(button(descending, "name").find("i").classes()).toContain("pi-arrow-down");
+    expect(button(ascending, "packageId").find("i").classes()).toContain("pi-sort-alt");
   });
 
-  it("offers every criterion twice for Active and omits load order for Inactive", () => {
-    expect(mountBar(ACTIVE_SORT_KEYS).findAll("button")).toHaveLength(8);
+  it("offers one button per criterion and omits load order for Inactive", () => {
+    expect(mountBar(ACTIVE_SORT_KEYS).findAll("button")).toHaveLength(4);
 
     const inactive = mountBar(INACTIVE_SORT_KEYS);
 
-    expect(inactive.findAll("button")).toHaveLength(6);
-    expect(inactive.find('[data-testid="mods-sort-loadOrder-ascending"]').exists()).toBe(false);
+    expect(inactive.findAll("button")).toHaveLength(3);
+    expect(inactive.find('[data-testid="mods-sort-loadOrder"]').exists()).toBe(false);
   });
 
-  it("emits the chosen criterion and direction when an arrow is clicked", async () => {
-    const wrapper = mount(ModSortBar, { props: { keys: ACTIVE_SORT_KEYS, sort: NAME_ASC } });
+  it.each(["ascending", "descending"] as const)(
+    "selects another criterion ascending when it is clicked from %s",
+    async (from) => {
+      const wrapper = mountBar(ACTIVE_SORT_KEYS, { key: "name", direction: from });
 
-    await wrapper.get('[data-testid="mods-sort-lastUpdated-descending"]').trigger("click");
+      await button(wrapper, "lastUpdated").trigger("click");
 
-    expect(wrapper.emitted("update:sort")).toEqual([
-      [{ key: "lastUpdated", direction: "descending" }],
-    ]);
+      expect(wrapper.emitted("update:sort")).toEqual([
+        [{ key: "lastUpdated", direction: "ascending" }],
+      ]);
+    },
+  );
+
+  it.each([
+    ["ascending", "descending"],
+    ["descending", "ascending"],
+  ] as const)("flips the active criterion from %s to %s on click", async (from, to) => {
+    const wrapper = mountBar(ACTIVE_SORT_KEYS, { key: "name", direction: from });
+
+    await button(wrapper, "name").trigger("click");
+
+    expect(wrapper.emitted("update:sort")).toEqual([[{ key: "name", direction: to }]]);
   });
 
-  it("is keyboard operable: every arrow is a native button in the tab order", () => {
+  it("is keyboard operable: every button is a native button in the tab order", () => {
     const wrapper = mountBar();
 
-    for (const button of wrapper.findAll("button")) {
-      expect(button.element.tagName).toBe("BUTTON");
-      expect(button.attributes("type")).toBe("button");
-      expect(button.attributes("tabindex")).toBeUndefined();
-      expect(button.attributes("disabled")).toBeUndefined();
+    for (const candidate of wrapper.findAll("button")) {
+      expect(candidate.element.tagName).toBe("BUTTON");
+      expect(candidate.attributes("type")).toBe("button");
+      expect(candidate.attributes("tabindex")).toBeUndefined();
+      expect(candidate.attributes("disabled")).toBeUndefined();
     }
   });
 

@@ -191,7 +191,7 @@ describe("GuidedFlowStrip", () => {
     const fromFile = mountStrip(dashboard({ selected: "current", fileMatchesSuggested: true }));
     await flush();
     const text = fromFile.get('[data-testid="guide-step-choose"]').text();
-    expect(text).toContain("ModsConfig.xml already matches the suggested order.");
+    expect(text).toContain("Your active order already matches the suggested order.");
     expect(text).not.toContain("The suggested order is selected.");
     fromFile.unmount();
   });

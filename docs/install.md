@@ -25,8 +25,8 @@ subfolder to your `PATH`. The folder is named after the version, so
 rename it to `Rimmerge` first, or update the `PATH` entry when you
 upgrade.
 
-None of the binaries are code-signed — this project has no signing
-certificate. Windows SmartScreen will warn on first run (choose *More
+None of the binaries are code-signed, because this project has no
+signing certificate. Windows SmartScreen will warn on first run (choose *More
 info*, then *Run anyway*); that warning is expected, not a sign the
 download was tampered with. To check a download, compare
 `(Get-FileHash .\<zip>).Hash.ToLower()` (PowerShell) with the matching
@@ -36,9 +36,9 @@ in the download folder.
 **Where your data lives.** Not in the extracted folder; two folders
 under `%LOCALAPPDATA%`:
 
-- `%LOCALAPPDATA%\rimmerge` — settings, profiles, decisions, and cached
+- `%LOCALAPPDATA%\rimmerge`: settings, profiles, decisions, and cached
   rule databases (see [`config.json`](#configjson) below).
-- `%LOCALAPPDATA%\dev.rimmerge.app` — the WebView2 cache and the
+- `%LOCALAPPDATA%\dev.rimmerge.app`: the WebView2 cache and the
   desktop app's display preferences (language, mod-name display).
 
 Moving the folder or extracting a newer release over it keeps both.
@@ -85,7 +85,7 @@ bun run tauri build
 ```
 
 `bun run tauri dev` runs it without a release build, for
-day-to-day development — see
+day-to-day development. See
 [apps/desktop/README.md](../apps/desktop/README.md).
 
 To assemble the same zips a release ships from your own build
@@ -109,8 +109,8 @@ In order, the first that resolves wins:
    on the desktop app.
 2. the `RIMMERGE_GAME_DIR` environment variable.
 3. `game_dir` in the app's own `config.json` (see below).
-4. auto-detection, platform-specific — every candidate is just checked
-   for existence and RimWorld's own install shape (`Version.txt` +
+4. auto-detection, which is platform-specific. Each candidate is only
+   checked for existence and RimWorld's own install shape (`Version.txt` +
    `Data/Core/`). Beyond `libraryfolders.vdf`, the only other thing read is
    Steam's own install folder from the registry (below):
    - **Windows**: Rimmerge first finds the Steam folders: the one Steam
@@ -118,8 +118,8 @@ In order, the first that resolves wins:
      (`HKCU\Software\Valve\Steam\SteamPath`), the machine-wide one
      (`HKLM\SOFTWARE\WOW6432Node\Valve\Steam\InstallPath`), then
      `%ProgramFiles(x86)%\Steam` and `%ProgramFiles%\Steam`. The
-     registry read is local and read-only; a missing or unreadable key
-     simply contributes nothing, and no network host is involved. So a
+     registry read is local and read-only. A missing or unreadable key
+     contributes nothing, and no network host is involved. So a
      Steam installed on any drive, not only under Program Files, is
      found. Then it checks every Steam library named by
      `steamapps\libraryfolders.vdf` under each of those folders (each
@@ -131,8 +131,8 @@ In order, the first that resolves wins:
      then every other Steam library, then `/Applications/RimWorld.app`.
    - **Linux**: the usual native and Flatpak Steam locations, then every
      other Steam library.
-5. a typed error naming every candidate it looked in — never a silent
-   fallback to a path that doesn't exist.
+5. a typed error naming every candidate it looked in. It never falls
+   back silently to a path that doesn't exist.
 
 A path only counts as "the game folder" once it has both `Version.txt`
 and a `Data/Core/` subfolder; the same check backs both detection and
@@ -178,10 +178,10 @@ rimmerge config clear
 The desktop app's Setup page writes the same file when you save a path
 there.
 
-`config.json` is not `Settings` (see [settings.md](settings.md)) —
-settings live inside a profile and change what the sorter produces;
-`config.json` only says where to find the game in the first place, so it
-has to exist before a profile can even be opened.
+`config.json` is not `Settings` (see [settings.md](settings.md)).
+Settings live inside a profile and change what the sorter produces.
+`config.json` only says where to find the game, so it has to exist
+before a profile can be opened.
 
 ## Read-only, until you ask otherwise
 

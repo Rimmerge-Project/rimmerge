@@ -140,17 +140,17 @@
     "thresholdLabel": "Güven eşiği (otomatik / karar bekliyor)",
     "tieBreak": {
       "label": "Eşitlik bozma",
-      "description": "Başka hiçbir modun sabitlemediği bir modun nereden başlayacağını belirler. Yeniden kur, bu modları ada göre sıralar ve mevcut sıranı yok sayar; bu yüzden RimSort'un oluşturduğu bir listeyi ilk kez yeniden kurduğunda çoğu modun yer değiştirmesini bekle. Mevcudu koru, her modu ModsConfig.xml dosyasındaki konumundan başlatır ve mümkün olduğunca az modu yerinden oynatır.",
+      "description": "Başka hiçbir modun sabitlemediği bir modun nereden başlayacağını belirler. Yeniden kur, bu modları ada göre sıralar ve mevcut sıranı yok sayar; bu yüzden RimSort'un oluşturduğu bir listeyi ilk kez yeniden kurduğunda çoğu modun yer değiştirmesini bekle. Mevcudu koru, her modu etkin sırandaki konumundan başlatır ve mümkün olduğunca az modu yerinden oynatır.",
       "rebuild": "Yeniden kur",
       "preserveCurrent": "Mevcudu koru"
     },
     "useImportedPairs": {
       "label": "İçe aktarılan ikili kuralları kullan",
-      "description": "RimSort/SteamDB \"önce/sonra yükle\" kurallarının sıralamayı etkilemesine izin verir. Varsayılan olarak açık — içe aktarılan ikililerin çoğu, sıralayıcının zaten kendiliğinden uyguladığı kanıtı yineler. Kendi belirlediğin bir kural bu ayardan asla etkilenmez."
+      "description": "RimSort/SteamDB \"önce/sonra yükle\" kurallarının sıralamayı etkilemesine izin verir. Varsayılan olarak açıktır, çünkü içe aktarılan ikililerin çoğu, sıralayıcının zaten kendiliğinden uyguladığı kanıtı yineler. Kendi belirlediğin bir kural bu ayardan asla etkilenmez."
     },
     "useImportedPlacements": {
       "label": "İçe aktarılan konum kurallarını kullan",
-      "description": "RimSort/SteamDB \"ilk/son yükle\" konumlarının bir modun katmanını sabitlemesine izin verir. Varsayılan olarak açık — bir modun kendi dosyalarındaki hiçbir şey \"beni en son yükle\" diyemez."
+      "description": "RimSort/SteamDB \"ilk/son yükle\" konumlarının bir modun katmanını sabitlemesine izin verir. Varsayılan olarak açıktır, çünkü bir modun kendi dosyalarındaki hiçbir şey \"beni en son yükle\" diyemez."
     },
     "enforceSoft": {
       "label": "Yumuşak kısıtları zorunlu kıl",
@@ -158,7 +158,7 @@
     },
     "enforceAwareness": {
       "label": "Farkındalık kısıtlarını zorunlu kıl",
-      "description": "Bu kısıtlar {edgeKinds} ipuçlarından gelir — modların etkileştiğine dair kanıt, bir sıralama gerçeği değil. Varsayılan olarak kapalı: Yumuşak kısıtlardan çok daha yaygındırlar; bu yüzden onları zorunlu kılmak sırayı çok daha fazla bozar."
+      "description": "Bu kısıtlar {edgeKinds} ipuçlarından gelir. Modların etkileştiğine dair kanıttırlar, bir sıralama gerçeği değil. Varsayılan olarak kapalı: Yumuşak kısıtlardan çok daha yaygındırlar; bu yüzden onları zorunlu kılmak sırayı çok daha fazla bozar."
     },
     "enforceInferred": {
       "label": "Çıkarım kısıtlarını zorunlu kıl",
@@ -169,11 +169,11 @@
       "recoveredWarning": "Uygulama ayarları dosyan okunamadı; bu yüzden ayarları yeniden kaydedene kadar internet erişimi kapalı.",
       "allowNetwork": {
         "label": "İnternet erişimine izin ver",
-        "description": "Rimmerge uygulamasının internet üzerinden gönderdiği her şeyin (otomatik ya da elle) ana anahtarı. Yalnızca iki GitHub sunucusuyla iletişim kurar — güncelleme denetimleri için api.github.com, kural veritabanı yenilemeleri için raw.githubusercontent.com — ve yerel ağınla asla. Kapalıyken her istek, herhangi bir adres oluşturulmadan veya bağlantı açılmadan önce atlanır. Hangi RimWorld kurulumunu açarsan aç, bu bilgisayardaki uygulamanın tamamı için geçerlidir."
+        "description": "Rimmerge uygulamasının internet üzerinden gönderdiği her şeyin (otomatik ya da elle) ana anahtarı. Yalnızca iki GitHub sunucusuyla iletişim kurar (güncelleme denetimleri için api.github.com, kural veritabanı yenilemeleri için raw.githubusercontent.com), yerel ağınla asla. Kapalıyken hiçbir istek yapılmaz. Hangi RimWorld kurulumunu açarsan aç, bu bilgisayardaki uygulamanın tamamı için geçerlidir."
       },
       "autoRefreshRuleDatabases": {
         "label": "Kural veritabanlarını otomatik yenile",
-        "description": "Günde bir kez, açılışta, Kural veritabanları kartında listelenen etkin kural veritabanlarını indirir — Steam Atölyesi veritabanını asla; o yalnızca Yenile'ye tıkladığında yenilenir."
+        "description": "Günde bir kez, açılışta, Kural veritabanları kartında listelenen etkin kural veritabanlarını indirir. Steam Atölyesi veritabanı asla bu yolla indirilmez; yalnızca Yenile düğmesine tıkladığında indirilir."
       },
       "checkForUpdates": {
         "label": "Güncellemeleri denetle",
@@ -182,10 +182,10 @@
       "checkNow": {
         "button": "Şimdi denetle",
         "disabledTitle": "İnternet erişimine izin ver ayarı kapalı olduğu için devre dışı",
-        "awaitingFirstRun": "Henüz denetlenmedi — önce Hoş geldin bildirimini yanıtla.",
+        "awaitingFirstRun": "Henüz denetlenmedi. Önce Hoş geldin bildirimini yanıtla.",
         "alreadyRanThisLaunch": "Bu açılışta zaten denetlendi.",
         "networkDisabled": "İnternet erişimi kapalı.",
-        "checkDisabled": "Yine de denetlendi — otomatik denetimler kapalı.",
+        "checkDisabled": "Otomatik denetimler kapalı olmasına rağmen denetlendi.",
         "rateLimited": "GitHub istek sınırına ulaşıldı; şu zamandan sonra yeniden dene: {until}.",
         "updated": "Daha yeni bir sürüm var: {version}.",
         "unchanged": "Güncel.",
@@ -206,7 +206,7 @@
     },
     "showDanglingDefReferences": {
       "label": "Boşta kalan Def başvurusu bulgularını göster",
-      "description": "Tanınan bir başvuru yerine (ör. bir araştırma ön koşulu, bir stat offset anahtarı) yazılmış, ancak hiçbir türdeki hiçbir etkin Def'in gerçekte taşımadığı bir adı işaretler. Varsayılan olarak kapalı — büyük bir kurulumda kayda değer sayıda yanlış pozitif üretebilir (örneğin kendini tanımlayan bir alanın çapraz başvuru sanılması). Yükleme sırasını asla değiştirmez."
+      "description": "Tanınan bir başvuru yerine (örneğin bir araştırma ön koşulu ya da bir stat offset anahtarı) yazılmış, ancak hiçbir türdeki hiçbir etkin Def'in gerçekte taşımadığı bir adı işaretler. Varsayılan olarak kapalıdır, çünkü büyük bir kurulumda azımsanmayacak sayıda yanlış pozitif üretebilir (örneğin kendini tanımlayan bir alanın çapraz başvuru sanılması). Yükleme sırasını asla değiştirmez."
     },
     "saveButton": "Kaydet",
     "resetButton": "Varsayılanlara sıfırla",
@@ -365,13 +365,13 @@
         "title": "Önerilen sırayı kullan",
         "pending": "Mevcut sıranı görüntülüyorsun. Önerilen sıra {count} modun yerini değiştiriyor. | Mevcut sıranı görüntülüyorsun. Önerilen sıra {count} modun yerini değiştiriyor.",
         "doneText": "Önerilen sıra seçili.",
-        "doneMatchesFileText": "ModsConfig.xml zaten önerilen sırayla eşleşiyor.",
+        "doneMatchesFileText": "Etkin sıran zaten önerilen sırayla eşleşiyor.",
         "button": "Önerilen sırayı kullan",
         "reviewLink": "Önerilen sırayı incele"
       },
       "apply": {
         "title": "Uygula",
-        "pending": "ModsConfig.xml dosyasına neyin yazılacağını gör. Önce bir yedek alınır.",
+        "pending": "Etkin mod listene neyin yazılacağını gör. Önce bir yedek alınır.",
         "button": "Uygula…",
         "staleBlocked": "Etkin modların son taramadan bu yana değişti. Uygulamadan önce yeniden tara.",
         "rescanButton": "Yeniden tara"
@@ -380,11 +380,11 @@
         "title": "Onayla",
         "pending": "Özeti incele, ardından onayla. Gerekli bir modun eksik olması gibi bir şey bozulacaksa önce sana sorulur."
       },
-      "done": "ModsConfig.xml önerilen sırayla eşleşiyor. Oynamak için RimWorld'ü başlat.",
+      "done": "Etkin sıran önerilen sırayla eşleşiyor. Oynamak için RimWorld'ü başlat.",
       "asOfLastScan": "Son tarama veya Uygula işlemi itibarıyla.",
       "needsInputHint": "{count} bulgu kararını bekliyor (isteğe bağlı) | {count} bulgu kararını bekliyor (isteğe bağlı)",
       "openInbox": "Bulgular sayfasını aç",
-      "appliedAnnouncement": "Uygulandı. ModsConfig.xml artık önerilen sırayla eşleşiyor."
+      "appliedAnnouncement": "Uygulandı. Etkin sıran artık önerilen sırayla eşleşiyor."
     }
   },
   "notifications": {
@@ -400,7 +400,7 @@
     },
     "welcome": {
       "title": "Rimmerge'e hoş geldin",
-      "body": "Rimmerge, açıldığında GitHub ile iletişim kurabilir:\n- daha yeni bir Rimmerge sürümünün yayımlanıp yayımlanmadığını denetlemek için (api.github.com), her açılışta;\n- güncel kural veritabanlarını indirmek için — topluluğun yükleme sırası kuralları ve Rimmerge kural dosyası (raw.githubusercontent.com), en fazla günde bir kez. Güncellemeler yerel olarak saklanır; yükleme sıranı yalnızca sen içe aktarmayı seçtiğinde değiştirirler.\n\nSenin, modlarının veya kurulumunun hakkında hiçbir şey göndermez — yalnızca GitHub'ın IP adresini gördüğü sade bir istek. Büyük Steam Atölyesi veritabanı asla otomatik olarak indirilmez; yalnızca Yenile'ye tıkladığında indirilir.",
+      "body": "Rimmerge, açıldığında GitHub ile iletişim kurabilir:\n- daha yeni bir Rimmerge sürümünün yayımlanıp yayımlanmadığını denetlemek için (api.github.com), her açılışta;\n- güncel kural veritabanlarını (topluluğun yükleme sırası kuralları ve Rimmerge kural dosyası, raw.githubusercontent.com adresinden) indirmek için, en fazla günde bir kez. Güncellemeler yerel olarak saklanır ve yükleme sıranı yalnızca sen içe aktarmayı seçtiğinde değiştirir.\n\nSana, modlarına veya kurulumuna dair hiçbir şey göndermez. GitHub yalnızca IP adresinden gelen sıradan bir web isteği görür. Büyük Steam Atölyesi veritabanı asla otomatik olarak indirilmez; yalnızca Yenile düğmesine tıkladığında indirilir.",
       "settingsAlreadyRecommended": "Ayarların zaten önerilen varsayılanlarla eşleşiyor.",
       "steamWorkshopLabel": "Steam Atölyesi veritabanı (yaklaşık 49 MB, yalnızca Yenile'ye tıkladığında indirilir)"
     },
@@ -500,7 +500,7 @@
       },
       "finding_not_found": {
         "title": "Bulgu bulunamadı",
-        "detail": "Bu bulgu artık geçerli değil — zaten çözülmüş olabilir."
+        "detail": "Bu bulgu artık geçerli değil. Zaten çözülmüş olabilir."
       },
       "merge_source_failed": {
         "title": "Bir birleştirme kaynağı okunamadı",
@@ -532,7 +532,7 @@
       },
       "stale_active_set": {
         "title": "Etkin mod listesi güncel değil",
-        "detail": "ModsConfig.xml dosyasına yazmadan önce yeniden tara."
+        "detail": "Etkin mod listene yazmadan önce yeniden tara."
       },
       "already_running": {
         "title": "İşlem zaten sürüyor",
@@ -574,7 +574,7 @@
       },
       "nothing_to_export": {
         "title": "Dışa aktarılacak bir şey yok",
-        "detail": "Hiçbir etkin mod listelenemedi. ModsConfig.xml dosyasındaki etkin modları denetle."
+        "detail": "Hiçbir etkin mod listelenemedi. Etkin mod listenin boş olmadığını denetle."
       },
       "move_anchor_not_active": {
         "title": "Bu mod artık etkin listede değil",
@@ -582,11 +582,11 @@
       },
       "revert_order_pending_changes": {
         "title": "Önce bekleyen değişikliklerini at",
-        "detail": "Etkin listede henüz taranmamış değişiklikler var. Bunları at ya da yeniden tara, sonra ModsConfig.xml sırasına geri dön."
+        "detail": "Etkin listede henüz taranmamış değişiklikler var. Bunları at ya da yeniden tara, sonra sırayı geri döndür."
       },
       "revert_order_membership_differs": {
-        "title": "Dosyada farklı modlar listeleniyor",
-        "detail": "ModsConfig.xml dosyasında mevcut sıradakinden farklı modlar listeleniyor, bu yüzden geri dönülecek bir sıra yok. Bunun yerine dosyadaki listeyi kullan ya da kendi sıranı uygula."
+        "title": "Kayıtlı listede farklı modlar var",
+        "detail": "Kayıtlı etkin modların mevcut sırandakilerden farklı, bu yüzden geri dönülecek bir sıra yok. Kayıtlı listeyi kullanmak istiyorsan Yükleme sırası sayfasında İçe aktar ile aç. Aksi halde kendi sıranı uygula."
       }
     }
   },
@@ -739,8 +739,8 @@
         "referrerFromDef": "{modId} içinde {defType}/{defName} ({fieldPath})",
         "referrerFromTemplate": "{modId} içinde {defType}/{'@'}{name} ({fieldPath})",
         "referrerFromPatch": "{modId} modunun {defType}/{defName} üzerindeki yaması ({fieldPath})",
-        "sentence": "{name}, hiçbir türdeki hiçbir etkin Def'e çözümlenmiyor — {cause}.",
-        "likelySound": "Bu bir ses başvurusuna benziyor — eksik bir {soundDef} yüklemeyi durdurmaz; bir uyarı kaydeder ve sessizce tanımsız bir sese geri döner.",
+        "sentence": "{name}, hiçbir türdeki hiçbir etkin Def'e çözümlenmiyor: {cause}.",
+        "likelySound": "Bu bir ses başvurusuna benziyor. Eksik bir {soundDef} yüklemeyi durdurmaz; bir uyarı kaydeder ve sessizce tanımsız bir sese geri döner.",
         "referencedFrom": "Başvuran yerler:",
         "truncatedReferrers": "Gösterilmeyen {count} başvuran daha var (görüntüleme sınırı). | Gösterilmeyen {count} başvuran daha var (görüntüleme sınırı)."
       },
@@ -821,26 +821,26 @@
         "sentence": "{modId} modundaki {def} Def'inin {field} alanı {path} dokusunu gösteriyor, ancak hiçbir etkin mod bu dokuyu barındırmıyor."
       },
       "undecodableTexture": {
-        "sentence": "{modId} modundaki {path} dosyası çözülemiyor ({width}x{height}, {fourcc}) — ana oyun onun yerine bozuk doku yer tutucusunu gösterir.",
+        "sentence": "{modId} modundaki {path} dosyası çözülemiyor ({width}x{height}, {fourcc}). Ana oyun onun yerine bozuk doku yer tutucusunu gösterir.",
         "pngSibling": "Bu mod aynı yolda DDS olmayan bir dosya da barındırıyor, ancak ana oyun asla ona geri dönmez."
       },
       "brokenInheritance": {
-        "missingParent": "{modId} modundaki {child}, {parentName} üst öğesinden kalıtım alıyor — hiçbir etkin mod bunu tanımlamıyor, bu yüzden o üst öğenin kendi alanlarının hiçbiri olmadan yükleniyor.",
-        "wrongType": "{modId} modundaki {child}, {parentName} üst öğesinden kalıtım alıyor — bu ad, modun kendi yükleme konumunda bir {childDefType} olarak değil, bir {parentType} olarak çözümleniyor.",
+        "missingParent": "{modId} modundaki {child}, {parentName} üst öğesinden kalıtım alıyor, ancak hiçbir etkin mod bunu tanımlamıyor; bu yüzden o üst öğenin kendi alanlarının hiçbiri olmadan yükleniyor.",
+        "wrongType": "{modId} modundaki {child}, {parentName} üst öğesinden kalıtım alıyor, ancak bu ad, modun kendi yükleme konumunda bir {childDefType} olarak değil, bir {parentType} olarak çözümleniyor.",
         "affectedCount": "Etkilenen {count} Def: | Etkilenen {count} Def:",
-        "andMore": "… ve {count} tane daha",
+        "andMore": "ve {count} tane daha",
         "truncated": "Gösterilmeyen {count} etkilenen Def daha var (görüntüleme sınırı). | Gösterilmeyen {count} etkilenen Def daha var (görüntüleme sınırı)."
       },
       "nearMissModReference": {
-        "findModName": "{modId} modundaki FindMod adı {written} hiçbir etkin veya yüklü moda çözümlenmiyor, ancak {candidateName} ile çok benzer — bir yazım hatası olabilir.",
-        "mayRequireId": "{modId} modundaki MayRequire ID'si {written} hiçbir etkin veya yüklü moda çözümlenmiyor, ancak {candidateName} ile çok benzer — bir yazım hatası olabilir.",
+        "findModName": "{modId} modundaki FindMod adı {written} hiçbir etkin veya kurulu moda çözümlenmiyor, ancak {candidateName} ile çok benzer. Bir yazım hatası olabilir.",
+        "mayRequireId": "{modId} modundaki MayRequire ID'si {written} hiçbir etkin veya kurulu moda çözümlenmiyor, ancak {candidateName} ile çok benzer. Bir yazım hatası olabilir.",
         "writtenIn": "Yazıldığı yer: {file}"
       },
       "patchWillFail": {
-        "causeRemovedBy": "{modId} modunun {defKey} üzerindeki {operation} işleminin bu sırada başarısız olacağı öngörülüyor — daha önce yüklenen {causeModId} modu, hedef düğümü kendi işlemiyle kaldırıyor.",
-        "causeNotYetInjected": "{modId} modunun {defKey} üzerindeki {operation} işleminin bu sırada başarısız olacağı öngörülüyor — {causeModId} modunun eklediği bir düğümü hedefliyor, ancak o mod kendisinden sonra yükleniyor.",
-        "causeDeadTarget": "{modId} modunun {defKey} üzerindeki {operation} işleminin bu sırada başarısız olacağı öngörülüyor — kazanan sahibin kendi çözümlenmiş yapısında, yükleme sırasından bağımsız olarak bu düğüm hiç bulunmuyor.",
-        "causeUnclassified": "{modId} modunun {defKey} üzerindeki {operation} işleminin bu sırada başarısız olacağı öngörülüyor — nedeni sınıflandırılamadı.",
+        "causeRemovedBy": "{modId} modunun {defKey} üzerindeki {operation} işleminin bu sırada başarısız olacağı öngörülüyor. Daha önce yüklenen {causeModId} modu, hedef düğümü kendi işlemiyle kaldırıyor.",
+        "causeNotYetInjected": "{modId} modunun {defKey} üzerindeki {operation} işleminin bu sırada başarısız olacağı öngörülüyor. İşlem, {causeModId} modunun eklediği bir düğümü hedefliyor, ancak o mod daha sonra yükleniyor.",
+        "causeDeadTarget": "{modId} modunun {defKey} üzerindeki {operation} işleminin bu sırada başarısız olacağı öngörülüyor. Kazanan sahibin kendi çözümlenmiş yapısında, yükleme sırasından bağımsız olarak bu düğüm hiç bulunmuyor.",
+        "causeUnclassified": "{modId} modunun {defKey} üzerindeki {operation} işleminin bu sırada başarısız olacağı öngörülüyor. Nedeni sınıflandırılamadı.",
         "specificField": "Belirli alan: {leafXpath}"
       },
       "contributesNothing": {
@@ -894,7 +894,7 @@
       "completenessPartial": "Kısmi",
       "completenessCompleteWithProblems": "Tam, sorunlu",
       "completenessComplete": "Tam",
-      "patchCollisionWithSubPath": "Yama çakışması — {subPath}",
+      "patchCollisionWithSubPath": "Yama çakışması: {subPath}",
       "injectedNodeRelation": "{selector} modunun yaması, {injector} tarafından eklenen bir düğümü seçiyor",
       "showLabel": "Göster",
       "filterAllChanged": "Tüm değişenler",
@@ -967,7 +967,7 @@
     "state": {
       "merged": "birleştirildi",
       "needsInput": "{count} alan karar bekliyor | {count} alan karar bekliyor",
-      "structuralGuard": "otomatik birleştirilmedi — kazananı onayla",
+      "structuralGuard": "otomatik birleştirilmedi: kazananı onayla",
       "cannotMerge": "birleştirilemez"
     },
     "skipped": {
@@ -982,7 +982,7 @@
     "header": {
       "inspectLink": "İncele",
       "outOfScope": "Kapsam dışında, birleştirilmedi: {mods}",
-      "structuralGuardLine": "{field} farklı ({by} / temel kopya) — bu Def için alan düzeyinde birleştirme güvenli değil. Bulgular sayfasında bu bulguyu kabul ederek yükleme sırası kazananını onayla; birleştirme olarak tamamlanamaz.",
+      "structuralGuardLine": "{field} farklı ({by} / temel kopya), bu yüzden bu Def için alan düzeyinde birleştirme güvenli değil. Bulgular sayfasında bu bulguyu kabul ederek yükleme sırası kazananını onayla. Birleştirme olarak tamamlanamaz.",
       "baseTag": "(temel)",
       "winnerTag": "(kazanan)",
       "totalsFields": "{count} alan | {count} alan",
@@ -1004,27 +1004,27 @@
       "heading": "Birleştirme çıktısı",
       "mergedDefs": "{count} birleştirilmiş Def | {count} birleştirilmiş Def",
       "nothingYet": "boş",
-      "summary": "Rimmerge, birleştirme ve varlık kararlarını bu uyumluluk moduna yazar — şu anki içerik: {contents}. Uygula'ya her bastığında yeniden oluşturulur; önerilen sırada her zaman en son yüklenir.",
-      "summaryWithSources": "Rimmerge, birleştirme ve varlık kararlarını bu uyumluluk moduna yazar — şu anki içerik: {contents}; kaynak: {count} mod. Uygula'ya her bastığında yeniden oluşturulur; önerilen sırada her zaman en son yüklenir. | Rimmerge, birleştirme ve varlık kararlarını bu uyumluluk moduna yazar — şu anki içerik: {contents}; kaynak: {count} mod. Uygula'ya her bastığında yeniden oluşturulur; önerilen sırada her zaman en son yüklenir.",
+      "summary": "Rimmerge, birleştirme ve varlık kararlarını bu uyumluluk moduna yazar. Şu anki içerik: {contents}. Uygula'ya her bastığında yeniden oluşturulur ve önerilen sırada her zaman en son yüklenir.",
+      "summaryWithSources": "Rimmerge, birleştirme ve varlık kararlarını bu uyumluluk moduna yazar. Şu anki içerik: {contents}; kaynak: {count} mod. Uygula'ya her bastığında yeniden oluşturulur ve önerilen sırada her zaman en son yüklenir. | Rimmerge, birleştirme ve varlık kararlarını bu uyumluluk moduna yazar. Şu anki içerik: {contents}; kaynak: {count} mod. Uygula'ya her bastığında yeniden oluşturulur ve önerilen sırada her zaman en son yüklenir.",
       "loadFailed": "Birleştirme çıktısı yüklenemedi.",
       "packageIdLabel": "Paket ID'si",
       "folderLabel": "Klasör",
       "pathLabel": "Yol",
       "onDiskLabel": "Diskte",
-      "existsYes": "Evet — Uygula'ya her bastığında yeniden oluşturulur",
-      "existsNo": "Henüz değil — oluşturmak için \"Birleştirme modunu yaz\" seçeneğiyle uygula",
+      "existsYes": "Evet, Uygula'ya her bastığında yeniden oluşturulur",
+      "existsNo": "Henüz değil. Oluşturmak için \"Birleştirme modunu yaz\" seçeneğiyle uygula",
       "placementLabel": "Yükleme sırasındaki konumu",
       "placementValue": "En son (sıralayıcı, oluşturulan modu her zaman önerilen sıranın en altına yerleştirir)",
       "sourceModsLabel": "Kaynak modlar",
       "entriesHeading": "Girdiler",
-      "noEntriesYet": "Henüz birleştirme veya dahil edilen varlık kararı yok — eklemek için birleştirme düzenleyicisiyle bir Def geçersiz kılma veya yama çakışması bulgusuna karar ver.",
+      "noEntriesYet": "Henüz birleştirme veya dahil edilen varlık kararı yok. Eklemek için birleştirme düzenleyicisiyle bir Def geçersiz kılma veya yama çakışması bulgusuna karar ver.",
       "filesHeading": "Dosyalar",
       "nothingRendersYet": "En az bir birleştirme veya dahil edilen varlık kararı olduğunda dosyalar burada görünür.",
       "fileLoadFailed": "Bu dosya oluşturulamadı."
     },
     "filePreviewLabel": "Dosya önizlemesi",
     "editor": {
-      "sourceFailedSuffix": "{message} — projenin dosyaları son taramadan bu yana değişti.",
+      "sourceFailedSuffix": "Projenin dosyaları son taramadan bu yana değişti: {message}",
       "reloadProject": "Projeyi yeniden yükle",
       "loadFailed": "Birleştirme önizlemesi yüklenemedi.",
       "showMore": "Daha fazla göster ({loaded}/{total})",
@@ -1051,7 +1051,7 @@
       "sectionAuto": "Otomatik çözülen ({count})",
       "sectionUnchanged": "Değişmeyen ({count})",
       "containerEntries": "{count} girdi | {count} girdi",
-      "containerSummary": "{container} — {entries}",
+      "containerSummary": "{container}: {entries}",
       "containerConflicts": "{count} çakışma | {count} çakışma",
       "containerSummaryWithConflicts": "{base}, {conflicts}",
       "acceptSuggested": "Önerileni kabul et ({count})"
@@ -1068,7 +1068,7 @@
       "needsInput": "karar bekliyor",
       "saving": "kaydediliyor…",
       "drop": "At",
-      "dropUnavailableTitle": "Yama çakışmasında atma desteklenmez — RimWorld yamaları yeniden oynatıldığında her zaman bir değer ortaya çıkar.",
+      "dropUnavailableTitle": "Yama çakışmasında atma desteklenmez, çünkü RimWorld yamaları yeniden oynatıldığında her zaman bir değer ortaya çıkar.",
       "clearChoice": "Seçimi temizle",
       "autoRevert": "Otomatik"
     },
@@ -1102,7 +1102,7 @@
       "label": "kısmi: +{mods}"
     },
     "table": {
-      "emptyState": "Henüz uyumluluk yaması yok — oluşturmak için n tuşuna bas.",
+      "emptyState": "Henüz uyumluluk yaması yok. Oluşturmak için n tuşuna bas.",
       "nameHeader": "Ad",
       "packageIdHeader": "Paket ID'si",
       "scopeHeader": "Kapsam",
@@ -1139,7 +1139,7 @@
       "importedNoSkips": "{count} karar içe aktarıldı. | {count} karar içe aktarıldı.",
       "rejection": {
         "outOfScope": "bu yamanın kapsam üyeleri arasında bir bulgu değil",
-        "notPatchable": "bir yama yalnızca birleştirme, dahil edilen varlık ve yok sayma kararları içerebilir — \"{action}\" değil",
+        "notPatchable": "bir yama yalnızca birleştirme, dahil edilen varlık ve yok sayma kararları içerebilir, \"{action}\" değil",
         "choiceOutsideScope": "{path}: seçimi, bu yamanın kapsamında olmayan {mod} modunu gösteriyor",
         "assetOutsideScope": "dahil ettiği varlık, bu yamanın kapsamında olmayan {mod} modundan geliyor",
         "actionName": {
@@ -1183,7 +1183,7 @@
       "searchLabel": "Kapsama eklenecek modları ara",
       "searchResultsLabel": "Aramayla eşleşen modlar",
       "noMatches": "Eşleşme yok.",
-      "scopeShrunk": "Kapsam daraldı — {count} karar artık sahipsiz. | Kapsam daraldı — {count} karar artık sahipsiz.",
+      "scopeShrunk": "Kapsam daraldı: {count} karar artık sahipsiz. | Kapsam daraldı: {count} karar artık sahipsiz.",
       "remainingChoicesNamingRemoved": "Kalan {count} seçim hâlâ kaldırılmış bir modu gösteriyor. | Kalan {count} seçim hâlâ kaldırılmış bir modu gösteriyor."
     },
     "exportPanel": {
@@ -1191,9 +1191,9 @@
       "exportDirPlaceholder": "Bir klasör seç…",
       "chooseButton": "Seç…",
       "installCheckboxLabel": "Mods klasörüne kur ve etkinleştir",
-      "staleActiveSetNote": "Bekleyen etkinleştirme değişiklikleri dahil değil — bu kuruluma girmelerini istiyorsan önce yeniden tara.",
+      "staleActiveSetNote": "Bekleyen etkinleştirme değişiklikleri dahil değil. Bu kuruluma girmelerini istiyorsan önce yeniden tara.",
       "unappliedOrderNote": "Kurulum mevcut sıranı yazar; bu sıra henüz uygulanmadı.",
-      "forceWarning": "RimWorldWin64.exe çalışıyor görünüyor. Şimdi kurmak ModsConfig.xml dosyasına yazar; oyun kapanırken bu dosyanın üzerine yazdığı için değişiklik kaybolabilir. Yine de dışa aktarılsın mı?",
+      "forceWarning": "RimWorldWin64.exe çalışıyor görünüyor. Şimdi kurmak etkin mod listene yazar; oyun kapanırken bu listenin üzerine yazdığı için değişiklik kaybolabilir. Yine de dışa aktarılsın mı?",
       "exportAnyway": "Yine de dışa aktar",
       "export": "Dışa aktar",
       "exportedTo": "Dışa aktarıldığı yer: {path}",
@@ -1203,7 +1203,7 @@
       "renderLoadFailed": "Bu yama oluşturulamadı.",
       "dependenciesHeading": "Bağımlılıklar",
       "entriesHeading": "Girdiler",
-      "noEntriesYet": "Henüz birleştirme veya dahil edilen varlık kararı yok — eklemek için bu yamanın bulgularında bir Def geçersiz kılma veya yama çakışması bulgusuna karar ver.",
+      "noEntriesYet": "Henüz birleştirme veya dahil edilen varlık kararı yok. Eklemek için bu yamanın bulgularında bir Def geçersiz kılma veya yama çakışması bulgusuna karar ver.",
       "skippedHeading": "Atlananlar",
       "filesHeading": "Dosyalar",
       "nothingRendersYet": "Bu yamanın en az bir birleştirme veya dahil edilen varlık kararı olduğunda dosyalar burada görünür.",
@@ -1273,11 +1273,17 @@
         "packageId": "Paket ID'sine göre sırala, A'dan Z'ye",
         "lastUpdated": "Son güncellemeye göre sırala, önce en eski"
       },
-      "descending": {
-        "loadOrder": "Yükleme sırasına göre sırala, sondan ilke",
-        "name": "Ada göre sırala, Z'den A'ya",
-        "packageId": "Paket ID'sine göre sırala, Z'den A'ya",
-        "lastUpdated": "Son güncellemeye göre sırala, önce en yeni"
+      "activeAscending": {
+        "loadOrder": "Yükleme sırasına göre sıralı, ilkten sona. Sondan ilke için tıkla.",
+        "name": "Ada göre sıralı, A'dan Z'ye. Z'den A'ya için tıkla.",
+        "packageId": "Paket ID'sine göre sıralı, A'dan Z'ye. Z'den A'ya için tıkla.",
+        "lastUpdated": "Son güncellemeye göre sıralı, önce en eski. Önce en yeni için tıkla."
+      },
+      "activeDescending": {
+        "loadOrder": "Yükleme sırasına göre sıralı, sondan ilke. İlkten sona için tıkla.",
+        "name": "Ada göre sıralı, Z'den A'ya. A'dan Z'ye için tıkla.",
+        "packageId": "Paket ID'sine göre sıralı, Z'den A'ya. A'dan Z'ye için tıkla.",
+        "lastUpdated": "Son güncellemeye göre sıralı, önce en yeni. Önce en eski için tıkla."
       },
       "updatedUnavailable": {
         "shippedWithGame": "Oyunla birlikte gelir",
@@ -1285,8 +1291,8 @@
       }
     },
     "pendingChanges": {
-      "unscanned": "{count} bekleyen değişiklik — analizi güncellemek için yeniden tara | {count} bekleyen değişiklik — analizi güncellemek için yeniden tara",
-      "unapplied": "{count} değişiklik henüz ModsConfig.xml dosyasına uygulanmadı | {count} değişiklik henüz ModsConfig.xml dosyasına uygulanmadı",
+      "unscanned": "{count} bekleyen değişiklik. Analizi güncellemek için yeniden tara. | {count} bekleyen değişiklik. Analizi güncellemek için yeniden tara.",
+      "unapplied": "{count} değişiklik henüz uygulanmadı | {count} değişiklik henüz uygulanmadı",
       "rescanButton": "Yeniden tara",
       "rescanFinishedToast": "Yeniden tarama tamamlandı: {count} not | Yeniden tarama tamamlandı: {count} not",
       "rescannedWithWarningsToast": "Yeniden tarama uyarılarla tamamlandı",
@@ -1294,7 +1300,7 @@
     },
     "closeGuard": {
       "header": "Kaydedilmemiş etkin mod değişiklikleri",
-      "body": "Çalışılan etkin mod listesinde henüz hiçbir yeniden taramanın almadığı değişiklikler var ya da taranmış bir sıra {modsConfig} dosyasına uygulanmadı. Şimdi çıkarsan bellekteki bu çalışma kaybolur — oyunun kendi dosyasına her iki durumda da dokunulmaz.",
+      "body": "Etkin modlarında henüz hiçbir yeniden taramanın almadığı değişiklikler ya da henüz uygulanmamış taranmış bir sıra var. Şimdi çıkarsan bu çalışma kaybolur. Oyunun kendi mod listesine her iki durumda da dokunulmaz.",
       "stay": "Kal",
       "leaveAnyway": "Yine de çık"
     },
@@ -1303,7 +1309,7 @@
     },
     "detail": {
       "loadFailed": "Bu mod yüklenemedi.",
-      "idAndSource": "{modId} — {source}",
+      "idAndSource": "{modId} ({source})",
       "byAuthors": "Yapan: {authors}",
       "tagsHeading": "Etiketler",
       "declaredOrderHeading": "Bildirilen sıra",
@@ -1333,7 +1339,7 @@
       "activateSelectedButton": "Seçilenleri etkinleştir",
       "loadFailed": "Modlar yüklenemedi.",
       "totalMods": "{count} mod | {count} mod",
-      "pageCapHint": "(ilk {count} gösteriliyor — aramayla daralt)",
+      "pageCapHint": "(ilk {count} gösteriliyor; daha fazlasını görmek için aramayı daralt)",
       "activateDialogHeader": "Modları etkinleştir",
       "willActivateHeading": "Etkinleştirilecek:",
       "alreadyActiveHeading": "Zaten etkin, atlandı:",
@@ -1384,7 +1390,7 @@
       "announcedManyOf": "{count} mod {position}. konumdan başlayarak taşındı (toplam {total}) | {count} mod {position}. konumdan başlayarak taşındı (toplam {total})",
       "announcedManyHidden": "{count} mod ({hidden} tanesi gösterilmiyor) {position}. konumdan başlayarak taşındı | {count} mod ({hidden} tanesi gösterilmiyor) {position}. konumdan başlayarak taşındı",
       "announcedManyHiddenOf": "{count} mod ({hidden} tanesi gösterilmiyor) {position}. konumdan başlayarak taşındı (toplam {total}) | {count} mod ({hidden} tanesi gösterilmiyor) {position}. konumdan başlayarak taşındı (toplam {total})",
-      "switchedNote": "Artık kendi sıranı kullanıyorsun — önerilen sıra değişmedi.",
+      "switchedNote": "Artık kendi sıranı kullanıyorsun. Önerilen sıra değişmedi.",
       "viewSuggested": "Önerilen sırayı göster",
       "suggestedNote": "Uygula işlemi önerilen sırayı yazacak. Bir modu taşırsan kendi sırana geçilir.",
       "coreStaysActive": "Ana İçerik devre dışı bırakılamaz.",
@@ -1405,7 +1411,7 @@
       "notAppliedTitle": "Etkisiz: içe aktarılan ikililer kapalı",
       "promotedFrom": "(kaynağı: {origin}, yükseltildi)",
       "overridesDeclaredTag": "(beyanı geçersiz kılar)",
-      "overridesDeclaredTitle": "Bu kural, aynı iki mod arasında beyan edilmiş bir kısıt (loadAfter/modDependencies) varsa onu geçersiz kılmak üzere işaretlenmiş — yalnızca bu ikili için mod yapımcısının kendi beyanını yener, ama asla Kesin bir bağımlılığı değil.",
+      "overridesDeclaredTitle": "Bu kural, aynı iki mod arasında beyan edilmiş bir kısıt (loadAfter/modDependencies) varsa onu geçersiz kılmak üzere işaretlenmiş. Bu ikili için mod yapımcısının kendi beyanını yener, ama asla Kesin bir bağımlılığı değil.",
       "promotedButton": "Yükseltildi",
       "promoteButton": "Yükselt",
       "deleteButton": "Sil"
@@ -1416,7 +1422,7 @@
       "loadsBeforeLabel": "Önce yüklenen (bağımlılık)",
       "commentLabel": "Yorum (isteğe bağlı)",
       "overrideDeclaredLabel": "Varsa bu modlar arasında beyan edilmiş bir kısıtı geçersiz kıl",
-      "overrideDeclaredWarning": "Bu, yalnızca bu ikili için mod yapımcısının kendi loadAfter/modDependencies beyanını yener — asla Kesin bir bağımlılığı değil. Yalnızca beyanın kendisi eskimiş veya yanlışsa kullan.",
+      "overrideDeclaredWarning": "Bu, bu ikili için mod yapımcısının kendi loadAfter/modDependencies beyanını yener, ama asla Kesin bir bağımlılığı değil. Yalnızca beyanın kendisi eskimiş veya yanlışsa kullan.",
       "sameModError": "İkili kural için iki farklı mod gerekir.",
       "replaceWarning": "Bu işlem, bu ikili için mevcut {origin} kuralının yerini alır.",
       "addButton": "Ekle"
@@ -1458,7 +1464,7 @@
       "refreshButton": "Yenile",
       "refreshDisabledTitle": "İnternet erişimine izin ver ayarı kapalı olduğu için devre dışı (Ayarlar sayfası)",
       "networkDisabledNotice": "İnternet erişimi kapalı, bu yüzden yenileme devre dışı. Önbellekteki veritabanları kullanılmaya devam ediyor.",
-      "failureBanner": "Son yenileme en az bir kaynak için başarısız oldu — önbellekteki kopya kullanılmaya devam ediyor.",
+      "failureBanner": "Son yenileme en az bir kaynak için başarısız oldu. Önbellekteki kopya kullanılmaya devam ediyor.",
       "loadFailed": "Kural veritabanları yüklenemedi.",
       "needsReimport": "(yeniden içe aktarılabilir)",
       "neverFetched": "Hiç indirilmedi",
@@ -1550,15 +1556,15 @@
   },
   "defPage": {
     "loadFailed": "Bu Def yüklenemedi.",
-    "sourceTitle": "{source} sıraya göre görüntüleniyor — değiştirmek için tıkla",
+    "sourceTitle": "{source} sıraya göre görüntüleniyor. Değiştirmek için tıkla",
     "partialBanner": "Tamamlanmadı, durduğu yer: {reason}. Bu noktadan sonraki alanlar gösterilmiyor.",
     "replayStopper": "{mod} modunun {opIndex} numaralı işlemi: {error}",
-    "ambiguousTemplateIntro": "Belirsiz şablon: bu Name için {count} kayıt var. RimWorld her alt Def'i bağımsız olarak, kendi konumunda ya da öncesinde en yakın yüklenen kayda çözümler — asla tek bir kazanan olmaz. Yukarıdaki \"kazanan\"/\"son yüklenen temsilci\", belirli bir alt Def sorulmadığı durumlar için bu uygulamanın açıkça belirttiği bir yer tutucudur, bir yanıt değil. | Belirsiz şablon: bu Name için {count} kayıt var. RimWorld her alt Def'i bağımsız olarak, kendi konumunda ya da öncesinde en yakın yüklenen kayda çözümler — asla tek bir kazanan olmaz. Yukarıdaki \"kazanan\"/\"son yüklenen temsilci\", belirli bir alt Def sorulmadığı durumlar için bu uygulamanın açıkça belirttiği bir yer tutucudur, bir yanıt değil.",
+    "ambiguousTemplateIntro": "Belirsiz şablon: bu Name için {count} kayıt var. RimWorld her alt Def'i ayrı ayrı, kendi konumunda ya da öncesinde en yakın yüklenen kayda çözümler; bu yüzden tek bir kazanan yoktur. Yukarıdaki \"kazanan\" ve \"son yüklenen temsilci\", belirli bir alt Def sorulmadığı durumlar için bu uygulamanın koyduğu bir yer tutucudur, bir yanıt değil. | Belirsiz şablon: bu Name için {count} kayıt var. RimWorld her alt Def'i ayrı ayrı, kendi konumunda ya da öncesinde en yakın yüklenen kayda çözümler; bu yüzden tek bir kazanan yoktur. Yukarıdaki \"kazanan\" ve \"son yüklenen temsilci\", belirli bir alt Def sorulmadığı durumlar için bu uygulamanın koyduğu bir yer tutucudur, bir yanıt değil.",
     "knownChildrenResolve": "{count} bilinen alt Def buraya çözümleniyor | {count} bilinen alt Def buraya çözümleniyor",
     "ownersHeading": "Sahipler",
     "winnerTag": "(kazanan)",
     "representativeTag": "(son yüklenen temsilci)",
-    "representativeTitle": "Yalnızca temsilci — tek bir yanıt yok; yukarıdaki belirsiz şablon bildirimine bak",
+    "representativeTitle": "Yalnızca temsilci. Tek bir yanıt yok; yukarıdaki belirsiz şablon bildirimine bak",
     "generatedTag": "(oluşturulmuş)",
     "patchersHeading": "Yamalayanlar",
     "patcherStatusNotReached": "ulaşılmadı",
@@ -1604,7 +1610,7 @@
     "awareness": "Farkındalık"
   },
   "order": {
-    "heading": "Yükleme sırası — {source}",
+    "heading": "Yükleme sırası: {source}",
     "loadFailed": "Sıra yüklenemedi.",
     "sortProvenance": {
       "summary": "eşitlik bozma: {tieBreak} · içe aktarılan ikililer: {pairs} · içe aktarılan konumlar: {placements}",
@@ -1621,7 +1627,7 @@
       "movedFrom": "önceki: #{position}"
     },
     "whyPanel": {
-      "headerWithMod": "{mod} — neden burada?",
+      "headerWithMod": "{mod} modu neden burada?",
       "headerFallback": "Neden burada?",
       "loadFailed": "Açıklama yüklenemedi.",
       "positionHeading": "Konum",
@@ -1676,7 +1682,7 @@
   "orderShare": {
     "export": {
       "button": "Dışa aktar",
-      "hint": "ModsConfig.xml dosyasındaki sırayı, yani RimWorld'ün yüklediği sırayı dışa aktarır.",
+      "hint": "Etkin sırayı, yani RimWorld'ün yüklediği sırayı dışa aktarır.",
       "saveFile": "RimWorld mod listesi olarak kaydet (.rml)…",
       "copyText": "Metin olarak kopyala",
       "fileFilter": "RimWorld mod listesi",
@@ -1702,7 +1708,7 @@
       "summary": "Listede {count} mod | Listede {count} mod",
       "versionDiffers": "RimWorld {listed} ile hazırlanmış; sende {game} var.",
       "replacesPending": "Henüz yeniden taramadığın etkinleştirme değişikliklerinin yerini bu içe aktarma alacak.",
-      "replacesUnwritten": "Bu içe aktarma, henüz ModsConfig.xml dosyasında olmayan Mevcut sıranın yerini alır.",
+      "replacesUnwritten": "Bu içe aktarma, henüz uygulanmamış Mevcut sıranın yerini alır.",
       "moved": "{count} modun konumu değişiyor. | {count} modun konumu değişiyor.",
       "sameOrder": "Kurulu modlar mevcut sıralarını korur.",
       "coreAdded": "Ana İçerik listede yoktu; ilk sırada kalır.",
@@ -1720,19 +1726,19 @@
       "copyMissing": "Eksik mod listesini kopyala",
       "missingCopied": "Eksik mod listesi kopyalandı.",
       "duplicatesHeading": "Birden çok kez listelenmiş ({count})",
-      "duplicateRow": "{id} — ilk konum (#{position}) kullanılır.",
+      "duplicateRow": "{id}: ilk konum (#{position}) kullanılır.",
       "otherCopyHeading": "Başka bir kopyayla eşleşti ({count})",
       "otherCopyRow": "{listed} → sendeki kopya: {installed}",
       "skippedHeading": "Anlaşılamayan satırlar ({count})",
       "skipped": {
         "notAnEntry": "Satır {line}: mod girdisi değil.",
-        "malformedId": "Girdi {position}: “{text}” geçerli bir paket ID'si değil."
+        "malformedId": "Girdi {position}: \"{text}\" geçerli bir paket ID'si değil."
       },
       "skippedOmitted": "{count} girdi daha gösterilmiyor. | {count} girdi daha gösterilmiyor.",
       "blocked": {
         "coreMissing": "Ana İçerik kurulu değil, bu yüzden bu liste içe aktarılamaz.",
         "nothingInstalled": "Listelenen modların hiçbiri kurulu değil; içe aktarılacak bir şey yok.",
-        "tooMany": "Bu sıra çok fazla mod içerirdi; bir içe aktarma en fazla {limit} mod içerebilir.",
+        "tooMany": "Bu sıra çok fazla mod içerirdi. Bir içe aktarma en fazla {limit} mod içerebilir.",
         "unknown": "{id} kurulu bir mod değil.",
         "duplicate": "{id} sırada birden çok kez geçiyor."
       },
@@ -1741,8 +1747,8 @@
       "whatHappens": "Rimmerge bu sırayla yeniden tarar ve onu Mevcut sıra olarak gösterir. Uygula'ya basana kadar hiçbir şey yazılmaz.",
       "confirm": "Bu sırayı kullan"
     },
-    "imported": "İçe aktarılan sıra hazır. Gözden geçir, sonra ModsConfig.xml dosyasına yazmak için Uygula'ya bas.",
-    "notInFile": "Bu sıra henüz ModsConfig.xml dosyasında değil.",
+    "imported": "İçe aktarılan sıra hazır. Gözden geçir, sonra etkin sıran olarak kaydetmek için Uygula'ya bas.",
+    "notInFile": "Bu henüz etkin sıran değil.",
     "notInFileApply": "Uygula",
     "previewOutdated": "Önizlemeden bu yana kurulu modların değişti. Listeyi yeniden önizle.",
     "rejected": {
@@ -1758,17 +1764,18 @@
     },
     "importedWithWarnings": "Tarama {count} uyarı bildirdi. | Tarama {count} uyarı bildirdi.",
     "importedRuleWarnings": "İçe aktarıldı, ancak bazı kurallar yüklenemedi",
-    "revertOrder": "ModsConfig.xml sırasına geri dön"
+    "revertOrder": "Kayıtlı etkin sırana geri dön",
+    "revertOrderTitle": "Sıranı, ModsConfig.xml dosyasında kayıtlı sıraya geri döndürür."
   },
   "apply": {
     "dialog": {
       "header": "Uygula",
       "defCacheNote": "Etkin bir Def önbelleği modu, önbelleğini yükleme sırasına göre tutar; bu Uygula işleminden sonraki ilk açılışta önbellek yeniden oluşturulacak{parenthetical}.",
       "defCacheParenthetical": " (son günlüğüne göre yaklaşık {seconds} saniye)",
-      "writeModsConfigLabel": "ModsConfig.xml dosyasını yaz (RimWorld'ün okuduğu yükleme sırası)",
-      "staleActiveSetMessage": "Çalışılan etkin mod kümesinde bekleyen değişiklikler var — ModsConfig.xml dosyasına yazmak için yeniden tara.",
+      "writeModsConfigLabel": "Etkin mod listeni yaz (RimWorld'ün okuduğu yükleme sırası)",
+      "staleActiveSetMessage": "Etkin modlarında bekleyen değişiklikler var. Etkin mod listene yazmadan önce yeniden tara.",
       "rescanButton": "Yeniden tara",
-      "writeMergeModLabel": "Birleştirme modunu yaz (oluşturulan modu Mods/ klasörüne yazar ya da hiçbir birleştirme/varlık kararı kalmadıysa kaldırır)",
+      "writeMergeModLabel": "Birleştirme modunu yaz (oluşturulan modu Mods/ klasörüne yazar ya da hiçbir birleştirme veya varlık kararı kalmadıysa kaldırır)",
       "closeButton": "Kapat",
       "cancelButton": "İptal",
       "writeAnywayButton": "Yine de yaz",
@@ -1777,11 +1784,11 @@
       "saveDecisionsButton": "Kararları ve kuralları kaydet"
     },
     "preflight": {
-      "unappliedHeading": "Tarandı ancak henüz ModsConfig.xml dosyasına uygulanmadı:",
+      "unappliedHeading": "Tarandı ancak henüz uygulanmadı:",
       "addedLabel": "Eklenen:",
       "removedLabel": "Kaldırılan:",
       "orderLabel": "Sıra",
-      "modsConfigLabel": "ModsConfig.xml",
+      "modsConfigLabel": "Etkin mod listesi",
       "decisionsLabel": "Kararlar",
       "rulesLabel": "Kurallar",
       "movedModsLabel": "Yeri değişen modlar",
@@ -1794,41 +1801,41 @@
     },
     "progress": {
       "heading": "Sırayı doğrula",
-      "description": "Bu sırada hangilerinin başarısız olacağını öngörmek için her yabancı yama işlemini, RimWorld'ün kendi günlüğünün göstereceği şekilde yeniden oynatır. Yalnızca istek üzerine çalışır — büyük bir kurulumda yaklaşık bir dakika sürer.",
+      "description": "Bu sırada hangilerinin başarısız olacağını öngörmek için her yabancı yama işlemini, RimWorld'ün kendi günlüğünün göstereceği şekilde yeniden oynatır. Yalnızca sen istediğinde çalışır ve büyük bir kurulumda yaklaşık bir dakika sürer.",
       "verifyingLabel": "Sıra doğrulanıyor",
       "checksCaption": "{checked}/{total} denetim",
       "startingCaption": "Başlatılıyor…"
     },
     "diff": {
-      "summary": "{source} sıraya göre {count} Def denetlendi — {list}. | {source} sıraya göre {count} Def denetlendi — {list}.",
+      "summary": "{source} sıraya göre {count} Def denetlendi: {list}. | {source} sıraya göre {count} Def denetlendi: {list}.",
       "summaryOperations": "başarısız olacağı öngörülen {count} işlem | başarısız olacağı öngörülen {count} işlem",
       "summaryTargets": "etkilenen {count} Def hedefi | etkilenen {count} Def hedefi",
       "removedByCount": "Daha önce yüklenen bir mod tarafından kaldırıldı: {count}",
       "notYetInjectedCount": "Henüz eklenmedi: {count}",
       "deadTargetCount": "Ölü hedef: {count}",
       "unknownCount": "Bilinmeyen: {count}",
-      "orderFixableHeading": "Sırayla düzeltilebilir — adı geçen modu yeniden sıralamak bunları çözebilir:",
-      "cosmeticText": "kozmetik: her iki sırada da nihai Def aynı — yeniden sıralama önerilmez.",
+      "orderFixableHeading": "Sırayla düzeltilebilir: adı geçen modu yeniden sıralamak bunları çözebilir:",
+      "cosmeticText": "kozmetik: nihai Def her iki sırada da aynı, bu yüzden yeniden sıralama önerilmez.",
       "mergeInsteadLink": "Bunun yerine birleştirmek",
       "mergeInstead": "{link}, kaybeden modun kendi amacını korur.",
       "noMergeAvailable": "Bu hedef için birleştirme yok.",
       "removedByCause": "Daha önce yüklenen {mod} modu hedef düğümü kaldırıyor.",
       "notYetInjectedCause": "hedef düğüm, daha sonra yüklenen {mod} modu tarafından ekleniyor.",
       "modPossessive": "{mod} modunun {operation} işlemi",
-      "notFullyFixableHeading": "Tamamen sırayla düzeltilemez — eskimiş yamalar, sınıflandırılmamış bir neden veya bunların karışımı; moda göre gruplandı:",
-      "groupedByModLine": "{mod} — {list}",
+      "notFullyFixableHeading": "Tamamen sırayla düzeltilemez (eskimiş yamalar, sınıflandırılmamış bir neden veya bunların karışımı), moda göre gruplandı:",
+      "groupedByModLine": "{mod}: {list}",
       "groupedOperations": "{count} işlem | {count} işlem",
       "groupedTargets": "{count} Def hedefi | {count} Def hedefi",
-      "partlyFixableHeading": "Bunların bazıları kısmen sırayla düzeltilebilir — bir yeniden sıralama, Def hedeflerinin bir kısmını çözer:",
+      "partlyFixableHeading": "Bunların bazıları kısmen sırayla düzeltilebilir. Bir yeniden sıralama, Def hedeflerinin bir kısmını çözer:",
       "skippedCandidates": "{count} aday denetlenemedi. | {count} aday denetlenemedi.",
-      "pvoMismatchWarning": "İçe aktarılan günlük, az önce doğrulanandan farklı bir mod sırasıyla üretilmiş — aşağıdaki sayılar birbiriyle ilgisiz iki çalıştırmayı karşılaştırıyor.",
+      "pvoMismatchWarning": "İçe aktarılan günlük, az önce doğrulanandan farklı bir mod sırasıyla üretilmiş; bu yüzden aşağıdaki sayılar birbiriyle ilgisiz iki çalıştırmayı karşılaştırıyor.",
       "pvoHeading": "Öngörülen ve gözlenen (son içe aktarılan günlük)",
       "pvoSnapshotNote": "İçe aktarılan günlük bir konsol anlık görüntüsü, bir oyun çalışmasının tamamının günlüğü değil: oyunun konsoldaki en eski kayıttan önce kaydettiği bir hata bunda yer almaz; bu yüzden \"öngörüldü, gözlenmedi\" bir hatanın yaşanmadığının kanıtı değildir.",
       "pvoCutOffNote": "İçe aktarılan günlük, temiz bir çıkış olmadan ve herhangi bir yama sonucu kaydedilmeden önce sona erdi; bu yüzden oyun yama aşamasına hiç ulaşmamış olabilir: \"öngörüldü, gözlenmedi\" bir hatanın yaşanmadığının kanıtı değildir.",
       "pvoGapsNote": "Oyun, içe aktarılan günlük yazılırken mesaj yazmayı durdurdu; bu yüzden bir hata günlükte eksik olabilir: \"öngörüldü, gözlenmedi\" bir hatanın yaşanmadığının kanıtı değildir.",
       "pvoMatchedSummary": "Günlükle doğrulanan: {count}",
       "pvoPredictedOnlySummary": "Öngörüldü, günlükte gözlenmedi: {count}",
-      "pvoObservedOnlySummary": "Günlükte gözlendi, öngörülmedi: {count} — olduğu gibi listelenir, asla atılmaz:",
+      "pvoObservedOnlySummary": "Günlükte gözlendi, öngörülmedi: {count} (olduğu gibi listelenir, asla atılmaz):",
       "unattributedRaw": "(atfedilmemiş: {raw})",
       "counterfactualJobsLine": "{count} işlem başka yükleme sıralarına göre yeniden denetlendi | {count} işlem başka yükleme sıralarına göre yeniden denetlendi",
       "counterfactualResolvedLine": "{count} başarısız işlem açıklandı | {count} başarısız işlem açıklandı",
@@ -1841,18 +1848,18 @@
       "createPairRule": "İkili kural oluştur",
       "createPairRuleAnyway": "Yine de ikili kural oluştur",
       "conflictText": "{kind} ile çakışıyor: {detail} ({status})",
-      "ruleCreated": "Kural oluşturuldu. Denetlemek için Sırayı doğrula'yı yeniden çalıştır — bir kural yine de bir mod yapımcısı beyanı veya başka bir kural tarafından bastırılabilir ve zıt yönlü iki kural birbirini iptal eder; gerçekte neyin geçerli olduğunu Kurallar sayfası gösterir.",
+      "ruleCreated": "Kural oluşturuldu. Denetlemek için Sırayı doğrula'yı yeniden çalıştır. Bir kural yine de bir mod yapımcısı beyanı veya başka bir kural tarafından bastırılabilir ve zıt yönlü iki kural birbirini iptal eder. Gerçekte neyin geçerli olduğunu Kurallar sayfası gösterir.",
       "ruleExists": "Kural zaten var."
     },
     "result": {
-      "forceWarning": "RimWorldWin64.exe çalışıyor görünüyor. Oyun kapanırken ModsConfig.xml dosyasının üzerine yazar; bu yüzden şimdi yazdıkların kaybolabilir. Yine de yazılsın mı?",
+      "forceWarning": "RimWorldWin64.exe çalışıyor görünüyor. Oyun kapanırken etkin mod listenin üzerine yazar; bu yüzden şimdi yazdıkların kaybolabilir. Yine de yazılsın mı?",
       "mergeModPath": "Birleştirme modu: {path}",
       "mergeModRemoved": "Birleştirme modu: kaldırıldı (birleştirme veya varlık kararı kalmadı)",
       "mergeModBackupPath": "Birleştirme modu yedeği: {path}",
-      "skippedHeading": "Atlananlar — birleştirme modu bunlar olmadan yazıldı:",
+      "skippedHeading": "Atlananlar. Birleştirme modu bunlar olmadan yazıldı:",
       "toastAppliedSummary": "Uygulandı",
       "toastSavedSummary": "Kaydedildi",
-      "toastModsConfigPath": "ModsConfig: {path}",
+      "toastModsConfigPath": "Etkin mod listesi: {path}",
       "toastBackupPath": "Yedek: {path}",
       "toastDecisionsPath": "Kararlar: {path}",
       "toastRulesPath": "Kurallar: {path}",
@@ -1887,11 +1894,11 @@
     },
     "launchedSteam": "Steam'e RimWorld'ü başlatma isteği gönderildi.",
     "launchedExecutable": "RimWorld başlatılıyor.",
-    "notStartedAfterApply": "ModsConfig.xml dosyası yazılmadı, bu yüzden RimWorld başlatılmadı.",
+    "notStartedAfterApply": "Etkin mod listen yazılmadı, bu yüzden RimWorld başlatılmadı.",
     "applyFirst": {
       "header": "Önce uygulansın mı?",
-      "orderDiffers": "ModsConfig.xml dosyası {order} sırayı içermiyor (son taramaya ya da Uygula işlemine göre). Şimdi başlatılırsa RimWorld, bu dosyanın listelediği modlar ve yükleme sırasıyla açılır.",
-      "activationChanges": "Bekleyen etkinleştirme değişikliklerin henüz ModsConfig.xml dosyasında değil. Şimdi başlatılırsa RimWorld bu değişiklikler olmadan açılır.",
+      "orderDiffers": "{order} sıra henüz etkin sıran olarak kaydedilmedi (son taramaya ya da Uygula işlemine göre). Şimdi başlatılırsa RimWorld, kayıtlı modlar ve yükleme sırasıyla açılır.",
+      "activationChanges": "Bekleyen etkinleştirme değişikliklerin henüz kaydedilmedi. Şimdi başlatılırsa RimWorld bu değişiklikler olmadan açılır.",
       "applyButton": "Önce uygula",
       "launchAnywayButton": "Yine de başlat"
     }
@@ -1912,7 +1919,7 @@
       "snapshot": {
         "belowCap": "Konsolda yalnızca {count} kayıt vardı; bu yüzden bu kopya, bu kaydın göstermediği hiçbir aşama hakkında bilgi vermez | Konsolda yalnızca {count} kayıt vardı; bu yüzden bu kopya, bu kayıtların göstermediği hiçbir aşama hakkında bilgi vermez",
         "atCap": "Yalnızca konsolun tuttuğu {count} kayıt var, konsol sınırında: daha eski kayıtları oyun attı | Yalnızca konsolun tuttuğu {count} kayıt var, konsol sınırında: daha eski kayıtları oyun attı",
-        "overCap": "{count} kayıt; bir konsolun tutabileceğinden fazla, yani bu tek bir konsol kopyası değil: birden çok kopya birleştirilmiş ya da bir ayrıştırma sorunu var; oyunun ne kadarını attığı söylenemez | {count} kayıt; bir konsolun tutabileceğinden fazla, yani bu tek bir konsol kopyası değil: birden çok kopya birleştirilmiş ya da bir ayrıştırma sorunu var; oyunun ne kadarını attığı söylenemez",
+        "overCap": "{count} kayıt, bir konsolun tutabileceğinden fazla; yani bu tek bir konsol kopyası değil. Birden çok kopya birleştirilmiş ya da günlük yanlış ayrıştırılmış olabilir. Oyunun ne kadarını attığı söylenemez | {count} kayıt, bir konsolun tutabileceğinden fazla; yani bu tek bir konsol kopyası değil. Birden çok kopya birleştirilmiş ya da günlük yanlış ayrıştırılmış olabilir. Oyunun ne kadarını attığı söylenemez",
         "headTruncated": "Kopya bir kaydın ortasından başlıyor: ilk kaydı eksik."
       }
     },
@@ -1938,9 +1945,9 @@
   },
   "startup": {
     "heading": "Açılış maliyeti",
-    "description": "Etkin mod başına bir satır — değişiklik yapan yama işlemleri, yavaş biçimli xpath'ler, dokular, DLL'ler ve Def'ler; süre ölçümü yok (Rimmerge oyunu asla çalıştırmaz). Hatalı boyutlu DDS ve gözlenen zamanlayıcı sütunlarını doldurmak için bir {playerLog} dosyası ya da bir konsol anlık görüntüsü içe aktar (konsol anlık görüntüsü zamanlayıcıları dolduramaz).",
-    "orderMismatchWarning": "İçe aktarılan günlük, şu anda seçili olandan farklı bir mod sırasıyla üretilmiş — aşağıdaki hatalı boyutlu DDS ve gözlenen zamanlayıcı sütunları bu çalıştırmayı değil, o başka çalıştırmayı yansıtıyor.",
-    "noOrderBlockWarning": "İçe aktarılan günlükte hiçbir etkin mod listesi yok; bu yüzden seçili sırayla karşılaştırılamıyor — aşağıdaki hatalı boyutlu DDS ve gözlenen zamanlayıcı sütunları bundan farklı bir çalıştırmayı yansıtıyor olabilir.",
+    "description": "Etkin mod başına bir satır: değişiklik yapan yama işlemleri, yavaş biçimli xpath'ler, dokular, DLL'ler ve Def'ler sayılır. Süre ölçümü yok, çünkü Rimmerge oyunu asla çalıştırmaz. Hatalı boyutlu DDS ve gözlenen zamanlayıcı sütunlarını doldurmak için bir {playerLog} dosyası ya da bir konsol anlık görüntüsü içe aktar (konsol anlık görüntüsü zamanlayıcıları dolduramaz).",
+    "orderMismatchWarning": "İçe aktarılan günlük, şu anda seçili olandan farklı bir mod sırasıyla üretilmiş; bu yüzden aşağıdaki hatalı boyutlu DDS ve gözlenen zamanlayıcı sütunları bu çalıştırmayı değil, o başka çalıştırmayı yansıtıyor.",
+    "noOrderBlockWarning": "İçe aktarılan günlükte hiçbir etkin mod listesi yok; bu yüzden seçili sırayla karşılaştırılamıyor. Aşağıdaki hatalı boyutlu DDS ve gözlenen zamanlayıcı sütunları bundan farklı bir çalıştırmayı yansıtıyor olabilir.",
     "loadFailed": "Açılış maliyeti tablosu yüklenemedi.",
     "modHeader": "Mod",
     "patchOpsHeader": "Yama işlemi",
@@ -1978,20 +1985,20 @@
         "reclassified": "{count} alan yeniden sınıflandırıldı | {count} alan yeniden sınıflandırıldı"
       },
       "reclassifiedNames": " ({names})",
-      "strandedValuesLine": "{count} saklanan değer atıldı — yeniden sınıflandırılan bir alanın yeni rolü, orada saklananı artık kabul etmiyor: | {count} saklanan değer atıldı — yeniden sınıflandırılan bir alanın yeni rolü, orada saklananı artık kabul etmiyor:",
-      "droppedRowsLine": "{count} satır atıldı — hedefi hedef kümesinden çıktı: | {count} satır atıldı — hedefleri hedef kümesinden çıktı:",
+      "strandedValuesLine": "Yeniden sınıflandırılan bir alanın yeni rolü orada saklananı artık kabul etmediği için {count} saklanan değer atıldı: | Yeniden sınıflandırılan bir alanın yeni rolü orada saklananı artık kabul etmediği için {count} saklanan değer atıldı:",
+      "droppedRowsLine": "Hedefi hedef kümesinden çıktığı için {count} satır atıldı: | Hedefleri hedef kümesinden çıktığı için {count} satır atıldı:",
       "clean": "Bu değişiklikle hiçbir şey atılmadı veya boşta kalmadı.",
       "closeButton": "Kapat",
       "saveButton": "Kaydet"
     },
     "rowEditor": {
       "copyFrom": "Şuradan kopyala:",
-      "winnerBadge": "— kazanan",
-      "prefillFrom": "— kaynak: {mod}",
-      "clampedTo": "— \"{name}\" değerine indirildi: bu yuva yalnızca bir ad tutar, ancak bu değer {count} ad içeriyordu ({joined})",
-      "droppedFromCopy": "— o Def etkin olmadığı için ödünç alınan {count} değer atlandı: {names} | — o Def'ler etkin olmadığı için ödünç alınan {count} değer atlandı: {names}",
+      "winnerBadge": "(kazanan)",
+      "prefillFrom": "(kaynak: {mod})",
+      "clampedTo": "\"{name}\" değerine indirildi: bu yuva yalnızca bir ad tutar, ancak bu değer {count} ad içeriyordu ({joined})",
+      "droppedFromCopy": "O Def etkin olmadığı için ödünç alınan {count} değer atlandı: {names} | O Def'ler etkin olmadığı için ödünç alınan {count} değer atlandı: {names}",
       "pairedTo": "{slot} ile eşlendi",
-      "overrideBadge": "Geçersiz kılma — {count} mevcut eşleşme | Geçersiz kılma — {count} mevcut eşleşme",
+      "overrideBadge": "Geçersiz kılma: {count} mevcut eşleşme | Geçersiz kılma: {count} mevcut eşleşme",
       "inspectDefLink": "Def'i incele",
       "defNameLabel": "defName",
       "saveRowButton": "Satırı kaydet",
@@ -2005,8 +2012,8 @@
       "coveredByMod": "{mod} tarafından kapsanıyor",
       "coveredByAnotherMod": "başka bir mod tarafından kapsanıyor",
       "uncovered": "kapsanmıyor",
-      "wouldWinNoOwner": "— kazanırdı",
-      "wouldWinWithOwner": "— {mod} kazanırdı",
+      "wouldWinNoOwner": "(kazanırdı)",
+      "wouldWinWithOwner": "({mod} modu kazanırdı)",
       "noMatches": "Eşleşen hedef yok."
     },
     "schemaTable": {
@@ -2018,7 +2025,7 @@
       "defTypePlaceholder": "Def türü",
       "hideButton": "Gizle",
       "unreadableTargets": "Biçim öğrenilirken başvurulan {count} hedef okunamadı: | Biçim öğrenilirken başvurulan {count} hedef okunamadı:",
-      "unreadableTargetLine": "{field}: {defType}/{defName} — {reason}",
+      "unreadableTargetLine": "{field}: {defType}/{defName} ({reason})",
       "newFieldPathLabel": "Yeni alan yolu",
       "roleLabel": "Rol",
       "defTypeLabel": "Def türü",
@@ -2031,9 +2038,9 @@
       "exportDirPlaceholder": "Bir klasör seç…",
       "chooseButton": "Seç…",
       "installCheckboxLabel": "Mods klasörüne kur ve etkinleştir",
-      "staleActiveSetNote": "Bekleyen etkinleştirme değişiklikleri dahil değil — bu kuruluma girmelerini istiyorsan önce yeniden tara.",
+      "staleActiveSetNote": "Bekleyen etkinleştirme değişiklikleri dahil değil. Bu kuruluma girmelerini istiyorsan önce yeniden tara.",
       "unappliedOrderNote": "Kurulum mevcut sıranı yazar; bu sıra henüz uygulanmadı.",
-      "forceWarning": "RimWorldWin64.exe çalışıyor görünüyor. Şimdi kurmak ModsConfig.xml dosyasına yazar; oyun kapanırken bu dosyanın üzerine yazdığı için değişiklik kaybolabilir. Yine de dışa aktarılsın mı?",
+      "forceWarning": "RimWorldWin64.exe çalışıyor görünüyor. Şimdi kurmak etkin mod listene yazar; oyun kapanırken bu listenin üzerine yazdığı için değişiklik kaybolabilir. Yine de dışa aktarılsın mı?",
       "exportAnyway": "Yine de dışa aktar",
       "export": "Dışa aktar",
       "exportedTo": "Dışa aktarıldığı yer: {path}",
@@ -2051,7 +2058,7 @@
       "noTargetSelected": "Hedef seçilmedi.",
       "ownRowsHeading": "Kendi satırları",
       "newRowButton": "Yeni satır",
-      "standaloneHint": "Bu bağımsız bir bölüm — kendi satırlarının eşleşeceği bir hedef yok; bu yüzden burada kapsam kuyruğu yok.",
+      "standaloneHint": "Bu bağımsız bir bölüm. Kendi satırlarının eşleşeceği bir hedef yok; bu yüzden burada kapsam kuyruğu yok.",
       "noRowsYet": "Henüz satır yok.",
       "selectOrNewRow": "Bir satır seç ya da oluşturmak için \"Yeni satır\" düğmesine tıkla.",
       "exportHeading": "Dışa aktar",
@@ -2060,11 +2067,11 @@
       "addSectionDialogHeader": "Bölüm ekle",
       "listingCandidates": "Adaylar listeleniyor…",
       "candidateGroupLabel": "Aday bölüm türü",
-      "noAddableCandidates": "Eklenecek aday yok — bu projenin kendi başvuru modlarının sahip olduğu her Def türü zaten bir bölüm.",
+      "noAddableCandidates": "Eklenecek aday yok. Bu projenin kendi başvuru modlarının sahip olduğu her Def türü zaten bir bölüm.",
       "addButton": "Ekle",
       "removeSectionDialogHeader": "Bu bölüm kaldırılsın mı?",
       "removeSectionBody": "Bu işlem {defType} bölümünü ve tüm satırlarını kaldırır. Buradan geri alınamaz.",
-      "sectionInUse": "Başka bir bölümdeki {count} satır hâlâ buna başvuruyor. Yine de kaldırmak bu başvuruları boşta bırakır — sonraki bir dışa aktarma her birini atlanan olarak bildirir. | Başka bir bölümdeki {count} satır hâlâ buna başvuruyor. Yine de kaldırmak bu başvuruları boşta bırakır — sonraki bir dışa aktarma her birini atlanan olarak bildirir.",
+      "sectionInUse": "Başka bir bölümdeki {count} satır hâlâ buna başvuruyor. Yine de kaldırmak bu başvuruları boşta bırakır ve sonraki bir dışa aktarma her birini atlanan olarak bildirir. | Başka bir bölümdeki {count} satır hâlâ buna başvuruyor. Yine de kaldırmak bu başvuruları boşta bırakır ve sonraki bir dışa aktarma her birini atlanan olarak bildirir.",
       "referenceLine": "{defType} {row}: {path}",
       "removeAnywayButton": "Yine de kaldır",
       "removeButton": "Kaldır"
@@ -2081,7 +2088,7 @@
       "targetsHint": "Var olan bir Def türünü yamalamak yerine yepyeni bir Def türü oluşturmak için boş bırak (\"yeni Def\" projesi).",
       "listCandidatesButton": "Adayları listele",
       "effectiveRefsHeading": "Geçerli başvuru kümesi",
-      "excludedTitle": "Hariç tutuldu — dahil etmek için tıkla",
+      "excludedTitle": "Hariç tutuldu. Dahil etmek için tıkla",
       "includeTitle": "Hariç tutmak için tıkla",
       "excludedTag": "hariç",
       "includedTag": "×",
@@ -2089,7 +2096,7 @@
       "candidateGroupLabel": "Aday atama türü",
       "instanceCount": "{defType} ({count} örnek) | {defType} ({count} örnek)",
       "inferringSchema": "Şema çıkarılıyor…",
-      "standaloneNote": "Bu adayın hedef anahtarı alanı yok — hedefle eşleşen satırlar yerine bağımsız satırlara sahip bir \"yeni Def\" projesi olacak.",
+      "standaloneNote": "Bu adayın hedef anahtarı alanı yok, bu yüzden hedefle eşleşen satırlar yerine bağımsız satırlara sahip bir \"yeni Def\" projesi olacak.",
       "excludedTargetsNote": "T/Core dışında başvurulan {count} hedef hiç okunmadı (T'ye bağlı kalmak bunu hızlı tutar). | T/Core dışında başvurulan {count} hedef hiç okunmadı (T'ye bağlı kalmak bunu hızlı tutar).",
       "createButton": "Oluştur"
     },
@@ -2139,13 +2146,13 @@
       "patchTargetsDef": "yamalar, yükleme sırasından bağımsız olarak, her modun Def'leri yüklendikten sonra birleştirilmiş Def belgesine uygulanır",
       "parentTemplate": "ulaşılamaz: ParentName kısıtı bir yükleme anı sıralama gerçeğidir (Kesin), asla öneri niteliğinde değildir",
       "usesType": "tür, yükleme sırasından bağımsız olarak yüklenen tüm assembly'ler genelinde çözümlenir",
-      "patchSelectsInjectedNode": "seçilen düğüm başka bir yolla zaten var olabilir (satır içi yazılmış, birden fazla etkin mod tarafından eklenmiş ya da seçen modun kendi yamasıyla eklenmiş) veya analizcinin denetlemek için dizinlediğinden daha derinde olabilir — bu yüzden bu, kanıtlanmış bir yükleme sırası gereksinimi değildir",
-      "patchRemovedNode": "analizci bunu yama içeriğinden çıkarır: bir mod, başka bir modun da yamaladığı bir düğümü kaldırır ve kaldıran mod en son yüklenmelidir, yoksa diğer yama dokunacak bir şey bulamaz — bu, mod yapımcısının kendi bildirdiği yükleme sırası değildir; bu yüzden bir beyan veya konum aksini söylediğinde geri çekilir",
-      "retextureAfterOwner": "analizci bunu ortak bir doku yolundan çıkarır: yalnızca doku içeren bir doku paketi, görünümünü değiştirdiği içerik modundan sonra yüklenmelidir, yoksa yeni dokusu, değiştirmesi gereken içerik tarafından üzerine yazılır — bu, mod yapımcısının kendi bildirdiği yükleme sırası değildir; bu yüzden bir beyan veya konum aksini söylediğinde geri çekilir",
-      "defOverrideAfterOrigin": "analizci bunu şablon/Def sayısı kanıtından çıkarır: başka bir modun kendi ad alanına ait bir Def'i de barındıran bir mod, o ad alanının sahibinden sonra yüklenmelidir, yoksa geçersiz kılması kaynağın kendi tanımının üstüne değil, altına düşer — bu, mod yapımcısının kendi bildirdiği yükleme sırası değildir; bu yüzden bir beyan veya konum aksini söylediğinde geri çekilir",
-      "patchInvalidatesPredicate": "analizci bunu yama içeriğinden çıkarır: bir Replace/Remove, başka bir modun kendi xpath koşulunun okuduğu bir düğümü yeniden yazar veya siler ve koşulu okuyan işlem önce yüklenmelidir, yoksa kendi koşulu artık eşleşmez — bu, mod yapımcısının kendi bildirdiği yükleme sırası değildir; bu yüzden bir beyan veya konum aksini söylediğinde geri çekilir",
-      "patchRemovedNodeCosmetic": "analizci bunu yama içeriğinden çıkarır, ancak burada nihai Def'ler her iki sırada da aynıdır — yalnızca hatayı hangi modun kendi işleminin kaydettiği değişir — bu yüzden mod yapımcısının kendi bildirdiği yükleme sırasından daha zayıf bir kanıttır ve bir beyan veya konum aksini söylediğinde geri çekilir",
-      "replaceDiscardsAddition": "analizci bunu yama içeriğinden çıkarır: bir Replace yepyeni bir düğüm koyar ve daha önceki bir eklemenin içine yazdığı her şeyi sessizce atar; bu yüzden ekleme, değiştirmeden sonra yüklenmelidir, yoksa kendi içeriği hiçbir günlük satırı bırakmadan kaybolur — bu, mod yapımcısının kendi bildirdiği yükleme sırası değildir; bu yüzden bir beyan veya konum aksini söylediğinde geri çekilir",
+      "patchSelectsInjectedNode": "seçilen düğüm başka bir yolla zaten var olabilir (satır içi yazılmış, birden fazla etkin mod tarafından eklenmiş ya da seçen modun kendi yamasıyla eklenmiş) veya analizcinin denetlemek için dizinlediğinden daha derinde olabilir; bu yüzden bu, kanıtlanmış bir yükleme sırası gereksinimi değildir",
+      "patchRemovedNode": "analizci bunu yama içeriğinden çıkarır: bir mod, başka bir modun da yamaladığı bir düğümü kaldırır ve kaldıran mod en son yüklenmelidir, yoksa diğer yama dokunacak bir şey bulamaz. Bu, mod yapımcısının kendi bildirdiği yükleme sırası değildir; bu yüzden bir beyan veya konum aksini söylediğinde geri çekilir",
+      "retextureAfterOwner": "analizci bunu ortak bir doku yolundan çıkarır: yalnızca doku içeren bir doku paketi, görünümünü değiştirdiği içerik modundan sonra yüklenmelidir, yoksa yeni dokusu, değiştirmesi gereken içerik tarafından üzerine yazılır. Bu, mod yapımcısının kendi bildirdiği yükleme sırası değildir; bu yüzden bir beyan veya konum aksini söylediğinde geri çekilir",
+      "defOverrideAfterOrigin": "analizci bunu şablon/Def sayısı kanıtından çıkarır: başka bir modun kendi ad alanına ait bir Def'i de barındıran bir mod, o ad alanının sahibinden sonra yüklenmelidir, yoksa geçersiz kılması kaynağın kendi tanımının üstüne değil, altına düşer. Bu, mod yapımcısının kendi bildirdiği yükleme sırası değildir; bu yüzden bir beyan veya konum aksini söylediğinde geri çekilir",
+      "patchInvalidatesPredicate": "analizci bunu yama içeriğinden çıkarır: bir Replace/Remove, başka bir modun kendi xpath koşulunun okuduğu bir düğümü yeniden yazar veya siler ve koşulu okuyan işlem önce yüklenmelidir, yoksa kendi koşulu artık eşleşmez. Bu, mod yapımcısının kendi bildirdiği yükleme sırası değildir; bu yüzden bir beyan veya konum aksini söylediğinde geri çekilir",
+      "patchRemovedNodeCosmetic": "analizci bunu yama içeriğinden çıkarır, ancak burada nihai Def'ler her iki sırada da aynıdır (yalnızca hatayı hangi modun kendi işleminin kaydettiği değişir); bu yüzden mod yapımcısının kendi bildirdiği yükleme sırasından daha zayıf bir kanıttır ve bir beyan veya konum aksini söylediğinde geri çekilir",
+      "replaceDiscardsAddition": "analizci bunu yama içeriğinden çıkarır: bir Replace yepyeni bir düğüm koyar ve daha önceki bir eklemenin içine yazdığı her şeyi sessizce atar; bu yüzden ekleme, değiştirmeden sonra yüklenmelidir, yoksa kendi içeriği hiçbir günlük satırı bırakmadan kaybolur. Bu, mod yapımcısının kendi bildirdiği yükleme sırası değildir; bu yüzden bir beyan veya konum aksini söylediğinde geri çekilir",
       "interactionEvidence": "bu, modların etkileştiğine dair bir kanıttır, yükleyicinin kendisinin ihtiyaç duyduğu bir sıralama gerçeği değil"
     },
     "rulePhrase": {
@@ -2215,11 +2222,11 @@
     "reorderBeforeRemover": "{modId} modunu {remover} modundan önce yükle; böylece işlemi, düğüm hâlâ varken çalışır.",
     "patchWillFailNotYetInjected": "{modId} modunun '{xpath}' konumundaki işlemi, {injector} modunun eklediği bir düğümü hedefliyor, ancak denetlenen sırada {injector} ondan sonra yükleniyor.",
     "reorderAfterInjector": "{modId} modunu {injector} modundan sonra yükle; böylece işlemi, düğüm eklendikten sonra onu bulur.",
-    "patchWillFailDeadTarget": "{modId} modunun '{xpath}' konumundaki işlemi, kazanan sahibin kendi çözümlenmiş yapısında yükleme sırasından bağımsız olarak hiç bulunmayan bir düğümü hedefliyor — hiçbir yeniden sıralama bunu düzeltmez.",
+    "patchWillFailDeadTarget": "{modId} modunun '{xpath}' konumundaki işlemi, kazanan sahibin kendi çözümlenmiş yapısında yükleme sırasından bağımsız olarak hiç bulunmayan bir düğümü hedefliyor, bu yüzden hiçbir yeniden sıralama bunu düzeltmez.",
     "patchWillFailUnknownCause": "{modId} modunun '{xpath}' konumundaki işleminin başarısız olacağı öngörülüyor; nedeni sınıflandırılamadı.",
-    "brokenInheritance": "Bu `ParentName` başvurusu, alt öğenin kendi eleman türünün beklediği şekilde çözümlenmiyor — Def eksik ya da yanlış içerikle yükleniyor. Bunu, başvuran modun yapımcısına bildir.",
-    "danglingDefReference": "Bu ad, hiçbir türdeki hiçbir etkin Def'e çözümlenmiyor — {cause}.{soundCaveat} Çapraz başvurular, her modun Def'leri ve yamaları yüklendikten sonra çözümlenir; bu yüzden bu durum asla yükleme sırasına bağlı değildir.",
-    "danglingDefReferenceSoundCaveat": " Bu bir ses başvurusuna benziyor — eksik bir `SoundDef` yüklemeyi durdurmaz; bir uyarı kaydeder ve sessizce tanımsız bir sese geri döner.",
+    "brokenInheritance": "Bu `ParentName` başvurusu, alt öğenin kendi eleman türünün beklediği şekilde çözümlenmiyor. Def eksik ya da yanlış içerikle yükleniyor. Bunu, başvuran modun yapımcısına bildir.",
+    "danglingDefReference": "Bu ad, hiçbir türdeki hiçbir etkin Def'e çözümlenmiyor: {cause}.{soundCaveat} Çapraz başvurular, her modun Def'leri ve yamaları yüklendikten sonra çözümlenir; bu yüzden bu durum asla yükleme sırasına bağlı değildir.",
+    "danglingDefReferenceSoundCaveat": " Bu bir ses başvurusuna benziyor. Eksik bir `SoundDef` yüklemeyi durdurmaz; bir uyarı kaydeder ve sessizce tanımsız bir sese geri döner.",
     "discardedAdditionDeliberate": "{replacer}, {adder} modundan sonra yüklendiğini bildiriyor ve '{path}' yolunu değiştiriyor: {adder} modunun '{adderPath}' konumundaki kendi eklemesi bilerek atılıyor.",
     "forceTextureWinner": "Tek bir modun dokusunun kazanmasını zorla.",
     "copyTextureIntoMergeMod": "Yükleme sırasından bağımsız olarak, bu modun doku dosyasını birleştirme moduna kopyala.",
@@ -2229,22 +2236,22 @@
     "keyedTranslationCollision": "Bu iki mod {keyCount} çeviri anahtarını paylaşıyor; en son yüklenen kazanır. | Bu iki mod {keyCount} çeviri anahtarını paylaşıyor; her birinde en son yüklenen kazanır.",
     "soundOverrideCosmetic": "Ses geçersiz kılma kozmetiktir ve oyun içinde duyulabilir; asla engel oluşturmaz.",
     "forceSoundWinner": "Tek bir modun sesinin kazanmasını zorla.",
-    "missingTexturePath": "Bu doku yolu hiçbir etkin modda bulunmuyor — oyun onun yerine macenta bir yer tutucu gösterecek.",
-    "undecodableTexture": "Bu .dds dosyası çözülemiyor — ana oyun onun yerine bozuk doku yer tutucusunu gösterir.",
-    "contributesNothing": "{modId} bu sırada gözlemlenebilir hiçbir katkı sağlamıyor: hiçbir assembly barındırmıyor, sahip olduğu her Def sonraki bir kopya tarafından geçersiz kılınmış, barındırdığı her doku ve çeviri geçersiz kılınmış ve her yama işlemi ya uygulanamıyor ya da hiç çalışmıyor — onu devre dışı bırakmak oyunda hiçbir şeyi değiştirmez ve yükleme maliyetinden tasarruf sağlar.",
+    "missingTexturePath": "Bu doku yolu hiçbir etkin modda bulunmuyor. Oyun onun yerine macenta bir yer tutucu gösterecek.",
+    "undecodableTexture": "Bu .dds dosyası çözülemiyor. Ana oyun onun yerine bozuk doku yer tutucusunu gösterir.",
+    "contributesNothing": "{modId} bu sırada gözlemlenebilir hiçbir katkı sağlamıyor: hiçbir assembly barındırmıyor, sahip olduğu her Def sonraki bir kopya tarafından geçersiz kılınmış, barındırdığı her doku ve çeviri geçersiz kılınmış ve her yama işlemi ya uygulanamıyor ya da hiç çalışmıyor. Onu devre dışı bırakmak oyunda hiçbir şeyi değiştirmez ve yükleme maliyetinden tasarruf sağlar.",
     "undeclaredTypeDependency": "{user}, {provider} modunun assembly dosyasındaki bir türü kullanıyor ama ona bir bağımlılık bildirmiyor.",
     "pinRelationExplicitly": "İlişkiyi bir yükleme sırası kuralı olarak açıkça sabitle.",
     "runtimePatchCollisionNoLastPatcher": "Birden çok mod {targetType}.{targetMethod} metodunu yamalıyor.",
     "runtimePatchCollisionLastPatcher": "{ownerCount} mod {targetType}.{targetMethod} metodunu yamalıyor; bugün en son {last} yükleniyor, bu yüzden onun yaması en son çalışıyor. | {ownerCount} mod {targetType}.{targetMethod} metodunu yamalıyor; bugün en son {last} yükleniyor, bu yüzden onun yaması en son çalışıyor.",
     "forceRuntimePatchLastWinner": "Yükleme sırasından bağımsız olarak bu modun yamasının en son çalışmasını zorla.",
-    "transpilerCollision": "{ownerCount} mod, {targetType}.{targetMethod} metodunun IL kodunu bir çalışma zamanı yaması transpiler'ı ile yeniden yazıyor; bunların çalışma sırası, sonrakinin kendi deseninin hâlâ eşleşip eşleşmeyeceğini belirleyebilir. Bu tür çakışmaların çoğu zararsızdır — bu modlardan biri bir yama hatası kaydederse çalışan sırayı `rimmerge rule set-pair` ile belirt. | {ownerCount} modun her biri {targetType}.{targetMethod} metodunun IL kodunu bir çalışma zamanı yaması transpiler'ı ile yeniden yazıyor; bunların çalışma sırası, sonrakinin kendi deseninin hâlâ eşleşip eşleşmeyeceğini belirleyebilir. Bu tür çakışmaların çoğu zararsızdır — bu modlardan biri bir yama hatası kaydederse çalışan sırayı `rimmerge rule set-pair` ile belirt.",
+    "transpilerCollision": "{ownerCount} mod, {targetType}.{targetMethod} metodunun IL kodunu bir çalışma zamanı yaması transpiler'ı ile yeniden yazıyor; bunların çalışma sırası, sonrakinin kendi deseninin hâlâ eşleşip eşleşmeyeceğini belirleyebilir. Bu tür çakışmaların çoğu zararsızdır. Bu modlardan biri bir yama hatası kaydederse çalışan sırayı `rimmerge rule set-pair` ile belirt. | {ownerCount} modun her biri {targetType}.{targetMethod} metodunun IL kodunu bir çalışma zamanı yaması transpiler'ı ile yeniden yazıyor; bunların çalışma sırası, sonrakinin kendi deseninin hâlâ eşleşip eşleşmeyeceğini belirleyebilir. Bu tür çakışmaların çoğu zararsızdır. Bu modlardan biri bir yama hatası kaydederse çalışan sırayı `rimmerge rule set-pair` ile belirt.",
     "duplicateAssemblyFirstLoadedWins": "Birden fazla etkin mod bu adda bir assembly barındırıyor; çalışma zamanında ilk yüklenen kopya kazanır.",
     "removeDuplicateAssemblyCopy": "Yinelenen kopyalardan birini etkin listeden kaldır.",
     "likelyDuplicateMod": "Bu iki mod, aralarında bildirilmiş bir ilişki olmadan çok sayıda özdeş Def paylaşıyor.",
     "removeLikelyDuplicateModA": "Muhtemel yinelenen modlardan birini etkin listeden kaldır.",
     "removeLikelyDuplicateModB": "Muhtemel yinelenen modlardan diğerini etkin listeden kaldır.",
-    "missingModNotInstalled": "Bu mod ModsConfig.xml dosyasında etkin ama yüklü değil; RimWorld bilinmeyen ID'leri zaten atar.",
-    "keepMissingModId": "Mod yeniden ortaya çıkarsa diye ID'yi ModsConfig.xml dosyasında tut.",
+    "missingModNotInstalled": "Bu mod etkin listende ama kurulu değil. RimWorld bilinmeyen ID'leri zaten atar.",
+    "keepMissingModId": "Mod yeniden ortaya çıkarsa diye ID'yi etkin listende tut.",
     "missingDependencyNotEnforced": "Bildirilmiş bir bağımlılık etkin değil; RimWorld bu konuda yalnızca uyarır, zorunlu kılmaz.",
     "incompatiblePair": "Bu modlar birbirini uyumsuz olarak bildiriyor.",
     "removeIncompatibleModA": "Uyumsuz modlardan birini etkin listeden kaldır.",
@@ -2254,14 +2261,14 @@
     "pinRelationExplicitlyAnyway": "İlişkiyi yine de bir yükleme sırası kuralı olarak açıkça sabitle.",
     "lazyReferenceViolatedJitResolved": "Geç çözümlenen bu assembly başvurusuna mevcut sıra uymuyor, ancak her assembly yüklendikten sonra JIT anında çözümlenir; bu yüzden yükleme sırası onu gerçekte etkilemez.",
     "nearMissModReference": {
-      "findModName": "Bu FindMod adı ('{written}') hiçbir etkin veya yüklü moda çözümlenmiyor, ancak etkin '{candidateName}' moduna çok benziyor — bir yazım hatası olabilir. Bunu, başvuran modun yapımcısına bildir.",
-      "mayRequireId": "Bu MayRequire ID'si ('{written}') hiçbir etkin veya yüklü moda çözümlenmiyor, ancak etkin '{candidateName}' moduna çok benziyor — bir yazım hatası olabilir. Bunu, başvuran modun yapımcısına bildir."
+      "findModName": "Bu FindMod adı ('{written}') hiçbir etkin veya kurulu moda çözümlenmiyor, ancak etkin '{candidateName}' moduna çok benziyor. Bir yazım hatası olabilir. Bunu, başvuran modun yapımcısına bildir.",
+      "mayRequireId": "Bu MayRequire ID'si ('{written}') hiçbir etkin veya kurulu moda çözümlenmiyor, ancak etkin '{candidateName}' moduna çok benziyor. Bir yazım hatası olabilir. Bunu, başvuran modun yapımcısına bildir."
     },
     "mergeCompleteNothingToMerge": "oyun bu katkıları tek bir değere sırayla uygular; birleştirilecek bir şey yok",
     "mergeLeadDefOverrideCombine": "Modlar farklı alanları değiştiriyor; birleştirmek ikisini bir araya getirir.",
     "mergePromotedPatchCollisionKeepsBoth": "Modlar farklı alanları değiştiriyor; birleştirmek ikisini de korur.",
     "keepLoadOrderWinner": "Yükleme sırası kazananını koru.",
-    "mergeStructuralGuard": "{field} sahipler arasında farklı — alan düzeyinde birleştirme güvenli değil; yükleme sırası kazananını onayla",
+    "mergeStructuralGuard": "{field} sahipler arasında farklı, bu yüzden alan düzeyinde birleştirme güvenli değil. Yükleme sırası kazananını onayla",
     "mergeFieldsNeedChoice": "Birleştir; {unresolved} alan seçim bekliyor. | Birleştir; {unresolved} alan seçim bekliyor.",
     "identicalCopiesOrderIrrelevant": "özdeş kopyalar; sıra sonucu değiştiremez",
     "notAddressedByPatch": "Bu yama bunu ele almıyor; bugünkü gibi yükleme sırası karar verir."
@@ -2278,14 +2285,14 @@
       "previewUnsupportedFormat": "Önizleme PNG veya JPEG değil",
       "previewUnreadable": "Önizleme okunamadı",
       "missingHeading": "Eksik",
-      "missingBody": "ModsConfig.xml dosyasında listelenmiş ama diskte bulunamadı",
+      "missingBody": "Etkin listende ama diskte bulunamadı",
       "requiredByHeading": "Gerektiren modlar",
-      "pendingActivation": "Etkinleştirme bekliyor — geçerli olması için uygula veya yeniden tara",
-      "pendingDeactivation": "Devre dışı bırakma bekliyor — geçerli olması için uygula veya yeniden tara",
+      "pendingActivation": "Etkinleştirme bekliyor. Geçerli olması için uygula veya yeniden tara",
+      "pendingDeactivation": "Devre dışı bırakma bekliyor. Geçerli olması için uygula veya yeniden tara",
       "packageIdLine": "Paket ID'si: {id}",
       "workshopCopyNote": "Atölye kopyası",
       "versionLine": "Mod sürümü: {version}",
-      "aboutNotOnDisk": "Bu modun About.xml dosyası bulunamadı — dosyaları son taramadan bu yana taşınmış veya silinmiş olabilir.",
+      "aboutNotOnDisk": "Bu modun About.xml dosyası bulunamadı. Dosyaları son taramadan bu yana taşınmış veya silinmiş olabilir.",
       "supportedVersionsLabel": "Desteklenen sürümler",
       "supportsGameVersion": "Bu oyun sürümünü destekliyor",
       "doesNotSupportGameVersion": "Bu oyun sürümünü desteklediğini bildirmiyor",
@@ -2315,7 +2322,7 @@
       "noDescription": "Açıklama yok.",
       "showMore": "Daha fazla göster",
       "showLess": "Daha az göster",
-      "aboutChanged": "About.xml son taramadan bu yana değişti — yeniden tara",
+      "aboutChanged": "About.xml son taramadan bu yana değişti. Değişikliği almak için yeniden tara",
       "aboutUnreadable": "About.xml okunamadı: {reason}",
       "aboutUnreadableIoHeadline": "dosya okunamadı",
       "aboutUnreadableXmlHeadline": "dosya geçerli bir XML değil",

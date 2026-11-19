@@ -5,16 +5,16 @@
 Rimmerge contacts exactly **two hosts**, both GitHub, for exactly two
 purposes. Every request is checked at the point it's made: the scheme
 must be `https://`, and the host must be the one host that particular
-request is allowed to use — an exact, case-insensitive match against a
-fixed list compiled into the program, never a setting, never a
-subdomain, never an address taken from a downloaded file.
+request is allowed to use. The check is an exact, case-insensitive match
+against a fixed list compiled into the program: never a setting, never
+a subdomain, never an address taken from a downloaded file.
 
 | Host | What | Size |
 |---|---|---|
-| `api.github.com` | The latest published Rimmerge release (`/repos/Rimmerge-Project/rimmerge/releases/latest`) — to tell you a newer version exists. Draft and pre-release versions are never announced. | tens of KB |
+| `api.github.com` | The latest published Rimmerge release (`/repos/Rimmerge-Project/rimmerge/releases/latest`), to tell you a newer version exists. Draft and pre-release versions are never announced. | tens of KB |
 | `raw.githubusercontent.com` | RimSort's community rules database | about 400 KB |
 | `raw.githubusercontent.com` | This project's own `rimmerge-rules.json` | a few KB |
-| `raw.githubusercontent.com` | RimSort's Steam Workshop database — **only by a manual action** (a Refresh click, `rimmerge db refresh`, the recommended-databases notice's "Turn on and download" button, or the Dashboard's "Get the recommended rules" step); recommended and enabled by default, but never fetched automatically | about 49 MB |
+| `raw.githubusercontent.com` | RimSort's Steam Workshop database, **only by a manual action** (a Refresh click, `rimmerge db refresh`, the recommended-databases notice's "Turn on and download" button, or the Dashboard's "Get the recommended rules" step); recommended and enabled by default, but never fetched automatically | about 49 MB |
 
 ## If you use a proxy
 
@@ -31,7 +31,7 @@ destination it asks for.
 
 Each request is a plain HTTPS GET carrying a `User-Agent: rimmerge`
 header (no version, no operating system), the standard headers GitHub's
-API requires, and — when Rimmerge already has a copy — the copy's
+API requires, and, when Rimmerge already has a copy, the copy's
 `ETag`, so an unchanged file isn't downloaded again. No account, token,
 cookie, Rimmerge version, profile, install path, mod list, or any other
 identifier is ever sent. As with any web request, GitHub sees your IP
@@ -108,11 +108,11 @@ anyone else.
 - **Settings → Internet access → Allow internet access** (or `rimmerge
   network off`) is the master switch. "Internet access" here means only
   the two GitHub hosts listed above (update checks and rule-database
-  refreshes), never your local network. Off, every request — automatic,
-  *Check now*, and *Refresh* — is skipped **before any address is built
-  or connection opened**. This setting applies to the whole app, on this
+  refreshes), never your local network. When it is off, every request
+  (automatic, *Check now*, and *Refresh*) is skipped **before any address
+  is built or connection opened**. This setting applies to the whole app, on this
   computer, whichever RimWorld install you open.
-- Separate switches turn off just the update check, just the automatic
+- Separate switches turn off only the update check, only the automatic
   database refresh, or individual databases.
 - Answering the first-run notice (any button, or closing it) saves your
   settings file if there is none yet, so a later version changing a
@@ -124,27 +124,27 @@ anyone else.
 ## Links you click
 
 Separate from network fetches, the desktop app can open a link in your
-system's own default browser — never inside the app, and never on its
-own. This only ever happens when you click something: a mod's workshop
+system's own default browser, never inside the app and never on its
+own. This only happens when you click something: a mod's workshop
 or homepage link in the mod info panel, or one of the fixed links in
 Settings' About section and the sidebar's "Support Rimmerge" link (the
 project's GitHub repository, its issues page, and a support page).
 
 Every one of these goes through the same backend opener, and the
-frontend never builds or sends a URL to it — a mod link names which of
+frontend never builds or sends a URL to it. A mod link names which of
 that mod's own links to open (`"workshop"` or `"homepage"`, resolved
-from that mod's own scan data or a re-read `About.xml`), and an app link
+from that mod's own scan data or a re-read `About.xml`). An app link
 names one of a fixed, closed set of targets (the repository, its issues
-page, or the support page); the backend maps that name to its own
+page, or the support page). The backend maps that name to its own
 constant `http`/`https` URL and hands it to the OS. The desktop
 frontend's own permission set carries no general "open a URL" capability
-at all — only the backend calls the opener, so there's no path from
+at all. Only the backend calls the opener, so there's no path from
 arbitrary frontend code (or a compromised renderer) to opening an
 arbitrary link. A mod's own declared homepage that isn't a valid
 `http`/`https` URL (a bare string, a `steam:` link, ...) is shown as
 text, never made clickable. A new-version notice's own release link is
-copyable text, not a clickable one — copying it to your clipboard never
-opens anything on its own.
+copyable text, not a clickable one. Copying it to your clipboard never
+opens anything.
 
 An imported load order's preview adds one more kind: *Open on Steam
 Workshop* beside a listed mod you don't have installed. The list you
@@ -198,8 +198,8 @@ Exporting and importing a load order (see
 web request, the two hosts above are still the only ones Rimmerge ever
 contacts, and the Internet access switch has nothing to block here.
 
-- **Export** reads `ModsConfig.xml` and your installed mods' names and
-  Workshop ids. *Save as RimWorld mod list* writes one `.rml` file, at
+- **Export** reads your active order from `ModsConfig.xml` and your
+  installed mods' names and Workshop ids. *Save as RimWorld mod list* writes one `.rml` file, at
   the path you choose in the save dialog (the app accepts only a `.rml`
   name and refuses to write over `ModsConfig.xml`); `order export --out`
   writes the one file you name. *Copy as text*, and `order export` without
@@ -220,16 +220,16 @@ contacts, and the Internet access switch has nothing to block here.
 
 Being offline is normal: a failed check or refresh is recorded (shown
 in Settings and on the Databases card), cached data keeps working, and
-Rimmerge simply tries again the next day. If GitHub says its request
+Rimmerge tries again the next day. If GitHub says its request
 limit for your connection has been reached, Rimmerge waits until
 GitHub's stated reset time (at most a day) before asking again.
 
 ## Everything else is local
 
-Every other operation — scanning your install, sorting, building the
-ledger, merging, verifying, sharing a load order, starting the game —
-reads and writes only your local filesystem, and only when you ask for a
-write. Scanning, sorting, the ledger, `verify`, previewing an imported
+Every other operation (scanning your install, sorting, building the
+ledger, merging, verifying, sharing a load order, starting the game)
+reads and writes only your local filesystem, and writes only when you
+ask. Scanning, sorting, the ledger, `verify`, previewing an imported
 load order, and launching RimWorld never write anything; launching only
 reads the install folder and Steam's records of it (see
 [Starting the game](#starting-the-game)). `apply`, `mods
@@ -239,8 +239,8 @@ file you chose (see [Sharing a load order](#sharing-a-load-order)).
 `apply --write-merge-mod`, and exporting a compatibility patch or
 patch-maker mod with `--install`, additionally write a generated mod
 folder into your RimWorld install's own `Mods/` folder and add its
-package id to `ModsConfig.xml` — the only writes this tool ever makes
-under the game install itself. None of these writes happen while
+package id to `ModsConfig.xml`. These are the only writes this tool
+ever makes under the game install itself. None of these writes happen while
 RimWorld looks like it's still running unless you force it. Your
 RimWorld install and Workshop content folder are otherwise read only;
 Rimmerge's own profile data lives under your local app-data directory.

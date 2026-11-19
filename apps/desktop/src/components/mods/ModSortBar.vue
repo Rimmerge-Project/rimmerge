@@ -4,15 +4,17 @@ import { useI18n } from "vue-i18n";
 import { useTranslateMessage } from "@/composables/useTranslateMessage";
 import type { ListSortDto } from "@/types/generated/ListSortDto";
 import type { ListSortKeyDto } from "@/types/generated/ListSortKeyDto";
-import type { SortDirectionDto } from "@/types/generated/SortDirectionDto";
-import { sortButtonLabel, sortKeyLabel } from "@/utils/modListSort";
+import { nextSort, sortButtonLabel, sortKeyLabel } from "@/utils/modListSort";
 
 /**
- * The display-sort controls of one Mods list: per criterion, a pair of arrow
- * buttons (ascending, descending). Each is a native toggle button, so Tab,
- * Enter and Space work; the active one says so through `aria-pressed` and a
- * filled style with a thicker border, never colour alone. Display only: choosing a sort sends no
- * mutation.
+ * The display-sort controls of one Mods list: one toggle button per criterion.
+ * Clicking the active criterion flips its direction; clicking another selects it
+ * ascending. Each is a native button, so Tab, Enter and Space work. There is no
+ * `aria-pressed`: the button never un-presses and its name changes, which is not
+ * the toggle pattern. The active one says so in its accessible name and title
+ * ("Sorted by name, A to Z. Click for Z to A."), and visually by a filled style, a
+ * thicker border and an arrow showing its direction, never colour alone. Display
+ * only: choosing a sort sends no mutation.
  */
 const { keys } = defineProps<{
   /** The criteria this list offers, in display order. */
@@ -23,52 +25,46 @@ const sort = defineModel<ListSortDto>("sort", { required: true });
 const { t } = useI18n();
 const tm = useTranslateMessage();
 
-const DIRECTIONS: readonly SortDirectionDto[] = ["ascending", "descending"];
-const ARROW_ICON: Readonly<Record<SortDirectionDto, string>> = {
-  ascending: "pi-arrow-up",
-  descending: "pi-arrow-down",
-};
-
-function isActive(key: ListSortKeyDto, direction: SortDirectionDto): boolean {
-  return sort.value.key === key && sort.value.direction === direction;
+function isActive(key: ListSortKeyDto): boolean {
+  return sort.value.key === key;
 }
 
-function choose(key: ListSortKeyDto, direction: SortDirectionDto): void {
-  sort.value = { key, direction };
+function iconFor(key: ListSortKeyDto): string {
+  if (!isActive(key)) {
+    return "pi-sort-alt";
+  }
+  return sort.value.direction === "ascending" ? "pi-arrow-up" : "pi-arrow-down";
+}
+
+function choose(key: ListSortKeyDto): void {
+  sort.value = nextSort(sort.value, key);
 }
 </script>
 
 <template>
   <div
     role="group"
-    class="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 text-sm"
+    class="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm"
     :aria-label="t('mods.sort.groupLabel')"
     data-testid="mods-sort-bar"
   >
     <span class="text-text-muted">{{ t("mods.sort.heading") }}</span>
-    <span
+    <button
       v-for="key in keys"
       :key="key"
-      class="flex items-center gap-1"
+      type="button"
+      class="border-border hover:bg-surface-2 focus-visible:outline-accent inline-flex h-7 items-center gap-1.5 rounded border px-2 focus-visible:outline-2"
+      :class="isActive(key) ? 'bg-accent-soft text-accent border-accent border-2 font-semibold' : 'text-text'"
+      :aria-label="tm(sortButtonLabel(sort, key))"
+      :title="tm(sortButtonLabel(sort, key))"
+      :data-testid="`mods-sort-${key}`"
+      @click="choose(key)"
     >
-      <span class="text-text">{{ tm(sortKeyLabel(key)) }}</span>
-      <button
-        v-for="direction in DIRECTIONS"
-        :key="direction"
-        type="button"
-        class="border-border hover:bg-surface-2 focus-visible:outline-accent inline-flex size-7 items-center justify-center rounded border focus-visible:outline-2"
-        :class="isActive(key, direction) ? 'bg-accent-soft text-accent border-accent border-2 font-semibold' : 'text-text-muted'"
-        :aria-pressed="isActive(key, direction)"
-        :aria-label="tm(sortButtonLabel(key, direction))"
-        :title="tm(sortButtonLabel(key, direction))"
-        :data-testid="`mods-sort-${key}-${direction}`"
-        @click="choose(key, direction)"
-      >
-        <i
-          :class="['pi', ARROW_ICON[direction]]"
-          aria-hidden="true"
-        />
-      </button>
-    </span>
+      <span>{{ tm(sortKeyLabel(key)) }}</span>
+      <i
+        :class="['pi', iconFor(key), isActive(key) ? '' : 'opacity-50']"
+        aria-hidden="true"
+      />
+    </button>
   </div>
 </template>

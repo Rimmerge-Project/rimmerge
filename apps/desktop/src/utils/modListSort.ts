@@ -1,7 +1,6 @@
 import { descriptor, type MessageDescriptor } from "@/i18n/messageDescriptor";
 import type { ListSortDto } from "@/types/generated/ListSortDto";
 import type { ListSortKeyDto } from "@/types/generated/ListSortKeyDto";
-import type { SortDirectionDto } from "@/types/generated/SortDirectionDto";
 import type { UpdateTimeDto } from "@/types/generated/UpdateTimeDto";
 import { assertNever } from "@/utils/assertNever";
 
@@ -53,36 +52,63 @@ function ascendingLabel(key: ListSortKeyDto): MessageDescriptor {
   }
 }
 
-function descendingLabel(key: ListSortKeyDto): MessageDescriptor {
+function activeAscendingLabel(key: ListSortKeyDto): MessageDescriptor {
   switch (key) {
     case "loadOrder":
-      return descriptor("mods.sort.descending.loadOrder");
+      return descriptor("mods.sort.activeAscending.loadOrder");
     case "name":
-      return descriptor("mods.sort.descending.name");
+      return descriptor("mods.sort.activeAscending.name");
     case "packageId":
-      return descriptor("mods.sort.descending.packageId");
+      return descriptor("mods.sort.activeAscending.packageId");
     case "lastUpdated":
-      return descriptor("mods.sort.descending.lastUpdated");
+      return descriptor("mods.sort.activeAscending.lastUpdated");
+    default:
+      return assertNever(key);
+  }
+}
+
+function activeDescendingLabel(key: ListSortKeyDto): MessageDescriptor {
+  switch (key) {
+    case "loadOrder":
+      return descriptor("mods.sort.activeDescending.loadOrder");
+    case "name":
+      return descriptor("mods.sort.activeDescending.name");
+    case "packageId":
+      return descriptor("mods.sort.activeDescending.packageId");
+    case "lastUpdated":
+      return descriptor("mods.sort.activeDescending.lastUpdated");
     default:
       return assertNever(key);
   }
 }
 
 /**
- * The accessible name and tooltip of one arrow: it names both the criterion
- * and the direction ("Sort by name, A to Z").
+ * The sort a click on a criterion's button asks for: the active criterion
+ * flips its direction, any other one starts ascending.
  */
-export function sortButtonLabel(
-  key: ListSortKeyDto,
-  direction: SortDirectionDto,
-): MessageDescriptor {
-  switch (direction) {
+export function nextSort(current: ListSortDto, key: ListSortKeyDto): ListSortDto {
+  if (current.key !== key) {
+    return { key, direction: "ascending" };
+  }
+  return { key, direction: current.direction === "ascending" ? "descending" : "ascending" };
+}
+
+/**
+ * The accessible name and tooltip of a criterion's one button. An inactive
+ * criterion says what a click selects ("Sort by name, A to Z"); the active one
+ * says its current direction and what the next click does.
+ */
+export function sortButtonLabel(current: ListSortDto, key: ListSortKeyDto): MessageDescriptor {
+  if (current.key !== key) {
+    return ascendingLabel(key);
+  }
+  switch (current.direction) {
     case "ascending":
-      return ascendingLabel(key);
+      return activeAscendingLabel(key);
     case "descending":
-      return descendingLabel(key);
+      return activeDescendingLabel(key);
     default:
-      return assertNever(direction);
+      return assertNever(current.direction);
   }
 }
 

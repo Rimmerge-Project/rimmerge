@@ -113,7 +113,7 @@ function errorText(reorder: VerifyReorderDto): string {
     return "";
   }
   return error.technicalDetail
-    ? `${tm(error.detail)} — ${error.technicalDetail}`
+    ? `${tm(error.detail)} (${error.technicalDetail})`
     : tm(error.detail);
 }
 </script>

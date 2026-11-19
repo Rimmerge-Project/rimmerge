@@ -343,7 +343,7 @@ describe("ApplyDialog merge mod", () => {
     await flush();
     await wrapper.vm.$nextTick();
     const skipped = wrapper.get('[data-testid="apply-dialog-skipped-merges"]');
-    expect(skipped.text()).toContain("not auto-merged — confirm the winner");
+    expect(skipped.text()).toContain("not auto-merged: confirm the winner");
 
     failing = true;
     await invalidateAllExpectingFailure(pinia);
@@ -351,6 +351,6 @@ describe("ApplyDialog merge mod", () => {
 
     const afterFailure = wrapper.get('[data-testid="apply-dialog-skipped-merges"]');
     expect(afterFailure.text()).toContain(guardedKey);
-    expect(afterFailure.text()).not.toContain("not auto-merged — confirm the winner");
+    expect(afterFailure.text()).not.toContain("not auto-merged: confirm the winner");
   });
 });

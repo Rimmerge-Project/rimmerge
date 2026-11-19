@@ -34,22 +34,25 @@ async function openMods(page: Page): Promise<void> {
   await expect(page.getByTestId("mod-row-mod.000")).toBeVisible();
 }
 
+/** The thicker border only the active sort button has (the non-colour cue next to its arrow). */
+const ACTIVE_MARK = /(^| )border-2( |$)/;
+
 test.describe("mods display sort", () => {
-  test("every arrow names its criterion and direction, and the default one is pressed", async ({
+  test("each button names its criterion, direction and next click, and the default one is marked active", async ({
     page,
   }) => {
     await openMods(page);
 
-    const loadOrder = modsPane(page, "active").getByTestId("mods-sort-loadOrder-ascending");
-    await expect(loadOrder).toHaveAccessibleName("Sort by load order, first to last");
-    await expect(loadOrder).toHaveAttribute("aria-pressed", "true");
-    await expect(loadOrder).toHaveAttribute("title", "Sort by load order, first to last");
+    const loadOrder = modsPane(page, "active").getByTestId("mods-sort-loadOrder");
+    const activeName = "Sorted by load order, first to last. Click for last to first.";
+    await expect(loadOrder).toHaveAccessibleName(activeName);
+    await expect(loadOrder).toHaveClass(ACTIVE_MARK);
+    await expect(loadOrder).toHaveAttribute("title", activeName);
     await expect(
-      modsPane(page, "active").getByTestId("mods-sort-lastUpdated-descending"),
-    ).toHaveAccessibleName("Sort by last updated, newest first");
-    await expect(modsPane(page, "active").getByTestId("mods-sort-name-ascending")).toHaveAttribute(
-      "aria-pressed",
-      "false",
+      modsPane(page, "active").getByTestId("mods-sort-lastUpdated"),
+    ).toHaveAccessibleName("Sort by last updated, oldest first");
+    await expect(modsPane(page, "active").getByTestId("mods-sort-name")).not.toHaveClass(
+      ACTIVE_MARK,
     );
   });
 
@@ -61,12 +64,11 @@ test.describe("mods display sort", () => {
     await modsPane(page, "active").getByTestId("mods-search").fill("mod.0");
     await expect(modsPane(page, "active").getByTestId("mods-total")).toHaveText("60 mods");
 
-    await modsPane(page, "active").getByTestId("mods-sort-name-ascending").click();
+    const nameButton = modsPane(page, "active").getByTestId("mods-sort-name");
+    await nameButton.click();
     // "Mod 0" (Core), "Mod 1" (DLC), "Mod 10", "Mod 11", ... : text order, not id order.
-    await expect(modsPane(page, "active").getByTestId("mods-sort-name-ascending")).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    await expect(nameButton).toHaveClass(ACTIVE_MARK);
+    await expect(nameButton).toHaveAccessibleName("Sorted by name, A to Z. Click for Z to A.");
     await expect(page.getByTestId("mod-row-mod.010")).toBeVisible();
     expect((await renderedRowIds(page)).slice(0, 4)).toEqual([
       "mod.000",
@@ -75,15 +77,10 @@ test.describe("mods display sort", () => {
       "mod.011",
     ]);
 
-    await modsPane(page, "active").getByTestId("mods-sort-name-descending").click();
-    await expect(modsPane(page, "active").getByTestId("mods-sort-name-descending")).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-    await expect(modsPane(page, "active").getByTestId("mods-sort-name-ascending")).toHaveAttribute(
-      "aria-pressed",
-      "false",
-    );
+    // A second click on the same button flips the direction.
+    await nameButton.click();
+    await expect(nameButton).toHaveClass(ACTIVE_MARK);
+    await expect(nameButton).toHaveAccessibleName("Sorted by name, Z to A. Click for A to Z.");
     // "Mod 9" is the last name in text order, so it leads descending.
     await expect(page.getByTestId("mod-row-mod.009")).toBeVisible();
     expect((await renderedRowIds(page))[0]).toBe("mod.009");
@@ -95,16 +92,17 @@ test.describe("mods display sort", () => {
     await openMods(page);
     await modsPane(page, "active").getByTestId("mods-search").fill("mod.00");
 
-    await modsPane(page, "active").getByTestId("mods-sort-lastUpdated-ascending").click();
+    const updatedButton = modsPane(page, "active").getByTestId("mods-sort-lastUpdated");
+    await updatedButton.click();
     // mod.000/001 ship with the game, mod.007 has no Steam record; the rest carry a time.
     await expect(page.getByTestId("mod-row-updated-mod.002")).toBeVisible();
     const ascending = await renderedRowIds(page);
     expect(ascending.slice(-3)).toEqual(["mod.000", "mod.001", "mod.007"]);
 
-    await modsPane(page, "active").getByTestId("mods-sort-lastUpdated-descending").click();
-    await expect(
-      modsPane(page, "active").getByTestId("mods-sort-lastUpdated-descending"),
-    ).toHaveAttribute("aria-pressed", "true");
+    await updatedButton.click();
+    await expect(updatedButton).toHaveAccessibleName(
+      "Sorted by last updated, newest first. Click for oldest first.",
+    );
     const descending = await renderedRowIds(page);
     expect(descending.slice(-3)).toEqual(["mod.000", "mod.001", "mod.007"]);
     // The known ones reverse: the day sets repeat, so equal days keep ascending id order.
@@ -119,7 +117,9 @@ test.describe("mods display sort", () => {
     await openMods(page);
 
     await modsPane(page, "active").getByTestId("mods-search").fill("Mod 1");
-    await modsPane(page, "active").getByTestId("mods-sort-packageId-descending").click();
+    const packageIdButton = modsPane(page, "active").getByTestId("mods-sort-packageId");
+    await packageIdButton.click();
+    await packageIdButton.click();
     await expect
       .poll(() => page.evaluate(() => window.__LIST_WORKING_MODS_CALLS__?.at(-1)))
       .toEqual({
@@ -135,19 +135,15 @@ test.describe("mods display sort", () => {
     expect(ids.every((id) => id.startsWith("mod."))).toBe(true);
   });
 
-  test("the Inactive list has no load-order arrows and keeps its own sort", async ({ page }) => {
+  test("the Inactive list has no load-order button and keeps its own sort", async ({ page }) => {
     await openMods(page);
-    await modsPane(page, "active").getByTestId("mods-sort-packageId-ascending").click();
+    await modsPane(page, "active").getByTestId("mods-sort-packageId").click();
 
     await expect(page.getByTestId("mod-row-mod.901")).toBeVisible();
 
-    await expect(
-      modsPane(page, "inactive").getByTestId("mods-sort-loadOrder-ascending"),
-    ).toHaveCount(0);
-    await expect(
-      modsPane(page, "inactive").getByTestId("mods-sort-name-ascending"),
-    ).toHaveAttribute("aria-pressed", "true");
-    await modsPane(page, "inactive").getByTestId("mods-sort-name-descending").click();
+    await expect(modsPane(page, "inactive").getByTestId("mods-sort-loadOrder")).toHaveCount(0);
+    await expect(modsPane(page, "inactive").getByTestId("mods-sort-name")).toHaveClass(ACTIVE_MARK);
+    await modsPane(page, "inactive").getByTestId("mods-sort-name").click();
     // Name, Z to A: "Inactive Mod 9" first.
     await expect(page.getByTestId("mod-row-mod.909")).toBeVisible();
     expect((await renderedRowIds(page, "inactive"))[0]).toBe("mod.909");
@@ -156,9 +152,9 @@ test.describe("mods display sort", () => {
       direction: "descending",
     });
 
-    await expect(
-      modsPane(page, "active").getByTestId("mods-sort-packageId-ascending"),
-    ).toHaveAttribute("aria-pressed", "true");
+    await expect(modsPane(page, "active").getByTestId("mods-sort-packageId")).toHaveClass(
+      ACTIVE_MARK,
+    );
   });
 
   test("sorting is display only: it writes nothing and load order returns unchanged", async ({
@@ -168,9 +164,10 @@ test.describe("mods display sort", () => {
     const original = (await renderedRowIds(page)).slice(0, 6);
     const snapshotBefore = await sessionSnapshot(page);
 
-    await modsPane(page, "active").getByTestId("mods-sort-name-descending").click();
-    await modsPane(page, "active").getByTestId("mods-sort-lastUpdated-ascending").click();
-    await modsPane(page, "active").getByTestId("mods-sort-loadOrder-ascending").click();
+    await modsPane(page, "active").getByTestId("mods-sort-name").click();
+    await modsPane(page, "active").getByTestId("mods-sort-name").click();
+    await modsPane(page, "active").getByTestId("mods-sort-lastUpdated").click();
+    await modsPane(page, "active").getByTestId("mods-sort-loadOrder").click();
     await expect(page.getByTestId("mod-row-mod.000")).toBeVisible();
 
     expect((await renderedRowIds(page)).slice(0, 6)).toEqual(original);
@@ -186,27 +183,28 @@ test.describe("mods display sort", () => {
     await openMods(page);
     await expect(page.getByTestId("mod-row-position-mod.000")).toHaveCount(0);
 
-    await modsPane(page, "active").getByTestId("mods-sort-name-ascending").click();
+    await modsPane(page, "active").getByTestId("mods-sort-name").click();
     await expect(page.getByTestId("mod-row-position-mod.000")).toBeVisible();
     await expect(page.getByTestId("mod-row-position-mod.000")).toHaveText("#1");
     await expect(page.getByTestId("mod-row-mod.000")).toContainText("Load order position 1");
 
-    await modsPane(page, "active").getByTestId("mods-sort-loadOrder-ascending").click();
+    await modsPane(page, "active").getByTestId("mods-sort-loadOrder").click();
     await expect(page.getByTestId("mod-row-position-mod.000")).toHaveCount(0);
   });
 
-  test("an arrow works from the keyboard", async ({ page }) => {
+  test("a sort button works from the keyboard", async ({ page }) => {
     await openMods(page);
 
-    const arrow = modsPane(page, "active").getByTestId("mods-sort-name-ascending");
-    await arrow.focus();
+    const button = modsPane(page, "active").getByTestId("mods-sort-name");
+    await button.focus();
     await page.keyboard.press("Enter");
-    await expect(arrow).toHaveAttribute("aria-pressed", "true");
+    await expect(button).toHaveClass(ACTIVE_MARK);
+    await expect(button).toHaveAccessibleName("Sorted by name, A to Z. Click for Z to A.");
 
-    const other = modsPane(page, "active").getByTestId("mods-sort-name-descending");
-    await other.focus();
     await page.keyboard.press("Space");
-    await expect(other).toHaveAttribute("aria-pressed", "true");
-    await expect(arrow).toHaveAttribute("aria-pressed", "false");
+    await expect(button).toHaveAccessibleName("Sorted by name, Z to A. Click for A to Z.");
+    await expect(modsPane(page, "active").getByTestId("mods-sort-loadOrder")).not.toHaveClass(
+      ACTIVE_MARK,
+    );
   });
 });

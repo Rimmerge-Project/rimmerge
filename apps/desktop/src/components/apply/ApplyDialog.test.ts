@@ -462,7 +462,7 @@ describe("ApplyDialog", () => {
   // A structurally guarded skip must read
   // as a decision to confirm, never as an incomplete merge — on the apply
   // dialog's own skip line too.
-  it("describes a structurally-guarded skip as 'not auto-merged — confirm the winner', not 'still needs input'", async () => {
+  it("describes a structurally-guarded skip as 'not auto-merged: confirm the winner', not 'still needs input'", async () => {
     const guardedKey = "def_override:HediffDef/BionicHeart:[ludeon.rimworld,example.bionicsfork]";
     installMockIpc({
       list_rules: EMPTY_RULE_SET,
@@ -497,7 +497,7 @@ describe("ApplyDialog", () => {
 
     const skipped = wrapper.get('[data-testid="apply-dialog-skipped-merges"]');
     expect(skipped.text()).toContain(guardedKey);
-    expect(skipped.text()).toContain("not auto-merged — confirm the winner");
+    expect(skipped.text()).toContain("not auto-merged: confirm the winner");
     expect(skipped.text()).not.toContain("still needs input");
   });
 

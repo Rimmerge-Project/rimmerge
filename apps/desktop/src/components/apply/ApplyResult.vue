@@ -107,7 +107,7 @@ function skippedReasonText(reason: (typeof skippedMergeEntries.value)[number]["r
           :key="entry.key"
           class="text-xs"
         >
-          <span class="font-mono">{{ entry.key }}</span> — {{ skippedReasonText(entry.reason) }}
+          <span class="font-mono">{{ entry.key }}</span>: {{ skippedReasonText(entry.reason) }}
         </li>
       </ul>
     </div>

@@ -110,7 +110,7 @@ describe("MergeModEntryList", () => {
     const { wrapper } = await mountList([GUARDED_ENTRY]);
 
     const row = wrapper.get(`[data-testid="merge-mod-entry-${GUARDED_ENTRY.key}"]`);
-    expect(row.text()).toContain("not auto-merged — confirm the winner");
+    expect(row.text()).toContain("not auto-merged: confirm the winner");
     expect(row.text()).not.toContain("need input");
   });
 

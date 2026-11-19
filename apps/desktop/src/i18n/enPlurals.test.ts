@@ -117,13 +117,13 @@ describe("count messages pick their English form from their own count", () => {
     );
 
     expect(without).not.toMatch(/[{}]/);
-    expect(withSources).toContain("currently 2 merged defs, sourced from 2 mods.");
+    expect(withSources).toContain("Currently 2 merged defs, sourced from 2 mods.");
   });
 
-  it("reads the empty merge mod as 'currently empty'", () => {
+  it("reads the empty merge mod as 'Currently empty'", () => {
     const empty = t("merge.mod.summary", { contents: t("merge.mod.nothingYet") });
 
-    expect(empty).toContain("— currently empty.");
+    expect(empty).toContain("Currently empty.");
   });
 
   it("names the order source in lowercase inside the verify summary sentence", () => {
@@ -133,6 +133,6 @@ describe("count messages pick their English form from their own count", () => {
       1,
     );
 
-    expect(summary).toBe("Checked 1 def against the current order — L.");
+    expect(summary).toBe("Checked 1 def against the current order: L.");
   });
 });

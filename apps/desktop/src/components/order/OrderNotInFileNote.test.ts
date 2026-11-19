@@ -47,7 +47,11 @@ describe("OrderNotInFileNote revert", () => {
     await flushPromises();
 
     expect(wrapper.get('[data-testid="order-not-in-file-revert"]').text()).toBe(
-      "Revert order to ModsConfig.xml",
+      "Revert to your saved active order",
+    );
+    // The file is named only in the tooltip, where the user can see what the button acts on.
+    expect(wrapper.get('[data-testid="order-not-in-file-revert"]').attributes("title")).toBe(
+      "Puts your order back to the sequence saved in ModsConfig.xml.",
     );
   });
 
@@ -119,7 +123,7 @@ describe("OrderNotInFileNote revert", () => {
     await flushPromises();
 
     expect(wrapper.get('[data-testid="order-not-in-file-revert-error"]').text()).toContain(
-      "The file lists different mods",
+      "The saved list has different mods",
     );
   });
 });
