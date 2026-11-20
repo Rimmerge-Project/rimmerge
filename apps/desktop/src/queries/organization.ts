@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryCache } from "@pinia/colada";
-import { type MaybeRefOrGetter, toValue } from "vue";
+import { computed, type MaybeRefOrGetter, toValue } from "vue";
 
 import { awaitInvalidation } from "@/queries/invalidation";
 import { queryKeys } from "@/queries/keys";
@@ -8,6 +8,7 @@ import {
   createGroup,
   deleteGroup,
   getOrganization,
+  groupMembershipCounts,
   moveGroupMembers,
   planGroupScope,
   removeGroupMembers,
@@ -48,6 +49,31 @@ export function useGroupScopePlanQuery(groupId: MaybeRefOrGetter<number | null>)
     query: () => planGroupScope({ id: toValue(groupId) as number }),
     enabled: () => toValue(groupId) !== null,
   });
+}
+
+/**
+ * How many of the given mods each group holds directly (`null` ids: nothing to ask, the query is
+ * off). Its key sits under the organization key, so an organization edit refetches it and a group
+ * deleted while a dialog is open drops out of the answer. `counts` stays `null` until an answer
+ * arrives and a failure sets `hasFailed` instead of an empty map: an unknown count is never read
+ * as zero.
+ */
+export function useGroupMembershipCountsQuery(modIds: MaybeRefOrGetter<readonly string[] | null>) {
+  const { data, error } = useQuery({
+    key: () => [...queryKeys.organization(), "membershipCounts", toValue(modIds)] as const,
+    query: async () =>
+      new Map(
+        (await groupMembershipCounts({ modIds: [...(toValue(modIds) ?? [])] })).map((row) => [
+          row.id,
+          row.count,
+        ]),
+      ) as ReadonlyMap<number, number>,
+    enabled: () => toValue(modIds) !== null,
+  });
+  return {
+    counts: computed(() => data.value ?? null),
+    hasFailed: computed(() => error.value !== null && data.value === undefined),
+  };
 }
 
 /**

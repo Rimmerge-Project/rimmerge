@@ -563,6 +563,26 @@ pub struct RemoveUninstalledMembersRequestDto {
     pub mod_ids: Vec<String>,
 }
 
+/// Request shape for `group_membership_counts`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export, export_to = "../../src/types/generated/")]
+pub struct GroupMembershipCountsRequestDto {
+    /// The mods, by any id.
+    pub mod_ids: Vec<String>,
+}
+
+/// How many of the requested mods one group holds directly.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export, export_to = "../../src/types/generated/")]
+pub struct GroupMembershipCountDto {
+    /// The group.
+    pub id: u32,
+    /// How many of the requested mods are direct members of it.
+    pub count: usize,
+}
+
 /// A group id from the wire: never zero.
 ///
 /// # Errors

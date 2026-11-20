@@ -104,6 +104,7 @@ import type { SaveListingDto } from "../../src/types/generated/SaveListingDto";
 import type { SectionReferenceDto } from "../../src/types/generated/SectionReferenceDto";
 import type { SetAssignmentRowRequestDto } from "../../src/types/generated/SetAssignmentRowRequestDto";
 import type { SetManualTagRequestDto } from "../../src/types/generated/SetManualTagRequestDto";
+import type { SetManualTagsRequestDto } from "../../src/types/generated/SetManualTagsRequestDto";
 import type { SetMergeChoicesRequestDto } from "../../src/types/generated/SetMergeChoicesRequestDto";
 import type { SettingsDto } from "../../src/types/generated/SettingsDto";
 import type { SkippedEntryDto } from "../../src/types/generated/SkippedEntryDto";
@@ -179,6 +180,8 @@ declare global {
     __PROMOTE_RULE_CALLS__?: RuleKeyDto[];
     /** Every `set_manual_tag` payload the mock received, in order. */
     __SET_MANUAL_TAG_CALLS__?: SetManualTagRequestDto[];
+    /** Every `set_manual_tags` (bulk) payload the mock received, in order. */
+    __SET_MANUAL_TAGS_CALLS__?: SetManualTagsRequestDto[];
     /** Every `set_settings` payload the mock received, in order. */
     __SET_SETTINGS_CALLS__?: SettingsDto[];
     /** Every `import_rimsort` payload the mock received, in order. */
@@ -3053,6 +3056,11 @@ export function installScenario(): void {
     const mod = mods.find((m) => m.modId === id);
     if (mod) mod.tags = tags;
   }
+  // `manualAdds` holds the pairs a bulk add pinned (the backend's manual `Add` overrides); the
+  // seeded tags above are the inferred ones. No decision exists in the mock, so
+  // `keptByDecision` is always 0.
+  const tagPairKey = (modId: string, tag: string): string => `${modId}::${tag}`;
+  const manualAdds = new Set<string>();
 
   // `promotedFrom`/`alreadyPromoted` are never stored on a row directly —
   // like the real backend's `StoredRules`/`PairRule`, this mock's own
@@ -6974,6 +6982,7 @@ export function installScenario(): void {
   window.__DELETE_RULE_CALLS__ = [];
   window.__PROMOTE_RULE_CALLS__ = [];
   window.__SET_MANUAL_TAG_CALLS__ = [];
+  window.__SET_MANUAL_TAGS_CALLS__ = [];
   window.__SET_SETTINGS_CALLS__ = [];
   window.__IMPORT_RIMSORT_CALLS__ = [];
   window.__SET_MERGE_CHOICES_CALLS__ = [];
@@ -7952,6 +7961,46 @@ export function installScenario(): void {
         ),
       };
     },
+    set_manual_tags: (payload: unknown) => {
+      const request = (payload as { request: SetManualTagsRequestDto }).request;
+      // The backend parses the tag and bounds the ids before anything runs or is recorded.
+      if (!/^[a-z0-9_-]+$/.test(request.tag)) {
+        throw {
+          code: "invalid_input",
+          message: `invalid tag ${JSON.stringify(request.tag)}: must be non-empty lowercase [a-z0-9_-]+`,
+        };
+      }
+      if (request.modIds.length > ORGANIZATION_MAX_TOTAL_MEMBERSHIPS) {
+        throw { code: "invalid_input", message: "too many mods in one request" };
+      }
+      window.__SET_MANUAL_TAGS_CALLS__?.push(request);
+      // Same outcome as the backend. An add pins the tag (a manual `Add` override) on every mod
+      // without one, including a mod that only shows it by inference, and counts it changed; a
+      // mod that already has the override is unchanged. A remove changes only a mod that
+      // currently shows the tag: it drops the override, and the tag goes (the backend records a
+      // `Remove` where inference would still show it); a mod that does not show it is unchanged.
+      let changed = 0;
+      for (const modId of new Set(request.modIds)) {
+        const current = tagsByMod.get(modId) ?? [];
+        const pair = tagPairKey(modId, request.tag);
+        if (request.mode === "add") {
+          if (manualAdds.has(pair)) continue;
+          manualAdds.add(pair);
+          tagsByMod.set(modId, current.includes(request.tag) ? current : [...current, request.tag]);
+        } else {
+          if (!current.includes(request.tag)) continue;
+          manualAdds.delete(pair);
+          tagsByMod.set(
+            modId,
+            current.filter((tag) => tag !== request.tag),
+          );
+        }
+        const mod = mods.find((m) => m.modId === modId);
+        if (mod) mod.tags = tagsByMod.get(modId) ?? [];
+        changed += 1;
+      }
+      return { changed, keptByDecision: 0, unchanged: new Set(request.modIds).size - changed };
+    },
     list_mods: (payload: unknown) => {
       const filter = (
         payload as {
@@ -8182,6 +8231,18 @@ export function installScenario(): void {
         }
         return { kind: "removed", removed: removed.size, absent: gone.size - removed.size };
       });
+    },
+    group_membership_counts: (payload: unknown) => {
+      const request = (payload as { request: { modIds: string[] } }).request;
+      recordOrganizationCall("group_membership_counts", request);
+      requireLoadedOrganization();
+      const mods = organizedIds(request.modIds);
+      return [...organizationGroups.entries()]
+        .map(([id, group]) => ({
+          id,
+          count: [...mods].filter((modId) => group.members.has(modId)).length,
+        }))
+        .filter((row) => row.count > 0);
     },
     plan_group_scope: (payload: unknown) => {
       const request = (payload as { request: { id: number } }).request;

@@ -142,6 +142,8 @@ describe("GroupRail", () => {
       "Rename…",
       "Colour…",
       "Move group to…",
+      "No mods to activate",
+      "No mods to deactivate",
       "Remove 3 mods that aren't installed",
       "Delete…",
     ]);
@@ -153,6 +155,46 @@ describe("GroupRail", () => {
     await wrapper.get('[data-testid="group-menu-new-subgroup"]').trigger("click");
     expect(wrapper.emitted("deleteGroup")).toEqual([[1]]);
     expect(wrapper.emitted("createGroup")).toEqual([[1]]);
+  });
+
+  it("offers Activate and Deactivate with the number of mods each covers, and asks the page to start them", async () => {
+    install(0, () => ({
+      ...plan(0),
+      groupCount: 2,
+      activeIds: ["a", "b"],
+      inactiveIds: ["c", "d", "e"],
+    }));
+    const wrapper = mountComponent(GroupRail, { nodes: NODES, scope: ALL_MODS });
+    await flushPromises();
+
+    await wrapper.get('[data-key="group-1"]').trigger("contextmenu");
+    await flushPromises();
+
+    expect(wrapper.get('[data-testid="group-menu-activate-all"]').text()).toBe("Activate 3 mods…");
+    expect(wrapper.get('[data-testid="group-menu-deactivate-all"]').text()).toBe(
+      "Deactivate 2 mods…",
+    );
+    await wrapper.get('[data-testid="group-menu-activate-all"]').trigger("click");
+    await wrapper.get('[data-key="group-1"]').trigger("contextmenu");
+    await flushPromises();
+    await wrapper.get('[data-testid="group-menu-deactivate-all"]').trigger("click");
+    expect(wrapper.emitted("activateGroup")).toEqual([[1]]);
+    expect(wrapper.emitted("deactivateGroup")).toEqual([[1]]);
+  });
+
+  it("disables the group activate entries while the count is unknown, never offering them blind", async () => {
+    install(0, () => new Promise(() => {}));
+    const wrapper = mountComponent(GroupRail, { nodes: NODES, scope: ALL_MODS });
+    await flushPromises();
+
+    await wrapper.get('[data-key="group-3"]').trigger("contextmenu");
+    await flushPromises();
+
+    const item = wrapper.get('[data-testid="group-menu-scope-status"]');
+    expect(item.text()).toBe("Checking the mods in this group…");
+    expect(item.element.closest("li")?.getAttribute("data-p-disabled")).toBe("true");
+    expect(wrapper.find('[data-testid="group-menu-activate-all"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="group-menu-deactivate-all"]').exists()).toBe(false);
   });
 
   it("disables the remove entry when every mod in the group is installed", async () => {

@@ -610,7 +610,7 @@
       },
       "organization_limit": {
         "title": "A limit for groups was reached",
-        "detail": "You reached a limit for groups and colours: how many groups, how deep they nest, how many mods are in groups or coloured, or how large the saved file may be. Nothing was changed. Removing some of these may make room."
+        "detail": "You reached a limit for groups and colours: how many groups, how deep they nest, how many mods are in groups or coloured, or how large the groups file (organization.json) may be. Nothing was changed. Remove groups, mods from groups or colours you no longer need, then try again."
       }
     }
   },
@@ -1405,6 +1405,68 @@
       "ariaLabel": "Jump to a def",
       "placeholder": "Jump to a def…"
     },
+    "bulk": {
+      "region": "Actions for the selected mods in the {list} list",
+      "addToGroup": "Add to group…",
+      "removeFromGroup": "Remove from group…",
+      "moveToGroup": "Move to group…",
+      "color": "Colour…",
+      "tagsButton": "Tags…",
+      "tags": {
+        "title": "Tags for the selected mods",
+        "help": "Add a tag to every selected mod, or remove it. Removing takes the tag off every selected mod that shows it, whether you added it or Rimmerge inferred it. Mods that do not show the tag are left alone. Adding also pins the tag on mods that already show it by inference, so it stays if a rescan stops inferring it. Tags never change your load order.",
+        "label": "Tag",
+        "format": "Use lowercase letters, digits, hyphens and underscores.",
+        "addButton": "Add tag",
+        "removeButton": "Remove tag"
+      },
+      "dialog": {
+        "addTitle": "Add to group",
+        "removeTitle": "Remove from group",
+        "moveTitle": "Move to group",
+        "addButton": "Add",
+        "removeButton": "Remove",
+        "moveButton": "Move",
+        "noGroups": "There are no groups yet. Create one in the Groups panel first.",
+        "loading": "Checking which groups hold these mods…",
+        "failed": "Couldn't check which groups hold these mods. Close this dialog and try again.",
+        "noneInGroups": "None of the selected mods are in a group.",
+        "addHelp": "The mods join the group you pick. They stay in every other group they are in.",
+        "removeHelp": "The mods leave the group you pick. Their other groups are not changed.",
+        "moveHelp": "Moving takes the mods out of one group and puts them in another. Mods that are not in the first group are left alone.",
+        "targetLegend": "Group",
+        "removeLegend": "Group to remove the mods from",
+        "fromLegend": "Move from",
+        "toLegend": "Move to",
+        "sameGroup": "Same as the source",
+        "holdsCount": "{count} selected mod is in it | {count} selected mods are in it"
+      },
+      "toast": {
+        "added": "Added {count} mod to {name} | Added {count} mods to {name}",
+        "alreadyIn": "{count} was already in the group | {count} were already in the group",
+        "removed": "Removed {count} mod from {name} | Removed {count} mods from {name}",
+        "notIn": "{count} was not in the group | {count} were not in the group",
+        "moved": "Moved {count} mod from {from} to {to} | Moved {count} mods from {from} to {to}",
+        "notInSource": "{count} was not in {name}, so it did not move | {count} were not in {name}, so they did not move",
+        "alreadyInTarget": "{count} was already in {name} | {count} were already in {name}",
+        "colorSet": "Colour set for {count} mod | Colour set for {count} mods",
+        "colorCleared": "Colour cleared for {count} mod | Colour cleared for {count} mods",
+        "unchanged": "{count} did not change | {count} did not change",
+        "keptByDecision": "{count} mod keeps it because of a decision on the Findings page | {count} mods keep it because of a decision on the Findings page",
+        "tagAdded": "Tag {tag} added to {count} mod | Tag {tag} added to {count} mods",
+        "tagRemoved": "Tag {tag} removed from {count} mod | Tag {tag} removed from {count} mods"
+      },
+      "scope": {
+        "activateGroup": "Activate {count} mod in this group | Activate {count} mods in this group",
+        "activateTree": "Activate {count} mod, including subgroups | Activate {count} mods, including subgroups",
+        "deactivateGroup": "Deactivate {count} mod in this group | Deactivate {count} mods in this group",
+        "deactivateTree": "Deactivate {count} mod, including subgroups | Deactivate {count} mods, including subgroups",
+        "notInstalled": "{count} mod is not installed and is skipped | {count} mods are not installed and are skipped",
+        "hidden": "{count} is not shown by the current filter | {count} are not shown by the current filter",
+        "nothingToActivate": "None of the mods in this group can be activated. They are already active or not installed.",
+        "nothingToDeactivate": "None of the mods in this group are active."
+      }
+    },
     "selection": {
       "selectAllShown": "Select all {count} shown | Select all {count} shown",
       "selectAllEmpty": "Select all",
@@ -1462,9 +1524,11 @@
       "modTitle": "Mod colour",
       "groupHelp": "A colour marks the group in the tree and on mod rows. It changes nothing else.",
       "modHelp": "A colour marks this mod on its row. It does not change your load order.",
+      "modsTitle": "Colour for the selected mods",
+      "modsHelp": "A colour marks each selected mod on its row. It does not change your load order.",
       "legend": "Colour",
       "none": "No colour",
-      "apply": "Apply",
+      "apply": "Set colour",
       "toast": {
         "groupChanged": "Group colour changed",
         "modChanged": "Colour changed for {name}",
@@ -1501,6 +1565,12 @@
         "rename": "Rename…",
         "color": "Colour…",
         "move": "Move group to…",
+        "activateAll": "Activate {count} mod… | Activate {count} mods…",
+        "deactivateAll": "Deactivate {count} mod… | Deactivate {count} mods…",
+        "nothingToActivate": "No mods to activate",
+        "nothingToDeactivate": "No mods to deactivate",
+        "checkingScope": "Checking the mods in this group…",
+        "scopeUnavailable": "Couldn't check the mods in this group",
         "checkingUninstalled": "Checking for mods that aren't installed…",
         "uninstalledUnavailable": "Couldn't check for mods that aren't installed",
         "removeUninstalled": "Remove {count} mod that isn't installed | Remove {count} mods that aren't installed",
@@ -1530,7 +1600,7 @@
         "moveLegend": "New place for the group",
         "topLevel": "Top level",
         "moveInvalid": "A group can't go inside itself or its own subgroups",
-        "moveCurrent": "Already here",
+        "moveCurrent": "Current location",
         "moveButton": "Move",
         "modGroupsTitle": "Groups for {name}",
         "modGroupsHelp": "Check a group to add this mod to it. Clear it to take the mod out. Each change is saved at once.",
@@ -1541,7 +1611,7 @@
         "removeUninstalledBody": "As of the last scan, {count} mod in {name} and its subgroups isn't installed. Remove it from those groups? It comes back only if you add it to a group again. | As of the last scan, {count} mods in {name} and its subgroups aren't installed. Remove them from those groups? They come back only if you add them to a group again.",
         "removeUninstalledList": "Mods to remove",
         "removeUninstalledLoading": "Checking which mods aren't installed…",
-        "removeUninstalledFailed": "Couldn't check which mods aren't installed. Close this and try again.",
+        "removeUninstalledFailed": "Couldn't check which mods aren't installed. Close this dialog and try again.",
         "removeUninstalledButton": "Remove"
       },
       "startOver": {
@@ -1555,7 +1625,7 @@
         "tooLarge": "Your groups and colours file is too large to read. They are read-only until you start over.",
         "malformed": "Your groups and colours file is damaged. They are read-only until you start over.",
         "newerVersion": "Your groups and colours were saved by a newer version of Rimmerge. They are read-only here so they are not overwritten.",
-        "invalid": "Your groups and colours file breaks a rule and can't be used. They are read-only until you start over.",
+        "invalid": "Your groups and colours file has groups that don't fit together (for example a loop, a missing or repeated group, or too many groups), so it can't be used. They are read-only until you start over.",
         "tryAgain": "Rescan and try again",
         "startOver": "Start over…"
       },

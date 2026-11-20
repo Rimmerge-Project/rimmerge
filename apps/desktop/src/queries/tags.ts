@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryCache } from "@pinia/colada";
 
-import { startInvalidation } from "@/queries/invalidation";
+import { awaitInvalidation, startInvalidation } from "@/queries/invalidation";
 import { queryKeys } from "@/queries/keys";
-import { listTags, setManualTag } from "@/services/ipc";
+import { listTags, setManualTag, setManualTags } from "@/services/ipc";
 import type { SetManualTagRequestDto } from "@/types/generated/SetManualTagRequestDto";
+import type { SetManualTagsRequestDto } from "@/types/generated/SetManualTagsRequestDto";
 
 /** The current tag assignments (inference plus manual overrides). */
 export function useTagsQuery() {
@@ -26,5 +27,18 @@ export function useSetManualTagMutation() {
     onSuccess: () => {
       startInvalidation(queryCache);
     },
+  });
+}
+
+/**
+ * Adds or removes one manual tag on many mods at once (one save). Waits for the refetch so the
+ * lists already show the tag when the caller reports the outcome; like the single-mod tag it
+ * invalidates everything, which is what the `tagSet` event would refetch anyway.
+ */
+export function useSetManualTagsMutation() {
+  const queryCache = useQueryCache();
+  return useMutation({
+    mutation: (request: SetManualTagsRequestDto) => setManualTags(request),
+    onSuccess: () => awaitInvalidation(queryCache),
   });
 }

@@ -82,6 +82,7 @@ pub fn run() {
             commands::recommended_rules::skip_recommended_rules_step,
             commands::tags::list_tags,
             commands::tags::set_manual_tag,
+            commands::tags::set_manual_tags,
             commands::mods::list_mods,
             commands::mods::list_working_mods,
             commands::mods::get_mod,
@@ -179,6 +180,7 @@ pub fn run() {
             commands::organization::move_group_members,
             commands::organization::set_mod_colors,
             commands::organization::plan_group_scope,
+            commands::organization::group_membership_counts,
             commands::organization::remove_uninstalled_members,
             commands::organization::reset_organization,
         ])

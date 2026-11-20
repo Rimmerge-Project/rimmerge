@@ -75,7 +75,9 @@ pub use recommended_rules::{
     FirstRun, RecommendedRulesFacts, RecommendedRulesStep, SourceNeed, StepSkip, Unavailable,
     recommended_rules_step,
 };
-pub use session::{PatchDecideError, RuleKey, Session, UnknownAssignment, UnknownPatch};
+pub use session::{
+    ManualTagsChange, PatchDecideError, RuleKey, Session, UnknownAssignment, UnknownPatch,
+};
 pub use settings::{Settings, SortProvenance, filter_imported_rules};
 
 #[cfg(any(test, feature = "test-support"))]

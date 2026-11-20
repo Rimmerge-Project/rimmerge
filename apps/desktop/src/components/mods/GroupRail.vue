@@ -12,6 +12,8 @@ import { isInsideMenu, isKeyboardOpen, markFirstMenuItem } from "@/composables/p
 import { isInert } from "@/composables/shortcutTargets";
 import { useGroupScopePlanQuery } from "@/queries/organization";
 import type { GroupNodeDto } from "@/types/generated/GroupNodeDto";
+import type { GroupScopePlanDto } from "@/types/generated/GroupScopePlanDto";
+import { type GroupScopeAction, scopeIds } from "@/utils/groupScopeText";
 import { findNode, type GroupScopeChoice, searchTree } from "@/utils/organization";
 
 /**
@@ -32,6 +34,10 @@ const emit = defineEmits<{
   moveGroup: [groupId: number];
   deleteGroup: [groupId: number];
   removeUninstalled: [groupId: number];
+  /** Activate every installed mod of the group and its subgroups (opens the Activate dialog). */
+  activateGroup: [groupId: number];
+  /** Deactivate every active mod of the group and its subgroups (opens the Deactivate dialog). */
+  deactivateGroup: [groupId: number];
   close: [];
 }>();
 const scope = defineModel<GroupScopeChoice>("scope", { required: true });
@@ -94,6 +100,8 @@ const menuItems = computed<MenuItem[]>(() => {
       command: () => emit("moveGroup", id),
     },
     { separator: true },
+    ...scopeActionItems(id),
+    { separator: true },
     removeUninstalledItem(id),
     { separator: true },
     {
@@ -103,6 +111,60 @@ const menuItems = computed<MenuItem[]>(() => {
     },
   ];
 });
+
+/**
+ * The Activate and Deactivate entries for a whole group. The plan answers how many mods each
+ * covers; until it does (or when it failed) the counts are unknown, and one disabled line says so
+ * for both instead of offering an action over an unknown number of mods. Choosing an entry plans
+ * over the same mods again, fresh, in the page.
+ */
+function scopeActionItems(id: number): MenuItem[] {
+  const plan = scopePlan.value;
+  if (plan === undefined) {
+    return [
+      {
+        label:
+          scopePlanError.value === null
+            ? t("mods.groups.menu.checkingScope")
+            : t("mods.groups.menu.scopeUnavailable"),
+        testId: "group-menu-scope-status",
+        disabled: true,
+      },
+    ];
+  }
+  return [scopeActionItem(id, "activate", plan), scopeActionItem(id, "deactivate", plan)];
+}
+
+function scopeActionItem(id: number, action: GroupScopeAction, plan: GroupScopePlanDto): MenuItem {
+  const testId = `group-menu-${action}-all`;
+  const count = scopeIds(plan, action).length;
+  if (count === 0) {
+    return {
+      label: t(
+        action === "activate"
+          ? "mods.groups.menu.nothingToActivate"
+          : "mods.groups.menu.nothingToDeactivate",
+      ),
+      testId,
+      disabled: true,
+    };
+  }
+  return {
+    label: t(
+      action === "activate" ? "mods.groups.menu.activateAll" : "mods.groups.menu.deactivateAll",
+      { count },
+      count,
+    ),
+    testId,
+    command: () => {
+      if (action === "activate") {
+        emit("activateGroup", id);
+      } else {
+        emit("deactivateGroup", id);
+      }
+    },
+  };
+}
 
 /**
  * The "remove mods that aren't installed" entry. Until the plan answers (or when it failed) the

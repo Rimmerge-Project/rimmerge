@@ -175,4 +175,23 @@ export type OrganizationDialog =
   | { readonly kind: "removeUninstalled"; readonly id: number }
   | { readonly kind: "modColor"; readonly modId: string; readonly current: ColorTokenDto | null }
   | { readonly kind: "modGroups"; readonly modId: string; readonly groupIds: readonly number[] }
-  | { readonly kind: "startOver" };
+  | { readonly kind: "startOver" }
+  | {
+      readonly kind: "bulkGroups";
+      readonly mode: BulkGroupMode;
+      /** The selected mods of one list, hidden-by-filter ones included. */
+      readonly modIds: readonly string[];
+      /** How many of them the list's filter hides. */
+      readonly hiddenCount: number;
+    }
+  | {
+      readonly kind: "bulkColor";
+      readonly modIds: readonly string[];
+      readonly hiddenCount: number;
+    };
+
+/** What a bulk group dialog does with the selection. */
+export type BulkGroupMode = "add" | "remove" | "move";
+
+/** The organization and tag actions a list's selection offers. */
+export type BulkAction = "addToGroup" | "removeFromGroup" | "moveToGroup" | "color" | "tags";

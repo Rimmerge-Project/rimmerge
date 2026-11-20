@@ -20,10 +20,12 @@ import ModSortBar from "@/components/mods/ModSortBar.vue";
 import ModsRescanButton from "@/components/mods/ModsRescanButton.vue";
 import type { MenuAction } from "@/components/mods/ModTable.vue";
 import OrderSwitchedNote from "@/components/mods/OrderSwitchedNote.vue";
+import BulkTagsDialog from "@/components/mods/organization/BulkTagsDialog.vue";
 import OrganizationDialogs from "@/components/mods/organization/OrganizationDialogs.vue";
 import OrganizationNotice from "@/components/mods/organization/OrganizationNotice.vue";
 import OrderNotInFileNote from "@/components/order/OrderNotInFileNote.vue";
 import { useGroupScope } from "@/composables/useGroupScope";
+import { useGroupScopeActions } from "@/composables/useGroupScopeActions";
 import { useModActivation } from "@/composables/useModActivation";
 import { useModDeactivation } from "@/composables/useModDeactivation";
 import { useModListFilters } from "@/composables/useModListFilters";
@@ -32,8 +34,10 @@ import { type ListKind, useModReorder } from "@/composables/useModReorder";
 import { useOrderSource } from "@/composables/useOrderSource";
 import { useInactiveModsQuery, useWorkingModsQuery } from "@/queries/activeSet";
 import type { ModListDto } from "@/types/generated/ModListDto";
+import { assertNever } from "@/utils/assertNever";
 import { ACTIVE_SORT_KEYS, INACTIVE_SORT_KEYS } from "@/utils/modListSort";
-import { ALL_MODS, type OrganizationDialog } from "@/utils/organization";
+import { ALL_MODS, type BulkAction, type OrganizationDialog } from "@/utils/organization";
+import { selectionSummary } from "@/utils/selectionText";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -173,6 +177,7 @@ const {
   isPlanning: planningActivate,
   isCommitting: activating,
   openDialog: openActivateDialog,
+  openForIds: openActivateFor,
   activateAt,
   confirm: confirmActivate,
 } = useModActivation({
@@ -190,9 +195,75 @@ const {
   isPlanning: planningDeactivate,
   isCommitting: deactivating,
   openDialog: openDeactivateDialog,
+  openForIds: openDeactivateFor,
   deactivateDropped,
   confirm: confirmDeactivate,
 } = useModDeactivation({ selectedIds: selectedActiveIds });
+
+const shownIds = (list: ModListDto | undefined): ReadonlySet<string> =>
+  new Set(list?.items.map((row) => row.modId));
+
+const groupActions = useGroupScopeActions({
+  openActivate: openActivateFor,
+  openDeactivate: openDeactivateFor,
+  shownInactiveIds: () => shownIds(inactiveData.value),
+  shownActiveIds: () => shownIds(activeData.value),
+});
+
+// A group's scope lines belong to the one dialog it opened: any later dialog (the selection
+// button, a drop) starts without them.
+watch(activateDialogVisible, (isVisible) => {
+  if (!isVisible) {
+    groupActions.clearScope("activate");
+  }
+});
+watch(deactivateDialogVisible, (isVisible) => {
+  if (!isVisible) {
+    groupActions.clearScope("deactivate");
+  }
+});
+
+// Bulk organization and tag actions act on one list's whole selection, hidden-by-filter mods
+// included (each list keeps its own selection). They open dialogs and never touch the selection.
+// The selection stays after the dialog closes so its text does not blank during the leave
+// animation; the next open replaces it.
+const bulkTags = ref<{ readonly modIds: readonly string[]; readonly hiddenCount: number } | null>(
+  null,
+);
+const isBulkTagsVisible = ref(false);
+const bulkTagsText = computed(() =>
+  bulkTags.value === null
+    ? ""
+    : selectionSummary(t, bulkTags.value.modIds.length, bulkTags.value.hiddenCount),
+);
+
+function onBulkAction(from: ListKind, action: BulkAction): void {
+  const modIds = [
+    ...new Set(from === "active" ? selectedActiveIds.value : selectedInactiveIds.value),
+  ];
+  const shown = shownIds(from === "active" ? activeData.value : inactiveData.value);
+  const hiddenCount = modIds.filter((id) => !shown.has(id)).length;
+  switch (action) {
+    case "addToGroup":
+      organizationDialog.value = { kind: "bulkGroups", mode: "add", modIds, hiddenCount };
+      return;
+    case "removeFromGroup":
+      organizationDialog.value = { kind: "bulkGroups", mode: "remove", modIds, hiddenCount };
+      return;
+    case "moveToGroup":
+      organizationDialog.value = { kind: "bulkGroups", mode: "move", modIds, hiddenCount };
+      return;
+    case "color":
+      organizationDialog.value = { kind: "bulkColor", modIds, hiddenCount };
+      return;
+    case "tags":
+      bulkTags.value = { modIds, hiddenCount };
+      isBulkTagsVisible.value = true;
+      return;
+    default:
+      assertNever(action);
+  }
+}
 
 const reorder = useModReorder({
   activeList: activeData,
@@ -267,6 +338,8 @@ const followFocus = useDebounceFn((modId: string) => {
       @move-group="(id: number) => (organizationDialog = { kind: 'moveGroup', id })"
       @delete-group="(id: number) => (organizationDialog = { kind: 'deleteGroup', id })"
       @remove-uninstalled="(id: number) => (organizationDialog = { kind: 'removeUninstalled', id })"
+      @activate-group="(id: number) => void groupActions.activateGroup(id)"
+      @deactivate-group="(id: number) => void groupActions.deactivateGroup(id)"
       @close="() => void closeGroupDrawer()"
     />
     <section class="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
@@ -335,6 +408,7 @@ const followFocus = useDebounceFn((modId: string) => {
           @drag-end="reorder.endDrag"
           @drop="(slot: number) => reorder.drop('inactive', slot)"
           @menu-action="(modId: string, action: MenuAction) => onMenuAction(modId, action, 'inactive')"
+          @bulk-action="(action: BulkAction) => onBulkAction('inactive', action)"
         >
           <template #toolbar>
             <ModFilterBar
@@ -392,6 +466,7 @@ const followFocus = useDebounceFn((modId: string) => {
           @drop="(slot: number) => reorder.drop('active', slot)"
           @move-step="reorder.step"
           @menu-action="(modId: string, action: MenuAction) => onMenuAction(modId, action, 'active')"
+          @bulk-action="(action: BulkAction) => onBulkAction('active', action)"
         >
           <template #toolbar>
             <ModFilterBar
@@ -448,6 +523,7 @@ const followFocus = useDebounceFn((modId: string) => {
     <ActivateDialog
       v-model:visible="activateDialogVisible"
       :plan="activatePlan"
+      :scope-lines="groupActions.activateLines.value"
       :error="activateError"
       :is-submitting="activating"
       @confirm="confirmActivate"
@@ -456,6 +532,7 @@ const followFocus = useDebounceFn((modId: string) => {
     <DeactivateDialog
       v-model:visible="deactivateDialogVisible"
       :plan="deactivatePlan"
+      :scope-lines="groupActions.deactivateLines.value"
       :error="deactivateError"
       :is-submitting="deactivating"
       @confirm="confirmDeactivate"
@@ -465,6 +542,12 @@ const followFocus = useDebounceFn((modId: string) => {
       v-model:dialog="organizationDialog"
       :nodes="groups.nodes.value"
       @group-deleted="() => void groupRail?.focusTree()"
+    />
+
+    <BulkTagsDialog
+      v-model:visible="isBulkTagsVisible"
+      :mod-ids="bulkTags?.modIds ?? []"
+      :selection-text="bulkTagsText"
     />
 
     <ModPositionDialog

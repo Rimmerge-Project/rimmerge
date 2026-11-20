@@ -1,11 +1,13 @@
 //! [`Session`]'s organization: the profile's groups and mod colours.
 //! Held beside the sort and the ledger, never read by either.
 
+use std::collections::{BTreeMap, BTreeSet};
+
 use super::Session;
 use crate::mod_inventory::ModInventory;
 use crate::organization::{
     GroupId, GroupScopeResolution, ModOrganization, OrganizationQueryError, OrganizationState,
-    OrganizationUnavailable, resolve_scope,
+    OrganizationUnavailable, OrganizedModId, resolve_scope,
 };
 use crate::ports::OrganizationStore;
 
@@ -70,6 +72,26 @@ impl Session {
         let resolved = resolve_scope(&scope.mods, &inventory, &self.working);
         Ok(GroupScopeResolution { scope, resolved })
     }
+
+    /// How many of `mods` are direct members of each group, for the groups that hold at least
+    /// one. What the Move to group dialog lists as possible sources. Pure (`&self`).
+    ///
+    /// # Errors
+    ///
+    /// [`OrganizationUnavailable`] unless organization is loaded.
+    pub fn group_membership_counts(
+        &self,
+        mods: &BTreeSet<OrganizedModId>,
+    ) -> Result<BTreeMap<GroupId, usize>, OrganizationUnavailable> {
+        let organization = self.organization.loaded()?;
+        let mut counts = BTreeMap::new();
+        for mod_id in mods {
+            for group in organization.groups_of(mod_id) {
+                *counts.entry(group).or_insert(0) += 1;
+            }
+        }
+        Ok(counts)
+    }
 }
 
 #[cfg(test)]
@@ -84,6 +106,48 @@ mod tests {
             .create_group(GroupName::new(text).expect("valid name"), None)
             .expect("create");
         organization
+    }
+
+    fn base_ids(raw: &[&str]) -> BTreeSet<OrganizedModId> {
+        raw.iter()
+            .map(|id| OrganizedModId::new(&rim_analyzer::domain::ModId::new(*id)).expect("id"))
+            .collect()
+    }
+
+    #[test]
+    fn membership_counts_list_only_groups_holding_a_requested_mod_directly() {
+        let mut organization = ModOrganization::new();
+        let weapons = organization
+            .create_group(GroupName::new("Weapons").expect("name"), None)
+            .expect("create");
+        let melee = organization
+            .create_group(GroupName::new("Melee").expect("name"), Some(weapons))
+            .expect("create");
+        organization
+            .create_group(GroupName::new("Empty").expect("name"), None)
+            .expect("create");
+        organization
+            .add_members(weapons, &base_ids(&["a", "b"]))
+            .expect("add");
+        organization
+            .add_members(melee, &base_ids(&["a", "z"]))
+            .expect("add");
+        let mut session = session_fixture(&["a", "b"]);
+        session.set_organization_state(OrganizationState::Loaded(organization));
+
+        let counts = session
+            .group_membership_counts(&base_ids(&["a", "b"]))
+            .expect("loaded");
+
+        assert_eq!(counts, BTreeMap::from([(weapons, 2), (melee, 1)]));
+    }
+
+    #[test]
+    fn membership_counts_refuse_an_unavailable_organization() {
+        let mut session = session_fixture(&["a"]);
+        session.set_organization_state(OrganizationState::NotLoaded);
+
+        assert!(session.group_membership_counts(&base_ids(&["a"])).is_err());
     }
 
     #[test]
