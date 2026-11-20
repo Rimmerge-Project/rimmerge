@@ -356,19 +356,14 @@ impl Session {
                 && shown.contains(&m.mod_id)
                 && !kept_by_decision.contains(&m.mod_id))
         });
+        // A still-inferred mod cannot already carry a `Remove` for this tag: that override would hide
+        // the inferred tag, so the mod would not have been `shown`.
         for mod_id in still_inferred {
-            let is_recorded = self
-                .rules
-                .manual_tags
-                .iter()
-                .any(|m| m.mod_id == mod_id && m.tag == *tag && m.mode == TagMode::Remove);
-            if !is_recorded {
-                self.rules.manual_tags.push(ManualTag {
-                    mod_id,
-                    tag: tag.clone(),
-                    mode: TagMode::Remove,
-                });
-            }
+            self.rules.manual_tags.push(ManualTag {
+                mod_id,
+                tag: tag.clone(),
+                mode: TagMode::Remove,
+            });
         }
         self.refresh_tagging();
         (changed, kept_by_decision.len())

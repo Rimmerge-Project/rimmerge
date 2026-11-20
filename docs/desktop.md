@@ -197,7 +197,8 @@ or a paste, and always
 shows a preview first. *Import from a save…* opens a list of the saves in
 RimWorld's `Saves` folder (the one beside the `Config` folder that holds
 `ModsConfig.xml`), newest first, with the save's name and the date it was last
-saved, at most 200 of them (it says how many older ones are not shown). *Preview*
+saved, at most 200 of them (it says how many older ones are not shown; the
+screenshot below shows the list). *Preview*
 on a save opens the same preview as any other import; *Browse…* opens the file
 dialog in that folder for a save kept elsewhere. When the `Saves` folder is not
 found next to your `ModsConfig.xml`, or cannot be listed, the dialog says so and
@@ -221,6 +222,8 @@ order would be too long, or it names a mod that isn't installed or names
 one twice). A list that leaves Core out is not refused: Core is kept first. If your installed mods change between the preview and the
 click, the import is refused, the preview closes and a notice asks you to
 preview the list again.
+
+![The Import from a save list](screenshots/order-page/import-from-save.png)
 
 Importing rescans with the previewed order and selects **Current**: the page
 then shows the imported order with a note that it isn't your active order
@@ -506,6 +509,13 @@ load order. They live in the profile's `organization.json`, separate from the
 sorter's rules, keyed by a mod's package id so they survive updates and
 rescans.
 
+![The Groups panel, a group's mods and the bulk actions over two selected mods](screenshots/mods-page/groups-and-bulk-actions.png)
+
+Choosing **Add to group…** in the bulk actions opens a dialog that names the
+selection and lists the groups:
+
+![The Add to group dialog for two selected mods](screenshots/mods-page/bulk-add-to-group-dialog.png)
+
 - **The Groups panel** is a column on the left of a window 1,800 pixels wide
   or more, and a drawer opened by the **Groups** button on narrower windows.
   It lists **All mods**, **Ungrouped** and your group tree. Each group shows
@@ -541,9 +551,9 @@ rescans.
 - **Bulk actions** appear above a list while it has a selection (each list
   keeps its own selection, and an action works on that list's selection only,
   including selected mods the filter hides; the dialog says "12 selected
-  (3 not shown)"). **Add to group** puts the mods in the group you pick and
-  leaves every other membership alone. **Remove from group** lists only the
-  groups that hold at least one selected mod, with how many. **Move to group**
+  (3 not shown)"). **Add to group…** puts the mods in the group you pick and
+  leaves every other membership alone. **Remove from group…** lists only the
+  groups that hold at least one selected mod, with how many. **Move to group…**
   is the one way to replace a membership: you pick the group to move **from**
   (again only groups that hold a selected mod) and the group to move **to**;
   mods that are not in the first group are left alone. **Colour** sets or
@@ -565,8 +575,8 @@ rescans.
   panel to add them to it (a selected row carries the whole selection, the
   rows a filter hides included; the hint under the tree and the toast both
   say how many were not shown). A drop only ever adds: mods stay in their
-  other groups, and taking a mod out of one is the **Groups…** dialog (clear
-  its box). Drag a group onto another group to put it inside, or onto **All
+  other groups, and taking mods out of one is **Remove from group…** in the
+  bulk actions (or clear its box in a row's **Groups…** dialog). Drag a group onto another group to put it inside, or onto **All
   mods** to make it top level. The hovered entry gets a dashed outline, an icon
   and a sentence under the tree ("Add 3 mods to Weapons"); a place the group
   cannot go (itself, its own subgroups, where it already is, **Ungrouped**)
@@ -578,9 +588,9 @@ rescans.
   moves a mod, never changes the selection, and the Active list's own
   reordering drag works as before. Below 1,800 pixels, open the Groups drawer
   first, then drag. Without a mouse: a group's menu **Move group to…** nests it
-  or makes it top level, and a row's ⋮ menu **Groups…** adds that one mod to
-  groups. Adding a whole selection from the keyboard comes with the selection
-  toolbar.
+  or makes it top level, a row's ⋮ menu **Groups…** adds that one mod to
+  groups, and to add a whole selection, select the rows and use the bulk
+  actions' **Add to group…**.
 - If `organization.json` cannot be read, a notice says so and groups are
   read-only. If another program only has the file open, **Rescan and try
   again** reads it again (it is a full rescan of your mods, the only thing that

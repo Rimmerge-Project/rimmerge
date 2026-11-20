@@ -7945,6 +7945,11 @@ export function installScenario(): void {
           ? [...new Set([...current, request.tag])]
           : current.filter((tag) => tag !== request.tag);
       tagsByMod.set(request.modId, next);
+      // The backend replaces the pair's override: an add pins a manual `Add`, a remove replaces
+      // it with a `Remove`, so either way the pair no longer holds an `Add` unless this is one.
+      const pair = tagPairKey(request.modId, request.tag);
+      if (request.mode === "add") manualAdds.add(pair);
+      else manualAdds.delete(pair);
       const mod = mods.find((m) => m.modId === request.modId);
       if (mod) mod.tags = next;
       return {

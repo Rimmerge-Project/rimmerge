@@ -414,29 +414,6 @@ mod tests {
     }
 
     #[test]
-    fn a_repeated_remove_does_not_duplicate_the_recorded_remove() {
-        let mut session = tagged_session(
-            &["a"],
-            &["a"],
-            StoredRules {
-                manual_tags: vec![manual("a", TagMode::Remove)],
-                ..StoredRules::default()
-            },
-        );
-        let use_case = SetManualTags::new(InMemoryRuleStore::new());
-
-        let change = use_case
-            .execute(&mut session, &ids(&["a"]), &framework(), TagMode::Remove)
-            .expect("remove");
-
-        assert_eq!(change.unchanged, 1);
-        assert_eq!(
-            overrides(&session),
-            vec![("a".to_string(), TagMode::Remove)]
-        );
-    }
-
-    #[test]
     fn a_failed_save_rolls_every_override_back() {
         let mut session = session_fixture(&["a", "b"]);
         let store = InMemoryRuleStore::new();

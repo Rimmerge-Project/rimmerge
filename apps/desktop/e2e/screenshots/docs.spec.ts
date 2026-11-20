@@ -4,6 +4,7 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 // Type-only: pulls in `Window.__MODS_CONFIG_FILE__`'s ambient declaration.
 import type {} from "../../src/e2e-mock-bootstrap";
 import type { ModListDto } from "../../src/types/generated/ModListDto";
+import { addToGroup, createGroup, node, WIDE } from "../specs/organization-support";
 import { loadScenario, modsPane } from "../specs/support";
 import { waitForQuietMain } from "./settle";
 
@@ -20,6 +21,7 @@ import { waitForQuietMain } from "./settle";
 const IS_ENABLED = process.env["RIMMERGE_DOCS_SCREENSHOTS"] === "1";
 const SCREENSHOTS_DIR = path.resolve(import.meta.dirname, "../../../../docs/screenshots");
 const MODS_PAGE_DIR = path.join(SCREENSHOTS_DIR, "mods-page");
+const SAVES_FOLDER = "C:/Users/example/Saves";
 
 /**
  * A dialog opens with keyboard focus on its close button, and blurring it did
@@ -330,5 +332,53 @@ test.describe("docs screenshots", () => {
       [page.getByTestId("order-not-in-file"), page.getByTestId("order-switched-note")],
       path.join(MODS_PAGE_DIR, "order-not-applied-note.png"),
     );
+  });
+
+  test("mods page: the Groups panel and the bulk actions over a selection", async ({ page }) => {
+    // The Groups panel is a column from 1,800 pixels wide, so these two images are wider.
+    await page.setViewportSize(WIDE);
+    await startScenario(page, "dark");
+    await openMods(page);
+    await createGroup(page, "Weapons");
+    await createGroup(page, "Armor");
+    await addToGroup(page, "active", "mod.004", "Weapons");
+    await addToGroup(page, "active", "mod.008", "Weapons");
+    await addToGroup(page, "active", "mod.010", "Armor");
+    await node(page, "Weapons").click();
+    await expect(page.getByTestId("mods-bulk-bar-active")).toHaveCount(0);
+
+    await selectModRow(page, "mod.004");
+    await selectModRow(page, "mod.008");
+    await expect(page.getByTestId("mods-bulk-bar-active")).toBeVisible();
+    await capture(page, path.join(MODS_PAGE_DIR, "groups-and-bulk-actions.png"));
+
+    await page.getByTestId("bulk-add-to-group-active").click();
+    await expect(page.getByTestId("bulk-groups-dialog")).toBeVisible();
+    await capture(page, path.join(MODS_PAGE_DIR, "bulk-add-to-group-dialog.png"));
+  });
+
+  test("order page: importing a load order from a save", async ({ page }) => {
+    await startScenario(page, "dark");
+    await page.evaluate((folder) => {
+      window.__SAVES__ = {
+        folder,
+        saves: [
+          {
+            path: `${folder}/Colony of Example.rws`,
+            name: "Colony of Example",
+            savedAt: 1_800_000_000,
+          },
+          { path: `${folder}/Second try.rws`, name: "Second try", savedAt: 1_790_000_000 },
+          { path: `${folder}/Older colony.rws`, name: "Older colony", savedAt: 1_700_000_000 },
+        ],
+        omitted: 0,
+      };
+    }, SAVES_FOLDER);
+    await page.getByTestId("nav-order").click();
+    await page.getByTestId("order-import-button").click();
+    await page.getByTestId("order-import-save").click();
+    await expect(page.getByTestId("save-import-dialog")).toBeVisible();
+    await expect(page.getByTestId("save-import-name")).toHaveCount(3);
+    await capture(page, path.join(SCREENSHOTS_DIR, "order-page", "import-from-save.png"));
   });
 });

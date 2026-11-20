@@ -50,9 +50,28 @@ before that point is not summarized here.
   id so they survive updates and rescans. If that file cannot be used, a
   notice says so and groups stay read-only; **Start over…** keeps a copy of
   the file and begins with no groups.
-- *Placeholder, still in progress: bulk actions on selected mods (#40 batch
-  D) and dragging mods onto a group (#40 batch E). Replace this line when
-  those batches merge.*
+- **New: act on many mods at once from the Mods page.** While a list has a
+  selection, a row of buttons above it works on that selection (each list
+  keeps its own, and mods a filter hides are included; every dialog says how
+  many were not shown). **Add to group…** puts the mods in a group, **Remove
+  from group…** takes them out of the groups that hold them, and **Move to
+  group…** replaces one group with another. **Colour** sets or clears their
+  colour, and **Tags** adds or removes one tag on all of them. A group's menu
+  also has **Activate** and **Deactivate** for the whole group, subgroups
+  included, in the same dialogs as the selection buttons, with a line that
+  says how many mods it covers. Each action is one save and one message that
+  says what changed and what was left alone. None of them changes the load
+  order, a pending change or `ModsConfig.xml`; tags never change the sorted
+  order.
+- **New: drag mods and groups onto the Groups panel.** Drag a row, or every
+  selected row, onto a group to add the mods to it; mods stay in their other
+  groups. Drag a group onto another group to put it inside, or onto **All
+  mods** to make it top level. The group under the pointer is outlined and a
+  sentence under the tree says what the drop will do, or why it cannot. A
+  collapsed group opens when you hold a drag over it. A drop never activates
+  or moves a mod, and the Active list's own drag works as before. On a
+  narrower window, open the Groups drawer first. Without a mouse, a group's
+  menu **Move group to…** and the bulk **Add to group…** do the same.
 
 ## [1.2.4] - 2026-11-19
 
