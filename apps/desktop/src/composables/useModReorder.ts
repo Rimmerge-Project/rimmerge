@@ -29,6 +29,8 @@ export interface DragState {
   readonly ids: readonly string[];
   /** Whether Core is among the shown dragged rows, which cannot leave the Active list. */
   readonly includesCore: boolean;
+  /** How many carried mods are selected rows the list's filter hides. */
+  readonly hiddenCount: number;
 }
 
 /** A pending "Move after…" or "Activate at…" choice: the mods and what the choice does. */
@@ -105,9 +107,11 @@ export function useModReorder({
     const selected = from === "active" ? selectedActiveIds.value : selectedInactiveIds.value;
     const ids = moveSetFor(modId, selected, rows);
     const dragged = new Set(ids);
+    const shownIds = new Set(rows.map((row) => row.modId));
     drag.value = {
       from,
       ids,
+      hiddenCount: ids.filter((id) => !shownIds.has(id)).length,
       includesCore: rows.some((row) => dragged.has(row.modId) && row.source === "core"),
     };
   }
@@ -329,6 +333,7 @@ export function useModReorder({
     announcement,
     isReorderable,
     reorderBlockedReason,
+    announce,
     startDrag,
     endDrag,
     dropModeFor,

@@ -23,6 +23,7 @@ import OrderSwitchedNote from "@/components/mods/OrderSwitchedNote.vue";
 import OrganizationDialogs from "@/components/mods/organization/OrganizationDialogs.vue";
 import OrganizationNotice from "@/components/mods/organization/OrganizationNotice.vue";
 import OrderNotInFileNote from "@/components/order/OrderNotInFileNote.vue";
+import { useGroupDrop } from "@/composables/useGroupDrop";
 import { useGroupScope } from "@/composables/useGroupScope";
 import { useModActivation } from "@/composables/useModActivation";
 import { useModDeactivation } from "@/composables/useModDeactivation";
@@ -211,6 +212,22 @@ const reorder = useModReorder({
   },
 });
 
+// Mods dropped on a group join it and a group dropped on a group nests; both are organization
+// edits only (D14: a drop never replaces a membership).
+const groupDrop = useGroupDrop({
+  nodes: groups.nodes,
+  drag: reorder.drag,
+  endDrag: reorder.endDrag,
+  announce: reorder.announce,
+});
+
+/** The tree's view of a drag from a list: how many mods it carries, `null` when none. */
+const rowDrag = computed(() =>
+  reorder.drag.value === null
+    ? null
+    : { count: reorder.drag.value.ids.length, hiddenCount: reorder.drag.value.hiddenCount },
+);
+
 const isPositionDialogVisible = computed({
   get: () => reorder.positionRequest.value !== null,
   set: (isVisible) => {
@@ -261,12 +278,15 @@ const followFocus = useDebounceFn((modId: string) => {
       v-model:scope="groups.scope.value"
       :nodes="groups.nodes.value"
       :is-overlay="!hasGroupColumn"
+      :row-drag="rowDrag"
       @create-group="(parent: number | null) => (organizationDialog = { kind: 'createGroup', parent })"
       @rename-group="(id: number) => (organizationDialog = { kind: 'renameGroup', id })"
       @change-color="(id: number) => (organizationDialog = { kind: 'groupColor', id })"
       @move-group="(id: number) => (organizationDialog = { kind: 'moveGroup', id })"
       @delete-group="(id: number) => (organizationDialog = { kind: 'deleteGroup', id })"
       @remove-uninstalled="(id: number) => (organizationDialog = { kind: 'removeUninstalled', id })"
+      @drop-mods="(id: number) => void groupDrop.dropMods(id)"
+      @drop-group="(id: number, parent: number | null) => void groupDrop.dropGroup(id, parent)"
       @close="() => void closeGroupDrawer()"
     />
     <section class="flex min-h-0 min-w-0 flex-1 flex-col gap-4">

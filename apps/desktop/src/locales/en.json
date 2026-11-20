@@ -1566,6 +1566,23 @@
         "note": "Search and filters work inside this group. The Active list stays in load order.",
         "showAll": "Show all mods"
       },
+      "drop": {
+        "addTo": "Add {count} mod to {name} | Add {count} mods to {name}",
+        "idleMods": "Drop {count} mod on a group to add it | Drop {count} mods on a group to add them",
+        "idleGroup": "Drop on a group to put this group inside it, or on All mods to make it top level.",
+        "needsGroup": "Mods can only be added to a group",
+        "notUngrouped": "A group can't go into Ungrouped. Use All mods to make it top level.",
+        "withHidden": "{text} ({hidden})",
+        "alreadyThere": "The group is already there",
+        "makeTopLevel": "Make {name} a top-level group",
+        "nestInside": "Move {name} inside {parent}",
+        "added": "Added {count} mod to {name} | Added {count} mods to {name}",
+        "nothingToAdd": "Every mod was already in {name}",
+        "alreadyIn": "{count} was already in the group | {count} were already in the group",
+        "hiddenIncluded": "{count} selected mod that a filter hides was included | {count} selected mods that a filter hides were included",
+        "movedTop": "{name} is now a top-level group",
+        "movedInside": "{name} moved inside {parent}"
+      },
       "toast": {
         "created": "Group created",
         "renamed": "Group renamed",

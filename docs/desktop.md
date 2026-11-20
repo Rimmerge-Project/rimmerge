@@ -538,6 +538,26 @@ rescans.
   none).
 - **Tags** you added by hand now show on every row, Inactive included, and the
   tag filter works on both lists.
+- **Dragging onto groups.** Drag rows from either list onto a group in the
+  panel to add them to it (a selected row carries the whole selection, the
+  rows a filter hides included; the hint under the tree and the toast both
+  say how many were not shown). A drop only ever adds: mods stay in their
+  other groups, and taking a mod out of one is the **Groups…** dialog (clear
+  its box). Drag a group onto another group to put it inside, or onto **All
+  mods** to make it top level. The hovered entry gets a dashed outline, an icon
+  and a sentence under the tree ("Add 3 mods to Weapons"); a place the group
+  cannot go (itself, its own subgroups, where it already is, **Ungrouped**)
+  shows the not-allowed cursor and says why. Other refusals, such as nesting
+  past the depth limit, come from Rimmerge itself and show as an error toast.
+  Only drags that start on a mod row or a group in the panel are taken; a file
+  or text dragged in from elsewhere is ignored. A collapsed group opens after a
+  drag has hovered it for a moment. Dragging never activates, deactivates or
+  moves a mod, never changes the selection, and the Active list's own
+  reordering drag works as before. Below 1,800 pixels, open the Groups drawer
+  first, then drag. Without a mouse: a group's menu **Move group to…** nests it
+  or makes it top level, and a row's ⋮ menu **Groups…** adds that one mod to
+  groups. Adding a whole selection from the keyboard comes with the selection
+  toolbar.
 - If `organization.json` cannot be read, a notice says so and groups are
   read-only. If another program only has the file open, **Rescan and try
   again** reads it again (it is a full rescan of your mods, the only thing that

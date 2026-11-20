@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 // Type-only: pulls in `Window.__E2E_MOCK_IPC__`'s ambient declaration.
 import type {} from "../../src/e2e-mock-bootstrap";
 import type { ModListDto } from "../../src/types/generated/ModListDto";
@@ -46,6 +46,24 @@ async function createGroup(page: Page, name: string): Promise<void> {
   await page.getByTestId("group-name-submit").click();
   await expect(page.getByTestId("group-name-dialog")).toBeHidden();
   await expect(page.getByTestId("group-tree").getByText(name, { exact: true })).toBeVisible();
+}
+
+/** The summary line of a toast (the live region repeats the same words for screen readers). */
+function toastSummary(page: Page, text: string) {
+  return page.locator(".p-toast-summary", { hasText: text });
+}
+
+/** Moves the held mouse into the middle of `target`, so the browser fires `dragover` there. */
+async function dragOver(page: Page, target: Locator): Promise<void> {
+  const box = await target.boundingBox();
+  if (box === null) {
+    throw new Error("the drop target has no box");
+  }
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  await page.mouse.move(x, y, { steps: 8 });
+  // The move that enters a target fires `dragenter`; one more inside it fires `dragover`.
+  await page.mouse.move(x + 2, y, { steps: 2 });
 }
 
 /** The tree entry for the group named `name`. */
@@ -534,6 +552,175 @@ test.describe("mods groups on a narrow row", () => {
     expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(rowBox.x + rowBox.width);
     // The chips are hidden at this width, so the groups must still be there as text.
     await expect(row.getByTestId("mod-row-groups-text")).toHaveText(/Waffen/);
+    await expectNothingMoved(page, before);
+  });
+});
+
+test.describe("mods groups drag onto the tree", () => {
+  /** The organization commands sent so far, in order. */
+  async function organizationCommands(page: Page): Promise<string[]> {
+    // `plan_group_scope` is a read the group menu makes, not an edit.
+    return page.evaluate(() =>
+      (window.__ORGANIZATION_CALLS__ ?? [])
+        .map((call) => call.command)
+        .filter((command) => command !== "plan_group_scope"),
+    );
+  }
+
+  /** A new group named `name`, optionally inside `parent` through the group menu. */
+  async function makeGroup(page: Page, name: string, parent?: string): Promise<void> {
+    if (parent === undefined) {
+      await createGroup(page, name);
+      return;
+    }
+    await groupMenu(page, parent, "new-subgroup");
+    await page.getByTestId("group-name-input").fill(name);
+    await page.getByTestId("group-name-submit").click();
+    await expect(page.getByTestId("group-name-dialog")).toBeHidden();
+    await expect(node(page, name)).toBeVisible();
+  }
+
+  test("drops a row, and a selected range, onto a group; keeps other memberships and moves nothing", async ({
+    page,
+  }) => {
+    const before = await openMods(page);
+    await makeGroup(page, "Weapons");
+    await makeGroup(page, "Armor");
+    const active = modsPane(page, "active");
+    await addToGroup(page, "active", "mod.004", "Armor");
+
+    await active.getByTestId("mod-row-mod.003").dragTo(node(page, "Weapons"));
+
+    await expect(active.getByTestId("mod-row-mod.003")).toContainText("Weapons");
+    await expect(toastSummary(page, "Added 1 mod to Weapons")).toBeVisible();
+
+    // A range carries every selected row; mod.004 keeps Armor and gains Weapons.
+    await active.getByTestId("mod-row-select-mod.004").locator("input").check();
+    await active.getByTestId("mod-row-select-mod.005").locator("input").check();
+    await active.getByTestId("mod-row-mod.004").dragTo(node(page, "Weapons"));
+
+    await expect(active.getByTestId("mod-row-mod.004")).toContainText("Armor");
+    await expect(active.getByTestId("mod-row-mod.004")).toContainText("Weapons");
+    await expect(active.getByTestId("mod-row-mod.005")).toContainText("Weapons");
+    await expect(toastSummary(page, "Added 2 mods to Weapons")).toBeVisible();
+    // Dropping never changes the selection.
+    await expect(active.getByTestId("mod-row-select-mod.004").locator("input")).toBeChecked();
+    await expect(active.getByTestId("mod-row-select-mod.005").locator("input")).toBeChecked();
+
+    expect(await organizationCommands(page)).toEqual([
+      "create_group",
+      "create_group",
+      "add_group_members",
+      "add_group_members",
+      "add_group_members",
+    ]);
+    await expectNothingMoved(page, before);
+  });
+
+  test("drops an inactive row onto a group without activating it", async ({ page }) => {
+    const before = await openMods(page);
+    await makeGroup(page, "Weapons");
+    const inactive = modsPane(page, "inactive");
+
+    await inactive.getByTestId("mod-row-mod.901").dragTo(node(page, "Weapons"));
+
+    await expect(inactive.getByTestId("mod-row-mod.901")).toContainText("Weapons");
+    await expectNothingMoved(page, before);
+  });
+
+  test("nests a group by dragging it, and makes it top level on All mods", async ({ page }) => {
+    const before = await openMods(page);
+    await makeGroup(page, "Weapons");
+    await makeGroup(page, "Armor");
+
+    await node(page, "Armor").dragTo(node(page, "Weapons"));
+    await expect(toastSummary(page, "Armor moved inside Weapons")).toBeVisible();
+    // A group that gains its first subgroup opens, so the nested group is drawn.
+    await expect(node(page, "Armor")).toHaveAttribute("aria-level", "2");
+
+    await node(page, "Armor").dragTo(page.getByTestId("group-node-all"));
+    await expect(node(page, "Armor")).toHaveAttribute("aria-level", "1");
+
+    expect(await organizationCommands(page)).toEqual([
+      "create_group",
+      "create_group",
+      "reparent_group",
+      "reparent_group",
+    ]);
+    await expectNothingMoved(page, before);
+  });
+
+  test("refuses a group dragged into its own subgroup, with the reason on screen and no command", async ({
+    page,
+  }) => {
+    const before = await openMods(page);
+    await makeGroup(page, "Weapons");
+    await makeGroup(page, "Melee", "Weapons");
+
+    await node(page, "Weapons").hover();
+    await page.mouse.down();
+    await dragOver(page, node(page, "Melee"));
+
+    await expect(node(page, "Melee")).toHaveAttribute("data-drop", "refuse");
+    await expect(page.getByTestId("group-drop-hint")).toHaveText(
+      "A group can't go inside itself or its own subgroups",
+    );
+    await expect(page.getByTestId("group-drop-icon")).toBeVisible();
+    await page.mouse.up();
+
+    await expect(page.getByTestId("group-drop-hint")).toHaveCount(0);
+    expect(await organizationCommands(page)).toEqual(["create_group", "create_group"]);
+    await expectNothingMoved(page, before);
+  });
+
+  test("opens a collapsed group while a row hovers it, then drops into the subgroup", async ({
+    page,
+  }) => {
+    const before = await openMods(page);
+    await makeGroup(page, "Weapons");
+    await makeGroup(page, "Melee", "Weapons");
+    await page
+      .getByTestId("group-tree")
+      .getByTestId(/group-node-toggle-/)
+      .first()
+      .click();
+    await expect(node(page, "Melee")).toBeHidden();
+
+    const row = modsPane(page, "active").getByTestId("mod-row-mod.003");
+    await row.hover();
+    await page.mouse.down();
+    await dragOver(page, node(page, "Weapons"));
+    await expect(page.getByTestId("group-drop-hint")).toHaveText("Add 1 mod to Weapons");
+    await expect(node(page, "Melee")).toBeVisible({ timeout: 3000 });
+    await dragOver(page, node(page, "Melee"));
+    await page.mouse.up();
+
+    await expect(row).toContainText("Melee");
+    await expectNothingMoved(page, before);
+  });
+
+  test("has keyboard routes with the same effects: the row menu's Groups and the group menu's Move", async ({
+    page,
+  }) => {
+    const before = await openMods(page);
+    await makeGroup(page, "Weapons");
+    await makeGroup(page, "Armor");
+
+    await addToGroup(page, "active", "mod.003", "Weapons");
+    await groupMenu(page, "Armor", "move");
+    await page
+      .getByTestId("group-move-dialog")
+      .getByLabel(/^Weapons/)
+      .check();
+    await page.getByTestId("group-move-submit").click();
+    await expect(page.getByTestId("group-move-dialog")).toBeHidden();
+
+    expect(await organizationCommands(page)).toEqual([
+      "create_group",
+      "create_group",
+      "add_group_members",
+      "reparent_group",
+    ]);
     await expectNothingMoved(page, before);
   });
 });

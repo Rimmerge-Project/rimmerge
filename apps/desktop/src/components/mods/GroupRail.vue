@@ -19,11 +19,17 @@ import { findNode, type GroupScopeChoice, searchTree } from "@/utils/organizatio
  * (`isOverlay`) below that. It holds the search, the tree and the actions on the group in focus;
  * the dialogs and every edit live with the page, so this only says what the user asked for.
  */
-const { nodes, isOverlay = false } = defineProps<{
+const {
+  nodes,
+  isOverlay = false,
+  rowDrag = null,
+} = defineProps<{
   /** Every group, depth first, siblings by name. */
   nodes: readonly GroupNodeDto[];
   /** Whether the panel floats over the page (a drawer) instead of taking its own column. */
   isOverlay?: boolean;
+  /** The mods being dragged from a list, so the tree can take them as a drop. */
+  rowDrag?: { readonly count: number; readonly hiddenCount: number } | null;
 }>();
 const emit = defineEmits<{
   createGroup: [parent: number | null];
@@ -32,6 +38,8 @@ const emit = defineEmits<{
   moveGroup: [groupId: number];
   deleteGroup: [groupId: number];
   removeUninstalled: [groupId: number];
+  dropMods: [groupId: number];
+  dropGroup: [groupId: number, parent: number | null];
   close: [];
 }>();
 const scope = defineModel<GroupScopeChoice>("scope", { required: true });
@@ -269,9 +277,12 @@ watch(
       v-model:expanded="expanded"
       :nodes="nodes"
       :shown="shown"
+      :row-drag="rowDrag"
       @menu="openMenu"
       @rename="(id: number) => emit('renameGroup', id)"
       @delete="(id: number) => emit('deleteGroup', id)"
+      @drop-mods="(id: number) => emit('dropMods', id)"
+      @drop-group="(id: number, parent: number | null) => emit('dropGroup', id, parent)"
     />
     <Menu
       ref="groupMenu"
