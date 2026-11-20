@@ -42,6 +42,8 @@ export function modRow(overrides: ModRowOverrides = {}): ModListRowDto {
     workshopId: null,
     updated: overrides.updated ?? { kind: "unknown" },
     membership: overrides.membership ?? "none",
+    groups: [],
+    color: null,
   };
 }
 

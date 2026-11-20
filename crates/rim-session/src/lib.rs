@@ -25,6 +25,7 @@ mod mod_knowledge;
 pub mod mod_list;
 mod mod_lists;
 mod mod_times;
+pub mod organization;
 mod paths;
 mod recommended_rules;
 mod replay_pool;
@@ -65,8 +66,8 @@ pub use mod_index::{ModFilter, ModPage, ModSummary};
 pub use mod_inventory::{InventoryEntry, ModInventory};
 pub use mod_knowledge::ModKnowledge;
 pub use mod_lists::{
-    ListSort, ListSortKey, MAX_MOD_LIST_ROWS, ModList, ModListQuery, ModListRow, RowState,
-    SortDirection,
+    GroupFilter, GroupLabel, ListSort, ListSortKey, MAX_MOD_LIST_ROWS, ModList, ModListError,
+    ModListQuery, ModListRow, RowState, SortDirection,
 };
 pub use mod_times::{ModTimeSubject, ModUpdateTimes, UnixSeconds, UpdateTime, UpdateUnavailable};
 pub use paths::ProjectPaths;

@@ -43,6 +43,24 @@ here or in the two interface apps; `rim-resolve`/`rim-merge`/
   `NotificationState::default`, since it's app-remembered state, not a
   preference, and losing it costs at most re-showing an already-seen
   notice.
+- `organization.rs` (`organization.json`, `JsonOrganizationStore`) is the
+  third store that does not follow "unknown version is an error": its
+  `load` has no error type, because every outcome is a state the session
+  models (`OrganizationLoad::{Missing, Loaded, Unusable(issue)}`). It
+  treats the file as untrusted: at most `OrganizationLimits::MAX_FILE_BYTES`
+  are read, a version above 1 is `NewerVersion` (checked before the rest of
+  the shape), every value goes through a domain constructor and the whole
+  document through `ModOrganization::from_parts`, and nothing is repaired:
+  an unusable file stays on disk untouched until the user starts over, when
+  `archive_unusable` copies it to `organization.json.unusable-<seconds>`
+  (a `-n` suffix when that name is taken) before the empty save. `save`
+  writes groups in id order and members sorted, so one state is one byte
+  string. It also persists `next_group_id` (required in the v1 file, bounded
+  by `OrganizationLimits::MAX_GROUP_ID`), so a deleted group's id is never
+  reused after a reload, and it **refuses to write** a document larger than
+  `MAX_FILE_BYTES` (a `StoreError`, so the edit rolls back): the app never
+  writes a file its own reader would turn into `TooLarge`.
+  `archive_unusable` on a missing file is a no-op success.
 - `net/` is this crate's only network dependency; its only two callers
   are `databases/cache.rs` and `release_feed.rs`. `net::http::UreqHttpGet`
   is the only thing anywhere in this workspace that opens a socket —

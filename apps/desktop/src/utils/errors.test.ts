@@ -69,6 +69,11 @@ describe("describeCommandError", () => {
       "move_anchor_not_active",
       "revert_order_pending_changes",
       "revert_order_membership_differs",
+      "organization_unavailable",
+      "group_not_found",
+      "group_name_taken",
+      "group_cycle",
+      "organization_limit",
     ] as const;
 
     const keys = codes.map((code) => {

@@ -15,7 +15,7 @@ use crate::file_baseline::{
 };
 use crate::game_launch::{OrderOnDisk, UnappliedReason};
 use crate::mod_index::{self, ModFilter, ModPage};
-use crate::mod_lists::{self, ModList, ModListQuery};
+use crate::mod_lists::{self, ModList, ModListError, ModListQuery};
 use crate::ports::ModsConfigFile;
 use crate::settings::SortProvenance;
 
@@ -61,14 +61,19 @@ impl Session {
     /// The Mods page's Active list: the working set in its own order,
     /// every row (up to [`crate::MAX_MOD_LIST_ROWS`]) matching `query`.
     /// Pure (`&self`).
-    #[must_use]
-    pub fn working_mod_list(&self, query: &ModListQuery) -> ModList {
+    ///
+    /// # Errors
+    ///
+    /// [`ModListError`] when the query's group filter names a group that
+    /// does not exist or organization is unavailable.
+    pub fn working_mod_list(&self, query: &ModListQuery) -> Result<ModList, ModListError> {
         mod_lists::working_list(
             &self.report,
             &self.tagging,
             &self.working,
             &self.update_times,
             &FileMembership::of(&self.file_active_mods),
+            &self.organization,
             query,
         )
     }
@@ -76,14 +81,18 @@ impl Session {
     /// The Mods page's Inactive list: every mod on disk whose base id is
     /// not in the working set, by name (A first) unless `query.sort` says
     /// otherwise. Pure (`&self`).
-    #[must_use]
-    pub fn inactive_mod_list(&self, query: &ModListQuery) -> ModList {
+    ///
+    /// # Errors
+    ///
+    /// See [`Session::working_mod_list`].
+    pub fn inactive_mod_list(&self, query: &ModListQuery) -> Result<ModList, ModListError> {
         mod_lists::inactive_list(
             &self.report,
             &self.tagging,
             &self.working,
             &self.update_times,
             &FileMembership::of(&self.file_active_mods),
+            &self.organization,
             query,
         )
     }

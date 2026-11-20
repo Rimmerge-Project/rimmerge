@@ -1,6 +1,6 @@
 # Settings
 
-Settings split into two scopes, stored in two different places:
+Settings and saved state live in three places, each with its own file:
 
 - **App settings** (`<base>/app-settings.json`): internet access, the
   automatic-refresh feature toggles, and the staleness-reminder
@@ -12,7 +12,16 @@ Settings split into two scopes, stored in two different places:
   from the desktop app's Settings page or by hand-editing that
   `rules.json`.
 
-Both tables list each field's default and whether changing it can
+- **Library organization** (the profile's `organization.json`): your mod
+  groups and mod colours. One per profile, a plain JSON file you can copy
+  between profile folders. It is separate from the settings above on
+  purpose: nothing in it can change a sort or a ledger. If the file cannot
+  be read, groups become read-only until you start over (the Start over
+  button arrives with the groups screen in a later release; until then fix
+  the file by hand and rescan). Starting over first keeps a copy beside it
+  as `organization.json.unusable-<time>`.
+
+The two tables below list each field's default and whether changing it can
 change what the sorter or ledger produce, which is the question that
 matters most. Every app-setting row is **No**: none of them can change a
 sort, only whether and when a network request happens.

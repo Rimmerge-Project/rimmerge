@@ -1150,6 +1150,175 @@ async fn mod_lists_against_the_real_install() {
     );
 }
 
+/// Library organization against the real install: a group of 200 real mods
+/// (no mod identity is named here, they are taken from the working set), both
+/// lists filtered by it and by `Ungrouped`, under the 2 s command budget, with
+/// the real `ModsConfig.xml` byte-identical afterwards. The organization store
+/// is the in-memory fake, so not even `organization.json` is written; the
+/// install and `ModsConfig.xml` are only read.
+#[tokio::test]
+#[ignore = "needs the real install plus RIMMERGE_PERF_PROFILE_DIR pointing at a scratch profile copy"]
+async fn organization_against_the_real_install() {
+    use std::sync::Arc;
+
+    use rim_session::organization::{ModOrganization, OrganizationState};
+    use rim_session::test_support::InMemoryOrganizationStore;
+
+    use crate::commands::active_set::list_inactive_mods_inner;
+    use crate::commands::mods::list_working_mods_inner;
+    use crate::commands::organization::{
+        add_group_members_inner, create_group_inner, plan_group_scope_inner,
+    };
+    use crate::dto::mod_lists::{GroupFilterDto, ModListQueryDto};
+    use crate::dto::organization::{
+        CreateGroupRequestDto, GroupMembersRequestDto, GroupScopeRequestDto,
+    };
+
+    const GROUP_SIZE: usize = 200;
+    const COMMAND_BUDGET: Duration = Duration::from_secs(2);
+
+    let Some(profile_dir) = crate::real_install_support::require_profile_dir(RERUN_COMMAND) else {
+        return;
+    };
+    let paths = crate::real_install_support::real_install_paths(profile_dir, RERUN_COMMAND);
+    let mods_config_before =
+        std::fs::read(&paths.mods_config).expect("read the real ModsConfig.xml");
+    let store = Arc::new(InMemoryOrganizationStore::new());
+    let state = AppState {
+        adapters: crate::state::Adapters {
+            organization_store: store.clone(),
+            ..crate::state::Adapters::default()
+        },
+        ..AppState::default()
+    };
+    let adapters = state.adapters.clone();
+    let use_case = rim_session::use_cases::LoadProject::new(
+        adapters.scanner,
+        adapters.config_store,
+        adapters.decision_store,
+        adapters.rule_store,
+        adapters.patch_store,
+        adapters.assignment_store,
+        rim_io::FsModKnowledgeStore::vendored(),
+        true,
+    )
+    .with_organization_store(adapters.organization_store.clone());
+    let session = use_case
+        .execute(paths.clone(), &mut |_| {})
+        .expect("load project");
+    assert!(
+        matches!(session.organization(), OrganizationState::Loaded(organization) if *organization == ModOrganization::new()),
+        "a fresh in-memory store loads an empty organization"
+    );
+    let members: Vec<String> = session
+        .working()
+        .ids()
+        .iter()
+        .take(GROUP_SIZE)
+        .map(ToString::to_string)
+        .collect();
+    assert_eq!(
+        members.len(),
+        GROUP_SIZE,
+        "the real tier has at least 200 active mods"
+    );
+    *state.session.write().expect("lock") = Some(session);
+
+    let crate::dto::organization::OrganizationEditOutcomeDto::Created { id: group } =
+        create_group_inner(
+            &state,
+            CreateGroupRequestDto {
+                name: "Perf".to_string(),
+                parent: None,
+            },
+        )
+        .await
+        .expect("create group")
+    else {
+        panic!("creating a group reports its id");
+    };
+    add_group_members_inner(
+        &state,
+        GroupMembersRequestDto {
+            id: group,
+            mod_ids: members,
+        },
+    )
+    .await
+    .expect("add 200 members");
+
+    let scoped = ModListQueryDto {
+        group: Some(GroupFilterDto::InScope { group_id: group }),
+        ..ModListQueryDto::default()
+    };
+    let ungrouped = ModListQueryDto {
+        group: Some(GroupFilterDto::Ungrouped),
+        ..ModListQueryDto::default()
+    };
+    let start = Instant::now();
+    let active = list_working_mods_inner(&state, scoped.clone())
+        .await
+        .expect("scoped active list");
+    let active_elapsed = start.elapsed();
+    let start = Instant::now();
+    let inactive = list_inactive_mods_inner(&state, scoped)
+        .await
+        .expect("scoped inactive list");
+    let inactive_elapsed = start.elapsed();
+    let rest = list_working_mods_inner(&state, ungrouped)
+        .await
+        .expect("ungrouped active list");
+    let everything = list_working_mods_inner(&state, ModListQueryDto::default())
+        .await
+        .expect("active list");
+    let start = Instant::now();
+    let plan = plan_group_scope_inner(&state, GroupScopeRequestDto { id: group })
+        .await
+        .expect("plan the group scope");
+    let plan_elapsed = start.elapsed();
+
+    eprintln!(
+        "organization: scoped active {} rows in {:.1} ms, scoped inactive {} rows in {:.1} ms, plan in {:.1} ms",
+        active.total,
+        active_elapsed.as_secs_f64() * 1e3,
+        inactive.total,
+        inactive_elapsed.as_secs_f64() * 1e3,
+        plan_elapsed.as_secs_f64() * 1e3
+    );
+    assert_eq!(active.total, GROUP_SIZE);
+    assert!(
+        active.reorderable,
+        "a group filter keeps the Active list reorderable"
+    );
+    assert!(
+        active.items.iter().all(|row| row.groups.len() == 1),
+        "every listed mod carries the group's label"
+    );
+    assert_eq!(
+        rest.total + active.total,
+        everything.total,
+        "Ungrouped is the rest"
+    );
+    assert_eq!(plan.active_ids.len(), GROUP_SIZE);
+    assert!(
+        active_elapsed < COMMAND_BUDGET,
+        "scoped Active took {active_elapsed:?}"
+    );
+    assert!(
+        inactive_elapsed < COMMAND_BUDGET,
+        "scoped Inactive took {inactive_elapsed:?}"
+    );
+    assert!(
+        plan_elapsed < COMMAND_BUDGET,
+        "the plan took {plan_elapsed:?}"
+    );
+    assert_eq!(
+        std::fs::read(&paths.mods_config).expect("read the real ModsConfig.xml again"),
+        mods_config_before,
+        "organization never writes ModsConfig.xml"
+    );
+}
+
 /// A reorder over the real install: `move_mods` puts two mods at the start of
 /// the Active list, the list shows them there, Current changed and settled at
 /// once (no rescan, no pending diff), `ModsConfig.xml` on disk and the session's
