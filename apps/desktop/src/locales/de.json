@@ -610,7 +610,7 @@
       },
       "organization_limit": {
         "title": "Ein Limit für Gruppen wurde erreicht",
-        "detail": "Du hast ein Limit für Gruppen und Farben erreicht: wie viele Gruppen es gibt, wie tief sie verschachtelt sind, wie viele Mods in Gruppen sind oder eine Farbe haben, oder wie groß die gespeicherte Datei sein darf. Es wurde nichts geändert. Wenn du einige davon entfernst, kann wieder Platz entstehen."
+        "detail": "Du hast ein Limit für Gruppen und Farben erreicht: wie viele Gruppen es gibt, wie tief sie verschachtelt sind, wie viele Mods in Gruppen sind oder eine Farbe haben, oder wie groß die Gruppendatei (organization.json) sein darf. Es wurde nichts geändert. Entferne Gruppen, Mods aus Gruppen oder Farben, die du nicht mehr brauchst, und versuche es dann erneut."
       }
     }
   },
@@ -1405,6 +1405,68 @@
       "ariaLabel": "Zu einer Def springen",
       "placeholder": "Zu einer Def springen…"
     },
+    "bulk": {
+      "region": "Aktionen für die ausgewählten Mods in der Liste „{list}“",
+      "addToGroup": "Zu Gruppe hinzufügen…",
+      "removeFromGroup": "Aus Gruppe entfernen…",
+      "moveToGroup": "In Gruppe verschieben…",
+      "color": "Farbe…",
+      "tagsButton": "Tags…",
+      "tags": {
+        "title": "Tags für die ausgewählten Mods",
+        "help": "Füge allen ausgewählten Mods einen Tag hinzu oder entferne ihn. Beim Entfernen wird der Tag von jeder ausgewählten Mod genommen, die ihn trägt, egal ob du ihn hinzugefügt hast oder Rimmerge ihn abgeleitet hat. Mods ohne diesen Tag bleiben unverändert. Beim Hinzufügen wird der Tag außerdem bei Mods fixiert, die ihn bereits abgeleitet tragen, sodass er bleibt, auch wenn ein erneuter Scan ihn nicht mehr ableitet. Tags ändern nie deine Ladereihenfolge.",
+        "label": "Tag",
+        "format": "Verwende Kleinbuchstaben, Ziffern, Bindestriche und Unterstriche.",
+        "addButton": "Tag hinzufügen",
+        "removeButton": "Tag entfernen"
+      },
+      "dialog": {
+        "addTitle": "Zu Gruppe hinzufügen",
+        "removeTitle": "Aus Gruppe entfernen",
+        "moveTitle": "In Gruppe verschieben",
+        "addButton": "Hinzufügen",
+        "removeButton": "Entfernen",
+        "moveButton": "Verschieben",
+        "noGroups": "Es gibt noch keine Gruppen. Erstelle zuerst eine im Bereich „Gruppen“.",
+        "loading": "Es wird geprüft, in welchen Gruppen diese Mods sind…",
+        "failed": "Es konnte nicht geprüft werden, in welchen Gruppen diese Mods sind. Schließe diesen Dialog und versuche es erneut.",
+        "noneInGroups": "Keine der ausgewählten Mods ist in einer Gruppe.",
+        "addHelp": "Die Mods kommen in die Gruppe, die du wählst. Sie bleiben in allen anderen Gruppen, in denen sie sind.",
+        "removeHelp": "Die Mods werden aus der Gruppe genommen, die du wählst. Ihre anderen Gruppen bleiben unverändert.",
+        "moveHelp": "Beim Verschieben werden die Mods aus einer Gruppe genommen und in eine andere gelegt. Mods, die nicht in der ersten Gruppe sind, bleiben unverändert.",
+        "targetLegend": "Gruppe",
+        "removeLegend": "Gruppe, aus der die Mods entfernt werden",
+        "fromLegend": "Verschieben aus",
+        "toLegend": "Verschieben nach",
+        "sameGroup": "Entspricht der Quellgruppe",
+        "holdsCount": "{count} ausgewählte Mod ist darin | {count} ausgewählte Mods sind darin"
+      },
+      "toast": {
+        "added": "{count} Mod zu {name} hinzugefügt | {count} Mods zu {name} hinzugefügt",
+        "alreadyIn": "{count} war bereits in der Gruppe | {count} waren bereits in der Gruppe",
+        "removed": "{count} Mod aus {name} entfernt | {count} Mods aus {name} entfernt",
+        "notIn": "{count} war nicht in der Gruppe | {count} waren nicht in der Gruppe",
+        "moved": "{count} Mod von {from} nach {to} verschoben | {count} Mods von {from} nach {to} verschoben",
+        "notInSource": "{count} war nicht in {name} und wurde daher nicht verschoben | {count} waren nicht in {name} und wurden daher nicht verschoben",
+        "alreadyInTarget": "{count} war bereits in {name} | {count} waren bereits in {name}",
+        "colorSet": "Farbe für {count} Mod festgelegt | Farbe für {count} Mods festgelegt",
+        "colorCleared": "Farbe von {count} Mod entfernt | Farbe von {count} Mods entfernt",
+        "unchanged": "{count} unverändert | {count} unverändert",
+        "keptByDecision": "{count} Mod behält ihn wegen einer Entscheidung auf der Seite „Befunde“ | {count} Mods behalten ihn wegen einer Entscheidung auf der Seite „Befunde“",
+        "tagAdded": "Tag {tag} zu {count} Mod hinzugefügt | Tag {tag} zu {count} Mods hinzugefügt",
+        "tagRemoved": "Tag {tag} von {count} Mod entfernt | Tag {tag} von {count} Mods entfernt"
+      },
+      "scope": {
+        "activateGroup": "{count} Mod in dieser Gruppe aktivieren | {count} Mods in dieser Gruppe aktivieren",
+        "activateTree": "{count} Mod aktivieren, einschließlich Untergruppen | {count} Mods aktivieren, einschließlich Untergruppen",
+        "deactivateGroup": "{count} Mod in dieser Gruppe deaktivieren | {count} Mods in dieser Gruppe deaktivieren",
+        "deactivateTree": "{count} Mod deaktivieren, einschließlich Untergruppen | {count} Mods deaktivieren, einschließlich Untergruppen",
+        "notInstalled": "{count} Mod ist nicht installiert und wird übersprungen | {count} Mods sind nicht installiert und werden übersprungen",
+        "hidden": "{count} wird vom aktuellen Filter nicht angezeigt | {count} werden vom aktuellen Filter nicht angezeigt",
+        "nothingToActivate": "Keine der Mods in dieser Gruppe kann aktiviert werden. Sie sind bereits aktiv oder nicht installiert.",
+        "nothingToDeactivate": "Keine der Mods in dieser Gruppe ist aktiv."
+      }
+    },
     "selection": {
       "selectAllShown": "{count} angezeigte auswählen | Alle {count} angezeigten auswählen",
       "selectAllEmpty": "Alle auswählen",
@@ -1462,9 +1524,11 @@
       "modTitle": "Mod-Farbe",
       "groupHelp": "Eine Farbe markiert die Gruppe im Baum und in den Mod-Zeilen. Sonst ändert sie nichts.",
       "modHelp": "Eine Farbe markiert diese Mod in ihrer Zeile. Deine Ladereihenfolge ändert sie nicht.",
+      "modsTitle": "Farbe für die ausgewählten Mods",
+      "modsHelp": "Eine Farbe markiert jede ausgewählte Mod in ihrer Zeile. Deine Ladereihenfolge ändert sie nicht.",
       "legend": "Farbe",
       "none": "Keine Farbe",
-      "apply": "Anwenden",
+      "apply": "Farbe festlegen",
       "toast": {
         "groupChanged": "Gruppenfarbe geändert",
         "modChanged": "Farbe für {name} geändert",
@@ -1501,6 +1565,12 @@
         "rename": "Umbenennen…",
         "color": "Farbe…",
         "move": "Gruppe verschieben nach…",
+        "activateAll": "{count} Mod aktivieren… | {count} Mods aktivieren…",
+        "deactivateAll": "{count} Mod deaktivieren… | {count} Mods deaktivieren…",
+        "nothingToActivate": "Keine Mods zum Aktivieren",
+        "nothingToDeactivate": "Keine Mods zum Deaktivieren",
+        "checkingScope": "Mods in dieser Gruppe werden geprüft…",
+        "scopeUnavailable": "Die Mods in dieser Gruppe konnten nicht geprüft werden",
         "checkingUninstalled": "Suche nach nicht installierten Mods…",
         "uninstalledUnavailable": "Nicht installierte Mods konnten nicht geprüft werden",
         "removeUninstalled": "{count} nicht installierte Mod entfernen | {count} nicht installierte Mods entfernen",
@@ -1530,7 +1600,7 @@
         "moveLegend": "Neuer Platz für die Gruppe",
         "topLevel": "Oberste Ebene",
         "moveInvalid": "Eine Gruppe kann nicht in sich selbst oder ihren eigenen Untergruppen liegen",
-        "moveCurrent": "Bereits hier",
+        "moveCurrent": "Aktueller Ort",
         "moveButton": "Verschieben",
         "modGroupsTitle": "Gruppen für {name}",
         "modGroupsHelp": "Hake eine Gruppe an, um diese Mod hinzuzufügen. Entferne den Haken, um die Mod herauszunehmen. Jede Änderung wird sofort gespeichert.",
@@ -1541,7 +1611,7 @@
         "removeUninstalledBody": "Laut dem letzten Scan ist {count} Mod in der Gruppe {name} und ihren Untergruppen nicht installiert. Aus diesen Gruppen entfernen? Sie kommt nur zurück, wenn du sie wieder einer Gruppe hinzufügst. | Laut dem letzten Scan sind {count} Mods in der Gruppe {name} und ihren Untergruppen nicht installiert. Aus diesen Gruppen entfernen? Sie kommen nur zurück, wenn du sie wieder einer Gruppe hinzufügst.",
         "removeUninstalledList": "Zu entfernende Mods",
         "removeUninstalledLoading": "Es wird geprüft, welche Mods nicht installiert sind…",
-        "removeUninstalledFailed": "Es konnte nicht geprüft werden, welche Mods nicht installiert sind. Schließe dies und versuche es erneut.",
+        "removeUninstalledFailed": "Es konnte nicht geprüft werden, welche Mods nicht installiert sind. Schließe diesen Dialog und versuche es erneut.",
         "removeUninstalledButton": "Entfernen"
       },
       "startOver": {
@@ -1555,7 +1625,7 @@
         "tooLarge": "Die Datei mit deinen Gruppen und Farben ist zu groß zum Lesen. Sie sind schreibgeschützt, bis du neu anfängst.",
         "malformed": "Die Datei mit deinen Gruppen und Farben ist beschädigt. Sie sind schreibgeschützt, bis du neu anfängst.",
         "newerVersion": "Deine Gruppen und Farben wurden von einer neueren Version von Rimmerge gespeichert. Hier sind sie schreibgeschützt, damit sie nicht überschrieben werden.",
-        "invalid": "Die Datei mit deinen Gruppen und Farben verstößt gegen eine Regel und kann nicht verwendet werden. Sie sind schreibgeschützt, bis du neu anfängst.",
+        "invalid": "Die Datei mit deinen Gruppen und Farben enthält Gruppen, die nicht zueinander passen (zum Beispiel eine Schleife, eine fehlende oder doppelte Gruppe oder zu viele Gruppen), daher kann sie nicht verwendet werden. Sie sind schreibgeschützt, bis du neu anfängst.",
         "tryAgain": "Erneut scannen und wiederholen",
         "startOver": "Neu anfangen…"
       },
@@ -1565,6 +1635,23 @@
         "notInstalled": "{count} Mod ist nicht installiert | {count} Mods sind nicht installiert",
         "note": "Suche und Filter wirken innerhalb dieser Gruppe. Die aktive Liste bleibt in Ladereihenfolge.",
         "showAll": "Alle Mods anzeigen"
+      },
+      "drop": {
+        "addTo": "{count} Mod zu {name} hinzufügen | {count} Mods zu {name} hinzufügen",
+        "idleMods": "Lege {count} Mod auf einer Gruppe ab, um sie hinzuzufügen | Lege {count} Mods auf einer Gruppe ab, um sie hinzuzufügen",
+        "idleGroup": "Auf einer Gruppe ablegen, um diese Gruppe hineinzulegen, oder auf „Alle Mods“, um sie auf die oberste Ebene zu bringen.",
+        "needsGroup": "Mods können nur zu einer Gruppe hinzugefügt werden",
+        "notUngrouped": "Eine Gruppe kann nicht in „Ohne Gruppe“ liegen. Verwende „Alle Mods“, um sie auf die oberste Ebene zu bringen.",
+        "withHidden": "{text} ({hidden})",
+        "alreadyThere": "Die Gruppe ist bereits dort",
+        "makeTopLevel": "{name} auf die oberste Ebene verschieben",
+        "nestInside": "{name} in {parent} verschieben",
+        "added": "{count} Mod zu {name} hinzugefügt | {count} Mods zu {name} hinzugefügt",
+        "nothingToAdd": "Alle Mods waren bereits in {name}",
+        "alreadyIn": "{count} war bereits in der Gruppe | {count} waren bereits in der Gruppe",
+        "hiddenIncluded": "{count} ausgewählte, durch einen Filter ausgeblendete Mod wurde einbezogen | {count} ausgewählte, durch einen Filter ausgeblendete Mods wurden einbezogen",
+        "movedTop": "{name} ist jetzt eine Gruppe auf oberster Ebene",
+        "movedInside": "{name} in {parent} verschoben"
       },
       "toast": {
         "created": "Gruppe erstellt",

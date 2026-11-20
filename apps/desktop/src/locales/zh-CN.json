@@ -610,7 +610,7 @@
       },
       "organization_limit": {
         "title": "已达到分组的数量上限",
-        "detail": "已达到分组和颜色的某项上限：分组数量、嵌套深度、分组中或带颜色的 Mod 数量，或保存文件的大小。未做任何更改。移除其中一些也许能腾出空间。"
+        "detail": "已达到分组和颜色的某项上限：分组数量、嵌套深度、分组中或带颜色的 Mod 数量，或分组文件（organization.json）的大小。未做任何更改。请移除不再需要的分组、分组中的 Mod 或颜色，然后重试。"
       }
     }
   },
@@ -1405,6 +1405,68 @@
       "ariaLabel": "跳转到 Def",
       "placeholder": "跳转到 Def…"
     },
+    "bulk": {
+      "region": "“{list}”列表中所选 Mod 的操作",
+      "addToGroup": "加入分组…",
+      "removeFromGroup": "移出分组…",
+      "moveToGroup": "移到分组…",
+      "color": "颜色…",
+      "tagsButton": "标签…",
+      "tags": {
+        "title": "所选 Mod 的标签",
+        "help": "为每个所选 Mod 添加或移除一个标签。移除会从每个显示该标签的所选 Mod 上去掉它，无论标签是你添加的还是 Rimmerge 推断的。不显示该标签的 Mod 保持不变。添加还会把已通过推断显示该标签的 Mod 上的标签固定下来，这样即使重新扫描后不再推断出它，它也会保留。标签从不改变你的加载顺序。",
+        "label": "标签",
+        "format": "请使用小写字母、数字、连字符和下划线。",
+        "addButton": "添加标签",
+        "removeButton": "移除标签"
+      },
+      "dialog": {
+        "addTitle": "加入分组",
+        "removeTitle": "移出分组",
+        "moveTitle": "移到分组",
+        "addButton": "加入",
+        "removeButton": "移出",
+        "moveButton": "移动",
+        "noGroups": "还没有分组。请先在分组面板中创建一个。",
+        "loading": "正在检查这些 Mod 所在的分组…",
+        "failed": "无法检查这些 Mod 所在的分组。请关闭此对话框后重试。",
+        "noneInGroups": "所选 Mod 均不在任何分组中。",
+        "addHelp": "这些 Mod 会加入你选择的分组，并仍保留在它们所在的其他分组中。",
+        "removeHelp": "这些 Mod 会移出你选择的分组，它们所在的其他分组不变。",
+        "moveHelp": "移动会将这些 Mod 从一个分组移出，并放入另一个分组。不在第一个分组中的 Mod 保持不变。",
+        "targetLegend": "分组",
+        "removeLegend": "要将 Mod 移出的分组",
+        "fromLegend": "移出自",
+        "toLegend": "移到",
+        "sameGroup": "与来源分组相同",
+        "holdsCount": "其中有 {count} 个所选 Mod"
+      },
+      "toast": {
+        "added": "已将 {count} 个 Mod 加入 {name}",
+        "alreadyIn": "{count} 个原本就在该分组中",
+        "removed": "已将 {count} 个 Mod 移出 {name}",
+        "notIn": "{count} 个原本就不在该分组中",
+        "moved": "已将 {count} 个 Mod 从 {from} 移到 {to}",
+        "notInSource": "{count} 个不在 {name} 中，因此未移动",
+        "alreadyInTarget": "{count} 个原本就在 {name} 中",
+        "colorSet": "已为 {count} 个 Mod 设置颜色",
+        "colorCleared": "已清除 {count} 个 Mod 的颜色",
+        "unchanged": "{count} 个未改变",
+        "keptByDecision": "{count} 个 Mod 因检查结果页上的某项决定而保留该标签",
+        "tagAdded": "已为 {count} 个 Mod 添加标签 {tag}",
+        "tagRemoved": "已从 {count} 个 Mod 移除标签 {tag}"
+      },
+      "scope": {
+        "activateGroup": "启用此分组中的 {count} 个 Mod",
+        "activateTree": "启用 {count} 个 Mod（含子分组）",
+        "deactivateGroup": "禁用此分组中的 {count} 个 Mod",
+        "deactivateTree": "禁用 {count} 个 Mod（含子分组）",
+        "notInstalled": "{count} 个 Mod 未安装，将被跳过",
+        "hidden": "{count} 个被当前筛选隐藏",
+        "nothingToActivate": "此分组中没有可启用的 Mod。它们已启用或未安装。",
+        "nothingToDeactivate": "此分组中没有已启用的 Mod。"
+      }
+    },
     "selection": {
       "selectAllShown": "全选当前显示的 {count} 个",
       "selectAllEmpty": "全选",
@@ -1462,9 +1524,11 @@
       "modTitle": "Mod 颜色",
       "groupHelp": "颜色会在分组树和 Mod 行上标记该分组，不会改变其他任何内容。",
       "modHelp": "颜色会在此 Mod 所在行上标记它，不会改变你的加载顺序。",
+      "modsTitle": "所选 Mod 的颜色",
+      "modsHelp": "颜色会在每个所选 Mod 所在行上标记它，不会改变你的加载顺序。",
       "legend": "颜色",
       "none": "无颜色",
-      "apply": "确定",
+      "apply": "设置颜色",
       "toast": {
         "groupChanged": "已更改分组颜色",
         "modChanged": "已更改 {name} 的颜色",
@@ -1501,6 +1565,12 @@
         "rename": "重命名…",
         "color": "颜色…",
         "move": "移动分组到…",
+        "activateAll": "启用 {count} 个 Mod…",
+        "deactivateAll": "禁用 {count} 个 Mod…",
+        "nothingToActivate": "没有可启用的 Mod",
+        "nothingToDeactivate": "没有可禁用的 Mod",
+        "checkingScope": "正在检查此分组中的 Mod…",
+        "scopeUnavailable": "无法检查此分组中的 Mod",
         "checkingUninstalled": "正在检查未安装的 Mod…",
         "uninstalledUnavailable": "无法检查未安装的 Mod",
         "removeUninstalled": "移除 {count} 个未安装的 Mod",
@@ -1530,7 +1600,7 @@
         "moveLegend": "分组的新位置",
         "topLevel": "顶层",
         "moveInvalid": "分组不能放入自身或其子分组中",
-        "moveCurrent": "已在此处",
+        "moveCurrent": "当前位置",
         "moveButton": "移动",
         "modGroupsTitle": "{name} 的分组",
         "modGroupsHelp": "勾选一个分组即可将此 Mod 加入其中；取消勾选即可将其移出。每项更改都会立即保存。",
@@ -1541,7 +1611,7 @@
         "removeUninstalledBody": "根据上次扫描，{name} 及其子分组中有 {count} 个 Mod 未安装。要将它们从这些分组中移除吗？只有再次将它们加入分组，它们才会回来。",
         "removeUninstalledList": "要移除的 Mod",
         "removeUninstalledLoading": "正在检查哪些 Mod 未安装…",
-        "removeUninstalledFailed": "无法检查哪些 Mod 未安装。请关闭此窗口后重试。",
+        "removeUninstalledFailed": "无法检查哪些 Mod 未安装。请关闭此对话框后重试。",
         "removeUninstalledButton": "移除"
       },
       "startOver": {
@@ -1555,7 +1625,7 @@
         "tooLarge": "你的分组和颜色文件过大，无法读取。在你重新开始之前，它们为只读。",
         "malformed": "你的分组和颜色文件已损坏。在你重新开始之前，它们为只读。",
         "newerVersion": "你的分组和颜色由更新版本的 Rimmerge 保存。它们在此处为只读，以免被覆盖。",
-        "invalid": "你的分组和颜色文件违反了某项规则，无法使用。在你重新开始之前，它们为只读。",
+        "invalid": "你的分组和颜色文件中有无法相互配合的分组（例如循环嵌套、分组缺失或重复，或分组过多），因此无法使用。在你重新开始之前，它们为只读。",
         "tryAgain": "重新扫描并重试",
         "startOver": "重新开始…"
       },
@@ -1565,6 +1635,23 @@
         "notInstalled": "{count} 个 Mod 未安装",
         "note": "搜索和筛选在此分组内进行。已启用列表仍按加载顺序排列。",
         "showAll": "显示全部 Mod"
+      },
+      "drop": {
+        "addTo": "将 {count} 个 Mod 加入 {name}",
+        "idleMods": "将 {count} 个 Mod 拖放到某个分组上即可加入",
+        "idleGroup": "拖放到某个分组上即可将此分组放入其中，拖放到“全部 Mod”上则使其成为顶层分组。",
+        "needsGroup": "Mod 只能加入分组",
+        "notUngrouped": "分组不能放入“未分组”。请使用“全部 Mod”使其成为顶层分组。",
+        "withHidden": "{text}（{hidden}）",
+        "alreadyThere": "该分组已在此处",
+        "makeTopLevel": "使 {name} 成为顶层分组",
+        "nestInside": "将 {name} 移入 {parent}",
+        "added": "已将 {count} 个 Mod 加入 {name}",
+        "nothingToAdd": "所有 Mod 原本就在 {name} 中",
+        "alreadyIn": "{count} 个原本就在该分组中",
+        "hiddenIncluded": "已包含 {count} 个被筛选隐藏的所选 Mod",
+        "movedTop": "{name} 现在是顶层分组",
+        "movedInside": "已将 {name} 移入 {parent}"
       },
       "toast": {
         "created": "已创建分组",

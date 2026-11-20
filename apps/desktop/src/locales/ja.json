@@ -610,7 +610,7 @@
       },
       "organization_limit": {
         "title": "グループの上限に達しました",
-        "detail": "グループと色の上限（グループの数、入れ子の深さ、グループ内または色付きのMODの数、保存ファイルのサイズのいずれか）に達しました。何も変更されていません。これらの一部を減らすと、空きができる場合があります。"
+        "detail": "グループと色の上限（グループの数、入れ子の深さ、グループ内または色付きのMODの数、グループのファイル（organization.json）のサイズのいずれか）に達しました。何も変更されていません。不要になったグループを削除するか、グループからMODを外すか、色を外してから、再度お試しください。"
       }
     }
   },
@@ -1405,6 +1405,68 @@
       "ariaLabel": "Defへ移動",
       "placeholder": "Defへ移動…"
     },
+    "bulk": {
+      "region": "「{list}」リストで選択中のMODの操作",
+      "addToGroup": "グループに追加…",
+      "removeFromGroup": "グループから外す…",
+      "moveToGroup": "グループへ移動…",
+      "color": "色…",
+      "tagsButton": "タグ…",
+      "tags": {
+        "title": "選択したMODのタグ",
+        "help": "選択したすべてのMODにタグを追加するか、タグを削除します。削除すると、そのタグが表示されている選択中のMODすべてから、手動で追加したものかRimmergeが推定したものかに関係なくタグが外れます。タグが表示されていないMODは変更されません。追加すると、推定によってすでにそのタグが表示されているMODでもタグが固定されるため、再スキャンで推定されなくなってもタグは残ります。タグによってロード順が変わることはありません。",
+        "label": "タグ",
+        "format": "小文字の英字、数字、ハイフン、アンダースコアを使用してください。",
+        "addButton": "タグを追加",
+        "removeButton": "タグを削除"
+      },
+      "dialog": {
+        "addTitle": "グループに追加",
+        "removeTitle": "グループから外す",
+        "moveTitle": "グループへ移動",
+        "addButton": "追加",
+        "removeButton": "外す",
+        "moveButton": "移動",
+        "noGroups": "グループはまだありません。先に「グループ」パネルで作成してください。",
+        "loading": "これらのMODが属しているグループを確認中…",
+        "failed": "これらのMODが属しているグループを確認できませんでした。このダイアログを閉じてから再度お試しください。",
+        "noneInGroups": "選択したMODはどれもグループに属していません。",
+        "addHelp": "MODは選んだグループに加わります。ほかに属しているグループにもそのまま残ります。",
+        "removeHelp": "MODは選んだグループから外れます。ほかのグループは変更されません。",
+        "moveHelp": "移動すると、MODが一方のグループから外れ、別のグループに入ります。移動元のグループに属していないMODは変更されません。",
+        "targetLegend": "グループ",
+        "removeLegend": "MODを外すグループ",
+        "fromLegend": "移動元",
+        "toLegend": "移動先",
+        "sameGroup": "移動元と同じ",
+        "holdsCount": "選択中のMOD{count}個が所属"
+      },
+      "toast": {
+        "added": "{name}にMOD{count}個を追加しました",
+        "alreadyIn": "{count}個はすでにグループに属していました",
+        "removed": "{name}からMOD{count}個を外しました",
+        "notIn": "{count}個はグループに属していませんでした",
+        "moved": "MOD{count}個を{from}から{to}へ移動しました",
+        "notInSource": "{count}個は{name}に属していなかったため、移動しませんでした",
+        "alreadyInTarget": "{count}個はすでに{name}に属していました",
+        "colorSet": "MOD{count}個に色を設定しました",
+        "colorCleared": "MOD{count}個の色を外しました",
+        "unchanged": "{count}個は変更されませんでした",
+        "keptByDecision": "{count}個のMODは「検出結果」ページでの決定によりタグが残ります",
+        "tagAdded": "タグ{tag}をMOD{count}個に追加しました",
+        "tagRemoved": "MOD{count}個からタグ{tag}を削除しました"
+      },
+      "scope": {
+        "activateGroup": "このグループのMOD{count}個を有効化",
+        "activateTree": "MOD{count}個を有効化（サブグループを含む）",
+        "deactivateGroup": "このグループのMOD{count}個を無効化",
+        "deactivateTree": "MOD{count}個を無効化（サブグループを含む）",
+        "notInstalled": "{count}個のMODはインストールされていないため、スキップされます",
+        "hidden": "{count}個はフィルターで非表示になっています",
+        "nothingToActivate": "このグループのMODはどれも有効化できません。すでに有効か、インストールされていません。",
+        "nothingToDeactivate": "このグループのMODはどれも有効ではありません。"
+      }
+    },
     "selection": {
       "selectAllShown": "表示中の{count}個をすべて選択",
       "selectAllEmpty": "すべて選択",
@@ -1462,9 +1524,11 @@
       "modTitle": "MODの色",
       "groupHelp": "色はツリー内とMODの行でグループを示す印です。ほかには何も変わりません。",
       "modHelp": "色はこのMODの行に付く印です。ロード順は変わりません。",
+      "modsTitle": "選択したMODの色",
+      "modsHelp": "色は選択した各MODの行に付く印です。ロード順は変わりません。",
       "legend": "色",
       "none": "色なし",
-      "apply": "適用",
+      "apply": "色を設定",
       "toast": {
         "groupChanged": "グループの色を変更しました",
         "modChanged": "{name}の色を変更しました",
@@ -1501,6 +1565,12 @@
         "rename": "名前を変更…",
         "color": "色…",
         "move": "グループの移動先…",
+        "activateAll": "MOD{count}個を有効化…",
+        "deactivateAll": "MOD{count}個を無効化…",
+        "nothingToActivate": "有効化できるMODはありません",
+        "nothingToDeactivate": "無効化できるMODはありません",
+        "checkingScope": "このグループのMODを確認中…",
+        "scopeUnavailable": "このグループのMODを確認できませんでした",
         "checkingUninstalled": "インストールされていないMODを確認中…",
         "uninstalledUnavailable": "インストールされていないMODを確認できませんでした",
         "removeUninstalled": "インストールされていないMOD{count}個を外す",
@@ -1541,7 +1611,7 @@
         "removeUninstalledBody": "前回のスキャンの時点で、{name}とそのサブグループにある{count}個のMODがインストールされていません。これらのグループから外しますか？外したMODは、もう一度グループに追加しない限り戻りません。",
         "removeUninstalledList": "外すMOD",
         "removeUninstalledLoading": "インストールされていないMODを確認中…",
-        "removeUninstalledFailed": "インストールされていないMODを確認できませんでした。これを閉じてから再度お試しください。",
+        "removeUninstalledFailed": "インストールされていないMODを確認できませんでした。このダイアログを閉じてから再度お試しください。",
         "removeUninstalledButton": "外す"
       },
       "startOver": {
@@ -1555,7 +1625,7 @@
         "tooLarge": "グループと色のファイルが大きすぎて読み取れません。最初からやり直すまで読み取り専用になります。",
         "malformed": "グループと色のファイルが破損しています。最初からやり直すまで読み取り専用になります。",
         "newerVersion": "グループと色は新しいバージョンのRimmergeで保存されています。上書きされないよう、ここでは読み取り専用になります。",
-        "invalid": "グループと色のファイルがルールに違反しているため使用できません。最初からやり直すまで読み取り専用になります。",
+        "invalid": "グループと色のファイルに、互いに整合しないグループ（循環、見つからないグループや重複したグループ、多すぎるグループなど）があるため使用できません。最初からやり直すまで読み取り専用になります。",
         "tryAgain": "再スキャンして再試行",
         "startOver": "最初からやり直す…"
       },
@@ -1565,6 +1635,23 @@
         "notInstalled": "{count}個のMODがインストールされていません",
         "note": "検索とフィルターはこのグループ内で機能します。「有効」リストはロード順のままです。",
         "showAll": "すべてのMODを表示"
+      },
+      "drop": {
+        "addTo": "{name}にMOD{count}個を追加",
+        "idleMods": "MOD{count}個をグループにドロップして追加",
+        "idleGroup": "グループの上にドロップするとこのグループをその中に入れ、「すべてのMOD」の上にドロップすると最上位にします。",
+        "needsGroup": "MODはグループにのみ追加できます",
+        "notUngrouped": "グループを「グループなし」には入れられません。最上位にするには「すべてのMOD」を使用してください。",
+        "withHidden": "{text}（{hidden}）",
+        "alreadyThere": "グループはすでにそこにあります",
+        "makeTopLevel": "{name}を最上位のグループにする",
+        "nestInside": "{name}を{parent}の中へ移動",
+        "added": "{name}にMOD{count}個を追加しました",
+        "nothingToAdd": "すべてのMODがすでに{name}に属していました",
+        "alreadyIn": "{count}個はすでにグループに属していました",
+        "hiddenIncluded": "フィルターで非表示になっている選択中のMOD{count}個も含めました",
+        "movedTop": "{name}が最上位のグループになりました",
+        "movedInside": "{name}を{parent}の中へ移動しました"
       },
       "toast": {
         "created": "グループを作成しました",

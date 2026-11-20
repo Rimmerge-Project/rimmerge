@@ -610,7 +610,7 @@
       },
       "organization_limit": {
         "title": "已達到分組的上限",
-        "detail": "分組與顏色已達到某項上限：分組數量、巢狀層級深度、分組中或已設定顏色的模組數量，或儲存檔案的大小。未做任何變更。移除其中一些項目或許能騰出空間。"
+        "detail": "分組與顏色已達到某項上限：分組數量、巢狀層級深度、分組中或已設定顏色的模組數量，或分組檔案（organization.json）的大小。未做任何變更。請移除不再需要的分組、分組中的模組或顏色，然後再試一次。"
       }
     }
   },
@@ -1405,6 +1405,68 @@
       "ariaLabel": "跳至 Def",
       "placeholder": "跳至 Def…"
     },
+    "bulk": {
+      "region": "「{list}」清單中所選模組的動作",
+      "addToGroup": "加入分組…",
+      "removeFromGroup": "從分組移除…",
+      "moveToGroup": "移至分組…",
+      "color": "顏色…",
+      "tagsButton": "標籤…",
+      "tags": {
+        "title": "所選模組的標籤",
+        "help": "為每個所選模組新增或移除標籤。移除時，凡是顯示此標籤的所選模組都會被拿掉該標籤，無論是你自己新增的，還是 Rimmerge 推斷的。未顯示此標籤的模組不受影響。新增時，也會將已透過推斷顯示此標籤的模組固定下來，因此即使重新掃描後不再推斷出此標籤，它仍會保留。標籤絕不會變更你的載入順序。",
+        "label": "標籤",
+        "format": "請使用小寫英文字母、數字、連字號（-）與底線（_）。",
+        "addButton": "新增標籤",
+        "removeButton": "移除標籤"
+      },
+      "dialog": {
+        "addTitle": "加入分組",
+        "removeTitle": "從分組移除",
+        "moveTitle": "移至分組",
+        "addButton": "加入",
+        "removeButton": "移除",
+        "moveButton": "移動",
+        "noGroups": "尚無分組。請先在「分組」面板建立一個。",
+        "loading": "正在檢查哪些分組包含這些模組…",
+        "failed": "無法檢查哪些分組包含這些模組。請關閉此對話方塊後再試一次。",
+        "noneInGroups": "所選模組都不在任何分組中。",
+        "addHelp": "這些模組會加入你選擇的分組，並仍保留在它們所屬的其他分組中。",
+        "removeHelp": "這些模組會離開你選擇的分組，它們的其他分組不會變更。",
+        "moveHelp": "移動會將模組從一個分組移出，並放入另一個分組。不在第一個分組中的模組不受影響。",
+        "targetLegend": "分組",
+        "removeLegend": "要從中移除模組的分組",
+        "fromLegend": "移出自",
+        "toLegend": "移至",
+        "sameGroup": "與來源相同",
+        "holdsCount": "其中有 {count} 個所選模組"
+      },
+      "toast": {
+        "added": "已將 {count} 個模組加入 {name}",
+        "alreadyIn": "{count} 個原本就已在此分組中",
+        "removed": "已將 {count} 個模組從 {name} 移除",
+        "notIn": "{count} 個原本就不在此分組中",
+        "moved": "已將 {count} 個模組從 {from} 移至 {to}",
+        "notInSource": "{count} 個不在 {name} 中，因此未移動",
+        "alreadyInTarget": "{count} 個原本就已在 {name} 中",
+        "colorSet": "已為 {count} 個模組設定顏色",
+        "colorCleared": "已清除 {count} 個模組的顏色",
+        "unchanged": "{count} 個未變更",
+        "keptByDecision": "{count} 個模組因「檢查結果」頁面上的決定而保留此標籤",
+        "tagAdded": "已將標籤 {tag} 新增至 {count} 個模組",
+        "tagRemoved": "已從 {count} 個模組移除標籤 {tag}"
+      },
+      "scope": {
+        "activateGroup": "啟用此分組中的 {count} 個模組",
+        "activateTree": "啟用 {count} 個模組（含子分組）",
+        "deactivateGroup": "停用此分組中的 {count} 個模組",
+        "deactivateTree": "停用 {count} 個模組（含子分組）",
+        "notInstalled": "{count} 個模組未安裝，將會略過",
+        "hidden": "其中 {count} 個未在目前的篩選條件下顯示",
+        "nothingToActivate": "此分組中沒有可啟用的模組。它們皆已啟用或未安裝。",
+        "nothingToDeactivate": "此分組中沒有已啟用的模組。"
+      }
+    },
     "selection": {
       "selectAllShown": "全選顯示中的 {count} 個",
       "selectAllEmpty": "全選",
@@ -1462,9 +1524,11 @@
       "modTitle": "模組顏色",
       "groupHelp": "顏色會在分組樹與模組列上標示此分組，不會變更其他任何內容。",
       "modHelp": "顏色會在此模組的列上標示它，不會變更你的載入順序。",
+      "modsTitle": "所選模組的顏色",
+      "modsHelp": "顏色會在每個所選模組的列上標示它，不會變更你的載入順序。",
       "legend": "顏色",
       "none": "無顏色",
-      "apply": "套用",
+      "apply": "設定顏色",
       "toast": {
         "groupChanged": "已變更分組顏色",
         "modChanged": "已變更 {name} 的顏色",
@@ -1501,6 +1565,12 @@
         "rename": "重新命名…",
         "color": "顏色…",
         "move": "移動分組至…",
+        "activateAll": "啟用 {count} 個模組…",
+        "deactivateAll": "停用 {count} 個模組…",
+        "nothingToActivate": "沒有可啟用的模組",
+        "nothingToDeactivate": "沒有可停用的模組",
+        "checkingScope": "正在檢查此分組中的模組…",
+        "scopeUnavailable": "無法檢查此分組中的模組",
         "checkingUninstalled": "正在檢查未安裝的模組…",
         "uninstalledUnavailable": "無法檢查未安裝的模組",
         "removeUninstalled": "移除 {count} 個未安裝的模組",
@@ -1530,7 +1600,7 @@
         "moveLegend": "分組的新位置",
         "topLevel": "最上層",
         "moveInvalid": "分組無法放入自身或其子分組之中",
-        "moveCurrent": "已在此處",
+        "moveCurrent": "目前位置",
         "moveButton": "移動",
         "modGroupsTitle": "{name} 的分組",
         "modGroupsHelp": "勾選分組即可將此模組加入其中，取消勾選則會將模組移出。每項變更都會立即儲存。",
@@ -1541,7 +1611,7 @@
         "removeUninstalledBody": "依上次掃描結果，{name} 及其子分組中有 {count} 個模組未安裝。要將它們從這些分組中移除嗎？只有在你再次將它們加入分組時才會回來。",
         "removeUninstalledList": "要移除的模組",
         "removeUninstalledLoading": "正在檢查哪些模組未安裝…",
-        "removeUninstalledFailed": "無法檢查哪些模組未安裝。請關閉此視窗後再試一次。",
+        "removeUninstalledFailed": "無法檢查哪些模組未安裝。請關閉此對話方塊後再試一次。",
         "removeUninstalledButton": "移除"
       },
       "startOver": {
@@ -1555,7 +1625,7 @@
         "tooLarge": "你的分組與顏色檔案過大，無法讀取。在你重新開始之前，它們皆為唯讀。",
         "malformed": "你的分組與顏色檔案已損毀。在你重新開始之前，它們皆為唯讀。",
         "newerVersion": "你的分組與顏色是由較新版本的 Rimmerge 儲存的。為避免被覆蓋，它們在此為唯讀。",
-        "invalid": "你的分組與顏色檔案違反了某項規則，無法使用。在你重新開始之前，它們皆為唯讀。",
+        "invalid": "你的分組與顏色檔案中有彼此衝突的分組（例如形成循環、缺少或重複的分組，或分組過多），因此無法使用。在你重新開始之前，它們皆為唯讀。",
         "tryAgain": "重新掃描並再試一次",
         "startOver": "重新開始…"
       },
@@ -1565,6 +1635,23 @@
         "notInstalled": "{count} 個模組未安裝",
         "note": "搜尋與篩選會在此分組內進行。「已啟用」清單仍依載入順序排列。",
         "showAll": "顯示所有模組"
+      },
+      "drop": {
+        "addTo": "將 {count} 個模組加入 {name}",
+        "idleMods": "將 {count} 個模組拖放到分組上即可加入",
+        "idleGroup": "拖放到某個分組上可將此分組放入其中，拖放到「所有模組」上則可使其成為最上層分組。",
+        "needsGroup": "模組只能加入分組",
+        "notUngrouped": "分組無法放入「未分組」。請使用「所有模組」使其成為最上層分組。",
+        "withHidden": "{text}（{hidden}）",
+        "alreadyThere": "此分組已在該處",
+        "makeTopLevel": "讓 {name} 成為最上層分組",
+        "nestInside": "將 {name} 移入 {parent}",
+        "added": "已將 {count} 個模組加入 {name}",
+        "nothingToAdd": "所有模組都已在 {name} 中",
+        "alreadyIn": "{count} 個原本就已在此分組中",
+        "hiddenIncluded": "已一併加入 {count} 個被篩選條件隱藏的所選模組",
+        "movedTop": "{name} 現在是最上層分組",
+        "movedInside": "已將 {name} 移入 {parent}"
       },
       "toast": {
         "created": "已建立分組",

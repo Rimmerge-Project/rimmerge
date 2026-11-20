@@ -610,7 +610,7 @@
       },
       "organization_limit": {
         "title": "그룹 한도에 도달함",
-        "detail": "그룹과 색상의 한도(그룹 수, 중첩 깊이, 그룹에 넣거나 색상을 지정한 모드 수, 저장되는 파일 크기)에 도달했습니다. 아무것도 변경되지 않았습니다. 이 중 일부를 제거하면 여유가 생길 수 있습니다."
+        "detail": "그룹과 색상의 한도(그룹 수, 중첩 깊이, 그룹에 넣거나 색상을 지정한 모드 수, 그룹 파일(organization.json)의 크기)에 도달했습니다. 아무것도 변경되지 않았습니다. 더 이상 필요 없는 그룹, 그룹 안의 모드 또는 색상을 제거한 다음 다시 시도하세요."
       }
     }
   },
@@ -1405,6 +1405,68 @@
       "ariaLabel": "Def로 이동",
       "placeholder": "Def로 이동…"
     },
+    "bulk": {
+      "region": "{list} 목록에서 선택한 모드에 대한 작업",
+      "addToGroup": "그룹에 추가…",
+      "removeFromGroup": "그룹에서 제거…",
+      "moveToGroup": "그룹으로 이동…",
+      "color": "색상…",
+      "tagsButton": "태그…",
+      "tags": {
+        "title": "선택한 모드의 태그",
+        "help": "선택한 모든 모드에 태그를 추가하거나 제거합니다. 제거하면 태그가 표시된 선택한 모든 모드에서 태그가 빠지며, 직접 추가한 태그인지 Rimmerge가 추론한 태그인지는 상관없습니다. 태그가 표시되지 않은 모드는 그대로 둡니다. 추가하면 이미 추론으로 태그가 표시된 모드에도 태그가 고정되므로, 다시 스캔했을 때 더 이상 추론되지 않아도 태그가 유지됩니다. 태그는 로드 순서를 바꾸지 않습니다.",
+        "label": "태그",
+        "format": "영문 소문자, 숫자, 하이픈(-), 밑줄(_)을 사용하세요.",
+        "addButton": "태그 추가",
+        "removeButton": "태그 제거"
+      },
+      "dialog": {
+        "addTitle": "그룹에 추가",
+        "removeTitle": "그룹에서 제거",
+        "moveTitle": "그룹으로 이동",
+        "addButton": "추가",
+        "removeButton": "제거",
+        "moveButton": "이동",
+        "noGroups": "아직 그룹이 없습니다. 먼저 '그룹' 패널에서 그룹을 만드세요.",
+        "loading": "이 모드들이 속한 그룹을 확인하는 중…",
+        "failed": "이 모드들이 속한 그룹을 확인하지 못했습니다. 이 대화 상자를 닫고 다시 시도하세요.",
+        "noneInGroups": "선택한 모드 중 그룹에 속한 모드가 없습니다.",
+        "addHelp": "모드가 선택한 그룹에 추가됩니다. 모드가 속한 다른 그룹은 모두 그대로 유지됩니다.",
+        "removeHelp": "모드가 선택한 그룹에서 빠집니다. 모드가 속한 다른 그룹은 바뀌지 않습니다.",
+        "moveHelp": "이동하면 모드가 한 그룹에서 빠지고 다른 그룹에 들어갑니다. 첫 번째 그룹에 없는 모드는 그대로 둡니다.",
+        "targetLegend": "그룹",
+        "removeLegend": "모드를 제거할 그룹",
+        "fromLegend": "이동 전 그룹",
+        "toLegend": "이동할 그룹",
+        "sameGroup": "이동 전 그룹과 같음",
+        "holdsCount": "선택한 모드 {count}개가 속해 있음"
+      },
+      "toast": {
+        "added": "{name} 그룹에 모드 {count}개를 추가했습니다",
+        "alreadyIn": "{count}개는 이미 그룹에 있었습니다",
+        "removed": "{name} 그룹에서 모드 {count}개를 제거했습니다",
+        "notIn": "{count}개는 그룹에 없었습니다",
+        "moved": "모드 {count}개를 {from} 그룹에서 {to} 그룹으로 이동했습니다",
+        "notInSource": "{count}개는 {name} 그룹에 없어서 이동하지 않았습니다",
+        "alreadyInTarget": "{count}개는 이미 {name} 그룹에 있었습니다",
+        "colorSet": "모드 {count}개의 색상을 지정했습니다",
+        "colorCleared": "모드 {count}개의 색상을 제거했습니다",
+        "unchanged": "{count}개는 변경되지 않았습니다",
+        "keptByDecision": "'발견 사항' 페이지의 결정 때문에 모드 {count}개에는 태그가 유지됩니다",
+        "tagAdded": "모드 {count}개에 {tag} 태그를 추가했습니다",
+        "tagRemoved": "모드 {count}개에서 {tag} 태그를 제거했습니다"
+      },
+      "scope": {
+        "activateGroup": "이 그룹의 모드 {count}개 활성화",
+        "activateTree": "하위 그룹 포함 모드 {count}개 활성화",
+        "deactivateGroup": "이 그룹의 모드 {count}개 비활성화",
+        "deactivateTree": "하위 그룹 포함 모드 {count}개 비활성화",
+        "notInstalled": "모드 {count}개는 설치되어 있지 않아 건너뜁니다",
+        "hidden": "{count}개는 현재 필터 때문에 표시되지 않습니다",
+        "nothingToActivate": "이 그룹에는 활성화할 수 있는 모드가 없습니다. 이미 활성 상태이거나 설치되어 있지 않습니다.",
+        "nothingToDeactivate": "이 그룹에는 활성 상태인 모드가 없습니다."
+      }
+    },
     "selection": {
       "selectAllShown": "표시된 {count}개 모두 선택",
       "selectAllEmpty": "모두 선택",
@@ -1462,9 +1524,11 @@
       "modTitle": "모드 색상",
       "groupHelp": "색상은 트리와 모드 행에서 그룹을 표시합니다. 그 밖에는 아무것도 바꾸지 않습니다.",
       "modHelp": "색상은 모드 행에서 이 모드를 표시합니다. 로드 순서는 바뀌지 않습니다.",
+      "modsTitle": "선택한 모드의 색상",
+      "modsHelp": "색상은 선택한 각 모드를 해당 행에서 표시합니다. 로드 순서는 바뀌지 않습니다.",
       "legend": "색상",
       "none": "색상 없음",
-      "apply": "색상 적용",
+      "apply": "색상 지정",
       "toast": {
         "groupChanged": "그룹 색상을 변경했습니다",
         "modChanged": "{name} 모드의 색상을 변경했습니다",
@@ -1501,6 +1565,12 @@
         "rename": "이름 변경…",
         "color": "색상…",
         "move": "그룹 이동…",
+        "activateAll": "모드 {count}개 활성화…",
+        "deactivateAll": "모드 {count}개 비활성화…",
+        "nothingToActivate": "활성화할 모드 없음",
+        "nothingToDeactivate": "비활성화할 모드 없음",
+        "checkingScope": "이 그룹의 모드 확인 중…",
+        "scopeUnavailable": "이 그룹의 모드를 확인할 수 없음",
         "checkingUninstalled": "설치되지 않은 모드 확인 중…",
         "uninstalledUnavailable": "설치되지 않은 모드를 확인할 수 없음",
         "removeUninstalled": "설치되지 않은 모드 {count}개를 그룹에서 제거",
@@ -1541,7 +1611,7 @@
         "removeUninstalledBody": "마지막 스캔 기준으로 {name} 그룹과 그 하위 그룹에 있는 모드 {count}개가 설치되어 있지 않습니다. 이 그룹들에서 제거할까요? 그룹에 다시 추가해야만 다시 나타납니다.",
         "removeUninstalledList": "제거할 모드",
         "removeUninstalledLoading": "설치되지 않은 모드를 확인하는 중…",
-        "removeUninstalledFailed": "설치되지 않은 모드를 확인하지 못했습니다. 이 창을 닫고 다시 시도하세요.",
+        "removeUninstalledFailed": "설치되지 않은 모드를 확인하지 못했습니다. 이 대화 상자를 닫고 다시 시도하세요.",
         "removeUninstalledButton": "제거"
       },
       "startOver": {
@@ -1555,7 +1625,7 @@
         "tooLarge": "그룹 및 색상 파일이 너무 커서 읽을 수 없습니다. 처음부터 다시 시작하기 전까지는 읽기 전용입니다.",
         "malformed": "그룹 및 색상 파일이 손상되었습니다. 처음부터 다시 시작하기 전까지는 읽기 전용입니다.",
         "newerVersion": "그룹과 색상이 더 최신 버전의 Rimmerge에서 저장되었습니다. 덮어쓰지 않도록 여기서는 읽기 전용입니다.",
-        "invalid": "그룹 및 색상 파일이 규칙에 맞지 않아 사용할 수 없습니다. 처음부터 다시 시작하기 전까지는 읽기 전용입니다.",
+        "invalid": "그룹 및 색상 파일에 서로 맞지 않는 그룹(예: 순환, 누락되거나 중복된 그룹, 너무 많은 그룹)이 있어 사용할 수 없습니다. 처음부터 다시 시작하기 전까지는 읽기 전용입니다.",
         "tryAgain": "다시 스캔 후 재시도",
         "startOver": "처음부터 다시 시작…"
       },
@@ -1565,6 +1635,23 @@
         "notInstalled": "모드 {count}개가 설치되어 있지 않음",
         "note": "검색과 필터는 이 그룹 안에서 작동합니다. 활성 목록은 로드 순서를 그대로 유지합니다.",
         "showAll": "모든 모드 표시"
+      },
+      "drop": {
+        "addTo": "{name} 그룹에 모드 {count}개 추가",
+        "idleMods": "모드 {count}개를 그룹 위에 놓으면 그룹에 추가됩니다",
+        "idleGroup": "그룹 위에 놓으면 이 그룹이 그 안으로 들어가고, '모든 모드'에 놓으면 최상위 그룹이 됩니다.",
+        "needsGroup": "모드는 그룹에만 추가할 수 있습니다",
+        "notUngrouped": "그룹은 '그룹 없음'에 넣을 수 없습니다. 최상위 그룹으로 만들려면 '모든 모드'를 사용하세요.",
+        "withHidden": "{text} ({hidden})",
+        "alreadyThere": "그룹이 이미 이 위치에 있습니다",
+        "makeTopLevel": "{name} 그룹을 최상위 그룹으로 만들기",
+        "nestInside": "{name} 그룹을 {parent} 그룹 안으로 이동",
+        "added": "{name} 그룹에 모드 {count}개를 추가했습니다",
+        "nothingToAdd": "모든 모드가 이미 {name} 그룹에 있었습니다",
+        "alreadyIn": "{count}개는 이미 그룹에 있었습니다",
+        "hiddenIncluded": "필터로 숨겨진 선택한 모드 {count}개도 포함되었습니다",
+        "movedTop": "{name} 그룹이 이제 최상위 그룹입니다",
+        "movedInside": "{name} 그룹을 {parent} 그룹 안으로 이동했습니다"
       },
       "toast": {
         "created": "그룹을 만들었습니다",
