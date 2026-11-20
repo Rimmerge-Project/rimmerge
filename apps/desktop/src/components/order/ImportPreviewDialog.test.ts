@@ -50,6 +50,10 @@ function previewFixture(overrides: Partial<OrderImportPreviewDto> = {}): OrderIm
     moved: 2,
     core: "listed",
     version: { kind: "same" },
+    format: "savedModList",
+    listedGameVersion: null,
+    names: { kind: "absent" },
+    workshopIds: { kind: "absent" },
     replacesPendingChanges: false,
     skipped: [
       { kind: "notAnEntry", line: 4 },
@@ -126,6 +130,15 @@ describe("ImportPreviewDialog", () => {
     expect(wrapper.findAll('[data-testid^="import-preview-workshop-"]')).toHaveLength(1);
   });
 
+  it("shows the numeric Workshop id beside the button and says it came from the file", async () => {
+    const wrapper = mountDialog(ready());
+    await flush();
+
+    const note = wrapper.get('[data-testid="import-preview-id-from-file-1234567890"]');
+
+    expect(note.text()).toBe("Workshop id 1234567890, taken from the file you imported.");
+  });
+
   it("sends the Workshop id when the button is clicked and names the mod for assistive tech", async () => {
     const wrapper = mountDialog(ready());
     await flush();
@@ -149,17 +162,58 @@ describe("ImportPreviewDialog", () => {
     expect(skipped).toContain("3 more entries not shown.");
   });
 
+  it("words a save's version as one and warns only when the release differs", async () => {
+    const sameRelease = mountDialog(
+      ready({
+        format: "saveHeader",
+        listedGameVersion: "1.6.4871 rev591",
+        version: { kind: "same" },
+      }),
+    );
+    await flush();
+
+    expect(sameRelease.get('[data-testid="import-preview-listed-version"]').text()).toBe(
+      "From a save made with RimWorld 1.6.4871 rev591.",
+    );
+    expect(sameRelease.find('[data-testid="import-preview-version"]').exists()).toBe(false);
+
+    const noVersion = mountDialog(ready({ listedGameVersion: null }));
+    await flush();
+
+    expect(noVersion.find('[data-testid="import-preview-listed-version"]').exists()).toBe(false);
+  });
+
+  it("says when the names or the Workshop ids were left out for not lining up", async () => {
+    const wrapper = mountDialog(
+      ready({
+        names: { kind: "misaligned", ids: 4, values: 3 },
+        workshopIds: { kind: "misaligned", ids: 4, values: 5 },
+      }),
+    );
+    await flush();
+
+    const notes = wrapper.findAll('[data-testid="import-preview-misaligned"]');
+    expect(notes.map((note) => note.text())).toEqual([
+      "The number of names in the list (3) doesn't match the number of mods (4), so the sender's names aren't shown.",
+      "The number of Workshop ids in the list (5) doesn't match the number of mods (4), so no Workshop links are shown.",
+    ]);
+  });
+
   it("notes a differing version, Core put first and a missing Core", async () => {
     const differs = mountDialog(
       ready({
         version: { kind: "differs", listed: "1.5.4409", game: "1.6.4871" },
+        listedGameVersion: "1.5.4409",
         core: "addedFirst",
       }),
     );
     await flush();
 
+    expect(differs.get('[data-testid="import-preview-listed-version"]').text()).toBe(
+      "Made with RimWorld 1.5.4409.",
+    );
     expect(differs.get('[data-testid="import-preview-version"]').text()).toBe(
-      "Made with RimWorld 1.5.4409; you have 1.6.4871.",
+      "You have RimWorld 1.6.4871, a different release.",
     );
     expect(differs.get('[data-testid="import-preview-core"]').text()).toBe(
       "Core wasn't in the list; it stays first.",
@@ -343,10 +397,19 @@ describe("ImportPreviewDialog", () => {
     [{ kind: "tooDeep" }, "The file is nested too deeply to be a mod list."],
     [
       { kind: "unrecognizedFormat" },
-      "This isn't a RimWorld mod list (.rml), a ModsConfig.xml, or a text list.",
+      "This isn't a RimWorld mod list (.rml), a RimWorld save (.rws), a ModsConfig.xml, or a text list.",
     ],
     [{ kind: "missingModList" }, "The file has no mod list in it."],
     [{ kind: "noEntries" }, "No package ids were found."],
+    [
+      { kind: "saveHeaderTruncated" },
+      "The save ends before its mod list does. It may be damaged, or the game may still be writing it.",
+    ],
+    [{ kind: "saveHeaderMissing" }, "This save has no mod list in its header."],
+    [
+      { kind: "saveHeaderTooLarge", limitBytes: 4 * 1024 * 1024 },
+      "The save's mod list header is larger than 4.00 MiB.",
+    ],
   ] as const)("shows %j as its reason with only a Close button", async (reason, sentence) => {
     const wrapper = mountDialog({ kind: "rejected", reason });
     await flush();

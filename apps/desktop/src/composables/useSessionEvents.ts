@@ -2,6 +2,7 @@ import { useQueryCache } from "@pinia/colada";
 
 import { useTauriEvent } from "@/composables/useTauriEvent";
 import { startInvalidation } from "@/queries/invalidation";
+import { queryKeys } from "@/queries/keys";
 import type { SessionChangedEventDto } from "@/types/generated/SessionChangedEventDto";
 import type { SessionChangeReasonDto } from "@/types/generated/SessionChangeReasonDto";
 
@@ -20,6 +21,18 @@ export const HANDLED_BY_MERGE_MUTATION = new Set<SessionChangeReasonDto>([
 ]);
 
 /**
+ * What an `organizationChanged` event refetches: the organization query and the two Mods lists
+ * (group chips, colours and group filters live there). Organization touches no order, sort,
+ * ledger or active list, so invalidating everything else would only refetch expensive queries
+ * for nothing.
+ */
+export const ORGANIZATION_QUERY_KEYS: readonly (readonly string[])[] = [
+  queryKeys.organization(),
+  queryKeys.workingModsAll(),
+  queryKeys.inactiveModsAll(),
+];
+
+/**
  * The actual per-`reason` decision, factored out of {@link useSessionEvents}
  * so it's directly unit-testable without simulating a real Tauri event
  * round trip — `invalidateAll` is `startInvalidation(queryCache)` (no
@@ -29,8 +42,13 @@ export const HANDLED_BY_MERGE_MUTATION = new Set<SessionChangeReasonDto>([
 export function handleSessionChanged(
   event: SessionChangedEventDto,
   invalidateAll: () => void,
+  invalidateOrganization: () => void = invalidateAll,
 ): void {
   if (HANDLED_BY_MERGE_MUTATION.has(event.reason)) {
+    return;
+  }
+  if (event.reason === "organizationChanged") {
+    invalidateOrganization();
     return;
   }
   invalidateAll();
@@ -53,6 +71,14 @@ export function useSessionEvents(): void {
   const queryCache = useQueryCache();
 
   useTauriEvent<SessionChangedEventDto>("session://changed", (event) => {
-    handleSessionChanged(event, () => startInvalidation(queryCache));
+    handleSessionChanged(
+      event,
+      () => startInvalidation(queryCache),
+      () => {
+        for (const key of ORGANIZATION_QUERY_KEYS) {
+          startInvalidation(queryCache, { key: [...key] });
+        }
+      },
+    );
   });
 }

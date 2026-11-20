@@ -18,6 +18,7 @@ mod game_launch;
 mod merge;
 mod mods;
 mod order_share;
+mod organization;
 mod patches;
 mod project;
 mod recommended_rules;
@@ -130,6 +131,10 @@ pub enum CommandErrorCode {
     /// that was read but is not an importable list is not this: that is an
     /// outcome of the preview, not an error.
     ModListIoFailed,
+    /// RimWorld's `Saves` folder exists but its files could not be listed
+    /// (no permission, or it vanished). Its own code, not
+    /// `mod_list_io_failed`, because the way out differs: browse for a save.
+    SavesFolderUnreadable,
     /// An export found no active mod it could put in a list (an empty
     /// `ModsConfig.xml` list, or only ids a mod list cannot hold).
     NothingToExport,
@@ -143,6 +148,20 @@ pub enum CommandErrorCode {
     /// `revert_order_to_file` was refused because the file lists different
     /// mods than the current order, so there is no sequence to restore.
     RevertOrderMembershipDiffers,
+    /// Organization cannot be read or written in this session: it was never
+    /// loaded, or `organization.json` is unusable and read-only until the
+    /// user starts over.
+    OrganizationUnavailable,
+    /// The group does not exist (deleted meanwhile, or a stale view): the
+    /// tree and the lists are shown again.
+    GroupNotFound,
+    /// A sibling already has that group name.
+    GroupNameTaken,
+    /// The move would put a group inside itself or one of its subgroups.
+    GroupCycle,
+    /// A limit was hit: nesting depth, number of groups, mods in groups or
+    /// coloured mods.
+    OrganizationLimit,
 }
 
 /// Structured detail some [`CommandError`]s carry alongside their plain

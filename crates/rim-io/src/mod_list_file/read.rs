@@ -7,16 +7,22 @@ use std::collections::BTreeMap;
 use rim_analyzer::domain::ModId;
 use rim_analyzer::extract::{MAX_RAW_ELEMENT_DEPTH, raw_element_nesting_exceeds};
 use rim_session::mod_list::{
-    ListedGameVersion, ListedName, ListedPackageId, ModListLimits, ParsedModList, Rejection,
-    SharedModEntry, SharedModList, SharedModListError, SkippedEntry, TruncatedText, WorkshopId,
-    parse_text,
+    ListAlignment, ListFormat, ListedGameVersion, ListedName, ListedPackageId, ModListLimits,
+    ParsedModList, Rejection, SharedModEntry, SharedModList, SharedModListError, SkippedEntry,
+    TruncatedText, WorkshopId, parse_text,
 };
 use roxmltree::{Document, Error as XmlError, Node, ParsingOptions};
 
 const RML_ROOT: &str = "savedModList";
 const MODS_CONFIG_ROOT: &str = "ModsConfigData";
 const UTF8_BOM: &[u8] = &[0xEF, 0xBB, 0xBF];
-const XML_STARTS: [&str; 4] = ["<?xml", "<!", "<savedModList", "<ModsConfigData"];
+const XML_STARTS: [&str; 5] = [
+    "<?xml",
+    "<!",
+    "<savedModList",
+    "<ModsConfigData",
+    "<savegame",
+];
 
 /// Parses `bytes` as a mod list in whichever format its content shows.
 pub(super) fn parse_bytes(bytes: &[u8]) -> Result<ParsedModList, Rejection> {
@@ -39,7 +45,7 @@ pub(super) fn parse_bytes(bytes: &[u8]) -> Result<ParsedModList, Rejection> {
 /// `parse_text` report `TooLarge` for it; past the limit every U+FFFD,
 /// decoded or original, becomes a 1-byte `?` instead, which cannot grow
 /// the text (the byte bound is the reader's job, checked above).
-fn decode(bytes: &[u8]) -> Cow<'_, str> {
+pub(super) fn decode(bytes: &[u8]) -> Cow<'_, str> {
     let text = String::from_utf8_lossy(bytes.strip_prefix(UTF8_BOM).unwrap_or(bytes));
     if text.len() > ModListLimits::MAX_INPUT_BYTES {
         Cow::Owned(text.replace(char::REPLACEMENT_CHARACTER, "?"))
@@ -60,6 +66,21 @@ fn is_xml(text: &str) -> bool {
 }
 
 fn parse_xml(text: &str) -> Result<ParsedModList, Rejection> {
+    let document = parse_document(text)?;
+    let root = document.root_element();
+    let root_name = root.tag_name().name();
+    if root_name.eq_ignore_ascii_case(RML_ROOT) {
+        read_rml(root)
+    } else if root_name.eq_ignore_ascii_case(MODS_CONFIG_ROOT) {
+        read_mods_config(root)
+    } else {
+        Err(Rejection::UnrecognizedFormat)
+    }
+}
+
+/// The one XML safety sequence every shape shares: no DOCTYPE, bounded
+/// nesting, bounded node count, no entity resolver.
+pub(super) fn parse_document(text: &str) -> Result<Document<'_>, Rejection> {
     // roxmltree already refuses a non-empty DTD; this also refuses an
     // empty one, which it allows, so no DOCTYPE is ever accepted.
     if text.contains("<!DOCTYPE") {
@@ -73,16 +94,7 @@ fn parse_xml(text: &str) -> Result<ParsedModList, Rejection> {
         nodes_limit: u32::try_from(ModListLimits::MAX_XML_NODES).unwrap_or(u32::MAX),
         entity_resolver: None,
     };
-    let document = Document::parse_with_options(text, options).map_err(rejection_for)?;
-    let root = document.root_element();
-    let root_name = root.tag_name().name();
-    if root_name.eq_ignore_ascii_case(RML_ROOT) {
-        read_rml(root)
-    } else if root_name.eq_ignore_ascii_case(MODS_CONFIG_ROOT) {
-        read_mods_config(root)
-    } else {
-        Err(Rejection::UnrecognizedFormat)
-    }
+    Document::parse_with_options(text, options).map_err(rejection_for)
 }
 
 fn rejection_for(error: XmlError) -> Rejection {
@@ -132,11 +144,14 @@ fn list_texts<'a>(container: Node<'a, '_>) -> Result<Vec<&'a str>, Rejection> {
         .collect())
 }
 
-fn child_texts<'a>(parent: Node<'a, '_>, tag: &str) -> Result<Option<Vec<&'a str>>, Rejection> {
+pub(super) fn child_texts<'a>(
+    parent: Node<'a, '_>,
+    tag: &str,
+) -> Result<Option<Vec<&'a str>>, Rejection> {
     direct_child(parent, tag).map(list_texts).transpose()
 }
 
-fn game_version_of(parent: Node, tag: &str) -> Option<ListedGameVersion> {
+pub(super) fn game_version_of(parent: Node, tag: &str) -> Option<ListedGameVersion> {
     direct_child(parent, tag)
         .and_then(|node| node.text())
         .and_then(ListedGameVersion::new)
@@ -154,15 +169,17 @@ fn read_rml(root: Node) -> Result<ParsedModList, Rejection> {
         .transpose()?
         .flatten();
     let meta = direct_child(root, "meta");
-    let workshop_ids = match meta {
+    let (workshop_ids, workshop_alignment) = match meta {
         Some(meta) => meta_workshop_ids(meta)?,
-        None => BTreeMap::new(),
+        None => (BTreeMap::new(), ListAlignment::Absent),
     };
     ListPieces {
+        format: ListFormat::SavedModList,
         game_version: meta.and_then(|meta| game_version_of(meta, "gameVersion")),
         ids,
         names,
         workshop_ids,
+        workshop_alignment,
     }
     .into_parsed()
 }
@@ -170,26 +187,41 @@ fn read_rml(root: Node) -> Result<ParsedModList, Rejection> {
 fn read_mods_config(root: Node) -> Result<ParsedModList, Rejection> {
     let ids = child_texts(root, "activeMods")?.ok_or(Rejection::MissingModList)?;
     ListPieces {
+        format: ListFormat::ModsConfig,
         game_version: game_version_of(root, "version"),
         ids,
         names: None,
         workshop_ids: BTreeMap::new(),
+        workshop_alignment: ListAlignment::Absent,
     }
     .into_parsed()
 }
 
 /// The `meta` block's package id to Workshop id pairs. The two lists are
 /// zipped by position only when their lengths agree; otherwise no Workshop
-/// id is taken. A `0` (no Workshop copy) and anything non-numeric give no
-/// id, and the first pair for an id wins.
-fn meta_workshop_ids(meta: Node) -> Result<BTreeMap<ModId, WorkshopId>, Rejection> {
+/// id is taken and the mismatch is reported. A `0` (no Workshop copy) and
+/// anything non-numeric give no id, and the first pair for an id wins.
+fn meta_workshop_ids(
+    meta: Node,
+) -> Result<(BTreeMap<ModId, WorkshopId>, ListAlignment), Rejection> {
     let package_ids = child_texts(meta, "modIds")?;
     let steam_ids = child_texts(meta, "modSteamIds")?;
+    Ok(match (package_ids, steam_ids) {
+        (Some(package_ids), Some(steam_ids)) => workshop_pairs(&package_ids, &steam_ids),
+        _ => (BTreeMap::new(), ListAlignment::Absent),
+    })
+}
+
+/// Pairs each package id with the Steam id at its position, when the two
+/// lists have one value per id; a list of another length is dropped whole.
+pub(super) fn workshop_pairs(
+    package_ids: &[&str],
+    steam_ids: &[&str],
+) -> (BTreeMap<ModId, WorkshopId>, ListAlignment) {
+    let alignment = ListAlignment::between(package_ids.len(), steam_ids.len());
     let mut pairs = BTreeMap::new();
-    if let (Some(package_ids), Some(steam_ids)) = (package_ids, steam_ids)
-        && package_ids.len() == steam_ids.len()
-    {
-        for (package_id, steam_id) in package_ids.into_iter().zip(steam_ids) {
+    if alignment == ListAlignment::Aligned {
+        for (package_id, steam_id) in package_ids.iter().zip(steam_ids) {
             if let Ok(workshop_id) = WorkshopId::try_from(steam_id.trim()) {
                 pairs
                     .entry(ModId::new(package_id.trim()))
@@ -197,24 +229,30 @@ fn meta_workshop_ids(meta: Node) -> Result<BTreeMap<ModId, WorkshopId>, Rejectio
             }
         }
     }
-    Ok(pairs)
+    (pairs, alignment)
 }
 
 /// The raw parts of one document, ready to become a [`ParsedModList`].
-struct ListPieces<'a> {
-    game_version: Option<ListedGameVersion>,
-    ids: Vec<&'a str>,
+pub(super) struct ListPieces<'a> {
+    pub(super) format: ListFormat,
+    pub(super) game_version: Option<ListedGameVersion>,
+    pub(super) ids: Vec<&'a str>,
     /// Kept only when it has one name per id.
-    names: Option<Vec<&'a str>>,
-    workshop_ids: BTreeMap<ModId, WorkshopId>,
+    pub(super) names: Option<Vec<&'a str>>,
+    pub(super) workshop_ids: BTreeMap<ModId, WorkshopId>,
+    /// How the Steam-id list the pairs came from lined up with its ids.
+    pub(super) workshop_alignment: ListAlignment,
 }
 
 impl ListPieces<'_> {
-    fn into_parsed(self) -> Result<ParsedModList, Rejection> {
+    pub(super) fn into_parsed(self) -> Result<ParsedModList, Rejection> {
+        let names_alignment = self.names.as_ref().map_or(ListAlignment::Absent, |names| {
+            ListAlignment::between(self.ids.len(), names.len())
+        });
         let names = self
             .names
             .as_ref()
-            .filter(|names| names.len() == self.ids.len());
+            .filter(|_| names_alignment == ListAlignment::Aligned);
         let mut entries = Vec::with_capacity(self.ids.len());
         let mut skipped = Vec::new();
         let mut omitted_skipped = 0;
@@ -250,7 +288,10 @@ impl ListPieces<'_> {
             SharedModListError::TooManyEntries { limit } => Rejection::TooManyEntries { limit },
         })?;
         Ok(ParsedModList {
+            format: self.format,
             list,
+            names: names_alignment,
+            workshop_ids: self.workshop_alignment,
             skipped,
             omitted_skipped,
         })

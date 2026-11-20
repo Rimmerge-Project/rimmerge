@@ -3,8 +3,8 @@
 //! scanned tier's row): two DTOs may not share a Rust type name.
 
 use rim_session::{
-    ListSort, ListSortKey, ModList, ModListQuery, ModListRow, RowState, SortDirection, UpdateTime,
-    UpdateUnavailable,
+    GroupFilter, ListSort, ListSortKey, ModList, ModListQuery, ModListRow, RowState, SortDirection,
+    UpdateTime, UpdateUnavailable,
 };
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
@@ -12,6 +12,7 @@ use ts_rs::TS;
 use super::common::SourceDto;
 use super::file_baseline::MembershipMarkDto;
 use super::mods::GeneratedMarkerDto;
+use super::organization::{ColorTokenDto, GroupLabelDto, parse_group_id};
 use crate::error::CommandError;
 
 /// Request shape for `list_working_mods`/`list_inactive_mods`. There is no
@@ -31,6 +32,37 @@ pub struct ModListQueryDto {
     /// The display sort; `null` is the list's own default (load order for
     /// Active, name A to Z for Inactive).
     pub sort: Option<ListSortDto>,
+    /// Only mods in this group scope; absent or `null` is no group filter.
+    /// A filter, never a reorder.
+    #[serde(default)]
+    #[ts(optional = nullable)]
+    pub group: Option<GroupFilterDto>,
+}
+
+/// A group scope a list can be narrowed to. Mirrors [`GroupFilter`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+#[ts(export, export_to = "../../src/types/generated/")]
+pub enum GroupFilterDto {
+    /// Mods in this group or any group below it, each mod once.
+    #[serde(rename_all = "camelCase")]
+    InScope {
+        /// The group.
+        group_id: u32,
+    },
+    /// Mods that are in no group at all.
+    Ungrouped,
+}
+
+impl TryFrom<GroupFilterDto> for GroupFilter {
+    type Error = CommandError;
+
+    fn try_from(value: GroupFilterDto) -> Result<Self, CommandError> {
+        match value {
+            GroupFilterDto::InScope { group_id } => Ok(Self::InScope(parse_group_id(group_id)?)),
+            GroupFilterDto::Ungrouped => Ok(Self::Ungrouped),
+        }
+    }
 }
 
 /// What a list is ordered by. Mirrors [`ListSortKey`].
@@ -126,6 +158,7 @@ impl TryFrom<ModListQueryDto> for ModListQuery {
             tag: value.tag.map(rim_resolve::domain::Tag::new).transpose()?,
             source: value.source.map(Into::into),
             sort: value.sort.map(Into::into),
+            group: value.group.map(TryInto::try_into).transpose()?,
         })
     }
 }
@@ -145,8 +178,12 @@ pub enum ModRowStateDto {
     },
     /// No scan facts, only identity. In the Active list: activated since
     /// the last rescan. In the Inactive list: an ordinary inactive mod
-    /// (inactive mods are never scanned).
-    PendingScan,
+    /// (inactive mods are never scanned). Tags added by hand still show.
+    #[serde(rename_all = "camelCase")]
+    PendingScan {
+        /// The tags added to the mod by hand.
+        manual_tags: Vec<String>,
+    },
     /// Listed in the working set but found nowhere on disk.
     Missing,
 }
@@ -161,7 +198,9 @@ impl From<&RowState> for ModRowStateDto {
                 tags: tags.iter().map(ToString::to_string).collect(),
                 hard_dependents: *hard_dependents,
             },
-            RowState::PendingScan => Self::PendingScan,
+            RowState::PendingScan { manual_tags } => Self::PendingScan {
+                manual_tags: manual_tags.iter().map(ToString::to_string).collect(),
+            },
             RowState::Missing => Self::Missing,
         }
     }
@@ -192,6 +231,11 @@ pub struct ModListRowDto {
     pub updated: UpdateTimeDto,
     /// How its membership differs from the file's active list, by base id.
     pub membership: MembershipMarkDto,
+    /// The groups the mod is a direct member of, by name. Empty while
+    /// organization is unavailable.
+    pub groups: Vec<GroupLabelDto>,
+    /// The mod's own colour; a group's colour is never inherited.
+    pub color: Option<ColorTokenDto>,
 }
 
 impl From<&ModListRow> for ModListRowDto {
@@ -206,6 +250,8 @@ impl From<&ModListRow> for ModListRowDto {
             workshop_id: value.workshop_id,
             updated: value.updated.into(),
             membership: value.membership.into(),
+            groups: value.groups.iter().map(Into::into).collect(),
+            color: value.color.map(Into::into),
         }
     }
 }

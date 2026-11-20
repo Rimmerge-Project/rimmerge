@@ -12,9 +12,9 @@
 //! an id or a link on the way back in.
 
 use super::{
-    ListedGameVersion, ListedName, ListedPackageId, ModListLimits, ParsedModList, Rejection,
-    SharedModEntry, SharedModList, SharedModListError, SkippedEntry, TruncatedText, WorkshopId,
-    count_as_u32,
+    ListAlignment, ListFormat, ListedGameVersion, ListedName, ListedPackageId, ModListLimits,
+    ParsedModList, Rejection, SharedModEntry, SharedModList, SharedModListError, SkippedEntry,
+    TruncatedText, WorkshopId, count_as_u32,
 };
 use crate::mod_info::workshop_url;
 
@@ -174,11 +174,29 @@ pub fn parse_text(input: &str) -> Result<ParsedModList, Rejection> {
             SharedModListError::Empty => Rejection::NoEntries,
             SharedModListError::TooManyEntries { limit } => Rejection::TooManyEntries { limit },
         })?;
+    let names = parallel_presence(&list, |entry| entry.name.is_some());
+    let workshop_ids = parallel_presence(&list, |entry| entry.workshop_id.is_some());
     Ok(ParsedModList {
+        format: ListFormat::Text,
         list,
+        names,
+        workshop_ids,
         skipped: collected.skipped,
         omitted_skipped: collected.omitted_skipped,
     })
+}
+
+/// A text line carries its own name or link, so there is nothing to
+/// misalign: the value is absent unless some line wrote one.
+fn parallel_presence(
+    list: &SharedModList,
+    has_value: impl Fn(&SharedModEntry) -> bool,
+) -> ListAlignment {
+    if list.entries().iter().any(has_value) {
+        ListAlignment::Aligned
+    } else {
+        ListAlignment::Absent
+    }
 }
 
 fn classify(raw_line: &str) -> Line {

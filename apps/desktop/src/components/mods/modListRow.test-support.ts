@@ -1,3 +1,5 @@
+import type { ColorTokenDto } from "@/types/generated/ColorTokenDto";
+import type { GroupLabelDto } from "@/types/generated/GroupLabelDto";
 import type { MembershipMarkDto } from "@/types/generated/MembershipMarkDto";
 import type { ModListDto } from "@/types/generated/ModListDto";
 import type { ModListRowDto } from "@/types/generated/ModListRowDto";
@@ -16,6 +18,12 @@ export interface ModRowOverrides {
   missing?: boolean;
   /** Activated since the last scan. */
   pendingScan?: boolean;
+  /** Tags added by hand; shown on an unscanned row (a scanned row lists its own `tags`). */
+  manualTags?: string[];
+  /** The groups the mod is a direct member of. */
+  groups?: GroupLabelDto[];
+  /** The mod's own colour. */
+  color?: ColorTokenDto | null;
   updated?: UpdateTimeDto;
   /** How the row differs from the saved active mod list; none unless said. */
   membership?: MembershipMarkDto;
@@ -26,7 +34,7 @@ export function modRow(overrides: ModRowOverrides = {}): ModListRowDto {
   const state: ModListRowDto["state"] = overrides.missing
     ? { kind: "missing" }
     : overrides.pendingScan
-      ? { kind: "pendingScan" }
+      ? { kind: "pendingScan", manualTags: overrides.manualTags ?? [] }
       : {
           kind: "scanned",
           tags: overrides.tags ?? [],
@@ -42,6 +50,8 @@ export function modRow(overrides: ModRowOverrides = {}): ModListRowDto {
     workshopId: null,
     updated: overrides.updated ?? { kind: "unknown" },
     membership: overrides.membership ?? "none",
+    groups: overrides.groups ?? [],
+    color: overrides.color ?? null,
   };
 }
 

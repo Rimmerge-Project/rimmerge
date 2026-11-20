@@ -8,9 +8,7 @@ import { useTranslateMessage } from "@/composables/useTranslateMessage";
 import type { SourceDto } from "@/types/generated/SourceDto";
 import { sourceLabel } from "@/utils/source";
 
-const { hasTagFilter, searchLabel } = defineProps<{
-  /** Whether the tag input shows: only the Active list's mods carry tags. */
-  hasTagFilter: boolean;
+const { searchLabel } = defineProps<{
   /** The search box's accessible name, which says which list it filters (two lists sit side by side). */
   searchLabel: string;
 }>();
@@ -39,7 +37,6 @@ const sourceOptions = computed(() => [
       data-testid="mods-search"
     />
     <InputText
-      v-if="hasTagFilter"
       v-model="tag"
       class="min-w-0 flex-1"
       :placeholder="t('mods.page.tagFilterPlaceholder')"

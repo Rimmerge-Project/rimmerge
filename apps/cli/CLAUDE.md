@@ -139,9 +139,9 @@ output, so it doubles as this generator's own regression test.
   written into a list go to stderr as warnings, so stdout stays pasteable.
   `import <file|->` previews through `PreviewOrderImport`/
   `ImportPreview::from_read` (`-` reads stdin through
-  `rim_io::read_mod_list_bounded` and parses it with
-  `rim_io::parse_mod_list_bytes`, so it gets the same bound, lossy
-  decoding and format detection as a file: text or a piped `.rml`) and
+  `rim_io::read_mod_list`, the reader `RmlFileStore` uses, so it gets the
+  same bound, lossy decoding and format detection as a file: text, a piped
+  `.rml`, or a piped RimWorld save, of which only the header is read) and
   prints the plan, then writes `<activeMods>` = the planned
   order through the same `mods::write_active_set` (backup, file's
   `version`/`knownExpansions` kept) and `mods::refuse_while_running`

@@ -243,7 +243,7 @@
     "droppedClusterRules": "载入时丢弃了 {count} 条迁移前的集群规则：{ids}",
     "unknownModKnowledgeValue": "已忽略 {section} 规则中的未知值“{value}”（{what}）",
     "modKnowledgeCacheUnreadableHeadline": "无法读取缓存的 Rimmerge 规则；改用内置快照",
-    "rowsOverRoleLimit": "已忽略 {section} 规则的 {role} 组中超出单角色上限的 {count} 行",
+    "rowsOverRoleLimit": "已忽略 {section} 规则中 {role} 角色超出单角色上限的 {count} 行",
     "precedenceRuleMissingFramework": "已忽略 {defType} 的优先规则：它没有指明任何框架",
     "what": {
       "precedenceRule": "优先规则",
@@ -568,6 +568,10 @@
         "title": "RimWorld 未能启动",
         "detail": "Windows 无法启动 RimWorldWin64.exe。"
       },
+      "saves_folder_unreadable": {
+        "title": "无法读取 Saves 文件夹",
+        "detail": "Rimmerge 无法列出 RimWorld 的 Saves 文件夹中的文件。请改为手动浏览选择存档。"
+      },
       "mod_list_io_failed": {
         "title": "无法读取或写入 Mod 列表",
         "detail": "无法读取或写入该 Mod 列表文件。请确认该文件（保存时则为其所在文件夹）存在，并且你有权限在该位置打开或保存它。"
@@ -587,6 +591,26 @@
       "revert_order_membership_differs": {
         "title": "已保存的列表包含不同的 Mod",
         "detail": "你已保存的已启用 Mod 与当前顺序中的不同，因此没有可恢复的顺序。如需改用已保存的列表，请在“加载顺序”页通过“导入”打开它。否则，请应用你自己的顺序。"
+      },
+      "organization_unavailable": {
+        "title": "暂时无法更改分组",
+        "detail": "Rimmerge 无法读取 organization.json，因此你的分组和颜色为只读。可在 Mod 页面选择“重新开始…”以创建一套新的分组（会保留该文件的副本），或修复该文件后重新扫描。"
+      },
+      "group_not_found": {
+        "title": "该分组已不存在",
+        "detail": "它可能已被删除。分组已刷新，请重试。"
+      },
+      "group_name_taken": {
+        "title": "该分组名称已被使用",
+        "detail": "同一层级的另一个分组已使用此名称。名称不区分大小写。"
+      },
+      "group_cycle": {
+        "title": "分组不能放入自身",
+        "detail": "请选择该分组及其子分组之外的位置。"
+      },
+      "organization_limit": {
+        "title": "已达到分组的某项上限",
+        "detail": "已达到分组和颜色的某项上限：分组数量、嵌套深度、分组中或带颜色的 Mod 数量，或分组文件（organization.json）的大小。未做任何更改。请移除不再需要的分组、分组中的 Mod 或颜色，然后重试。"
       }
     }
   },
@@ -1263,7 +1287,8 @@
         "removed": "移除",
         "addedTitle": "尚未在你已保存的已启用 Mod 列表中。应用后会添加它。",
         "removedTitle": "在你已保存的已启用 Mod 列表中。应用后会移除它。"
-      }
+      },
+      "rowActionsButton": "{name} 的操作"
     },
     "sort": {
       "groupLabel": "排序方式",
@@ -1380,12 +1405,75 @@
       "ariaLabel": "跳转到 Def",
       "placeholder": "跳转到 Def…"
     },
+    "bulk": {
+      "region": "“{list}”列表中所选 Mod 的操作",
+      "addToGroup": "加入分组…",
+      "removeFromGroup": "移出分组…",
+      "moveToGroup": "移到分组…",
+      "color": "颜色…",
+      "tagsButton": "标签…",
+      "tags": {
+        "title": "所选 Mod 的标签",
+        "help": "为每个所选 Mod 添加或移除一个标签。移除会从每个显示该标签的所选 Mod 上去掉它，无论标签是你添加的还是 Rimmerge 推断的。不显示该标签的 Mod 保持不变。添加还会把已通过推断显示该标签的 Mod 上的标签固定下来，这样即使重新扫描后不再推断出它，它也会保留。标签从不改变你的加载顺序。",
+        "label": "标签",
+        "format": "请使用小写拉丁字母（a 到 z）、数字、连字符和下划线。",
+        "addButton": "添加标签",
+        "removeButton": "移除标签"
+      },
+      "dialog": {
+        "addTitle": "加入分组",
+        "removeTitle": "移出分组",
+        "moveTitle": "移到分组",
+        "addButton": "加入",
+        "removeButton": "移出",
+        "moveButton": "移动",
+        "noGroups": "还没有分组。请先在分组面板中创建一个。",
+        "loading": "正在检查这些 Mod 所在的分组…",
+        "failed": "无法检查这些 Mod 所在的分组。请关闭此对话框后重试。",
+        "noneInGroups": "所选 Mod 均不在任何分组中。",
+        "addHelp": "这些 Mod 会加入你选择的分组，并仍保留在它们所在的其他分组中。",
+        "removeHelp": "这些 Mod 会移出你选择的分组，它们所在的其他分组不变。",
+        "moveHelp": "移动会将这些 Mod 从一个分组移出，并放入另一个分组。不在第一个分组中的 Mod 保持不变。",
+        "targetLegend": "分组",
+        "removeLegend": "要将 Mod 移出的分组",
+        "fromLegend": "来源分组",
+        "toLegend": "目标分组",
+        "sameGroup": "与来源分组相同",
+        "holdsCount": "其中有 {count} 个所选 Mod"
+      },
+      "toast": {
+        "added": "已将 {count} 个 Mod 加入 {name}",
+        "alreadyIn": "{count} 个原本就在该分组中",
+        "removed": "已将 {count} 个 Mod 移出 {name}",
+        "notIn": "{count} 个原本就不在该分组中",
+        "moved": "已将 {count} 个 Mod 从 {from} 移到 {to}",
+        "notInSource": "{count} 个不在 {name} 中，因此未移动",
+        "alreadyInTarget": "{count} 个原本就在 {name} 中",
+        "colorSet": "已为 {count} 个 Mod 设置颜色",
+        "colorCleared": "已清除 {count} 个 Mod 的颜色",
+        "unchanged": "{count} 个未改变",
+        "keptByDecision": "{count} 个 Mod 因检查结果页上的某项决定而保留该标签",
+        "tagAdded": "已为 {count} 个 Mod 添加标签 {tag}",
+        "tagRemoved": "已从 {count} 个 Mod 移除标签 {tag}"
+      },
+      "scope": {
+        "activateGroup": "启用此分组中的 {count} 个 Mod",
+        "activateTree": "启用 {count} 个 Mod（含子分组）",
+        "deactivateGroup": "禁用此分组中的 {count} 个 Mod",
+        "deactivateTree": "禁用 {count} 个 Mod（含子分组）",
+        "notInstalled": "{count} 个 Mod 未安装，将被跳过",
+        "hidden": "{count} 个被当前筛选隐藏",
+        "nothingToActivate": "此分组中没有可启用的 Mod。它们已启用或未安装。",
+        "nothingToDeactivate": "此分组中没有已启用的 Mod。"
+      }
+    },
     "selection": {
       "selectAllShown": "全选当前显示的 {count} 个",
       "selectAllEmpty": "全选",
       "selectedCount": "已选 {count} 个",
-      "notShown": "（{count} 个未显示）",
-      "clear": "清除选择"
+      "clear": "清除选择",
+      "selectedCountHidden": "{selected}（{hidden}）",
+      "hiddenPart": "{count} 个未显示"
     },
     "move": {
       "up": "上移",
@@ -1393,7 +1481,6 @@
       "top": "移到顶部",
       "bottom": "移到底部",
       "after": "移到指定 Mod 之后…",
-      "menuButton": "移动 {name}",
       "activateAtButton": "在指定位置启用 {name}…",
       "afterDialogHeader": "移到另一个 Mod 之后",
       "activateAtDialogHeader": "在指定位置启用",
@@ -1414,7 +1501,167 @@
       "viewSuggested": "查看建议顺序",
       "suggestedNote": "点击应用将写入建议顺序。移动任意 Mod 即会切换到你自己的顺序。",
       "coreStaysActive": "Core 无法禁用。",
-      "inactiveNotOrdered": "此列表没有自己的顺序。将 Mod 拖到已启用列表即可启用它们。"
+      "inactiveNotOrdered": "此列表没有自己的顺序。将 Mod 拖到已启用列表即可启用它们。",
+      "activateAtItem": "在指定位置启用…"
+    },
+    "colors": {
+      "names": {
+        "red": "红色",
+        "orange": "橙色",
+        "amber": "琥珀色",
+        "lime": "黄绿色",
+        "green": "绿色",
+        "teal": "蓝绿色",
+        "cyan": "青色",
+        "blue": "蓝色",
+        "indigo": "靛蓝色",
+        "violet": "紫色",
+        "pink": "粉色",
+        "slate": "石板灰"
+      },
+      "rowColor": "颜色：{name}",
+      "groupTitle": "分组颜色",
+      "modTitle": "Mod 颜色",
+      "groupHelp": "颜色会在分组树和 Mod 行上标记该分组，不会改变其他任何内容。",
+      "modHelp": "颜色会在此 Mod 所在行上标记它，不会改变你的加载顺序。",
+      "modsTitle": "所选 Mod 的颜色",
+      "modsHelp": "颜色会在每个所选 Mod 所在行上标记它，不会改变你的加载顺序。",
+      "legend": "颜色",
+      "none": "无颜色",
+      "apply": "设置颜色",
+      "toast": {
+        "groupChanged": "已更改分组颜色",
+        "modChanged": "已更改 {name} 的颜色",
+        "modCleared": "已移除 {name} 的颜色"
+      }
+    },
+    "groups": {
+      "regionLabel": "分组",
+      "heading": "分组",
+      "help": "分组只是帮你查找 Mod，从不移动文件，也不改变你的加载顺序。",
+      "openButton": "分组",
+      "close": "关闭分组",
+      "treeLabel": "分组",
+      "allMods": "全部 Mod",
+      "ungrouped": "未分组",
+      "newGroup": "新建分组",
+      "actions": "分组操作",
+      "actionsFor": "{name} 的操作",
+      "searchLabel": "搜索分组",
+      "searchPlaceholder": "搜索分组…",
+      "empty": "还没有分组。创建一个分组，开始整理你的 Mod。",
+      "noMatches": "没有匹配的分组。",
+      "nodeModCount": "{count} 个 Mod（含子分组）",
+      "nodeSubgroupCount": "{count} 个子分组",
+      "chipWithColor": "{name}（{color}）",
+      "allGroups": "所在分组：{groups}",
+      "rowMenu": {
+        "groups": "分组…",
+        "color": "颜色…",
+        "colorCurrent": "颜色（{name}）…"
+      },
+      "menu": {
+        "newSubgroup": "新建子分组…",
+        "rename": "重命名…",
+        "color": "颜色…",
+        "move": "移动分组到…",
+        "activateAll": "启用 {count} 个 Mod…",
+        "deactivateAll": "禁用 {count} 个 Mod…",
+        "nothingToActivate": "没有可启用的 Mod",
+        "nothingToDeactivate": "没有可禁用的 Mod",
+        "checkingScope": "正在检查此分组中的 Mod…",
+        "scopeUnavailable": "无法检查此分组中的 Mod",
+        "checkingUninstalled": "正在检查未安装的 Mod…",
+        "uninstalledUnavailable": "无法检查未安装的 Mod",
+        "removeUninstalled": "移除 {count} 个未安装的 Mod",
+        "noUninstalled": "此分组中的 Mod 均已安装",
+        "delete": "删除…"
+      },
+      "dialog": {
+        "createTitle": "新建分组",
+        "subgroupTitle": "新建子分组",
+        "renameTitle": "重命名分组",
+        "inside": "位于 {parent} 内",
+        "nameLabel": "名称",
+        "nameHelp": "最多 64 个字符。同一层级的两个分组不能同名（不区分大小写）。",
+        "createButton": "创建",
+        "renameButton": "重命名",
+        "deleteTitle": "删除分组",
+        "deleteQuestion": "删除 {name}？",
+        "deleteNoMods": "此分组中没有 Mod。",
+        "deleteMods": "此分组（含其子分组）中有 {count} 个 Mod。",
+        "modeLegend": "如何处理它的 {count} 个子分组",
+        "keepSubgroups": "保留子分组，并将其上移一级",
+        "deleteSubgroups": "同时删除子分组",
+        "deleteSafety": "不会删除或卸载任何 Mod。Mod 仍会保留在它所属的其他分组中。",
+        "deleteButton": "删除分组",
+        "moveTitle": "移动分组",
+        "moveQuestion": "将 {name} 移动到：",
+        "moveLegend": "分组的新位置",
+        "topLevel": "顶层",
+        "moveInvalid": "分组不能放入自身或其子分组中",
+        "moveCurrent": "当前位置",
+        "moveButton": "移动",
+        "modGroupsTitle": "{name} 的分组",
+        "modGroupsHelp": "勾选一个分组即可将此 Mod 加入其中；取消勾选即可将其移出。每项更改都会立即保存。",
+        "modGroupsEmpty": "还没有分组。请在分组面板中创建。",
+        "modGroupsList": "分组",
+        "done": "完成",
+        "removeUninstalledTitle": "移除未安装的 Mod",
+        "removeUninstalledBody": "截至上次扫描时，{name} 及其子分组中有 {count} 个 Mod 未安装。要将它们从这些分组中移除吗？之后只有再次将它们加入分组，它们才会重新出现在分组中。",
+        "removeUninstalledList": "要移除的 Mod",
+        "removeUninstalledLoading": "正在检查哪些 Mod 未安装…",
+        "removeUninstalledFailed": "无法检查哪些 Mod 未安装。请关闭此对话框后重试。",
+        "removeUninstalledButton": "移除"
+      },
+      "startOver": {
+        "title": "重新开始，不保留分组",
+        "body": "Rimmerge 会在无法读取的文件旁保留一份副本，然后以没有分组和颜色的状态重新开始。你的 Mod 和加载顺序不受影响。",
+        "confirm": "重新开始"
+      },
+      "notice": {
+        "notLoaded": "本次会话中无法使用分组和颜色。",
+        "unreadable": "Rimmerge 无法读取你的分组和颜色，它们暂时为只读。如果有其他程序打开了该文件，请将其关闭后重新扫描。",
+        "tooLarge": "你的分组和颜色文件过大，无法读取。在你重新开始之前，它们为只读。",
+        "malformed": "你的分组和颜色文件已损坏。在你重新开始之前，它们为只读。",
+        "newerVersion": "你的分组和颜色由更新版本的 Rimmerge 保存。它们在此处为只读，以免被覆盖。",
+        "invalid": "你的分组和颜色文件中的分组结构不一致（例如循环嵌套、分组缺失或重复，或分组过多），因此无法使用。在你重新开始之前，它们为只读。",
+        "tryAgain": "重新扫描并重试",
+        "startOver": "重新开始…"
+      },
+      "scope": {
+        "ungrouped": "正在显示不在任何分组中的 Mod",
+        "group": "正在显示 {name}：{count} 个 Mod（含子分组）",
+        "notInstalled": "{count} 个 Mod 未安装",
+        "note": "搜索和筛选在此分组内进行。已启用列表仍按加载顺序排列。",
+        "showAll": "显示全部 Mod"
+      },
+      "drop": {
+        "addTo": "将 {count} 个 Mod 加入 {name}",
+        "idleMods": "将 {count} 个 Mod 拖放到某个分组上即可加入",
+        "idleGroup": "拖放到某个分组上即可将此分组放入其中，拖放到“全部 Mod”上则使其成为顶层分组。",
+        "needsGroup": "Mod 只能加入分组",
+        "notUngrouped": "分组不能放入“未分组”。请使用“全部 Mod”使其成为顶层分组。",
+        "withHidden": "{text}（{hidden}）",
+        "alreadyThere": "该分组已在此处",
+        "makeTopLevel": "使 {name} 成为顶层分组",
+        "nestInside": "将 {name} 移入 {parent}",
+        "added": "已将 {count} 个 Mod 加入 {name}",
+        "nothingToAdd": "所有 Mod 原本就在 {name} 中",
+        "alreadyIn": "{count} 个原本就在该分组中",
+        "hiddenIncluded": "已包含 {count} 个被筛选隐藏的所选 Mod",
+        "movedTop": "{name} 现在是顶层分组",
+        "movedInside": "已将 {name} 移入 {parent}"
+      },
+      "toast": {
+        "created": "已创建分组",
+        "renamed": "已重命名分组",
+        "moved": "已移动分组",
+        "deleted": "已删除分组",
+        "removedUninstalled": "已移除 {count} 个未安装的 Mod",
+        "keptInstalledAgain": "{count} 个 Mod 已重新安装，因此仍保留在分组中",
+        "startedOver": "已重新开始，当前没有分组"
+      }
     }
   },
   "rules": {
@@ -1716,7 +1963,8 @@
       "button": "导入",
       "openFile": "打开 Mod 列表文件…",
       "paste": "粘贴列表…",
-      "fileFilter": "Mod 列表（.rml、.xml、.txt）",
+      "fromSave": "从存档导入…",
+      "fileFilter": "Mod 列表和存档（.rml、.rws、.xml、.txt）",
       "allFiles": "所有文件",
       "pasteTitle": "粘贴加载顺序",
       "pasteHint": "每行一个 Mod：粘贴“复制为文本”得到的文本，或每行一个 ID。",
@@ -1726,7 +1974,13 @@
     "preview": {
       "title": "导入加载顺序",
       "summary": "列表中有 {count} 个 Mod",
-      "versionDiffers": "此列表由 RimWorld {listed} 制作；你的版本是 {game}。",
+      "fromSave": "来自用 RimWorld {version} 创建的存档。",
+      "madeWith": "用 RimWorld {version} 创建。",
+      "versionDiffers": "你使用的是 RimWorld {game}，版本不同。",
+      "misaligned": {
+        "names": "列表中的名称数量（{values}）与 Mod 数量（{ids}）不一致，因此不显示发送者的名称。",
+        "workshopIds": "列表中的创意工坊 ID 数量（{values}）与 Mod 数量（{ids}）不一致，因此不显示创意工坊链接。"
+      },
       "replacesPending": "你尚未重新扫描的启用状态更改将被替换。",
       "replacesUnwritten": "此次导入会替换你的当前顺序，而该顺序尚未应用。",
       "moved": "{count} 个 Mod 的位置会改变。",
@@ -1738,6 +1992,7 @@
       "missingExplanation": "Rimmerge 从不下载 Mod。请自行订阅这些 Mod，然后重新导入。",
       "openWorkshop": "在 Steam 创意工坊中打开",
       "openWorkshopLabel": "在 Steam 创意工坊中打开 {name}",
+      "workshopIdFromFile": "创意工坊 ID {id}，取自你导入的文件。",
       "missingKind": {
         "dlc": "你未安装的 DLC。",
         "rimmergeMergeMod": "发送者的合并 Mod，由 Rimmerge 在其电脑上生成；你不需要它。",
@@ -1767,6 +2022,19 @@
       "whatHappens": "Rimmerge 会用此顺序重新扫描，并将其显示为当前顺序。在你应用之前，不会写入任何内容。",
       "confirm": "使用此顺序"
     },
+    "saves": {
+      "title": "从存档导入",
+      "intro": "只会读取存档的 Mod 列表，从不更改存档本身。",
+      "savedAt": "保存于 {date}",
+      "unknownDate": "日期未知",
+      "preview": "预览",
+      "previewLabel": "预览 {name} 的 Mod 列表",
+      "browse": "浏览…",
+      "fileFilter": "RimWorld 存档（.rws）",
+      "empty": "RimWorld 的 Saves 文件夹中没有存档。",
+      "noFolder": "在你的 ModsConfig.xml 旁未找到 RimWorld 的 Saves 文件夹。请改为手动浏览选择存档。",
+      "omitted": "另有 {count} 个较早的存档未显示。"
+    },
     "imported": "导入的顺序已就绪。请检查后点击应用，将其保存为已启用的加载顺序。",
     "notInFile": "这还不是已启用的加载顺序。",
     "notInFileApply": "应用",
@@ -1778,9 +2046,12 @@
       "malformedXml": "该文件不是有效的 XML。",
       "dtdNotAllowed": "该文件声明了 DTD，而 Mod 列表从不这样做。",
       "tooDeep": "该文件嵌套层级过深，不可能是 Mod 列表。",
-      "unrecognizedFormat": "这不是 RimWorld Mod 列表（.rml）、ModsConfig.xml 或文本列表。",
+      "unrecognizedFormat": "这不是 RimWorld Mod 列表（.rml）、RimWorld 存档（.rws）、ModsConfig.xml 或文本列表。",
       "missingModList": "该文件中没有 Mod 列表。",
-      "noEntries": "未找到任何 ID。"
+      "noEntries": "未找到任何 ID。",
+      "saveHeaderTruncated": "该存档在 Mod 列表读完之前就已结束。存档可能已损坏，或游戏仍在写入它。",
+      "saveHeaderMissing": "此存档的头部没有 Mod 列表。",
+      "saveHeaderTooLarge": "存档头部的 Mod 列表超过 {limit}。"
     },
     "importedWithWarnings": "扫描报告了 {count} 条警告。",
     "importedRuleWarnings": "已导入，但有规则无法载入",
@@ -1842,7 +2113,7 @@
       "removedByCause": "先加载的 {mod} 会删除目标节点。",
       "notYetInjectedCause": "目标节点由 {mod} 注入，而该 Mod 在之后才加载。",
       "modPossessive": "{mod} 的 {operation}",
-      "notFullyFixableHeading": "无法完全通过顺序修复（补丁已过时、原因未分类，或兼而有之），按 Mod 分组：",
+      "notFullyFixableHeading": "无法完全通过顺序修复（补丁已过时、原因未分类，或兼而有之），按 Mod 归类：",
       "groupedByModLine": "{mod}：{list}",
       "groupedOperations": "{count} 项操作",
       "groupedTargets": "{count} 个 Def 目标",

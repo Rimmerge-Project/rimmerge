@@ -207,7 +207,15 @@ contacts, and the Internet access switch has nothing to block here.
   names, Workshop ids and the game's major.minor version, nothing else:
   no path, profile, or account.
 - **Import** reads only the file you pick, or the text you paste (or pipe
-  to `order import -`), at most 4 MiB. The preview writes nothing. In the
+  to `order import -`), at most 4 MiB. For a RimWorld save it reads only the
+  `<meta>` header at the start of the file (the mod list the save was made
+  with, at most 4 MiB of it) and never decodes or changes the rest of the
+  save (it stops reading within 64 KiB after the header). *Import from a
+  save…* in the desktop app also lists the file names and modified dates of
+  the `.rws` files in RimWorld's `Saves` folder (the folder beside the
+  `Config` folder that holds `ModsConfig.xml`; directory information only,
+  no save is opened for the list); a save is opened only once you press
+  Preview on it or pick it with Browse. The preview writes nothing. In the
   desktop app, *Use this order* rescans your install with the list, and
   still writes nothing until you Apply. `order import` writes
   `ModsConfig.xml` after printing the same preview, with a backup first,

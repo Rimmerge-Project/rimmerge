@@ -100,6 +100,11 @@ export function useModActivation({
     return planAndAsk([...selectedIds.value], null, "ask");
   }
 
+  /** The mods of a group: plans exactly `ids` at their default place and opens the dialog. */
+  function openForIds(ids: string[]): Promise<void> {
+    return planAndAsk([...ids], null, "ask");
+  }
+
   /** A drop of `ids` at `anchor` (`null`: the default place). */
   function activateAt(ids: string[], anchor: AnchorDto | null): Promise<void> {
     return planAndAsk(ids, anchor, "commitIfPlain");
@@ -125,6 +130,7 @@ export function useModActivation({
     isPlanning,
     isCommitting,
     openDialog,
+    openForIds,
     activateAt,
     confirm,
   };

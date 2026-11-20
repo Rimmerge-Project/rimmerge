@@ -1,23 +1,29 @@
 <script setup lang="ts">
 import { useVirtualizer, type VirtualItem } from "@tanstack/vue-virtual";
-import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
 import Menu, { type MenuMethods } from "primevue/menu";
 import type { MenuItem } from "primevue/menuitem";
-import { computed, nextTick, ref, useTemplateRef, watch } from "vue";
+import { computed, ref, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
 
 import MembershipBadge from "@/components/mods/MembershipBadge.vue";
+import ModRowColor from "@/components/mods/ModRowColor.vue";
+import ModRowGroups from "@/components/mods/ModRowGroups.vue";
+import ModRowMenuButton from "@/components/mods/ModRowMenuButton.vue";
+import ModRowPosition from "@/components/mods/ModRowPosition.vue";
+import ModRowScanFacts from "@/components/mods/ModRowScanFacts.vue";
+import ModRowStatePill from "@/components/mods/ModRowStatePill.vue";
 import SourceBadge from "@/components/mods/SourceBadge.vue";
-import { isInert } from "@/composables/shortcutTargets";
-import { useDragAutoScroll } from "@/composables/useDragAutoScroll";
+import { isKeyboardOpen, markFirstMenuItem } from "@/composables/popupMenuFocus";
 import { useModLabel } from "@/composables/useModLabel";
+import { useRowDrag } from "@/composables/useRowDrag";
+import { useRowKeys } from "@/composables/useRowKeys";
 import { useTranslateMessage } from "@/composables/useTranslateMessage";
 import { descriptor } from "@/i18n/messageDescriptor";
 import type { ModListRowDto } from "@/types/generated/ModListRowDto";
-import { assertNever } from "@/utils/assertNever";
 import { updateUnavailableLabel } from "@/utils/modListSort";
 import { anchorForStep, moveSetFor } from "@/utils/modMove";
+import { COLOR_NAME_KEY } from "@/utils/organization";
 
 /** What this table's rows may be dragged to, set by the page from the drag in progress. */
 export type DropMode =
@@ -33,12 +39,13 @@ export type DropMode =
 /** Which row action button the rows carry. */
 export type RowMenu = "none" | "move" | "activate";
 
-/** A Move menu entry that is not a one-step move. */
-export type MenuAction = "top" | "bottom" | "after" | "activateAt";
+/** A row menu entry that is not a one-step move: a position, or one of the mod own organization dialogs. */
+export type MenuAction = "top" | "bottom" | "after" | "activateAt" | "groups" | "color";
 
 const {
   mods,
   selectable = false,
+  selectedIds = [],
   showActiveColumns = true,
   showUpdated = false,
   showPosition = false,
@@ -47,11 +54,14 @@ const {
   dropMode = "off",
   refusedText = "",
   rowMenu = "none",
+  hasOrganizationActions = false,
   reorderBlockedReason = null,
 } = defineProps<{
   mods: ModListRowDto[];
-  /** Adds a checkbox column bound to {@link selectedIds}. */
+  /** Adds a checkbox column showing {@link selectedIds}; every change goes out as an event for the owner's selection. */
   selectable?: boolean;
+  /** Selected ids, only meaningful while {@link selectable} is set. */
+  selectedIds?: readonly string[];
   /**
    * Whether the tags/hard-dependents columns show — off for the Inactive
    * tab, where both are always empty (the analyzer never computes tags
@@ -75,8 +85,10 @@ const {
   dropMode?: DropMode;
   /** Why a refused drag is refused, shown over the list while it hovers. */
   refusedText?: string;
-  /** The per-row action: a Move menu (Active), "Activate at…" (Inactive) or none. */
+  /** The per-row position actions: Move entries (Active), "Activate at…" (Inactive) or none. */
   rowMenu?: RowMenu;
+  /** Whether the row menu also offers the mod own "Groups…" and "Colour…" (organization is usable). */
+  hasOrganizationActions?: boolean;
   /** Why moving is off (set while the list is not in load order); `null` when it is on. */
   reorderBlockedReason?: string | null;
 }>();
@@ -87,12 +99,22 @@ const emit = defineEmits<{
   dragEnd: [];
   /** A drop; `slot` is the gap before that row index (`mods.length` is after the last row). */
   drop: [slot: number];
+  /** A Ctrl/Cmd+click, the checkbox or Space: toggle this row's selection. */
+  toggleSelect: [modId: string];
+  /** A plain click or plain keyboard movement: the range anchor follows to this row. */
+  anchorRow: [modId: string];
+  /** A Shift+click or Shift+Space: add the range from the selection anchor to this row. */
+  rangeSelect: [modId: string];
+  /** Shift+Arrow: extend the selection from the anchor to the row focus moved to. */
+  extendSelect: [fromModId: string, toModId: string];
+  /** Ctrl/Cmd+A: select every shown row. */
+  selectAll: [];
+  /** Escape with a selection: clear it. */
+  clearSelection: [];
   /** One shown row up or down, from the Move menu or Alt+Arrow. */
   moveStep: [modId: string, direction: "up" | "down"];
   menuAction: [modId: string, action: MenuAction];
 }>();
-/** Checked ids, only meaningful while {@link selectable} is set. */
-const selectedIds = defineModel<string[]>("selectedIds", { default: () => [] });
 const { t, locale } = useI18n();
 const tm = useTranslateMessage();
 const modLabel = useModLabel();
@@ -124,41 +146,9 @@ const visibleRows = computed<VisibleRow[]>(() =>
 );
 const totalSize = computed(() => virtualizer.value.getTotalSize());
 
-/** The roving-tabindex row — only this one is in the Tab order at a time. `null` before anything has been focused (every row then reads `tabindex="0"`, so the first Tab press lands on the first one). */
-const rovingIndex = computed<number | null>(() => {
-  const index = mods.findIndex((mod) => mod.modId === lastFocusedId.value);
-  return index >= 0 ? index : null;
-});
 const lastFocusedId = defineModel<string | null>("focusedId", { default: null });
 
-/** A row's tags; only a scanned row has any. */
-function tagsOf(mod: ModListRowDto): readonly string[] {
-  const state = mod.state;
-  switch (state.kind) {
-    case "scanned":
-      return state.tags;
-    case "pendingScan":
-    case "missing":
-      return [];
-    default:
-      return assertNever(state);
-  }
-}
-
-/** A row's Hard-dependent count; `null` while no scan facts exist for it. */
-function hardDependentsOf(mod: ModListRowDto): number | null {
-  const state = mod.state;
-  switch (state.kind) {
-    case "scanned":
-      return state.hardDependents;
-    case "pendingScan":
-    case "missing":
-      return null;
-    default:
-      return assertNever(state);
-  }
-}
-
+// One formatter for the whole table, not one per rendered row.
 const dateFormat = computed(() => new Intl.DateTimeFormat(locale.value, { dateStyle: "medium" }));
 
 /** A row's update time as a date in the app language, or the reason it has none. */
@@ -177,14 +167,10 @@ function updatedText(mod: ModListRowDto): string {
   return reason === null ? "" : tm(reason);
 }
 
-function isSelected(modId: string): boolean {
-  return selectedIds.value.includes(modId);
-}
+const selectedSet = computed(() => new Set(selectedIds));
 
-function toggleSelected(modId: string): void {
-  selectedIds.value = isSelected(modId)
-    ? selectedIds.value.filter((id) => id !== modId)
-    : [...selectedIds.value, modId];
+function isSelected(modId: string): boolean {
+  return selectedSet.value.has(modId);
 }
 
 function openRow(modId: string): void {
@@ -192,226 +178,91 @@ function openRow(modId: string): void {
 }
 
 /**
- * Tracks the roving-tabindex target only — never emits `focusMod`. A
- * plain click already fires `openRow`'s own immediate `selectMod`
- * synchronously, and a click also natively focuses the row (it has a
- * tabindex), so this same DOM `focus` event fires right alongside that
- * click every time. Emitting `focusMod` here too would arm the caller's
- * debounced auto-follow (`ModsPage.vue`'s `followFocus`) on every
- * click, racing it against whatever explicit navigation the click (or
- * something the user does moments later, e.g. inside the now-open
- * panel) already triggered — a stale timer could fire mid-flight and
- * cancel that explicit navigation. Only {@link moveFocus} (pure
- * keyboard arrow/Home/End movement, with no immediate navigation of its
- * own) emits `focusMod`.
+ * Ctrl/Cmd+click toggles and Shift+click extends a range, neither opening the info panel; a plain
+ * click only opens it and never touches the selection.
  */
-function onRowFocus(modId: string): void {
-  lastFocusedId.value = modId;
-}
-
-/** Moves roving focus by `delta` rows (±1), or to the very first/last row when `toEnd` is given. */
-async function moveFocus(delta: number, toEnd?: "start" | "end"): Promise<void> {
-  if (mods.length === 0) {
+function onRowClick(event: MouseEvent, modId: string): void {
+  if (selectable && (event.ctrlKey || event.metaKey)) {
+    emit("toggleSelect", modId);
     return;
   }
-  const current = rovingIndex.value ?? 0;
-  const target =
-    toEnd === "start"
-      ? 0
-      : toEnd === "end"
-        ? mods.length - 1
-        : Math.min(Math.max(current + delta, 0), mods.length - 1);
-  const targetMod = mods[target];
-  if (!targetMod) {
+  if (selectable && event.shiftKey) {
+    // Shift+click would otherwise also select the text between the two rows.
+    window.getSelection()?.removeAllRanges();
+    emit("rangeSelect", modId);
     return;
   }
-  await focusRow(targetMod.modId);
-  emit("focusMod", targetMod.modId);
+  emit("anchorRow", modId);
+  openRow(modId);
 }
 
 /**
- * Scrolls the row for `modId` into view and focuses it, whether or not it is rendered yet.
- * A row that is not in the list is ignored.
+ * A Shift+click on the row checkbox extends a range like one on the row; any other click is left
+ * to the checkbox, which toggles through its own change event.
  */
-async function focusRow(modId: string): Promise<void> {
-  const index = mods.findIndex((mod) => mod.modId === modId);
-  if (index === -1) {
-    return;
+function onCheckboxClick(event: MouseEvent, modId: string): void {
+  if (event.shiftKey) {
+    event.preventDefault();
+    window.getSelection()?.removeAllRanges();
+    emit("rangeSelect", modId);
   }
-  virtualizer.value.scrollToIndex(index);
-  lastFocusedId.value = modId;
-  // The target row may not exist in the DOM yet (virtualization) until
-  // the scroll above re-renders `visibleRows` — wait for Vue to flush
-  // that render before focusing it.
-  await nextTick();
-  const element = scrollElementRef.value?.querySelector<HTMLElement>(
-    `[data-testid="mod-row-${modId}"]`,
-  );
-  element?.focus();
 }
+
+/** Whether rows carry a ⋮ button and a menu at all. */
+const hasRowMenu = computed(() => rowMenu !== "none" || hasOrganizationActions);
+
+/**
+ * Whether the menu would hold one entry only: the Inactive list's "Activate at…" while
+ * organization is not usable. The button then runs it directly instead of opening a one-item menu.
+ */
+const isDirectActivate = computed(() => rowMenu === "activate" && !hasOrganizationActions);
+
+const { rovingIndex, onRowFocus, onRowKeydown, focusRow } = useRowKeys({
+  mods: () => mods,
+  focusedId: lastFocusedId,
+  isSelectable: () => selectable,
+  hasSelection: () => selectedIds.length > 0,
+  rowMenu: () => rowMenu,
+  hasRowMenu: () => hasRowMenu.value,
+  scrollToIndex: (index) => virtualizer.value.scrollToIndex(index),
+  getScroller: () => scrollElementRef.value,
+  actions: {
+    open: openRow,
+    setAnchor: (modId) => emit("anchorRow", modId),
+    toggleSelected: (modId) => emit("toggleSelect", modId),
+    selectRange: (modId) => emit("rangeSelect", modId),
+    extendSelection: (fromModId, toModId) => emit("extendSelect", fromModId, toModId),
+    selectAll: () => emit("selectAll"),
+    clearSelection: () => emit("clearSelection"),
+    moveStep: (modId, direction) => emit("moveStep", modId, direction),
+    openMenu: (event, modId) => onRowMenuClick(event, modId),
+    focusMod: (modId) => emit("focusMod", modId),
+  },
+});
 defineExpose({ focusRow });
 
-/**
- * Alt+ArrowUp/Down moves the row (the Active list only). Text entry and dialogs keep their own
- * keys (`isInert`); plain arrows stay the roving focus. Returns whether the key was consumed.
- */
-function onMoveKey(event: KeyboardEvent, modId: string): boolean {
-  if (!event.altKey || (event.key !== "ArrowUp" && event.key !== "ArrowDown")) {
-    return false;
-  }
-  if (isInert(event.target)) {
-    return true;
-  }
-  event.preventDefault();
-  if (rowMenu === "move") {
-    emit("moveStep", modId, event.key === "ArrowUp" ? "up" : "down");
-  }
-  return true;
-}
-
-/**
- * Shift+F10 or the ContextMenu key on a focused row opens that row's menu, the keyboard route to
- * the ⋮ button (which is out of the Tab order, so rows stay one tab stop each). The same inert
- * rules as the other row shortcuts apply. Returns whether the key was consumed.
- */
-function onMenuKey(event: KeyboardEvent, modId: string): boolean {
-  const isMenuKey = event.key === "ContextMenu" || (event.key === "F10" && event.shiftKey);
-  if (!isMenuKey || rowMenu === "none" || isInert(event.target)) {
-    return false;
-  }
-  // Without this the browser's own context menu opens over ours.
-  event.preventDefault();
-  onRowMenuClick(event, modId);
-  return true;
-}
-
-function onRowKeydown(event: KeyboardEvent, modId: string): void {
-  if (onMoveKey(event, modId) || onMenuKey(event, modId)) {
-    return;
-  }
-  switch (event.key) {
-    case "Enter":
-      openRow(modId);
-      break;
-    case " ":
-      if (selectable) {
-        event.preventDefault();
-        toggleSelected(modId);
-      }
-      break;
-    case "ArrowDown":
-      event.preventDefault();
-      void moveFocus(1);
-      break;
-    case "ArrowUp":
-      event.preventDefault();
-      void moveFocus(-1);
-      break;
-    case "Home":
-      event.preventDefault();
-      void moveFocus(0, "start");
-      break;
-    case "End":
-      event.preventDefault();
-      void moveFocus(0, "end");
-      break;
-    default:
-      break;
-  }
-}
-
 const draggingSet = computed(() => new Set(draggingIds));
-const autoScroll = useDragAutoScroll(() => scrollElementRef.value);
-/** The gap a position drop would land in (a line shows it); `null` when nothing hovers. */
-const dragSlot = ref<number | null>(null);
-const isHoveringPane = ref(false);
-const isHoveringRefused = ref(false);
-
-function clearHover(): void {
-  dragSlot.value = null;
-  isHoveringPane.value = false;
-  isHoveringRefused.value = false;
-  autoScroll.stop();
-}
-
-watch(
-  () => dropMode,
-  (mode) => {
-    if (mode === "off") {
-      clearHover();
-    }
+const {
+  dragSlot,
+  isHoveringPane,
+  isHoveringRefused,
+  onRowDragStart,
+  onRowDragEnd,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+} = useRowDrag({
+  getScroller: () => scrollElementRef.value,
+  rowCount: () => mods.length,
+  rowHeightPx: ROW_HEIGHT_PX,
+  isDraggable: () => draggable,
+  dropMode: () => dropMode,
+  actions: {
+    dragStart: (modId) => emit("dragStart", modId),
+    dragEnd: () => emit("dragEnd"),
+    drop: (slot) => emit("drop", slot),
   },
-);
-
-function onRowDragStart(event: DragEvent, modId: string): void {
-  if (!draggable) {
-    event.preventDefault();
-    return;
-  }
-  if (event.dataTransfer) {
-    // Some engines refuse to start a drag with no data.
-    event.dataTransfer.setData("text/plain", modId);
-    event.dataTransfer.effectAllowed = "move";
-  }
-  emit("dragStart", modId);
-}
-
-function onRowDragEnd(): void {
-  clearHover();
-  emit("dragEnd");
-}
-
-/** The gap nearest the pointer: the row's top half is the gap before it, the bottom half after. */
-function slotAt(event: DragEvent): number {
-  const scroller = scrollElementRef.value;
-  if (!scroller) {
-    return mods.length;
-  }
-  const offset = event.clientY - scroller.getBoundingClientRect().top + scroller.scrollTop;
-  return Math.min(Math.max(Math.round(offset / ROW_HEIGHT_PX), 0), mods.length);
-}
-
-function onDragOver(event: DragEvent): void {
-  if (dropMode === "off") {
-    return;
-  }
-  if (dropMode === "refused") {
-    // Not cancelling the event leaves the drop refused and shows the not-allowed cursor.
-    if (event.dataTransfer) {
-      event.dataTransfer.dropEffect = "none";
-    }
-    isHoveringRefused.value = true;
-    return;
-  }
-  event.preventDefault();
-  if (event.dataTransfer) {
-    event.dataTransfer.dropEffect = "move";
-  }
-  autoScroll.update(event);
-  if (dropMode === "position") {
-    dragSlot.value = slotAt(event);
-  } else {
-    isHoveringPane.value = true;
-  }
-}
-
-function onDragLeave(event: DragEvent): void {
-  const next = event.relatedTarget;
-  if (next instanceof Node && scrollElementRef.value?.contains(next)) {
-    return;
-  }
-  clearHover();
-}
-
-function onDrop(event: DragEvent): void {
-  if (dropMode !== "position" && dropMode !== "pane") {
-    return;
-  }
-  event.preventDefault();
-  const slot = dropMode === "position" ? slotAt(event) : mods.length;
-  clearHover();
-  emit("drop", slot);
-}
+});
 
 // One popup menu for the whole table: a menu per virtualized row would be a menu per row.
 const menu = useTemplateRef<MenuMethods>("moveMenu");
@@ -422,9 +273,48 @@ const menuItems = computed<MenuItem[]>(() => {
   if (modId === null) {
     return [];
   }
-  const moving = new Set(moveSetFor(modId, selectedIds.value, mods));
-  const isBlocked = reorderBlockedReason !== null;
   // `testId` rides along on the item (a MenuItem accepts extra keys) for the item template.
+  const positionItems = rowMenu === "move" ? moveItems(modId) : activateItems(modId);
+  if (!hasOrganizationActions) {
+    return positionItems;
+  }
+  const color = mods.find((mod) => mod.modId === modId)?.color ?? null;
+  const organizationItems: MenuItem[] = [
+    {
+      label: t("mods.groups.rowMenu.groups"),
+      testId: "mod-menu-groups",
+      command: () => emit("menuAction", modId, "groups"),
+    },
+    {
+      label:
+        color === null
+          ? t("mods.groups.rowMenu.color")
+          : t("mods.groups.rowMenu.colorCurrent", { name: t(COLOR_NAME_KEY[color]) }),
+      testId: "mod-menu-color",
+      command: () => emit("menuAction", modId, "color"),
+    },
+  ];
+  return positionItems.length === 0
+    ? organizationItems
+    : [...positionItems, { separator: true }, ...organizationItems];
+});
+
+function activateItems(modId: string): MenuItem[] {
+  if (rowMenu !== "activate") {
+    return [];
+  }
+  return [
+    {
+      label: t("mods.move.activateAtItem"),
+      testId: "mod-activate-at",
+      command: () => emit("menuAction", modId, "activateAt"),
+    },
+  ];
+}
+
+function moveItems(modId: string): MenuItem[] {
+  const moving = new Set(moveSetFor(modId, selectedIds, mods));
+  const isBlocked = reorderBlockedReason !== null;
   return [
     {
       label: t("mods.move.up"),
@@ -457,24 +347,29 @@ const menuItems = computed<MenuItem[]>(() => {
       command: () => emit("menuAction", modId, "after"),
     },
   ];
-});
+}
 
-/** The row button: the Active list opens the Move menu, the Inactive list goes straight to "Activate at…". */
+/** Whether the open menu came from the keyboard, so its first item is marked once it shows. */
+let isMenuFromKeyboard = false;
+
+/**
+ * The row button (and Shift+F10): opens the one shared menu for this row, or, with a single
+ * possible entry, runs it.
+ */
 function onRowMenuClick(event: Event, modId: string): void {
-  if (rowMenu === "activate") {
+  if (isDirectActivate.value) {
     emit("menuAction", modId, "activateAt");
     return;
   }
   menuModId.value = modId;
+  isMenuFromKeyboard = isKeyboardOpen(event);
   menu.value?.toggle(event);
 }
 
-/** The row button's name and tooltip. */
-function rowMenuLabel(modId: string): string {
-  const name = modLabel.label(modId);
-  return rowMenu === "move"
-    ? t("mods.move.menuButton", { name })
-    : t("mods.move.activateAtButton", { name });
+function onMenuShown(): void {
+  if (isMenuFromKeyboard) {
+    markFirstMenuItem();
+  }
 }
 </script>
 
@@ -484,7 +379,9 @@ function rowMenuLabel(modId: string): string {
       ref="scrollElement"
       class="surface-card @container min-h-0 flex-1 overflow-y-auto"
       :class="isHoveringPane ? 'outline-accent outline-2 -outline-offset-2' : ''"
-      role="table"
+      role="grid"
+      :aria-multiselectable="selectable ? 'true' : undefined"
+      :aria-rowcount="mods.length"
       :aria-label="t('mods.table.regionLabel')"
       data-testid="mod-table"
       @dragover="onDragOver"
@@ -507,104 +404,93 @@ function rowMenuLabel(modId: string): string {
           v-for="{ virtualRow, mod } in visibleRows"
           :key="mod.modId"
           role="row"
+          :aria-rowindex="virtualRow.index + 1"
           :tabindex="rovingIndex === null ? (virtualRow.index === 0 ? 0 : -1) : virtualRow.index === rovingIndex ? 0 : -1"
           :aria-current="mod.modId === lastFocusedId ? 'true' : undefined"
+          :aria-selected="selectable ? isSelected(mod.modId) : undefined"
           :draggable="draggable"
           class="border-border-subtle hover:bg-surface-2 focus-visible:bg-accent-soft absolute top-0 left-0 flex w-full cursor-pointer items-center gap-2 overflow-hidden border-b @lg:gap-3 px-3 text-sm focus-visible:outline"
-          :class="draggingSet.has(mod.modId) ? 'opacity-50' : ''"
+          :class="[
+            draggingSet.has(mod.modId) ? 'opacity-50' : '',
+            selectable && isSelected(mod.modId) ? 'inset-ring-accent inset-ring-2' : '',
+          ]"
           :style="{
             height: `${virtualRow.size}px`,
             transform: `translateY(${virtualRow.start}px)`,
           }"
           :data-testid="`mod-row-${mod.modId}`"
-          @click="openRow(mod.modId)"
+          @click="onRowClick($event, mod.modId)"
           @keydown="onRowKeydown($event, mod.modId)"
           @focus="onRowFocus(mod.modId)"
           @dragstart="onRowDragStart($event, mod.modId)"
           @dragend="onRowDragEnd"
         >
-          <Checkbox
+          <ModRowColor
+            :color="mod.color"
+            part="stripe"
+          />
+          <div
             v-if="selectable"
-            class="shrink-0"
-            binary
-            :model-value="isSelected(mod.modId)"
-            :data-testid="`mod-row-select-${mod.modId}`"
-            @click.stop
-            @update:model-value="toggleSelected(mod.modId)"
-          />
-          <template v-if="showPosition && mod.position !== null">
-            <span
-              class="text-text-muted w-10 shrink-0 text-right text-xs tabular-nums"
-              aria-hidden="true"
-              :data-testid="`mod-row-position-${mod.modId}`"
-            >#{{ mod.position + 1 }}</span>
-            <span class="sr-only">{{ t("mods.table.loadOrderPosition", { position: mod.position + 1 }) }}</span>
-          </template>
-          <SourceBadge :source="mod.source" />
-          <span
-            class="text-text min-w-12 flex-1 truncate font-medium"
-            :title="modLabel.titleFor(mod.modId)"
-            :data-testid="`mod-row-name-${mod.modId}`"
-          >{{ modLabel.label(mod.modId) }}</span>
-          <MembershipBadge :mark="mod.membership" />
-          <span
-            v-if="mod.state.kind === 'missing'"
-            class="bg-status-danger-soft text-status-danger shrink-0 rounded px-1.5 py-0.5 text-xs font-medium"
-            data-testid="mod-row-missing-pill"
-          >{{ t("mods.table.missing") }}</span>
-          <span
-            v-else-if="showActiveColumns && mod.state.kind === 'pendingScan'"
-            role="img"
-            class="bg-surface-2 text-text-muted inline-flex shrink-0 items-center rounded px-1.5 py-0.5 text-xs font-medium"
-            :aria-label="t('mods.table.pendingScan')"
-            :title="t('mods.table.pendingScan')"
-            data-testid="mod-row-pending-scan-pill"
+            role="gridcell"
+            class="contents"
           >
-            <!-- One accessible name on this wrapper, as SourceBadge does. Narrow, the words give way to an icon; a keyboard user has no hover tooltip, so the state reaches them through this name and the pending-changes banner. -->
+            <Checkbox
+              class="shrink-0"
+              binary
+              :model-value="isSelected(mod.modId)"
+              :data-testid="`mod-row-select-${mod.modId}`"
+              @click.stop="onCheckboxClick($event, mod.modId)"
+              @update:model-value="emit('toggleSelect', mod.modId)"
+            />
+          </div>
+          <div
+            role="gridcell"
+            class="contents"
+          >
+            <ModRowPosition
+              v-if="showPosition && mod.position !== null"
+              :mod-id="mod.modId"
+              :position="mod.position"
+            />
+            <ModRowColor
+              :color="mod.color"
+              part="name"
+            />
+            <SourceBadge :source="mod.source" />
             <span
-              class="hidden @md:inline"
-              aria-hidden="true"
-            >{{ t("mods.table.pendingScan") }}</span>
+              class="text-text min-w-12 flex-1 truncate font-medium"
+              :title="modLabel.titleFor(mod.modId)"
+              :data-testid="`mod-row-name-${mod.modId}`"
+            >{{ modLabel.label(mod.modId) }}</span>
+            <MembershipBadge :mark="mod.membership" />
+            <ModRowStatePill
+              :state="mod.state"
+              :show-pending-scan="showActiveColumns"
+            />
+            <ModRowGroups :groups="mod.groups" />
             <span
-              class="@md:hidden"
-              aria-hidden="true"
-            ><span class="pi pi-clock" /></span>
-          </span>
-          <span
-            v-if="showUpdated"
-            class="text-text-muted w-20 min-w-0 truncate text-right text-xs @lg:w-28 @lg:shrink-0"
-            :title="updatedText(mod)"
-            :data-testid="`mod-row-updated-${mod.modId}`"
-          >{{ updatedText(mod) }}</span>
-          <template v-if="showActiveColumns">
-            <span
-              v-if="tagsOf(mod).length > 0"
-              class="hidden min-w-0 gap-1 overflow-hidden @md:flex"
-            >
-              <span
-                v-for="tag in tagsOf(mod)"
-                :key="tag"
-                class="bg-surface-2 text-text-muted shrink-0 rounded px-1.5 py-0.5 text-xs"
-              >{{ tag }}</span>
-            </span>
-            <span class="text-text-muted hidden w-10 shrink-0 text-right text-xs @md:inline">{{ hardDependentsOf(mod) ?? "—" }}</span>
-          </template>
-          <Button
-            v-if="rowMenu !== 'none'"
-            class="shrink-0"
-            icon="pi pi-ellipsis-v"
-            severity="secondary"
-            text
-            rounded
-            size="small"
-            tabindex="-1"
-            :aria-haspopup="rowMenu === 'move' ? 'menu' : 'dialog'"
-            :aria-label="rowMenuLabel(mod.modId)"
-            :title="rowMenuLabel(mod.modId)"
-            :data-testid="`mod-row-menu-${mod.modId}`"
-            @click.stop="onRowMenuClick($event, mod.modId)"
-            @keydown.stop
-          />
+              v-if="showUpdated"
+              class="text-text-muted w-20 min-w-0 truncate text-right text-xs @lg:w-28 @lg:shrink-0"
+              :title="updatedText(mod)"
+              :data-testid="`mod-row-updated-${mod.modId}`"
+            >{{ updatedText(mod) }}</span>
+            <ModRowScanFacts
+              :state="mod.state"
+              :show-dependents="showActiveColumns"
+            />
+          </div>
+          <div
+            v-if="hasRowMenu"
+            role="gridcell"
+            class="contents"
+          >
+            <ModRowMenuButton
+              :mod-id="mod.modId"
+              :name="modLabel.label(mod.modId)"
+              :is-direct="isDirectActivate"
+              @open="onRowMenuClick($event, mod.modId)"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -616,11 +502,12 @@ function rowMenuLabel(modId: string): string {
       {{ refusedText }}
     </p>
     <Menu
-      v-if="rowMenu === 'move'"
+      v-if="hasRowMenu"
       ref="moveMenu"
       popup
       :model="menuItems"
       data-testid="mod-move-menu"
+      @show="onMenuShown"
     >
       <template #item="{ item, props }">
         <a
@@ -631,7 +518,7 @@ function rowMenuLabel(modId: string): string {
         </a>
       </template>
       <template
-        v-if="reorderBlockedReason !== null"
+        v-if="rowMenu === 'move' && reorderBlockedReason !== null"
         #end
       >
         <p

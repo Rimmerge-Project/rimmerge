@@ -9,21 +9,30 @@ import BaseEmpty from "@/components/base/BaseEmpty.vue";
 import ModDescription from "@/components/mods/ModDescription.vue";
 import ModInfoFacts from "@/components/mods/ModInfoFacts.vue";
 import ModPreview from "@/components/mods/ModPreview.vue";
+import { isInsideMenu } from "@/composables/popupMenuFocus";
 import { isInert } from "@/composables/shortcutTargets";
 import { useModLabel } from "@/composables/useModLabel";
 import { useTranslateMessage } from "@/composables/useTranslateMessage";
 import { formatList } from "@/i18n/format";
 import { useModIconQuery, useModInfoQuery, useOpenModLinkMutation } from "@/queries/mods";
 import { RimmergeError } from "@/services/ipc";
+import type { ColorTokenDto } from "@/types/generated/ColorTokenDto";
+import type { GroupLabelDto } from "@/types/generated/GroupLabelDto";
 import type { HomepageLinkDto } from "@/types/generated/HomepageLinkDto";
 import type { ModInfoDto } from "@/types/generated/ModInfoDto";
 import type { PendingChangeDto } from "@/types/generated/PendingChangeDto";
 import { describeAboutUnreadable } from "@/utils/aboutUnreadable";
 import { assertNever } from "@/utils/assertNever";
 import { describeCommandError } from "@/utils/errors";
+import { COLOR_NAME_KEY, COLOR_SWATCH_CLASS } from "@/utils/organization";
 import { sourceLabel } from "@/utils/source";
 
-const { modId, isOverlay = false } = defineProps<{
+const {
+  modId,
+  isOverlay = false,
+  color = null,
+  groups = [],
+} = defineProps<{
   /** `null` closes the panel; a mod id opens it and loads that mod's info. */
   modId: string | null;
   /**
@@ -31,6 +40,10 @@ const { modId, isOverlay = false } = defineProps<{
    * column: the Mods page does so below very wide windows, where the two lists need the width.
    */
   isOverlay?: boolean;
+  /** The mod's own colour, from its row in the list; `null` for none or when no row is shown. */
+  color?: ColorTokenDto | null;
+  /** The groups the mod is a direct member of, from its row in the list. */
+  groups?: readonly GroupLabelDto[];
 }>();
 const emit = defineEmits<{ close: [] }>();
 
@@ -100,7 +113,12 @@ const panel = useTemplateRef<HTMLElement>("panel");
 // the lists, so it closes from anywhere on the page; a panel in its own column only from inside
 // it. Either way a dialog or a text field keeps its own Escape.
 useEventListener(window, "keydown", (event: KeyboardEvent) => {
-  if (modId === null || event.key !== "Escape" || isInert(event.target)) {
+  if (
+    modId === null ||
+    event.key !== "Escape" ||
+    isInert(event.target) ||
+    isInsideMenu(event.target)
+  ) {
     return;
   }
   const isInsidePanel =
@@ -244,6 +262,25 @@ function pendingChangeText(pending: PendingChangeDto): string {
         </p>
         <p class="text-text-muted text-xs">
           {{ tm(sourceLabel(activeOrInactive.source)) }}
+        </p>
+        <p
+          v-if="color !== null"
+          class="text-text-muted flex items-center gap-1.5 text-xs"
+          data-testid="mod-info-color"
+        >
+          <span
+            class="size-3 shrink-0 rounded-full"
+            :class="COLOR_SWATCH_CLASS[color]"
+            aria-hidden="true"
+          />
+          {{ t("mods.colors.rowColor", { name: t(COLOR_NAME_KEY[color]) }) }}
+        </p>
+        <p
+          v-if="groups.length > 0"
+          class="text-text-muted text-xs"
+          data-testid="mod-info-groups"
+        >
+          {{ t("mods.groups.allGroups", { groups: formatList(locale, groups.map((group) => group.name)) }) }}
         </p>
         <p
           v-if="activeOrInactive.kind === 'active'"

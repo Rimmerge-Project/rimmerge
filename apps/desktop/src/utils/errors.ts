@@ -162,6 +162,10 @@ const ERROR_CODE_KEYS = {
     title: "error.code.mod_list_io_failed.title",
     detail: "error.code.mod_list_io_failed.detail",
   },
+  saves_folder_unreadable: {
+    title: "error.code.saves_folder_unreadable.title",
+    detail: "error.code.saves_folder_unreadable.detail",
+  },
   nothing_to_export: {
     title: "error.code.nothing_to_export.title",
     detail: "error.code.nothing_to_export.detail",
@@ -177,6 +181,26 @@ const ERROR_CODE_KEYS = {
   revert_order_membership_differs: {
     title: "error.code.revert_order_membership_differs.title",
     detail: "error.code.revert_order_membership_differs.detail",
+  },
+  organization_unavailable: {
+    title: "error.code.organization_unavailable.title",
+    detail: "error.code.organization_unavailable.detail",
+  },
+  group_not_found: {
+    title: "error.code.group_not_found.title",
+    detail: "error.code.group_not_found.detail",
+  },
+  group_name_taken: {
+    title: "error.code.group_name_taken.title",
+    detail: "error.code.group_name_taken.detail",
+  },
+  group_cycle: {
+    title: "error.code.group_cycle.title",
+    detail: "error.code.group_cycle.detail",
+  },
+  organization_limit: {
+    title: "error.code.organization_limit.title",
+    detail: "error.code.organization_limit.detail",
   },
 } satisfies Record<CommandErrorCode, { title: string; detail: string }>;
 

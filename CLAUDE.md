@@ -35,7 +35,10 @@ composition roots with no business logic.
   `order import`, and `patch|assign export --install`. Run any of them
   against the real install only when a human asks for it. Likewise no
   test or manual run writes into the real `ModLists` folder (RimWorld's
-  own saved mod lists, where `order export --out` may be pointed).
+  own saved mod lists, where `order export --out` may be pointed) or into
+  the real `Saves` folder (RimWorld's saves). The real-install tier reads
+  one save from it, strictly read-only (`order import --dry-run`), and only
+  its `<meta>` header.
 - IMPORTANT: agents and tests never start the real game — no call to
   the real `SystemGameLauncher::launch`, no `steam://` URL opened, no
   `RimWorldWin64.exe` spawned. Tests inject a fake launcher

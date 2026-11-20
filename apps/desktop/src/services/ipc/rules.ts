@@ -2,6 +2,7 @@
 
 import type { DeleteRuleRequestDto } from "@/types/generated/DeleteRuleRequestDto";
 import type { ImportReportDto } from "@/types/generated/ImportReportDto";
+import type { ManualTagsOutcomeDto } from "@/types/generated/ManualTagsOutcomeDto";
 import type { OrphanedDecisionDto } from "@/types/generated/OrphanedDecisionDto";
 import type { RecommendedRulesReportDto } from "@/types/generated/RecommendedRulesReportDto";
 import type { RecommendedRulesStepDto } from "@/types/generated/RecommendedRulesStepDto";
@@ -14,6 +15,7 @@ import type { RuleFilterDto } from "@/types/generated/RuleFilterDto";
 import type { RuleKeyDto } from "@/types/generated/RuleKeyDto";
 import type { RuleSetDto } from "@/types/generated/RuleSetDto";
 import type { SetManualTagRequestDto } from "@/types/generated/SetManualTagRequestDto";
+import type { SetManualTagsRequestDto } from "@/types/generated/SetManualTagsRequestDto";
 import type { TaggingDto } from "@/types/generated/TaggingDto";
 import { call } from "./core";
 
@@ -111,4 +113,9 @@ export function listTags(): Promise<TaggingDto> {
 /** Sets (or replaces) a manual tag override, persisting the change. */
 export function setManualTag(request: SetManualTagRequestDto): Promise<TaggingDto> {
   return call("set_manual_tag", { request });
+}
+
+/** Adds or removes one manual tag on many mods: one save, no re-sort. */
+export function setManualTags(request: SetManualTagsRequestDto): Promise<ManualTagsOutcomeDto> {
+  return call("set_manual_tags", { request });
 }

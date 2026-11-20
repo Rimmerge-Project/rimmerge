@@ -14,6 +14,10 @@ import type { ModListDto } from "@/types/generated/ModListDto";
 import type { ModListRowDto } from "@/types/generated/ModListRowDto";
 import { assertNever } from "@/utils/assertNever";
 import { describeCommandError } from "@/utils/errors";
+
+/** The row menu entries that place a mod; Groups and Color are the page's own dialogs. */
+type PositionMenuAction = Exclude<MenuAction, "groups" | "color">;
+
 import { anchorForSlot, anchorForStep, isNoopSlot, moveSetFor } from "@/utils/modMove";
 
 /** Which of the two lists a drag started in or a drop landed on. */
@@ -25,6 +29,8 @@ export interface DragState {
   readonly ids: readonly string[];
   /** Whether Core is among the shown dragged rows, which cannot leave the Active list. */
   readonly includesCore: boolean;
+  /** How many carried mods are selected rows the list's filter hides. */
+  readonly hiddenCount: number;
 }
 
 /** A pending "Move after…" or "Activate at…" choice: the mods and what the choice does. */
@@ -101,9 +107,11 @@ export function useModReorder({
     const selected = from === "active" ? selectedActiveIds.value : selectedInactiveIds.value;
     const ids = moveSetFor(modId, selected, rows);
     const dragged = new Set(ids);
+    const shownIds = new Set(rows.map((row) => row.modId));
     drag.value = {
       from,
       ids,
+      hiddenCount: ids.filter((id) => !shownIds.has(id)).length,
       includesCore: rows.some((row) => dragged.has(row.modId) && row.source === "core"),
     };
   }
@@ -279,7 +287,7 @@ export function useModReorder({
   }
 
   /** The Move menu's other entries, and an inactive row's "Activate at…". */
-  async function menuAction(modId: string, action: MenuAction): Promise<void> {
+  async function menuAction(modId: string, action: PositionMenuAction): Promise<void> {
     switch (action) {
       case "top":
       case "bottom": {
@@ -325,6 +333,7 @@ export function useModReorder({
     announcement,
     isReorderable,
     reorderBlockedReason,
+    announce,
     startDrag,
     endDrag,
     dropModeFor,

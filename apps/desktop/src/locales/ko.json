@@ -243,7 +243,7 @@
     "droppedClusterRules": "규칙을 불러올 때 마이그레이션 이전 클러스터 규칙 {count}개를 버렸습니다: {ids}",
     "unknownModKnowledgeValue": "{section} 규칙에서 알 수 없는 {what} 값을 무시했습니다: \"{value}\"",
     "modKnowledgeCacheUnreadableHeadline": "캐시된 Rimmerge 규칙을 읽을 수 없어 내장 스냅샷을 사용합니다",
-    "rowsOverRoleLimit": "{section} 규칙의 {role} 그룹에서 역할별 한도를 넘은 행 {count}개를 무시했습니다",
+    "rowsOverRoleLimit": "{section} 규칙에서 {role} 역할의 역할별 한도를 넘은 행 {count}개를 무시했습니다",
     "precedenceRuleMissingFramework": "{defType}의 우선순위 규칙을 무시했습니다: 프레임워크가 지정되지 않았습니다",
     "what": {
       "precedenceRule": "우선순위 규칙",
@@ -568,6 +568,10 @@
         "title": "RimWorld가 시작되지 않음",
         "detail": "Windows가 RimWorldWin64.exe 파일을 시작하지 못했습니다."
       },
+      "saves_folder_unreadable": {
+        "title": "Saves 폴더를 읽을 수 없음",
+        "detail": "Rimmerge가 RimWorld의 Saves 폴더에 있는 파일 목록을 읽지 못했습니다. 대신 '찾아보기…'로 저장 파일을 선택하세요."
+      },
       "mod_list_io_failed": {
         "title": "모드 목록을 읽거나 쓸 수 없음",
         "detail": "모드 목록 파일을 읽거나 쓸 수 없습니다. 파일(저장할 때는 저장할 폴더)이 있는지, 그리고 그 위치에서 파일을 열거나 저장할 권한이 있는지 확인하세요."
@@ -587,6 +591,26 @@
       "revert_order_membership_differs": {
         "title": "저장된 목록의 모드가 다름",
         "detail": "저장된 활성 모드가 현재 순서와 다르므로 되돌아갈 순서가 없습니다. 저장된 목록을 대신 사용하려면 '로드 순서' 페이지의 '가져오기'에서 여세요. 그렇지 않으면 직접 정한 순서를 적용하세요."
+      },
+      "organization_unavailable": {
+        "title": "지금은 그룹을 변경할 수 없음",
+        "detail": "Rimmerge가 organization.json 파일을 읽지 못해 그룹과 색상이 읽기 전용 상태입니다. 새로 만들려면 '모드' 페이지에서 '처음부터 다시 시작…'을 선택하세요(파일 사본은 보관됩니다). 또는 파일을 수정한 다음 다시 스캔하세요."
+      },
+      "group_not_found": {
+        "title": "그룹이 더 이상 존재하지 않음",
+        "detail": "삭제되었을 수 있습니다. 그룹 목록을 새로 고쳤으니 다시 시도하세요."
+      },
+      "group_name_taken": {
+        "title": "이미 사용 중인 그룹 이름",
+        "detail": "같은 단계에 이 이름을 쓰는 다른 그룹이 있습니다. 이름은 대소문자를 구분하지 않습니다."
+      },
+      "group_cycle": {
+        "title": "그룹을 자기 자신 안에 넣을 수 없음",
+        "detail": "해당 그룹과 그 하위 그룹 밖의 위치를 선택하세요."
+      },
+      "organization_limit": {
+        "title": "그룹 한도에 도달함",
+        "detail": "그룹과 색상의 한도(그룹 수, 중첩 깊이, 그룹에 넣거나 색상을 지정한 모드 수, 그룹 파일(organization.json)의 크기)에 도달했습니다. 아무것도 변경되지 않았습니다. 더 이상 필요 없는 그룹, 그룹 안의 모드 또는 색상을 제거한 다음 다시 시도하세요."
       }
     }
   },
@@ -1263,7 +1287,8 @@
         "removed": "제거됨",
         "addedTitle": "저장된 활성 모드 목록에 아직 없습니다. 적용하면 추가됩니다.",
         "removedTitle": "저장된 활성 모드 목록에 있습니다. 적용하면 제거됩니다."
-      }
+      },
+      "rowActionsButton": "{name} 작업"
     },
     "sort": {
       "groupLabel": "정렬 순서",
@@ -1380,12 +1405,75 @@
       "ariaLabel": "Def로 이동",
       "placeholder": "Def로 이동…"
     },
+    "bulk": {
+      "region": "{list} 목록에서 선택한 모드에 대한 작업",
+      "addToGroup": "그룹에 추가…",
+      "removeFromGroup": "그룹에서 제거…",
+      "moveToGroup": "그룹으로 이동…",
+      "color": "색상…",
+      "tagsButton": "태그…",
+      "tags": {
+        "title": "선택한 모드의 태그",
+        "help": "선택한 모든 모드에 태그를 추가하거나 제거합니다. 제거하면 태그가 표시된 선택한 모든 모드에서 태그가 빠지며, 직접 추가한 태그인지 Rimmerge가 추론한 태그인지는 상관없습니다. 태그가 표시되지 않은 모드는 그대로 둡니다. 추가하면 이미 추론으로 태그가 표시된 모드에도 태그가 고정되므로, 다시 스캔했을 때 더 이상 추론되지 않아도 태그가 유지됩니다. 태그는 로드 순서를 바꾸지 않습니다.",
+        "label": "태그",
+        "format": "영문 소문자(a~z), 숫자, 하이픈(-), 밑줄(_)을 사용하세요.",
+        "addButton": "태그 추가",
+        "removeButton": "태그 제거"
+      },
+      "dialog": {
+        "addTitle": "그룹에 추가",
+        "removeTitle": "그룹에서 제거",
+        "moveTitle": "그룹으로 이동",
+        "addButton": "추가",
+        "removeButton": "제거",
+        "moveButton": "이동",
+        "noGroups": "아직 그룹이 없습니다. 먼저 '그룹' 패널에서 그룹을 만드세요.",
+        "loading": "이 모드들이 속한 그룹을 확인하는 중…",
+        "failed": "이 모드들이 속한 그룹을 확인하지 못했습니다. 이 대화 상자를 닫고 다시 시도하세요.",
+        "noneInGroups": "선택한 모드 중 그룹에 속한 모드가 없습니다.",
+        "addHelp": "모드가 선택한 그룹에 추가됩니다. 모드가 속한 다른 그룹은 모두 그대로 유지됩니다.",
+        "removeHelp": "모드가 선택한 그룹에서 빠집니다. 모드가 속한 다른 그룹은 바뀌지 않습니다.",
+        "moveHelp": "이동하면 모드가 한 그룹에서 빠지고 다른 그룹에 들어갑니다. 첫 번째 그룹에 없는 모드는 그대로 둡니다.",
+        "targetLegend": "그룹",
+        "removeLegend": "모드를 제거할 그룹",
+        "fromLegend": "이동 전 그룹",
+        "toLegend": "이동할 그룹",
+        "sameGroup": "이동 전 그룹과 같음",
+        "holdsCount": "선택한 모드 {count}개가 속해 있음"
+      },
+      "toast": {
+        "added": "{name} 그룹에 모드 {count}개를 추가했습니다",
+        "alreadyIn": "{count}개는 이미 그룹에 있었습니다",
+        "removed": "{name} 그룹에서 모드 {count}개를 제거했습니다",
+        "notIn": "{count}개는 그룹에 없었습니다",
+        "moved": "모드 {count}개를 {from} 그룹에서 {to} 그룹으로 이동했습니다",
+        "notInSource": "{count}개는 {name} 그룹에 없어서 이동하지 않았습니다",
+        "alreadyInTarget": "{count}개는 이미 {name} 그룹에 있었습니다",
+        "colorSet": "모드 {count}개의 색상을 지정했습니다",
+        "colorCleared": "모드 {count}개의 색상을 제거했습니다",
+        "unchanged": "{count}개는 변경되지 않았습니다",
+        "keptByDecision": "'발견 사항' 페이지의 결정 때문에 모드 {count}개에는 태그가 유지됩니다",
+        "tagAdded": "모드 {count}개에 {tag} 태그를 추가했습니다",
+        "tagRemoved": "모드 {count}개에서 {tag} 태그를 제거했습니다"
+      },
+      "scope": {
+        "activateGroup": "이 그룹의 모드 {count}개 활성화",
+        "activateTree": "하위 그룹 포함 모드 {count}개 활성화",
+        "deactivateGroup": "이 그룹의 모드 {count}개 비활성화",
+        "deactivateTree": "하위 그룹 포함 모드 {count}개 비활성화",
+        "notInstalled": "모드 {count}개는 설치되어 있지 않아 건너뜁니다",
+        "hidden": "{count}개는 현재 필터 때문에 표시되지 않습니다",
+        "nothingToActivate": "이 그룹에는 활성화할 수 있는 모드가 없습니다. 이미 활성 상태이거나 설치되어 있지 않습니다.",
+        "nothingToDeactivate": "이 그룹에는 활성 상태인 모드가 없습니다."
+      }
+    },
     "selection": {
       "selectAllShown": "표시된 {count}개 모두 선택",
       "selectAllEmpty": "모두 선택",
       "selectedCount": "{count}개 선택됨",
-      "notShown": "({count}개 표시되지 않음)",
-      "clear": "선택 해제"
+      "clear": "선택 해제",
+      "selectedCountHidden": "{selected} ({hidden})",
+      "hiddenPart": "{count}개 표시되지 않음"
     },
     "move": {
       "up": "위로 이동",
@@ -1393,7 +1481,6 @@
       "top": "맨 위로 이동",
       "bottom": "맨 아래로 이동",
       "after": "다른 모드 뒤로 이동…",
-      "menuButton": "{name} 이동",
       "activateAtButton": "{name} 활성화 위치 선택…",
       "afterDialogHeader": "다른 모드 뒤로 이동",
       "activateAtDialogHeader": "지정한 위치에 활성화",
@@ -1414,7 +1501,167 @@
       "viewSuggested": "제안된 순서 보기",
       "suggestedNote": "적용하면 제안된 순서가 기록됩니다. 모드를 이동하면 직접 정한 순서로 전환됩니다.",
       "coreStaysActive": "코어는 비활성화할 수 없습니다.",
-      "inactiveNotOrdered": "이 목록에는 자체 순서가 없습니다. 모드를 활성화하려면 활성 목록으로 끌어다 놓으세요."
+      "inactiveNotOrdered": "이 목록에는 자체 순서가 없습니다. 모드를 활성화하려면 활성 목록으로 끌어다 놓으세요.",
+      "activateAtItem": "활성화 위치 선택…"
+    },
+    "colors": {
+      "names": {
+        "red": "빨강",
+        "orange": "주황",
+        "amber": "노랑",
+        "lime": "연두",
+        "green": "초록",
+        "teal": "청록",
+        "cyan": "하늘색",
+        "blue": "파랑",
+        "indigo": "남색",
+        "violet": "보라",
+        "pink": "분홍",
+        "slate": "회색"
+      },
+      "rowColor": "색상: {name}",
+      "groupTitle": "그룹 색상",
+      "modTitle": "모드 색상",
+      "groupHelp": "색상은 트리와 모드 행에서 그룹을 표시합니다. 그 밖에는 아무것도 바꾸지 않습니다.",
+      "modHelp": "색상은 모드 행에서 이 모드를 표시합니다. 로드 순서는 바뀌지 않습니다.",
+      "modsTitle": "선택한 모드의 색상",
+      "modsHelp": "색상은 선택한 각 모드를 해당 행에서 표시합니다. 로드 순서는 바뀌지 않습니다.",
+      "legend": "색상",
+      "none": "색상 없음",
+      "apply": "색상 지정",
+      "toast": {
+        "groupChanged": "그룹 색상을 변경했습니다",
+        "modChanged": "{name} 모드의 색상을 변경했습니다",
+        "modCleared": "{name} 모드의 색상을 제거했습니다"
+      }
+    },
+    "groups": {
+      "regionLabel": "그룹",
+      "heading": "그룹",
+      "help": "그룹은 모드를 찾기 쉽게 해 줄 뿐입니다. 파일을 옮기거나 로드 순서를 바꾸지 않습니다.",
+      "openButton": "그룹",
+      "close": "그룹 닫기",
+      "treeLabel": "그룹",
+      "allMods": "모든 모드",
+      "ungrouped": "그룹 없음",
+      "newGroup": "새 그룹",
+      "actions": "그룹 작업",
+      "actionsFor": "{name} 작업",
+      "searchLabel": "그룹 검색",
+      "searchPlaceholder": "그룹 검색…",
+      "empty": "아직 그룹이 없습니다. 그룹을 만들어 모드 정리를 시작하세요.",
+      "noMatches": "일치하는 그룹이 없습니다.",
+      "nodeModCount": "하위 그룹 포함 모드 {count}개",
+      "nodeSubgroupCount": "하위 그룹 {count}개",
+      "chipWithColor": "{name} ({color})",
+      "allGroups": "소속 그룹: {groups}",
+      "rowMenu": {
+        "groups": "그룹…",
+        "color": "색상…",
+        "colorCurrent": "색상 ({name})…"
+      },
+      "menu": {
+        "newSubgroup": "새 하위 그룹…",
+        "rename": "이름 변경…",
+        "color": "색상…",
+        "move": "그룹 이동…",
+        "activateAll": "모드 {count}개 활성화…",
+        "deactivateAll": "모드 {count}개 비활성화…",
+        "nothingToActivate": "활성화할 모드 없음",
+        "nothingToDeactivate": "비활성화할 모드 없음",
+        "checkingScope": "이 그룹의 모드 확인 중…",
+        "scopeUnavailable": "이 그룹의 모드를 확인할 수 없음",
+        "checkingUninstalled": "설치되지 않은 모드 확인 중…",
+        "uninstalledUnavailable": "설치되지 않은 모드를 확인할 수 없음",
+        "removeUninstalled": "설치되지 않은 모드 {count}개를 그룹에서 제거",
+        "noUninstalled": "이 그룹의 모든 모드가 설치되어 있음",
+        "delete": "삭제…"
+      },
+      "dialog": {
+        "createTitle": "새 그룹",
+        "subgroupTitle": "새 하위 그룹",
+        "renameTitle": "그룹 이름 변경",
+        "inside": "상위 그룹: {parent}",
+        "nameLabel": "이름",
+        "nameHelp": "최대 64자입니다. 같은 단계에 있는 두 그룹은 대소문자와 관계없이 같은 이름을 쓸 수 없습니다.",
+        "createButton": "만들기",
+        "renameButton": "이름 변경",
+        "deleteTitle": "그룹 삭제",
+        "deleteQuestion": "{name} 그룹을 삭제할까요?",
+        "deleteNoMods": "이 그룹에는 모드가 없습니다.",
+        "deleteMods": "하위 그룹을 포함해 이 그룹에 모드 {count}개가 있습니다.",
+        "modeLegend": "하위 그룹 {count}개 처리 방법",
+        "keepSubgroups": "하위 그룹을 유지하고 한 단계 위로 옮기기",
+        "deleteSubgroups": "하위 그룹도 삭제",
+        "deleteSafety": "어떤 모드도 삭제되거나 설치 해제되지 않습니다. 모드는 속해 있는 다른 그룹에 그대로 남습니다.",
+        "deleteButton": "그룹 삭제",
+        "moveTitle": "그룹 이동",
+        "moveQuestion": "{name} 그룹을 이동할 위치:",
+        "moveLegend": "그룹의 새 위치",
+        "topLevel": "최상위",
+        "moveInvalid": "그룹은 자기 자신이나 그 하위 그룹 안에 넣을 수 없음",
+        "moveCurrent": "현재 위치",
+        "moveButton": "이동",
+        "modGroupsTitle": "{name} 모드의 그룹",
+        "modGroupsHelp": "그룹을 선택하면 이 모드가 그 그룹에 추가됩니다. 선택을 해제하면 모드가 그룹에서 빠집니다. 변경 사항은 바로 저장됩니다.",
+        "modGroupsEmpty": "아직 그룹이 없습니다. '그룹' 패널에서 그룹을 만드세요.",
+        "modGroupsList": "그룹",
+        "done": "완료",
+        "removeUninstalledTitle": "설치되지 않은 모드 제거",
+        "removeUninstalledBody": "마지막 스캔 기준으로 {name} 그룹과 그 하위 그룹에 있는 모드 {count}개가 설치되어 있지 않습니다. 이 그룹들에서 제거할까요? 그룹에 다시 추가해야만 다시 나타납니다.",
+        "removeUninstalledList": "제거할 모드",
+        "removeUninstalledLoading": "설치되지 않은 모드를 확인하는 중…",
+        "removeUninstalledFailed": "설치되지 않은 모드를 확인하지 못했습니다. 이 대화 상자를 닫고 다시 시도하세요.",
+        "removeUninstalledButton": "제거"
+      },
+      "startOver": {
+        "title": "그룹 없이 처음부터 다시 시작",
+        "body": "Rimmerge는 읽을 수 없는 파일의 사본을 같은 위치에 보관한 다음, 그룹과 색상이 없는 상태로 새로 시작합니다. 모드와 로드 순서에는 영향이 없습니다.",
+        "confirm": "처음부터 다시 시작"
+      },
+      "notice": {
+        "notLoaded": "이 세션에서는 그룹과 색상을 사용할 수 없습니다.",
+        "unreadable": "Rimmerge가 그룹과 색상을 읽지 못했습니다. 지금은 읽기 전용입니다. 다른 프로그램이 파일을 열고 있다면 닫은 다음 다시 스캔하세요.",
+        "tooLarge": "그룹 및 색상 파일이 너무 커서 읽을 수 없습니다. 처음부터 다시 시작하기 전까지는 읽기 전용입니다.",
+        "malformed": "그룹 및 색상 파일이 손상되었습니다. 처음부터 다시 시작하기 전까지는 읽기 전용입니다.",
+        "newerVersion": "그룹과 색상이 더 최신 버전의 Rimmerge에서 저장되었습니다. 덮어쓰지 않도록 여기서는 읽기 전용입니다.",
+        "invalid": "그룹 및 색상 파일에 서로 맞지 않는 그룹(예: 순환, 누락되거나 중복된 그룹, 너무 많은 그룹)이 있어 사용할 수 없습니다. 처음부터 다시 시작하기 전까지는 읽기 전용입니다.",
+        "tryAgain": "다시 스캔 후 재시도",
+        "startOver": "처음부터 다시 시작…"
+      },
+      "scope": {
+        "ungrouped": "그룹에 속하지 않은 모드 표시 중",
+        "group": "{name} 표시 중: 하위 그룹 포함 모드 {count}개",
+        "notInstalled": "모드 {count}개가 설치되어 있지 않음",
+        "note": "검색과 필터는 이 그룹 안에서 작동합니다. 활성 목록은 로드 순서를 그대로 유지합니다.",
+        "showAll": "모든 모드 표시"
+      },
+      "drop": {
+        "addTo": "{name} 그룹에 모드 {count}개 추가",
+        "idleMods": "모드 {count}개를 그룹 위에 놓으면 그룹에 추가됩니다",
+        "idleGroup": "그룹 위에 놓으면 이 그룹이 그 안으로 들어가고, '모든 모드'에 놓으면 최상위 그룹이 됩니다.",
+        "needsGroup": "모드는 그룹에만 추가할 수 있습니다",
+        "notUngrouped": "그룹은 '그룹 없음'에 넣을 수 없습니다. 최상위 그룹으로 만들려면 '모든 모드'를 사용하세요.",
+        "withHidden": "{text} ({hidden})",
+        "alreadyThere": "그룹이 이미 이 위치에 있습니다",
+        "makeTopLevel": "{name} 그룹을 최상위 그룹으로 만들기",
+        "nestInside": "{name} 그룹을 {parent} 그룹 안으로 이동",
+        "added": "{name} 그룹에 모드 {count}개를 추가했습니다",
+        "nothingToAdd": "모든 모드가 이미 {name} 그룹에 있었습니다",
+        "alreadyIn": "{count}개는 이미 그룹에 있었습니다",
+        "hiddenIncluded": "필터로 숨겨진 선택한 모드 {count}개도 포함되었습니다",
+        "movedTop": "{name} 그룹이 이제 최상위 그룹입니다",
+        "movedInside": "{name} 그룹을 {parent} 그룹 안으로 이동했습니다"
+      },
+      "toast": {
+        "created": "그룹을 만들었습니다",
+        "renamed": "그룹 이름을 변경했습니다",
+        "moved": "그룹을 이동했습니다",
+        "deleted": "그룹을 삭제했습니다",
+        "removedUninstalled": "설치되지 않은 모드 {count}개를 그룹에서 제거했습니다",
+        "keptInstalledAgain": "모드 {count}개는 다시 설치되어 그룹에 그대로 남았습니다",
+        "startedOver": "그룹 없이 처음부터 다시 시작했습니다"
+      }
     }
   },
   "rules": {
@@ -1716,7 +1963,8 @@
       "button": "가져오기",
       "openFile": "모드 목록 파일 열기…",
       "paste": "목록 붙여넣기…",
-      "fileFilter": "모드 목록(.rml, .xml, .txt)",
+      "fromSave": "저장 파일에서 가져오기…",
+      "fileFilter": "모드 목록 및 저장 파일(.rml, .rws, .xml, .txt)",
       "allFiles": "모든 파일",
       "pasteTitle": "로드 순서 붙여넣기",
       "pasteHint": "한 줄에 모드 하나씩 넣습니다. '텍스트로 복사'로 복사한 텍스트를 붙여넣거나, 한 줄에 패키지 ID를 하나씩 입력하세요.",
@@ -1726,7 +1974,13 @@
     "preview": {
       "title": "로드 순서 가져오기",
       "summary": "목록에 있는 모드 {count}개",
-      "versionDiffers": "RimWorld {listed} 버전으로 만든 목록입니다. 설치된 버전은 {game}입니다.",
+      "fromSave": "RimWorld {version} 버전으로 만든 저장 파일입니다.",
+      "madeWith": "RimWorld {version} 버전으로 만든 목록입니다.",
+      "versionDiffers": "설치된 RimWorld는 {game} 버전으로, 이와 다른 릴리스입니다.",
+      "misaligned": {
+        "names": "목록의 이름 수({values})가 모드 수({ids})와 일치하지 않으므로, 보낸 사람 목록의 모드 이름은 표시하지 않습니다.",
+        "workshopIds": "목록의 창작마당 ID 수({values})가 모드 수({ids})와 일치하지 않으므로, 창작마당 링크는 표시하지 않습니다."
+      },
       "replacesPending": "아직 다시 스캔하지 않은 활성화 변경 사항은 이 목록으로 대체됩니다.",
       "replacesUnwritten": "이 가져오기는 아직 적용되지 않은 '현재' 순서를 대체합니다.",
       "moved": "모드 {count}개의 위치가 바뀝니다.",
@@ -1738,6 +1992,7 @@
       "missingExplanation": "Rimmerge는 모드를 내려받지 않습니다. 이 모드들을 직접 구독한 다음 다시 가져오세요.",
       "openWorkshop": "스팀 창작마당에서 열기",
       "openWorkshopLabel": "스팀 창작마당에서 {name} 열기",
+      "workshopIdFromFile": "창작마당 ID {id}: 가져온 파일에서 읽은 값입니다.",
       "missingKind": {
         "dlc": "설치되어 있지 않은 확장팩입니다.",
         "rimmergeMergeMod": "보낸 사람의 컴퓨터에서 Rimmerge가 만든 병합 모드입니다. 이 모드는 필요하지 않습니다.",
@@ -1767,6 +2022,19 @@
       "whatHappens": "Rimmerge가 이 순서로 다시 스캔하고 '현재' 순서로 표시합니다. 적용하기 전에는 아무것도 기록되지 않습니다.",
       "confirm": "이 순서 사용"
     },
+    "saves": {
+      "title": "저장 파일에서 가져오기",
+      "intro": "저장 파일의 모드 목록만 읽습니다. 저장 파일 자체는 절대 변경되지 않습니다.",
+      "savedAt": "저장 일시: {date}",
+      "unknownDate": "날짜 알 수 없음",
+      "preview": "미리 보기",
+      "previewLabel": "{name}의 모드 목록 미리 보기",
+      "browse": "찾아보기…",
+      "fileFilter": "RimWorld 저장 파일(.rws)",
+      "empty": "RimWorld의 Saves 폴더에 저장 파일이 없습니다.",
+      "noFolder": "ModsConfig.xml 파일 옆에서 RimWorld의 Saves 폴더를 찾지 못했습니다. 대신 '찾아보기…'로 저장 파일을 선택하세요.",
+      "omitted": "표시되지 않은 이전 저장 파일이 {count}개 더 있습니다."
+    },
     "imported": "가져온 순서가 준비되었습니다. 검토한 다음 적용하여 활성 모드 순서로 저장하세요.",
     "notInFile": "이 순서는 아직 활성 모드 순서가 아닙니다.",
     "notInFileApply": "적용",
@@ -1778,9 +2046,12 @@
       "malformedXml": "올바른 XML 파일이 아닙니다.",
       "dtdNotAllowed": "파일에 DTD 선언이 있습니다. 모드 목록에는 DTD 선언이 없습니다.",
       "tooDeep": "파일의 중첩이 너무 깊어 모드 목록일 수 없습니다.",
-      "unrecognizedFormat": "RimWorld 모드 목록(.rml), ModsConfig.xml, 텍스트 목록 중 어느 것도 아닙니다.",
+      "unrecognizedFormat": "이 파일은 RimWorld 모드 목록(.rml), RimWorld 저장 파일(.rws), ModsConfig.xml, 텍스트 목록 중 어느 것도 아닙니다.",
       "missingModList": "파일에 모드 목록이 없습니다.",
-      "noEntries": "패키지 ID를 찾지 못했습니다."
+      "noEntries": "패키지 ID를 찾지 못했습니다.",
+      "saveHeaderTruncated": "모드 목록이 끝나기 전에 저장 파일이 끝납니다. 파일이 손상되었거나, 게임이 아직 파일을 기록하는 중일 수 있습니다.",
+      "saveHeaderMissing": "이 저장 파일의 헤더에 모드 목록이 없습니다.",
+      "saveHeaderTooLarge": "저장 파일의 모드 목록 헤더가 {limit}보다 큽니다."
     },
     "importedWithWarnings": "스캔에서 경고 {count}개가 보고되었습니다.",
     "importedRuleWarnings": "가져왔지만 불러오지 못한 규칙이 있음",
@@ -1946,7 +2217,7 @@
     "gaps": {
       "warning": "게임이 메시지 기록을 {count}번 멈췄습니다. 기록되지 않은 내용은 복구할 수 없습니다.",
       "neverResumed": "재개 메시지가 뒤따르지 않는 로그 기록 중단이 {count}건 있으므로, 로그에서 가장 이른 중단 지점 이후의 모든 내용은 신뢰할 수 없습니다.",
-      "lowerBound": "최소 {count}개 항목 그룹(로그 항목의 {percent}%)이 로그 기록 중단 구간에 걸쳐 있어 그 개수가 실제보다 적을 수 있습니다. 모든 개수가 실제보다 적을 수 있습니다.",
+      "lowerBound": "최소 {count}개 항목 묶음(로그 항목의 {percent}%)이 로그 기록 중단 구간에 걸쳐 있어 그 개수가 실제보다 적을 수 있습니다. 모든 개수가 실제보다 적을 수 있습니다.",
       "resumed": "{stop}행부터 {resume}행까지",
       "open": "{stop}행부터 로그 끝까지",
       "more": "외 {count}개"

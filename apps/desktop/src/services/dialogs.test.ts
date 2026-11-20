@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const { openMock, saveMock } = vi.hoisted(() => ({ openMock: vi.fn(), saveMock: vi.fn() }));
 vi.mock("@tauri-apps/plugin-dialog", () => ({ open: openMock, save: saveMock }));
 
-import { pickFile, pickModListFile, pickModListSavePath } from "@/services/dialogs";
+import { pickFile, pickModListFile, pickModListSavePath, pickSaveFile } from "@/services/dialogs";
 
 const FILTER_NAMES = { logFiles: "Log files (translated)", allFiles: "Everything (translated)" };
 
@@ -42,7 +42,7 @@ describe("pickModListFile", () => {
     openMock.mockReset();
   });
 
-  it("offers .rml, .xml and .txt first, and every file, since the import detects the format", async () => {
+  it("offers .rml, .rws, .xml and .txt first, and every file, since the import detects the format", async () => {
     openMock.mockResolvedValue("C:/lists/shared.rml");
 
     const path = await pickModListFile({ modLists: "Mod lists", allFiles: "Everything" });
@@ -52,7 +52,7 @@ describe("pickModListFile", () => {
       directory: false,
       multiple: false,
       filters: [
-        { name: "Mod lists", extensions: ["rml", "xml", "txt"] },
+        { name: "Mod lists", extensions: ["rml", "rws", "xml", "txt"] },
         { name: "Everything", extensions: ["*"] },
       ],
     });
@@ -62,6 +62,46 @@ describe("pickModListFile", () => {
     openMock.mockResolvedValue(null);
 
     expect(await pickModListFile({ modLists: "Mod lists", allFiles: "Everything" })).toBeNull();
+  });
+});
+
+describe("pickSaveFile", () => {
+  afterEach(() => {
+    openMock.mockReset();
+  });
+
+  it("offers .rws then every file, starting in the Saves folder when it is known", async () => {
+    openMock.mockResolvedValue("C:/Saves/Colony.rws");
+
+    const path = await pickSaveFile({
+      filterName: "Saves",
+      allFilesName: "Everything",
+      defaultPath: "C:/Saves",
+    });
+
+    expect(path).toBe("C:/Saves/Colony.rws");
+    expect(openMock).toHaveBeenCalledWith({
+      directory: false,
+      multiple: false,
+      filters: [
+        { name: "Saves", extensions: ["rws"] },
+        { name: "Everything", extensions: ["*"] },
+      ],
+      defaultPath: "C:/Saves",
+    });
+  });
+
+  it("leaves the start folder to the system when none is known", async () => {
+    openMock.mockResolvedValue(null);
+
+    const path = await pickSaveFile({
+      filterName: "Saves",
+      allFilesName: "Everything",
+      defaultPath: null,
+    });
+
+    expect(path).toBeNull();
+    expect(openMock.mock.calls[0]?.[0]).not.toHaveProperty("defaultPath");
   });
 });
 

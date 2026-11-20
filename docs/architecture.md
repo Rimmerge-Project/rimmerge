@@ -96,6 +96,11 @@ interface apps.
 - Nothing at the interface layer (`apps/*`) should contain a decision
   about *what* to do. It only decides how to parse the request and how
   to render the result.
+- A new fact about how a user organizes their mod library (a group, a
+  colour, a membership) → `rim-session::organization`, a pure model that
+  the sorter and the ledger never read; its file is
+  `<profile>/organization.json`, behind `ports::OrganizationStore`. A fact
+  that changes the load order is not organization: that is a rule.
 - A new notice → a `Notification` variant, its `NotificationKind` (the
   declaration order is display priority) and a rule in
   `rim-session::notifications::evaluate`; the kind's on-disk spelling in

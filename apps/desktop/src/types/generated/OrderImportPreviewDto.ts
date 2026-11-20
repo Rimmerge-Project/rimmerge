@@ -2,6 +2,8 @@
 import type { CorePlacementDto } from "./CorePlacementDto";
 import type { ImportBlockedDto } from "./ImportBlockedDto";
 import type { ImportedEntryDto } from "./ImportedEntryDto";
+import type { ListAlignmentDto } from "./ListAlignmentDto";
+import type { ListFormatDto } from "./ListFormatDto";
 import type { ModRefDto } from "./ModRefDto";
 import type { SkippedEntryDto } from "./SkippedEntryDto";
 import type { VersionCheckDto } from "./VersionCheckDto";
@@ -41,6 +43,24 @@ core: CorePlacementDto,
  * How the list's game version compares with the installed one.
  */
 version: VersionCheckDto, 
+/**
+ * The document shape the list was read from.
+ */
+format: ListFormatDto, 
+/**
+ * The game version text the list carries, verbatim (untrusted: render
+ * it as text only), or `null` when it has none.
+ */
+listedGameVersion: string | null, 
+/**
+ * Whether the list's names lined up with its ids; a misaligned list
+ * was left out whole.
+ */
+names: ListAlignmentDto, 
+/**
+ * The same for the Steam ids behind the Workshop links.
+ */
+workshopIds: ListAlignmentDto, 
 /**
  * Whether the import replaces activation edits not yet rescanned.
  */

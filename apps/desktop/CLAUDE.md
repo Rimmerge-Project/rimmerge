@@ -45,7 +45,13 @@ of that command surface — no direct filesystem or process access outside
   infallible ones (`get_default_settings`, `get_app_version`) return their
   value without a `Result`, and `get_app_version` is not even `async`.
   `load_project`/`rescan_project` are the other shape: they hold
-  `state.load_lock` and swap the session in with `replace_session`.
+  `state.load_lock` and swap the session in with `replace_session`, which
+  (like the rescan swap) re-reads the organization under the session write
+  lock just before the swap, so an organization edit that landed during the
+  scan is not lost. Organization commands take only the session lock, never
+  `load_lock` (a drag must not wait on a scan). Rules and decisions have a
+  wider version of the same window (read inside `LoadProject`, outside the
+  lock); it is a known, unfixed follow-up.
   `import_order` (`commands/order_share.rs`) is the rescan shape too: it is
   `rescan_with(ScanRequest::Import(order))`, so the order is validated
   (`ImportOrder::validate`, including its size bound), scanned and swapped in
@@ -153,7 +159,25 @@ of that command surface — no direct filesystem or process access outside
   toasts "preview again" with the code's sentence. `isBusy` makes every entry point a
   no-op while a dialog, export or preview is in flight. The save dialog starts at
   `suggested_mod_list_path` (null when RimWorld's `ModLists` folder is absent)
-  and offers `.rml` only; `dialog:allow-save` is the capability it needs. The
+  and offers `.rml` only; `dialog:allow-save` is the capability it needs.
+  "Import from a save…" (`SaveImportDialog.vue`, owned by `OrderShareMenus` with
+  `isSavesOpen`/`openSaves`/`previewSave`/`browseSave` in `useOrderShare`) lists RimWorld's
+  `Saves` folder through `list_saves` (`rim_io::list_saves`, called inside `with_session`:
+  `<user-data root>/Saves`, the sibling of the `Config` folder holding `ModsConfig.xml`, found by
+  the same `user_data_folder` helper `suggested_mod_list_path` uses). The query
+  (`useSavesQuery`, `queryKeys.saves()`, `staleTime: 0`) is enabled only while the dialog is
+  open. The backend orders and bounds the list (newest first, at most 200, `omitted` counts
+  the rest) and the page never re-sorts it; a missing folder is `folder: null` (the dialog says
+  so, Browse still works), an unlistable one is `saves_folder_unreadable` shown inside the
+  dialog in place of the list (it is a state of the list, not a toast). A failed preview of a
+  listed save is a toast: the order-share group renders above the modal mask and stays
+  clickable (`order-share-save.spec.ts`), so the dialog stays open under it. Directory metadata only: no save is
+  opened for the list; "Preview" and "Browse…" (`pickSaveFile`, starting in the `Saves` folder)
+  both go through `preview_order_import_file`, and the list closes when the preview opens
+  (`showPreview`). A save's name is the player's text and renders as text. The mock
+  (`list_saves` in `scenario.ts`) mirrors the ordering and cap over `window.__SAVES__` (any
+  order in), `__LIST_SAVES_ERROR__` makes it fail, `__LIST_SAVES_CALLS__` counts calls and
+  `__OPEN_DIALOG_OPTIONS__` records every file picker's options. The
   preview's "Use this order" is enabled exactly when `importBlocked` is `null`
   (never re-derived from the entries). `importBlocked` is the backend's reason
   (`ImportBlockedDto`, from `ImportOrder::import_blocker`, the one rule behind
@@ -163,8 +187,11 @@ of that command surface — no direct filesystem or process access outside
   cannot arise from a preview and has no variant. `order` is sent back unchanged, and a Workshop
   button sends the id as digits, never a URL. Every `ImportedEntryDto`,
   `MissingKindDto`, `SkippedEntryDto`, `VersionCheckDto`, `CorePlacementDto` and
-  `ImportRejectionDto` is worded by an `assertNever` switch in
-  `utils/orderShare.ts`; a sender's name and a skipped excerpt are untrusted
+  `ImportRejectionDto`, `ListFormatDto` and `ListAlignmentDto` is worded by an
+  `assertNever` switch in `utils/orderShare.ts` (the preview shows the listed
+  game version verbatim whenever it has one, "From a save made with..." for a
+  save, and the "you have RimWorld X" note only on a major.minor difference;
+  a misaligned names or Steam-id list gets a note of its own); a sender's name and a skipped excerpt are untrusted
   and render as text only. The two replace warnings are separate facts:
   `replacesPendingChanges` (from the preview: unrescanned activation edits) and
   `PendingActiveChangesDto.orderUnapplied` (the Current order is not in the
@@ -538,6 +565,15 @@ of that command surface — no direct filesystem or process access outside
   `patchDecided` — `useSetMergeChoicesMutation`'s own `onSuccess`), not
   an exhaustive switch: a new `SessionChangeReasonDto` variant falls
   through to "invalidate everything" with no code change required.
+  **One reason has its own targeted refetch instead:** `organizationChanged`
+  (every organization command: groups and mod colours) refetches only
+  `ORGANIZATION_QUERY_KEYS` (the `organization` query and the two Mods
+  lists), because organization touches no order, sort, ledger or active
+  list. A new query that shows organization must share one of those key
+  prefixes, or be added to the list. The prefixes come from `queryKeys`, not
+  from copies. A command that fails with `group_not_found` emits the same
+  event (the frontend's tree is stale), so the error text's promise that
+  "the groups have been refreshed" is true.
 - **ts-rs bindings are generated, never hand-edited.** After any DTO
   change: `cargo test -p rimmerge-desktop` regenerates
   `src/types/generated/`, then `bun run types:check`.

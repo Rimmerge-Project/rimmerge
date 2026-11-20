@@ -338,6 +338,19 @@ key, so deleting one doesn't wipe the other. `active_mods_by_base_id()`
 (base id -> `Mod.workshop_id`) exists for `rim-io`'s SteamDB importer;
 every other caller still uses the plain-id `active_base_ids()`.
 
+`SetManualTags` (the Mods page's bulk Tags action) is the bulk sibling of
+`SetManualTag`: one rules snapshot, one save, rollback on failure, and **no
+`recompute_sort`** — a tag-only change cannot move a mod, so
+`Session::set_manual_tags` re-infers the tagging through the same
+`infer_session_tagging` the full `compute` uses and drops only the ledgers
+(their `TagInferred` findings read the tagging). Its `Remove` acts only on mods
+that currently *show* the tag (manual or inferred): it deletes a manual `Add`
+override and records a manual `Remove` only if inference would still show the
+tag, so no dead `Remove` override is written; the rest count as unchanged. The
+rollback is `restore_manual_tags` (tagging refresh only), never
+`restore_rules`, which would re-sort and could replace Suggested. Tests pin that
+the sort outcome and both orders are unchanged.
+
 The generated merge mod's id is derived from the profile hash
 (`GeneratedModIdentity::for_profile`), **never stored** — `Session::compute`
 adds its synthetic Bottom placement rule whenever the id is already in
@@ -808,6 +821,89 @@ therefore refreshed by every rescan. It is deliberately outside
 infallible: an unreadable source answers `Unavailable(Unknown)`, never an error
 and never an epoch. Fake: `test_support::FakeModTimestampReader`.
 
+## Library organization (`organization`, `EditOrganization`)
+
+Nested mod groups and per-mod colours: a bounded context of its own, pure
+in `organization.rs` (a facade over `organization/{ids,color,group,forest,
+edit,resolve,state}.rs`), persisted to `<profile>/organization.json`
+through `ports::OrganizationStore` (`rim-io`'s `JsonOrganizationStore`).
+
+- **Never on the sort path.** `compute()`, the ledger and every cache in
+  `Session` take no organization, so an organization edit invalidates no
+  cache, changes no order, no `working`, no `ModsConfig.xml`. A test pins
+  `working`, both orders, `file_active_mods`, the selection, the pending
+  diff, the sort outcome, the rules, the decisions and the ledger as equal
+  before and after every edit kind, and the sort and ledger equal with an
+  empty and a large organization. Keep it that way: a new `Session` cache
+  must not read it, and `mod_lists` is the only join (fresh per query, no
+  cache).
+- **`ModOrganization` is a forest with direct members only.** Ids are
+  `OrganizedModId` (a base id: `x` and `x_steam` are one member; the
+  constructor is fallible, bounded like the file reader), `GroupId`
+  (non-zero, never reused within a session), `GroupName` (trimmed, 1 to 64
+  characters, no control characters), `ColorToken` (a closed 12-name
+  palette). Invariants live in the aggregate: no cycle, depth at most 8,
+  at most 1,000 groups, sibling names unique ignoring case, bounded
+  memberships and colours (`OrganizationLimits`, read by the `rim-io`
+  reader too). A mutator that returns an error changed nothing (a proptest
+  asserts it). "Parent views include descendants" is `scope()`, derived on
+  every call; no ancestor membership is ever stored. A mod never inherits
+  a group's colour.
+- **`OrganizationState` is closed**: `NotLoaded` (built without a store:
+  the CLI, most tests), `Loaded`, `Recovered { issue }` (the file is
+  present but unreadable, too large, malformed, from a newer version or
+  breaking a forest rule). Only `Loaded` can be read or edited
+  (`OrganizationState::loaded`/`loaded_mut`, `OrganizationUnavailable`),
+  so a session that could not read the file can never save an empty
+  organization over it. `LoadProject::with_organization_store` (optional,
+  desktop only) reads the file once per load, so every rescan and import
+  rebuild reloads it: nothing is carried by hand. A damaged file never
+  fails a project load. The desktop also calls
+  `Session::reload_organization(&store)` on the new session **under the
+  session write lock, just before the swap** (`replace_session` and the
+  rescan swap): every organization edit saves while holding that lock, so
+  an edit that landed after `LoadProject` read the file is on disk by then
+  and the swap cannot drop it (and the next save cannot erase it). A
+  `NotLoaded` session is left alone. `set_organization_state` is
+  crate-private (fixtures in other crates use
+  `test_support::set_organization_state`). Errors split by origin: an edit
+  reports `OrganizationError`, reading a document reports
+  `OrganizationDocumentError` (dangling parent, duplicate id, an id out of
+  range, a `next_group_id` behind the groups, or a wrapped rule). The next
+  group id is part of the document, so ids are never reused after a
+  reload.
+- **One use case, one closed command type.** `EditOrganization::execute`
+  applies an `OrganizationEdit` (create, rename, reparent, delete, group
+  colour, add/remove/move members, mod colours), snapshots, saves once and
+  restores on a failed save; an edit that changes nothing writes nothing.
+  `ResetOrganization` ("start over") is the only way out of `Recovered`:
+  `OrganizationStore::archive_unusable` keeps a copy
+  (`organization.json.unusable-<seconds>`) before the empty save, and it
+  refuses a loaded organization.
+  `OrganizationStore::save` fails with `OrganizationSaveError`: `TooLarge`
+  (the document would exceed the file's size limit; a limit the user can act
+  on, `organization_limit` in the desktop) or `Failed`; `EditOrganizationError::Save`
+  and `ResetOrganizationError::Store` carry it whole, so the desktop maps one
+  type. "Remove mods that aren't installed" is the use case
+  `RemoveUninstalledMembers` (an `OrganizationEdit::RemoveMembersFromGroups`
+  over the scope's groups): the caller names the mods the user confirmed, and
+  the use case removes only those still in `ResolvedScope::not_installed`
+  when it runs, so a mod installed again since the confirmation keeps its
+  memberships. The command in `apps/desktop` only parses and calls it.
+- **Resolving against the install** is `resolve_scope` (the
+  `find_by_base` rule, a copy already active wins, members found nowhere
+  are counted, not dropped), reached through `Session::resolve_group_scope`
+  for group-level activate/deactivate planning.
+- **`mod_lists`** gains `ModListQuery::group` (`GroupFilter::InScope`,
+  descendants included and deduplicated, or `Ungrouped`), `ModListRow::groups`
+  (direct labels by name) and `ModListRow::color`. Both list functions now
+  return `Result<_, ModListError>`: a stale group id is `UnknownGroup`, and
+  a filter with unavailable organization is refused, never read as "no
+  filter". A group filter is a filter: `reorderable` stays on.
+  A row's `RowState::PendingScan` carries the mod's `manual_tags` (an
+  unscanned mod has no evidence, so every tag it holds was added by hand);
+  the tag filter matches scanned tags and these, in both lists.
+
 ## Sharing a load order (`mod_list`, `ExportOrder`, `PreviewOrderImport`, `ImportOrder`)
 
 - **`mod_list` is pure**: value objects, the "Copy as text" codec
@@ -823,7 +919,15 @@ and never an epoch. Fake: `test_support::FakeModTimestampReader`.
   desktop paste all read. A malformed entry is a `SkippedEntry` (at most
   `MAX_SKIPPED_REPORTED`, the rest only counted); only a whole-document
   failure is a `Rejection`, and a rejection is a preview **outcome**
-  (`ImportPreview::Rejected`), not an error.
+  (`ImportPreview::Rejected`), not an error. A RimWorld save is one more
+  source behind the same port (`ListFormat::SaveHeader`; the three
+  save-specific rejections are `SaveHeaderTruncated`, `SaveHeaderMissing`
+  and `SaveHeaderTooLarge`). `ParsedModList` carries its `ListFormat` and,
+  per parallel list (names, Steam ids), a `ListAlignment` (`Absent`,
+  `Aligned`, or `Misaligned { ids, values }`: the list was left out whole,
+  never zipped short); `ReadyImport` passes both through with the listed game
+  version text (`listed_game_version`, verbatim), while `ImportPlan` and
+  `VersionCheck` (major.minor) are unchanged.
 - **Export reads the file, not the selection.** `ExportOrder` re-reads
   `ModsConfig.xml` through `ModsConfigStore::read` on every call (the
   desktop opens on Suggested, an order the player may never have run),

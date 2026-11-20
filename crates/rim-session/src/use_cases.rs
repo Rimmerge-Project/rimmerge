@@ -25,6 +25,7 @@ mod delete_assignment;
 mod delete_patch;
 mod delete_rule;
 mod discard_pending_changes;
+mod edit_organization;
 #[cfg(test)]
 mod edit_settle_tests;
 mod export_assignment;
@@ -55,9 +56,11 @@ mod read_texture;
 mod refresh_file_baseline;
 mod refresh_rule_databases;
 mod remove_assignment_section;
+mod remove_uninstalled_members;
 mod render_merge_mod;
 mod render_patch;
 mod rescan;
+mod reset_organization;
 mod revert_decision;
 mod revert_order_to_file;
 mod revert_patch_decision;
@@ -65,6 +68,7 @@ mod run_launch_network_checks;
 mod select_order;
 mod set_assignment_row;
 mod set_manual_tag;
+mod set_manual_tags;
 mod skip_recommended_rules;
 mod update_app_settings;
 mod update_assignment;
@@ -110,6 +114,7 @@ pub use delete_assignment::{DeleteAssignment, DeleteAssignmentError};
 pub use delete_patch::{DeletePatch, DeletePatchError};
 pub use delete_rule::DeleteRule;
 pub use discard_pending_changes::DiscardPendingChanges;
+pub use edit_organization::{EditOrganization, EditOrganizationError};
 pub use export_assignment::{
     AssignmentExportOptions, AssignmentExportOutcome, AssignmentSkip, ExportAssignment,
     ExportAssignmentError,
@@ -163,12 +168,14 @@ pub use read_texture::{ReadTexture, ReadTextureError, ReadTextureOutput};
 pub use refresh_file_baseline::{FileObservation, RefreshFileBaseline};
 pub use refresh_rule_databases::{RefreshRuleDatabases, RuleDatabaseView};
 pub use remove_assignment_section::{RemoveAssignmentSection, RemoveAssignmentSectionError};
+pub use remove_uninstalled_members::{RemoveUninstalledMembers, RemoveUninstalledMembersError};
 pub use render_merge_mod::{
     MergeEntryKind, MergeModEntry, MergeModRender, RenderMergeMod, RenderMergeModError,
     RenderTarget,
 };
 pub use render_patch::{RenderPatch, RenderPatchError};
 pub use rescan::Rescan;
+pub use reset_organization::{ResetOrganization, ResetOrganizationError};
 pub use revert_decision::RevertDecision;
 pub use revert_order_to_file::{RevertOrderError, RevertOrderToFile};
 pub use revert_patch_decision::{RevertPatchDecision, RevertPatchDecisionError};
@@ -176,6 +183,7 @@ pub use run_launch_network_checks::{LaunchNetworkChecksOutcome, RunLaunchNetwork
 pub use select_order::SelectOrder;
 pub use set_assignment_row::{SetAssignmentRow, SetAssignmentRowError};
 pub use set_manual_tag::SetManualTag;
+pub use set_manual_tags::SetManualTags;
 pub use skip_recommended_rules::SkipRecommendedRules;
 pub use update_app_settings::{EnableRecommendedSources, ResetNetworkPolicy, UpdateAppSettings};
 pub use update_assignment::{

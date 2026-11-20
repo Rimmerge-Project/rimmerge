@@ -3,6 +3,76 @@
 This changelog starts at the first public release. Development history
 before that point is not summarized here.
 
+## [1.2.6] - 2026-11-20
+
+- **New: import a load order from a RimWorld save.** The Load order page's
+  Import menu has **Import from a save…**, which lists the saves in
+  RimWorld's `Saves` folder (the one beside the `Config` folder that holds
+  `ModsConfig.xml`), newest first, with each save's name and the date it was
+  last saved, at most 200 of them. **Preview** on a save opens the usual
+  import preview, and **Browse…** opens the file dialog in that folder for a
+  save kept elsewhere. *Open a mod list file…* and `rimmerge order import`
+  accept a save (`.rws`) too, on stdin as well. Only the mod list in the
+  save's header is read: Rimmerge stops within 64 KiB after the header,
+  never decodes or changes the rest of the file, and refuses a header larger
+  than 4 MiB, a save that ends before its header does, and a file whose
+  header has no mod list, each with its own reason. Listing the folder reads
+  only file names and dates. The preview (and the CLI's `version:` line)
+  says which RimWorld version the list was made with, and adds a note when
+  this install is a different release (1.5 against 1.6, for example). When
+  the list's names or Workshop ids do not line up with its package ids, that
+  list is left out instead of being paired by guesswork, and the preview and
+  the CLI say so; this applies to `.rml` files too. A missing mod's Workshop
+  link uses the id written in the file. For a save that is the id the mod's
+  own `About.xml` declares, which few mods have.
+- **New: select several mods at once.** On the Mods page, Ctrl+click
+  (Cmd+click on a Mac) adds or removes one row, and Shift+click selects a
+  range the way a file manager does. From the keyboard, Shift+Space and
+  Shift+Up or Shift+Down extend the range from the focused row, Ctrl+A
+  (Cmd+A) selects every shown row and Escape clears the selection.
+  Reversing a range shrinks it again, and rows you selected before the
+  range, or that a filter hides, stay selected. Screen readers announce each
+  list as a multi-select grid.
+- **New: groups and colours on the Mods page.** Sort your mods into groups,
+  nested up to 8 levels, from a Groups panel: a column on a very wide window
+  and a drawer opened by the **Groups** button otherwise. It lists **All
+  mods**, **Ungrouped** and your group tree, with how many mods each group
+  holds. Choosing a group narrows both lists to its mods and its subgroups'
+  mods. This is a filter: the Active list stays in load order and can still
+  be reordered. A group or a mod can have one of twelve named colours. Every
+  row, Inactive included, shows its groups as chips, its colour as a stripe
+  that is also named in text, and the tags you added by hand, and the tag
+  filter now works on both lists. A group's menu creates subgroups, renames,
+  colours, moves or deletes it, and can remove the mods in it that are not
+  installed. Groups are a way to find mods and nothing more: they never move
+  a file, activate or deactivate a mod, or change the sort or your load
+  order. They are saved per profile in `organization.json`, keyed by package
+  id so they survive updates and rescans. If that file cannot be used, a
+  notice says so and groups stay read-only; **Start over…** keeps a copy of
+  the file and begins with no groups.
+- **New: act on many mods at once from the Mods page.** While a list has a
+  selection, a row of buttons above it works on that selection (each list
+  keeps its own, and mods a filter hides are included; every dialog says how
+  many were not shown). **Add to group…** puts the mods in a group, **Remove
+  from group…** takes them out of the groups that hold them, and **Move to
+  group…** replaces one group with another. **Colour** sets or clears their
+  colour, and **Tags** adds or removes one tag on all of them. A group's menu
+  also has **Activate** and **Deactivate** for the whole group, subgroups
+  included, in the same dialogs as the selection buttons, with a line that
+  says how many mods it covers. Each action is one save and one message that
+  says what changed and what was left alone. None of them changes the load
+  order, a pending change or `ModsConfig.xml`; tags never change the sorted
+  order.
+- **New: drag mods and groups onto the Groups panel.** Drag a row, or every
+  selected row, onto a group to add the mods to it; mods stay in their other
+  groups. Drag a group onto another group to put it inside, or onto **All
+  mods** to make it top level. The group under the pointer is outlined and a
+  sentence under the tree says what the drop will do, or why it cannot. A
+  collapsed group opens when you hold a drag over it. A drop never activates
+  or moves a mod, and the Active list's own drag works as before. On a
+  narrower window, open the Groups drawer first. Without a mouse, a group's
+  menu **Move group to…** and the bulk **Add to group…** do the same.
+
 ## [1.2.4] - 2026-11-19
 
 - **New: see what Apply will add or remove.** On the Mods page, an Active mod

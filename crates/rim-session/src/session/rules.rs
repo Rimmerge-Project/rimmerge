@@ -1,14 +1,30 @@
 //! [`Session`]'s rule editing: upsert/delete, promotion of imported rules, manual tags, profile
 //! import, and the rules snapshot/restore pair.
 
+use std::collections::BTreeSet;
+
 use rim_analyzer::domain::ModId;
 use rim_resolve::domain::{
     ManualTag, PairRule, PlacementRule, PromotedRuleKey, Rule, RuleOrigin, Tag, TagMode,
+    TagProvenance,
 };
 
-use super::Session;
+use super::{Session, duplicate_template_children, infer_session_tagging, mods_by_id};
 use crate::ports::StoredRules;
 use crate::settings::{Settings, is_imported_origin};
+
+/// What [`Session::set_manual_tags`] did, in mods.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct ManualTagsChange {
+    /// Mods whose override changed.
+    pub changed: usize,
+    /// Mods that still show the tag after a removal because a ledger decision (`AddTag`) puts it
+    /// there; no override can hide it, so none is recorded.
+    pub kept_by_decision: usize,
+    /// Mods the request did not apply to: an add that was already in place, or a removal of a
+    /// tag the mod does not show.
+    pub unchanged: usize,
+}
 
 /// A rule's natural key, used by [`Session::upsert_rule`]/
 /// [`Session::delete_rule`] since none of [`Rule`]'s shapes carry an id
@@ -218,6 +234,162 @@ impl Session {
             .retain(|m| !(m.mod_id == mod_id && m.tag == tag));
         self.rules.manual_tags.push(ManualTag { mod_id, tag, mode });
         self.recompute_sort();
+    }
+
+    /// Sets one manual tag override on every mod in `mods` that it applies to, and refreshes the
+    /// tagging and the ledgers **without re-sorting**: tags are not an input of the sorter
+    /// (`SortInput::tagging` is unused by it), so a tag-only change cannot move a mod, and the
+    /// sort is the expensive part of [`Self::set_manual_tag`]. The ledger is invalidated because
+    /// its `TagInferred` findings read the tagging.
+    ///
+    /// `Add` replaces the pair's override with an `Add`; a mod that already has an `Add` is
+    /// unchanged. `Remove` takes the tag off every mod that currently **shows** it, whether
+    /// manual or inferred: a manual `Add` override is deleted, and a `Remove` override is
+    /// recorded only when the tag would still be shown by inference, never twice. A mod whose tag
+    /// comes from a ledger decision keeps it and is counted in `kept_by_decision`. A mod that
+    /// does not show the tag is untouched and counted unchanged, so no dead `Remove` override
+    /// reaches the rules file.
+    pub fn set_manual_tags(
+        &mut self,
+        mods: &BTreeSet<ModId>,
+        tag: &Tag,
+        mode: TagMode,
+    ) -> ManualTagsChange {
+        let (changed, kept_by_decision) = match mode {
+            TagMode::Add => (self.add_manual_tags(mods, tag), 0),
+            TagMode::Remove => self.remove_shown_tags(mods, tag),
+        };
+        ManualTagsChange {
+            changed,
+            kept_by_decision,
+            unchanged: mods.len() - changed - kept_by_decision,
+        }
+    }
+
+    /// The manual overrides alone, for a rollback that must not re-sort
+    /// ([`Self::restore_manual_tags`]).
+    #[must_use]
+    pub fn manual_tags_snapshot(&self) -> Vec<ManualTag> {
+        self.rules.manual_tags.clone()
+    }
+
+    /// Puts back a [`Self::manual_tags_snapshot`] and re-infers the tags, leaving the sort, the
+    /// orders and every sort-dependent cache alone (unlike [`Self::restore_rules`], which
+    /// re-sorts and so can replace Suggested).
+    pub fn restore_manual_tags(&mut self, manual_tags: Vec<ManualTag>) {
+        self.rules.manual_tags = manual_tags;
+        self.refresh_tagging();
+    }
+
+    /// Re-infers the tags from the current rules and decisions and drops the ledgers built from
+    /// the old ones. The sort, the orders and every sort-dependent cache are left alone.
+    fn refresh_tagging(&mut self) {
+        let template_children =
+            duplicate_template_children(&self.report, &self.sources, &mods_by_id(&self.report));
+        let overrides = self.decisions.sorter_overrides(&template_children);
+        self.tagging = infer_session_tagging(&self.evidence, &self.rules, &overrides);
+        self.invalidate_ledgers();
+    }
+
+    /// Records an `Add` override for every mod of `mods` without one; how many were changed.
+    fn add_manual_tags(&mut self, mods: &BTreeSet<ModId>, tag: &Tag) -> usize {
+        let already_added: BTreeSet<&ModId> = self
+            .rules
+            .manual_tags
+            .iter()
+            .filter(|m| m.tag == *tag && m.mode == TagMode::Add)
+            .map(|m| &m.mod_id)
+            .collect();
+        let to_add: BTreeSet<ModId> = mods
+            .iter()
+            .filter(|id| !already_added.contains(id))
+            .cloned()
+            .collect();
+        if to_add.is_empty() {
+            return 0;
+        }
+        // One pass drops a replaced `Remove` override, then every new `Add` goes on the end.
+        self.rules
+            .manual_tags
+            .retain(|m| !(m.tag == *tag && to_add.contains(&m.mod_id)));
+        let added = to_add.len();
+        for mod_id in to_add {
+            self.rules.manual_tags.push(ManualTag {
+                mod_id,
+                tag: tag.clone(),
+                mode: TagMode::Add,
+            });
+        }
+        self.refresh_tagging();
+        added
+    }
+
+    /// Takes `tag` off every mod of `mods` that shows it, as far as a manual override can: how
+    /// many were changed and how many still show it because of a decision.
+    ///
+    /// A tag a ledger `AddTag` decision put on a mod (provenance `Manual`, applied after the
+    /// `Remove` overrides) cannot be hidden by a `Remove`, so such a mod is counted as kept, its
+    /// own `Add` override (if any) stays and no override is recorded.
+    fn remove_shown_tags(&mut self, mods: &BTreeSet<ModId>, tag: &Tag) -> (usize, usize) {
+        let shown: BTreeSet<ModId> = mods
+            .iter()
+            .filter(|id| self.tagging.tags_of(id).contains(tag))
+            .cloned()
+            .collect();
+        if shown.is_empty() {
+            return (0, 0);
+        }
+        let before = self.rules.manual_tags.clone();
+        self.rules
+            .manual_tags
+            .retain(|m| !(m.tag == *tag && m.mode == TagMode::Add && shown.contains(&m.mod_id)));
+        if self.rules.manual_tags.len() != before.len() {
+            // What inference and decisions alone say is only known once the `Add` overrides are gone.
+            self.refresh_tagging();
+        }
+        let (kept_by_decision, still_inferred) = self.classify_still_shown(&shown, tag);
+        let changed = shown.len() - kept_by_decision.len();
+        self.rules.manual_tags = before;
+        self.rules.manual_tags.retain(|m| {
+            !(m.tag == *tag
+                && m.mode == TagMode::Add
+                && shown.contains(&m.mod_id)
+                && !kept_by_decision.contains(&m.mod_id))
+        });
+        // A still-inferred mod cannot already carry a `Remove` for this tag: that override would hide
+        // the inferred tag, so the mod would not have been `shown`.
+        for mod_id in still_inferred {
+            self.rules.manual_tags.push(ManualTag {
+                mod_id,
+                tag: tag.clone(),
+                mode: TagMode::Remove,
+            });
+        }
+        self.refresh_tagging();
+        (changed, kept_by_decision.len())
+    }
+
+    /// Of the `shown` mods, those that still show `tag` with only a decision to blame (provenance
+    /// `Manual`), and those that still show it by inference (a `Remove` would hide it).
+    fn classify_still_shown(
+        &self,
+        shown: &BTreeSet<ModId>,
+        tag: &Tag,
+    ) -> (BTreeSet<ModId>, Vec<ModId>) {
+        let mut kept_by_decision = BTreeSet::new();
+        let mut still_inferred = Vec::new();
+        for assignment in self.tagging.assignments() {
+            if assignment.tag != *tag || !shown.contains(&assignment.mod_id) {
+                continue;
+            }
+            match assignment.provenance {
+                TagProvenance::Manual => {
+                    kept_by_decision.insert(assignment.mod_id.clone());
+                }
+                TagProvenance::Inferred { .. } => still_inferred.push(assignment.mod_id.clone()),
+            }
+        }
+        (kept_by_decision, still_inferred)
     }
 
     /// Replaces imported rules **per origin, independently** —

@@ -7,8 +7,8 @@ use rim_analyzer::domain::ModId;
 
 use crate::ports::{
     AssignmentProjectStore, ConfigError, DecisionStore, ModKnowledgeStore, ModScanner,
-    ModTimestampReader, ModsConfigStore, PatchProjectStore, RuleStore, ScanError, ScanProgress,
-    StoreError,
+    ModTimestampReader, ModsConfigStore, OrganizationStore, PatchProjectStore, RuleStore,
+    ScanError, ScanProgress, StoreError,
 };
 use crate::{ModTimeSubject, ModUpdateTimes, ProjectPaths, Session};
 
@@ -60,6 +60,13 @@ pub struct LoadProject<Scanner, Config, Decisions, Rules, Patches, Assignments, 
     /// most tests) need not supply one; a session built without it
     /// answers "unavailable" for every mod.
     timestamp_reader: Option<Arc<dyn ModTimestampReader + Send + Sync>>,
+    /// Reads the profile's groups and mod colours, once per load, so a
+    /// rescan or an import (which build a new session) reloads them.
+    /// Optional so the CLI and most tests need none; a session built
+    /// without it has [`crate::organization::OrganizationState::NotLoaded`]
+    /// and refuses every organization edit rather than saving an empty
+    /// organization over the user's file.
+    organization_store: Option<Arc<dyn OrganizationStore + Send + Sync>>,
 }
 
 impl<Scanner, Config, Decisions, Rules, Patches, Assignments, Knowledge>
@@ -115,6 +122,7 @@ where
             knowledge_store,
             fetch_rimmerge_rules,
             timestamp_reader: None,
+            organization_store: None,
         }
     }
 
@@ -127,6 +135,18 @@ where
         reader: Arc<dyn ModTimestampReader + Send + Sync>,
     ) -> Self {
         self.timestamp_reader = Some(reader);
+        self
+    }
+
+    /// Has every session this builds load the profile's organization
+    /// through `store`. A damaged file does not fail the load: the session
+    /// comes up with a recovered, read-only organization.
+    #[must_use]
+    pub fn with_organization_store(
+        mut self,
+        store: Arc<dyn OrganizationStore + Send + Sync>,
+    ) -> Self {
+        self.organization_store = Some(store);
         self
     }
 
@@ -234,6 +254,10 @@ where
             let subjects = ModTimeSubject::all_in(session.report());
             let times = reader.read_update_times(&session.paths().workshop_dir, &subjects);
             session.set_update_times(ModUpdateTimes::new(times));
+        }
+        if let Some(store) = &self.organization_store {
+            let loaded = store.load(&session.paths().profile_dir);
+            session.set_organization_state(loaded.into());
         }
         // `Session::new`'s own default for `file_active_mods` (whatever
         // `mods_config.active_mods` held when it ran) is wrong exactly
@@ -692,6 +716,116 @@ mod tests {
             Some(Some(working_set.clone()))
         );
         assert_eq!(session.orders().current.as_slice(), working_set.as_slice());
+    }
+
+    mod organization {
+        use super::*;
+        use std::collections::BTreeSet;
+
+        use crate::organization::{
+            EditOutcome, GroupName, ModOrganization, OrganizationEdit, OrganizationIssue,
+            OrganizationState,
+        };
+        use crate::test_support::{InMemoryOrganizationStore, organized};
+        use crate::use_cases::EditOrganization;
+
+        fn name(text: &str) -> GroupName {
+            GroupName::new(text).expect("valid fixture name")
+        }
+
+        #[test]
+        fn without_an_organization_store_the_session_is_not_loaded() {
+            let use_case = load_project_with(report_fixture(&["a"]));
+
+            let session = use_case
+                .execute(paths(), &mut |_| {})
+                .expect("load must succeed");
+
+            assert_eq!(session.organization(), &OrganizationState::NotLoaded);
+        }
+
+        #[test]
+        fn a_profile_with_no_file_loads_an_empty_organization() {
+            let store = Arc::new(InMemoryOrganizationStore::new());
+            let use_case = load_project_with(report_fixture(&["a"])).with_organization_store(store);
+
+            let session = use_case
+                .execute(paths(), &mut |_| {})
+                .expect("load must succeed");
+
+            assert_eq!(
+                session.organization(),
+                &OrganizationState::Loaded(ModOrganization::new())
+            );
+        }
+
+        #[test]
+        fn an_unusable_file_does_not_fail_the_load_and_comes_up_recovered() {
+            let store = Arc::new(InMemoryOrganizationStore::unusable(
+                OrganizationIssue::Malformed,
+            ));
+            let use_case =
+                load_project_with(report_fixture(&["a"])).with_organization_store(store.clone());
+
+            let session = use_case
+                .execute(paths(), &mut |_| {})
+                .expect("a damaged organization file must not fail the project load");
+
+            assert_eq!(
+                session.organization(),
+                &OrganizationState::Recovered {
+                    issue: OrganizationIssue::Malformed
+                }
+            );
+            assert_eq!(store.save_count(), 0, "loading never writes");
+        }
+
+        #[test]
+        fn a_rescan_or_an_import_reloads_the_saved_groups() {
+            let store = Arc::new(InMemoryOrganizationStore::new());
+            let use_case = load_project_with(report_fixture(&["a", "b"]))
+                .with_organization_store(store.clone());
+            let mut session = use_case
+                .execute(paths(), &mut |_| {})
+                .expect("load must succeed");
+            let edit = EditOrganization::new(&*store);
+            let EditOutcome::Created(group) = edit
+                .execute(
+                    &mut session,
+                    OrganizationEdit::CreateGroup {
+                        name: name("Weapons"),
+                        parent: None,
+                    },
+                )
+                .expect("create")
+            else {
+                panic!("creating a group reports its id");
+            };
+            edit.execute(
+                &mut session,
+                OrganizationEdit::AddMembers {
+                    id: group,
+                    mods: BTreeSet::from([organized("a_steam")]),
+                },
+            )
+            .expect("add");
+
+            let rebuilt = use_case
+                .execute_with_active_set(
+                    paths(),
+                    vec![ModId::new("b"), ModId::new("a")],
+                    &mut |_| {},
+                )
+                .expect("rescan must succeed");
+
+            let organization = rebuilt.organization().loaded().expect("loaded again");
+            assert_eq!(organization.group_count(), 1);
+            assert_eq!(
+                organization.groups_of(&organized("a")),
+                BTreeSet::from([group]),
+                "memberships are keyed by base id and reloaded from the file"
+            );
+        }
     }
 
     /// A rescan builds its session from the working set, but the file still

@@ -82,13 +82,71 @@ pub enum Rejection {
     DtdNotAllowed,
     /// The XML is nested deeper than any mod list.
     TooDeep,
-    /// The input is none of an `.rml`, a `ModsConfig.xml` shape or text.
+    /// The input is none of an `.rml`, a RimWorld save, a `ModsConfig.xml`
+    /// shape or text.
     UnrecognizedFormat,
     /// An `.rml` without `modList/ids`, or a `ModsConfig.xml` shape
     /// without `activeMods`.
     MissingModList,
     /// The input parsed but named no mod.
     NoEntries,
+    /// A RimWorld save that ends before its header's `</meta>`: damaged, or
+    /// still being written.
+    SaveHeaderTruncated,
+    /// A RimWorld save whose first element after the root is not `meta`.
+    SaveHeaderMissing,
+    /// A RimWorld save whose header does not end within `limit_bytes`.
+    SaveHeaderTooLarge {
+        /// [`ModListLimits::MAX_INPUT_BYTES`], the one budget for every
+        /// shape.
+        limit_bytes: usize,
+    },
+}
+
+/// Which document shape a list was read from.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ListFormat {
+    /// A RimWorld `.rml` (`<savedModList>`).
+    SavedModList,
+    /// A `ModsConfig.xml`-shaped list (`<ModsConfigData>`).
+    ModsConfig,
+    /// The text format, or one package id per line.
+    Text,
+    /// The `<meta>` header of a RimWorld save (`<savegame>`); the rest of
+    /// the save is never read.
+    SaveHeader,
+}
+
+/// Whether a parallel list (names, Steam ids) lines up with the ids.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ListAlignment {
+    /// The document carries no such list.
+    Absent,
+    /// The values are present and none was dropped (one per id where the
+    /// format pairs them by position; a text list carries its own).
+    Aligned,
+    /// A different length: the whole list was left out, never zipped short.
+    Misaligned {
+        /// How many ids (or the list it pairs with) there were.
+        ids: u32,
+        /// How many values the parallel list held.
+        values: u32,
+    },
+}
+
+impl ListAlignment {
+    /// A present list of `value_count` values against `id_count` ids.
+    #[must_use]
+    pub fn between(id_count: usize, value_count: usize) -> Self {
+        if id_count == value_count {
+            Self::Aligned
+        } else {
+            Self::Misaligned {
+                ids: count_as_u32(id_count),
+                values: count_as_u32(value_count),
+            }
+        }
+    }
 }
 
 /// One part of the input that was left out of the list.
@@ -111,8 +169,15 @@ pub enum SkippedEntry {
 /// A successfully parsed list plus whatever was left out of it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParsedModList {
+    /// The document shape the list was read from.
+    pub format: ListFormat,
     /// The entries that were understood.
     pub list: SharedModList,
+    /// Whether the document's names lined up with its ids; a misaligned
+    /// names list is left out whole.
+    pub names: ListAlignment,
+    /// The same for the Steam ids that give Workshop links.
+    pub workshop_ids: ListAlignment,
     /// What was skipped, at most [`ModListLimits::MAX_SKIPPED_REPORTED`].
     pub skipped: Vec<SkippedEntry>,
     /// How many further skipped parts were not recorded in `skipped`.

@@ -25,6 +25,7 @@ mod mod_knowledge;
 pub mod mod_list;
 mod mod_lists;
 mod mod_times;
+pub mod organization;
 mod paths;
 mod recommended_rules;
 mod replay_pool;
@@ -65,8 +66,8 @@ pub use mod_index::{ModFilter, ModPage, ModSummary};
 pub use mod_inventory::{InventoryEntry, ModInventory};
 pub use mod_knowledge::ModKnowledge;
 pub use mod_lists::{
-    ListSort, ListSortKey, MAX_MOD_LIST_ROWS, ModList, ModListQuery, ModListRow, RowState,
-    SortDirection,
+    GroupFilter, GroupLabel, ListSort, ListSortKey, MAX_MOD_LIST_ROWS, ModList, ModListError,
+    ModListQuery, ModListRow, RowState, SortDirection,
 };
 pub use mod_times::{ModTimeSubject, ModUpdateTimes, UnixSeconds, UpdateTime, UpdateUnavailable};
 pub use paths::ProjectPaths;
@@ -74,7 +75,9 @@ pub use recommended_rules::{
     FirstRun, RecommendedRulesFacts, RecommendedRulesStep, SourceNeed, StepSkip, Unavailable,
     recommended_rules_step,
 };
-pub use session::{PatchDecideError, RuleKey, Session, UnknownAssignment, UnknownPatch};
+pub use session::{
+    ManualTagsChange, PatchDecideError, RuleKey, Session, UnknownAssignment, UnknownPatch,
+};
 pub use settings::{Settings, SortProvenance, filter_imported_rules};
 
 #[cfg(any(test, feature = "test-support"))]

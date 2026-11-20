@@ -11,4 +11,8 @@ limitBytes: number, } | { "kind": "tooManyEntries",
 /**
  * The entry limit.
  */
-limit: number, } | { "kind": "malformedXml" } | { "kind": "dtdNotAllowed" } | { "kind": "tooDeep" } | { "kind": "unrecognizedFormat" } | { "kind": "missingModList" } | { "kind": "noEntries" };
+limit: number, } | { "kind": "malformedXml" } | { "kind": "dtdNotAllowed" } | { "kind": "tooDeep" } | { "kind": "unrecognizedFormat" } | { "kind": "missingModList" } | { "kind": "noEntries" } | { "kind": "saveHeaderTruncated" } | { "kind": "saveHeaderMissing" } | { "kind": "saveHeaderTooLarge", 
+/**
+ * The header size limit in bytes.
+ */
+limitBytes: number, };

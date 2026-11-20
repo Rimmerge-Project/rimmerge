@@ -328,10 +328,64 @@ test.describe("sharing a load order", () => {
     await page.getByTestId("order-import-button").click();
     await page.getByTestId("order-import-file").click();
 
+    await expect(page.getByTestId("import-preview-listed-version")).toHaveText(
+      "Made with RimWorld 1.5.4409 rev1.",
+    );
     await expect(page.getByTestId("import-preview-version")).toHaveText(
-      "Made with RimWorld 1.5.4409 rev1; you have 1.6.4871.",
+      "You have RimWorld 1.6.4871, a different release.",
     );
     await expect(page.getByTestId("import-preview-summary")).toHaveText("2 mods in the list");
+  });
+
+  test("a RimWorld save previews from its header alone, worded as a save, and ignores its body", async ({
+    page,
+  }) => {
+    await openOrderPage(page);
+    await page.evaluate(() => {
+      window.__PICK_FILE_RESULT__ = "C:/saves/autosave.rws";
+      window.__ORDER_FILES__ = {
+        "C:/saves/autosave.rws": [
+          '<?xml version="1.0" encoding="utf-8"?>',
+          "<savegame><meta><gameVersion>1.6.4871 rev591</gameVersion>",
+          "<modIds><li>mod.000</li><li>mod.001</li><li>mod.002</li></modIds>",
+          "<modSteamIds><li>0</li><li>0</li><li>0</li></modSteamIds>",
+          "<modNames><li>Core</li><li>Mod 1</li></modNames></meta>",
+          "<game><modIds><li>mod.003</li></modIds><unclosed></game>",
+        ].join("\n"),
+      };
+    });
+
+    await page.getByTestId("order-import-button").click();
+    await page.getByTestId("order-import-file").click();
+
+    await expect(page.getByTestId("import-preview-listed-version")).toHaveText(
+      "From a save made with RimWorld 1.6.4871 rev591.",
+    );
+    await expect(page.getByTestId("import-preview-version")).toHaveCount(0);
+    await expect(page.getByTestId("import-preview-summary")).toHaveText("3 mods in the list");
+    await expect(page.getByTestId("import-preview-misaligned")).toHaveText(
+      "The number of names in the list (2) doesn't match the number of mods (3), so the sender's names aren't shown.",
+    );
+  });
+
+  test("a save that ends before its header does is rejected with its own reason", async ({
+    page,
+  }) => {
+    await openOrderPage(page);
+    await page.evaluate(() => {
+      window.__PICK_FILE_RESULT__ = "C:/saves/cut.rws";
+      window.__ORDER_FILES__ = {
+        "C:/saves/cut.rws": "<savegame><meta><modIds><li>mod.000</li>",
+      };
+    });
+
+    await page.getByTestId("order-import-button").click();
+    await page.getByTestId("order-import-file").click();
+
+    await expect(page.getByTestId("import-preview-rejected-reason")).toHaveText(
+      "The save ends before its mod list does. It may be damaged, or the game may still be writing it.",
+    );
+    await expect(page.getByTestId("import-preview-confirm")).toHaveCount(0);
   });
 
   test("text with no mod entry is rejected as having no ids", async ({ page }) => {
@@ -398,8 +452,11 @@ test.describe("sharing a load order", () => {
     await openOrderPage(page);
 
     await pasteAndPreview(page, "# RimWorld 1.5.4409 rev1\n1. Core [mod.000]\n2. Mod 1 [mod.001]");
+    await expect(page.getByTestId("import-preview-listed-version")).toHaveText(
+      "Made with RimWorld 1.5.4409 rev1.",
+    );
     await expect(page.getByTestId("import-preview-version")).toHaveText(
-      "Made with RimWorld 1.5.4409 rev1; you have 1.6.4871.",
+      "You have RimWorld 1.6.4871, a different release.",
     );
     await page.getByTestId("import-preview-cancel").click();
 

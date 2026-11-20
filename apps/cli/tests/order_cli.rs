@@ -429,3 +429,185 @@ fn a_missing_version_txt_is_reported_by_name() {
     assert!(export.contains("Version.txt"), "got:\n{export}");
     assert!(import.contains("Version.txt"), "got:\n{import}");
 }
+
+// -- a RimWorld save --------------------------------------------------------
+
+const SAVE_ORDER: [&str; 4] = ["ludeon.rimworld", "zzz.mod", "sample.mod", "aaa.mod"];
+
+fn list_lines(values: &[&str]) -> String {
+    values
+        .iter()
+        .map(|value| format!("\t\t\t<li>{value}</li>\r\n"))
+        .collect()
+}
+
+/// The header of a save as the game writes it, with a body after it.
+fn save_text(ids: &[&str], names: &[&str]) -> String {
+    let steam = vec!["0"; ids.len()];
+    format!(
+        "\u{feff}<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<savegame>\r\n\t<meta>\r\n\
+         \t\t<gameVersion>1.6.4871 rev591</gameVersion>\r\n\t\t<modIds>\r\n{ids}\t\t</modIds>\r\n\
+         \t\t<modSteamIds>\r\n{steam}\t\t</modSteamIds>\r\n\
+         \t\t<modNames>\r\n{names}\t\t</modNames>\r\n\t</meta>\r\n\
+         \t<game>\r\n\t\t<colony>never read</colony>\r\n\t</game>\r\n</savegame>",
+        ids = list_lines(ids),
+        steam = list_lines(&steam),
+        names = list_lines(names),
+    )
+}
+
+fn standard_save() -> String {
+    save_text(&SAVE_ORDER, &["Core", "Zzz", "Sample", "Aaa"])
+}
+
+fn write_save(scratch: &Scratch, name: &str, text: &str) -> PathBuf {
+    let path = scratch.root.join(name);
+    fs::write(&path, text).unwrap_or_else(|error| panic!("write save: {error}"));
+    path
+}
+
+#[test]
+fn a_save_dry_run_prints_the_plan_its_source_and_version_and_writes_nothing() {
+    let scratch = scratch();
+    let save = write_save(&scratch, "autosave.rws", &standard_save());
+    let before = scratch.read_mods_config();
+
+    let text = stdout_of(scratch.cmd(&["import", &save.to_string_lossy(), "--dry-run"]));
+
+    assert!(
+        text.contains("source: RimWorld save (header only)"),
+        "got:\n{text}"
+    );
+    assert!(
+        text.contains("version: saved with RimWorld 1.6.4871 rev591"),
+        "got:\n{text}"
+    );
+    assert!(text.contains("2 activated"), "got:\n{text}");
+    assert!(text.contains("(dry run"), "got:\n{text}");
+    assert_eq!(scratch.read_mods_config(), before);
+    assert_eq!(scratch.backup_count(), 0);
+}
+
+#[test]
+fn a_save_and_an_rml_of_the_same_order_write_the_same_active_mods() {
+    let from_save = scratch();
+    let from_rml = scratch();
+    let save = write_save(&from_save, "autosave.rws", &standard_save());
+    let rml = write_save(
+        &from_rml,
+        "list.rml",
+        &format!(
+            "<savedModList><modList><ids>{}</ids></modList></savedModList>",
+            SAVE_ORDER
+                .iter()
+                .map(|id| format!("<li>{id}</li>"))
+                .collect::<String>()
+        ),
+    );
+
+    stdout_of(from_save.cmd(&["import", &save.to_string_lossy(), "--force", "--yes"]));
+    stdout_of(from_rml.cmd(&["import", &rml.to_string_lossy(), "--force", "--yes"]));
+
+    assert_eq!(from_save.active_ids(), SAVE_ORDER);
+    assert_eq!(from_save.read_mods_config(), from_rml.read_mods_config());
+}
+
+#[test]
+fn a_save_piped_on_stdin_gives_the_same_plan_as_the_file() {
+    let scratch = scratch();
+    let save = write_save(&scratch, "autosave.rws", &standard_save());
+    let from_file = stdout_of(scratch.cmd(&["import", &save.to_string_lossy(), "--dry-run"]));
+    let mut piped = scratch.cmd(&["import", "-", "--dry-run"]);
+    piped.write_stdin(standard_save());
+
+    let from_stdin = stdout_of(piped);
+
+    assert_eq!(from_stdin, from_file);
+}
+
+#[test]
+fn a_truncated_save_is_refused_with_a_reason_and_nothing_is_written() {
+    let scratch = scratch();
+    let whole = standard_save();
+    let cut = whole
+        .find("<modSteamIds>")
+        .unwrap_or_else(|| panic!("fixture has the tag"));
+    let save = write_save(&scratch, "cut.rws", &whole[..cut]);
+    let before = scratch.read_mods_config();
+
+    let message =
+        stderr_of_failure(scratch.cmd(&["import", &save.to_string_lossy(), "--force", "--yes"]));
+
+    assert!(
+        message.contains("ends before its mod list does"),
+        "got:\n{message}"
+    );
+    assert_eq!(scratch.read_mods_config(), before);
+    assert_eq!(scratch.backup_count(), 0);
+}
+
+#[test]
+fn a_save_with_too_few_names_discloses_that_the_names_were_left_out() {
+    let scratch = scratch();
+    let save = write_save(
+        &scratch,
+        "short.rws",
+        &save_text(&SAVE_ORDER, &["Core", "Zzz", "Sample"]),
+    );
+
+    let text = stdout_of(scratch.cmd(&["import", &save.to_string_lossy(), "--dry-run"]));
+
+    assert!(
+        text.contains("names: 3 for 4 ids, not shown"),
+        "got:\n{text}"
+    );
+}
+
+#[test]
+fn a_save_with_too_few_steam_ids_discloses_that_the_workshop_ids_were_left_out() {
+    let scratch = scratch();
+    let whole = save_text(&SAVE_ORDER, &["Core", "Zzz", "Sample", "Aaa"]);
+    // Two of the four `0` entries removed: 2 Steam ids for 4 package ids.
+    let two_steam_ids = whole.replacen("\t\t\t<li>0</li>\r\n", "", 2);
+    let save = write_save(&scratch, "short-steam.rws", &two_steam_ids);
+
+    let text = stdout_of(scratch.cmd(&["import", &save.to_string_lossy(), "--dry-run"]));
+
+    assert!(
+        text.lines()
+            .any(|line| line == "workshop ids: 2 for 4 ids, no Workshop links shown"),
+        "got:\n{text}"
+    );
+    assert!(!text.contains("names: "), "got:\n{text}");
+}
+
+#[test]
+fn a_save_name_with_a_line_separator_prints_on_one_line() {
+    let scratch = scratch();
+    // A mod that is not installed is the one whose listed name is printed.
+    let ids = ["ludeon.rimworld", "sample.mod", "absent.mod"];
+    let names = ["Core", "Sample", "Evil\u{2028}Name"];
+    let save = write_save(&scratch, "evil.rws", &save_text(&ids, &names));
+
+    let text = stdout_of(scratch.cmd(&["import", &save.to_string_lossy(), "--dry-run"]));
+
+    assert!(text.contains("EvilName"), "got:\n{text:?}");
+    assert!(
+        !text.contains('\u{2028}') && !text.contains("Evil\nName"),
+        "got:\n{text:?}"
+    );
+}
+
+#[test]
+fn importing_a_save_leaves_the_save_unchanged() {
+    let scratch = scratch();
+    let save = write_save(&scratch, "autosave.rws", &standard_save());
+    let before = fs::read(&save).unwrap_or_else(|error| panic!("read save: {error}"));
+
+    stdout_of(scratch.cmd(&["import", &save.to_string_lossy(), "--force", "--yes"]));
+
+    assert_eq!(
+        fs::read(&save).unwrap_or_else(|error| panic!("read save: {error}")),
+        before
+    );
+}

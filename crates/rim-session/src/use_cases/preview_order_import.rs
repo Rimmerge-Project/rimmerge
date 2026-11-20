@@ -9,7 +9,8 @@ use rim_analyzer::domain::ModId;
 use crate::Session;
 use crate::mod_inventory::ModInventory;
 use crate::mod_list::{
-    ImportContext, ImportPlan, ParsedModList, Rejection, SkippedEntry, parse_text, plan_import,
+    ImportContext, ImportPlan, ListAlignment, ListFormat, ListedGameVersion, ParsedModList,
+    Rejection, SkippedEntry, parse_text, plan_import,
 };
 use crate::ports::{ModListFileError, ModListFileStore, ModListRead};
 
@@ -52,6 +53,15 @@ impl ImportTarget {
 pub struct ReadyImport {
     /// The diff against this install.
     pub plan: ImportPlan,
+    /// The document shape the list was read from.
+    pub format: ListFormat,
+    /// The game version text the list carries, verbatim (`plan.version`
+    /// only says whether its major.minor differs).
+    pub listed_game_version: Option<ListedGameVersion>,
+    /// Whether the document's names lined up with its ids.
+    pub names: ListAlignment,
+    /// Whether the document's Steam ids lined up with its ids.
+    pub workshop_ids: ListAlignment,
     /// What the parser left out of the list, bounded.
     pub skipped: Vec<SkippedEntry>,
     /// How many further skipped parts were not recorded in `skipped`.
@@ -134,6 +144,10 @@ fn ready(parsed: ParsedModList, target: &ImportTarget) -> ImportPreview {
     );
     ImportPreview::Ready(ReadyImport {
         plan,
+        format: parsed.format,
+        listed_game_version: parsed.list.game_version().cloned(),
+        names: parsed.names,
+        workshop_ids: parsed.workshop_ids,
         skipped: parsed.skipped,
         omitted_skipped: parsed.omitted_skipped,
     })
@@ -182,6 +196,54 @@ mod tests {
             ImportPreview::Ready(ready) => ready,
             ImportPreview::Rejected(rejection) => panic!("rejected: {rejection:?}"),
         }
+    }
+
+    #[test]
+    fn a_save_header_list_carries_its_format_version_and_alignment_into_the_preview() {
+        let mut save = parsed(
+            "ludeon.rimworld
+example.base
+",
+        );
+        save.format = ListFormat::SaveHeader;
+        save.names = ListAlignment::Misaligned { ids: 2, values: 1 };
+        save.list = SharedModList::new(
+            ListedGameVersion::new("1.6.4871 rev591"),
+            save.list.entries().to_vec(),
+        )
+        .expect("list");
+        let store =
+            InMemoryModListFileStore::new().with_file("autosave.rws", ModListRead::Parsed(save));
+
+        let ready = ready_plan(
+            preview_of(store)
+                .from_file(Path::new("autosave.rws"), &target(&["example.base"], &[]))
+                .expect("reads"),
+        );
+
+        assert_eq!(ready.format, ListFormat::SaveHeader);
+        assert_eq!(
+            ready
+                .listed_game_version
+                .as_ref()
+                .map(ListedGameVersion::as_str),
+            Some("1.6.4871 rev591")
+        );
+        assert_eq!(ready.names, ListAlignment::Misaligned { ids: 2, values: 1 });
+        assert_eq!(ready.workshop_ids, ListAlignment::Absent);
+    }
+
+    #[test]
+    fn pasted_text_previews_as_the_text_format() {
+        let ready = ready_plan(ImportPreview::from_text(
+            "ludeon.rimworld
+",
+            &target(&[], &[]),
+        ));
+
+        assert_eq!(ready.format, ListFormat::Text);
+        assert_eq!(ready.listed_game_version, None);
+        assert_eq!(ready.names, ListAlignment::Absent);
     }
 
     #[test]

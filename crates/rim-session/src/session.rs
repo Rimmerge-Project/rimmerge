@@ -19,7 +19,7 @@ use rim_resolve::domain::{
     Action, AssignmentId, AssignmentProject, BothOrders, Coverage, DecisionSet, DefRef,
     GeneratedModIdentity, Ledger, LedgerStats, ManualTag, MergeState, OrderSource, PatchId,
     PatchProject, Placement, PlacementRule, ResolutionStatus, Rule, RuleOrigin, RuleSet,
-    TagEvidence, TagMode, Tagging, merge_status,
+    SorterOverrides, TagEvidence, TagMode, Tagging, merge_status,
 };
 use rim_resolve::sort::{self, SortInput, SortOutcome};
 use rim_resolve::tags::infer_tags;
@@ -31,6 +31,7 @@ use crate::active_set::ActiveSet;
 use crate::file_baseline::FileWatch;
 use crate::finding_index::FindingIndex;
 use crate::merge_workspace::{MergeWorkspace, PreviewSlot};
+use crate::organization::OrganizationState;
 use crate::ports::{DefSourceReader, ModsConfigFile, RulesLoadWarning, StoredRules};
 use crate::settings::{Settings, filter_imported_rules};
 
@@ -40,12 +41,13 @@ mod findings;
 mod merge;
 mod mod_info;
 mod order;
+mod organization;
 mod patches;
 mod rules;
 
 pub use assignments::UnknownAssignment;
 pub use patches::{PatchDecideError, UnknownPatch};
-pub use rules::RuleKey;
+pub use rules::{ManualTagsChange, RuleKey};
 
 // Sibling-file tests; `#[path]` keeps the module named `tests`.
 #[cfg(test)]
@@ -221,26 +223,14 @@ fn merge_mod_placement(
     })
 }
 
-/// Builds the tagging, sort outcome, and effective (filtered, merged, plus
-/// the synthetic merge-mod placement) rule set that follow from the given
-/// facts — a free function (not a method) so [`Session::new`] can call it
-/// before `self` exists. The rule set is returned (not just consumed
-/// internally) so [`Session::recompute_sort`] can cache it as
-/// [`Session::effective_rules`] — the placement-origin lookup needs the
-/// exact set that produced `sort_outcome` to name a placement's own
-/// origin back out of it in `ledger::extract_findings`.
-fn compute(
-    report: &Report,
+/// The tags in effect: inference over the scan evidence and the profile's tag rules, with the
+/// rules page's manual overrides and the decisions' `AddTag`/`RemoveTag` as extra overrides. One
+/// function so a full recompute and a tag-only refresh can never disagree about it.
+fn infer_session_tagging(
     evidence: &[TagEvidence],
     rules: &StoredRules,
-    decisions: &DecisionSet,
-    current: &LoadOrder,
-    profile_hash: &str,
-    sources: &SourceIndex,
-) -> (Tagging, SortOutcome, RuleSet) {
-    let template_children = duplicate_template_children(report, sources, &mods_by_id(report));
-    let overrides = decisions.sorter_overrides(&template_children);
-
+    overrides: &SorterOverrides,
+) -> Tagging {
     // `AddTag`/`RemoveTag` decisions are additional manual overrides on
     // top of the rules page's own `manual_tags` — concatenating them
     // works regardless of order because `infer_tags` processes every
@@ -268,15 +258,33 @@ fn compute(
                 mode: TagMode::Remove,
             }),
     );
+    infer_tags(evidence, &rules.tag_rules, &manual)
+}
 
-    let tagging = infer_tags(evidence, &rules.tag_rules, &manual);
-    // Cluster membership is a scheduling decision, not just a display
-    // label (see `Tagging::accepted`'s own doc comment): only tags the
-    // ledger would already auto-accept at the current threshold — a
-    // manual tag, or an inferred one confident enough — may move a mod
-    // into a contiguous cluster. `self.tagging` (returned below) stays
-    // the full, unfiltered view so the rules page can still show every
-    // inferred tag alongside its confidence.
+/// Builds the tagging, sort outcome, and effective (filtered, merged, plus
+/// the synthetic merge-mod placement) rule set that follow from the given
+/// facts — a free function (not a method) so [`Session::new`] can call it
+/// before `self` exists. The rule set is returned (not just consumed
+/// internally) so [`Session::recompute_sort`] can cache it as
+/// [`Session::effective_rules`] — the placement-origin lookup needs the
+/// exact set that produced `sort_outcome` to name a placement's own
+/// origin back out of it in `ledger::extract_findings`.
+fn compute(
+    report: &Report,
+    evidence: &[TagEvidence],
+    rules: &StoredRules,
+    decisions: &DecisionSet,
+    current: &LoadOrder,
+    profile_hash: &str,
+    sources: &SourceIndex,
+) -> (Tagging, SortOutcome, RuleSet) {
+    let template_children = duplicate_template_children(report, sources, &mods_by_id(report));
+    let overrides = decisions.sorter_overrides(&template_children);
+
+    let tagging = infer_session_tagging(evidence, rules, &overrides);
+    // `SortInput::tagging` is an unused seam (the sorter does no tag-based scheduling), so the
+    // accepted view only feeds it; `self.tagging` (returned below) stays the full, unfiltered view
+    // so the rules page can still show every inferred tag alongside its confidence.
     let accepted = tagging.accepted(rules.settings.threshold);
     // The two import toggles
     // are applied before the synthetic merge-mod placement is merged in
@@ -426,6 +434,12 @@ pub struct Session {
     /// [`crate::ports::ModTimestampReader`]; empty (every time
     /// unavailable) otherwise. Never part of the report.
     update_times: ModUpdateTimes,
+    /// The profile's groups and mod colours, set by
+    /// [`crate::use_cases::LoadProject`] when it has an
+    /// [`crate::ports::OrganizationStore`]. Never read by the sorter or the
+    /// ledger: nothing in [`compute`] or the caches takes it, so an
+    /// organization edit invalidates no cache. See [`OrganizationState`].
+    organization: OrganizationState,
     selected: OrderSource,
     /// Set by the composition root ([`Session::set_def_source_reader`])
     /// once real XML I/O is available. `None` in most tests (and in a
@@ -530,6 +544,7 @@ impl std::fmt::Debug for Session {
             .field("assignments", &self.assignments)
             .field("scoped", &self.scoped)
             .field("rule_load_warnings", &self.rule_load_warnings)
+            .field("organization", &self.organization)
             .field("selected", &self.selected)
             .field(
                 "def_source_reader",
@@ -635,6 +650,7 @@ impl Session {
             rule_load_warnings: Vec::new(),
             mod_knowledge: ModKnowledge::default(),
             update_times: ModUpdateTimes::default(),
+            organization: OrganizationState::NotLoaded,
             selected: OrderSource::Current,
             def_source_reader: None,
             inspections: HashMap::new(),

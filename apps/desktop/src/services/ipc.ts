@@ -54,11 +54,28 @@ export {
   exportOrderFile,
   exportOrderText,
   importOrder,
+  listSaves,
   openWorkshopPage,
   previewOrderImportFile,
   previewOrderImportText,
   suggestedModListPath,
 } from "./ipc/orderShare";
+export {
+  addGroupMembers,
+  createGroup,
+  deleteGroup,
+  getOrganization,
+  groupMembershipCounts,
+  moveGroupMembers,
+  planGroupScope,
+  removeGroupMembers,
+  removeUninstalledMembers,
+  renameGroup,
+  reparentGroup,
+  resetOrganization,
+  setGroupColor,
+  setModColors,
+} from "./ipc/organization";
 export {
   createPatch,
   decidePatch,
@@ -129,6 +146,7 @@ export {
   promoteImportedRule,
   refreshRuleDatabases,
   setManualTag,
+  setManualTags,
   skipRecommendedRulesStep,
   upsertRule,
 } from "./ipc/rules";

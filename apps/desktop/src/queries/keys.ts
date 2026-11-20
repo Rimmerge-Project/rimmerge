@@ -9,6 +9,10 @@ import type { ModListQueryDto } from "@/types/generated/ModListQueryDto";
 import type { OrderSourceDto } from "@/types/generated/OrderSourceDto";
 import type { RuleOriginDto } from "@/types/generated/RuleOriginDto";
 
+/** The shared prefixes of the two Mods list queries, so the per-query keys and the prefix invalidation cannot drift. */
+const WORKING_MODS_PREFIX = ["mods", "working"] as const;
+const INACTIVE_MODS_PREFIX = ["mods", "inactive"] as const;
+
 /**
  * Query key factories for Pinia Colada, centralized here so every query
  * definition and `useSessionEvents`'s invalidation both build the same
@@ -49,6 +53,8 @@ export const queryKeys = {
    * `ruleDatabases()` invalidation (refresh, enable) refreshes this too.
    */
   recommendedRulesStep: () => ["rules", "ruleDatabases", "recommendedStep"] as const,
+  /** `list_saves`'s result — the "Import from a save" list. */
+  saves: () => ["saves"] as const,
   /** `list_tags`'s result. */
   tags: () => ["tags"] as const,
   /** `list_mods`'s result for one filter. */
@@ -58,9 +64,15 @@ export const queryKeys = {
   /** `list_mod_names`'s result. */
   modNames: () => ["mods", "names"] as const,
   /** `list_working_mods`'s result for one query — the Active tab. */
-  workingMods: (query: ModListQueryDto) => ["mods", "working", query] as const,
+  workingMods: (query: ModListQueryDto) => [...WORKING_MODS_PREFIX, query] as const,
+  /** Every Active-tab list query, whatever its query object: the invalidation prefix. */
+  workingModsAll: () => WORKING_MODS_PREFIX,
   /** `list_inactive_mods`'s result for one query — the Inactive tab. */
-  inactiveMods: (query: ModListQueryDto) => ["mods", "inactive", query] as const,
+  inactiveMods: (query: ModListQueryDto) => [...INACTIVE_MODS_PREFIX, query] as const,
+  /** Every Inactive-tab list query, whatever its query object: the invalidation prefix. */
+  inactiveModsAll: () => INACTIVE_MODS_PREFIX,
+  /** `get_organization`'s result: the group tree. */
+  organization: () => ["organization"] as const,
   /** `get_mods_config_baseline`'s result: the live file baseline's status and outside change. */
   fileBaseline: () => ["mods", "fileBaseline"] as const,
   /** `get_pending_active_changes`'s result. */

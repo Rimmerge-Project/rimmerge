@@ -191,8 +191,23 @@ file; only a `.rml` name is accepted. *Copy as text* puts a numbered list
 on the clipboard for a chat message. A mod Rimmerge cannot list is left out
 and the toast says how many.
 
-**Import** takes a `.rml`, a `ModsConfig.xml`-shaped file or a text list,
-from a file or a paste, and always shows a preview first. The preview names
+**Import** takes a `.rml`, a `ModsConfig.xml`-shaped file, a RimWorld save
+(`.rws`; only the mod list in its header is read) or a text list, from a file
+or a paste, and always
+shows a preview first. *Import from a save…* opens a list of the saves in
+RimWorld's `Saves` folder (the one beside the `Config` folder that holds
+`ModsConfig.xml`), newest first, with the save's name and the date it was last
+saved, at most 200 of them (it says how many older ones are not shown; the
+screenshot below shows the list). *Preview*
+on a save opens the same preview as any other import; *Browse…* opens the file
+dialog in that folder for a save kept elsewhere. When the `Saves` folder is not
+found next to your `ModsConfig.xml`, or cannot be listed, the dialog says so and
+Browse still works. The list itself reads only file names and dates; no save is
+opened until you press *Preview* or pick one. *Open a mod list file…* accepts a
+save too. The preview says which RimWorld version the list was
+made with ("From a save made with RimWorld ..." for a save), adds a note when
+this install is a different release, and says when the names or the Workshop ids
+had a different length from the ids and were left out. It names
 what will be activated and deactivated, measured against the active list you have
 in Rimmerge now (the Mods page's Active list, pending changes included; the list is
 the whole active set; Core is never deactivated), the mods that aren't installed (with an *Open on
@@ -207,6 +222,8 @@ order would be too long, or it names a mod that isn't installed or names
 one twice). A list that leaves Core out is not refused: Core is kept first. If your installed mods change between the preview and the
 click, the import is refused, the preview closes and a notice asks you to
 preview the list again.
+
+![The Import from a save list](screenshots/order-page/import-from-save.png)
 
 Importing rescans with the previewed order and selects **Current**: the page
 then shows the imported order with a note that it isn't your active order
@@ -223,7 +240,7 @@ Lists every discovered mod and lets you activate, deactivate and reorder
 them. The **Inactive** list is on the left and the **Active** list on the
 right, side by side on a window about 1,024 pixels wide or more, and stacked
 (Inactive above Active) below that. Each list has its own search, source
-filter (the Active list also a tag filter), sort and selection. A change is
+filter, tag filter, sort and selection. A change is
 staged in the app, not written to `ModsConfig.xml`: it reaches the file's
 `<activeMods>` list only when you Apply (after a Rescan, when mods were added
 or removed). Until then a pending-changes banner shows it, and a stale-order
@@ -299,8 +316,11 @@ which place is meant.
   Move down, Move to top, Move to bottom, and **Move after…**, which opens a
   search over the Active mods and puts the row right after the one you pick.
   Each Inactive row has an **Activate at…** button with the same search, plus
-  "At the start of the list" and "At the end of the list". Up and Down move
-  one shown row, so they follow a filtered view.
+  "At the start of the list" and "At the end of the list". While groups are
+  usable (see Groups and colours below) both lists' ⋮ buttons open a menu that
+  also holds **Groups…** and **Colour…**; the Inactive button then opens a menu
+  with **Activate at…** as its first entry instead of acting at once. Up and
+  Down move one shown row, so they follow a filtered view.
 - *The keyboard.* **Alt+Up** and **Alt+Down** on a focused Active row move it
   one row (with the same selection rule); plain arrow keys still move the
   focus. **Shift+F10** or the **Menu** key on a focused row opens its row menu
@@ -481,12 +501,115 @@ Rescanning brings everything back in sync:
 ![Apply dialog after rescan](screenshots/mods-page/apply-dialog-after-rescan.png)
 ![Mods page after rescan](screenshots/mods-page/mods-page-after-rescan.png)
 
+### Groups and colours
+
+Groups are a way to find mods, nothing more. A group is virtual: it never
+moves a file, never activates or deactivates a mod, and never changes your
+load order. They live in the profile's `organization.json`, separate from the
+sorter's rules, keyed by a mod's package id so they survive updates and
+rescans.
+
+![The Groups panel, a group's mods and the bulk actions over two selected mods](screenshots/mods-page/groups-and-bulk-actions.png)
+
+Choosing **Add to group…** in the bulk actions opens a dialog that names the
+selection and lists the groups:
+
+![The Add to group dialog for two selected mods](screenshots/mods-page/bulk-add-to-group-dialog.png)
+
+- **The Groups panel** is a column on the left of a window 1,800 pixels wide
+  or more, and a drawer opened by the **Groups** button on narrower windows.
+  It lists **All mods**, **Ungrouped** and your group tree. Each group shows
+  how many mods it holds, counting its subgroups (each mod once). It follows
+  the usual tree keys: Up and Down move, Right opens a group or enters it,
+  Left closes it or goes to its parent, Home and End jump, typing a name
+  jumps to it, Enter selects, F2 renames, Delete deletes, and Shift+F10 or
+  the menu key opens the group menu (a right click does too).
+- **Choosing a group** narrows both lists to its mods and its subgroups' mods.
+  This is a filter, not a reorder: the Active list stays in load order and
+  can still be reordered. Search and the other filters work inside the
+  group. A bar above the lists names the group, counts its mods and says
+  how many are not installed.
+- **The group menu** offers a new subgroup, rename, colour, **Move group to**
+  (a group cannot go inside itself or its own subgroups; those places are
+  listed and disabled with the reason), **Remove mods that aren't
+  installed** (the dialog lists those mods, as of the last scan, and removes
+  only the ones still not installed when you confirm), and **Delete**. Deleting asks what to do with subgroups (keep
+  them one level up, the default, or delete them too) and says that no mod
+  is deleted or uninstalled. Names are unique among groups at the same level,
+  not case sensitive; groups nest at most 8 levels.
+- **On a row**, a group shows as a chip with its name (the first two, then
+  "+N" with every name in its tooltip), and a mod's own colour as a stripe on
+  the row's edge, also named in text for screen readers. A colour is never
+  the only cue: the info panel names the mod's colour and lists its groups
+  too, and a narrow row, which hides the chips, keeps the group names as
+  screen-reader text. A mod does not inherit its group's colour. The row's ⋮
+  menu has **Groups…** (check a group to add the mod to it, clear it to remove
+  it; each click is saved at once) and **Colour…** (twelve named colours, or
+  none).
+- **Tags** you added by hand now show on every row, Inactive included, and the
+  tag filter works on both lists.
+- **Bulk actions** appear above a list while it has a selection (each list
+  keeps its own selection, and an action works on that list's selection only,
+  including selected mods the filter hides; the dialog says "12 selected
+  (3 not shown)"). **Add to group…** puts the mods in the group you pick and
+  leaves every other membership alone. **Remove from group…** lists only the
+  groups that hold at least one selected mod, with how many. **Move to group…**
+  is the one way to replace a membership: you pick the group to move **from**
+  (again only groups that hold a selected mod) and the group to move **to**;
+  mods that are not in the first group are left alone. **Colour** sets or
+  clears the colour of every selected mod. **Tags** adds or removes one tag on
+  every selected mod (a tag is lowercase letters, digits, hyphens and
+  underscores). Removing takes the tag off every selected mod that shows it,
+  whether you added it by hand or Rimmerge inferred it; a mod that does not show
+  the tag is left alone and counted as "did not change". Each action is one save, reports what changed
+  ("Added 9 mods to Weapons", "3 were already in the group"), and never
+  changes the selection, the load order, a pending change or `ModsConfig.xml`.
+  Tags never change the sorted order.
+- **Activate or deactivate a whole group**: the group menu has **Activate N
+  mods…** and **Deactivate N mods…** (each mod once, subgroups included). They
+  open the same Activate and Deactivate dialogs as the selection buttons, with
+  a line saying how far the action reaches ("Activate 42 mods, including
+  subgroups", how many are not installed and skipped, how many the current
+  filter hides). Nothing is written until you Apply, like any other change.
+- **Dragging onto groups.** Drag rows from either list onto a group in the
+  panel to add them to it (a selected row carries the whole selection, the
+  rows a filter hides included; the hint under the tree and the toast both
+  say how many were not shown). A drop only ever adds: mods stay in their
+  other groups, and taking mods out of one is **Remove from group…** in the
+  bulk actions (or clear its box in a row's **Groups…** dialog). Drag a group onto another group to put it inside, or onto **All
+  mods** to make it top level. The hovered entry gets a dashed outline, an icon
+  and a sentence under the tree ("Add 3 mods to Weapons"); a place the group
+  cannot go (itself, its own subgroups, where it already is, **Ungrouped**)
+  shows the not-allowed cursor and says why. Other refusals, such as nesting
+  past the depth limit, come from Rimmerge itself and show as an error toast.
+  Only drags that start on a mod row or a group in the panel are taken; a file
+  or text dragged in from elsewhere is ignored. A collapsed group opens after a
+  drag has hovered it for a moment. Dragging never activates, deactivates or
+  moves a mod, never changes the selection, and the Active list's own
+  reordering drag works as before. Below 1,800 pixels, open the Groups drawer
+  first, then drag. Without a mouse: a group's menu **Move group to…** nests it
+  or makes it top level, a row's ⋮ menu **Groups…** adds that one mod to
+  groups, and to add a whole selection, select the rows and use the bulk
+  actions' **Add to group…**.
+- If `organization.json` cannot be read, a notice says so and groups are
+  read-only. If another program only has the file open, **Rescan and try
+  again** reads it again (it is a full rescan of your mods, the only thing that
+  reads the file); otherwise **Start over** keeps a copy of the file and begins
+  with no groups. Your mods and load order are never affected.
+
 ## Rules
 
 Every rule feeding the sorter (your own pair/placement rules, and, if
 imported, rules from a RimSort database), with edit and delete actions
 and, for an imported rule, a "promote to mine" action so it survives a
 re-import. See [concepts/rules-databases.md](concepts/rules-databases.md).
+
+Tags you set on the Mods page's **Tags…** action (one tag on many mods, either
+list) are manual tag overrides like the ones set here, saved in the same rules
+file with one save. An **Add** is a manual override; a **Remove** deletes your
+manual add if there is one and records a "hide" override only when an inferred
+tag would still show, so the file never gains an override that does nothing.
+Tags are not a sorter input, so tagging never changes the sorted order.
 
 ## Def inspector (`/defs/:defRef`)
 

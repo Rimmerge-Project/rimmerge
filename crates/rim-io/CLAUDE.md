@@ -43,6 +43,24 @@ here or in the two interface apps; `rim-resolve`/`rim-merge`/
   `NotificationState::default`, since it's app-remembered state, not a
   preference, and losing it costs at most re-showing an already-seen
   notice.
+- `organization.rs` (`organization.json`, `JsonOrganizationStore`) is the
+  third store that does not follow "unknown version is an error": its
+  `load` has no error type, because every outcome is a state the session
+  models (`OrganizationLoad::{Missing, Loaded, Unusable(issue)}`). It
+  treats the file as untrusted: at most `OrganizationLimits::MAX_FILE_BYTES`
+  are read, a version above 1 is `NewerVersion` (checked before the rest of
+  the shape), every value goes through a domain constructor and the whole
+  document through `ModOrganization::from_parts`, and nothing is repaired:
+  an unusable file stays on disk untouched until the user starts over, when
+  `archive_unusable` copies it to `organization.json.unusable-<seconds>`
+  (a `-n` suffix when that name is taken) before the empty save. `save`
+  writes groups in id order and members sorted, so one state is one byte
+  string. It also persists `next_group_id` (required in the v1 file, bounded
+  by `OrganizationLimits::MAX_GROUP_ID`), so a deleted group's id is never
+  reused after a reload, and it **refuses to write** a document larger than
+  `MAX_FILE_BYTES` (a `StoreError`, so the edit rolls back): the app never
+  writes a file its own reader would turn into `TooLarge`.
+  `archive_unusable` on a missing file is a no-op success.
 - `net/` is this crate's only network dependency; its only two callers
   are `databases/cache.rs` and `release_feed.rs`. `net::http::UreqHttpGet`
   is the only thing anywhere in this workspace that opens a socket —
@@ -80,6 +98,21 @@ here or in the two interface apps; `rim-resolve`/`rim-merge`/
   `MAX_PLAUSIBLE_SECONDS` (9999-12-31, the same bound on the `About.xml` mtime) is no time:
   the UI's date formatting throws on anything larger. A missing file, an implausible time or
   a time under the wrong section is `Unavailable(Unknown)`. Local only, no network.
+- **`saves.rs`**: `list_saves(folder)` lists the `.rws` files directly in
+  RimWorld's `Saves` folder for the desktop's "Import from a save" list. A plain
+  function, not a port (directory metadata, no decision: the caller picks the
+  folder). Directory metadata only, never a save's contents. A regular file whose
+  name ends in `.rws` (ASCII case-insensitive) counts; the entry's own metadata
+  never follows a link, so a symlink or junction named like a save and a folder
+  named `x.rws` are skipped (the `Saves` folder itself is opened as given, so a
+  player's moved folder still lists). At most `MAX_SAVE_DIR_ENTRIES` (10,000)
+  entries are examined and `MAX_LISTED_SAVES` (200) returned, `omitted` counting
+  the qualifying rest (past the examination bound the listing covers the first
+  entries the file system hands out). Newest modified time first, ties by file
+  name ordinal, a missing or implausible time (`plausible_time.rs`, shared with
+  `mod_timestamps.rs`: zero or past 9999-12-31 is no time) `None` and last. A
+  single entry that cannot be inspected is skipped; an unlistable folder is an
+  `io::Error`.
 - Tests only ever touch `tempfile` copies of `tests/fixtures/` — never
   the real install, and never anything "near" it: every path an
   end-to-end test touches, `ModsConfig.xml` included, is a scratch copy
@@ -548,20 +581,54 @@ gate block in the root `CLAUDE.md`.
   (`new()` uses the real one) so route tests never read this machine's
   Steam; **no test calls `launch`**: the `open::that_detached` and `.spawn()`
   lines are covered only by the manual check.
-- **`mod_list_file.rs` + `mod_list_file/{read,write}.rs`**: `RmlFileStore`
+- **`mod_list_file.rs` + `mod_list_file/{read,write,stream,sniff,save_header}.rs`**: `RmlFileStore`
   implements `rim_session::ports::ModListFileStore`. The input is
   untrusted and every bound is a `rim_session::mod_list::ModListLimits`
-  constant, never a local number: `read_bounded` (re-exported as
-  `read_mod_list_bounded`, which the CLI's stdin uses) takes at most
-  `MAX_INPUT_BYTES + 1` bytes and returns `None` past the limit, so an
-  oversized input is never held whole (`Rejection::TooLarge`); decoding is
+  constant, never a local number. **One bounded, incremental reader serves
+  every source**: `stream::read_mod_list(impl Read)` (public, used by
+  `RmlFileStore::read` and the CLI's stdin; the old `read_bounded` and
+  `parse_mod_list_bytes` are gone) reads 64 KiB chunks into one buffer that
+  never exceeds `MAX_INPUT_BYTES + 1`, and `sniff.rs` decides from the first
+  bytes (BOM, declaration, comments, the root, the root's first child) what
+  it is reading. Every read fills a whole 64 KiB chunk and the shape must be
+  settled within the first chunk (past it an undecided input is a list, a
+  save root with no first child is `SaveHeaderMissing`), so the re-sniff
+  from the buffer start is at most two passes however small the source's
+  reads are. The save root is `savegame` (ASCII case-insensitive, like the
+  other roots) and its first child must be exactly `meta` (the game compares
+  it exactly); the sniff returns the root's byte offset and
+  `save_header.rs` starts from it, so a comment naming the root before it
+  cannot confuse the parse. A header whose `</meta>` ends past
+  `MAX_INPUT_BYTES` is `SaveHeaderTooLarge`; input ending after a bare
+  save root is `SaveHeaderTruncated`. A list is read whole up to the budget
+  and parsed as before (`Rejection::TooLarge` past it, so an oversized input
+  is never held whole); a **RimWorld save** (`<savegame>`, root matched
+  ASCII case-insensitively like the others) is read only up to its first
+  `</meta>`, at most one chunk past it (a `</meta>` straddling two chunks is
+  found), and `save_header.rs` closes that prefix, from the root on, with a
+  synthetic `</savegame>` and runs the same `parse_document` safety
+  sequence. A DOCTYPE
+  before the root is `DtdNotAllowed` at the sniff, before any save logic; the
+  first element after the root not being `meta` is `SaveHeaderMissing` (the
+  game itself expects it first); input ending before `</meta>` is
+  `SaveHeaderTruncated`; no `</meta>` within the budget is
+  `SaveHeaderTooLarge`; a `</meta>` inside a comment makes the closed
+  document malformed, so a crafted file is refused, never read as a shorter
+  list. The save header's `modIds`/`modSteamIds`/`modNames` feed the shared
+  `ListPieces` tail (id grammar, skipped entries, the official-content
+  rule); `modSteamIds` is a mod's `About.xml` `steamAppId`, so most values
+  are `0`, and ids can end in `_steam`. **A misaligned parallel list is never
+  zipped short**: `ListPieces` reports `ListAlignment::{Absent, Aligned,
+  Misaligned}` for the names and the Steam ids (for `.rml` and saves alike,
+  where it used to drop them silently), drops a misaligned list whole and
+  keeps every id; `ParsedModList` also carries the `ListFormat`. Decoding is
   lossy UTF-8 with the BOM stripped, and past the byte limit every U+FFFD
   becomes `?` so decoding can't grow the text. **The format is detected by
   content, never by extension**: after the BOM and leading whitespace, a
-  start of `<?xml`, `<!`, `<savedModList` or `<ModsConfigData` (ASCII
+  start of `<?xml`, `<!`, `<savedModList`, `<ModsConfigData` or `<savegame` (ASCII
   case-insensitive) is XML, anything else (a hand-typed line starting with
   `<` included) goes to `rim_session::mod_list::parse_text`; an XML root
-  other than those two is `UnrecognizedFormat`. XML safety: any
+  other than `savedModList`, `ModsConfigData` and `savegame` is `UnrecognizedFormat`. XML safety: any
   `<!DOCTYPE` is `DtdNotAllowed` before parsing (roxmltree allows an empty
   DTD on its own), `raw_element_nesting_exceeds(MAX_RAW_ELEMENT_DEPTH)` is
   `TooDeep`, and roxmltree runs with `allow_dtd: false`, no entity

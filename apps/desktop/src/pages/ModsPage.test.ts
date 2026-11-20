@@ -47,6 +47,7 @@ function mountModsPage(fixtureOverrides: Record<string, unknown> = {}, attachTo?
       return modList([modRow({ modId: "inactive.mod", name: "Inactive Mod" })]);
     },
     list_mod_names: {},
+    get_organization: { kind: "loaded", groups: [], coloredModCount: 0 },
     get_dashboard: dashboardFixture(0),
     list_findings: { total: 0, items: [] },
     // The panel `mod-detail` mounts over the list; kept loading, since
@@ -425,14 +426,14 @@ describe("ModsPage", () => {
     ]);
   });
 
-  it("offers no tag filter on the Inactive list, and a tag typed on the Active list never reaches it", async () => {
+  it("gives each list its own tag filter, so a tag typed on the Active list never reaches the Inactive one", async () => {
     const wrapper = await mountAndNavigate();
     await pane(wrapper, "active").get('[data-testid="mods-tag-filter"]').setValue("framework");
     await pane(wrapper, "inactive").findComponent(Select).vm.$emit("update:modelValue", "local");
 
     await flushPromises();
 
-    expect(pane(wrapper, "inactive").find('[data-testid="mods-tag-filter"]').exists()).toBe(false);
+    expect(pane(wrapper, "inactive").find('[data-testid="mods-tag-filter"]').exists()).toBe(true);
     expect(listInactiveModsCalls.at(-1)).toEqual({
       search: null,
       tag: null,
@@ -630,7 +631,7 @@ describe("ModsPage", () => {
     expect(wrapper.vm.$router.currentRoute.value.fullPath).toBe("/mods/active.mod");
   });
 
-  it("hides the active-only columns on the Inactive tab", async () => {
+  it("hides the dependent count on the Inactive tab but still shows a tag a mod carries", async () => {
     const wrapper = await mountAndNavigate({
       list_inactive_mods: () =>
         modList([modRow({ modId: "inactive.mod", tags: ["framework"], hardDependents: 7 })]),
@@ -639,7 +640,7 @@ describe("ModsPage", () => {
     await flushPromises();
 
     const rowText = wrapper.get('[data-testid="mod-row-inactive.mod"]').text();
-    expect(rowText).not.toContain("framework");
+    expect(rowText).toContain("framework");
     expect(rowText).not.toContain("7");
   });
 
@@ -786,7 +787,7 @@ describe("ModsPage", () => {
       { hidden: 1, text: "(1 not shown)" },
       { hidden: 2, text: "(2 not shown)" },
     ])(
-      "keeps rows a later filter hides selected and says $text, spaced by the span, not the message",
+      "keeps rows a later filter hides selected and says $text in the one count sentence",
       async ({ hidden, text }) => {
         vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
         const allRows = [
@@ -814,12 +815,15 @@ describe("ModsPage", () => {
         expect(pane(wrapper, "active").get('[data-testid="mods-selected-count"]').text()).toContain(
           `${hidden + 1} selected`,
         );
-        const hiddenNote = pane(wrapper, "active").get('[data-testid="mods-selected-hidden"]');
-        // vue-i18n trims whitespace around a plural form, so the gap cannot live in the message
-        // (it would vanish from form 2 on). The span carries it as a logical margin, which also
-        // lets a CJK catalogue write full-width brackets with no gap of its own.
-        expect(hiddenNote.element.textContent).toBe(text);
-        expect(hiddenNote.classes()).toContain("ms-1");
+        // One whole sentence, so a translator owns any space before the bracket (a CJK catalogue
+        // writes none); there is no separate span or margin to get wrong in another language.
+        expect(pane(wrapper, "active").get('[data-testid="mods-selected-count"]').text()).toBe(
+          `${hidden + 1} selected ${text}`,
+        );
+        // The sentence is a single text node in the live region: no child element carries part of it.
+        expect(
+          pane(wrapper, "active").get('[data-testid="mods-selected-count"]').element.children,
+        ).toHaveLength(0);
 
         await pane(wrapper, "active").get('[data-testid="mods-clear-selection"]').trigger("click");
         await flushPromises();
@@ -1607,6 +1611,8 @@ describe("ModsPage", () => {
         const wrapper = await mountMoves();
 
         await wrapper.get('[data-testid="mod-row-menu-x"]').trigger("click");
+        await flushPromises();
+        await wrapper.get('[data-testid="mod-activate-at"]').trigger("click");
         await flushPromises();
         await wrapper.get('[data-testid="mod-position-start"]').trigger("click");
         await flushPromises();

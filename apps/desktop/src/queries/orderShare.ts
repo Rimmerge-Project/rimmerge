@@ -1,8 +1,25 @@
-import { useQueryCache } from "@pinia/colada";
+import { useQuery, useQueryCache } from "@pinia/colada";
+import type { MaybeRefOrGetter } from "vue";
+import { toValue } from "vue";
 
 import { startInvalidation } from "@/queries/invalidation";
+import { queryKeys } from "@/queries/keys";
+import { listSaves } from "@/services/ipc";
 import { useSessionStore } from "@/stores/session";
 import type { ProjectSummaryDto } from "@/types/generated/ProjectSummaryDto";
+
+/**
+ * RimWorld's `Saves` folder listing for the "Import from a save" dialog. Enabled only while
+ * the dialog is open and always stale, so a save the game wrote since is there on reopening.
+ */
+export function useSavesQuery(isOpen: MaybeRefOrGetter<boolean>) {
+  return useQuery({
+    key: queryKeys.saves,
+    query: listSaves,
+    enabled: () => toValue(isOpen),
+    staleTime: 0,
+  });
+}
 
 /**
  * Adopts the session an import (`import_order`) just swapped in: the backend's `selected`
