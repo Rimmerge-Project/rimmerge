@@ -41,6 +41,7 @@ export type MenuAction = "top" | "bottom" | "after" | "activateAt";
 const {
   mods,
   selectable = false,
+  selectedIds = [],
   showActiveColumns = true,
   showUpdated = false,
   showPosition = false,
@@ -52,8 +53,10 @@ const {
   reorderBlockedReason = null,
 } = defineProps<{
   mods: ModListRowDto[];
-  /** Adds a checkbox column bound to {@link selectedIds}. */
+  /** Adds a checkbox column showing {@link selectedIds}; every change goes out as an event for the owner's selection. */
   selectable?: boolean;
+  /** Selected ids, only meaningful while {@link selectable} is set. */
+  selectedIds?: readonly string[];
   /**
    * Whether the tags/hard-dependents columns show — off for the Inactive
    * tab, where both are always empty (the analyzer never computes tags
@@ -89,12 +92,22 @@ const emit = defineEmits<{
   dragEnd: [];
   /** A drop; `slot` is the gap before that row index (`mods.length` is after the last row). */
   drop: [slot: number];
+  /** A Ctrl/Cmd+click, the checkbox or Space: toggle this row's selection. */
+  toggleSelect: [modId: string];
+  /** A plain click or plain keyboard movement: the range anchor follows to this row. */
+  anchorRow: [modId: string];
+  /** A Shift+click or Shift+Space: add the range from the selection anchor to this row. */
+  rangeSelect: [modId: string];
+  /** Shift+Arrow: extend the selection from the anchor to the row focus moved to. */
+  extendSelect: [fromModId: string, toModId: string];
+  /** Ctrl/Cmd+A: select every shown row. */
+  selectAll: [];
+  /** Escape with a selection: clear it. */
+  clearSelection: [];
   /** One shown row up or down, from the Move menu or Alt+Arrow. */
   moveStep: [modId: string, direction: "up" | "down"];
   menuAction: [modId: string, action: MenuAction];
 }>();
-/** Checked ids, only meaningful while {@link selectable} is set. */
-const selectedIds = defineModel<string[]>("selectedIds", { default: () => [] });
 const { t, locale } = useI18n();
 const tm = useTranslateMessage();
 const modLabel = useModLabel();
@@ -147,30 +160,63 @@ function updatedText(mod: ModListRowDto): string {
   return reason === null ? "" : tm(reason);
 }
 
-function isSelected(modId: string): boolean {
-  return selectedIds.value.includes(modId);
-}
+const selectedSet = computed(() => new Set(selectedIds));
 
-function toggleSelected(modId: string): void {
-  selectedIds.value = isSelected(modId)
-    ? selectedIds.value.filter((id) => id !== modId)
-    : [...selectedIds.value, modId];
+function isSelected(modId: string): boolean {
+  return selectedSet.value.has(modId);
 }
 
 function openRow(modId: string): void {
   emit("selectMod", modId);
 }
 
+/**
+ * Ctrl/Cmd+click toggles and Shift+click extends a range, neither opening the info panel; a plain
+ * click only opens it and never touches the selection.
+ */
+function onRowClick(event: MouseEvent, modId: string): void {
+  if (selectable && (event.ctrlKey || event.metaKey)) {
+    emit("toggleSelect", modId);
+    return;
+  }
+  if (selectable && event.shiftKey) {
+    // Shift+click would otherwise also select the text between the two rows.
+    window.getSelection()?.removeAllRanges();
+    emit("rangeSelect", modId);
+    return;
+  }
+  emit("anchorRow", modId);
+  openRow(modId);
+}
+
+/**
+ * A Shift+click on the row checkbox extends a range like one on the row; any other click is left
+ * to the checkbox, which toggles through its own change event.
+ */
+function onCheckboxClick(event: MouseEvent, modId: string): void {
+  if (event.shiftKey) {
+    event.preventDefault();
+    window.getSelection()?.removeAllRanges();
+    emit("rangeSelect", modId);
+  }
+}
+
 const { rovingIndex, onRowFocus, onRowKeydown, focusRow } = useRowKeys({
   mods: () => mods,
   focusedId: lastFocusedId,
   isSelectable: () => selectable,
+  hasSelection: () => selectedIds.length > 0,
   rowMenu: () => rowMenu,
   scrollToIndex: (index) => virtualizer.value.scrollToIndex(index),
   getScroller: () => scrollElementRef.value,
   actions: {
     open: openRow,
-    toggleSelected,
+    setAnchor: (modId) => emit("anchorRow", modId),
+    toggleSelected: (modId) => emit("toggleSelect", modId),
+    selectRange: (modId) => emit("rangeSelect", modId),
+    extendSelection: (fromModId, toModId) => emit("extendSelect", fromModId, toModId),
+    selectAll: () => emit("selectAll"),
+    clearSelection: () => emit("clearSelection"),
     moveStep: (modId, direction) => emit("moveStep", modId, direction),
     openMenu: (event, modId) => onRowMenuClick(event, modId),
     focusMod: (modId) => emit("focusMod", modId),
@@ -210,7 +256,7 @@ const menuItems = computed<MenuItem[]>(() => {
   if (modId === null) {
     return [];
   }
-  const moving = new Set(moveSetFor(modId, selectedIds.value, mods));
+  const moving = new Set(moveSetFor(modId, selectedIds, mods));
   const isBlocked = reorderBlockedReason !== null;
   // `testId` rides along on the item (a MenuItem accepts extra keys) for the item template.
   return [
@@ -264,7 +310,9 @@ function onRowMenuClick(event: Event, modId: string): void {
       ref="scrollElement"
       class="surface-card @container min-h-0 flex-1 overflow-y-auto"
       :class="isHoveringPane ? 'outline-accent outline-2 -outline-offset-2' : ''"
-      role="table"
+      role="grid"
+      :aria-multiselectable="selectable ? 'true' : undefined"
+      :aria-rowcount="mods.length"
       :aria-label="t('mods.table.regionLabel')"
       data-testid="mod-table"
       @dragover="onDragOver"
@@ -287,64 +335,84 @@ function onRowMenuClick(event: Event, modId: string): void {
           v-for="{ virtualRow, mod } in visibleRows"
           :key="mod.modId"
           role="row"
+          :aria-rowindex="virtualRow.index + 1"
           :tabindex="rovingIndex === null ? (virtualRow.index === 0 ? 0 : -1) : virtualRow.index === rovingIndex ? 0 : -1"
           :aria-current="mod.modId === lastFocusedId ? 'true' : undefined"
+          :aria-selected="selectable ? isSelected(mod.modId) : undefined"
           :draggable="draggable"
           class="border-border-subtle hover:bg-surface-2 focus-visible:bg-accent-soft absolute top-0 left-0 flex w-full cursor-pointer items-center gap-2 overflow-hidden border-b @lg:gap-3 px-3 text-sm focus-visible:outline"
-          :class="draggingSet.has(mod.modId) ? 'opacity-50' : ''"
+          :class="[
+            draggingSet.has(mod.modId) ? 'opacity-50' : '',
+            selectable && isSelected(mod.modId) ? 'inset-ring-accent inset-ring-2' : '',
+          ]"
           :style="{
             height: `${virtualRow.size}px`,
             transform: `translateY(${virtualRow.start}px)`,
           }"
           :data-testid="`mod-row-${mod.modId}`"
-          @click="openRow(mod.modId)"
+          @click="onRowClick($event, mod.modId)"
           @keydown="onRowKeydown($event, mod.modId)"
           @focus="onRowFocus(mod.modId)"
           @dragstart="onRowDragStart($event, mod.modId)"
           @dragend="onRowDragEnd"
         >
-          <Checkbox
+          <div
             v-if="selectable"
-            class="shrink-0"
-            binary
-            :model-value="isSelected(mod.modId)"
-            :data-testid="`mod-row-select-${mod.modId}`"
-            @click.stop
-            @update:model-value="toggleSelected(mod.modId)"
-          />
-          <ModRowPosition
-            v-if="showPosition && mod.position !== null"
-            :mod-id="mod.modId"
-            :position="mod.position"
-          />
-          <SourceBadge :source="mod.source" />
-          <span
-            class="text-text min-w-12 flex-1 truncate font-medium"
-            :title="modLabel.titleFor(mod.modId)"
-            :data-testid="`mod-row-name-${mod.modId}`"
-          >{{ modLabel.label(mod.modId) }}</span>
-          <MembershipBadge :mark="mod.membership" />
-          <ModRowStatePill
-            :state="mod.state"
-            :show-pending-scan="showActiveColumns"
-          />
-          <span
-            v-if="showUpdated"
-            class="text-text-muted w-20 min-w-0 truncate text-right text-xs @lg:w-28 @lg:shrink-0"
-            :title="updatedText(mod)"
-            :data-testid="`mod-row-updated-${mod.modId}`"
-          >{{ updatedText(mod) }}</span>
-          <ModRowScanFacts
-            v-if="showActiveColumns"
-            :state="mod.state"
-          />
-          <ModRowMenuButton
+            role="gridcell"
+            class="contents"
+          >
+            <Checkbox
+              class="shrink-0"
+              binary
+              :model-value="isSelected(mod.modId)"
+              :data-testid="`mod-row-select-${mod.modId}`"
+              @click.stop="onCheckboxClick($event, mod.modId)"
+              @update:model-value="emit('toggleSelect', mod.modId)"
+            />
+          </div>
+          <div
+            role="gridcell"
+            class="contents"
+          >
+            <ModRowPosition
+              v-if="showPosition && mod.position !== null"
+              :mod-id="mod.modId"
+              :position="mod.position"
+            />
+            <SourceBadge :source="mod.source" />
+            <span
+              class="text-text min-w-12 flex-1 truncate font-medium"
+              :title="modLabel.titleFor(mod.modId)"
+              :data-testid="`mod-row-name-${mod.modId}`"
+            >{{ modLabel.label(mod.modId) }}</span>
+            <MembershipBadge :mark="mod.membership" />
+            <ModRowStatePill
+              :state="mod.state"
+              :show-pending-scan="showActiveColumns"
+            />
+            <span
+              v-if="showUpdated"
+              class="text-text-muted w-20 min-w-0 truncate text-right text-xs @lg:w-28 @lg:shrink-0"
+              :title="updatedText(mod)"
+              :data-testid="`mod-row-updated-${mod.modId}`"
+            >{{ updatedText(mod) }}</span>
+            <ModRowScanFacts
+              v-if="showActiveColumns"
+              :state="mod.state"
+            />
+          </div>
+          <div
             v-if="rowMenu !== 'none'"
-            :mod-id="mod.modId"
-            :menu="rowMenu"
-            :name="modLabel.label(mod.modId)"
-            @open="onRowMenuClick($event, mod.modId)"
-          />
+            role="gridcell"
+            class="contents"
+          >
+            <ModRowMenuButton
+              :mod-id="mod.modId"
+              :menu="rowMenu"
+              :name="modLabel.label(mod.modId)"
+              @open="onRowMenuClick($event, mod.modId)"
+            />
+          </div>
         </div>
       </div>
     </div>

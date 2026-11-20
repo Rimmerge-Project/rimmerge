@@ -10,6 +10,8 @@ import type { ModSelection } from "@/composables/useModSelection";
 type SelectionBarModel = Pick<
   ModSelection,
   | "shownCount"
+  | "selectedCount"
+  | "isCountPaused"
   | "areAllShownSelected"
   | "areSomeShownSelected"
   | "hiddenSelectedCount"
@@ -22,11 +24,9 @@ type SelectionBarModel = Pick<
  * A Mods list's selection header: select all shown (or deselect them), how many are selected and
  * how many of those the filter hides (a polite live region), and clear.
  */
-const { selection, selectedCount } = defineProps<{
+const { selection } = defineProps<{
   /** The list's selection, owned by its pane. */
   selection: SelectionBarModel;
-  /** Every selected id, hidden ones included. */
-  selectedCount: number;
 }>();
 
 const { t } = useI18n();
@@ -73,8 +73,14 @@ function toggleSelectAll(): void {
       aria-live="polite"
       data-testid="mods-selected-count"
     >
-      <template v-if="selectedCount > 0">
-        {{ t("mods.selection.selectedCount", { count: selectedCount }, selectedCount) }}<span
+      <template v-if="selection.selectedCount.value > 0 && !selection.isCountPaused.value">
+        {{
+          t(
+            "mods.selection.selectedCount",
+            { count: selection.selectedCount.value },
+            selection.selectedCount.value,
+          )
+        }}<span
           v-if="selection.hiddenSelectedCount.value > 0"
           class="ms-1"
           data-testid="mods-selected-hidden"
@@ -92,7 +98,7 @@ function toggleSelectAll(): void {
       severity="secondary"
       text
       size="small"
-      :disabled="selectedCount === 0"
+      :disabled="selection.selectedCount.value === 0"
       data-testid="mods-clear-selection"
       @click="selection.clear"
     />

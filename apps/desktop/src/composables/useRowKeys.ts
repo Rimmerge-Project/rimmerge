@@ -10,6 +10,16 @@ export interface RowKeyActions {
   open: (modId: string) => void;
   /** Toggles the row's checkbox (Space, while the table is selectable). */
   toggleSelected: (modId: string) => void;
+  /** Moves the range anchor to a row focus moved to (plain arrow, Home, End). */
+  setAnchor: (modId: string) => void;
+  /** Adds the range from the selection anchor to the row (Shift+Space). */
+  selectRange: (modId: string) => void;
+  /** Extends the selection from the anchor to the row focus just moved to (Shift+Arrow). */
+  extendSelection: (fromModId: string, toModId: string) => void;
+  /** Selects every shown row (Ctrl/Cmd+A). */
+  selectAll: () => void;
+  /** Clears the selection (Escape, while something is selected). */
+  clearSelection: () => void;
   /** One shown row up or down (Alt+ArrowUp/Down, while the rows carry a Move menu). */
   moveStep: (modId: string, direction: "up" | "down") => void;
   /** Opens the row's menu (Shift+F10 or the ContextMenu key). */
@@ -24,6 +34,8 @@ export interface RowKeysOptions {
   /** The roving-tabindex row's id, owned by the table's caller; `null` before anything has been focused. */
   focusedId: Ref<string | null>;
   isSelectable: () => boolean;
+  /** Whether anything is selected; Escape only means "clear" then, so it still closes the panel otherwise. */
+  hasSelection: () => boolean;
   rowMenu: () => RowMenu;
   /** Scrolls the virtualized list so the row at `index` is rendered. */
   scrollToIndex: (index: number) => void;
@@ -33,13 +45,15 @@ export interface RowKeysOptions {
 
 /**
  * A mod table's keyboard model: one roving-tabindex row at a time, arrows/Home/End moving that
- * focus, Enter opening, Space toggling the checkbox, Alt+Arrow moving the row, and Shift+F10 or
+ * focus, Enter opening, Space toggling the checkbox (Shift+Space and Shift+Arrow extending a range,
+ * Ctrl/Cmd+A selecting all, Escape clearing), Alt+Arrow moving the row, and Shift+F10 or
  * the ContextMenu key opening the row menu.
  */
 export function useRowKeys({
   mods,
   focusedId,
   isSelectable,
+  hasSelection,
   rowMenu,
   scrollToIndex,
   getScroller,
@@ -70,10 +84,10 @@ export function useRowKeys({
   }
 
   /** Moves roving focus by `delta` rows (±1), or to the very first/last row when `toEnd` is given. */
-  async function moveFocus(delta: number, toEnd?: "start" | "end"): Promise<void> {
+  async function moveFocus(delta: number, toEnd?: "start" | "end"): Promise<string | null> {
     const rows = mods();
     if (rows.length === 0) {
-      return;
+      return null;
     }
     const current = rovingIndex.value ?? 0;
     const target =
@@ -84,10 +98,53 @@ export function useRowKeys({
           : Math.min(Math.max(current + delta, 0), rows.length - 1);
     const targetMod = rows[target];
     if (!targetMod) {
-      return;
+      return null;
     }
     await focusRow(targetMod.modId);
     actions.focusMod(targetMod.modId);
+    return targetMod.modId;
+  }
+
+  /** A plain focus move also moves the range anchor, leaving the selection as it is. */
+  async function moveFocusAndAnchor(delta: number, toEnd?: "start" | "end"): Promise<void> {
+    const targetId = await moveFocus(delta, toEnd);
+    if (isSelectable() && targetId !== null) {
+      actions.setAnchor(targetId);
+    }
+  }
+
+  /** Shift+Arrow: moves focus one row and extends the selection to it. */
+  async function extendFocus(delta: number, fromModId: string): Promise<void> {
+    const targetId = await moveFocus(delta);
+    if (isSelectable() && targetId !== null && targetId !== fromModId) {
+      actions.extendSelection(fromModId, targetId);
+    }
+  }
+
+  /**
+   * Ctrl/Cmd+A selects every shown row and Escape clears a non-empty selection (stopping the
+   * event so the same press does not also close the info panel). Both defer to text entry and
+   * dialogs. Returns whether the key was consumed.
+   */
+  function onSelectionKey(event: KeyboardEvent): boolean {
+    // A focused row checkbox is a native input but not text entry: the keys still mean the list.
+    const isRowCheckbox =
+      event.target instanceof HTMLInputElement && event.target.type === "checkbox";
+    if (!isSelectable() || (!isRowCheckbox && isInert(event.target))) {
+      return false;
+    }
+    const isSelectAll = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "a";
+    if (isSelectAll) {
+      event.preventDefault();
+      actions.selectAll();
+      return true;
+    }
+    if (event.key === "Escape" && hasSelection()) {
+      event.stopPropagation();
+      actions.clearSelection();
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -144,7 +201,7 @@ export function useRowKeys({
   }
 
   function onRowKeydown(event: KeyboardEvent, modId: string): void {
-    if (onMoveKey(event, modId) || onMenuKey(event, modId)) {
+    if (onMoveKey(event, modId) || onMenuKey(event, modId) || onSelectionKey(event)) {
       return;
     }
     switch (event.key) {
@@ -154,24 +211,28 @@ export function useRowKeys({
       case " ":
         if (isSelectable()) {
           event.preventDefault();
-          actions.toggleSelected(modId);
+          if (event.shiftKey) {
+            actions.selectRange(modId);
+          } else {
+            actions.toggleSelected(modId);
+          }
         }
         break;
       case "ArrowDown":
         event.preventDefault();
-        void moveFocus(1);
+        void (event.shiftKey ? extendFocus(1, modId) : moveFocusAndAnchor(1));
         break;
       case "ArrowUp":
         event.preventDefault();
-        void moveFocus(-1);
+        void (event.shiftKey ? extendFocus(-1, modId) : moveFocusAndAnchor(-1));
         break;
       case "Home":
         event.preventDefault();
-        void moveFocus(0, "start");
+        void moveFocusAndAnchor(0, "start");
         break;
       case "End":
         event.preventDefault();
-        void moveFocus(0, "end");
+        void moveFocusAndAnchor(0, "end");
         break;
       default:
         break;

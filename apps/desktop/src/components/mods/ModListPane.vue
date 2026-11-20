@@ -135,14 +135,13 @@ defineExpose({ focusRow });
     <ModSelectionBar
       v-if="rows"
       :selection="selection"
-      :selected-count="selectedIds.length"
     />
     <ModTable
       v-if="rows"
       ref="table"
-      v-model:selected-ids="selectedIds"
       :mods="rows"
       selectable
+      :selected-ids="selectedIds"
       :show-active-columns="showActiveColumns"
       :show-updated="sortKey === 'lastUpdated'"
       :show-position="showPosition"
@@ -152,6 +151,12 @@ defineExpose({ focusRow });
       :refused-text="refusedText"
       :row-menu="rowMenu"
       :reorder-blocked-reason="reorderBlockedReason"
+      @anchor-row="selection.setAnchor"
+      @toggle-select="selection.toggle"
+      @range-select="selection.selectRange"
+      @extend-select="selection.extendSelection"
+      @select-all="selection.selectAllShown"
+      @clear-selection="selection.clear"
       @select-mod="(modId: string) => emit('selectMod', modId)"
       @focus-mod="(modId: string) => emit('focusMod', modId)"
       @drag-start="(modId: string) => emit('dragStart', modId)"
