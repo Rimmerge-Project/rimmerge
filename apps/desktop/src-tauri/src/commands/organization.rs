@@ -13,8 +13,9 @@ use rim_session::use_cases::{EditOrganization, RemoveUninstalledMembers, ResetOr
 
 use crate::commands::emit_session_changed;
 use crate::dto::organization::{
-    CreateGroupRequestDto, DeleteGroupRequestDto, GroupMembersRequestDto, GroupScopePlanDto,
-    GroupScopeRequestDto, MoveGroupMembersRequestDto, OrganizationDto, OrganizationEditOutcomeDto,
+    CreateGroupRequestDto, DeleteGroupRequestDto, GroupMembersRequestDto, GroupMembershipCountDto,
+    GroupMembershipCountsRequestDto, GroupScopePlanDto, GroupScopeRequestDto,
+    MoveGroupMembersRequestDto, OrganizationDto, OrganizationEditOutcomeDto,
     RemoveUninstalledMembersRequestDto, RenameGroupRequestDto, ReparentGroupRequestDto,
     SetGroupColorRequestDto, SetModColorsRequestDto, parse_group_id, parse_mod_ids,
 };
@@ -219,6 +220,32 @@ pub(crate) async fn plan_group_scope_inner(
     .await
 }
 
+/// How many of the requested mods each group holds directly: the sources the Move to group
+/// dialog can offer. A read; nothing is saved or emitted.
+///
+/// # Errors
+///
+/// Returns [`CommandError::no_project_loaded`] when no project is loaded,
+/// [`CommandError::invalid_input`] for a bad or too many ids, or the
+/// `organization_unavailable` code.
+pub(crate) async fn group_membership_counts_inner(
+    state: &AppState,
+    request: GroupMembershipCountsRequestDto,
+) -> Result<Vec<GroupMembershipCountDto>, CommandError> {
+    let mods = parse_mod_ids(&request.mod_ids)?;
+    with_session(state, move |session| {
+        let counts = session.group_membership_counts(&mods)?;
+        Ok(counts
+            .into_iter()
+            .map(|(group, count)| GroupMembershipCountDto {
+                id: group.get(),
+                count,
+            })
+            .collect())
+    })
+    .await
+}
+
 /// "Start over" after an unusable `organization.json`: keeps a copy of the
 /// file, then saves an empty organization.
 ///
@@ -417,6 +444,19 @@ pub async fn plan_group_scope(
     request: GroupScopeRequestDto,
 ) -> Result<GroupScopePlanDto, CommandError> {
     plan_group_scope_inner(&state, request).await
+}
+
+/// See `group_membership_counts_inner`.
+///
+/// # Errors
+///
+/// See `group_membership_counts_inner`.
+#[tauri::command]
+pub async fn group_membership_counts(
+    state: tauri::State<'_, AppState>,
+    request: GroupMembershipCountsRequestDto,
+) -> Result<Vec<GroupMembershipCountDto>, CommandError> {
+    group_membership_counts_inner(&state, request).await
 }
 
 /// See `reset_organization_inner`; also emits `organizationChanged` on
@@ -1035,6 +1075,73 @@ mod tests {
         assert_eq!(plan.not_installed, 1);
         assert_eq!(plan.not_installed_ids, ["gone"]);
         assert_eq!(code_of(missing), CommandErrorCode::GroupNotFound);
+    }
+
+    #[tokio::test]
+    async fn membership_counts_cover_only_groups_holding_a_requested_mod() {
+        let (state, store) = app();
+        let weapons = create(&state, "Weapons", None).await;
+        let other = create(&state, "Other", None).await;
+        add_group_members_inner(
+            &state,
+            GroupMembersRequestDto {
+                id: weapons,
+                mod_ids: mod_ids(&["a", "b_steam"]),
+            },
+        )
+        .await
+        .expect("add");
+        add_group_members_inner(
+            &state,
+            GroupMembersRequestDto {
+                id: other,
+                mod_ids: mod_ids(&["idle"]),
+            },
+        )
+        .await
+        .expect("add");
+        let saves = store.save_count();
+
+        let counts = group_membership_counts_inner(
+            &state,
+            GroupMembershipCountsRequestDto {
+                mod_ids: mod_ids(&["a", "b", "zzz"]),
+            },
+        )
+        .await
+        .expect("counts");
+
+        assert_eq!(
+            counts,
+            vec![GroupMembershipCountDto {
+                id: weapons,
+                count: 2
+            }]
+        );
+        assert_eq!(store.save_count(), saves, "a read saves nothing");
+    }
+
+    #[tokio::test]
+    async fn membership_counts_refuse_when_organization_is_unavailable() {
+        let (state, _) = app();
+        {
+            // Scoped so the lock is released before the first await.
+            let mut guard = state.session.write().expect("lock");
+            set_organization_state(
+                guard.as_mut().expect("session"),
+                OrganizationState::NotLoaded,
+            );
+        }
+
+        let refused = group_membership_counts_inner(
+            &state,
+            GroupMembershipCountsRequestDto {
+                mod_ids: mod_ids(&["a"]),
+            },
+        )
+        .await;
+
+        assert_eq!(code_of(refused), CommandErrorCode::OrganizationUnavailable);
     }
 
     #[tokio::test]

@@ -5,6 +5,7 @@ import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 
 import type { ModSelection } from "@/composables/useModSelection";
+import { selectionSummary } from "@/utils/selectionText";
 
 /** The part of a list's selection the bar reads and acts on; pruning stays with the pane. */
 type SelectionBarModel = Pick<
@@ -42,25 +43,9 @@ const selectAllLabel = computed(() =>
     : t("mods.selection.selectAllEmpty"),
 );
 
-/**
- * One whole sentence, so the note about hidden rows (and any space or bracket around it) belongs
- * to the translation. Each number is worded by its own plural rule: "{selected}" and "{hidden}"
- * are two parts, each agreeing with its own count (ru, pl and uk change the noun with the number).
- */
-const selectedText = computed(() => {
-  const selected = t(
-    "mods.selection.selectedCount",
-    { count: selection.selectedCount.value },
-    selection.selectedCount.value,
-  );
-  const hiddenCount = selection.hiddenSelectedCount.value;
-  return hiddenCount > 0
-    ? t("mods.selection.selectedCountHidden", {
-        selected,
-        hidden: t("mods.selection.hiddenPart", { count: hiddenCount }, hiddenCount),
-      })
-    : selected;
-});
+const selectedText = computed(() =>
+  selectionSummary(t, selection.selectedCount.value, selection.hiddenSelectedCount.value),
+);
 
 function toggleSelectAll(): void {
   if (selection.areAllShownSelected.value) {

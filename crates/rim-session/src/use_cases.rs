@@ -68,6 +68,7 @@ mod run_launch_network_checks;
 mod select_order;
 mod set_assignment_row;
 mod set_manual_tag;
+mod set_manual_tags;
 mod skip_recommended_rules;
 mod update_app_settings;
 mod update_assignment;
@@ -182,6 +183,7 @@ pub use run_launch_network_checks::{LaunchNetworkChecksOutcome, RunLaunchNetwork
 pub use select_order::SelectOrder;
 pub use set_assignment_row::{SetAssignmentRow, SetAssignmentRowError};
 pub use set_manual_tag::SetManualTag;
+pub use set_manual_tags::SetManualTags;
 pub use skip_recommended_rules::SkipRecommendedRules;
 pub use update_app_settings::{EnableRecommendedSources, ResetNetworkPolicy, UpdateAppSettings};
 pub use update_assignment::{

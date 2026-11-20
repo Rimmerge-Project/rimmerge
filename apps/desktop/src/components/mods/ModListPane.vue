@@ -2,6 +2,7 @@
 import { computed, useTemplateRef, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
+import ModBulkBar from "@/components/mods/ModBulkBar.vue";
 import ModListStatus from "@/components/mods/ModListStatus.vue";
 import ModSelectionBar from "@/components/mods/ModSelectionBar.vue";
 import ModTable, {
@@ -13,6 +14,7 @@ import { useModSelection } from "@/composables/useModSelection";
 import type { ListSortKeyDto } from "@/types/generated/ListSortKeyDto";
 import type { ModListDto } from "@/types/generated/ModListDto";
 import type { ModListRowDto } from "@/types/generated/ModListRowDto";
+import type { BulkAction } from "@/utils/organization";
 
 const {
   kind,
@@ -71,6 +73,8 @@ const emit = defineEmits<{
   drop: [slot: number];
   moveStep: [modId: string, direction: "up" | "down"];
   menuAction: [modId: string, action: MenuAction];
+  /** An organization or tag action on this list's whole selection (hidden-by-filter mods included). */
+  bulkAction: [action: BulkAction];
 }>();
 const selectedIds = defineModel<string[]>("selectedIds", { required: true });
 defineSlots<{
@@ -83,6 +87,10 @@ defineSlots<{
 }>();
 
 const { t } = useI18n();
+
+const heading = computed(() =>
+  kind === "active" ? t("mods.page.activeHeading") : t("mods.page.inactiveHeading"),
+);
 
 /** The table's rows, only once the list loaded without error. */
 const rows = computed<ModListRowDto[] | null>(() =>
@@ -122,7 +130,7 @@ defineExpose({ focusRow });
       :id="`mods-pane-heading-${kind}`"
       class="text-text shrink-0 text-lg font-semibold"
     >
-      {{ kind === "active" ? t("mods.page.activeHeading") : t("mods.page.inactiveHeading") }}
+      {{ heading }}
     </h2>
     <slot name="toolbar" />
     <slot name="notes" />
@@ -138,6 +146,13 @@ defineExpose({ focusRow });
     <ModSelectionBar
       v-if="rows"
       :selection="selection"
+    />
+    <ModBulkBar
+      v-if="rows && selection.selectedCount.value > 0"
+      :kind="kind"
+      :list-name="heading"
+      :has-organization-actions="hasOrganizationActions"
+      @action="(action: BulkAction) => emit('bulkAction', action)"
     />
     <ModTable
       v-if="rows"

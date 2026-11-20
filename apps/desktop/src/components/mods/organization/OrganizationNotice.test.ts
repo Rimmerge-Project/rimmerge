@@ -103,7 +103,10 @@ describe("OrganizationNotice", () => {
     [{ kind: "tooLarge", limitBytes: 4_194_304 }, "too large"],
     [{ kind: "malformed" }, "damaged"],
     [{ kind: "newerVersion", found: 9 }, "newer version"],
-    [{ kind: "invalid", rule: "wouldCreateCycle" }, "breaks a rule"],
+    [{ kind: "invalid", rule: "wouldCreateCycle" }, "groups that don't fit together"],
+    // The same sentence covers causes that are not a loop or a limit, so it names none alone.
+    [{ kind: "invalid", rule: "danglingParent" }, "groups that don't fit together"],
+    [{ kind: "invalid", rule: "nameTaken" }, "groups that don't fit together"],
   ] as const)("offers Start over at once, and no retry, for %j", (issue, words) => {
     const wrapper = mountNotice({ kind: "recovered", issue });
 

@@ -9,7 +9,8 @@ useSessionEvents();
 
 <template>
   <RouterView />
-  <Toast />
+  <!-- A toast's detail may hold several lines (an action's extra counts); keep the line breaks. -->
+  <Toast :pt="{ detail: { class: 'whitespace-pre-line' } }" />
   <!-- The Load order page header's Export and Import menus sit top-right, where the default
        toasts land; sharing a load order reports in its own group at the bottom instead. -->
   <Toast

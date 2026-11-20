@@ -65,6 +65,7 @@ export {
   createGroup,
   deleteGroup,
   getOrganization,
+  groupMembershipCounts,
   moveGroupMembers,
   planGroupScope,
   removeGroupMembers,
@@ -145,6 +146,7 @@ export {
   promoteImportedRule,
   refreshRuleDatabases,
   setManualTag,
+  setManualTags,
   skipRecommendedRulesStep,
   upsertRule,
 } from "./ipc/rules";

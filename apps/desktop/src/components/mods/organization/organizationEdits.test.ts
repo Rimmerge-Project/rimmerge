@@ -291,7 +291,7 @@ describe("OrganizationDialogs: remove mods that are not installed", () => {
     await flushPromises();
 
     expect(wrapper.get('[data-testid="remove-uninstalled-failed"]').text()).toBe(
-      "Couldn't check which mods aren't installed. Close this and try again.",
+      "Couldn't check which mods aren't installed. Close this dialog and try again.",
     );
     expect(
       wrapper.get('[data-testid="remove-uninstalled-confirm"]').attributes("disabled"),

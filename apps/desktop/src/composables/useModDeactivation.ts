@@ -67,6 +67,11 @@ export function useModDeactivation({
     return planAndAsk([...selectedIds.value], "ask");
   }
 
+  /** The mods of a group: plans exactly `ids` and opens the dialog. */
+  function openForIds(ids: string[]): Promise<void> {
+    return planAndAsk([...ids], "ask");
+  }
+
   /** A drop of `ids` into the Inactive list. */
   function deactivateDropped(ids: string[]): Promise<void> {
     return planAndAsk(ids, "commitIfPlain");
@@ -88,6 +93,7 @@ export function useModDeactivation({
     isPlanning,
     isCommitting,
     openDialog,
+    openForIds,
     deactivateDropped,
     confirm,
   };

@@ -338,6 +338,19 @@ key, so deleting one doesn't wipe the other. `active_mods_by_base_id()`
 (base id -> `Mod.workshop_id`) exists for `rim-io`'s SteamDB importer;
 every other caller still uses the plain-id `active_base_ids()`.
 
+`SetManualTags` (the Mods page's bulk Tags action) is the bulk sibling of
+`SetManualTag`: one rules snapshot, one save, rollback on failure, and **no
+`recompute_sort`** — a tag-only change cannot move a mod, so
+`Session::set_manual_tags` re-infers the tagging through the same
+`infer_session_tagging` the full `compute` uses and drops only the ledgers
+(their `TagInferred` findings read the tagging). Its `Remove` acts only on mods
+that currently *show* the tag (manual or inferred): it deletes a manual `Add`
+override and records a manual `Remove` only if inference would still show the
+tag, so no dead `Remove` override is written; the rest count as unchanged. The
+rollback is `restore_manual_tags` (tagging refresh only), never
+`restore_rules`, which would re-sort and could replace Suggested. Tests pin that
+the sort outcome and both orders are unchanged.
+
 The generated merge mod's id is derived from the profile hash
 (`GeneratedModIdentity::for_profile`), **never stored** — `Session::compute`
 adds its synthetic Bottom placement rule whenever the id is already in

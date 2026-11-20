@@ -77,7 +77,9 @@ pub struct SortInput<'a> {
     /// Which mods carry which tags. Unused by the sorter itself (there is
     /// no tag-based scheduling); kept on `SortInput` as a stable seam for
     /// a future tag-driven ordering feature rather than churning every
-    /// caller to build one less field.
+    /// caller to build one less field. `Session::set_manual_tags` relies on
+    /// this: it refreshes tags without re-sorting, so the day the sorter
+    /// reads tags that method must re-sort too.
     pub tagging: &'a Tagging,
     /// User decisions that change what the sorter builds.
     pub overrides: &'a SorterOverrides,

@@ -14,28 +14,64 @@ import { COLOR_NAME_KEY, COLOR_SWATCH_CLASS, COLOR_TOKENS } from "@/utils/organi
  * radio with its swatch and its name, so the name carries the choice and the swatch only
  * decorates it.
  */
-const { subject, current, error, isSubmitting } = defineProps<{
+const {
+  subject,
+  current,
+  error,
+  isSubmitting,
+  scopeText = null,
+} = defineProps<{
   /** What is being coloured, for the title and help. */
-  subject: "group" | "mod";
+  subject: "group" | "mod" | "mods";
   /** The colour it has now, or `null` for none. */
   current: ColorTokenDto | null;
   error: CommandErrorDescriptor | null;
   isSubmitting: boolean;
+  /** For a bulk colour: "12 selected (3 not shown)", so the dialog says how many mods it acts on. */
+  scopeText?: string | null;
 }>();
-const emit = defineEmits<{ choose: [color: ColorTokenDto | null] }>();
+const emit = defineEmits<{
+  choose: [color: ColorTokenDto | null];
+  /** The dialog has finished leaving the page. */
+  afterHide: [];
+}>();
 const visible = defineModel<boolean>("visible", { required: true });
+
+const TITLE_KEY = {
+  group: "mods.colors.groupTitle",
+  mod: "mods.colors.modTitle",
+  mods: "mods.colors.modsTitle",
+} as const satisfies Record<"group" | "mod" | "mods", string>;
+const HELP_KEY = {
+  group: "mods.colors.groupHelp",
+  mod: "mods.colors.modHelp",
+  mods: "mods.colors.modsHelp",
+} as const satisfies Record<"group" | "mod" | "mods", string>;
 
 const { t } = useI18n();
 const legendId = useId();
-const picked = ref<ColorTokenDto | "none">(current ?? "none");
+
+/**
+ * What the dialog starts on: a group or a single mod shows the colour it has now. A bulk colour
+ * has no single current colour, so it starts with nothing picked and Set colour waits for a
+ * choice: one click must never clear every selected mod's colour by accident.
+ */
+function initialChoice(): ColorTokenDto | "none" | null {
+  return subject === "mods" ? null : (current ?? "none");
+}
+
+const picked = ref<ColorTokenDto | "none" | null>(initialChoice());
 
 watch(visible, (isOpen) => {
   if (isOpen) {
-    picked.value = current ?? "none";
+    picked.value = initialChoice();
   }
 });
 
 function apply(): void {
+  if (picked.value === null) {
+    return;
+  }
   emit("choose", picked.value === "none" ? null : picked.value);
 }
 </script>
@@ -44,13 +80,20 @@ function apply(): void {
   <Dialog
     v-model:visible="visible"
     modal
-    :header="subject === 'group' ? t('mods.colors.groupTitle') : t('mods.colors.modTitle')"
+    :header="t(TITLE_KEY[subject])"
     :style="{ width: '26rem' }"
     data-testid="color-dialog"
+    @after-hide="emit('afterHide')"
   >
     <div class="flex flex-col gap-3 text-sm">
+      <p
+        v-if="scopeText !== null"
+        data-testid="color-scope"
+      >
+        {{ scopeText }}
+      </p>
       <p class="text-text-muted">
-        {{ subject === "group" ? t("mods.colors.groupHelp") : t("mods.colors.modHelp") }}
+        {{ t(HELP_KEY[subject]) }}
       </p>
       <fieldset
         role="radiogroup"
@@ -110,6 +153,7 @@ function apply(): void {
       <Button
         :label="t('mods.colors.apply')"
         :loading="isSubmitting"
+        :disabled="picked === null"
         data-testid="color-apply"
         @click="apply"
       />

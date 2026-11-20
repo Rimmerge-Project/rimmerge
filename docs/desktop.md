@@ -538,6 +538,29 @@ rescans.
   none).
 - **Tags** you added by hand now show on every row, Inactive included, and the
   tag filter works on both lists.
+- **Bulk actions** appear above a list while it has a selection (each list
+  keeps its own selection, and an action works on that list's selection only,
+  including selected mods the filter hides; the dialog says "12 selected
+  (3 not shown)"). **Add to group** puts the mods in the group you pick and
+  leaves every other membership alone. **Remove from group** lists only the
+  groups that hold at least one selected mod, with how many. **Move to group**
+  is the one way to replace a membership: you pick the group to move **from**
+  (again only groups that hold a selected mod) and the group to move **to**;
+  mods that are not in the first group are left alone. **Colour** sets or
+  clears the colour of every selected mod. **Tags** adds or removes one tag on
+  every selected mod (a tag is lowercase letters, digits, hyphens and
+  underscores). Removing takes the tag off every selected mod that shows it,
+  whether you added it by hand or Rimmerge inferred it; a mod that does not show
+  the tag is left alone and counted as "did not change". Each action is one save, reports what changed
+  ("Added 9 mods to Weapons", "3 were already in the group"), and never
+  changes the selection, the load order, a pending change or `ModsConfig.xml`.
+  Tags never change the sorted order.
+- **Activate or deactivate a whole group**: the group menu has **Activate N
+  mods…** and **Deactivate N mods…** (each mod once, subgroups included). They
+  open the same Activate and Deactivate dialogs as the selection buttons, with
+  a line saying how far the action reaches ("Activate 42 mods, including
+  subgroups", how many are not installed and skipped, how many the current
+  filter hides). Nothing is written until you Apply, like any other change.
 - If `organization.json` cannot be read, a notice says so and groups are
   read-only. If another program only has the file open, **Rescan and try
   again** reads it again (it is a full rescan of your mods, the only thing that
@@ -550,6 +573,13 @@ Every rule feeding the sorter (your own pair/placement rules, and, if
 imported, rules from a RimSort database), with edit and delete actions
 and, for an imported rule, a "promote to mine" action so it survives a
 re-import. See [concepts/rules-databases.md](concepts/rules-databases.md).
+
+Tags you set on the Mods page's **Tags…** action (one tag on many mods, either
+list) are manual tag overrides like the ones set here, saved in the same rules
+file with one save. An **Add** is a manual override; a **Remove** deletes your
+manual add if there is one and records a "hide" override only when an inferred
+tag would still show, so the file never gains an override that does nothing.
+Tags are not a sorter input, so tagging never changes the sorted order.
 
 ## Def inspector (`/defs/:defRef`)
 

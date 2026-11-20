@@ -2,9 +2,10 @@
 import Button from "primevue/button";
 import Dialog from "primevue/dialog";
 import { useToast } from "primevue/usetoast";
-import { computed, ref, type WritableComputedRef } from "vue";
+import { computed, ref, type WritableComputedRef, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
+import BulkGroupsDialog from "@/components/mods/organization/BulkGroupsDialog.vue";
 import ColorPickerDialog from "@/components/mods/organization/ColorPickerDialog.vue";
 import GroupDeleteDialog from "@/components/mods/organization/GroupDeleteDialog.vue";
 import GroupMoveDialog from "@/components/mods/organization/GroupMoveDialog.vue";
@@ -13,7 +14,11 @@ import ModGroupsDialog from "@/components/mods/organization/ModGroupsDialog.vue"
 import OrganizationError from "@/components/mods/organization/OrganizationError.vue";
 import StartOverDialog from "@/components/mods/organization/StartOverDialog.vue";
 import { useModLabel } from "@/composables/useModLabel";
-import { useGroupScopePlanQuery, useOrganizationMutations } from "@/queries/organization";
+import {
+  useGroupMembershipCountsQuery,
+  useGroupScopePlanQuery,
+  useOrganizationMutations,
+} from "@/queries/organization";
 import type { ColorTokenDto } from "@/types/generated/ColorTokenDto";
 import type { DeleteModeDto } from "@/types/generated/DeleteModeDto";
 import type { GroupNodeDto } from "@/types/generated/GroupNodeDto";
@@ -21,6 +26,7 @@ import type { OrganizationEditOutcomeDto } from "@/types/generated/OrganizationE
 import { assertNever } from "@/utils/assertNever";
 import { type CommandErrorDescriptor, describeCommandError } from "@/utils/errors";
 import { findNode, type OrganizationDialog } from "@/utils/organization";
+import { selectionSummary } from "@/utils/selectionText";
 
 /**
  * Every organization dialog, and the one edit each makes. The page only says which dialog to open
@@ -94,6 +100,8 @@ const isRemoveUninstalledOpen = isOpen("removeUninstalled");
 const isModColorOpen = isOpen("modColor");
 const isModGroupsOpen = isOpen("modGroups");
 const isStartOverOpen = isOpen("startOver");
+const isBulkGroupsOpen = isOpen("bulkGroups");
+const isBulkColorOpen = isOpen("bulkColor");
 
 /** The group a dialog about one group is open for. */
 const groupId = computed(() => {
@@ -112,6 +120,8 @@ const groupId = computed(() => {
     case "modColor":
     case "modGroups":
     case "startOver":
+    case "bulkGroups":
+    case "bulkColor":
       return null;
     default:
       return assertNever(current);
@@ -133,6 +143,40 @@ const modGroupIds = computed(() =>
 );
 const modColorNow = computed<ColorTokenDto | null>(() =>
   dialog.value?.kind === "modColor" ? dialog.value.current : null,
+);
+
+type BulkDialog = Extract<OrganizationDialog, { kind: "bulkGroups" | "bulkColor" }>;
+
+/**
+ * The bulk dialogs' selection, kept until the dialog has finished leaving: closing sets `dialog`
+ * to `null` at once, and a dialog that read it directly would flip to its empty state (the
+ * "add" layout, no selection sentence) for the length of the leave animation.
+ */
+const bulk = ref<BulkDialog | null>(null);
+watch(
+  dialog,
+  (current) => {
+    if (current?.kind === "bulkGroups" || current?.kind === "bulkColor") {
+      bulk.value = current;
+    }
+  },
+  { immediate: true },
+);
+
+function onBulkDialogGone(): void {
+  const current = dialog.value;
+  if (current?.kind !== "bulkGroups" && current?.kind !== "bulkColor") {
+    bulk.value = null;
+  }
+}
+
+const bulkText = computed(() =>
+  bulk.value === null ? "" : selectionSummary(t, bulk.value.modIds.length, bulk.value.hiddenCount),
+);
+const bulkMode = computed(() => (bulk.value?.kind === "bulkGroups" ? bulk.value.mode : "add"));
+// Remove and move list the groups that hold a selected mod, so they ask the backend which do.
+const { counts: bulkCounts, hasFailed: bulkCountsFailed } = useGroupMembershipCountsQuery(() =>
+  bulk.value?.kind === "bulkGroups" && bulk.value.mode !== "add" ? bulk.value.modIds : null,
 );
 
 const { data: scopePlan, error: scopePlanError } = useGroupScopePlanQuery(() =>
@@ -279,6 +323,117 @@ function removeUninstalled(): Promise<void> {
   });
 }
 
+/**
+ * One toast per action: the summary, and any further sentences as its detail, one per line (a
+ * sentence never holds two numbers, so each count is its own line; the toast host keeps the line
+ * breaks).
+ */
+function sayCounts(summary: string, details: readonly (string | null)[]): void {
+  const lines = details.filter((line): line is string => line !== null);
+  say(summary, lines.length === 0 ? undefined : lines.join("\n"));
+}
+
+function bulkChoose(id: number): Promise<void> {
+  const current = dialog.value;
+  const target = findNode(nodes, id);
+  if (current?.kind !== "bulkGroups" || target === undefined) {
+    return Promise.resolve();
+  }
+  const request = { id, modIds: [...current.modIds] };
+  return run(async () => {
+    if (current.mode === "add") {
+      const outcome = await edits.addMembers.mutateAsync(request);
+      if (outcome.kind === "added") {
+        sayCounts(
+          t("mods.bulk.toast.added", { count: outcome.added, name: target.name }, outcome.added),
+          [
+            outcome.already > 0
+              ? t("mods.bulk.toast.alreadyIn", { count: outcome.already }, outcome.already)
+              : null,
+          ],
+        );
+      }
+      return;
+    }
+    const outcome = await edits.removeMembers.mutateAsync(request);
+    if (outcome.kind === "removed") {
+      sayCounts(
+        t(
+          "mods.bulk.toast.removed",
+          { count: outcome.removed, name: target.name },
+          outcome.removed,
+        ),
+        [
+          outcome.absent > 0
+            ? t("mods.bulk.toast.notIn", { count: outcome.absent }, outcome.absent)
+            : null,
+        ],
+      );
+    }
+  });
+}
+
+function bulkMove(from: number, to: number): Promise<void> {
+  const current = dialog.value;
+  const source = findNode(nodes, from);
+  const target = findNode(nodes, to);
+  if (current?.kind !== "bulkGroups" || source === undefined || target === undefined) {
+    return Promise.resolve();
+  }
+  return run(async () => {
+    const outcome = await edits.moveMembers.mutateAsync({
+      from,
+      to,
+      modIds: [...current.modIds],
+    });
+    if (outcome.kind !== "moved") {
+      return;
+    }
+    const left = outcome.moved + outcome.alreadyInTarget;
+    sayCounts(
+      t("mods.bulk.toast.moved", { count: left, from: source.name, to: target.name }, left),
+      [
+        outcome.notInSource > 0
+          ? t(
+              "mods.bulk.toast.notInSource",
+              { count: outcome.notInSource, name: source.name },
+              outcome.notInSource,
+            )
+          : null,
+        outcome.alreadyInTarget > 0
+          ? t(
+              "mods.bulk.toast.alreadyInTarget",
+              { count: outcome.alreadyInTarget, name: target.name },
+              outcome.alreadyInTarget,
+            )
+          : null,
+      ],
+    );
+  });
+}
+
+function bulkColor(color: ColorTokenDto | null): Promise<void> {
+  const current = dialog.value;
+  if (current?.kind !== "bulkColor") {
+    return Promise.resolve();
+  }
+  return run(async () => {
+    const outcome = await edits.setModColors.mutateAsync({ modIds: [...current.modIds], color });
+    if (outcome.kind !== "colored") {
+      return;
+    }
+    const summary =
+      color === null
+        ? t("mods.bulk.toast.colorCleared", { count: outcome.changed }, outcome.changed)
+        : t("mods.bulk.toast.colorSet", { count: outcome.changed }, outcome.changed);
+    sayCounts(summary, [
+      outcome.unchanged > 0
+        ? t("mods.bulk.toast.unchanged", { count: outcome.unchanged }, outcome.unchanged)
+        : null,
+    ]);
+  });
+}
+
 function startOver(): Promise<void> {
   return run(async () => {
     await edits.resetOrganization.mutateAsync();
@@ -346,6 +501,29 @@ function startOver(): Promise<void> {
     :error="error"
     :is-busy="isBusy"
     @toggle="toggleMembership"
+  />
+  <BulkGroupsDialog
+    v-model:visible="isBulkGroupsOpen"
+    :mode="bulkMode"
+    :nodes="nodes"
+    :selection-text="bulkText"
+    :counts="bulkCounts"
+    :counts-failed="bulkCountsFailed"
+    :error="error"
+    :is-submitting="isBusy"
+    @choose="bulkChoose"
+    @move="bulkMove"
+    @after-hide="onBulkDialogGone"
+  />
+  <ColorPickerDialog
+    v-model:visible="isBulkColorOpen"
+    subject="mods"
+    :current="null"
+    :scope-text="bulkText"
+    :error="error"
+    :is-submitting="isBusy"
+    @choose="bulkColor"
+    @after-hide="onBulkDialogGone"
   />
   <StartOverDialog
     v-model:visible="isStartOverOpen"

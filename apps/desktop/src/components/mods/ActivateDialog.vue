@@ -11,7 +11,12 @@ import { asRecord } from "@/types/dtoMaps";
 import type { ActivatePlanDto } from "@/types/generated/ActivatePlanDto";
 import type { CommandErrorDescriptor } from "@/utils/errors";
 
-const { plan, error, isSubmitting } = defineProps<{
+const {
+  plan,
+  error,
+  isSubmitting,
+  scopeLines = [],
+} = defineProps<{
   /** The plan to confirm; the body stays empty until the first plan arrives. */
   plan: ActivatePlanDto | null;
   /**
@@ -20,6 +25,8 @@ const { plan, error, isSubmitting } = defineProps<{
    */
   error: CommandErrorDescriptor | null;
   isSubmitting: boolean;
+  /** How far a group-level action reaches ("Activate 42 mods, including subgroups"), one sentence per line. */
+  scopeLines?: readonly string[];
 }>();
 const emit = defineEmits<{ confirm: [] }>();
 const visible = defineModel<boolean>("visible", { required: true });
@@ -36,6 +43,18 @@ const modLabel = useModLabel();
     :header="t('mods.page.activateDialogHeader')"
     data-testid="activate-confirm-dialog"
   >
+    <ul
+      v-if="scopeLines.length > 0"
+      class="mb-3 flex w-96 flex-col gap-1 text-sm"
+      data-testid="activate-scope"
+    >
+      <li
+        v-for="line in scopeLines"
+        :key="line"
+      >
+        {{ line }}
+      </li>
+    </ul>
     <div
       v-if="plan"
       class="flex w-96 flex-col gap-3 text-sm"

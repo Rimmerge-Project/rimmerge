@@ -4,6 +4,8 @@
 
 import type { CreateGroupRequestDto } from "@/types/generated/CreateGroupRequestDto";
 import type { DeleteGroupRequestDto } from "@/types/generated/DeleteGroupRequestDto";
+import type { GroupMembershipCountDto } from "@/types/generated/GroupMembershipCountDto";
+import type { GroupMembershipCountsRequestDto } from "@/types/generated/GroupMembershipCountsRequestDto";
 import type { GroupMembersRequestDto } from "@/types/generated/GroupMembersRequestDto";
 import type { GroupScopePlanDto } from "@/types/generated/GroupScopePlanDto";
 import type { GroupScopeRequestDto } from "@/types/generated/GroupScopeRequestDto";
@@ -90,6 +92,13 @@ export function removeUninstalledMembers(
 /** A group's mods, subgroups included, resolved against the install. Read-only. */
 export function planGroupScope(request: GroupScopeRequestDto): Promise<GroupScopePlanDto> {
   return call("plan_group_scope", { request });
+}
+
+/** How many of the given mods each group holds directly. Read-only. */
+export function groupMembershipCounts(
+  request: GroupMembershipCountsRequestDto,
+): Promise<GroupMembershipCountDto[]> {
+  return call("group_membership_counts", { request });
 }
 
 /** "Start over" after an unusable `organization.json`: keeps a copy, then saves an empty one. */
