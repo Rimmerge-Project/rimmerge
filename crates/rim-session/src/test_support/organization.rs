@@ -10,7 +10,7 @@ use crate::Session;
 use crate::organization::{
     ModOrganization, OrganizationIssue, OrganizationLoad, OrganizationState, OrganizedModId,
 };
-use crate::ports::{OrganizationStore, StoreError};
+use crate::ports::{OrganizationSaveError, OrganizationStore, StoreError};
 
 /// An in-memory organization store. `load` answers what it was seeded with
 /// until a `save` replaces it. Thread-safe, so a desktop test can hand it
@@ -20,6 +20,7 @@ use crate::ports::{OrganizationStore, StoreError};
 pub struct InMemoryOrganizationStore {
     current: Mutex<OrganizationLoad>,
     fail_next_save: AtomicBool,
+    too_large_next_save: AtomicBool,
     fail_next_archive: AtomicBool,
     /// Applied (as if another writer saved it) right after the next `load`
     /// answers, to simulate an edit landing after a read.
@@ -47,6 +48,7 @@ impl InMemoryOrganizationStore {
         Self {
             current: Mutex::new(load),
             fail_next_save: AtomicBool::new(false),
+            too_large_next_save: AtomicBool::new(false),
             fail_next_archive: AtomicBool::new(false),
             change_after_next_load: Mutex::new(None),
             saves: AtomicUsize::new(0),
@@ -90,6 +92,12 @@ impl InMemoryOrganizationStore {
         self.fail_next_save.store(true, Ordering::SeqCst);
     }
 
+    /// Makes the next `save` refuse the document as larger than the file
+    /// may hold, then resets.
+    pub fn fail_next_save_too_large(&self) {
+        self.too_large_next_save.store(true, Ordering::SeqCst);
+    }
+
     /// Makes the next `archive_unusable` fail, then resets.
     pub fn fail_next_archive(&self) {
         self.fail_next_archive.store(true, Ordering::SeqCst);
@@ -127,9 +135,16 @@ impl OrganizationStore for InMemoryOrganizationStore {
         answer
     }
 
-    fn save(&self, _dir: &Path, organization: &ModOrganization) -> Result<(), StoreError> {
+    fn save(
+        &self,
+        _dir: &Path,
+        organization: &ModOrganization,
+    ) -> Result<(), OrganizationSaveError> {
+        if self.too_large_next_save.swap(false, Ordering::SeqCst) {
+            return Err(OrganizationSaveError::TooLarge { bytes: 2, limit: 1 });
+        }
         if self.fail_next_save.swap(false, Ordering::SeqCst) {
-            return Err(StoreError("simulated save failure".to_string()));
+            return Err(StoreError("simulated save failure".to_string()).into());
         }
         *self.lock() = OrganizationLoad::Loaded(organization.clone());
         self.saves.fetch_add(1, Ordering::SeqCst);

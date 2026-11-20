@@ -5,7 +5,7 @@ use crate::Session;
 use crate::organization::{
     EditOutcome, OrganizationEdit, OrganizationError, OrganizationUnavailable,
 };
-use crate::ports::{OrganizationStore, StoreError};
+use crate::ports::{OrganizationSaveError, OrganizationStore};
 
 /// Why an organization edit did not happen.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
@@ -16,9 +16,10 @@ pub enum EditOrganizationError {
     /// An organization rule refused the edit; nothing changed.
     #[error(transparent)]
     Rejected(#[from] OrganizationError),
-    /// Saving `organization.json` failed; the edit was rolled back.
+    /// Saving `organization.json` failed or the document would not fit the
+    /// file ([`OrganizationSaveError::TooLarge`]); the edit was rolled back.
     #[error("saving the organization: {0}")]
-    Store(StoreError),
+    Save(#[from] OrganizationSaveError),
 }
 
 /// Applies an [`OrganizationEdit`], persists it through
@@ -43,9 +44,9 @@ impl<Store: OrganizationStore> EditOrganization<Store> {
     ///
     /// [`EditOrganizationError::Unavailable`] unless the organization is
     /// loaded (nothing is saved), [`EditOrganizationError::Rejected`] when
-    /// a rule refuses the edit, and [`EditOrganizationError::Store`] when
-    /// the save fails, in which case the edit is rolled back so the session
-    /// never runs ahead of disk.
+    /// a rule refuses the edit, and [`EditOrganizationError::Save`] when the
+    /// save fails or the document would not fit the file, in which case the
+    /// edit is rolled back so the session never runs ahead of disk.
     pub fn execute(
         &self,
         session: &mut Session,
@@ -60,7 +61,7 @@ impl<Store: OrganizationStore> EditOrganization<Store> {
         }
         if let Err(error) = self.store.save(&profile_dir, organization) {
             *organization = snapshot;
-            return Err(EditOrganizationError::Store(error));
+            return Err(error.into());
         }
         Ok(outcome)
     }

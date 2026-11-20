@@ -4,6 +4,7 @@ import { clearMocks } from "@tauri-apps/api/mocks";
 import { flushPromises, mount } from "@vue/test-utils";
 import { createPinia } from "pinia";
 import PrimeVue from "primevue/config";
+import Menu from "primevue/menu";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import ModTable from "@/components/mods/ModTable.vue";
@@ -184,15 +185,15 @@ describe("ModTable", () => {
     expect(cellText("gone.mod")).toContain("—");
   });
 
-  it("hides tags/hardDependents but still navigates when showActiveColumns is false", async () => {
+  it("hides the dependent count but still navigates when showActiveColumns is false", async () => {
     const wrapper = mountTable({
-      mods: [modRow({ tags: ["framework"] })],
+      mods: [modRow({ hardDependents: 7 })],
       showActiveColumns: false,
     });
     await flushPromises();
 
     const row = wrapper.get('[data-testid="mod-row-fixture.mod"]');
-    expect(row.text()).not.toContain("framework");
+    expect(row.text()).not.toContain("7");
 
     await row.trigger("click");
     expect(wrapper.emitted("selectMod")).toEqual([["fixture.mod"]]);
@@ -702,23 +703,92 @@ describe("ModTable", () => {
       expect(wrapper.emitted("moveStep")).toBeUndefined();
     });
 
-    it("goes straight to Activate at from an inactive row's button", async () => {
+    it("opens a menu with Activate at from an inactive row's button while organization is usable", async () => {
+      const wrapper = mountTable({
+        mods: THREE,
+        rowMenu: "activate",
+        hasOrganizationActions: true,
+      });
+      await flushPromises();
+
+      const button = wrapper.get('[data-testid="mod-row-menu-b"]');
+      expect(button.attributes("aria-label")).toBe("Actions for b");
+      await button.trigger("click");
+      await flushPromises();
+      await wrapper.get('[data-testid="mod-activate-at"]').trigger("click");
+
+      expect(wrapper.emitted("menuAction")).toEqual([["b", "activateAt"]]);
+      expect(wrapper.emitted("selectMod")).toBeUndefined();
+    });
+
+    it("runs Activate at straight from an inactive row's button while the menu would hold only it", async () => {
       const wrapper = mountTable({ mods: THREE, rowMenu: "activate" });
       await flushPromises();
 
       const button = wrapper.get('[data-testid="mod-row-menu-b"]');
       expect(button.attributes("aria-label")).toBe("Activate b at…");
+      expect(button.attributes("aria-haspopup")).toBe("dialog");
       await button.trigger("click");
+      await flushPromises();
 
       expect(wrapper.emitted("menuAction")).toEqual([["b", "activateAt"]]);
+      expect(wrapper.find('[data-testid="mod-activate-at"]').exists()).toBe(false);
       expect(wrapper.emitted("selectMod")).toBeUndefined();
+    });
+
+    it("runs Activate at straight from the menu key on an inactive row while organization is off", async () => {
+      const wrapper = mountTable({ mods: THREE, rowMenu: "activate" });
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-row-b"]').trigger("keydown", { key: "ContextMenu" });
+      await flushPromises();
+
+      expect(wrapper.emitted("menuAction")).toEqual([["b", "activateAt"]]);
+    });
+
+    it("adds Groups and Colour to the row menu only while organization is usable", async () => {
+      const without = mountTable({ mods: THREE, rowMenu: "move" });
+      const withOrganization = mountTable({
+        mods: THREE,
+        rowMenu: "move",
+        hasOrganizationActions: true,
+      });
+      await flushPromises();
+
+      await without.get('[data-testid="mod-row-menu-b"]').trigger("click");
+      await withOrganization.get('[data-testid="mod-row-menu-b"]').trigger("click");
+      await flushPromises();
+      expect(without.find('[data-testid="mod-menu-groups"]').exists()).toBe(false);
+      await withOrganization.get('[data-testid="mod-menu-groups"]').trigger("click");
+      await withOrganization.get('[data-testid="mod-row-menu-b"]').trigger("click");
+      await flushPromises();
+      await withOrganization.get('[data-testid="mod-menu-color"]').trigger("click");
+
+      expect(withOrganization.emitted("menuAction")).toEqual([
+        ["b", "groups"],
+        ["b", "color"],
+      ]);
+      expect(withOrganization.emitted("moveStep")).toBeUndefined();
+    });
+
+    it("gives a list without position actions a menu for the organization entries alone", async () => {
+      const wrapper = mountTable({ mods: THREE, hasOrganizationActions: true });
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-row-menu-a"]').trigger("click");
+      await flushPromises();
+
+      expect(wrapper.find('[data-testid="mod-move-up"]').exists()).toBe(false);
+      expect(wrapper.find('[data-testid="mod-menu-groups"]').exists()).toBe(true);
     });
 
     it("opens a Move menu from an active row's button without opening the mod", async () => {
       const wrapper = mountTable({ mods: THREE, rowMenu: "move" });
       await flushPromises();
 
-      expect(wrapper.get('[data-testid="mod-row-menu-b"]').attributes("aria-label")).toBe("Move b");
+      expect(wrapper.get('[data-testid="mod-row-menu-b"]').attributes("aria-label")).toBe(
+        "Actions for b",
+      );
       await wrapper.get('[data-testid="mod-row-menu-b"]').trigger("click");
       await flushPromises();
 
@@ -772,11 +842,52 @@ describe("ModTable", () => {
       expect(wrapper.emitted("menuAction")).toEqual([["b", "top"]]);
     });
 
-    it("goes to Activate at from the menu key on an inactive row", async () => {
-      const wrapper = mountTable({ mods: THREE, rowMenu: "activate" });
+    /**
+     * PrimeVue focuses the popup list and then emits `show` from its enter hook. happy-dom cannot
+     * lay the overlay out, so the hook never runs; this stands in for it, in the same order.
+     */
+    function showMenu(wrapper: ReturnType<typeof mountTable>): void {
+      (wrapper.get('[role="menu"]').element as HTMLElement).focus();
+      wrapper.findComponent(Menu).vm.$emit("show");
+    }
+
+    it("marks the first menu item when the menu opens from the keyboard, so Enter works at once", async () => {
+      const wrapper = mountTable({ mods: THREE, rowMenu: "move" });
       await flushPromises();
 
       await wrapper.get('[data-testid="mod-row-b"]').trigger("keydown", { key: "ContextMenu" });
+      showMenu(wrapper);
+      await flushPromises();
+
+      const list = wrapper.get('[role="menu"]');
+      const first = wrapper.get('[data-testid="mod-move-up"]').element.closest("li");
+      expect(list.attributes("aria-activedescendant")).toBe(first?.id);
+      await list.trigger("keydown", { key: "Enter", code: "Enter" });
+      expect(wrapper.emitted("moveStep")).toEqual([["b", "up"]]);
+    });
+
+    it("leaves the menu unmarked when a mouse click opens it", async () => {
+      const wrapper = mountTable({ mods: THREE, rowMenu: "move" });
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-row-menu-b"]').trigger("click", { detail: 1 });
+      showMenu(wrapper);
+      await flushPromises();
+
+      expect(wrapper.get('[role="menu"]').attributes("aria-activedescendant")).toBeUndefined();
+    });
+
+    it("opens the menu with Activate at from the menu key on an inactive row while organization is usable", async () => {
+      const wrapper = mountTable({
+        mods: THREE,
+        rowMenu: "activate",
+        hasOrganizationActions: true,
+      });
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-row-b"]').trigger("keydown", { key: "ContextMenu" });
+      await flushPromises();
+      await wrapper.get('[data-testid="mod-activate-at"]').trigger("click");
 
       expect(wrapper.emitted("menuAction")).toEqual([["b", "activateAt"]]);
     });
@@ -832,6 +943,126 @@ describe("ModTable", () => {
       expect(wrapper.get('[data-testid="mod-move-menu-reason"]').text()).toBe(
         "Sort by load order to move mods.",
       );
+    });
+  });
+
+  describe("organization on a row", () => {
+    const WEAPONS = { id: 1, name: "Weapons", color: "red" as const };
+    const ARMOR = { id: 2, name: "Armor", color: null };
+    const LOOT = { id: 3, name: "Loot", color: "blue" as const };
+
+    it("draws the mod's own colour as a stripe and also names it in text", async () => {
+      const wrapper = mountTable({ mods: [modRow({ modId: "a", color: "teal" })] });
+      await flushPromises();
+
+      const row = wrapper.get('[data-testid="mod-row-a"]');
+      expect(row.get('[data-testid="mod-row-color"]').attributes("data-color")).toBe("teal");
+      expect(row.get('[data-testid="mod-row-color"]').classes()).toContain("bg-mark-teal");
+      expect(row.text()).toContain("Colour: Teal");
+    });
+
+    it("puts the colour name inside the name cell, never as text straight in the row", async () => {
+      const wrapper = mountTable({ mods: [modRow({ modId: "a", color: "teal" })] });
+      await flushPromises();
+
+      const row = wrapper.get('[data-testid="mod-row-a"]');
+      const name = row.get('[data-testid="mod-row-color-name"]');
+      expect(name.element.closest('[role="gridcell"]')).not.toBeNull();
+      expect(name.element.parentElement?.closest('[role="row"]')).toBe(row.element);
+      expect(name.text()).toBe("Colour: Teal");
+      expect(row.get('[data-testid="mod-row-color"]').attributes("aria-hidden")).toBe("true");
+      const strayChildren = [...row.element.children].filter(
+        (child) =>
+          child.getAttribute("role") === null && child.getAttribute("aria-hidden") !== "true",
+      );
+      expect(strayChildren).toEqual([]);
+    });
+
+    it("draws no stripe for an uncoloured mod", async () => {
+      const wrapper = mountTable({ mods: [modRow({ modId: "a" })] });
+      await flushPromises();
+
+      expect(wrapper.find('[data-testid="mod-row-color"]').exists()).toBe(false);
+    });
+
+    it("shows at most two group chips by name and the rest as +N with every name in the tooltip", async () => {
+      const wrapper = mountTable({
+        mods: [modRow({ modId: "a", groups: [WEAPONS, ARMOR, LOOT] })],
+      });
+      await flushPromises();
+
+      const chips = wrapper.findAll('[data-testid^="mod-row-group-"]:not([data-testid$="more"])');
+      expect(chips.map((chip) => chip.text())).toEqual(["Weapons", "Armor"]);
+      expect(chips[0]?.attributes("title")).toBe("Weapons (Red)");
+      expect(chips[1]?.attributes("title")).toBe("Armor");
+      const more = wrapper.get('[data-testid="mod-row-groups-more"]');
+      expect(more.text()).toBe("+1");
+      expect(more.attributes("title")).toBe("In groups: Weapons, Armor, and Loot");
+    });
+
+    it("names every group as text for screen readers at every width, once", async () => {
+      const wrapper = mountTable({
+        mods: [modRow({ modId: "a", groups: [WEAPONS, ARMOR, LOOT] })],
+      });
+      await flushPromises();
+
+      const text = wrapper.get('[data-testid="mod-row-groups-text"]');
+      expect(text.text()).toBe("In groups: Weapons, Armor, and Loot");
+      expect(text.element.closest('[role="gridcell"]')).not.toBeNull();
+      expect(wrapper.get('[data-testid="mod-row-groups"]').attributes("aria-hidden")).toBe("true");
+    });
+
+    it("names the mod's current colour in the row menu entry", async () => {
+      const coloured = mountTable({
+        mods: [modRow({ modId: "a", color: "teal" })],
+        rowMenu: "move",
+        hasOrganizationActions: true,
+      });
+      const plain = mountTable({
+        mods: [modRow({ modId: "b" })],
+        rowMenu: "move",
+        hasOrganizationActions: true,
+      });
+      await flushPromises();
+
+      await coloured.get('[data-testid="mod-row-menu-a"]').trigger("click");
+      await plain.get('[data-testid="mod-row-menu-b"]').trigger("click");
+      await flushPromises();
+
+      expect(coloured.get('[data-testid="mod-menu-color"]').text()).toBe("Colour (Teal)…");
+      expect(plain.get('[data-testid="mod-menu-color"]').text()).toBe("Colour…");
+    });
+
+    it("shows no chips for a mod in no group", async () => {
+      const wrapper = mountTable({ mods: [modRow({ modId: "a" })] });
+      await flushPromises();
+
+      expect(wrapper.find('[data-testid="mod-row-groups"]').exists()).toBe(false);
+    });
+
+    it("shows manual tags on an unscanned row even where the dependent column is off", async () => {
+      const wrapper = mountTable({
+        mods: [modRow({ modId: "idle", pendingScan: true, manualTags: ["favourite"] })],
+        showActiveColumns: false,
+      });
+      await flushPromises();
+
+      expect(wrapper.get('[data-testid="mod-row-tags"]').text()).toBe("favourite");
+    });
+
+    it("keeps the dependent count off the Inactive list and on the Active list", async () => {
+      const inactive = mountTable({
+        mods: [modRow({ modId: "a", tags: ["x"] })],
+        showActiveColumns: false,
+      });
+      const active = mountTable({
+        mods: [modRow({ modId: "a", tags: ["x"], hardDependents: 3 })],
+      });
+      await flushPromises();
+
+      expect(inactive.get('[data-testid="mod-row-tags"]').text()).toBe("x");
+      expect(inactive.get('[data-testid="mod-row-a"]').text()).not.toContain("3");
+      expect(active.get('[data-testid="mod-row-a"]').text()).toContain("3");
     });
   });
 });

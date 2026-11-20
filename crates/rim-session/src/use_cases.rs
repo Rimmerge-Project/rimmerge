@@ -56,6 +56,7 @@ mod read_texture;
 mod refresh_file_baseline;
 mod refresh_rule_databases;
 mod remove_assignment_section;
+mod remove_uninstalled_members;
 mod render_merge_mod;
 mod render_patch;
 mod rescan;
@@ -166,6 +167,7 @@ pub use read_texture::{ReadTexture, ReadTextureError, ReadTextureOutput};
 pub use refresh_file_baseline::{FileObservation, RefreshFileBaseline};
 pub use refresh_rule_databases::{RefreshRuleDatabases, RuleDatabaseView};
 pub use remove_assignment_section::{RemoveAssignmentSection, RemoveAssignmentSectionError};
+pub use remove_uninstalled_members::{RemoveUninstalledMembers, RemoveUninstalledMembersError};
 pub use render_merge_mod::{
     MergeEntryKind, MergeModEntry, MergeModRender, RenderMergeMod, RenderMergeModError,
     RenderTarget,

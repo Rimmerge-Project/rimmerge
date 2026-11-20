@@ -11,4 +11,8 @@ tags: Array<string>,
 /**
  * Distinct active mods with a Hard-strength edge pointing at it.
  */
-hardDependents: number, } | { "kind": "pendingScan" } | { "kind": "missing" };
+hardDependents: number, } | { "kind": "pendingScan", 
+/**
+ * The tags added to the mod by hand.
+ */
+manualTags: Array<string>, } | { "kind": "missing" };

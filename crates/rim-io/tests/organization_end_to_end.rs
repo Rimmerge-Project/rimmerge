@@ -15,6 +15,7 @@ use rim_session::ProjectPaths;
 use rim_session::organization::{
     EditOutcome, GroupName, OrganizationEdit, OrganizationIssue, OrganizationState, OrganizedModId,
 };
+use rim_session::ports::OrganizationSaveError;
 use rim_session::use_cases::{
     EditOrganization, EditOrganizationError, LoadProject, ResetOrganization,
 };
@@ -261,7 +262,10 @@ fn an_edit_that_would_write_more_than_the_reader_accepts_is_refused_and_rolled_b
     };
 
     assert!(
-        matches!(refusal, EditOrganizationError::Store(_)),
+        matches!(
+            refusal,
+            EditOrganizationError::Save(OrganizationSaveError::TooLarge { .. })
+        ),
         "{refusal:?}"
     );
     let in_memory = session.organization().loaded().expect("still loaded");

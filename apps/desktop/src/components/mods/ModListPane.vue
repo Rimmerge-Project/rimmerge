@@ -28,6 +28,7 @@ const {
   dropMode = "off",
   refusedText = "",
   rowMenu = "none",
+  hasOrganizationActions = false,
   reorderBlockedReason = null,
 } = defineProps<{
   /** Which list this is: names the pane's heading and its `data-testid`. */
@@ -37,7 +38,7 @@ const {
   isPending: boolean;
   error: Error | null;
   /**
-   * Whether the list query carries a search/tag/source filter. An unfiltered
+   * Whether the list query carries a search/tag/source/group filter. An unfiltered
    * response is every row, so a selected id missing from it is gone, not hidden.
    */
   isFiltered: boolean;
@@ -57,6 +58,8 @@ const {
   refusedText?: string;
   /** Passed through to {@link ModTable}: the per-row action button. */
   rowMenu?: RowMenu;
+  /** Passed through to {@link ModTable}: whether the row menu offers the mod's groups and colour. */
+  hasOrganizationActions?: boolean;
   /** Passed through to {@link ModTable}: why moving is off, or `null`. */
   reorderBlockedReason?: string | null;
 }>();
@@ -150,6 +153,7 @@ defineExpose({ focusRow });
       :drop-mode="dropMode"
       :refused-text="refusedText"
       :row-menu="rowMenu"
+      :has-organization-actions="hasOrganizationActions"
       :reorder-blocked-reason="reorderBlockedReason"
       @anchor-row="selection.setAnchor"
       @toggle-select="selection.toggle"

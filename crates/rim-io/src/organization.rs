@@ -23,7 +23,7 @@ use rim_session::organization::{
     ColorToken, GroupId, GroupName, GroupParts, ModOrganization, OrganizationIssue,
     OrganizationLimits, OrganizationLoad, OrganizedModId,
 };
-use rim_session::ports::{OrganizationStore, StoreError};
+use rim_session::ports::{OrganizationSaveError, OrganizationStore, StoreError};
 use serde::{Deserialize, Serialize};
 
 use crate::atomic::write_atomically;
@@ -209,7 +209,11 @@ impl OrganizationStore for JsonOrganizationStore {
         }
     }
 
-    fn save(&self, dir: &Path, organization: &ModOrganization) -> Result<(), StoreError> {
+    fn save(
+        &self,
+        dir: &Path,
+        organization: &ModOrganization,
+    ) -> Result<(), OrganizationSaveError> {
         let path = dir.join(FILE_NAME);
         let mut json = serde_json::to_string_pretty(&document_of(organization))
             .map_err(|error| to_store_error(&path, error))?;
@@ -218,16 +222,13 @@ impl OrganizationStore for JsonOrganizationStore {
         // come back as `TooLarge` and turn the whole organization read-only.
         // The caller rolls the edit back on this error.
         if json.len() > OrganizationLimits::MAX_FILE_BYTES {
-            return Err(to_store_error(
-                &path,
-                format!(
-                    "the organization is {} bytes, more than the {} bytes the file may hold",
-                    json.len(),
-                    OrganizationLimits::MAX_FILE_BYTES
-                ),
-            ));
+            return Err(OrganizationSaveError::TooLarge {
+                bytes: json.len(),
+                limit: OrganizationLimits::MAX_FILE_BYTES,
+            });
         }
-        write_atomically(&path, json.as_bytes()).map_err(|error| to_store_error(&path, error))
+        write_atomically(&path, json.as_bytes())
+            .map_err(|error| to_store_error(&path, error).into())
     }
 
     fn archive_unusable(&self, dir: &Path) -> Result<(), StoreError> {
@@ -724,7 +725,10 @@ mod tests {
 
         let result = JsonOrganizationStore.save(dir.path(), &organization_at_its_limits());
 
-        assert!(result.is_err(), "the worst case exceeds the reader's cap");
+        assert!(
+            matches!(result, Err(OrganizationSaveError::TooLarge { .. })),
+            "the worst case exceeds the reader's cap, as a typed limit"
+        );
         assert_eq!(
             fs::read(dir.path().join(FILE_NAME)).expect("read"),
             before,

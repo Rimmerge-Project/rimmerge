@@ -4,7 +4,10 @@ use rim_session::ModListError;
 use rim_session::organization::{
     OrganizationError, OrganizationQueryError, OrganizationUnavailable,
 };
-use rim_session::use_cases::{EditOrganizationError, ResetOrganizationError};
+use rim_session::ports::OrganizationSaveError;
+use rim_session::use_cases::{
+    EditOrganizationError, RemoveUninstalledMembersError, ResetOrganizationError,
+};
 
 use super::{CommandError, CommandErrorCode};
 
@@ -32,6 +35,7 @@ impl From<OrganizationError> for CommandError {
             OrganizationError::WouldCreateCycle => Self::new(CommandErrorCode::GroupCycle, message),
             OrganizationError::TooDeep { .. }
             | OrganizationError::TooManyGroups { .. }
+            | OrganizationError::GroupIdsExhausted
             | OrganizationError::TooManyMembers { .. }
             | OrganizationError::TooManyColors { .. } => {
                 Self::new(CommandErrorCode::OrganizationLimit, message)
@@ -50,12 +54,34 @@ impl From<OrganizationQueryError> for CommandError {
     }
 }
 
+impl From<OrganizationSaveError> for CommandError {
+    /// A document over the file's size limit is a limit the user can act on;
+    /// any other failure is the profile's I/O.
+    fn from(error: OrganizationSaveError) -> Self {
+        match error {
+            too_large @ OrganizationSaveError::TooLarge { .. } => {
+                Self::new(CommandErrorCode::OrganizationLimit, too_large.to_string())
+            }
+            OrganizationSaveError::Failed(inner) => inner.into(),
+        }
+    }
+}
+
 impl From<EditOrganizationError> for CommandError {
     fn from(error: EditOrganizationError) -> Self {
         match error {
             EditOrganizationError::Unavailable(inner) => inner.into(),
             EditOrganizationError::Rejected(inner) => inner.into(),
-            EditOrganizationError::Store(inner) => inner.into(),
+            EditOrganizationError::Save(inner) => inner.into(),
+        }
+    }
+}
+
+impl From<RemoveUninstalledMembersError> for CommandError {
+    fn from(error: RemoveUninstalledMembersError) -> Self {
+        match error {
+            RemoveUninstalledMembersError::Query(inner) => inner.into(),
+            RemoveUninstalledMembersError::Edit(inner) => inner.into(),
         }
     }
 }
@@ -67,9 +93,8 @@ impl From<ResetOrganizationError> for CommandError {
         let message = error.to_string();
         match error {
             ResetOrganizationError::NotRecovered => Self::invalid_input(message),
-            ResetOrganizationError::Archive(inner) | ResetOrganizationError::Store(inner) => {
-                inner.into()
-            }
+            ResetOrganizationError::Archive(inner) => inner.into(),
+            ResetOrganizationError::Store(inner) => inner.into(),
         }
     }
 }

@@ -867,6 +867,16 @@ through `ports::OrganizationStore` (`rim-io`'s `JsonOrganizationStore`).
   `OrganizationStore::archive_unusable` keeps a copy
   (`organization.json.unusable-<seconds>`) before the empty save, and it
   refuses a loaded organization.
+  `OrganizationStore::save` fails with `OrganizationSaveError`: `TooLarge`
+  (the document would exceed the file's size limit; a limit the user can act
+  on, `organization_limit` in the desktop) or `Failed`; `EditOrganizationError::Save`
+  and `ResetOrganizationError::Store` carry it whole, so the desktop maps one
+  type. "Remove mods that aren't installed" is the use case
+  `RemoveUninstalledMembers` (an `OrganizationEdit::RemoveMembersFromGroups`
+  over the scope's groups): the caller names the mods the user confirmed, and
+  the use case removes only those still in `ResolvedScope::not_installed`
+  when it runs, so a mod installed again since the confirmation keeps its
+  memberships. The command in `apps/desktop` only parses and calls it.
 - **Resolving against the install** is `resolve_scope` (the
   `find_by_base` rule, a copy already active wins, members found nowhere
   are counted, not dropped), reached through `Session::resolve_group_scope`
@@ -877,6 +887,9 @@ through `ports::OrganizationStore` (`rim-io`'s `JsonOrganizationStore`).
   return `Result<_, ModListError>`: a stale group id is `UnknownGroup`, and
   a filter with unavailable organization is refused, never read as "no
   filter". A group filter is a filter: `reorderable` stays on.
+  A row's `RowState::PendingScan` carries the mod's `manual_tags` (an
+  unscanned mod has no evidence, so every tag it holds was added by hand);
+  the tag filter matches scanned tags and these, in both lists.
 
 ## Sharing a load order (`mod_list`, `ExportOrder`, `PreviewOrderImport`, `ImportOrder`)
 

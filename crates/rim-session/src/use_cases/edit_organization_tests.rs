@@ -11,6 +11,7 @@ use crate::organization::{
     ColorToken, DeleteMode, GroupId, GroupName, ModOrganization, OrganizationIssue,
     OrganizationState, OrganizedModId,
 };
+use crate::ports::OrganizationSaveError;
 use crate::test_support::{InMemoryOrganizationStore, organized, session_fixture_with_inactive};
 
 fn name(text: &str) -> GroupName {
@@ -70,6 +71,10 @@ fn every_edit(weapons: GroupId, armor: GroupId) -> Vec<OrganizationEdit> {
             id: weapons,
             mods: mods(&["a"]),
         },
+        OrganizationEdit::RemoveMembersFromGroups {
+            groups: [weapons, armor].into(),
+            mods: mods(&["idle"]),
+        },
         OrganizationEdit::MoveMembers {
             from: weapons,
             to: armor,
@@ -118,11 +123,40 @@ fn a_failed_save_rolls_every_edit_back() {
         let result = EditOrganization::new(&store).execute(&mut session, edit.clone());
 
         assert!(
-            matches!(result, Err(EditOrganizationError::Store(_))),
+            matches!(
+                result,
+                Err(EditOrganizationError::Save(OrganizationSaveError::Failed(
+                    _
+                )))
+            ),
             "{edit:?} reports the save failure"
         );
         assert_eq!(session.organization(), &before, "{edit:?} is rolled back");
     }
+}
+
+#[test]
+fn a_document_over_the_file_limit_is_a_typed_refusal_and_rolls_back() {
+    let (mut session, weapons, _) = session_with_groups();
+    let before = session.organization().clone();
+    let store = InMemoryOrganizationStore::new();
+    store.fail_next_save_too_large();
+
+    let result = EditOrganization::new(&store).execute(
+        &mut session,
+        OrganizationEdit::AddMembers {
+            id: weapons,
+            mods: mods(&["b"]),
+        },
+    );
+
+    assert!(matches!(
+        result,
+        Err(EditOrganizationError::Save(
+            OrganizationSaveError::TooLarge { .. }
+        ))
+    ));
+    assert_eq!(session.organization(), &before);
 }
 
 #[test]

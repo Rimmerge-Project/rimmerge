@@ -179,6 +179,7 @@ pub fn run() {
             commands::organization::move_group_members,
             commands::organization::set_mod_colors,
             commands::organization::plan_group_scope,
+            commands::organization::remove_uninstalled_members,
             commands::organization::reset_organization,
         ])
         .run(tauri::generate_context!());

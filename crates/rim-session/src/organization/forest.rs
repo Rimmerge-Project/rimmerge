@@ -32,6 +32,11 @@ pub enum OrganizationError {
         /// [`OrganizationLimits::MAX_GROUPS`].
         limit: usize,
     },
+    /// Every group number the file may hand out has been used (deleted
+    /// groups never give theirs back), so no group can be created, though
+    /// the group count is within its limit.
+    #[error("every group number has been used, so no new group can be created")]
+    GroupIdsExhausted,
     /// A sibling already has this name (compared case-insensitively).
     #[error("a group named {name:?} already exists here")]
     NameTaken {
@@ -537,9 +542,9 @@ impl ModOrganization {
         }
         self.ensure_name_free(parent, &name, None)?;
         if self.next_id > OrganizationLimits::MAX_GROUP_ID {
-            return Err(too_many);
+            return Err(OrganizationError::GroupIdsExhausted);
         }
-        let id = GroupId::new(self.next_id).ok_or_else(|| too_many.clone())?;
+        let id = GroupId::new(self.next_id).ok_or(OrganizationError::GroupIdsExhausted)?;
         let next_id = self.next_id + 1;
         self.groups.insert(
             id,
@@ -700,6 +705,34 @@ impl ModOrganization {
         Ok(MembershipRemoval {
             removed,
             absent: mods.len() - removed,
+        })
+    }
+
+    /// Removes `mods` from every group in `groups` at once (a group scope:
+    /// a group and its subgroups). `removed` counts mods that left at least
+    /// one group, each once.
+    ///
+    /// # Errors
+    ///
+    /// [`OrganizationError::GroupNotFound`] for the first missing group;
+    /// nothing changes then.
+    pub fn remove_members_from_groups(
+        &mut self,
+        groups: &BTreeSet<GroupId>,
+        mods: &BTreeSet<OrganizedModId>,
+    ) -> Result<MembershipRemoval, OrganizationError> {
+        for id in groups {
+            self.require(*id)?;
+        }
+        let mut gone: BTreeSet<&OrganizedModId> = BTreeSet::new();
+        for id in groups {
+            let group = self.require_mut(*id)?;
+            gone.extend(mods.iter().filter(|member| group.members.contains(*member)));
+            group.members.retain(|member| !mods.contains(member));
+        }
+        Ok(MembershipRemoval {
+            removed: gone.len(),
+            absent: mods.len() - gone.len(),
         })
     }
 

@@ -37,6 +37,8 @@ export interface RowKeysOptions {
   /** Whether anything is selected; Escape only means "clear" then, so it still closes the panel otherwise. */
   hasSelection: () => boolean;
   rowMenu: () => RowMenu;
+  /** Whether rows have a menu at all (position entries, or the mod own organization entries). */
+  hasRowMenu: () => boolean;
   /** Scrolls the virtualized list so the row at `index` is rendered. */
   scrollToIndex: (index: number) => void;
   getScroller: () => HTMLElement | null;
@@ -55,6 +57,7 @@ export function useRowKeys({
   isSelectable,
   hasSelection,
   rowMenu,
+  hasRowMenu,
   scrollToIndex,
   getScroller,
   actions,
@@ -191,7 +194,7 @@ export function useRowKeys({
    */
   function onMenuKey(event: KeyboardEvent, modId: string): boolean {
     const isMenuKey = event.key === "ContextMenu" || (event.key === "F10" && event.shiftKey);
-    if (!isMenuKey || rowMenu() === "none" || isInert(event.target)) {
+    if (!isMenuKey || !hasRowMenu() || isInert(event.target)) {
       return false;
     }
     // Without this the browser's own context menu opens over ours.

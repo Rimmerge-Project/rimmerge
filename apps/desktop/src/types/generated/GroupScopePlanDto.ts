@@ -22,6 +22,11 @@ activeIds: Array<string>,
  */
 inactiveIds: Array<string>, 
 /**
- * In-scope mods found nowhere on disk.
+ * How many in-scope mods are found nowhere on disk.
  */
-notInstalled: number, };
+notInstalled: number, 
+/**
+ * Those mods, by base id: what "Remove mods that aren't installed"
+ * would remove.
+ */
+notInstalledIds: Array<string>, };

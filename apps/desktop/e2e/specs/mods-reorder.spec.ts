@@ -246,6 +246,7 @@ test.describe("moves without dragging", () => {
     await openMods(page);
 
     await page.getByTestId("mod-row-menu-mod.901").click();
+    await page.getByTestId("mod-activate-at").click();
     await page.getByTestId("mod-position-start").click();
 
     await expect(modsPane(page, "active").getByTestId("mod-row-mod.901")).toBeVisible();
@@ -379,6 +380,7 @@ test.describe("what a move leaves to apply", () => {
   test("Discard pending changes drops a pending activation without a rescan", async ({ page }) => {
     await openMods(page);
     await page.getByTestId("mod-row-menu-mod.901").click();
+    await page.getByTestId("mod-activate-at").click();
     await page.getByTestId("mod-position-end").click();
     await expect(page.getByTestId("pending-changes-banner")).toBeVisible();
 

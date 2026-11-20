@@ -139,7 +139,11 @@ impl From<&OrganizationError> for OrganizationRuleDto {
             OrganizationError::GroupNotFound(_) => Self::GroupNotFound,
             OrganizationError::WouldCreateCycle => Self::WouldCreateCycle,
             OrganizationError::TooDeep { .. } => Self::TooDeep,
-            OrganizationError::TooManyGroups { .. } => Self::TooManyGroups,
+            // A file never produces this (it is an edit-time refusal); the
+            // nearest rule a document could break is the group limit.
+            OrganizationError::TooManyGroups { .. } | OrganizationError::GroupIdsExhausted => {
+                Self::TooManyGroups
+            }
             OrganizationError::NameTaken { .. } => Self::NameTaken,
             OrganizationError::SameGroup => Self::SameGroup,
             OrganizationError::TooManyMembers { .. } => Self::TooManyMembers,
@@ -412,8 +416,11 @@ pub struct GroupScopePlanDto {
     pub active_ids: Vec<String>,
     /// In-scope installed mods outside the working set, by exact id.
     pub inactive_ids: Vec<String>,
-    /// In-scope mods found nowhere on disk.
+    /// How many in-scope mods are found nowhere on disk.
     pub not_installed: usize,
+    /// Those mods, by base id: what "Remove mods that aren't installed"
+    /// would remove.
+    pub not_installed_ids: Vec<String>,
 }
 
 impl From<&GroupScopeResolution> for GroupScopePlanDto {
@@ -433,7 +440,13 @@ impl From<&GroupScopeResolution> for GroupScopePlanDto {
                 .iter()
                 .map(ToString::to_string)
                 .collect(),
-            not_installed: value.resolved.not_installed,
+            not_installed: value.resolved.not_installed_count(),
+            not_installed_ids: value
+                .resolved
+                .not_installed
+                .iter()
+                .map(ToString::to_string)
+                .collect(),
         }
     }
 }
@@ -535,6 +548,19 @@ pub struct SetModColorsRequestDto {
 pub struct GroupScopeRequestDto {
     /// The group.
     pub id: u32,
+}
+
+/// Request shape for `remove_uninstalled_members`: the group and the mods the
+/// user confirmed as not installed (as of the last scan).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export, export_to = "../../src/types/generated/")]
+pub struct RemoveUninstalledMembersRequestDto {
+    /// The group; its subgroups are included.
+    pub id: u32,
+    /// The mods confirmed as not installed, by base id. The backend removes
+    /// only those that are still found nowhere on disk.
+    pub mod_ids: Vec<String>,
 }
 
 /// A group id from the wire: never zero.

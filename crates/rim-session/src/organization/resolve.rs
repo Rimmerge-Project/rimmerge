@@ -19,7 +19,15 @@ pub struct ResolvedScope {
     pub inactive: Vec<ModId>,
     /// Members found nowhere on disk. Their memberships are kept: they
     /// come back when the mod is reinstalled.
-    pub not_installed: usize,
+    pub not_installed: BTreeSet<OrganizedModId>,
+}
+
+impl ResolvedScope {
+    /// How many members are found nowhere on disk.
+    #[must_use]
+    pub fn not_installed_count(&self) -> usize {
+        self.not_installed.len()
+    }
 }
 
 /// A group's scope and what it resolves to in this install.
@@ -48,14 +56,17 @@ pub fn resolve_scope(
         .cloned()
         .collect();
     let mut inactive = Vec::new();
-    let mut not_installed = 0;
-    for base in bases {
+    let mut not_installed = BTreeSet::new();
+    for member in mods {
+        let base = member.as_mod_id();
         if working_bases.contains(base) {
             continue;
         }
         match inventory.find_by_base(base) {
             Some((id, entry)) if entry.present_on_disk => inactive.push(id.clone()),
-            Some(_) | None => not_installed += 1,
+            Some(_) | None => {
+                not_installed.insert(member.clone());
+            }
         }
     }
     ResolvedScope {
