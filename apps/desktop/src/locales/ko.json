@@ -243,7 +243,7 @@
     "droppedClusterRules": "규칙을 불러올 때 마이그레이션 이전 클러스터 규칙 {count}개를 버렸습니다: {ids}",
     "unknownModKnowledgeValue": "{section} 규칙에서 알 수 없는 {what} 값을 무시했습니다: \"{value}\"",
     "modKnowledgeCacheUnreadableHeadline": "캐시된 Rimmerge 규칙을 읽을 수 없어 내장 스냅샷을 사용합니다",
-    "rowsOverRoleLimit": "{section} 규칙의 {role} 그룹에서 역할별 한도를 넘은 행 {count}개를 무시했습니다",
+    "rowsOverRoleLimit": "{section} 규칙에서 {role} 역할의 역할별 한도를 넘은 행 {count}개를 무시했습니다",
     "precedenceRuleMissingFramework": "{defType}의 우선순위 규칙을 무시했습니다: 프레임워크가 지정되지 않았습니다",
     "what": {
       "precedenceRule": "우선순위 규칙",
@@ -570,7 +570,7 @@
       },
       "saves_folder_unreadable": {
         "title": "Saves 폴더를 읽을 수 없음",
-        "detail": "Rimmerge가 RimWorld의 Saves 폴더에 있는 파일 목록을 읽지 못했습니다. 대신 '찾아보기'로 저장 파일을 선택하세요."
+        "detail": "Rimmerge가 RimWorld의 Saves 폴더에 있는 파일 목록을 읽지 못했습니다. 대신 '찾아보기…'로 저장 파일을 선택하세요."
       },
       "mod_list_io_failed": {
         "title": "모드 목록을 읽거나 쓸 수 없음",
@@ -1416,7 +1416,7 @@
         "title": "선택한 모드의 태그",
         "help": "선택한 모든 모드에 태그를 추가하거나 제거합니다. 제거하면 태그가 표시된 선택한 모든 모드에서 태그가 빠지며, 직접 추가한 태그인지 Rimmerge가 추론한 태그인지는 상관없습니다. 태그가 표시되지 않은 모드는 그대로 둡니다. 추가하면 이미 추론으로 태그가 표시된 모드에도 태그가 고정되므로, 다시 스캔했을 때 더 이상 추론되지 않아도 태그가 유지됩니다. 태그는 로드 순서를 바꾸지 않습니다.",
         "label": "태그",
-        "format": "영문 소문자, 숫자, 하이픈(-), 밑줄(_)을 사용하세요.",
+        "format": "영문 소문자(a~z), 숫자, 하이픈(-), 밑줄(_)을 사용하세요.",
         "addButton": "태그 추가",
         "removeButton": "태그 제거"
       },
@@ -1615,7 +1615,7 @@
         "removeUninstalledButton": "제거"
       },
       "startOver": {
-        "title": "그룹을 처음부터 다시 시작",
+        "title": "그룹 없이 처음부터 다시 시작",
         "body": "Rimmerge는 읽을 수 없는 파일의 사본을 같은 위치에 보관한 다음, 그룹과 색상이 없는 상태로 새로 시작합니다. 모드와 로드 순서에는 영향이 없습니다.",
         "confirm": "처음부터 다시 시작"
       },
@@ -1659,7 +1659,7 @@
         "moved": "그룹을 이동했습니다",
         "deleted": "그룹을 삭제했습니다",
         "removedUninstalled": "설치되지 않은 모드 {count}개를 그룹에서 제거했습니다",
-        "keptInstalledAgain": "모드 {count}개가 다시 설치되어 그룹에 그대로 남겨 두었습니다",
+        "keptInstalledAgain": "모드 {count}개는 다시 설치되어 그룹에 그대로 남았습니다",
         "startedOver": "그룹 없이 처음부터 다시 시작했습니다"
       }
     }
@@ -1976,7 +1976,7 @@
       "summary": "목록에 있는 모드 {count}개",
       "fromSave": "RimWorld {version} 버전으로 만든 저장 파일입니다.",
       "madeWith": "RimWorld {version} 버전으로 만든 목록입니다.",
-      "versionDiffers": "설치된 RimWorld는 {game} 버전이며, 다른 릴리스입니다.",
+      "versionDiffers": "설치된 RimWorld는 {game} 버전으로, 이와 다른 릴리스입니다.",
       "misaligned": {
         "names": "목록의 이름 수({values})가 모드 수({ids})와 일치하지 않으므로, 보낸 사람 목록의 모드 이름은 표시하지 않습니다.",
         "workshopIds": "목록의 창작마당 ID 수({values})가 모드 수({ids})와 일치하지 않으므로, 창작마당 링크는 표시하지 않습니다."
@@ -2032,7 +2032,7 @@
       "browse": "찾아보기…",
       "fileFilter": "RimWorld 저장 파일(.rws)",
       "empty": "RimWorld의 Saves 폴더에 저장 파일이 없습니다.",
-      "noFolder": "ModsConfig.xml 파일 옆에서 RimWorld의 Saves 폴더를 찾지 못했습니다. 대신 '찾아보기'로 저장 파일을 선택하세요.",
+      "noFolder": "ModsConfig.xml 파일 옆에서 RimWorld의 Saves 폴더를 찾지 못했습니다. 대신 '찾아보기…'로 저장 파일을 선택하세요.",
       "omitted": "표시되지 않은 이전 저장 파일이 {count}개 더 있습니다."
     },
     "imported": "가져온 순서가 준비되었습니다. 검토한 다음 적용하여 활성 모드 순서로 저장하세요.",
@@ -2046,10 +2046,10 @@
       "malformedXml": "올바른 XML 파일이 아닙니다.",
       "dtdNotAllowed": "파일에 DTD 선언이 있습니다. 모드 목록에는 DTD 선언이 없습니다.",
       "tooDeep": "파일의 중첩이 너무 깊어 모드 목록일 수 없습니다.",
-      "unrecognizedFormat": "RimWorld 모드 목록(.rml), RimWorld 저장 파일(.rws), ModsConfig.xml, 텍스트 목록 중 어느 것도 아닙니다.",
+      "unrecognizedFormat": "이 파일은 RimWorld 모드 목록(.rml), RimWorld 저장 파일(.rws), ModsConfig.xml, 텍스트 목록 중 어느 것도 아닙니다.",
       "missingModList": "파일에 모드 목록이 없습니다.",
       "noEntries": "패키지 ID를 찾지 못했습니다.",
-      "saveHeaderTruncated": "저장 파일이 모드 목록이 끝나기 전에 끝납니다. 파일이 손상되었거나, 게임이 아직 파일을 기록하는 중일 수 있습니다.",
+      "saveHeaderTruncated": "모드 목록이 끝나기 전에 저장 파일이 끝납니다. 파일이 손상되었거나, 게임이 아직 파일을 기록하는 중일 수 있습니다.",
       "saveHeaderMissing": "이 저장 파일의 헤더에 모드 목록이 없습니다.",
       "saveHeaderTooLarge": "저장 파일의 모드 목록 헤더가 {limit}보다 큽니다."
     },
@@ -2217,7 +2217,7 @@
     "gaps": {
       "warning": "게임이 메시지 기록을 {count}번 멈췄습니다. 기록되지 않은 내용은 복구할 수 없습니다.",
       "neverResumed": "재개 메시지가 뒤따르지 않는 로그 기록 중단이 {count}건 있으므로, 로그에서 가장 이른 중단 지점 이후의 모든 내용은 신뢰할 수 없습니다.",
-      "lowerBound": "최소 {count}개 항목 그룹(로그 항목의 {percent}%)이 로그 기록 중단 구간에 걸쳐 있어 그 개수가 실제보다 적을 수 있습니다. 모든 개수가 실제보다 적을 수 있습니다.",
+      "lowerBound": "최소 {count}개 항목 묶음(로그 항목의 {percent}%)이 로그 기록 중단 구간에 걸쳐 있어 그 개수가 실제보다 적을 수 있습니다. 모든 개수가 실제보다 적을 수 있습니다.",
       "resumed": "{stop}행부터 {resume}행까지",
       "open": "{stop}행부터 로그 끝까지",
       "more": "외 {count}개"

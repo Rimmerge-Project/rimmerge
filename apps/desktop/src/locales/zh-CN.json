@@ -243,7 +243,7 @@
     "droppedClusterRules": "载入时丢弃了 {count} 条迁移前的集群规则：{ids}",
     "unknownModKnowledgeValue": "已忽略 {section} 规则中的未知值“{value}”（{what}）",
     "modKnowledgeCacheUnreadableHeadline": "无法读取缓存的 Rimmerge 规则；改用内置快照",
-    "rowsOverRoleLimit": "已忽略 {section} 规则的 {role} 组中超出单角色上限的 {count} 行",
+    "rowsOverRoleLimit": "已忽略 {section} 规则中 {role} 角色超出单角色上限的 {count} 行",
     "precedenceRuleMissingFramework": "已忽略 {defType} 的优先规则：它没有指明任何框架",
     "what": {
       "precedenceRule": "优先规则",
@@ -609,7 +609,7 @@
         "detail": "请选择该分组及其子分组之外的位置。"
       },
       "organization_limit": {
-        "title": "已达到分组的数量上限",
+        "title": "已达到分组的某项上限",
         "detail": "已达到分组和颜色的某项上限：分组数量、嵌套深度、分组中或带颜色的 Mod 数量，或分组文件（organization.json）的大小。未做任何更改。请移除不再需要的分组、分组中的 Mod 或颜色，然后重试。"
       }
     }
@@ -1416,7 +1416,7 @@
         "title": "所选 Mod 的标签",
         "help": "为每个所选 Mod 添加或移除一个标签。移除会从每个显示该标签的所选 Mod 上去掉它，无论标签是你添加的还是 Rimmerge 推断的。不显示该标签的 Mod 保持不变。添加还会把已通过推断显示该标签的 Mod 上的标签固定下来，这样即使重新扫描后不再推断出它，它也会保留。标签从不改变你的加载顺序。",
         "label": "标签",
-        "format": "请使用小写字母、数字、连字符和下划线。",
+        "format": "请使用小写拉丁字母（a 到 z）、数字、连字符和下划线。",
         "addButton": "添加标签",
         "removeButton": "移除标签"
       },
@@ -1436,8 +1436,8 @@
         "moveHelp": "移动会将这些 Mod 从一个分组移出，并放入另一个分组。不在第一个分组中的 Mod 保持不变。",
         "targetLegend": "分组",
         "removeLegend": "要将 Mod 移出的分组",
-        "fromLegend": "移出自",
-        "toLegend": "移到",
+        "fromLegend": "来源分组",
+        "toLegend": "目标分组",
         "sameGroup": "与来源分组相同",
         "holdsCount": "其中有 {count} 个所选 Mod"
       },
@@ -1608,14 +1608,14 @@
         "modGroupsList": "分组",
         "done": "完成",
         "removeUninstalledTitle": "移除未安装的 Mod",
-        "removeUninstalledBody": "根据上次扫描，{name} 及其子分组中有 {count} 个 Mod 未安装。要将它们从这些分组中移除吗？只有再次将它们加入分组，它们才会回来。",
+        "removeUninstalledBody": "截至上次扫描时，{name} 及其子分组中有 {count} 个 Mod 未安装。要将它们从这些分组中移除吗？之后只有再次将它们加入分组，它们才会重新出现在分组中。",
         "removeUninstalledList": "要移除的 Mod",
         "removeUninstalledLoading": "正在检查哪些 Mod 未安装…",
         "removeUninstalledFailed": "无法检查哪些 Mod 未安装。请关闭此对话框后重试。",
         "removeUninstalledButton": "移除"
       },
       "startOver": {
-        "title": "重新开始分组",
+        "title": "重新开始，不保留分组",
         "body": "Rimmerge 会在无法读取的文件旁保留一份副本，然后以没有分组和颜色的状态重新开始。你的 Mod 和加载顺序不受影响。",
         "confirm": "重新开始"
       },
@@ -1625,7 +1625,7 @@
         "tooLarge": "你的分组和颜色文件过大，无法读取。在你重新开始之前，它们为只读。",
         "malformed": "你的分组和颜色文件已损坏。在你重新开始之前，它们为只读。",
         "newerVersion": "你的分组和颜色由更新版本的 Rimmerge 保存。它们在此处为只读，以免被覆盖。",
-        "invalid": "你的分组和颜色文件中有无法相互配合的分组（例如循环嵌套、分组缺失或重复，或分组过多），因此无法使用。在你重新开始之前，它们为只读。",
+        "invalid": "你的分组和颜色文件中的分组结构不一致（例如循环嵌套、分组缺失或重复，或分组过多），因此无法使用。在你重新开始之前，它们为只读。",
         "tryAgain": "重新扫描并重试",
         "startOver": "重新开始…"
       },
@@ -1975,7 +1975,7 @@
       "title": "导入加载顺序",
       "summary": "列表中有 {count} 个 Mod",
       "fromSave": "来自用 RimWorld {version} 创建的存档。",
-      "madeWith": "由 RimWorld {version} 制作。",
+      "madeWith": "用 RimWorld {version} 创建。",
       "versionDiffers": "你使用的是 RimWorld {game}，版本不同。",
       "misaligned": {
         "names": "列表中的名称数量（{values}）与 Mod 数量（{ids}）不一致，因此不显示发送者的名称。",
@@ -2049,7 +2049,7 @@
       "unrecognizedFormat": "这不是 RimWorld Mod 列表（.rml）、RimWorld 存档（.rws）、ModsConfig.xml 或文本列表。",
       "missingModList": "该文件中没有 Mod 列表。",
       "noEntries": "未找到任何 ID。",
-      "saveHeaderTruncated": "该存档在其 Mod 列表结束之前就已结束。存档可能已损坏，或游戏可能仍在写入它。",
+      "saveHeaderTruncated": "该存档在 Mod 列表读完之前就已结束。存档可能已损坏，或游戏仍在写入它。",
       "saveHeaderMissing": "此存档的头部没有 Mod 列表。",
       "saveHeaderTooLarge": "存档头部的 Mod 列表超过 {limit}。"
     },
@@ -2113,7 +2113,7 @@
       "removedByCause": "先加载的 {mod} 会删除目标节点。",
       "notYetInjectedCause": "目标节点由 {mod} 注入，而该 Mod 在之后才加载。",
       "modPossessive": "{mod} 的 {operation}",
-      "notFullyFixableHeading": "无法完全通过顺序修复（补丁已过时、原因未分类，或兼而有之），按 Mod 分组：",
+      "notFullyFixableHeading": "无法完全通过顺序修复（补丁已过时、原因未分类，或兼而有之），按 Mod 归类：",
       "groupedByModLine": "{mod}：{list}",
       "groupedOperations": "{count} 项操作",
       "groupedTargets": "{count} 个 Def 目标",

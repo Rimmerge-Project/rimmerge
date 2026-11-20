@@ -243,7 +243,7 @@
     "droppedClusterRules": "Dropped {count} pre-migration cluster rule on load: {ids} | Dropped {count} pre-migration cluster rules on load: {ids}",
     "unknownModKnowledgeValue": "Ignored an unknown {what} \"{value}\" in the {section} rules",
     "modKnowledgeCacheUnreadableHeadline": "Couldn't read the cached Rimmerge rules; using the bundled snapshot",
-    "rowsOverRoleLimit": "Ignored {count} row over the per-role limit in the {role} group of the {section} rules | Ignored {count} rows over the per-role limit in the {role} group of the {section} rules",
+    "rowsOverRoleLimit": "Ignored {count} row over the per-role limit for the {role} role in the {section} rules | Ignored {count} rows over the per-role limit for the {role} role in the {section} rules",
     "precedenceRuleMissingFramework": "Ignored the precedence rule for {defType}: it names no framework",
     "what": {
       "precedenceRule": "precedence rule",
@@ -1416,7 +1416,7 @@
         "title": "Tags for the selected mods",
         "help": "Add a tag to every selected mod, or remove it. Removing takes the tag off every selected mod that shows it, whether you added it or Rimmerge inferred it. Mods that do not show the tag are left alone. Adding also pins the tag on mods that already show it by inference, so it stays if a rescan stops inferring it. Tags never change your load order.",
         "label": "Tag",
-        "format": "Use lowercase letters, digits, hyphens and underscores.",
+        "format": "Use lowercase Latin letters (a to z), digits, hyphens and underscores.",
         "addButton": "Add tag",
         "removeButton": "Remove tag"
       },
@@ -1615,7 +1615,7 @@
         "removeUninstalledButton": "Remove"
       },
       "startOver": {
-        "title": "Start over with groups",
+        "title": "Start over without groups",
         "body": "Rimmerge keeps a copy of the unreadable file next to it, then starts with no groups and no colours. Your mods and load order are not affected.",
         "confirm": "Start over"
       },

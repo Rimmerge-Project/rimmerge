@@ -243,7 +243,7 @@
     "droppedClusterRules": "ロード時に移行前のクラスタールール{count}件を破棄しました：{ids}",
     "unknownModKnowledgeValue": "{section}ルール内の不明な{what}「{value}」を無視しました",
     "modKnowledgeCacheUnreadableHeadline": "キャッシュされたRimmergeルールを読み取れませんでした。同梱のスナップショットを使用します",
-    "rowsOverRoleLimit": "{section}ルールの{role}グループで、役割ごとの上限を超えた{count}行を無視しました",
+    "rowsOverRoleLimit": "{section}ルールの{role}の役割で、役割ごとの上限を超えた{count}行を無視しました",
     "precedenceRuleMissingFramework": "{defType}の優先ルールを無視しました：フレームワークが指定されていません",
     "what": {
       "precedenceRule": "優先ルール",
@@ -1416,7 +1416,7 @@
         "title": "選択したMODのタグ",
         "help": "選択したすべてのMODにタグを追加するか、タグを削除します。削除すると、そのタグが表示されている選択中のMODすべてから、手動で追加したものかRimmergeが推定したものかに関係なくタグが外れます。タグが表示されていないMODは変更されません。追加すると、推定によってすでにそのタグが表示されているMODでもタグが固定されるため、再スキャンで推定されなくなってもタグは残ります。タグによってロード順が変わることはありません。",
         "label": "タグ",
-        "format": "小文字の英字、数字、ハイフン、アンダースコアを使用してください。",
+        "format": "半角の英小文字（a～z）、数字、ハイフン（-）、アンダースコア（_）を使用してください。",
         "addButton": "タグを追加",
         "removeButton": "タグを削除"
       },
@@ -1615,7 +1615,7 @@
         "removeUninstalledButton": "外す"
       },
       "startOver": {
-        "title": "グループを最初からやり直す",
+        "title": "グループを空にして最初からやり直す",
         "body": "Rimmergeは読み取れないファイルのコピーを同じ場所に残し、グループも色もない状態から始めます。MODとロード順には影響しません。",
         "confirm": "最初からやり直す"
       },
@@ -1660,7 +1660,7 @@
         "deleted": "グループを削除しました",
         "removedUninstalled": "インストールされていないMOD{count}個を外しました",
         "keptInstalledAgain": "{count}個のMODは再びインストールされているため、グループに残しました",
-        "startedOver": "グループなしの状態から最初からやり直しました"
+        "startedOver": "最初からやり直しました。グループはありません"
       }
     }
   },
@@ -1976,7 +1976,7 @@
       "summary": "リスト内のMOD：{count}個",
       "fromSave": "RimWorld {version}で作成されたセーブデータです。",
       "madeWith": "RimWorld {version}で作成されました。",
-      "versionDiffers": "お使いのRimWorldは{game}で、異なるリリースです。",
+      "versionDiffers": "お使いのRimWorldは{game}で、リリースが異なります。",
       "misaligned": {
         "names": "リスト内の名前の数（{values}）がMODの数（{ids}）と一致しないため、共有元の名前は表示されません。",
         "workshopIds": "リスト内のワークショップIDの数（{values}）がMODの数（{ids}）と一致しないため、ワークショップリンクは表示されません。"
@@ -2033,7 +2033,7 @@
       "fileFilter": "RimWorldのセーブデータ（.rws）",
       "empty": "RimWorldのSavesフォルダーにセーブデータがありません。",
       "noFolder": "ModsConfig.xmlと同じ場所にRimWorldのSavesフォルダーが見つかりませんでした。代わりにセーブデータを参照して選んでください。",
-      "omitted": "ほかに古いセーブデータ{count}件は表示されていません。"
+      "omitted": "古いセーブデータ{count}件は表示されていません。"
     },
     "imported": "インポートした順序の準備ができました。内容を確認してから適用し、有効なMODの順序として保存してください。",
     "notInFile": "この順序はまだ有効なMODの順序に反映されていません。",

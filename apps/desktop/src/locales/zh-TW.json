@@ -243,7 +243,7 @@
     "droppedClusterRules": "載入時捨棄了 {count} 條遷移前的群組規則：{ids}",
     "unknownModKnowledgeValue": "已忽略 {section} 規則中未知的{what}「{value}」",
     "modKnowledgeCacheUnreadableHeadline": "無法讀取快取的 Rimmerge 規則；改用內建的快照",
-    "rowsOverRoleLimit": "已忽略 {section} 規則中 {role} 群組裡超過單一角色上限的 {count} 列",
+    "rowsOverRoleLimit": "已忽略 {section} 規則中 {role} 角色下超過單一角色上限的 {count} 列",
     "precedenceRuleMissingFramework": "已忽略 {defType} 的優先規則：它沒有指定框架",
     "what": {
       "precedenceRule": "優先規則",
@@ -570,7 +570,7 @@
       },
       "saves_folder_unreadable": {
         "title": "無法讀取存檔資料夾",
-        "detail": "Rimmerge 無法列出 RimWorld 存檔資料夾（Saves）中的檔案。請改為瀏覽並選擇存檔。"
+        "detail": "Rimmerge 無法列出 RimWorld 存檔資料夾（Saves）中的檔案。請改為按「瀏覽…」選擇存檔。"
       },
       "mod_list_io_failed": {
         "title": "無法讀取或寫入模組清單",
@@ -1416,7 +1416,7 @@
         "title": "所選模組的標籤",
         "help": "為每個所選模組新增或移除標籤。移除時，凡是顯示此標籤的所選模組都會被拿掉該標籤，無論是你自己新增的，還是 Rimmerge 推斷的。未顯示此標籤的模組不受影響。新增時，也會將已透過推斷顯示此標籤的模組固定下來，因此即使重新掃描後不再推斷出此標籤，它仍會保留。標籤絕不會變更你的載入順序。",
         "label": "標籤",
-        "format": "請使用小寫英文字母、數字、連字號（-）與底線（_）。",
+        "format": "請使用小寫英文字母（a 到 z）、數字、連字號（-）與底線（_）。",
         "addButton": "新增標籤",
         "removeButton": "移除標籤"
       },
@@ -1436,8 +1436,8 @@
         "moveHelp": "移動會將模組從一個分組移出，並放入另一個分組。不在第一個分組中的模組不受影響。",
         "targetLegend": "分組",
         "removeLegend": "要從中移除模組的分組",
-        "fromLegend": "移出自",
-        "toLegend": "移至",
+        "fromLegend": "來源分組",
+        "toLegend": "目標分組",
         "sameGroup": "與來源相同",
         "holdsCount": "其中有 {count} 個所選模組"
       },
@@ -1608,14 +1608,14 @@
         "modGroupsList": "分組",
         "done": "完成",
         "removeUninstalledTitle": "移除未安裝的模組",
-        "removeUninstalledBody": "依上次掃描結果，{name} 及其子分組中有 {count} 個模組未安裝。要將它們從這些分組中移除嗎？只有在你再次將它們加入分組時才會回來。",
+        "removeUninstalledBody": "依上次掃描結果，{name} 及其子分組中有 {count} 個模組未安裝。要將它們從這些分組中移除嗎？移除後，只有在你再次將它們加入分組時，它們才會重新出現在分組中。",
         "removeUninstalledList": "要移除的模組",
         "removeUninstalledLoading": "正在檢查哪些模組未安裝…",
         "removeUninstalledFailed": "無法檢查哪些模組未安裝。請關閉此對話方塊後再試一次。",
         "removeUninstalledButton": "移除"
       },
       "startOver": {
-        "title": "重新開始建立分組",
+        "title": "重新開始，不含任何分組",
         "body": "Rimmerge 會在無法讀取的檔案旁保留一份副本，然後以沒有任何分組與顏色的狀態重新開始。你的模組與載入順序不受影響。",
         "confirm": "重新開始"
       },
@@ -2032,7 +2032,7 @@
       "browse": "瀏覽…",
       "fileFilter": "RimWorld 存檔（.rws）",
       "empty": "RimWorld 的存檔資料夾（Saves）中沒有存檔。",
-      "noFolder": "在你的 ModsConfig.xml 旁找不到 RimWorld 的存檔資料夾（Saves）。請改為瀏覽並選擇存檔。",
+      "noFolder": "在你的 ModsConfig.xml 旁找不到 RimWorld 的存檔資料夾（Saves）。請改為按「瀏覽…」選擇存檔。",
       "omitted": "另有 {count} 個較舊的存檔未顯示。"
     },
     "imported": "匯入的順序已就緒。請檢查後再套用，將它儲存為已啟用模組的順序。",
@@ -2051,7 +2051,7 @@
       "noEntries": "找不到任何 Package ID。",
       "saveHeaderTruncated": "存檔在其模組清單結束之前就已中斷。檔案可能已損毀，或遊戲可能仍在寫入此存檔。",
       "saveHeaderMissing": "此存檔的標頭中沒有模組清單。",
-      "saveHeaderTooLarge": "此存檔含有模組清單的標頭大於 {limit}。"
+      "saveHeaderTooLarge": "此存檔的模組清單標頭大於 {limit}。"
     },
     "importedWithWarnings": "掃描回報了 {count} 個警告。",
     "importedRuleWarnings": "已匯入，但有規則無法載入",
@@ -2113,7 +2113,7 @@
       "removedByCause": "{mod} 先載入，並移除了目標節點。",
       "notYetInjectedCause": "目標節點由 {mod} 注入，而該模組較晚載入。",
       "modPossessive": "{mod} 的 {operation}",
-      "notFullyFixableHeading": "無法完全透過順序修正（過時的補丁、無法分類的原因，或混合情況），依模組分組：",
+      "notFullyFixableHeading": "無法完全透過順序修正（過時的補丁、無法分類的原因，或混合情況），依模組列出：",
       "groupedByModLine": "{mod}：{list}",
       "groupedOperations": "{count} 個操作",
       "groupedTargets": "{count} 個 Def 目標",

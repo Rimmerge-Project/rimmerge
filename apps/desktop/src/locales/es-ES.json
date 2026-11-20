@@ -243,7 +243,7 @@
     "droppedClusterRules": "Se descartó al cargar {count} regla de clúster anterior a la migración: {ids} | Se descartaron al cargar {count} reglas de clúster anteriores a la migración: {ids}",
     "unknownModKnowledgeValue": "Se ignoró un valor desconocido de {what} («{value}») en las reglas de {section}",
     "modKnowledgeCacheUnreadableHeadline": "No se pudieron leer las reglas de Rimmerge en caché; se usa la copia incluida",
-    "rowsOverRoleLimit": "Se ignoró {count} fila por encima del límite por rol en el grupo {role} de las reglas de {section} | Se ignoraron {count} filas por encima del límite por rol en el grupo {role} de las reglas de {section}",
+    "rowsOverRoleLimit": "Se ignoró {count} fila por encima del límite del rol {role} en las reglas de {section} | Se ignoraron {count} filas por encima del límite del rol {role} en las reglas de {section}",
     "precedenceRuleMissingFramework": "Se ignoró la regla de precedencia de {defType}: no nombra ningún framework",
     "what": {
       "precedenceRule": "regla de precedencia",
@@ -1416,7 +1416,7 @@
         "title": "Etiquetas de los mods seleccionados",
         "help": "Añade una etiqueta a todos los mods seleccionados, o quítala. Al quitarla, se quita de todos los mods seleccionados que la muestran, tanto si la añadiste tú como si Rimmerge la infirió. Los mods que no muestran la etiqueta no se tocan. Al añadirla, también se fija en los mods que ya la muestran por inferencia, así que se mantiene aunque un nuevo escaneo deje de inferirla. Las etiquetas nunca cambian tu orden de carga.",
         "label": "Etiqueta",
-        "format": "Usa letras minúsculas, dígitos, guiones y guiones bajos.",
+        "format": "Usa letras minúsculas de la a a la z (sin ñ ni tildes), dígitos, guiones y guiones bajos.",
         "addButton": "Añadir etiqueta",
         "removeButton": "Quitar etiqueta"
       },
@@ -1608,14 +1608,14 @@
         "modGroupsList": "Grupos",
         "done": "Hecho",
         "removeUninstalledTitle": "Quitar mods que no están instalados",
-        "removeUninstalledBody": "Según el último escaneo, {count} mod de {name} y sus subgrupos no está instalado. ¿Quitarlo de esos grupos? Solo volverá si lo añades de nuevo a un grupo. | Según el último escaneo, {count} mods de {name} y sus subgrupos no están instalados. ¿Quitarlos de esos grupos? Solo volverán si los añades de nuevo a un grupo.",
+        "removeUninstalledBody": "Según el último escaneo, {count} mod en {name} y sus subgrupos no está instalado. ¿Quitarlo de esos grupos? Solo volverá si lo añades de nuevo a un grupo. | Según el último escaneo, {count} mods en {name} y sus subgrupos no están instalados. ¿Quitarlos de esos grupos? Solo volverán si los añades de nuevo a un grupo.",
         "removeUninstalledList": "Mods que se quitarán",
         "removeUninstalledLoading": "Comprobando qué mods no están instalados…",
         "removeUninstalledFailed": "No se pudo comprobar qué mods no están instalados. Cierra esta ventana y vuelve a intentarlo.",
         "removeUninstalledButton": "Quitar"
       },
       "startOver": {
-        "title": "Empezar de cero con los grupos",
+        "title": "Empezar de cero sin grupos",
         "body": "Rimmerge guarda una copia del archivo ilegible junto a él y después empieza sin grupos ni colores. Tus mods y tu orden de carga no se ven afectados.",
         "confirm": "Empezar de cero"
       },

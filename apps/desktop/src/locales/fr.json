@@ -243,7 +243,7 @@
     "droppedClusterRules": "{count} règle de grappe antérieure à la migration abandonnée au chargement : {ids} | {count} règles de grappe antérieures à la migration abandonnées au chargement : {ids}",
     "unknownModKnowledgeValue": "Valeur inconnue « {value} » ignorée ({what}) dans les règles {section}",
     "modKnowledgeCacheUnreadableHeadline": "Impossible de lire les règles Rimmerge en cache ; utilisation de l’instantané intégré",
-    "rowsOverRoleLimit": "{count} ligne au-delà de la limite par rôle ignorée dans le groupe {role} des règles {section} | {count} lignes au-delà de la limite par rôle ignorées dans le groupe {role} des règles {section}",
+    "rowsOverRoleLimit": "{count} ligne au-delà de la limite par rôle ignorée pour le rôle {role} des règles {section} | {count} lignes au-delà de la limite par rôle ignorées pour le rôle {role} des règles {section}",
     "precedenceRuleMissingFramework": "Règle de priorité ignorée pour {defType} : elle ne nomme aucun framework",
     "what": {
       "precedenceRule": "règle de priorité",
@@ -570,7 +570,7 @@
       },
       "saves_folder_unreadable": {
         "title": "Impossible de lire le dossier Saves",
-        "detail": "Rimmerge n’a pas pu lister les fichiers du dossier Saves de RimWorld. Recherchez plutôt une sauvegarde avec Parcourir."
+        "detail": "Rimmerge n’a pas pu lister les fichiers du dossier Saves de RimWorld. Choisissez plutôt une sauvegarde avec Parcourir."
       },
       "mod_list_io_failed": {
         "title": "Impossible de lire ou d’écrire la liste de mods",
@@ -610,7 +610,7 @@
       },
       "organization_limit": {
         "title": "Une limite liée aux groupes a été atteinte",
-        "detail": "Vous avez atteint une limite des groupes et couleurs : nombre de groupes, profondeur d’imbrication, nombre de mods dans des groupes ou colorés, ou taille du fichier des groupes (organization.json). Rien n’a été modifié. Retirez les groupes, les mods de groupes ou les couleurs dont vous n’avez plus besoin, puis réessayez."
+        "detail": "Vous avez atteint une limite des groupes et couleurs : nombre de groupes, profondeur d’imbrication, nombre de mods dans des groupes ou colorés, ou taille du fichier des groupes (organization.json). Rien n’a été modifié. Supprimez les groupes dont vous n’avez plus besoin, retirez des mods de groupes ou retirez des couleurs, puis réessayez."
       }
     }
   },
@@ -1409,21 +1409,21 @@
       "region": "Actions pour les mods sélectionnés de la liste « {list} »",
       "addToGroup": "Ajouter au groupe…",
       "removeFromGroup": "Retirer du groupe…",
-      "moveToGroup": "Déplacer vers un groupe…",
+      "moveToGroup": "Changer de groupe…",
       "color": "Couleur…",
       "tagsButton": "Tags…",
       "tags": {
         "title": "Tags des mods sélectionnés",
         "help": "Ajoutez un tag à chaque mod sélectionné, ou retirez-le. Le retrait enlève le tag de chaque mod sélectionné qui l’affiche, que vous l’ayez ajouté ou que Rimmerge l’ait déduit. Les mods qui n’affichent pas le tag ne sont pas modifiés. L’ajout fixe aussi le tag sur les mods qui l’affichent déjà par déduction, si bien qu’il reste même si une nouvelle analyse cesse de le déduire. Les tags ne modifient jamais votre ordre de chargement.",
         "label": "Tag",
-        "format": "Utilisez des lettres minuscules, des chiffres, des traits d’union et des tirets bas.",
+        "format": "Utilisez des lettres latines minuscules (a à z, sans accents), des chiffres, des traits d’union et des tirets bas.",
         "addButton": "Ajouter le tag",
         "removeButton": "Retirer le tag"
       },
       "dialog": {
         "addTitle": "Ajouter au groupe",
         "removeTitle": "Retirer du groupe",
-        "moveTitle": "Déplacer vers un groupe",
+        "moveTitle": "Changer de groupe",
         "addButton": "Ajouter",
         "removeButton": "Retirer",
         "moveButton": "Déplacer",
@@ -1435,7 +1435,7 @@
         "removeHelp": "Les mods quittent le groupe choisi. Leurs autres groupes ne sont pas modifiés.",
         "moveHelp": "Le déplacement retire les mods d’un groupe et les place dans un autre. Les mods qui ne sont pas dans le premier groupe ne sont pas modifiés.",
         "targetLegend": "Groupe",
-        "removeLegend": "Groupe dont retirer les mods",
+        "removeLegend": "Groupe d’où retirer les mods",
         "fromLegend": "Déplacer depuis",
         "toLegend": "Déplacer vers",
         "sameGroup": "Identique à la source",
@@ -1461,7 +1461,7 @@
         "activateTree": "Activer {count} mod, sous-groupes compris | Activer {count} mods, sous-groupes compris",
         "deactivateGroup": "Désactiver {count} mod de ce groupe | Désactiver {count} mods de ce groupe",
         "deactivateTree": "Désactiver {count} mod, sous-groupes compris | Désactiver {count} mods, sous-groupes compris",
-        "notInstalled": "{count} mod n’est pas installé et est ignoré | {count} mods ne sont pas installés et sont ignorés",
+        "notInstalled": "{count} mod n’est pas installé et est laissé de côté | {count} mods ne sont pas installés et sont laissés de côté",
         "hidden": "{count} est masqué par le filtre actuel | {count} sont masqués par le filtre actuel",
         "nothingToActivate": "Aucun mod de ce groupe ne peut être activé : ils sont déjà actifs ou non installés.",
         "nothingToDeactivate": "Aucun mod de ce groupe n’est actif."
@@ -1538,7 +1538,7 @@
     "groups": {
       "regionLabel": "Groupes",
       "heading": "Groupes",
-      "help": "Les groupes servent uniquement à retrouver vos mods. Ils ne déplacent jamais de fichiers et ne modifient pas votre ordre de chargement.",
+      "help": "Les groupes servent uniquement à retrouver vos mods. Ils ne déplacent jamais de fichiers et ne modifient jamais votre ordre de chargement.",
       "openButton": "Groupes",
       "close": "Fermer les groupes",
       "treeLabel": "Groupes",
@@ -1615,7 +1615,7 @@
         "removeUninstalledButton": "Retirer"
       },
       "startOver": {
-        "title": "Repartir de zéro avec les groupes",
+        "title": "Repartir de zéro, sans aucun groupe",
         "body": "Rimmerge conserve une copie du fichier illisible à côté de celui-ci, puis repart sans aucun groupe ni aucune couleur. Vos mods et votre ordre de chargement ne sont pas modifiés.",
         "confirm": "Repartir de zéro"
       },
@@ -1660,7 +1660,7 @@
         "deleted": "Groupe supprimé",
         "removedUninstalled": "{count} mod non installé retiré | {count} mods non installés retirés",
         "keptInstalledAgain": "{count} mod est de nouveau installé, il reste donc dans le groupe | {count} mods sont de nouveau installés, ils restent donc dans le groupe",
-        "startedOver": "Groupes remis à zéro, il n’y a plus aucun groupe"
+        "startedOver": "Reparti de zéro, sans aucun groupe"
       }
     }
   },
@@ -2032,7 +2032,7 @@
       "browse": "Parcourir…",
       "fileFilter": "Sauvegardes RimWorld (.rws)",
       "empty": "Aucune sauvegarde dans le dossier Saves de RimWorld.",
-      "noFolder": "Le dossier Saves de RimWorld est introuvable à côté de votre ModsConfig.xml. Recherchez plutôt une sauvegarde avec Parcourir.",
+      "noFolder": "Le dossier Saves de RimWorld est introuvable à côté de votre ModsConfig.xml. Choisissez plutôt une sauvegarde avec Parcourir.",
       "omitted": "{count} sauvegarde plus ancienne non affichée. | {count} sauvegardes plus anciennes non affichées."
     },
     "imported": "L’ordre importé est prêt. Vérifiez-le, puis appliquez-le pour l’enregistrer comme ordre de vos mods actifs.",

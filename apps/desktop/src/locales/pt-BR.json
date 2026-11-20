@@ -243,7 +243,7 @@
     "droppedClusterRules": "{count} regra de agrupamento anterior à migração descartada ao carregar: {ids} | {count} regras de agrupamento anteriores à migração descartadas ao carregar: {ids}",
     "unknownModKnowledgeValue": "Valor desconhecido ignorado nas regras de {section}: {what} \"{value}\"",
     "modKnowledgeCacheUnreadableHeadline": "Não foi possível ler as regras do Rimmerge em cache; usando a versão embutida",
-    "rowsOverRoleLimit": "{count} linha acima do limite por papel ignorada no grupo {role} das regras de {section} | {count} linhas acima do limite por papel ignoradas no grupo {role} das regras de {section}",
+    "rowsOverRoleLimit": "{count} linha acima do limite por papel ignorada para o papel {role} nas regras de {section} | {count} linhas acima do limite por papel ignoradas para o papel {role} nas regras de {section}",
     "precedenceRuleMissingFramework": "Regra de precedência de {defType} ignorada: ela não indica nenhum framework",
     "what": {
       "precedenceRule": "regra de precedência",
@@ -610,7 +610,7 @@
       },
       "organization_limit": {
         "title": "Um limite de grupos foi atingido",
-        "detail": "Você atingiu um limite de grupos e cores: quantos grupos pode haver, quantos níveis eles podem aninhar, quantos mods podem estar em grupos ou ter cor, ou o tamanho máximo do arquivo de grupos (organization.json). Nada foi alterado. Remova grupos, mods de grupos ou cores de que você não precisa mais e tente novamente."
+        "detail": "Você atingiu um limite de grupos e cores: quantos grupos pode haver, em quantos níveis eles podem ser aninhados, quantos mods podem estar em grupos ou ter cor, ou o tamanho máximo do arquivo de grupos (organization.json). Nada foi alterado. Remova grupos, mods de grupos ou cores de que você não precisa mais e tente novamente."
       }
     }
   },
@@ -1112,7 +1112,7 @@
     "keepEdge": "Manter a restrição {edgeKind} {after} → {before}",
     "addTag": "Marcar {modId} com a tag {tag}",
     "removeTag": "Remover a tag {tag} de {modId}",
-    "excludeFromCluster": "Excluir {modId} do agrupamento {rule}",
+    "excludeFromCluster": "Remover {modId} do agrupamento {rule}",
     "removeMod": "Remover {modId} da lista de mods ativos",
     "merge": "Mesclar {defKey}",
     "shipAsset": "Incluir {texturePath} de {from}",
@@ -1175,7 +1175,7 @@
           "keepEdge": "Manter restrição",
           "addTag": "Adicionar tag",
           "removeTag": "Remover tag",
-          "excludeFromCluster": "Excluir do agrupamento",
+          "excludeFromCluster": "Remover do agrupamento",
           "removeMod": "Remover da lista de mods ativos",
           "promoteRule": "Promover regra",
           "dropRule": "Descartar regra"
@@ -1416,7 +1416,7 @@
         "title": "Tags dos mods selecionados",
         "help": "Adicione uma tag a todos os mods selecionados ou remova-a. Remover tira a tag de todos os mods selecionados que a exibem, tenha sido ela adicionada por você ou inferida pelo Rimmerge. Os mods que não exibem a tag não são alterados. Adicionar também fixa a tag nos mods que já a exibem por inferência, para que ela continue mesmo se um novo escaneamento deixar de inferi-la. As tags nunca alteram sua ordem de carregamento.",
         "label": "Tag",
-        "format": "Use letras minúsculas, dígitos, hífens e sublinhados.",
+        "format": "Use letras latinas minúsculas (de a até z, sem acentos), dígitos, hífens e sublinhados.",
         "addButton": "Adicionar tag",
         "removeButton": "Remover tag"
       },
@@ -1598,7 +1598,7 @@
         "moveTitle": "Mover grupo",
         "moveQuestion": "Mover {name} para:",
         "moveLegend": "Novo lugar para o grupo",
-        "topLevel": "Nível superior",
+        "topLevel": "Primeiro nível",
         "moveInvalid": "Um grupo não pode ficar dentro de si mesmo nem dos próprios subgrupos",
         "moveCurrent": "Local atual",
         "moveButton": "Mover",
@@ -1608,15 +1608,15 @@
         "modGroupsList": "Grupos",
         "done": "Concluído",
         "removeUninstalledTitle": "Remover mods não instalados",
-        "removeUninstalledBody": "Segundo o último escaneamento, {count} mod em {name} e nos subgrupos dele não está instalado. Removê-lo desses grupos? Ele só volta se você o adicionar a um grupo novamente. | Segundo o último escaneamento, {count} mods em {name} e nos subgrupos dele não estão instalados. Removê-los desses grupos? Eles só voltam se você os adicionar a um grupo novamente.",
+        "removeUninstalledBody": "Conforme o último escaneamento, {count} mod em {name} e nos subgrupos dele não está instalado. Removê-lo desses grupos? Ele só volta se você o adicionar a um grupo novamente. | Conforme o último escaneamento, {count} mods em {name} e nos subgrupos dele não estão instalados. Removê-los desses grupos? Eles só voltam se você os adicionar a um grupo novamente.",
         "removeUninstalledList": "Mods a remover",
         "removeUninstalledLoading": "Verificando quais mods não estão instalados…",
         "removeUninstalledFailed": "Não foi possível verificar quais mods não estão instalados. Feche esta janela e tente novamente.",
         "removeUninstalledButton": "Remover"
       },
       "startOver": {
-        "title": "Recomeçar os grupos do zero",
-        "body": "O Rimmerge guarda uma cópia do arquivo ilegível ao lado dele e então começa sem grupos e sem cores. Seus mods e sua ordem de carregamento não são afetados.",
+        "title": "Recomeçar sem grupos",
+        "body": "O Rimmerge guarda uma cópia do arquivo ilegível na mesma pasta e então começa sem grupos e sem cores. Seus mods e sua ordem de carregamento não são afetados.",
         "confirm": "Recomeçar"
       },
       "notice": {
@@ -1639,18 +1639,18 @@
       "drop": {
         "addTo": "Adicionar {count} mod a {name} | Adicionar {count} mods a {name}",
         "idleMods": "Solte {count} mod em um grupo para adicioná-lo | Solte {count} mods em um grupo para adicioná-los",
-        "idleGroup": "Solte em um grupo para colocar este grupo dentro dele, ou em Todos os mods para levá-lo ao nível superior.",
+        "idleGroup": "Solte em um grupo para colocar este grupo dentro dele, ou em Todos os mods para levá-lo ao primeiro nível.",
         "needsGroup": "Mods só podem ser adicionados a um grupo",
-        "notUngrouped": "Um grupo não pode ir para Sem grupo. Use Todos os mods para levá-lo ao nível superior.",
+        "notUngrouped": "Um grupo não pode ir para Sem grupo. Use Todos os mods para levá-lo ao primeiro nível.",
         "withHidden": "{text} ({hidden})",
         "alreadyThere": "O grupo já está aí",
-        "makeTopLevel": "Levar {name} ao nível superior",
+        "makeTopLevel": "Levar {name} ao primeiro nível",
         "nestInside": "Mover {name} para dentro de {parent}",
         "added": "{count} mod adicionado a {name} | {count} mods adicionados a {name}",
         "nothingToAdd": "Todos os mods já estavam em {name}",
         "alreadyIn": "{count} já estava no grupo | {count} já estavam no grupo",
         "hiddenIncluded": "{count} mod selecionado oculto por um filtro foi incluído | {count} mods selecionados ocultos por um filtro foram incluídos",
-        "movedTop": "{name} agora é um grupo de nível superior",
+        "movedTop": "{name} agora é um grupo de primeiro nível",
         "movedInside": "{name} movido para dentro de {parent}"
       },
       "toast": {
@@ -1660,7 +1660,7 @@
         "deleted": "Grupo excluído",
         "removedUninstalled": "{count} mod não instalado removido | {count} mods não instalados removidos",
         "keptInstalledAgain": "{count} mod está instalado novamente, então continuou no grupo | {count} mods estão instalados novamente, então continuaram no grupo",
-        "startedOver": "Recomeçado do zero, sem grupos"
+        "startedOver": "Recomeço concluído: nenhum grupo"
       }
     }
   },

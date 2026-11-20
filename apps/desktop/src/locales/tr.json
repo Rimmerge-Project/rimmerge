@@ -243,7 +243,7 @@
     "droppedClusterRules": "Kurallar yüklenirken geçiş öncesinden kalma {count} küme kuralı atıldı: {ids} | Kurallar yüklenirken geçiş öncesinden kalma {count} küme kuralı atıldı: {ids}",
     "unknownModKnowledgeValue": "{section} kurallarında bilinmeyen bir {what} değeri yok sayıldı: \"{value}\"",
     "modKnowledgeCacheUnreadableHeadline": "Önbellekteki Rimmerge kuralları okunamadı; uygulamayla gelen anlık kopya kullanılıyor",
-    "rowsOverRoleLimit": "{section} kurallarının {role} grubunda rol başına sınırı aşan {count} satır yok sayıldı | {section} kurallarının {role} grubunda rol başına sınırı aşan {count} satır yok sayıldı",
+    "rowsOverRoleLimit": "{section} kurallarında {role} rolü için rol başına sınırı aşan {count} satır yok sayıldı | {section} kurallarında {role} rolü için rol başına sınırı aşan {count} satır yok sayıldı",
     "precedenceRuleMissingFramework": "{defType} için öncelik kuralı yok sayıldı: hiçbir altyapı modu belirtmiyor",
     "what": {
       "precedenceRule": "öncelik kuralı",
@@ -399,7 +399,7 @@
       "none": "Bildirimler, yok"
     },
     "welcome": {
-      "title": "Rimmerge'e hoş geldin",
+      "title": "Rimmerge uygulamasına hoş geldin",
       "body": "Rimmerge, açıldığında GitHub ile iletişim kurabilir:\n- daha yeni bir Rimmerge sürümünün yayımlanıp yayımlanmadığını denetlemek için (api.github.com), her açılışta;\n- güncel kural veritabanlarını (topluluğun yükleme sırası kuralları ve Rimmerge kural dosyası, raw.githubusercontent.com adresinden) indirmek için, en fazla günde bir kez. Güncellemeler yerel olarak saklanır ve yükleme sıranı yalnızca sen içe aktarmayı seçtiğinde değiştirir.\n\nSana, modlarına veya kurulumuna dair hiçbir şey göndermez. GitHub yalnızca IP adresinden gelen sıradan bir web isteği görür. Büyük Steam Atölyesi veritabanı asla otomatik olarak indirilmez; yalnızca Yenile düğmesine tıkladığında indirilir.",
       "settingsAlreadyRecommended": "Ayarların zaten önerilen varsayılanlarla eşleşiyor.",
       "steamWorkshopLabel": "Steam Atölyesi veritabanı (yaklaşık 49 MB, yalnızca Yenile'ye tıkladığında indirilir)"
@@ -1414,9 +1414,9 @@
       "tagsButton": "Etiketler…",
       "tags": {
         "title": "Seçili modların etiketleri",
-        "help": "Seçili her moda bir etiket ekle ya da etiketi kaldır. Kaldırma, etiketi gösteren her seçili moddan etiketi çıkarır; etiketi ister sen eklemiş ol, ister Rimmerge çıkarmış olsun. Etiketi göstermeyen modlara dokunulmaz. Ekleme, etiketi zaten çıkarım yoluyla gösteren modlarda etiketi sabitler; böylece bir yeniden tarama artık bu çıkarımı yapmasa da etiket kalır. Etiketler yükleme sıranı hiçbir zaman değiştirmez.",
+        "help": "Seçili her moda bir etiket ekle ya da etiketi kaldır. Kaldırma, etiketi gösteren her seçili moddan onu çıkarır; etiketi ister sen eklemiş ol, ister Rimmerge çıkarım yoluyla bulmuş olsun. Etiketi göstermeyen modlara dokunulmaz. Ekleme, etiketi zaten çıkarım yoluyla gösteren modlarda etiketi sabitler; böylece bir yeniden tarama artık bu çıkarımı yapmasa da etiket kalır. Etiketler yükleme sıranı hiçbir zaman değiştirmez.",
         "label": "Etiket",
-        "format": "Küçük harf, rakam, kısa çizgi ve alt çizgi kullan.",
+        "format": "Yalnızca küçük Latin harfleri (a'dan z'ye; ç, ğ, ı, ö, ş, ü olmadan), rakam, kısa çizgi ve alt çizgi kullan.",
         "addButton": "Etiket ekle",
         "removeButton": "Etiketi kaldır"
       },
@@ -1573,7 +1573,7 @@
         "scopeUnavailable": "Bu gruptaki modlar denetlenemedi",
         "checkingUninstalled": "Kurulu olmayan modlar denetleniyor…",
         "uninstalledUnavailable": "Kurulu olmayan modlar denetlenemedi",
-        "removeUninstalled": "Kurulu olmayan {count} modu kaldır | Kurulu olmayan {count} modu kaldır",
+        "removeUninstalled": "Kurulu olmayan {count} modu gruplardan çıkar | Kurulu olmayan {count} modu gruplardan çıkar",
         "noUninstalled": "Bu gruptaki tüm modlar kurulu",
         "delete": "Sil…"
       },
@@ -1590,7 +1590,7 @@
         "deleteQuestion": "{name} grubu silinsin mi?",
         "deleteNoMods": "Bu grupta hiç mod yok.",
         "deleteMods": "Alt grupları dahil bu grupta {count} mod var. | Alt grupları dahil bu grupta {count} mod var.",
-        "modeLegend": "{count} alt gruba ne olacak | {count} alt gruba ne olacak",
+        "modeLegend": "Alt gruplarına ({count}) ne olacak | Alt gruplarına ({count}) ne olacak",
         "keepSubgroups": "Alt grupları koru ve bir düzey yukarı taşı",
         "deleteSubgroups": "Alt grupları da sil",
         "deleteSafety": "Hiçbir mod silinmez ya da kurulumu kaldırılmaz. Modlar, ait oldukları diğer gruplarda kalır.",
@@ -1607,15 +1607,15 @@
         "modGroupsEmpty": "Henüz grup yok. Gruplar panelinden bir grup oluştur.",
         "modGroupsList": "Gruplar",
         "done": "Bitti",
-        "removeUninstalledTitle": "Kurulu olmayan modları kaldır",
-        "removeUninstalledBody": "Son taramaya göre {name} grubunda ve alt gruplarında {count} mod kurulu değil. Bu mod o gruplardan kaldırılsın mı? Yalnızca onu yeniden bir gruba eklersen geri gelir. | Son taramaya göre {name} grubunda ve alt gruplarında {count} mod kurulu değil. Bu modlar o gruplardan kaldırılsın mı? Yalnızca onları yeniden bir gruba eklersen geri gelirler.",
-        "removeUninstalledList": "Kaldırılacak modlar",
+        "removeUninstalledTitle": "Kurulu olmayan modları gruplardan çıkar",
+        "removeUninstalledBody": "Son taramaya göre {name} grubunda ve alt gruplarında {count} mod kurulu değil. Bu mod o gruplardan çıkarılsın mı? Yalnızca onu yeniden bir gruba eklersen geri gelir. | Son taramaya göre {name} grubunda ve alt gruplarında {count} mod kurulu değil. Bu modlar o gruplardan çıkarılsın mı? Yalnızca onları yeniden bir gruba eklersen geri gelirler.",
+        "removeUninstalledList": "Gruplardan çıkarılacak modlar",
         "removeUninstalledLoading": "Hangi modların kurulu olmadığı denetleniyor…",
         "removeUninstalledFailed": "Hangi modların kurulu olmadığı denetlenemedi. Bu pencereyi kapatıp yeniden dene.",
-        "removeUninstalledButton": "Kaldır"
+        "removeUninstalledButton": "Gruplardan çıkar"
       },
       "startOver": {
-        "title": "Gruplara baştan başla",
+        "title": "Grupsuz baştan başla",
         "body": "Rimmerge okunamayan dosyanın bir kopyasını yanında saklar, sonra hiç grup ve renk olmadan başlar. Modların ve yükleme sıran etkilenmez.",
         "confirm": "Baştan başla"
       },
@@ -1633,7 +1633,7 @@
         "ungrouped": "Hiçbir grupta olmayan modlar gösteriliyor",
         "group": "{name} grubu gösteriliyor: alt gruplar dahil {count} mod | {name} grubu gösteriliyor: alt gruplar dahil {count} mod",
         "notInstalled": "{count} mod kurulu değil | {count} mod kurulu değil",
-        "note": "Arama ve filtreler bu grubun içinde çalışır. Etkin liste yükleme sırasında kalır.",
+        "note": "Arama ve filtreler bu grubun içinde çalışır. Etkin liste yükleme sırasına göre sıralı kalır.",
         "showAll": "Tüm modları göster"
       },
       "drop": {
@@ -1658,7 +1658,7 @@
         "renamed": "Grup yeniden adlandırıldı",
         "moved": "Grup taşındı",
         "deleted": "Grup silindi",
-        "removedUninstalled": "Kurulu olmayan {count} mod kaldırıldı | Kurulu olmayan {count} mod kaldırıldı",
+        "removedUninstalled": "Kurulu olmayan {count} mod gruplardan çıkarıldı | Kurulu olmayan {count} mod gruplardan çıkarıldı",
         "keptInstalledAgain": "{count} mod yeniden kurulu olduğu için grupta kaldı | {count} mod yeniden kurulu olduğu için grupta kaldı",
         "startedOver": "Hiç grup olmadan baştan başlandı"
       }

@@ -243,7 +243,7 @@
     "droppedClusterRules": "{count} Cluster-Regel aus der Zeit vor der Migration beim Laden verworfen: {ids} | {count} Cluster-Regeln aus der Zeit vor der Migration beim Laden verworfen: {ids}",
     "unknownModKnowledgeValue": "Unbekannten Wert „{value}“ für {what} in den {section}-Regeln ignoriert",
     "modKnowledgeCacheUnreadableHeadline": "Die zwischengespeicherten Rimmerge-Regeln konnten nicht gelesen werden; der mitgelieferte Stand wird verwendet",
-    "rowsOverRoleLimit": "{count} Zeile über dem Limit pro Rolle in der Gruppe {role} der {section}-Regeln ignoriert | {count} Zeilen über dem Limit pro Rolle in der Gruppe {role} der {section}-Regeln ignoriert",
+    "rowsOverRoleLimit": "{count} Zeile über dem Limit pro Rolle für die Rolle {role} in den {section}-Regeln ignoriert | {count} Zeilen über dem Limit pro Rolle für die Rolle {role} in den {section}-Regeln ignoriert",
     "precedenceRuleMissingFramework": "Vorrangregel für {defType} ignoriert: Sie nennt kein Framework",
     "what": {
       "precedenceRule": "Vorrangregel",
@@ -594,7 +594,7 @@
       },
       "organization_unavailable": {
         "title": "Gruppen können gerade nicht geändert werden",
-        "detail": "Rimmerge konnte organization.json nicht lesen, daher sind deine Gruppen und Farben schreibgeschützt. Wähle auf der Seite „Mods“ „Neu anfangen…“, um neu zu beginnen (eine Kopie der Datei wird aufbewahrt), oder repariere die Datei und scanne erneut."
+        "detail": "Rimmerge konnte organization.json nicht lesen, daher sind deine Gruppen und Farben schreibgeschützt. Wähle auf der Seite „Mods“ „Neu anfangen…“, um mit leeren Gruppen und Farben zu beginnen (eine Kopie der Datei wird aufbewahrt), oder repariere die Datei und scanne erneut."
       },
       "group_not_found": {
         "title": "Diese Gruppe gibt es nicht mehr",
@@ -1416,7 +1416,7 @@
         "title": "Tags für die ausgewählten Mods",
         "help": "Füge allen ausgewählten Mods einen Tag hinzu oder entferne ihn. Beim Entfernen wird der Tag von jeder ausgewählten Mod genommen, die ihn trägt, egal ob du ihn hinzugefügt hast oder Rimmerge ihn abgeleitet hat. Mods ohne diesen Tag bleiben unverändert. Beim Hinzufügen wird der Tag außerdem bei Mods fixiert, die ihn bereits abgeleitet tragen, sodass er bleibt, auch wenn ein erneuter Scan ihn nicht mehr ableitet. Tags ändern nie deine Ladereihenfolge.",
         "label": "Tag",
-        "format": "Verwende Kleinbuchstaben, Ziffern, Bindestriche und Unterstriche.",
+        "format": "Verwende lateinische Kleinbuchstaben (a bis z), Ziffern, Bindestriche und Unterstriche.",
         "addButton": "Tag hinzufügen",
         "removeButton": "Tag entfernen"
       },
@@ -1549,7 +1549,7 @@
       "actionsFor": "Aktionen für {name}",
       "searchLabel": "Gruppen durchsuchen",
       "searchPlaceholder": "Gruppen durchsuchen…",
-      "empty": "Noch keine Gruppen. Erstelle eine, um deine Mods zu ordnen.",
+      "empty": "Noch keine Gruppen. Erstelle eine, um deine Mods zu organisieren.",
       "noMatches": "Keine passende Gruppe.",
       "nodeModCount": "{count} Mod, einschließlich Untergruppen | {count} Mods, einschließlich Untergruppen",
       "nodeSubgroupCount": "{count} Untergruppe | {count} Untergruppen",
@@ -1572,7 +1572,7 @@
         "checkingScope": "Mods in dieser Gruppe werden geprüft…",
         "scopeUnavailable": "Die Mods in dieser Gruppe konnten nicht geprüft werden",
         "checkingUninstalled": "Suche nach nicht installierten Mods…",
-        "uninstalledUnavailable": "Nicht installierte Mods konnten nicht geprüft werden",
+        "uninstalledUnavailable": "Die Suche nach nicht installierten Mods ist fehlgeschlagen",
         "removeUninstalled": "{count} nicht installierte Mod entfernen | {count} nicht installierte Mods entfernen",
         "noUninstalled": "Alle Mods in dieser Gruppe sind installiert",
         "delete": "Löschen…"
@@ -1615,7 +1615,7 @@
         "removeUninstalledButton": "Entfernen"
       },
       "startOver": {
-        "title": "Mit Gruppen neu anfangen",
+        "title": "Ohne Gruppen neu anfangen",
         "body": "Rimmerge legt neben der unlesbaren Datei eine Kopie davon ab und beginnt dann ohne Gruppen und ohne Farben. Deine Mods und deine Ladereihenfolge sind davon nicht betroffen.",
         "confirm": "Neu anfangen"
       },
@@ -1974,7 +1974,7 @@
     "preview": {
       "title": "Ladereihenfolge importieren",
       "summary": "{count} Mod in der Liste | {count} Mods in der Liste",
-      "fromSave": "Aus einem Speicherstand, erstellt mit RimWorld {version}.",
+      "fromSave": "Aus einem Speicherstand von RimWorld {version}.",
       "madeWith": "Erstellt mit RimWorld {version}.",
       "versionDiffers": "Du hast RimWorld {game}, eine andere Version.",
       "misaligned": {
