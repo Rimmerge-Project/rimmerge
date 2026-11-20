@@ -1726,7 +1726,13 @@
     "preview": {
       "title": "Import load order",
       "summary": "{count} mod in the list | {count} mods in the list",
-      "versionDiffers": "Made with RimWorld {listed}; you have {game}.",
+      "fromSave": "From a save made with RimWorld {version}.",
+      "madeWith": "Made with RimWorld {version}.",
+      "versionDiffers": "You have RimWorld {game}, a different release.",
+      "misaligned": {
+        "names": "The list has {values} names for {ids} mods, so the sender's names aren't shown.",
+        "workshopIds": "The list has {values} Steam ids for {ids} mods, so no Workshop links are shown."
+      },
       "replacesPending": "Activation changes you haven't rescanned yet will be replaced.",
       "replacesUnwritten": "This import replaces your Current order, which hasn't been applied yet.",
       "moved": "{count} mod changes position. | {count} mods change position.",
@@ -1738,6 +1744,7 @@
       "missingExplanation": "Rimmerge never downloads mods. Subscribe to these yourself, then import again.",
       "openWorkshop": "Open on Steam Workshop",
       "openWorkshopLabel": "Open {name} on Steam Workshop",
+      "workshopIdFromFile": "Workshop id {id}, taken from the file you imported.",
       "missingKind": {
         "dlc": "A DLC you don't have installed.",
         "rimmergeMergeMod": "The sender's merge mod, made by Rimmerge on their computer; you don't need it.",
@@ -1778,9 +1785,12 @@
       "malformedXml": "The file isn't valid XML.",
       "dtdNotAllowed": "The file declares a DTD, which mod lists never do.",
       "tooDeep": "The file is nested too deeply to be a mod list.",
-      "unrecognizedFormat": "This isn't a RimWorld mod list (.rml), a ModsConfig.xml, or a text list.",
+      "unrecognizedFormat": "This isn't a RimWorld mod list (.rml), a RimWorld save (.rws), a ModsConfig.xml, or a text list.",
       "missingModList": "The file has no mod list in it.",
-      "noEntries": "No package ids were found."
+      "noEntries": "No package ids were found.",
+      "saveHeaderTruncated": "The save ends before its mod list does. It may be damaged, or the game may still be writing it.",
+      "saveHeaderMissing": "This save has no mod list in its header.",
+      "saveHeaderTooLarge": "The save's mod list header is larger than {limit}."
     },
     "importedWithWarnings": "The scan reported {count} warning. | The scan reported {count} warnings.",
     "importedRuleWarnings": "Imported, with rules that couldn't be loaded",

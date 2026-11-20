@@ -12,9 +12,11 @@ import { useModLabel } from "@/composables/useModLabel";
 import { useTranslateMessage } from "@/composables/useTranslateMessage";
 import type { OrderImportPreviewDto } from "@/types/generated/OrderImportPreviewDto";
 import {
+  alignmentNote,
   corePlacementNote,
   groupImportEntries,
   importBlockedMessage,
+  listedVersionLine,
   missingKindNote,
   skippedMessage,
   versionNote,
@@ -32,7 +34,14 @@ const tm = useTranslateMessage();
 const { labelWithFallback, titleFor } = useModLabel();
 
 const groups = computed(() => groupImportEntries(preview.entries));
+const listedVersion = computed(() => listedVersionLine(preview.format, preview.listedGameVersion));
 const version = computed(() => versionNote(preview.version));
+// A list that did not line up with its ids left the parallel list out whole: say so, once each.
+const alignmentNotes = computed(() =>
+  [alignmentNote("names", preview.names), alignmentNote("workshopIds", preview.workshopIds)].filter(
+    (note) => note !== null,
+  ),
+);
 const core = computed(() => corePlacementNote(preview.core));
 // The sender's name is untrusted text; it still follows the shell's id/name toggle.
 const missingRows = computed(() =>
@@ -67,11 +76,26 @@ const blocked = computed(() =>
       {{ t("orderShare.preview.summary", { count: preview.listed }, preview.listed) }}
     </p>
     <p
+      v-if="listedVersion"
+      class="text-text-muted text-sm"
+      data-testid="import-preview-listed-version"
+    >
+      {{ tm(listedVersion) }}
+    </p>
+    <p
       v-if="version"
       class="text-text-muted text-sm"
       data-testid="import-preview-version"
     >
       {{ tm(version) }}
+    </p>
+    <p
+      v-for="note in alignmentNotes"
+      :key="note.key"
+      class="text-text-muted text-sm"
+      data-testid="import-preview-misaligned"
+    >
+      {{ tm(note) }}
     </p>
     <Message
       v-if="preview.replacesPendingChanges"
@@ -171,6 +195,11 @@ const blocked = computed(() =>
                 v-if="note"
                 class="text-text-muted text-xs"
               >{{ tm(note) }}</span>
+              <span
+                v-if="row.missing.kind === 'workshop'"
+                class="text-text-muted text-xs"
+                :data-testid="`import-preview-id-from-file-${row.missing.workshopId}`"
+              >{{ t('orderShare.preview.workshopIdFromFile', { id: row.missing.workshopId }) }}</span>
             </span>
             <Button
               v-if="row.missing.kind === 'workshop'"

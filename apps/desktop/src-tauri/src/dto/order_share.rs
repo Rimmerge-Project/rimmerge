@@ -15,8 +15,8 @@
 
 use rim_analyzer::domain::ModId;
 use rim_session::mod_list::{
-    Activation, CorePlacement, ExportedModList, ImportPlan, ImportedEntry, MissingKind, Rejection,
-    SkippedEntry, VersionCheck, render_text,
+    Activation, CorePlacement, ExportedModList, ImportPlan, ImportedEntry, ListAlignment,
+    ListFormat, MissingKind, Rejection, SkippedEntry, VersionCheck, render_text,
 };
 use rim_session::use_cases::{ImportBlocker, ImportOrder, ImportPreview, ReadyImport};
 use rim_session::{InventoryEntry, ModInventory};
@@ -151,6 +151,16 @@ pub enum ImportRejectionDto {
     MissingModList,
     /// See [`Rejection::NoEntries`].
     NoEntries,
+    /// See [`Rejection::SaveHeaderTruncated`].
+    SaveHeaderTruncated,
+    /// See [`Rejection::SaveHeaderMissing`].
+    SaveHeaderMissing,
+    /// See [`Rejection::SaveHeaderTooLarge`].
+    #[serde(rename_all = "camelCase")]
+    SaveHeaderTooLarge {
+        /// The header size limit in bytes.
+        limit_bytes: usize,
+    },
 }
 
 impl From<Rejection> for ImportRejectionDto {
@@ -164,6 +174,67 @@ impl From<Rejection> for ImportRejectionDto {
             Rejection::UnrecognizedFormat => Self::UnrecognizedFormat,
             Rejection::MissingModList => Self::MissingModList,
             Rejection::NoEntries => Self::NoEntries,
+            Rejection::SaveHeaderTruncated => Self::SaveHeaderTruncated,
+            Rejection::SaveHeaderMissing => Self::SaveHeaderMissing,
+            Rejection::SaveHeaderTooLarge { limit_bytes } => {
+                Self::SaveHeaderTooLarge { limit_bytes }
+            }
+        }
+    }
+}
+
+/// Which document shape a list was read from. Mirrors [`ListFormat`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export, export_to = "../../src/types/generated/")]
+pub enum ListFormatDto {
+    /// See [`ListFormat::SavedModList`].
+    SavedModList,
+    /// See [`ListFormat::ModsConfig`].
+    ModsConfig,
+    /// See [`ListFormat::Text`].
+    Text,
+    /// See [`ListFormat::SaveHeader`].
+    SaveHeader,
+}
+
+impl From<ListFormat> for ListFormatDto {
+    fn from(value: ListFormat) -> Self {
+        match value {
+            ListFormat::SavedModList => Self::SavedModList,
+            ListFormat::ModsConfig => Self::ModsConfig,
+            ListFormat::Text => Self::Text,
+            ListFormat::SaveHeader => Self::SaveHeader,
+        }
+    }
+}
+
+/// Whether a parallel list (names, Steam ids) lined up with the ids.
+/// Mirrors [`ListAlignment`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+#[ts(export, export_to = "../../src/types/generated/")]
+pub enum ListAlignmentDto {
+    /// See [`ListAlignment::Absent`].
+    Absent,
+    /// See [`ListAlignment::Aligned`].
+    Aligned,
+    /// See [`ListAlignment::Misaligned`]: the whole list was left out.
+    #[serde(rename_all = "camelCase")]
+    Misaligned {
+        /// How many ids there were.
+        ids: u32,
+        /// How many values the parallel list held.
+        values: u32,
+    },
+}
+
+impl From<ListAlignment> for ListAlignmentDto {
+    fn from(value: ListAlignment) -> Self {
+        match value {
+            ListAlignment::Absent => Self::Absent,
+            ListAlignment::Aligned => Self::Aligned,
+            ListAlignment::Misaligned { ids, values } => Self::Misaligned { ids, values },
         }
     }
 }
@@ -385,6 +456,16 @@ pub struct OrderImportPreviewDto {
     pub core: CorePlacementDto,
     /// How the list's game version compares with the installed one.
     pub version: VersionCheckDto,
+    /// The document shape the list was read from.
+    pub format: ListFormatDto,
+    /// The game version text the list carries, verbatim (untrusted: render
+    /// it as text only), or `null` when it has none.
+    pub listed_game_version: Option<String>,
+    /// Whether the list's names lined up with its ids; a misaligned list
+    /// was left out whole.
+    pub names: ListAlignmentDto,
+    /// The same for the Steam ids behind the Workshop links.
+    pub workshop_ids: ListAlignmentDto,
     /// Whether the import replaces activation edits not yet rescanned.
     pub replaces_pending_changes: bool,
     /// What the parser left out, bounded.
@@ -449,6 +530,10 @@ impl From<ImportBlocker> for ImportBlockedDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[ts(export, export_to = "../../src/types/generated/")]
+#[expect(
+    clippy::large_enum_variant,
+    reason = "one value per preview, serialized at once and dropped: boxing the ready half would only add an indirection to every reader"
+)]
 pub enum OrderImportOutcomeDto {
     /// See [`ImportPreview::Rejected`].
     Rejected {
@@ -503,6 +588,13 @@ fn preview_dto(ready: &ReadyImport, inventory: &ModInventory) -> OrderImportPrev
         moved: plan.moved,
         core: plan.core.into(),
         version: plan.version.clone().into(),
+        format: ready.format.into(),
+        listed_game_version: ready
+            .listed_game_version
+            .as_ref()
+            .map(|version| version.as_str().to_string()),
+        names: ready.names.into(),
+        workshop_ids: ready.workshop_ids.into(),
         replaces_pending_changes: plan.replaces_pending_changes,
         skipped: ready.skipped.iter().map(Into::into).collect(),
         omitted_skipped: ready.omitted_skipped,
@@ -608,6 +700,50 @@ mod tests {
         assert_eq!(
             json,
             serde_json::json!({"kind": "tooLarge", "limitBytes": 4})
+        );
+    }
+
+    #[test]
+    fn the_save_rejections_ship_their_kind_and_camel_case_fields() {
+        let truncated =
+            serde_json::to_value(ImportRejectionDto::from(Rejection::SaveHeaderTruncated))
+                .expect("serializes");
+        let missing = serde_json::to_value(ImportRejectionDto::from(Rejection::SaveHeaderMissing))
+            .expect("serializes");
+        let too_large =
+            serde_json::to_value(ImportRejectionDto::from(Rejection::SaveHeaderTooLarge {
+                limit_bytes: 4,
+            }))
+            .expect("serializes");
+
+        assert_eq!(
+            truncated,
+            serde_json::json!({"kind": "saveHeaderTruncated"})
+        );
+        assert_eq!(missing, serde_json::json!({"kind": "saveHeaderMissing"}));
+        assert_eq!(
+            too_large,
+            serde_json::json!({"kind": "saveHeaderTooLarge", "limitBytes": 4})
+        );
+    }
+
+    #[test]
+    fn a_list_format_and_an_alignment_ship_as_a_name_and_a_tagged_union() {
+        let format =
+            serde_json::to_value(ListFormatDto::from(ListFormat::SaveHeader)).expect("serializes");
+        let aligned = serde_json::to_value(ListAlignmentDto::from(ListAlignment::Aligned))
+            .expect("serializes");
+        let misaligned = serde_json::to_value(ListAlignmentDto::from(ListAlignment::Misaligned {
+            ids: 4,
+            values: 3,
+        }))
+        .expect("serializes");
+
+        assert_eq!(format, serde_json::json!("saveHeader"));
+        assert_eq!(aligned, serde_json::json!({"kind": "aligned"}));
+        assert_eq!(
+            misaligned,
+            serde_json::json!({"kind": "misaligned", "ids": 4, "values": 3})
         );
     }
 

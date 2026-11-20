@@ -58,6 +58,8 @@ import type { ImportRejectionDto } from "../../src/types/generated/ImportRejecti
 import type { InspectDefRequestDto } from "../../src/types/generated/InspectDefRequestDto";
 import type { LaunchGameRequestDto } from "../../src/types/generated/LaunchGameRequestDto";
 import type { LaunchNetworkChecksOutcomeDto } from "../../src/types/generated/LaunchNetworkChecksOutcomeDto";
+import type { ListAlignmentDto } from "../../src/types/generated/ListAlignmentDto";
+import type { ListFormatDto } from "../../src/types/generated/ListFormatDto";
 import type { MergeChoiceDto } from "../../src/types/generated/MergeChoiceDto";
 import type { MergeFieldDto } from "../../src/types/generated/MergeFieldDto";
 import type { MergeModEntryDto } from "../../src/types/generated/MergeModEntryDto";
@@ -3784,10 +3786,20 @@ export function installScenario(): void {
     | { kind: "rejected"; reason: ImportRejectionDto }
     | {
         kind: "parsed";
+        format: ListFormatDto;
         entries: ListedEntry[];
         skipped: SkippedEntryDto[];
         gameVersion: string | null;
+        names: ListAlignmentDto;
+        workshopIds: ListAlignmentDto;
       };
+
+  /** `ListAlignment::between`: a present parallel list against the ids. */
+  function alignmentBetween(idCount: number, valueCount: number): ListAlignmentDto {
+    return idCount === valueCount
+      ? { kind: "aligned" }
+      : { kind: "misaligned", ids: idCount, values: valueCount };
+  }
 
   /** `ListedPackageId`'s grammar: dotted, `[A-Za-z0-9._-]`, at most 80 characters. */
   function isListedPackageId(text: string): boolean {
@@ -3842,7 +3854,18 @@ export function installScenario(): void {
         workshopId: workshop !== null && workshop > 0 ? workshop : null,
       });
     }
-    return { kind: "parsed", entries, skipped, gameVersion };
+    // A text line carries its own name or link: absent unless some line wrote one.
+    const presence = (has: (entry: ListedEntry) => boolean): ListAlignmentDto =>
+      entries.some(has) ? { kind: "aligned" } : { kind: "absent" };
+    return {
+      kind: "parsed",
+      format: "text",
+      entries,
+      skipped,
+      gameVersion,
+      names: presence((entry) => entry.name !== null),
+      workshopIds: presence((entry) => entry.workshopId !== null),
+    };
   }
 
   function xmlListItems(xml: string, container: string): string[] | null {
@@ -3892,15 +3915,99 @@ export function installScenario(): void {
       });
     }
     const gameVersion = /<gameVersion>([^<]*)<\/gameVersion>/.exec(xml)?.[1] ?? null;
-    return { kind: "parsed", entries, skipped, gameVersion };
+    return {
+      kind: "parsed",
+      format: isRml ? "savedModList" : "modsConfig",
+      entries,
+      skipped,
+      gameVersion,
+      names: names === null ? { kind: "absent" } : alignmentBetween(ids.length, names.length),
+      workshopIds:
+        metaIds !== null && steamIds !== null
+          ? alignmentBetween(metaIds.length, steamIds.length)
+          : { kind: "absent" },
+    };
+  }
+
+  /** A save's root start tag after an optional declaration and comments (`sniff`'s rule). */
+  const SAVE_ROOT = /^(?:<\?[\s\S]*?\?>\s*|<!--[\s\S]*?-->\s*)*<savegame(?=[\s>/])/i;
+
+  /**
+   * A RimWorld save: only the header up to the first `</meta>` is read, whatever follows it
+   * (as `read_mod_list` does), and the meta's lists are joined to the ids by position, a list of
+   * another length being left out whole and reported.
+   */
+  function parseSaveHeader(xml: string): ParsedOrderList {
+    const afterRoot = xml.slice(SAVE_ROOT.exec(xml)?.[0].length ?? 0);
+    const rootTail = /^[^>]*>/.exec(afterRoot)?.[0] ?? "";
+    if (rootTail.endsWith("/>")) return { kind: "rejected", reason: { kind: "saveHeaderMissing" } };
+    const firstChild = /^\s*(?:<!--[\s\S]*?-->\s*)*<([A-Za-z][\w]*)/.exec(
+      afterRoot.slice(rootTail.length),
+    )?.[1];
+    if (firstChild !== undefined && firstChild.toLowerCase() !== "meta") {
+      return { kind: "rejected", reason: { kind: "saveHeaderMissing" } };
+    }
+    const end = xml.indexOf("</meta>");
+    if (end < 0) {
+      return new TextEncoder().encode(xml).length > MAX_ORDER_INPUT_BYTES
+        ? {
+            kind: "rejected",
+            reason: { kind: "saveHeaderTooLarge", limitBytes: MAX_ORDER_INPUT_BYTES },
+          }
+        : { kind: "rejected", reason: { kind: "saveHeaderTruncated" } };
+    }
+    const header = xml.slice(0, end + "</meta>".length);
+    const opensComment = (header.match(/<!--/g) ?? []).length;
+    const closesComment = (header.match(/-->/g) ?? []).length;
+    if (opensComment > closesComment) return { kind: "rejected", reason: { kind: "malformedXml" } };
+    if (header.includes("<!DOCTYPE"))
+      return { kind: "rejected", reason: { kind: "dtdNotAllowed" } };
+    const ids = xmlListItems(header, "modIds");
+    if (ids === null) return { kind: "rejected", reason: { kind: "missingModList" } };
+    const names = xmlListItems(header, "modNames");
+    const steamIds = xmlListItems(header, "modSteamIds");
+    const namesAlignment =
+      names === null ? { kind: "absent" as const } : alignmentBetween(ids.length, names.length);
+    const steamAlignment =
+      steamIds === null
+        ? { kind: "absent" as const }
+        : alignmentBetween(ids.length, steamIds.length);
+    const entries: ListedEntry[] = [];
+    const skipped: SkippedEntryDto[] = [];
+    for (const [index, raw] of ids.entries()) {
+      const id = raw.trim();
+      if (!isListedPackageId(id)) {
+        skipped.push({ kind: "malformedId", position: index + 1, text: id.slice(0, 80) });
+        continue;
+      }
+      const steam = steamAlignment.kind === "aligned" ? Number(steamIds?.[index]) : 0;
+      entries.push({
+        id: id.toLowerCase(),
+        name: namesAlignment.kind === "aligned" ? (names?.[index] ?? null) : null,
+        workshopId: steam > 0 ? steam : null,
+      });
+    }
+    return {
+      kind: "parsed",
+      format: "saveHeader",
+      entries,
+      skipped,
+      gameVersion: /<gameVersion>([^<]*)<\/gameVersion>/.exec(header)?.[1] ?? null,
+      names: namesAlignment,
+      workshopIds: steamAlignment,
+    };
   }
 
   function parseOrderDocument(text: string): ParsedOrderList {
-    if (new TextEncoder().encode(text).length > MAX_ORDER_INPUT_BYTES) {
+    const body = text.replace(/^﻿/, "").trimStart();
+    // A save is recognised first: only its header counts toward the byte budget's meaning.
+    const isSave = SAVE_ROOT.test(body);
+    if (!isSave && new TextEncoder().encode(text).length > MAX_ORDER_INPUT_BYTES) {
       return { kind: "rejected", reason: { kind: "tooLarge", limitBytes: MAX_ORDER_INPUT_BYTES } };
     }
-    const body = text.replace(/^﻿/, "").trimStart();
-    const parsed = body.startsWith("<") ? parseOrderXml(body) : parseOrderText(body);
+    let parsed: ParsedOrderList;
+    if (isSave) parsed = parseSaveHeader(body);
+    else parsed = body.startsWith("<") ? parseOrderXml(body) : parseOrderText(body);
     if (parsed.kind === "rejected") return parsed;
     if (parsed.entries.length > MAX_ORDER_ENTRIES) {
       return { kind: "rejected", reason: { kind: "tooManyEntries", limit: MAX_ORDER_ENTRIES } };
@@ -4090,6 +4197,10 @@ export function installScenario(): void {
       moved,
       core,
       version: versionCheckFor(parsed.gameVersion),
+      format: parsed.format,
+      listedGameVersion: parsed.gameVersion,
+      names: parsed.names,
+      workshopIds: parsed.workshopIds,
       replacesPendingChanges: unscanned.added.length > 0 || unscanned.removed.length > 0,
       skipped: parsed.skipped.slice(0, MAX_ORDER_SKIPPED_REPORTED),
       omittedSkipped: Math.max(0, parsed.skipped.length - MAX_ORDER_SKIPPED_REPORTED),

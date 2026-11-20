@@ -548,20 +548,54 @@ gate block in the root `CLAUDE.md`.
   (`new()` uses the real one) so route tests never read this machine's
   Steam; **no test calls `launch`**: the `open::that_detached` and `.spawn()`
   lines are covered only by the manual check.
-- **`mod_list_file.rs` + `mod_list_file/{read,write}.rs`**: `RmlFileStore`
+- **`mod_list_file.rs` + `mod_list_file/{read,write,stream,sniff,save_header}.rs`**: `RmlFileStore`
   implements `rim_session::ports::ModListFileStore`. The input is
   untrusted and every bound is a `rim_session::mod_list::ModListLimits`
-  constant, never a local number: `read_bounded` (re-exported as
-  `read_mod_list_bounded`, which the CLI's stdin uses) takes at most
-  `MAX_INPUT_BYTES + 1` bytes and returns `None` past the limit, so an
-  oversized input is never held whole (`Rejection::TooLarge`); decoding is
+  constant, never a local number. **One bounded, incremental reader serves
+  every source**: `stream::read_mod_list(impl Read)` (public, used by
+  `RmlFileStore::read` and the CLI's stdin; the old `read_bounded` and
+  `parse_mod_list_bytes` are gone) reads 64 KiB chunks into one buffer that
+  never exceeds `MAX_INPUT_BYTES + 1`, and `sniff.rs` decides from the first
+  bytes (BOM, declaration, comments, the root, the root's first child) what
+  it is reading. Every read fills a whole 64 KiB chunk and the shape must be
+  settled within the first chunk (past it an undecided input is a list, a
+  save root with no first child is `SaveHeaderMissing`), so the re-sniff
+  from the buffer start is at most two passes however small the source's
+  reads are. The save root is `savegame` (ASCII case-insensitive, like the
+  other roots) and its first child must be exactly `meta` (the game compares
+  it exactly); the sniff returns the root's byte offset and
+  `save_header.rs` starts from it, so a comment naming the root before it
+  cannot confuse the parse. A header whose `</meta>` ends past
+  `MAX_INPUT_BYTES` is `SaveHeaderTooLarge`; input ending after a bare
+  save root is `SaveHeaderTruncated`. A list is read whole up to the budget
+  and parsed as before (`Rejection::TooLarge` past it, so an oversized input
+  is never held whole); a **RimWorld save** (`<savegame>`, root matched
+  ASCII case-insensitively like the others) is read only up to its first
+  `</meta>`, at most one chunk past it (a `</meta>` straddling two chunks is
+  found), and `save_header.rs` closes that prefix, from the root on, with a
+  synthetic `</savegame>` and runs the same `parse_document` safety
+  sequence. A DOCTYPE
+  before the root is `DtdNotAllowed` at the sniff, before any save logic; the
+  first element after the root not being `meta` is `SaveHeaderMissing` (the
+  game itself expects it first); input ending before `</meta>` is
+  `SaveHeaderTruncated`; no `</meta>` within the budget is
+  `SaveHeaderTooLarge`; a `</meta>` inside a comment makes the closed
+  document malformed, so a crafted file is refused, never read as a shorter
+  list. The save header's `modIds`/`modSteamIds`/`modNames` feed the shared
+  `ListPieces` tail (id grammar, skipped entries, the official-content
+  rule); `modSteamIds` is a mod's `About.xml` `steamAppId`, so most values
+  are `0`, and ids can end in `_steam`. **A misaligned parallel list is never
+  zipped short**: `ListPieces` reports `ListAlignment::{Absent, Aligned,
+  Misaligned}` for the names and the Steam ids (for `.rml` and saves alike,
+  where it used to drop them silently), drops a misaligned list whole and
+  keeps every id; `ParsedModList` also carries the `ListFormat`. Decoding is
   lossy UTF-8 with the BOM stripped, and past the byte limit every U+FFFD
   becomes `?` so decoding can't grow the text. **The format is detected by
   content, never by extension**: after the BOM and leading whitespace, a
-  start of `<?xml`, `<!`, `<savedModList` or `<ModsConfigData` (ASCII
+  start of `<?xml`, `<!`, `<savedModList`, `<ModsConfigData` or `<savegame` (ASCII
   case-insensitive) is XML, anything else (a hand-typed line starting with
   `<` included) goes to `rim_session::mod_list::parse_text`; an XML root
-  other than those two is `UnrecognizedFormat`. XML safety: any
+  other than `savedModList`, `ModsConfigData` and `savegame` is `UnrecognizedFormat`. XML safety: any
   `<!DOCTYPE` is `DtdNotAllowed` before parsing (roxmltree allows an empty
   DTD on its own), `raw_element_nesting_exceeds(MAX_RAW_ELEMENT_DEPTH)` is
   `TooDeep`, and roxmltree runs with `allow_dtd: false`, no entity

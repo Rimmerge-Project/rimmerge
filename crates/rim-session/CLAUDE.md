@@ -823,7 +823,15 @@ and never an epoch. Fake: `test_support::FakeModTimestampReader`.
   desktop paste all read. A malformed entry is a `SkippedEntry` (at most
   `MAX_SKIPPED_REPORTED`, the rest only counted); only a whole-document
   failure is a `Rejection`, and a rejection is a preview **outcome**
-  (`ImportPreview::Rejected`), not an error.
+  (`ImportPreview::Rejected`), not an error. A RimWorld save is one more
+  source behind the same port (`ListFormat::SaveHeader`; the three
+  save-specific rejections are `SaveHeaderTruncated`, `SaveHeaderMissing`
+  and `SaveHeaderTooLarge`). `ParsedModList` carries its `ListFormat` and,
+  per parallel list (names, Steam ids), a `ListAlignment` (`Absent`,
+  `Aligned`, or `Misaligned { ids, values }`: the list was left out whole,
+  never zipped short); `ReadyImport` passes both through with the listed game
+  version text (`listed_game_version`, verbatim), while `ImportPlan` and
+  `VersionCheck` (major.minor) are unchanged.
 - **Export reads the file, not the selection.** `ExportOrder` re-reads
   `ModsConfig.xml` through `ModsConfigStore::read` on every call (the
   desktop opens on Suggested, an order the player may never have run),

@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { ImportedEntryDto } from "@/types/generated/ImportedEntryDto";
 import {
+  alignmentNote,
   corePlacementNote,
   groupImportEntries,
+  listedVersionLine,
   missingKindNote,
   missingListText,
   rejectionMessage,
@@ -80,6 +82,8 @@ describe("rejectionMessage", () => {
       rejectionMessage({ kind: "unrecognizedFormat" }),
       rejectionMessage({ kind: "missingModList" }),
       rejectionMessage({ kind: "noEntries" }),
+      rejectionMessage({ kind: "saveHeaderTruncated" }),
+      rejectionMessage({ kind: "saveHeaderMissing" }),
     ].map((message) => message.key);
     expect(keys).toEqual([
       "orderShare.rejected.malformedXml",
@@ -88,7 +92,13 @@ describe("rejectionMessage", () => {
       "orderShare.rejected.unrecognizedFormat",
       "orderShare.rejected.missingModList",
       "orderShare.rejected.noEntries",
+      "orderShare.rejected.saveHeaderTruncated",
+      "orderShare.rejected.saveHeaderMissing",
     ]);
+    expect(rejectionMessage({ kind: "saveHeaderTooLarge", limitBytes: 4 * 1024 * 1024 })).toEqual({
+      key: "orderShare.rejected.saveHeaderTooLarge",
+      params: { limit: "4.00 MiB" },
+    });
   });
 });
 
@@ -118,8 +128,36 @@ describe("the small notes", () => {
     expect(versionNote({ kind: "same" })).toBeNull();
     expect(versionNote({ kind: "differs", listed: "1.5.4409", game: "1.6.4871" })).toEqual({
       key: "orderShare.preview.versionDiffers",
-      params: { listed: "1.5.4409", game: "1.6.4871" },
+      params: { game: "1.6.4871" },
     });
+  });
+
+  it("words the listed version as a save's or a list's, and says nothing without one", () => {
+    expect(listedVersionLine("saveHeader", "1.6.4871 rev591")).toEqual({
+      key: "orderShare.preview.fromSave",
+      params: { version: "1.6.4871 rev591" },
+    });
+    for (const format of ["savedModList", "modsConfig", "text"] as const) {
+      expect(listedVersionLine(format, "1.6")).toEqual({
+        key: "orderShare.preview.madeWith",
+        params: { version: "1.6" },
+      });
+    }
+    expect(listedVersionLine("saveHeader", null)).toBeNull();
+  });
+
+  it("notes a misaligned names or Steam-id list and nothing for an absent or aligned one", () => {
+    const misaligned = { kind: "misaligned", ids: 4, values: 3 } as const;
+
+    expect(alignmentNote("names", misaligned)).toEqual({
+      key: "orderShare.preview.misaligned.names",
+      params: { ids: 4, values: 3 },
+    });
+    expect(alignmentNote("workshopIds", misaligned)?.key).toBe(
+      "orderShare.preview.misaligned.workshopIds",
+    );
+    expect(alignmentNote("names", { kind: "absent" })).toBeNull();
+    expect(alignmentNote("workshopIds", { kind: "aligned" })).toBeNull();
   });
 
   it("notes Core only when the list did not place it", () => {

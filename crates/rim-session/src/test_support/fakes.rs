@@ -16,7 +16,7 @@ use rim_resolve::domain::{AssignmentId, AssignmentProject, DecisionSet, PatchId,
 use crate::ProjectPaths;
 use crate::app_settings::AppSettings;
 use crate::game_launch::LaunchUnavailable;
-use crate::mod_list::{ParsedModList, SharedModList};
+use crate::mod_list::{ListAlignment, ListFormat, ParsedModList, SharedModList};
 use crate::mod_times::{ModTimeSubject, UpdateTime, UpdateUnavailable};
 use crate::ports::{
     AboutImage, AboutReadError, AppSettingsLoad, AppSettingsStore, AssetLocator,
@@ -710,7 +710,10 @@ impl ModListFileStore for InMemoryModListFileStore {
             .borrow_mut()
             .push((path.to_path_buf(), list.clone()));
         let parsed = ParsedModList {
+            format: ListFormat::SavedModList,
             list: list.clone(),
+            names: ListAlignment::Aligned,
+            workshop_ids: ListAlignment::Absent,
             skipped: Vec::new(),
             omitted_skipped: 0,
         };

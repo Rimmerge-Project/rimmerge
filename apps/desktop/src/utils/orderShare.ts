@@ -3,6 +3,8 @@ import type { CorePlacementDto } from "@/types/generated/CorePlacementDto";
 import type { ImportBlockedDto } from "@/types/generated/ImportBlockedDto";
 import type { ImportedEntryDto } from "@/types/generated/ImportedEntryDto";
 import type { ImportRejectionDto } from "@/types/generated/ImportRejectionDto";
+import type { ListAlignmentDto } from "@/types/generated/ListAlignmentDto";
+import type { ListFormatDto } from "@/types/generated/ListFormatDto";
 import type { MissingKindDto } from "@/types/generated/MissingKindDto";
 import type { SkippedEntryDto } from "@/types/generated/SkippedEntryDto";
 import type { VersionCheckDto } from "@/types/generated/VersionCheckDto";
@@ -85,6 +87,14 @@ export function rejectionMessage(reason: ImportRejectionDto): MessageDescriptor 
       return descriptor("orderShare.rejected.missingModList");
     case "noEntries":
       return descriptor("orderShare.rejected.noEntries");
+    case "saveHeaderTruncated":
+      return descriptor("orderShare.rejected.saveHeaderTruncated");
+    case "saveHeaderMissing":
+      return descriptor("orderShare.rejected.saveHeaderMissing");
+    case "saveHeaderTooLarge":
+      return descriptor("orderShare.rejected.saveHeaderTooLarge", {
+        limit: formatBytes(reason.limitBytes),
+      });
     default:
       return assertNever(reason);
   }
@@ -124,19 +134,70 @@ export function skippedMessage(skipped: SkippedEntryDto): MessageDescriptor {
   }
 }
 
-/** The version line, only when the list was made with another RimWorld version. */
+/**
+ * Which RimWorld the list was made with, verbatim, whenever it says: a save is worded as one
+ * ("From a save made with..."), every other shape as "Made with...". `null` when the list
+ * carries no version. The text is untrusted and goes in as a parameter, never concatenated.
+ */
+export function listedVersionLine(
+  format: ListFormatDto,
+  listedGameVersion: string | null,
+): MessageDescriptor | null {
+  if (listedGameVersion === null) {
+    return null;
+  }
+  switch (format) {
+    case "saveHeader":
+      return descriptor("orderShare.preview.fromSave", { version: listedGameVersion });
+    case "savedModList":
+    case "modsConfig":
+    case "text":
+      return descriptor("orderShare.preview.madeWith", { version: listedGameVersion });
+    default:
+      return assertNever(format);
+  }
+}
+
+/**
+ * The note that this install runs another RimWorld release, only when the major.minor differs
+ * (the backend's `VersionCheck`): a different build or revision within one release never warns.
+ * It follows the "made with" line, so it names only this install's version.
+ */
 export function versionNote(version: VersionCheckDto): MessageDescriptor | null {
   switch (version.kind) {
     case "unknown":
     case "same":
       return null;
     case "differs":
-      return descriptor("orderShare.preview.versionDiffers", {
-        listed: version.listed,
-        game: version.game,
-      });
+      return descriptor("orderShare.preview.versionDiffers", { game: version.game });
     default:
       return assertNever(version);
+  }
+}
+
+/** Which parallel list of the document a misalignment note is about. */
+export type ParallelList = "names" | "workshopIds";
+
+/**
+ * The note for a names or Steam-id list that did not line up with the ids and was left out
+ * whole; `null` when the list was absent or aligned.
+ */
+export function alignmentNote(
+  list: ParallelList,
+  alignment: ListAlignmentDto,
+): MessageDescriptor | null {
+  switch (alignment.kind) {
+    case "absent":
+    case "aligned":
+      return null;
+    case "misaligned": {
+      const params = { ids: alignment.ids, values: alignment.values };
+      return list === "names"
+        ? descriptor("orderShare.preview.misaligned.names", params)
+        : descriptor("orderShare.preview.misaligned.workshopIds", params);
+    }
+    default:
+      return assertNever(alignment);
   }
 }
 

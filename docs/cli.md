@@ -73,8 +73,16 @@ file with no live install or profile involved at all.
   cannot go in a list is named on stderr. It never touches
   `ModsConfig.xml`.
 - **`order import <file | ->`**: reads a `.rml`, a `ModsConfig.xml`-shaped
-  file, or the text list (`-` reads text from stdin; input over 4 MiB is
-  rejected) and prints what it would change: mods activated and
+  file, the text list, or a RimWorld save `.rws` (detected by content, also
+  on stdin with `-`; a list over 4 MiB is rejected, and for a save the 4 MiB
+  bound is on its header, since only the `<meta>` header is read and never
+  the rest of the file, which can be hundreds of megabytes) and prints what
+  it would change. It first prints a `source:` line (`RimWorld save (header
+  only)`, `RimWorld mod list (.rml)`, ...), a `version: saved with RimWorld
+  ...` line whenever the list carries one (plus a note when this install is
+  a different major.minor release), and one line for each names or Steam-id
+  list that had a different length from the ids and was left out (`names: 3
+  for 4 ids, not shown`). Then: mods activated and
   deactivated, how many move, mods that are not installed (with their
   Steam Workshop link when the list has one), duplicates and lines it
   could not read. It then writes the list as `<activeMods>` in
@@ -83,8 +91,11 @@ file with no live install or profile involved at all.
   it (an install with no Core on disk refuses the import, and so does a
   list in which no mod besides Core is installed, since it would only
   deactivate your mods); your own
-  generated merge mod is never deactivated. A `.rml` can be piped on
-  stdin as well as text. If the import deactivates any active mod, or
+  generated merge mod is never deactivated. A `.rml` or a save can be given
+  on stdin as well as text; for a save prefer `rimmerge order import - <
+  save.rws` over `cat save.rws |`, since the reader stops early and `cat`
+  can then hit a broken pipe. A save that ends before its header does is
+  refused with that reason and nothing is written. If the import deactivates any active mod, or
   names a mod you do not have installed, it refuses until you pass
   `--yes`. `--dry-run` prints the plan and writes nothing; `--force`
   writes even if `RimWorldWin64.exe` looks like it is running. It does

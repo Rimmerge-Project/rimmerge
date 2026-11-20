@@ -54,9 +54,7 @@ pub use game_log::FileGameLogReader;
 pub use merge_mod::MergeModFolderWriter;
 pub use mod_about::FileModAboutReader;
 pub use mod_knowledge::{FsModKnowledgeStore, embedded_bundle_sha256, vendored_knowledge};
-pub use mod_list_file::{
-    RmlFileStore, parse_mod_list_bytes, read_bounded as read_mod_list_bounded,
-};
+pub use mod_list_file::{RmlFileStore, read_mod_list};
 pub use mod_timestamps::FileModTimestampReader;
 pub use mods_config::ModsConfigFileStore;
 pub use notifications::{

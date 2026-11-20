@@ -123,18 +123,44 @@ impl fmt::Display for ListedPackageId {
     }
 }
 
-/// Control characters, plus the zero-width and bidirectional formatting
-/// characters that can disguise text (U+200B-200F, U+202A-202E,
-/// U+2060-2064, U+2066-2069, U+FEFF).
+/// Control characters (Cc) plus the whole general categories Cf (format:
+/// zero-width, bidirectional and invisible-operator characters) and Zl/Zp
+/// (the line and paragraph separators), so text cannot disguise itself or
+/// break a terminal line. The workspace carries no Unicode category tables,
+/// so the Cf ranges below are written out from the Unicode 16 database;
+/// the test beside them checks one sample per range. Beyond Cf, the
+/// Default_Ignorable characters that render as nothing are stripped too
+/// (combining grapheme joiner, Hangul fillers, variation selectors).
 fn is_stripped(c: char) -> bool {
     c.is_control()
         || matches!(
             c,
-            '\u{200B}'..='\u{200F}'
-                | '\u{202A}'..='\u{202E}'
-                | '\u{2060}'..='\u{2064}'
-                | '\u{2066}'..='\u{2069}'
+            '\u{00AD}'
+                | '\u{034F}'
+                | '\u{0600}'..='\u{0605}'
+                | '\u{061C}'
+                | '\u{06DD}'
+                | '\u{070F}'
+                | '\u{0890}'..='\u{0891}'
+                | '\u{08E2}'
+                | '\u{115F}'..='\u{1160}'
+                | '\u{180E}'
+                | '\u{200B}'..='\u{200F}'
+                | '\u{2028}'..='\u{202E}'
+                | '\u{2060}'..='\u{206F}'
+                | '\u{3164}'
+                | '\u{FE00}'..='\u{FE0F}'
                 | '\u{FEFF}'
+                | '\u{FFA0}'
+                | '\u{FFF9}'..='\u{FFFB}'
+                | '\u{110BD}'
+                | '\u{110CD}'
+                | '\u{13430}'..='\u{1343F}'
+                | '\u{1BCA0}'..='\u{1BCA3}'
+                | '\u{1D173}'..='\u{1D17A}'
+                | '\u{E0001}'
+                | '\u{E0020}'..='\u{E007F}'
+                | '\u{E0100}'..='\u{E01EF}'
         )
 }
 
@@ -358,6 +384,48 @@ mod tests {
         let cleaned = ListedName::new("  A\u{0}B\nC\u{7f} ").expect("non-empty");
         assert_eq!(cleaned.as_str(), "ABC");
         assert!(ListedName::new(" \n\t").is_none());
+    }
+
+    #[test]
+    fn name_strips_separators_and_the_rest_of_the_format_category() {
+        // One sample per range of `is_stripped`, plus the line separators.
+        for hostile in [
+            '\u{00AD}',
+            '\u{034F}',
+            '\u{0601}',
+            '\u{061C}',
+            '\u{06DD}',
+            '\u{070F}',
+            '\u{0890}',
+            '\u{08E2}',
+            '\u{115F}',
+            '\u{1160}',
+            '\u{180E}',
+            '\u{200B}',
+            '\u{2028}',
+            '\u{2029}',
+            '\u{206A}',
+            '\u{3164}',
+            '\u{FE0F}',
+            '\u{FEFF}',
+            '\u{FFA0}',
+            '\u{FFF9}',
+            '\u{110BD}',
+            '\u{110CD}',
+            '\u{13430}',
+            '\u{1BCA0}',
+            '\u{1D173}',
+            '\u{E0001}',
+            '\u{E0041}',
+            '\u{E0100}',
+            '\u{E01EF}',
+        ] {
+            let raw = format!("Ex{hostile}ample");
+
+            let name = ListedName::new(&raw).expect("non-empty");
+
+            assert_eq!(name.as_str(), "Example", "U+{:04X}", u32::from(hostile));
+        }
     }
 
     #[test]

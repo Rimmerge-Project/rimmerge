@@ -259,9 +259,42 @@ package ids, the mods' names, their Steam ids, and the game version) into a
 and "Load list" reads from there. Rimmerge reads and writes that same
 format, so a list exported into `ModLists` shows up in the game, and a list
 saved in the game can be imported. It also reads a `ModsConfig.xml`-shaped
-list and a plain text list (see
+list, a plain text list, and the mod list stored in a RimWorld save (see
 [Sharing a load order](../desktop.md#sharing-a-load-order) for the
 buttons, and [`order export`/`order import`](../cli.md) for the CLI).
+
+**A save is a fourth source.** A RimWorld save (`.rws`) starts with a
+`<meta>` header that holds the package ids, the mods' names, their Steam ids
+and the game version of the mods the colony was saved with. Rimmerge reads
+only that header: it stops at the end of `<meta>`, a few hundred kilobytes
+into a file that can be hundreds of megabytes (it stops reading within
+64 KiB after the header), and never decodes or changes the rest. A save is recognized by its content, like the other
+shapes, whatever its name. A save that ends before its header does (damaged,
+or still being written), one whose first element is not `<meta>`, and one
+whose header is larger than 4 MiB are refused with their own reason. The
+"Steam id" the game writes is the `steamAppId` a mod's own `About.xml`
+declares, not its Workshop item id: the DLCs carry their app id, most mods
+carry none, so a save links a missing mod to the Steam Workshop only when
+its author put an id there, and few do. The package ids, which are what the
+import uses, are always there (a Workshop copy's id can end in `_steam`, and
+matches the same mod as the plain id).
+
+**A list that does not line up is said so.** The package ids are the list;
+the names and the Steam ids are extras. When the names (or the Steam ids)
+have a different length from the ids, Rimmerge leaves that extra list out
+whole instead of pairing it by position and guessing, imports exactly the
+same mods, and the preview (and `order import`) says which list was left
+out. This applies to `.rml` files and saves alike.
+
+**The version is shown, and a different release is noted.** The preview
+shows the game version the list was made with, exactly as written, whenever
+the list says one. It adds a note only when the major.minor differs from the
+installed game (1.5 against 1.6), in either direction, because mods are
+released per minor version; a different build or revision within one
+release (a save says `1.6.4871 rev591` where `Version.txt` says
+`1.6.4871 rev590` on the same machine) never warns. RimWorld itself loads an
+older 1.x save without a warning; the note is about the mod list, not about
+whether the game would load the save.
 
 **Export shares your active order**, re-read from `ModsConfig.xml` at
 export time: what RimWorld loads now, not the Suggested order. Package ids are written

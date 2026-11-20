@@ -392,8 +392,8 @@ mod tests {
     use crate::dto::active_set::ActivateRequestDto;
     use crate::dto::common::OrderSourceDto;
     use crate::dto::order_share::{
-        CorePlacementDto, ImportBlockedDto, ImportRejectionDto, ImportedEntryDto, MissingKindDto,
-        OrderImportPreviewDto,
+        CorePlacementDto, ImportBlockedDto, ImportRejectionDto, ImportedEntryDto, ListAlignmentDto,
+        ListFormatDto, MissingKindDto, OrderImportPreviewDto,
     };
     use crate::dto::project::ProjectPathsDto;
     use crate::error::CommandErrorCode;
@@ -920,6 +920,117 @@ mod tests {
                 reason: ImportRejectionDto::DtdNotAllowed
             }
         ));
+    }
+
+    /// A save as the game writes it: a header with `modIds`, `modSteamIds`
+    /// and `modNames`, then a body that is never read.
+    fn save_text(ids: &[&str], names: &[&str]) -> String {
+        let items = |values: &[&str]| -> String {
+            values
+                .iter()
+                .map(|value| format!("<li>{value}</li>"))
+                .collect()
+        };
+        let steam = vec!["0"; ids.len()];
+        format!(
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?><savegame><meta>\
+             <gameVersion>1.6.4871 rev591</gameVersion><modIds>{}</modIds>\
+             <modSteamIds>{}</modSteamIds><modNames>{}</modNames></meta><game>body</game></savegame>",
+            items(ids),
+            items(&steam),
+            items(names),
+        )
+    }
+
+    #[tokio::test]
+    async fn preview_file_reads_a_save_header_and_reports_its_format_and_version() {
+        let (scratch, state, _paths) = loaded_game().await;
+        let save = scratch.path().join("autosave.rws");
+        std::fs::write(
+            &save,
+            save_text(&["ludeon.rimworld", "sample.mod"], &["Core", "Sample"]),
+        )
+        .expect("write save");
+
+        let preview = ready(
+            preview_order_import_file_inner(&state, file_request(&save))
+                .await
+                .expect("previews"),
+        );
+
+        assert_eq!(preview.format, ListFormatDto::SaveHeader);
+        assert_eq!(
+            preview.listed_game_version.as_deref(),
+            Some("1.6.4871 rev591")
+        );
+        assert_eq!(preview.names, ListAlignmentDto::Aligned);
+        assert_eq!(preview.order, mod_ids(&["ludeon.rimworld", "sample.mod"]));
+    }
+
+    #[tokio::test]
+    async fn preview_file_reports_a_misaligned_names_list_and_a_truncated_save() {
+        let (scratch, state, _paths) = loaded_game().await;
+        let short = scratch.path().join("short.rws");
+        std::fs::write(
+            &short,
+            save_text(&["ludeon.rimworld", "sample.mod"], &["Core"]),
+        )
+        .expect("write save");
+        let cut = scratch.path().join("cut.rws");
+        std::fs::write(&cut, "<savegame><meta><modIds><li>ludeon.rimworld</li>").expect("write");
+
+        let misaligned = ready(
+            preview_order_import_file_inner(&state, file_request(&short))
+                .await
+                .expect("previews"),
+        );
+        let truncated = preview_order_import_file_inner(&state, file_request(&cut))
+            .await
+            .expect("a rejection is an outcome");
+
+        assert_eq!(
+            misaligned.names,
+            ListAlignmentDto::Misaligned { ids: 2, values: 1 }
+        );
+        assert!(matches!(
+            truncated,
+            OrderImportOutcomeDto::Rejected {
+                reason: ImportRejectionDto::SaveHeaderTruncated
+            }
+        ));
+    }
+
+    #[tokio::test]
+    async fn a_save_and_an_exported_rml_of_the_same_order_preview_the_same_order() {
+        let (scratch, state, _paths) = loaded_game().await;
+        let rml = scratch.path().join("mine.rml");
+        export_order_file_inner(
+            &state,
+            ExportOrderFileRequestDto {
+                path: rml.display().to_string(),
+            },
+        )
+        .await
+        .expect("exports");
+        let save = scratch.path().join("autosave.rws");
+        std::fs::write(
+            &save,
+            save_text(&["ludeon.rimworld", "sample.mod"], &["Core", "Sample"]),
+        )
+        .expect("write save");
+
+        let from_rml = ready(
+            preview_order_import_file_inner(&state, file_request(&rml))
+                .await
+                .expect("previews"),
+        );
+        let from_save = ready(
+            preview_order_import_file_inner(&state, file_request(&save))
+                .await
+                .expect("previews"),
+        );
+
+        assert_eq!(from_save.order, from_rml.order);
     }
 
     #[tokio::test]

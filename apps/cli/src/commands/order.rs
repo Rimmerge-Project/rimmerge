@@ -21,10 +21,9 @@ use rim_io::GameProcessProbe;
 use rim_resolve::domain::GeneratedModIdentity;
 use rim_session::mod_info::workshop_url;
 use rim_session::mod_list::{
-    Activation, CorePlacement, ImportContext, ImportPlan, ImportedEntry, MissingKind,
-    ModListLimits, Rejection, SkippedEntry, VersionCheck, render_text,
+    Activation, CorePlacement, ImportContext, ImportPlan, ImportedEntry, ListAlignment, ListFormat,
+    MissingKind, Rejection, SkippedEntry, VersionCheck, render_text,
 };
-use rim_session::ports::ModListRead;
 use rim_session::use_cases::{
     ExportOrder, ExportSource, ImportLoss, ImportOrder, ImportOrderError, ImportPreview,
     ImportTarget, PreviewOrderImport, ReadyImport,
@@ -69,8 +68,9 @@ pub struct ExportArgs {
 pub struct ImportArgs {
     #[command(flatten)]
     paths: PathsArgs,
-    /// The list to import, or `-` to read it from stdin (the text format or
-    /// a `.rml`, detected by content).
+    /// The list to import (a `.rml`, a `ModsConfig.xml`-shaped file, a text
+    /// list, or a RimWorld save `.rws`, whose header alone is read), or `-`
+    /// to read it from stdin; the format is detected by content.
     #[arg(value_name = "FILE")]
     source: PathBuf,
     /// Print the plan without writing anything.
@@ -182,13 +182,7 @@ fn preview(source: &Path, target: &ImportTarget) -> anyhow::Result<ImportPreview
             .from_file(source, target)
             .map_err(Into::into);
     }
-    let bytes = rim_io::read_mod_list_bounded(io::stdin().lock()).context("reading stdin")?;
-    let read = match bytes {
-        Some(bytes) => rim_io::parse_mod_list_bytes(&bytes),
-        None => ModListRead::Rejected(Rejection::TooLarge {
-            limit_bytes: ModListLimits::MAX_INPUT_BYTES,
-        }),
-    };
+    let read = rim_io::read_mod_list(io::stdin().lock()).context("reading stdin")?;
     Ok(ImportPreview::from_read(read, target))
 }
 
@@ -201,11 +195,18 @@ fn describe_rejection(rejection: Rejection) -> String {
         Rejection::MalformedXml => "the file is not valid XML".to_string(),
         Rejection::DtdNotAllowed => "the file declares a DTD, which a mod list never does".into(),
         Rejection::TooDeep => "the file is nested too deeply to be a mod list".to_string(),
-        Rejection::UnrecognizedFormat => {
-            "the input is not a RimWorld mod list (.rml), a ModsConfig.xml, or a text list".into()
-        }
+        Rejection::UnrecognizedFormat => "the input is not a RimWorld mod list (.rml), a RimWorld \
+             save (.rws), a ModsConfig.xml, or a text list"
+            .into(),
         Rejection::MissingModList => "the file has no mod list in it".to_string(),
         Rejection::NoEntries => "no mod ids were found".to_string(),
+        Rejection::SaveHeaderTruncated => "the save ends before its mod list does; it may be \
+             damaged, or the game may still be writing it"
+            .into(),
+        Rejection::SaveHeaderMissing => "the save has no mod list in its header".to_string(),
+        Rejection::SaveHeaderTooLarge { limit_bytes } => {
+            format!("the save's mod list header is larger than {limit_bytes} bytes")
+        }
     }
 }
 
@@ -294,6 +295,7 @@ fn print_plan(ready: &ReadyImport, target: &ImportTarget) {
         plan.deactivated.len(),
         plan.moved
     );
+    print_source(ready);
     print_notes(plan);
     print_section("activate", activated.iter().map(|id| id.to_string()));
     print_section(
@@ -314,6 +316,35 @@ fn print_plan(ready: &ReadyImport, target: &ImportTarget) {
     print_section("skipped", skipped_rows(ready).into_iter());
 }
 
+/// What was read: the format, the version the list was made with, and
+/// every parallel list that was left out because its length did not match.
+fn print_source(ready: &ReadyImport) {
+    println!("source: {}", format_name(ready.format));
+    if let Some(version) = &ready.listed_game_version {
+        println!(
+            "version: saved with RimWorld {}",
+            TerminalSafe::line(version.as_str())
+        );
+    }
+    print_misalignment("names", "not shown", ready.names);
+    print_misalignment("steam ids", "no Workshop links shown", ready.workshop_ids);
+}
+
+fn print_misalignment(label: &str, consequence: &str, alignment: ListAlignment) {
+    if let ListAlignment::Misaligned { ids, values } = alignment {
+        println!("{label}: {values} for {ids} ids, {consequence}");
+    }
+}
+
+fn format_name(format: ListFormat) -> &'static str {
+    match format {
+        ListFormat::SavedModList => "RimWorld mod list (.rml)",
+        ListFormat::ModsConfig => "ModsConfig.xml-shaped list",
+        ListFormat::Text => "text list",
+        ListFormat::SaveHeader => "RimWorld save (header only)",
+    }
+}
+
 fn print_notes(plan: &ImportPlan) {
     match plan.core {
         CorePlacement::Listed => {}
@@ -322,9 +353,8 @@ fn print_notes(plan: &ImportPlan) {
     }
     match &plan.version {
         VersionCheck::Unknown | VersionCheck::Same => {}
-        VersionCheck::Differs { listed, game } => println!(
-            "version: made with RimWorld {}; this install is {}",
-            TerminalSafe::line(listed),
+        VersionCheck::Differs { listed: _, game } => println!(
+            "version: this install is {}, a different release (mods are made per release)",
             TerminalSafe::line(game)
         ),
     }

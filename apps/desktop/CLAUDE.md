@@ -163,8 +163,11 @@ of that command surface — no direct filesystem or process access outside
   cannot arise from a preview and has no variant. `order` is sent back unchanged, and a Workshop
   button sends the id as digits, never a URL. Every `ImportedEntryDto`,
   `MissingKindDto`, `SkippedEntryDto`, `VersionCheckDto`, `CorePlacementDto` and
-  `ImportRejectionDto` is worded by an `assertNever` switch in
-  `utils/orderShare.ts`; a sender's name and a skipped excerpt are untrusted
+  `ImportRejectionDto`, `ListFormatDto` and `ListAlignmentDto` is worded by an
+  `assertNever` switch in `utils/orderShare.ts` (the preview shows the listed
+  game version verbatim whenever it has one, "From a save made with..." for a
+  save, and the "you have RimWorld X" note only on a major.minor difference;
+  a misaligned names or Steam-id list gets a note of its own); a sender's name and a skipped excerpt are untrusted
   and render as text only. The two replace warnings are separate facts:
   `replacesPendingChanges` (from the preview: unrescanned activation edits) and
   `PendingActiveChangesDto.orderUnapplied` (the Current order is not in the

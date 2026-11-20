@@ -191,8 +191,13 @@ file; only a `.rml` name is accepted. *Copy as text* puts a numbered list
 on the clipboard for a chat message. A mod Rimmerge cannot list is left out
 and the toast says how many.
 
-**Import** takes a `.rml`, a `ModsConfig.xml`-shaped file or a text list,
-from a file or a paste, and always shows a preview first. The preview names
+**Import** takes a `.rml`, a `ModsConfig.xml`-shaped file, a RimWorld save
+(`.rws`, from *Open a mod list file…*, by choosing the file; only the mod list
+in its header is read) or a text list, from a file or a paste, and always
+shows a preview first. The preview says which RimWorld version the list was
+made with ("From a save made with RimWorld ..." for a save), adds a note when
+this install is a different release, and says when the names or the Steam ids
+had a different length from the ids and were left out. It names
 what will be activated and deactivated, measured against the active list you have
 in Rimmerge now (the Mods page's Active list, pending changes included; the list is
 the whole active set; Core is never deactivated), the mods that aren't installed (with an *Open on

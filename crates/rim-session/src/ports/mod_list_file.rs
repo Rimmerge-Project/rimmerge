@@ -1,5 +1,5 @@
 //! The port for a shared mod-list file (`.rml`, a `ModsConfig.xml`-shaped
-//! list, or text), implemented by `rim-io`.
+//! list, text, or a RimWorld save's header), implemented by `rim-io`.
 
 use std::path::Path;
 
@@ -26,7 +26,8 @@ pub struct ModListFileError(pub String);
 pub trait ModListFileStore {
     /// Reads `path`, detecting its format by content (never by
     /// extension) and enforcing every bound in
-    /// [`crate::mod_list::ModListLimits`].
+    /// [`crate::mod_list::ModListLimits`]. A RimWorld save is read for its
+    /// `<meta>` header only; the rest of the file is never read.
     ///
     /// # Errors
     ///

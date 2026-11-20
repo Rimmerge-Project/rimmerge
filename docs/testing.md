@@ -55,6 +55,18 @@ two release-profile test binaries competing for the same CPU pushes
 those budgets into spurious failures that have nothing to do with a
 real regression. Run one tier to completion before starting the other.
 
+`apps/cli/tests/real_install_save_import.rs` (inside the first command's
+`-p rimmerge-cli`, behind the same guard) reads one real RimWorld save
+read-only: `RIMMERGE_REAL_SAVE` names it, else the newest `.rws` in the
+`Saves` folder beside the `Config` folder of the tier's `ModsConfig.xml`;
+with neither it prints a `skipping:` line. It checks that the header reads
+as a list with as many entries as an independent count of `<li>` under
+`modIds`, that reading stays well under the 2 s command budget (a regression check
+that the header read stays fast, not proof the 200 MB body was never read;
+`rim-io`'s read-count tests are that proof), and that `order import
+--dry-run` (against a scratch copy of `ModsConfig.xml`) succeeds and prints
+the same plan twice. No real id appears in the test.
+
 `crates/rim-io/tests/real_game_log.rs` is a third, standalone
 real-install test with its own command, never folded into the two
 above: `-p rim-io` also carries `tests/real_network_databases.rs` and
