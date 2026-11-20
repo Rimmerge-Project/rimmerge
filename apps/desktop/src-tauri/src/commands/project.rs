@@ -124,7 +124,8 @@ pub(crate) async fn load_project_inner(
             adapters.mod_knowledge_store.clone(),
             crate::commands::rules_databases::network_policy().fetch_rimmerge_rules,
         )
-        .with_timestamp_reader(adapters.mod_timestamp_reader.clone());
+        .with_timestamp_reader(adapters.mod_timestamp_reader.clone())
+        .with_organization_store(adapters.organization_store.clone());
 
         let start = Instant::now();
         let def_reader = adapters.def_reader.clone();

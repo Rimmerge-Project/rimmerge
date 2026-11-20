@@ -9,13 +9,15 @@ use rim_io::{
     AnalyzerScanner, FileAssetLocator, FileDefSourceReader, FileGameLogReader, FileModAboutReader,
     FileModTimestampReader, FsDefCacheCarrierProbe, FsModKnowledgeStore, GithubReleaseFeed,
     JsonAssignmentProjectStore, JsonDecisionStore, JsonNotificationStateStore,
-    JsonPatchProjectStore, JsonRuleStore, MergeModFolderWriter, ModsConfigFileStore, RmlFileStore,
+    JsonOrganizationStore, JsonPatchProjectStore, JsonRuleStore, MergeModFolderWriter,
+    ModsConfigFileStore, RmlFileStore,
 };
 pub use rim_io::{GameProcessProbe, SysinfoGameProcessProbe};
 use rim_session::Session;
 use rim_session::mod_info::ExternalUrl;
 use rim_session::ports::{
-    AssetLocator, DefSourceReader, GameLauncher, ModAboutReader, ModTimestampReader, ReleaseFeed,
+    AssetLocator, DefSourceReader, GameLauncher, ModAboutReader, ModTimestampReader,
+    OrganizationStore, ReleaseFeed,
 };
 use tauri::async_runtime::spawn_blocking;
 use tokio::sync::Mutex as AsyncMutex;
@@ -111,6 +113,12 @@ pub struct Adapters {
     /// `ModsConfig.xml`-shaped list, or text) for the load-order export
     /// and import commands. Stateless.
     pub mod_list_store: RmlFileStore,
+    /// Loads and saves `<profile>/organization.json` (groups and mod
+    /// colours). `Arc<dyn OrganizationStore>`, not `JsonOrganizationStore`,
+    /// because `LoadProject` keeps a shared handle and a test injects
+    /// `rim_session::test_support::InMemoryOrganizationStore` instead of a
+    /// file-backed one.
+    pub organization_store: Arc<dyn OrganizationStore + Send + Sync>,
 }
 
 impl Default for Adapters {
@@ -136,6 +144,7 @@ impl Default for Adapters {
             notification_state_store: JsonNotificationStateStore::new(),
             release_feed: Arc::new(GithubReleaseFeed::new()),
             mod_list_store: RmlFileStore::new(),
+            organization_store: Arc::new(JsonOrganizationStore::new()),
         }
     }
 }
@@ -160,6 +169,7 @@ impl std::fmt::Debug for Adapters {
             .field("notification_state_store", &self.notification_state_store)
             .field("release_feed", &"<dyn ReleaseFeed>")
             .field("mod_list_store", &self.mod_list_store)
+            .field("organization_store", &"<dyn OrganizationStore>")
             .finish()
     }
 }
@@ -375,15 +385,26 @@ where
 /// Replaces the loaded session with `session`, on a blocking thread for
 /// the same reason [`with_session`] does.
 ///
+/// The new session's organization is re-read from its store **under the
+/// write lock, just before the swap**. The session was built (and its
+/// organization read) outside the lock, possibly seconds earlier; every
+/// organization edit saves while holding this lock, so an edit that landed
+/// in between is on disk by now, and this read picks it up instead of the
+/// swap dropping it from memory (where the next save would erase it from
+/// disk).
+///
 /// # Errors
 ///
 /// Returns [`CommandError::internal`] when the blocking task panics.
 pub async fn replace_session(state: &AppState, session: Session) -> Result<(), CommandError> {
     let session_lock = Arc::clone(&state.session);
+    let organization_store = Arc::clone(&state.adapters.organization_store);
     spawn_blocking(move || {
+        let mut session = session;
         let mut guard = session_lock
             .write()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
+        session.reload_organization(&*organization_store);
         *guard = Some(session);
     })
     .await

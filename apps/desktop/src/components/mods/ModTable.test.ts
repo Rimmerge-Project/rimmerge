@@ -4,7 +4,7 @@ import { clearMocks } from "@tauri-apps/api/mocks";
 import { flushPromises, mount } from "@vue/test-utils";
 import { createPinia } from "pinia";
 import PrimeVue from "primevue/config";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import ModTable from "@/components/mods/ModTable.vue";
 import { modRow as baseRow, type ModRowOverrides } from "@/components/mods/modListRow.test-support";
@@ -52,6 +52,7 @@ describe("ModTable", () => {
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     clearMocks();
     Reflect.deleteProperty(HTMLElement.prototype, "offsetHeight");
     Reflect.deleteProperty(HTMLElement.prototype, "offsetWidth");
@@ -96,7 +97,7 @@ describe("ModTable", () => {
     expect(elementTexts).not.toContain("dlc");
   });
 
-  it("renders a checkbox per row when selectable, toggling the selectedIds model", async () => {
+  it("renders a checkbox per row when selectable, asking the owner to toggle it", async () => {
     const wrapper = mountTable({
       mods: [modRow({ modId: "a" }), modRow({ modId: "b" })],
       selectable: true,
@@ -110,7 +111,7 @@ describe("ModTable", () => {
     expect((checkboxB.element as HTMLInputElement).checked).toBe(false);
 
     await checkboxB.setValue(true);
-    expect(wrapper.emitted("update:selectedIds")?.at(-1)).toEqual([["a", "b"]]);
+    expect(wrapper.emitted("toggleSelect")).toEqual([["b"]]);
   });
 
   it("clicking a row's checkbox does not also emit selectMod", async () => {
@@ -272,7 +273,264 @@ describe("ModTable", () => {
 
     await wrapper.get('[data-testid="mod-row-a"]').trigger("keydown", { key: " " });
 
-    expect(wrapper.emitted("update:selectedIds")?.at(-1)).toEqual([["a"]]);
+    expect(wrapper.emitted("toggleSelect")).toEqual([["a"]]);
+  });
+
+  describe("multi-select gestures", () => {
+    const THREE = ["a", "b", "c"].map((modId) => modRow({ modId }));
+
+    it("a plain click opens the row and leaves the selection alone", async () => {
+      const wrapper = mountTable({ mods: THREE, selectable: true, selectedIds: ["c"] });
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-row-a"]').trigger("click");
+
+      expect(wrapper.emitted("selectMod")).toEqual([["a"]]);
+      expect(wrapper.emitted("anchorRow")).toEqual([["a"]]);
+      expect(wrapper.emitted("toggleSelect")).toBeUndefined();
+      expect(wrapper.emitted("rangeSelect")).toBeUndefined();
+    });
+
+    it("is a multi-select grid whose rows hold grid cells", async () => {
+      const wrapper = mountTable({ mods: THREE, selectable: true, rowMenu: "move" });
+      await flushPromises();
+
+      const grid = wrapper.get('[data-testid="mod-table"]');
+      expect(grid.attributes("role")).toBe("grid");
+      expect(grid.attributes("aria-multiselectable")).toBe("true");
+      expect(grid.attributes("aria-rowcount")).toBe("3");
+      expect(wrapper.get('[data-testid="mod-row-c"]').attributes("aria-rowindex")).toBe("3");
+      const row = wrapper.get('[data-testid="mod-row-a"]');
+      const cells = row.findAll(':scope > [role="gridcell"]');
+      expect(cells).toHaveLength(3);
+      expect(row.findAll(":scope > *")).toHaveLength(3);
+    });
+
+    it("is not a multi-select grid when rows cannot be selected", async () => {
+      const wrapper = mountTable({ mods: THREE });
+      await flushPromises();
+
+      expect(
+        wrapper.get('[data-testid="mod-table"]').attributes("aria-multiselectable"),
+      ).toBeUndefined();
+    });
+
+    it("Shift+click on a row clears the browser text selection", async () => {
+      const wrapper = mountTable({ mods: THREE, selectable: true });
+      await flushPromises();
+      const removeAllRanges = vi.fn();
+      vi.spyOn(window, "getSelection").mockReturnValue({ removeAllRanges } as unknown as Selection);
+
+      await wrapper.get('[data-testid="mod-row-b"]').trigger("click", { shiftKey: true });
+
+      expect(removeAllRanges).toHaveBeenCalledTimes(1);
+    });
+
+    it("Shift+click on a row checkbox extends a range instead of toggling", async () => {
+      const wrapper = mountTable({ mods: THREE, selectable: true });
+      await flushPromises();
+
+      await wrapper
+        .get('[data-testid="mod-row-select-c"] input[type="checkbox"]')
+        .trigger("click", { shiftKey: true });
+
+      expect(wrapper.emitted("rangeSelect")).toEqual([["c"]]);
+      expect(wrapper.emitted("toggleSelect")).toBeUndefined();
+    });
+
+    it("plain arrows, Home and End move the anchor; Shift+Arrow does not", async () => {
+      const wrapper = mountTable({ mods: THREE, selectable: true });
+      await flushPromises();
+      const rowA = wrapper.get('[data-testid="mod-row-a"]');
+
+      await rowA.trigger("keydown", { key: "ArrowDown" });
+      await flushPromises();
+      await rowA.trigger("keydown", { key: "End" });
+      await flushPromises();
+      await rowA.trigger("keydown", { key: "Home" });
+      await flushPromises();
+      await rowA.trigger("keydown", { key: "ArrowDown", shiftKey: true });
+      await flushPromises();
+
+      expect(wrapper.emitted("anchorRow")).toEqual([["b"], ["c"], ["a"]]);
+    });
+
+    it("Ctrl+A and Escape work while a row checkbox has focus", async () => {
+      const wrapper = mountTable({ mods: THREE, selectable: true, selectedIds: ["a"] });
+      await flushPromises();
+      const checkbox = wrapper.get('[data-testid="mod-row-select-a"] input[type="checkbox"]');
+
+      await checkbox.trigger("keydown", { key: "a", ctrlKey: true });
+      await checkbox.trigger("keydown", { key: "Escape" });
+
+      expect(wrapper.emitted("selectAll")).toHaveLength(1);
+      expect(wrapper.emitted("clearSelection")).toHaveLength(1);
+    });
+
+    it("Ctrl+A and Escape are left alone inside a dialog", async () => {
+      const wrapper = mountTable({ mods: THREE, selectable: true, selectedIds: ["a"] });
+      await flushPromises();
+      const dialog = document.createElement("div");
+      dialog.setAttribute("role", "dialog");
+      const button = document.createElement("button");
+      dialog.append(button);
+      wrapper.get('[data-testid="mod-row-a"]').element.append(dialog);
+
+      button.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "a", ctrlKey: true, bubbles: true }),
+      );
+      button.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+
+      expect(wrapper.emitted("selectAll")).toBeUndefined();
+      expect(wrapper.emitted("clearSelection")).toBeUndefined();
+    });
+
+    it("Ctrl+click and Cmd+click toggle the row without opening it", async () => {
+      const wrapper = mountTable({ mods: THREE, selectable: true });
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-row-a"]').trigger("click", { ctrlKey: true });
+      await wrapper.get('[data-testid="mod-row-b"]').trigger("click", { metaKey: true });
+
+      expect(wrapper.emitted("toggleSelect")).toEqual([["a"], ["b"]]);
+      expect(wrapper.emitted("selectMod")).toBeUndefined();
+    });
+
+    it("Shift+click asks for a range without opening the row", async () => {
+      const wrapper = mountTable({ mods: THREE, selectable: true });
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-row-c"]').trigger("click", { shiftKey: true });
+
+      expect(wrapper.emitted("rangeSelect")).toEqual([["c"]]);
+      expect(wrapper.emitted("selectMod")).toBeUndefined();
+    });
+
+    it("a modifier click opens the row when the table is not selectable", async () => {
+      const wrapper = mountTable({ mods: THREE });
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-row-a"]').trigger("click", { ctrlKey: true });
+
+      expect(wrapper.emitted("selectMod")).toEqual([["a"]]);
+      expect(wrapper.emitted("toggleSelect")).toBeUndefined();
+    });
+
+    it("marks selected rows with aria-selected, and carries none on a non-selectable table", async () => {
+      const selectable = mountTable({ mods: THREE, selectable: true, selectedIds: ["b"] });
+      const plain = mountTable({ mods: THREE });
+      await flushPromises();
+
+      const flags = selectable
+        .findAll('[role="row"]')
+        .map((row) => row.attributes("aria-selected"));
+      expect(flags).toEqual(["false", "true", "false"]);
+      expect(plain.get('[data-testid="mod-row-a"]').attributes("aria-selected")).toBeUndefined();
+    });
+
+    it("Shift+Space asks for a range, plain Space for a toggle", async () => {
+      const wrapper = mountTable({ mods: THREE, selectable: true });
+      await flushPromises();
+
+      await wrapper
+        .get('[data-testid="mod-row-b"]')
+        .trigger("keydown", { key: " ", shiftKey: true });
+
+      expect(wrapper.emitted("rangeSelect")).toEqual([["b"]]);
+      expect(wrapper.emitted("toggleSelect")).toBeUndefined();
+    });
+
+    it("Shift+ArrowDown moves focus and extends from the row it left", async () => {
+      const wrapper = mountTable({ mods: THREE, selectable: true });
+      await flushPromises();
+
+      await wrapper
+        .get('[data-testid="mod-row-a"]')
+        .trigger("keydown", { key: "ArrowDown", shiftKey: true });
+      await flushPromises();
+
+      expect(wrapper.emitted("extendSelect")).toEqual([["a", "b"]]);
+      expect(wrapper.emitted("focusMod")).toEqual([["b"]]);
+    });
+
+    it("Shift+ArrowDown on the last row extends nothing", async () => {
+      const wrapper = mountTable({ mods: THREE, selectable: true });
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-row-c"]').trigger("focus");
+      await wrapper
+        .get('[data-testid="mod-row-c"]')
+        .trigger("keydown", { key: "ArrowDown", shiftKey: true });
+      await flushPromises();
+
+      expect(wrapper.emitted("extendSelect")).toBeUndefined();
+    });
+
+    it("Ctrl+A and Cmd+A select every shown row", async () => {
+      const wrapper = mountTable({ mods: THREE, selectable: true });
+      await flushPromises();
+
+      await wrapper
+        .get('[data-testid="mod-row-a"]')
+        .trigger("keydown", { key: "a", ctrlKey: true });
+      await wrapper
+        .get('[data-testid="mod-row-a"]')
+        .trigger("keydown", { key: "A", metaKey: true });
+
+      expect(wrapper.emitted("selectAll")).toHaveLength(2);
+    });
+
+    it("Ctrl+A from a text field inside the table is left to the field", async () => {
+      const wrapper = mountTable({ mods: THREE, selectable: true });
+      await flushPromises();
+      const input = document.createElement("input");
+      wrapper.get('[data-testid="mod-row-a"]').element.append(input);
+
+      input.dispatchEvent(new KeyboardEvent("keydown", { key: "a", ctrlKey: true, bubbles: true }));
+
+      expect(wrapper.emitted("selectAll")).toBeUndefined();
+    });
+
+    it("Escape clears a non-empty selection and does not bubble on to close the panel", async () => {
+      const wrapper = mountTable({ mods: THREE, selectable: true, selectedIds: ["a"] });
+      await flushPromises();
+      let reachedWindow = false;
+      const listener = () => {
+        reachedWindow = true;
+      };
+      window.addEventListener("keydown", listener);
+
+      await wrapper.get('[data-testid="mod-row-a"]').trigger("keydown", { key: "Escape" });
+      window.removeEventListener("keydown", listener);
+
+      expect(wrapper.emitted("clearSelection")).toHaveLength(1);
+      expect(reachedWindow).toBe(false);
+    });
+
+    it("Escape with nothing selected is left to bubble", async () => {
+      const wrapper = mountTable({ mods: THREE, selectable: true });
+      await flushPromises();
+      let reachedWindow = false;
+      const listener = () => {
+        reachedWindow = true;
+      };
+      window.addEventListener("keydown", listener);
+
+      await wrapper.get('[data-testid="mod-row-a"]').trigger("keydown", { key: "Escape" });
+      window.removeEventListener("keydown", listener);
+
+      expect(wrapper.emitted("clearSelection")).toBeUndefined();
+      expect(reachedWindow).toBe(true);
+    });
+
+    it("Enter on a focused row menu button emits no selectMod", async () => {
+      const wrapper = mountTable({ mods: THREE, selectable: true, rowMenu: "move" });
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-row-menu-a"]').trigger("keydown", { key: "Enter" });
+
+      expect(wrapper.emitted("selectMod")).toBeUndefined();
+    });
   });
 
   describe("dragging and dropping", () => {

@@ -45,7 +45,13 @@ of that command surface — no direct filesystem or process access outside
   infallible ones (`get_default_settings`, `get_app_version`) return their
   value without a `Result`, and `get_app_version` is not even `async`.
   `load_project`/`rescan_project` are the other shape: they hold
-  `state.load_lock` and swap the session in with `replace_session`.
+  `state.load_lock` and swap the session in with `replace_session`, which
+  (like the rescan swap) re-reads the organization under the session write
+  lock just before the swap, so an organization edit that landed during the
+  scan is not lost. Organization commands take only the session lock, never
+  `load_lock` (a drag must not wait on a scan). Rules and decisions have a
+  wider version of the same window (read inside `LoadProject`, outside the
+  lock); it is a known, unfixed follow-up.
   `import_order` (`commands/order_share.rs`) is the rescan shape too: it is
   `rescan_with(ScanRequest::Import(order))`, so the order is validated
   (`ImportOrder::validate`, including its size bound), scanned and swapped in
@@ -541,6 +547,15 @@ of that command surface — no direct filesystem or process access outside
   `patchDecided` — `useSetMergeChoicesMutation`'s own `onSuccess`), not
   an exhaustive switch: a new `SessionChangeReasonDto` variant falls
   through to "invalidate everything" with no code change required.
+  **One reason has its own targeted refetch instead:** `organizationChanged`
+  (every organization command: groups and mod colours) refetches only
+  `ORGANIZATION_QUERY_KEYS` (the `organization` query and the two Mods
+  lists), because organization touches no order, sort, ledger or active
+  list. A new query that shows organization must share one of those key
+  prefixes, or be added to the list. The prefixes come from `queryKeys`, not
+  from copies. A command that fails with `group_not_found` emits the same
+  event (the frontend's tree is stale), so the error text's promise that
+  "the groups have been refreshed" is true.
 - **ts-rs bindings are generated, never hand-edited.** After any DTO
   change: `cargo test -p rimmerge-desktop` regenerates
   `src/types/generated/`, then `bun run types:check`.

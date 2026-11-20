@@ -25,6 +25,7 @@ mod delete_assignment;
 mod delete_patch;
 mod delete_rule;
 mod discard_pending_changes;
+mod edit_organization;
 #[cfg(test)]
 mod edit_settle_tests;
 mod export_assignment;
@@ -58,6 +59,7 @@ mod remove_assignment_section;
 mod render_merge_mod;
 mod render_patch;
 mod rescan;
+mod reset_organization;
 mod revert_decision;
 mod revert_order_to_file;
 mod revert_patch_decision;
@@ -110,6 +112,7 @@ pub use delete_assignment::{DeleteAssignment, DeleteAssignmentError};
 pub use delete_patch::{DeletePatch, DeletePatchError};
 pub use delete_rule::DeleteRule;
 pub use discard_pending_changes::DiscardPendingChanges;
+pub use edit_organization::{EditOrganization, EditOrganizationError};
 pub use export_assignment::{
     AssignmentExportOptions, AssignmentExportOutcome, AssignmentSkip, ExportAssignment,
     ExportAssignmentError,
@@ -169,6 +172,7 @@ pub use render_merge_mod::{
 };
 pub use render_patch::{RenderPatch, RenderPatchError};
 pub use rescan::Rescan;
+pub use reset_organization::{ResetOrganization, ResetOrganizationError};
 pub use revert_decision::RevertDecision;
 pub use revert_order_to_file::{RevertOrderError, RevertOrderToFile};
 pub use revert_patch_decision::{RevertPatchDecision, RevertPatchDecisionError};

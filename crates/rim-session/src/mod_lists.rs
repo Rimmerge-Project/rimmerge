@@ -17,6 +17,13 @@ use rim_resolve::domain::{Tag, Tagging};
 use crate::active_set::ActiveSet;
 use crate::file_baseline::{FileMembership, MembershipMark};
 use crate::mod_times::{ModUpdateTimes, UpdateTime};
+use crate::organization::{
+    ColorToken, GroupId, GroupName, OrganizationState, OrganizationUnavailable,
+};
+
+mod organized;
+
+use organized::ListOrganization;
 
 /// The most rows either list returns. Real installs hold a few thousand
 /// mods; the bound exists so a pathological `Mods` folder cannot make one
@@ -97,6 +104,41 @@ pub struct ModListQuery {
     /// The display sort; `None` is the list's own default
     /// ([`ListSort::ACTIVE_DEFAULT`] / [`ListSort::INACTIVE_DEFAULT`]).
     pub sort: Option<ListSort>,
+    /// Only mods in this group scope. A filter, never a reorder: the Active
+    /// list stays in load order and stays reorderable.
+    pub group: Option<GroupFilter>,
+}
+
+/// A group scope a list can be narrowed to.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GroupFilter {
+    /// Mods in this group or any group below it, each mod once.
+    InScope(GroupId),
+    /// Mods that are in no group at all.
+    Ungrouped,
+}
+
+/// Why a list could not be built.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+pub enum ModListError {
+    /// The group filter names a group that does not exist (deleted
+    /// meanwhile): never read as "no filter".
+    #[error("no group {0}")]
+    UnknownGroup(GroupId),
+    /// A group filter needs organization, which is not available.
+    #[error(transparent)]
+    OrganizationUnavailable(#[from] OrganizationUnavailable),
+}
+
+/// One group a mod is a direct member of, as a row shows it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GroupLabel {
+    /// The group.
+    pub id: GroupId,
+    /// Its name.
+    pub name: GroupName,
+    /// Its colour.
+    pub color: Option<ColorToken>,
 }
 
 /// What a row's facts are known from. Closed, so a tag on a row that was
@@ -142,6 +184,11 @@ pub struct ModListRow {
     /// id: `Added` on an Active row the file lacks, `Removed` on an
     /// Inactive row the file lists. Order never makes a mark.
     pub membership: MembershipMark,
+    /// The groups the mod is a **direct** member of, by name. Empty while
+    /// organization is unavailable.
+    pub groups: Vec<GroupLabel>,
+    /// The mod's own colour. A mod never inherits a group's colour.
+    pub color: Option<ColorToken>,
 }
 
 /// One list: `total` rows matched the query, `items` holds at most
@@ -206,6 +253,8 @@ fn scanned_row(
         generated: mod_entry.generated.clone(),
         updated: times.get(&mod_entry.id),
         membership,
+        groups: Vec::new(),
+        color: None,
     }
 }
 
@@ -225,6 +274,8 @@ fn pending_row(
         generated: mod_entry.generated.clone(),
         updated: times.get(&mod_entry.id),
         membership,
+        groups: Vec::new(),
+        color: None,
     }
 }
 
@@ -292,14 +343,20 @@ fn apply_direction(ordering: Ordering, direction: SortDirection) -> Ordering {
 }
 
 /// The Active list: `working`'s ids in order, or in `query.sort`'s order.
+///
+/// # Errors
+///
+/// [`ModListError`] when the query's group filter cannot be applied.
 pub(crate) fn working_list(
     report: &Report,
     tagging: &Tagging,
     working: &ActiveSet,
     times: &ModUpdateTimes,
     file: &FileMembership,
+    organization: &OrganizationState,
     query: &ModListQuery,
-) -> ModList {
+) -> Result<ModList, ModListError> {
+    let organized = ListOrganization::open(organization, query.group)?;
     let needle = query.search.as_deref().map(str::to_lowercase);
     let scanned: BTreeMap<&ModId, &rim_analyzer::domain::Mod> =
         report.mods.iter().map(|m| (&m.id, m)).collect();
@@ -323,15 +380,20 @@ pub(crate) fn working_list(
             generated: None,
             updated: times.get(id),
             membership,
+            groups: Vec::new(),
+            color: None,
         }
     });
     let mut rows: Vec<ModListRow> = rows
+        .map(|row| ListOrganization::decorate(organized.as_ref(), row))
         .filter(|row| {
             let tag_ok = query.tag.as_ref().is_none_or(|tag| match &row.state {
                 RowState::Scanned { tags, .. } => tags.contains(tag),
                 RowState::PendingScan | RowState::Missing => false,
             });
-            tag_ok && matches(row, query, needle.as_deref())
+            tag_ok
+                && ListOrganization::admits(organized.as_ref(), row)
+                && matches(row, query, needle.as_deref())
         })
         .collect();
     let sort = query.sort.unwrap_or(ListSort::ACTIVE_DEFAULT);
@@ -340,20 +402,26 @@ pub(crate) fn working_list(
     if !sort.is_load_order() {
         sort_rows(&mut rows, sort);
     }
-    ModList::from_rows(rows.into_iter(), sort.is_load_order())
+    Ok(ModList::from_rows(rows.into_iter(), sort.is_load_order()))
 }
 
 /// The Inactive list: every mod found on disk whose base id is not in
 /// `working`, in `query.sort`'s order (name, A first, by default). A
 /// scanned-active mod deactivated since the last scan appears here at once.
+///
+/// # Errors
+///
+/// [`ModListError`] when the query's group filter cannot be applied.
 pub(crate) fn inactive_list(
     report: &Report,
     tagging: &Tagging,
     working: &ActiveSet,
     times: &ModUpdateTimes,
     file: &FileMembership,
+    organization: &OrganizationState,
     query: &ModListQuery,
-) -> ModList {
+) -> Result<ModList, ModListError> {
+    let organized = ListOrganization::open(organization, query.group)?;
     let needle = query.search.as_deref().map(str::to_lowercase);
     let working_bases: BTreeSet<ModId> = working.ids().iter().map(ModId::base).collect();
     let is_inactive = |id: &ModId| !working_bases.contains(&id.base());
@@ -370,7 +438,11 @@ pub(crate) fn inactive_list(
                 .filter(|m| is_inactive(&m.id))
                 .map(|m| pending_row(m, times, None, file.mark_inactive(&m.id))),
         )
-        .filter(|row| matches(row, query, needle.as_deref()))
+        .map(|row| ListOrganization::decorate(organized.as_ref(), row))
+        .filter(|row| {
+            ListOrganization::admits(organized.as_ref(), row)
+                && matches(row, query, needle.as_deref())
+        })
         .collect();
     // An inactive mod has no load-order position, so that key means the
     // list's default there.
@@ -379,7 +451,7 @@ pub(crate) fn inactive_list(
         Some(_) | None => ListSort::INACTIVE_DEFAULT,
     };
     sort_rows(&mut rows, sort);
-    ModList::from_rows(rows.into_iter(), false)
+    Ok(ModList::from_rows(rows.into_iter(), false))
 }
 
 #[cfg(test)]
@@ -402,8 +474,10 @@ mod tests {
             working,
             &ModUpdateTimes::default(),
             &FileMembership::of(working.ids()),
+            &OrganizationState::NotLoaded,
             query,
         )
+        .expect("no group filter, so no failure")
     }
 
     fn inactive_list(
@@ -418,8 +492,10 @@ mod tests {
             working,
             &ModUpdateTimes::default(),
             &FileMembership::of(working.ids()),
+            &OrganizationState::NotLoaded,
             query,
         )
+        .expect("no group filter, so no failure")
     }
 
     fn ids(list: &ModList) -> Vec<&str> {
@@ -694,8 +770,10 @@ mod tests {
             &set,
             times,
             &FileMembership::of(set.ids()),
+            &OrganizationState::NotLoaded,
             query,
         )
+        .expect("no group filter, so no failure")
         .items
         .iter()
         .map(|row| row.mod_id.to_string())
@@ -922,16 +1000,20 @@ mod tests {
             &working(&[]),
             &table,
             &FileMembership::default(),
+            &OrganizationState::NotLoaded,
             &sort(ListSortKey::LastUpdated, SortDirection::Ascending),
-        );
+        )
+        .expect("no group filter, so no failure");
         let descending = super::inactive_list(
             &report,
             &Tagging::default(),
             &working(&[]),
             &table,
             &FileMembership::default(),
+            &OrganizationState::NotLoaded,
             &sort(ListSortKey::LastUpdated, SortDirection::Descending),
-        );
+        )
+        .expect("no group filter, so no failure");
 
         assert_eq!(ids(&ascending), ["deactivated", "fresh", "undated"]);
         assert_eq!(ids(&descending), ["fresh", "deactivated", "undated"]);
@@ -958,8 +1040,10 @@ mod tests {
             &working(&["a", "b", "c", "d"]),
             &ModUpdateTimes::default(),
             &FileMembership::default(),
+            &OrganizationState::NotLoaded,
             &query,
-        );
+        )
+        .expect("no group filter, so no failure");
 
         assert_eq!(ids(&list), ["d", "b", "a"]);
         assert_eq!(list.total, 3);
@@ -975,8 +1059,10 @@ mod tests {
             &working(&["b", "a"]),
             &ModUpdateTimes::default(),
             &FileMembership::default(),
+            &OrganizationState::NotLoaded,
             &sort(ListSortKey::PackageId, SortDirection::Ascending),
-        );
+        )
+        .expect("no group filter, so no failure");
 
         assert_eq!(ids(&list), ["a", "b"]);
         assert_eq!(
@@ -986,6 +1072,250 @@ mod tests {
                 .collect::<Vec<_>>(),
             [Some(1), Some(0)]
         );
+    }
+
+    mod organization {
+        use super::*;
+        use crate::organization::{
+            ColorToken, GroupId, GroupName, ModOrganization, OrganizationIssue, OrganizedModId,
+        };
+
+        fn member(id: &str) -> OrganizedModId {
+            OrganizedModId::new(&ModId::new(id)).expect("valid fixture id")
+        }
+
+        fn set(ids: &[&str]) -> BTreeSet<OrganizedModId> {
+            ids.iter().map(|id| member(id)).collect()
+        }
+
+        fn group(
+            organization: &mut ModOrganization,
+            text: &str,
+            parent: Option<GroupId>,
+        ) -> GroupId {
+            organization
+                .create_group(GroupName::new(text).expect("valid name"), parent)
+                .expect("create")
+        }
+
+        /// Active `a`, `b_steam`, `c`; inactive `idle`, `other`. Group
+        /// `Parent` holds `a` and `idle`; its subgroup `Kid` holds `a` and
+        /// `b` (the base of `b_steam`).
+        fn fixture() -> (Report, ActiveSet, OrganizationState, GroupId, GroupId) {
+            let report = ReportBuilder::new()
+                .mod_("a")
+                .mod_("b_steam")
+                .mod_("c")
+                .inactive("idle")
+                .inactive("other")
+                .build();
+            let mut organization = ModOrganization::new();
+            let parent = group(&mut organization, "Parent", None);
+            let kid = group(&mut organization, "Kid", Some(parent));
+            organization
+                .add_members(parent, &set(&["a", "idle"]))
+                .expect("add");
+            organization
+                .add_members(kid, &set(&["a", "b"]))
+                .expect("add");
+            organization
+                .set_mod_colors(&set(&["c"]), Some(ColorToken::Teal))
+                .expect("colour");
+            (
+                report,
+                working(&["a", "b_steam", "c"]),
+                OrganizationState::Loaded(organization),
+                parent,
+                kid,
+            )
+        }
+
+        fn query_of(group: Option<GroupFilter>) -> ModListQuery {
+            ModListQuery {
+                group,
+                ..ModListQuery::default()
+            }
+        }
+
+        fn active_list(
+            report: &Report,
+            set: &ActiveSet,
+            state: &OrganizationState,
+            query: &ModListQuery,
+        ) -> Result<ModList, ModListError> {
+            super::super::working_list(
+                report,
+                &Tagging::default(),
+                set,
+                &ModUpdateTimes::default(),
+                &FileMembership::default(),
+                state,
+                query,
+            )
+        }
+
+        fn idle_list(
+            report: &Report,
+            set: &ActiveSet,
+            state: &OrganizationState,
+            query: &ModListQuery,
+        ) -> Result<ModList, ModListError> {
+            super::super::inactive_list(
+                report,
+                &Tagging::default(),
+                set,
+                &ModUpdateTimes::default(),
+                &FileMembership::default(),
+                state,
+                query,
+            )
+        }
+
+        #[test]
+        fn a_scope_filter_includes_descendants_and_lists_each_mod_once() {
+            let (report, set, state, parent, _) = fixture();
+            let query = query_of(Some(GroupFilter::InScope(parent)));
+
+            let active = active_list(&report, &set, &state, &query).expect("filter applies");
+            let inactive = idle_list(&report, &set, &state, &query).expect("filter applies");
+
+            assert_eq!(ids(&active), ["a", "b_steam"], "load order, a once");
+            assert_eq!(active.total, 2);
+            assert_eq!(ids(&inactive), ["idle"]);
+        }
+
+        #[test]
+        fn a_subgroup_scope_excludes_its_parents_own_members() {
+            let (report, set, state, _, kid) = fixture();
+            let query = query_of(Some(GroupFilter::InScope(kid)));
+
+            let active = active_list(&report, &set, &state, &query).expect("ok");
+            let inactive = idle_list(&report, &set, &state, &query).expect("ok");
+
+            assert_eq!(ids(&active), ["a", "b_steam"]);
+            assert!(ids(&inactive).is_empty());
+        }
+
+        #[test]
+        fn the_ungrouped_filter_lists_mods_in_no_group() {
+            let (report, set, state, _, _) = fixture();
+            let query = query_of(Some(GroupFilter::Ungrouped));
+
+            let active = active_list(&report, &set, &state, &query).expect("ok");
+            let inactive = idle_list(&report, &set, &state, &query).expect("ok");
+
+            assert_eq!(ids(&active), ["c"]);
+            assert_eq!(ids(&inactive), ["other"]);
+        }
+
+        #[test]
+        fn a_group_filter_keeps_the_active_list_reorderable_in_load_order() {
+            let (report, set, state, parent, _) = fixture();
+            let query = query_of(Some(GroupFilter::InScope(parent)));
+
+            let active = active_list(&report, &set, &state, &query).expect("ok");
+
+            assert!(active.reorderable);
+            assert_eq!(
+                active
+                    .items
+                    .iter()
+                    .map(|row| row.position)
+                    .collect::<Vec<_>>(),
+                [Some(0), Some(1)],
+                "positions are the unfiltered working positions"
+            );
+        }
+
+        #[test]
+        fn rows_carry_labels_by_base_id_sorted_by_name_and_their_own_colour() {
+            let (report, set, state, parent, kid) = fixture();
+            let query = ModListQuery::default();
+
+            let active = active_list(&report, &set, &state, &query).expect("ok");
+            let inactive = idle_list(&report, &set, &state, &query).expect("ok");
+
+            let labels =
+                |row: &ModListRow| row.groups.iter().map(|label| label.id).collect::<Vec<_>>();
+            assert_eq!(
+                labels(&active.items[0]),
+                [kid, parent],
+                "Kid sorts before Parent"
+            );
+            assert_eq!(
+                labels(&active.items[1]),
+                [kid],
+                "b_steam is a member through its base id b"
+            );
+            assert!(active.items[2].groups.is_empty());
+            assert_eq!(active.items[2].color, Some(ColorToken::Teal));
+            assert_eq!(
+                active.items[0].color, None,
+                "no colour is inherited from a group"
+            );
+            assert_eq!(labels(&inactive.items[0]), [parent]);
+        }
+
+        #[test]
+        fn a_stale_group_id_is_an_error_never_no_filter() {
+            let (report, set, state, _, _) = fixture();
+            let stale = GroupId::new(99).expect("non-zero");
+            let query = query_of(Some(GroupFilter::InScope(stale)));
+
+            assert_eq!(
+                active_list(&report, &set, &state, &query),
+                Err(ModListError::UnknownGroup(stale))
+            );
+            assert_eq!(
+                idle_list(&report, &set, &state, &query),
+                Err(ModListError::UnknownGroup(stale))
+            );
+        }
+
+        #[test]
+        fn without_organization_rows_have_no_labels_and_a_filter_is_refused() {
+            let (report, set, _, parent, _) = fixture();
+
+            for state in [
+                OrganizationState::NotLoaded,
+                OrganizationState::Recovered {
+                    issue: OrganizationIssue::Malformed,
+                },
+            ] {
+                let plain =
+                    active_list(&report, &set, &state, &ModListQuery::default()).expect("ok");
+                assert!(
+                    plain
+                        .items
+                        .iter()
+                        .all(|row| row.groups.is_empty() && row.color.is_none())
+                );
+                let filtered = active_list(
+                    &report,
+                    &set,
+                    &state,
+                    &query_of(Some(GroupFilter::InScope(parent))),
+                );
+                assert!(matches!(
+                    filtered,
+                    Err(ModListError::OrganizationUnavailable(_))
+                ));
+            }
+        }
+
+        #[test]
+        fn search_runs_inside_the_group_scope() {
+            let (report, set, state, parent, _) = fixture();
+            let query = ModListQuery {
+                group: Some(GroupFilter::InScope(parent)),
+                search: Some("b".to_string()),
+                ..ModListQuery::default()
+            };
+
+            let list = active_list(&report, &set, &state, &query).expect("ok");
+
+            assert_eq!(ids(&list), ["b_steam"]);
+        }
     }
 
     mod properties {

@@ -4,11 +4,13 @@
 //! never compiled into a non-dev build.
 
 mod fakes;
+mod organization;
 mod projects;
 mod scenarios;
 mod sessions;
 
 pub use fakes::*;
+pub use organization::*;
 pub use projects::*;
 pub use scenarios::*;
 pub use sessions::*;

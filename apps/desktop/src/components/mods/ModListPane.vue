@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import Button from "primevue/button";
-import Checkbox from "primevue/checkbox";
 import { computed, useTemplateRef, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
+import ModListStatus from "@/components/mods/ModListStatus.vue";
+import ModSelectionBar from "@/components/mods/ModSelectionBar.vue";
 import ModTable, {
   type DropMode,
   type MenuAction,
@@ -81,13 +81,6 @@ defineSlots<{
 
 const { t } = useI18n();
 
-// The IPC layer can reject with a non-`Error` value despite the type, so
-// the fallback text stays.
-const errorMessage = computed(() =>
-  error instanceof Error ? error.message : t("mods.page.loadFailed"),
-);
-/** The backend bounds a list, so `total` can exceed the rows it returned. */
-const isCapped = computed(() => modList !== undefined && modList.total > modList.items.length);
 /** The table's rows, only once the list loaded without error. */
 const rows = computed<ModListRowDto[] | null>(() =>
   isPending || error || modList === undefined ? null : modList.items,
@@ -114,25 +107,6 @@ function focusRow(modId: string): Promise<void> {
   return table.value?.focusRow(modId) ?? Promise.resolve();
 }
 defineExpose({ focusRow });
-
-const hasRows = computed(() => selection.shownCount.value > 0);
-const selectAllLabel = computed(() =>
-  hasRows.value
-    ? t(
-        "mods.selection.selectAllShown",
-        { count: selection.shownCount.value },
-        selection.shownCount.value,
-      )
-    : t("mods.selection.selectAllEmpty"),
-);
-
-function toggleSelectAll(): void {
-  if (selection.areAllShownSelected.value) {
-    selection.deselectShown();
-  } else {
-    selection.selectAllShown();
-  }
-}
 </script>
 
 <template>
@@ -149,90 +123,25 @@ function toggleSelectAll(): void {
     </h2>
     <slot name="toolbar" />
     <slot name="notes" />
-    <div class="flex shrink-0 flex-wrap items-center gap-2">
-      <p
-        v-if="isPending"
-        class="text-text-muted text-sm"
-        data-testid="mods-loading"
-      >
-        {{ t("common.loading") }}
-      </p>
-      <p
-        v-else-if="error"
-        class="text-status-danger text-sm"
-        data-testid="mods-error"
-      >
-        {{ errorMessage }}
-      </p>
-      <p
-        v-else-if="modList"
-        class="text-text-muted text-sm"
-        data-testid="mods-total"
-      >
-        {{ t("mods.page.totalMods", { count: modList.total }, modList.total) }}
-        <span
-          v-if="isCapped"
-          class="text-text-faint"
-          data-testid="mods-page-cap-hint"
-        >{{ t("mods.page.pageCapHint", { count: modList.items.length }) }}</span>
-      </p>
-
-      <div class="ml-auto flex items-center gap-2">
-        <slot name="actions" />
-      </div>
-    </div>
-    <div
-      v-if="rows"
-      class="flex shrink-0 flex-wrap items-center gap-3 text-sm"
-      data-testid="mods-selection-bar"
+    <ModListStatus
+      :mod-list="modList"
+      :is-pending="isPending"
+      :error="error"
     >
-      <label class="flex items-center gap-1.5">
-        <Checkbox
-          binary
-          :model-value="selection.areAllShownSelected.value"
-          :indeterminate="selection.areSomeShownSelected.value"
-          :disabled="!hasRows"
-          data-testid="mods-select-all"
-          @update:model-value="toggleSelectAll"
-        />
-        <span data-testid="mods-select-all-label">{{ selectAllLabel }}</span>
-      </label>
-      <span
-        class="text-text-muted"
-        role="status"
-        aria-live="polite"
-        data-testid="mods-selected-count"
-      >
-        <template v-if="selectedIds.length > 0">
-          {{ t("mods.selection.selectedCount", { count: selectedIds.length }, selectedIds.length) }}<span
-            v-if="selection.hiddenSelectedCount.value > 0"
-            class="ms-1"
-            data-testid="mods-selected-hidden"
-          >{{
-            t(
-              "mods.selection.notShown",
-              { count: selection.hiddenSelectedCount.value },
-              selection.hiddenSelectedCount.value,
-            )
-          }}</span>
-        </template>
-      </span>
-      <Button
-        :label="t('mods.selection.clear')"
-        severity="secondary"
-        text
-        size="small"
-        :disabled="selectedIds.length === 0"
-        data-testid="mods-clear-selection"
-        @click="selection.clear"
-      />
-    </div>
+      <template #actions>
+        <slot name="actions" />
+      </template>
+    </ModListStatus>
+    <ModSelectionBar
+      v-if="rows"
+      :selection="selection"
+    />
     <ModTable
       v-if="rows"
       ref="table"
-      v-model:selected-ids="selectedIds"
       :mods="rows"
       selectable
+      :selected-ids="selectedIds"
       :show-active-columns="showActiveColumns"
       :show-updated="sortKey === 'lastUpdated'"
       :show-position="showPosition"
@@ -242,6 +151,12 @@ function toggleSelectAll(): void {
       :refused-text="refusedText"
       :row-menu="rowMenu"
       :reorder-blocked-reason="reorderBlockedReason"
+      @anchor-row="selection.setAnchor"
+      @toggle-select="selection.toggle"
+      @range-select="selection.selectRange"
+      @extend-select="selection.extendSelection"
+      @select-all="selection.selectAllShown"
+      @clear-selection="selection.clear"
       @select-mod="(modId: string) => emit('selectMod', modId)"
       @focus-mod="(modId: string) => emit('focusMod', modId)"
       @drag-start="(modId: string) => emit('dragStart', modId)"

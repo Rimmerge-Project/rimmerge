@@ -167,6 +167,18 @@ pub fn run() {
             commands::startup::get_startup_costs,
             commands::game_log::import_game_log,
             commands::def_cache::get_def_cache_carrier,
+            commands::organization::get_organization,
+            commands::organization::create_group,
+            commands::organization::rename_group,
+            commands::organization::reparent_group,
+            commands::organization::delete_group,
+            commands::organization::set_group_color,
+            commands::organization::add_group_members,
+            commands::organization::remove_group_members,
+            commands::organization::move_group_members,
+            commands::organization::set_mod_colors,
+            commands::organization::plan_group_scope,
+            commands::organization::reset_organization,
         ])
         .run(tauri::generate_context!());
 

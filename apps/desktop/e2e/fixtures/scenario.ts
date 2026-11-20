@@ -234,6 +234,14 @@ declare global {
     __LIST_WORKING_MODS_CALLS__?: RecordedModListQuery[];
     /** Every `list_inactive_mods` query the mock received, in order — for the mods sort spec. */
     __LIST_INACTIVE_MODS_CALLS__?: RecordedModListQuery[];
+    /**
+     * Set before the scenario installs: whether the mock session can use organization
+     * (`loaded`, the default), was built without a store (`notLoaded`) or found an unusable
+     * `organization.json` (`recovered`, read-only until `reset_organization`).
+     */
+    __ORGANIZATION_STATE__?: "loaded" | "notLoaded" | "recovered";
+    /** Every organization command the mock received, in order — for the organization specs. */
+    __ORGANIZATION_CALLS__?: { command: string; request: unknown }[];
     /** How many `rescan_project` calls the mock received — for the active-set spec. */
     __RESCAN_CALLS__?: number;
     /**
@@ -4708,6 +4716,7 @@ export function installScenario(): void {
     tag: string | null;
     source: string | null;
     sort: ListSortMock | null;
+    group?: GroupFilterMock | null;
   };
 
   type UpdateTimeMock =
@@ -4767,6 +4776,319 @@ export function installScenario(): void {
     return rows.toSorted((a, b) => byKey(a, b) || compareByModId(a, b));
   }
 
+  // ---- Library organization (`rim_session::organization`) ---------------------------------
+  //
+  // The mock mirrors the backend's rules: groups form a forest keyed by id with DIRECT members
+  // only, mods are keyed by BASE id (`x` and `x_steam` are one member), sibling names are unique
+  // ignoring case, nesting is at most 8 levels, a group can never go inside itself or a
+  // descendant, and every refusal leaves the model untouched. Organization never reads or changes
+  // the working set, the orders, the sort or the ledger; the lists below only JOIN it.
+
+  const ORGANIZATION_COLORS = [
+    "red",
+    "orange",
+    "amber",
+    "lime",
+    "green",
+    "teal",
+    "cyan",
+    "blue",
+    "indigo",
+    "violet",
+    "pink",
+    "slate",
+  ];
+  const ORGANIZATION_MAX_DEPTH = 8;
+  const ORGANIZATION_MAX_GROUPS = 1_000;
+  const ORGANIZATION_MAX_NAME_CHARS = 64;
+  const ORGANIZATION_MAX_ID_CHARS = 128;
+  const ORGANIZATION_MAX_MEMBERS_PER_GROUP = 5_000;
+  const ORGANIZATION_MAX_TOTAL_MEMBERSHIPS = 50_000;
+  const ORGANIZATION_MAX_MOD_COLORS = 20_000;
+
+  type OrganizationGroupMock = {
+    name: string;
+    parent: number | null;
+    color: string | null;
+    members: Set<string>;
+  };
+  type GroupFilterMock = { kind: "inScope"; groupId: number } | { kind: "ungrouped" };
+
+  const organizationGroups = new Map<number, OrganizationGroupMock>();
+  const organizationModColors = new Map<string, string>();
+  let nextOrganizationGroupId = 1;
+  /** Whether the session can use organization: `loaded`, or (set before install) a refusal state. */
+  let organizationAvailability: "loaded" | "notLoaded" | "recovered" =
+    window.__ORGANIZATION_STATE__ ?? "loaded";
+
+  function organizationError(code: string, message: string): never {
+    throw { code, message };
+  }
+
+  function requireLoadedOrganization(): void {
+    if (organizationAvailability !== "loaded") {
+      organizationError("organization_unavailable", "organization is not available");
+    }
+  }
+
+  function requireGroup(id: number): OrganizationGroupMock {
+    if (id === 0) organizationError("invalid_input", "a group id is never 0");
+    const group = organizationGroups.get(id);
+    if (group === undefined) organizationError("group_not_found", `no group ${id}`);
+    return group;
+  }
+
+  /** `char::is_control`: the Unicode Cc category, C0 (0x00-0x1F) and DEL plus C1 (0x7F-0x9F). */
+  function hasControlCharacter(text: string): boolean {
+    return [...text].some((character) => {
+      const code = character.codePointAt(0) ?? 0;
+      return code < 0x20 || (code >= 0x7f && code <= 0x9f);
+    });
+  }
+
+  function parseGroupName(raw: string): string {
+    const name = raw.trim();
+    if (name.length === 0) organizationError("invalid_input", "a group name cannot be empty");
+    if ([...name].length > ORGANIZATION_MAX_NAME_CHARS) {
+      organizationError("invalid_input", "a group name is too long");
+    }
+    if (hasControlCharacter(name)) {
+      organizationError("invalid_input", "a group name cannot hold control characters");
+    }
+    return name;
+  }
+
+  /** `OrganizedModId::new`: the base id, never empty, bounded, no control characters. */
+  function organizedId(raw: string): string {
+    const id = baseOf(raw.trim().toLowerCase());
+    if (id.length === 0 || [...id].length > ORGANIZATION_MAX_ID_CHARS || hasControlCharacter(id)) {
+      organizationError("invalid_input", `${JSON.stringify(raw)} cannot be organized`);
+    }
+    return id;
+  }
+
+  /** `parse_mod_ids`: at most the total-memberships limit of ids per request, each a valid id. */
+  function organizedIds(raw: string[]): Set<string> {
+    if (raw.length > ORGANIZATION_MAX_TOTAL_MEMBERSHIPS) {
+      organizationError(
+        "invalid_input",
+        `at most ${ORGANIZATION_MAX_TOTAL_MEMBERSHIPS} mods per request`,
+      );
+    }
+    return new Set(raw.map(organizedId));
+  }
+
+  /** `ModOrganization::membership_count`. */
+  function organizationMembershipCount(): number {
+    return [...organizationGroups.values()].reduce((sum, group) => sum + group.members.size, 0);
+  }
+
+  /** `ModOrganization::ensure_room`: `extra` more members fit in group `group` and in total. */
+  function ensureOrganizationRoom(group: OrganizationGroupMock, extra: number): void {
+    if (group.members.size + extra > ORGANIZATION_MAX_MEMBERS_PER_GROUP) {
+      organizationError(
+        "organization_limit",
+        `too many mods in groups (limit ${ORGANIZATION_MAX_MEMBERS_PER_GROUP})`,
+      );
+    }
+    if (organizationMembershipCount() + extra > ORGANIZATION_MAX_TOTAL_MEMBERSHIPS) {
+      organizationError(
+        "organization_limit",
+        `too many mods in groups (limit ${ORGANIZATION_MAX_TOTAL_MEMBERSHIPS})`,
+      );
+    }
+  }
+
+  function groupDepth(id: number): number {
+    let depth = 1;
+    let parent = organizationGroups.get(id)?.parent ?? null;
+    while (parent !== null) {
+      depth += 1;
+      parent = organizationGroups.get(parent)?.parent ?? null;
+    }
+    return depth;
+  }
+
+  function childGroupIds(id: number): number[] {
+    return [...organizationGroups].filter(([, group]) => group.parent === id).map(([key]) => key);
+  }
+
+  function groupSubtree(id: number): Set<number> {
+    const found = new Set([id]);
+    const pending = [id];
+    for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
+      for (const child of childGroupIds(next)) {
+        if (!found.has(child)) {
+          found.add(child);
+          pending.push(child);
+        }
+      }
+    }
+    return found;
+  }
+
+  function groupHeight(id: number): number {
+    return 1 + Math.max(0, ...childGroupIds(id).map(groupHeight));
+  }
+
+  function ensureNameFree(parent: number | null, name: string, except: number | null): void {
+    const taken = [...organizationGroups].some(
+      ([key, group]) =>
+        key !== except &&
+        group.parent === parent &&
+        group.name.toLowerCase() === name.toLowerCase(),
+    );
+    if (taken) organizationError("group_name_taken", `a group named ${name} already exists here`);
+  }
+
+  function compareGroupNames(
+    a: [number, OrganizationGroupMock],
+    b: [number, OrganizationGroupMock],
+  ) {
+    const [left, right] = [a[1].name.toLowerCase(), b[1].name.toLowerCase()];
+    if (left !== right) return left < right ? -1 : 1;
+    if (a[1].name !== b[1].name) return a[1].name < b[1].name ? -1 : 1;
+    return a[0] - b[0];
+  }
+
+  /** The members of `id` and of every group below it, each mod once. */
+  function groupScopeMods(id: number): Set<string> {
+    const mods = new Set<string>();
+    for (const key of groupSubtree(id)) {
+      for (const member of organizationGroups.get(key)?.members ?? []) mods.add(member);
+    }
+    return mods;
+  }
+
+  /** `ModOrganization::tree`: depth first, siblings by name, with direct and scope counts. */
+  function organizationTree() {
+    const nodes: unknown[] = [];
+    const walk = (parent: number | null, depth: number): void => {
+      const siblings = [...organizationGroups]
+        .filter(([, group]) => group.parent === parent)
+        .toSorted(compareGroupNames);
+      for (const [id, group] of siblings) {
+        nodes.push({
+          id,
+          name: group.name,
+          color: group.color,
+          parent,
+          depth,
+          childCount: childGroupIds(id).length,
+          directCount: group.members.size,
+          scopeCount: groupScopeMods(id).size,
+        });
+        walk(id, depth + 1);
+      }
+    };
+    walk(null, 1);
+    return nodes;
+  }
+
+  /** `OrganizationDto`: one tagged variant per state, each with only its own fields. */
+  function organizationDto() {
+    if (organizationAvailability === "recovered") {
+      return { kind: "recovered", issue: { kind: "malformed" } };
+    }
+    if (organizationAvailability === "notLoaded") return { kind: "notLoaded" };
+    return {
+      kind: "loaded",
+      groups: organizationTree(),
+      coloredModCount: organizationModColors.size,
+    };
+  }
+
+  function recordOrganizationCall(command: string, request: unknown): void {
+    window.__ORGANIZATION_CALLS__?.push({ command, request });
+  }
+
+  async function emitOrganizationChanged(): Promise<void> {
+    await window.__TAURI_INTERNALS__.invoke("plugin:event|emit", {
+      event: "session://changed",
+      payload: { reason: "organizationChanged" },
+    });
+  }
+
+  /** Runs one organization edit: recorded, refused unless loaded, and announced when it worked. */
+  async function editOrganization<T>(
+    command: string,
+    request: unknown,
+    apply: () => T,
+  ): Promise<T> {
+    recordOrganizationCall(command, request);
+    requireLoadedOrganization();
+    const outcome = apply();
+    await emitOrganizationChanged();
+    return outcome;
+  }
+
+  /**
+   * A colour outside the palette fails Tauri's argument deserialization before the command runs
+   * (no `{ code, message }`, nothing recorded): the backend's `ColorTokenDto` is a closed enum, so
+   * the rejection is a plain string, mirrored here.
+   */
+  function checkOrganizationColor(command: string, color: string | null): string | null {
+    if (color !== null && !ORGANIZATION_COLORS.includes(color)) {
+      throw `invalid args \`request\` for command \`${command}\`: unknown variant \`${color}\``;
+    }
+    return color;
+  }
+
+  /** `Session::resolve_group_scope`: the scope's mods split by what they are in this install. */
+  function resolveGroupScope(id: number) {
+    const scope = groupScopeMods(id);
+    const inventory = installedInventory().map((entry) => entry.modId);
+    const activeIds = [...workingActiveIds].filter((modId) => scope.has(baseOf(modId)));
+    const activeBases = new Set([...workingActiveIds].map(baseOf));
+    const inactiveIds: string[] = [];
+    let notInstalled = 0;
+    for (const base of [...scope].toSorted()) {
+      if (activeBases.has(base)) continue;
+      const copies = inventory.filter((modId) => baseOf(modId) === base).toSorted();
+      const copy = copies.includes(base) ? base : copies[0];
+      if (copy === undefined) notInstalled += 1;
+      else inactiveIds.push(copy);
+    }
+    return {
+      groupCount: groupSubtree(id).size,
+      modCount: scope.size,
+      activeIds,
+      inactiveIds,
+      notInstalled,
+    };
+  }
+
+  /** Joins organization onto list rows (labels by base id, the mod's own colour) and applies the group filter. */
+  function joinOrganization<Row extends { modId: string; groups: unknown[]; color: string | null }>(
+    rows: Row[],
+    filter: GroupFilterMock | null | undefined,
+  ): Row[] {
+    const isLoaded = organizationAvailability === "loaded";
+    if (!isLoaded) {
+      if (filter) organizationError("organization_unavailable", "organization is not available");
+      return rows;
+    }
+    if (filter?.kind === "inScope") requireGroup(filter.groupId);
+    const scope = filter?.kind === "inScope" ? groupScopeMods(filter.groupId) : null;
+    const labelled = [...organizationGroups].toSorted(compareGroupNames);
+    return rows
+      .map((row) => {
+        const base = baseOf(row.modId);
+        return {
+          ...row,
+          groups: labelled
+            .filter(([, group]) => group.members.has(base))
+            .map(([id, group]) => ({ id, name: group.name, color: group.color })),
+          color: organizationModColors.get(base) ?? null,
+        };
+      })
+      .filter((row) => {
+        if (filter?.kind === "inScope") return scope?.has(baseOf(row.modId)) ?? false;
+        if (filter?.kind === "ungrouped") return row.groups.length === 0;
+        return true;
+      });
+  }
+
   /** `rim_session::MAX_MOD_LIST_ROWS`: the most rows either working-tier list returns. */
   const MAX_MOD_LIST_ROWS = 5_000;
 
@@ -4786,6 +5108,10 @@ export function installScenario(): void {
     workshopId: number | null;
     updated: UpdateTimeMock;
     membership: MembershipMock;
+    /** The groups the mod is a direct member of (joined from organization), by name. */
+    groups: unknown[];
+    /** The mod's own colour; never inherited from a group. */
+    color: string | null;
   };
 
   type MembershipMock = "none" | "added" | "removed";
@@ -4813,6 +5139,8 @@ export function installScenario(): void {
       workshopId: workshopIdOf(row),
       updated: updateTimeOf(row),
       membership: membershipOf(row.modId, position !== null),
+      groups: [],
+      color: null,
     };
   }
 
@@ -4857,6 +5185,8 @@ export function installScenario(): void {
           workshopId: null,
           updated: updateTimeOf({ modId: id, source: null }),
           membership: membershipOf(id, true),
+          groups: [],
+          color: null,
         };
       });
     } else {
@@ -4868,6 +5198,7 @@ export function installScenario(): void {
         .map((row) => modListRow(row, null, stateOf(row, scannedActiveIds.has(row.modId))));
       rows = [...deactivated, ...unscanned];
     }
+    rows = joinOrganization(rows, query.group);
     const needle = query.search?.toLowerCase() ?? null;
     const matching = rows
       .filter((row) =>
@@ -6642,6 +6973,7 @@ export function installScenario(): void {
   window.__LIST_INACTIVE_MODS_CALLS__ = [];
   window.__DEACTIVATE_CALLS__ = [];
   window.__MOVE_MODS_CALLS__ = [];
+  window.__ORGANIZATION_CALLS__ = [];
   window.__DISCARD_PENDING_CALLS__ = 0;
   window.__REFRESH_BASELINE_CALLS__ = 0;
   window.__REFRESH_BASELINE_DONE__ = 0;
@@ -7656,6 +7988,174 @@ export function installScenario(): void {
       const query = (payload as { query: ModListQueryMock }).query;
       window.__LIST_INACTIVE_MODS_CALLS__?.push(query);
       return modListFor("inactive", query);
+    },
+    // The library organization (`rim_session::organization`); the model and its rules are above.
+    get_organization: () => organizationDto(),
+    create_group: (payload: unknown) => {
+      const request = (payload as { request: { name: string; parent: number | null } }).request;
+      const name = parseGroupName(request.name);
+      return editOrganization("create_group", request, () => {
+        if (organizationGroups.size >= ORGANIZATION_MAX_GROUPS) {
+          organizationError("organization_limit", "there can be at most 1,000 groups");
+        }
+        let depth = 1;
+        if (request.parent !== null) {
+          requireGroup(request.parent);
+          depth = groupDepth(request.parent) + 1;
+        }
+        if (depth > ORGANIZATION_MAX_DEPTH) {
+          organizationError("organization_limit", "groups nest at most 8 levels");
+        }
+        ensureNameFree(request.parent, name, null);
+        const id = nextOrganizationGroupId;
+        nextOrganizationGroupId += 1;
+        organizationGroups.set(id, {
+          name,
+          parent: request.parent,
+          color: null,
+          members: new Set(),
+        });
+        return { kind: "created", id };
+      });
+    },
+    rename_group: (payload: unknown) => {
+      const request = (payload as { request: { id: number; name: string } }).request;
+      const name = parseGroupName(request.name);
+      return editOrganization("rename_group", request, () => {
+        const group = requireGroup(request.id);
+        ensureNameFree(group.parent, name, request.id);
+        group.name = name;
+        return { kind: "done" };
+      });
+    },
+    reparent_group: (payload: unknown) => {
+      const request = (payload as { request: { id: number; parent: number | null } }).request;
+      return editOrganization("reparent_group", request, () => {
+        const group = requireGroup(request.id);
+        if (group.parent === request.parent) return { kind: "done" };
+        let parentDepth = 0;
+        if (request.parent !== null) {
+          requireGroup(request.parent);
+          if (groupSubtree(request.id).has(request.parent)) {
+            organizationError("group_cycle", "a group cannot go inside itself or a subgroup");
+          }
+          parentDepth = groupDepth(request.parent);
+        }
+        if (parentDepth + groupHeight(request.id) > ORGANIZATION_MAX_DEPTH) {
+          organizationError("organization_limit", "groups nest at most 8 levels");
+        }
+        ensureNameFree(request.parent, group.name, request.id);
+        group.parent = request.parent;
+        return { kind: "done" };
+      });
+    },
+    delete_group: (payload: unknown) => {
+      const request = (
+        payload as { request: { id: number; mode: "liftChildren" | "withSubgroups" } }
+      ).request;
+      return editOrganization("delete_group", request, () => {
+        const group = requireGroup(request.id);
+        if (request.mode === "withSubgroups") {
+          const doomed = groupSubtree(request.id);
+          for (const id of doomed) organizationGroups.delete(id);
+          return { kind: "deleted", groupsRemoved: doomed.size, childrenLifted: 0 };
+        }
+        const children = childGroupIds(request.id);
+        for (const child of children) {
+          ensureNameFree(group.parent, organizationGroups.get(child)?.name ?? "", request.id);
+        }
+        for (const child of children) {
+          const lifted = organizationGroups.get(child);
+          if (lifted) lifted.parent = group.parent;
+        }
+        organizationGroups.delete(request.id);
+        return { kind: "deleted", groupsRemoved: 1, childrenLifted: children.length };
+      });
+    },
+    set_group_color: (payload: unknown) => {
+      const request = (payload as { request: { id: number; color: string | null } }).request;
+      const color = checkOrganizationColor("set_group_color", request.color);
+      return editOrganization("set_group_color", request, () => {
+        requireGroup(request.id).color = color;
+        return { kind: "done" };
+      });
+    },
+    add_group_members: (payload: unknown) => {
+      const request = (payload as { request: { id: number; modIds: string[] } }).request;
+      const mods = organizedIds(request.modIds);
+      return editOrganization("add_group_members", request, () => {
+        const group = requireGroup(request.id);
+        const added = [...mods].filter((id) => !group.members.has(id));
+        ensureOrganizationRoom(group, added.length);
+        for (const id of added) group.members.add(id);
+        return { kind: "added", added: added.length, already: mods.size - added.length };
+      });
+    },
+    remove_group_members: (payload: unknown) => {
+      const request = (payload as { request: { id: number; modIds: string[] } }).request;
+      const mods = organizedIds(request.modIds);
+      return editOrganization("remove_group_members", request, () => {
+        const group = requireGroup(request.id);
+        const removed = [...mods].filter((id) => group.members.delete(id)).length;
+        return { kind: "removed", removed, absent: mods.size - removed };
+      });
+    },
+    move_group_members: (payload: unknown) => {
+      const request = (payload as { request: { from: number; to: number; modIds: string[] } })
+        .request;
+      const mods = organizedIds(request.modIds);
+      return editOrganization("move_group_members", request, () => {
+        if (request.from === request.to) {
+          organizationError("invalid_input", "the source and the target are the same group");
+        }
+        const source = requireGroup(request.from);
+        const target = requireGroup(request.to);
+        const leaving = [...mods].filter((id) => source.members.has(id));
+        const joining = leaving.filter((id) => !target.members.has(id));
+        ensureOrganizationRoom(target, joining.length);
+        for (const id of leaving) source.members.delete(id);
+        for (const id of joining) target.members.add(id);
+        return {
+          kind: "moved",
+          moved: joining.length,
+          alreadyInTarget: leaving.length - joining.length,
+          notInSource: mods.size - leaving.length,
+        };
+      });
+    },
+    set_mod_colors: (payload: unknown) => {
+      const request = (payload as { request: { modIds: string[]; color: string | null } }).request;
+      const mods = organizedIds(request.modIds);
+      const color = checkOrganizationColor("set_mod_colors", request.color);
+      return editOrganization("set_mod_colors", request, () => {
+        const changed = [...mods].filter((id) => (organizationModColors.get(id) ?? null) !== color);
+        const added =
+          color === null ? [] : [...mods].filter((id) => !organizationModColors.has(id));
+        if (organizationModColors.size + added.length > ORGANIZATION_MAX_MOD_COLORS) {
+          organizationError("organization_limit", "too many coloured mods");
+        }
+        for (const id of mods) {
+          if (color === null) organizationModColors.delete(id);
+          else organizationModColors.set(id, color);
+        }
+        return { kind: "colored", changed: changed.length, unchanged: mods.size - changed.length };
+      });
+    },
+    plan_group_scope: (payload: unknown) => {
+      const request = (payload as { request: { id: number } }).request;
+      recordOrganizationCall("plan_group_scope", request);
+      requireLoadedOrganization();
+      requireGroup(request.id);
+      return resolveGroupScope(request.id);
+    },
+    reset_organization: async () => {
+      recordOrganizationCall("reset_organization", null);
+      if (organizationAvailability !== "recovered") {
+        organizationError("invalid_input", "the organization file is not in need of a reset");
+      }
+      organizationAvailability = "loaded";
+      await emitOrganizationChanged();
+      return organizationDto();
     },
     plan_activate_mods: (payload: unknown) => {
       const request = (payload as { request: ActivateRequestDto }).request;

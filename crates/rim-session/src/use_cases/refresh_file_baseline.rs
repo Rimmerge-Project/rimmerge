@@ -106,6 +106,7 @@ mod tests {
     fn active_marks(session: &Session) -> Vec<(String, MembershipMark)> {
         session
             .working_mod_list(&ModListQuery::default())
+            .expect("no group filter")
             .items
             .into_iter()
             .map(|row| (row.mod_id.to_string(), row.membership))
@@ -115,6 +116,7 @@ mod tests {
     fn inactive_marks(session: &Session) -> Vec<(String, MembershipMark)> {
         session
             .inactive_mod_list(&ModListQuery::default())
+            .expect("no group filter")
             .items
             .into_iter()
             .map(|row| (row.mod_id.to_string(), row.membership))

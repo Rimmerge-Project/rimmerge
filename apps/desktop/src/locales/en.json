@@ -587,6 +587,26 @@
       "revert_order_membership_differs": {
         "title": "The saved list has different mods",
         "detail": "Your saved active mods differ from your current order, so there is no order to go back to. To use the saved list instead, open it from Import on the Load order page. Otherwise, apply your own order."
+      },
+      "organization_unavailable": {
+        "title": "Groups can't be changed right now",
+        "detail": "Rimmerge couldn't use your saved groups and colours, so they are read-only. Start over to make a fresh set, or fix the file and rescan."
+      },
+      "group_not_found": {
+        "title": "That group no longer exists",
+        "detail": "It may have been deleted. The groups have been refreshed, so try again."
+      },
+      "group_name_taken": {
+        "title": "That group name is already used",
+        "detail": "Another group at the same level has this name. Names are not case sensitive."
+      },
+      "group_cycle": {
+        "title": "A group can't go inside itself",
+        "detail": "Choose a place outside that group and its own subgroups."
+      },
+      "organization_limit": {
+        "title": "A limit for groups was reached",
+        "detail": "You reached a limit on how many groups, levels of nesting, mods in groups or coloured mods there can be. Remove some and try again."
       }
     }
   },

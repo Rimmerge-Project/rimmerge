@@ -40,14 +40,16 @@ use crate::state::{Adapters, AppState, with_session};
 /// Returns [`CommandError::no_project_loaded`] when no project is loaded,
 /// or [`CommandError::invalid_input`] when `query.tag` isn't a valid tag
 /// slug (accepted for symmetry with the Active list's query, though the
-/// Inactive list ignores it).
+/// Inactive list ignores it), or the `group_not_found`/
+/// `organization_unavailable` code when the query's group filter cannot be
+/// applied.
 pub(crate) async fn list_inactive_mods_inner(
     state: &AppState,
     query: ModListQueryDto,
 ) -> Result<ModListDto, CommandError> {
     with_session(state, move |session| {
         let query: rim_session::ModListQuery = query.try_into()?;
-        Ok(session.inactive_mod_list(&query).into())
+        Ok(session.inactive_mod_list(&query)?.into())
     })
     .await
 }
@@ -499,11 +501,16 @@ pub(crate) async fn rescan_with(
     let (new_session, mut summary) =
         scan_detached(state.adapters.clone(), paths, scan_ids, on_progress).await?;
 
+    let organization_store = state.adapters.organization_store.clone();
     let selected = with_session(state, move |session| {
         if session.working().ids() != working_ids.as_slice() {
             return Err(scan.working_changed_error());
         }
         let mut new_session = new_session;
+        // Under the write lock every organization edit holds while it
+        // saves: an edit that landed after the scan read the file is on
+        // disk, and this read sees it.
+        new_session.reload_organization(&*organization_store);
         scan.select_on(&mut new_session, session)?;
         let selected = new_session.selected();
         *session = new_session;
@@ -539,7 +546,8 @@ async fn scan_detached(
             adapters.mod_knowledge_store.clone(),
             crate::commands::rules_databases::network_policy().fetch_rimmerge_rules,
         )
-        .with_timestamp_reader(adapters.mod_timestamp_reader.clone());
+        .with_timestamp_reader(adapters.mod_timestamp_reader.clone())
+        .with_organization_store(adapters.organization_store.clone());
 
         let start = Instant::now();
         let def_reader = adapters.def_reader.clone();

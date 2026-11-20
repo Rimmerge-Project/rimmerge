@@ -485,6 +485,10 @@ pub enum SessionChangeReasonDto {
     /// invalidate the notifications query directly through their own
     /// command result instead.
     NotificationsChanged,
+    /// Groups or mod colours changed (every organization command). Touches
+    /// nothing else: no order, no sort, no ledger, no active list, so only
+    /// the organization query and the two mod lists refetch.
+    OrganizationChanged,
 }
 
 /// Payload of the `session://changed` event.

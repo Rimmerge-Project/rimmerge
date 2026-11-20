@@ -31,6 +31,7 @@ pub mod mod_timestamps;
 pub mod mods_config;
 pub(crate) mod net;
 pub mod notifications;
+pub mod organization;
 pub mod patches;
 pub mod process;
 pub mod profile;
@@ -60,6 +61,7 @@ pub use mods_config::ModsConfigFileStore;
 pub use notifications::{
     JsonNotificationStateStore, JsonProfileNotificationStateStore, notifications_path,
 };
+pub use organization::JsonOrganizationStore;
 pub use patches::JsonPatchProjectStore;
 pub use process::{GameProcessProbe, SysinfoGameProcessProbe};
 pub use profile::{databases_dir, profile_dir, resolve_user_dir};

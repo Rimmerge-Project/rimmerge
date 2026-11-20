@@ -31,6 +31,7 @@ use crate::active_set::ActiveSet;
 use crate::file_baseline::FileWatch;
 use crate::finding_index::FindingIndex;
 use crate::merge_workspace::{MergeWorkspace, PreviewSlot};
+use crate::organization::OrganizationState;
 use crate::ports::{DefSourceReader, ModsConfigFile, RulesLoadWarning, StoredRules};
 use crate::settings::{Settings, filter_imported_rules};
 
@@ -40,6 +41,7 @@ mod findings;
 mod merge;
 mod mod_info;
 mod order;
+mod organization;
 mod patches;
 mod rules;
 
@@ -426,6 +428,12 @@ pub struct Session {
     /// [`crate::ports::ModTimestampReader`]; empty (every time
     /// unavailable) otherwise. Never part of the report.
     update_times: ModUpdateTimes,
+    /// The profile's groups and mod colours, set by
+    /// [`crate::use_cases::LoadProject`] when it has an
+    /// [`crate::ports::OrganizationStore`]. Never read by the sorter or the
+    /// ledger: nothing in [`compute`] or the caches takes it, so an
+    /// organization edit invalidates no cache. See [`OrganizationState`].
+    organization: OrganizationState,
     selected: OrderSource,
     /// Set by the composition root ([`Session::set_def_source_reader`])
     /// once real XML I/O is available. `None` in most tests (and in a
@@ -530,6 +538,7 @@ impl std::fmt::Debug for Session {
             .field("assignments", &self.assignments)
             .field("scoped", &self.scoped)
             .field("rule_load_warnings", &self.rule_load_warnings)
+            .field("organization", &self.organization)
             .field("selected", &self.selected)
             .field(
                 "def_source_reader",
@@ -635,6 +644,7 @@ impl Session {
             rule_load_warnings: Vec::new(),
             mod_knowledge: ModKnowledge::default(),
             update_times: ModUpdateTimes::default(),
+            organization: OrganizationState::NotLoaded,
             selected: OrderSource::Current,
             def_source_reader: None,
             inspections: HashMap::new(),

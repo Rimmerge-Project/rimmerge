@@ -808,6 +808,76 @@ therefore refreshed by every rescan. It is deliberately outside
 infallible: an unreadable source answers `Unavailable(Unknown)`, never an error
 and never an epoch. Fake: `test_support::FakeModTimestampReader`.
 
+## Library organization (`organization`, `EditOrganization`)
+
+Nested mod groups and per-mod colours: a bounded context of its own, pure
+in `organization.rs` (a facade over `organization/{ids,color,group,forest,
+edit,resolve,state}.rs`), persisted to `<profile>/organization.json`
+through `ports::OrganizationStore` (`rim-io`'s `JsonOrganizationStore`).
+
+- **Never on the sort path.** `compute()`, the ledger and every cache in
+  `Session` take no organization, so an organization edit invalidates no
+  cache, changes no order, no `working`, no `ModsConfig.xml`. A test pins
+  `working`, both orders, `file_active_mods`, the selection, the pending
+  diff, the sort outcome, the rules, the decisions and the ledger as equal
+  before and after every edit kind, and the sort and ledger equal with an
+  empty and a large organization. Keep it that way: a new `Session` cache
+  must not read it, and `mod_lists` is the only join (fresh per query, no
+  cache).
+- **`ModOrganization` is a forest with direct members only.** Ids are
+  `OrganizedModId` (a base id: `x` and `x_steam` are one member; the
+  constructor is fallible, bounded like the file reader), `GroupId`
+  (non-zero, never reused within a session), `GroupName` (trimmed, 1 to 64
+  characters, no control characters), `ColorToken` (a closed 12-name
+  palette). Invariants live in the aggregate: no cycle, depth at most 8,
+  at most 1,000 groups, sibling names unique ignoring case, bounded
+  memberships and colours (`OrganizationLimits`, read by the `rim-io`
+  reader too). A mutator that returns an error changed nothing (a proptest
+  asserts it). "Parent views include descendants" is `scope()`, derived on
+  every call; no ancestor membership is ever stored. A mod never inherits
+  a group's colour.
+- **`OrganizationState` is closed**: `NotLoaded` (built without a store:
+  the CLI, most tests), `Loaded`, `Recovered { issue }` (the file is
+  present but unreadable, too large, malformed, from a newer version or
+  breaking a forest rule). Only `Loaded` can be read or edited
+  (`OrganizationState::loaded`/`loaded_mut`, `OrganizationUnavailable`),
+  so a session that could not read the file can never save an empty
+  organization over it. `LoadProject::with_organization_store` (optional,
+  desktop only) reads the file once per load, so every rescan and import
+  rebuild reloads it: nothing is carried by hand. A damaged file never
+  fails a project load. The desktop also calls
+  `Session::reload_organization(&store)` on the new session **under the
+  session write lock, just before the swap** (`replace_session` and the
+  rescan swap): every organization edit saves while holding that lock, so
+  an edit that landed after `LoadProject` read the file is on disk by then
+  and the swap cannot drop it (and the next save cannot erase it). A
+  `NotLoaded` session is left alone. `set_organization_state` is
+  crate-private (fixtures in other crates use
+  `test_support::set_organization_state`). Errors split by origin: an edit
+  reports `OrganizationError`, reading a document reports
+  `OrganizationDocumentError` (dangling parent, duplicate id, an id out of
+  range, a `next_group_id` behind the groups, or a wrapped rule). The next
+  group id is part of the document, so ids are never reused after a
+  reload.
+- **One use case, one closed command type.** `EditOrganization::execute`
+  applies an `OrganizationEdit` (create, rename, reparent, delete, group
+  colour, add/remove/move members, mod colours), snapshots, saves once and
+  restores on a failed save; an edit that changes nothing writes nothing.
+  `ResetOrganization` ("start over") is the only way out of `Recovered`:
+  `OrganizationStore::archive_unusable` keeps a copy
+  (`organization.json.unusable-<seconds>`) before the empty save, and it
+  refuses a loaded organization.
+- **Resolving against the install** is `resolve_scope` (the
+  `find_by_base` rule, a copy already active wins, members found nowhere
+  are counted, not dropped), reached through `Session::resolve_group_scope`
+  for group-level activate/deactivate planning.
+- **`mod_lists`** gains `ModListQuery::group` (`GroupFilter::InScope`,
+  descendants included and deduplicated, or `Ungrouped`), `ModListRow::groups`
+  (direct labels by name) and `ModListRow::color`. Both list functions now
+  return `Result<_, ModListError>`: a stale group id is `UnknownGroup`, and
+  a filter with unavailable organization is refused, never read as "no
+  filter". A group filter is a filter: `reorderable` stays on.
+
 ## Sharing a load order (`mod_list`, `ExportOrder`, `PreviewOrderImport`, `ImportOrder`)
 
 - **`mod_list` is pure**: value objects, the "Copy as text" codec

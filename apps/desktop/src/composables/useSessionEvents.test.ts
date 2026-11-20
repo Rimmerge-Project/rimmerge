@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { handleSessionChanged } from "@/composables/useSessionEvents";
+import { handleSessionChanged, ORGANIZATION_QUERY_KEYS } from "@/composables/useSessionEvents";
+import { queryKeys } from "@/queries/keys";
+import type { ModListQueryDto } from "@/types/generated/ModListQueryDto";
 import type { SessionChangeReasonDto } from "@/types/generated/SessionChangeReasonDto";
 
 /**
@@ -52,5 +54,34 @@ describe("handleSessionChanged", () => {
     handleSessionChanged({ reason }, invalidateAll);
 
     expect(invalidateAll).toHaveBeenCalledOnce();
+  });
+});
+
+describe("handleSessionChanged for organization", () => {
+  it("refetches only the organization targets, never everything", () => {
+    const invalidateAll = vi.fn();
+    const invalidateOrganization = vi.fn();
+
+    handleSessionChanged({ reason: "organizationChanged" }, invalidateAll, invalidateOrganization);
+
+    expect(invalidateOrganization).toHaveBeenCalledOnce();
+    expect(invalidateAll).not.toHaveBeenCalled();
+  });
+
+  it("targets the organization query and both Mods lists, as queryKeys builds them", () => {
+    const query: ModListQueryDto = { search: null, tag: null, source: null, sort: null };
+    const concreteKeys = [
+      queryKeys.organization(),
+      queryKeys.workingMods(query),
+      queryKeys.inactiveMods(query),
+    ];
+
+    for (const concrete of concreteKeys) {
+      const covered = ORGANIZATION_QUERY_KEYS.some((prefix) =>
+        prefix.every((part, index) => concrete[index] === part),
+      );
+      expect(covered, JSON.stringify(concrete)).toBe(true);
+    }
+    expect(ORGANIZATION_QUERY_KEYS).toHaveLength(3);
   });
 });

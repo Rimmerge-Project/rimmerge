@@ -178,6 +178,26 @@ const ERROR_CODE_KEYS = {
     title: "error.code.revert_order_membership_differs.title",
     detail: "error.code.revert_order_membership_differs.detail",
   },
+  organization_unavailable: {
+    title: "error.code.organization_unavailable.title",
+    detail: "error.code.organization_unavailable.detail",
+  },
+  group_not_found: {
+    title: "error.code.group_not_found.title",
+    detail: "error.code.group_not_found.detail",
+  },
+  group_name_taken: {
+    title: "error.code.group_name_taken.title",
+    detail: "error.code.group_name_taken.detail",
+  },
+  group_cycle: {
+    title: "error.code.group_cycle.title",
+    detail: "error.code.group_cycle.detail",
+  },
+  organization_limit: {
+    title: "error.code.organization_limit.title",
+    detail: "error.code.organization_limit.detail",
+  },
 } satisfies Record<CommandErrorCode, { title: string; detail: string }>;
 
 /**

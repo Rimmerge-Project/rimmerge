@@ -56,15 +56,16 @@ pub async fn list_mods(
 /// # Errors
 ///
 /// Returns [`CommandError::no_project_loaded`] when no project is loaded,
-/// or [`CommandError::invalid_input`] when `query.tag` isn't a valid tag
-/// slug.
+/// [`CommandError::invalid_input`] when `query.tag` isn't a valid tag
+/// slug, or the `group_not_found`/`organization_unavailable` code when the
+/// query's group filter cannot be applied.
 pub(crate) async fn list_working_mods_inner(
     state: &AppState,
     query: ModListQueryDto,
 ) -> Result<ModListDto, CommandError> {
     with_session(state, move |session| {
         let query: rim_session::ModListQuery = query.try_into()?;
-        Ok(session.working_mod_list(&query).into())
+        Ok(session.working_mod_list(&query)?.into())
     })
     .await
 }

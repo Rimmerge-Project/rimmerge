@@ -36,8 +36,8 @@ in the download folder.
 **Where your data lives.** Not in the extracted folder; two folders
 under `%LOCALAPPDATA%`:
 
-- `%LOCALAPPDATA%\rimmerge`: settings, profiles, decisions, and cached
-  rule databases (see [`config.json`](#configjson) below).
+- `%LOCALAPPDATA%\rimmerge`: settings, profiles, decisions, mod groups and
+  colours (`organization.json`), and cached rule databases (see [`config.json`](#configjson) below).
 - `%LOCALAPPDATA%\dev.rimmerge.app`: the WebView2 cache and the
   desktop app's display preferences (language, mod-name display).
 
