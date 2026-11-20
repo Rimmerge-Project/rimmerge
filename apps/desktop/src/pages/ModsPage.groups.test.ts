@@ -17,6 +17,7 @@ import { installMockIpc } from "@/services/ipc.mock";
 import type { GroupNodeDto } from "@/types/generated/GroupNodeDto";
 import type { ModListQueryDto } from "@/types/generated/ModListQueryDto";
 import type { OrganizationDto } from "@/types/generated/OrganizationDto";
+import { GROUP_DRAG_TYPE, ROW_DRAG_TYPE } from "@/utils/groupDrop";
 
 const toastAddSpy = vi.hoisted(() => vi.fn());
 vi.mock("primevue/usetoast", () => ({ useToast: () => ({ add: toastAddSpy }) }));
@@ -46,6 +47,14 @@ const calls: { command: string; payload: unknown }[] = [];
 let refuseGroupFilter: "group_not_found" | "organization_unavailable" | null = null;
 /** What a rescan leaves the organization as; `null` leaves it alone. */
 let afterRescan: OrganizationDto | null = null;
+/** The Active list's rows; a search keeps the rows whose id contains it. */
+let activeRows: ReturnType<typeof modRow>[] = [];
+/** What `add_group_members` answers. */
+let addOutcome: { kind: "added"; added: number; already: number } = {
+  kind: "added",
+  added: 1,
+  already: 0,
+};
 
 function record(command: string, result: unknown): (payload: unknown) => unknown {
   return (payload) => {
@@ -65,15 +74,8 @@ function mountPage() {
       if (refuseGroupFilter !== null && query.group !== undefined && query.group !== null) {
         throw { code: refuseGroupFilter, message: "refused" };
       }
-      return modList([
-        modRow({
-          modId: "active.mod",
-          name: "Active Mod",
-          position: 0,
-          groups: [{ id: 1, name: "Weapons", color: "red" }],
-          color: "teal",
-        }),
-      ]);
+      const search = query.search ?? "";
+      return modList(activeRows.filter((row) => row.modId.includes(search)));
     },
     list_inactive_mods: (payload: unknown) => {
       inactiveQueries.push((payload as { query: ModListQueryDto }).query);
@@ -104,7 +106,11 @@ function mountPage() {
       }
       return { kind: "deleted", groupsRemoved: 1, childrenLifted: 0 };
     },
-    add_group_members: record("add_group_members", { kind: "added", added: 1, already: 0 }),
+    add_group_members: (payload: unknown) => {
+      calls.push({ command: "add_group_members", payload });
+      return addOutcome;
+    },
+    reparent_group: record("reparent_group", { kind: "done" }),
     remove_group_members: record("remove_group_members", {
       kind: "removed",
       removed: 1,
@@ -169,6 +175,16 @@ describe("ModsPage groups", () => {
     organization = { kind: "loaded", groups: [WEAPONS, ARMOR], coloredModCount: 1 };
     refuseGroupFilter = null;
     afterRescan = null;
+    addOutcome = { kind: "added", added: 1, already: 0 };
+    activeRows = [
+      modRow({
+        modId: "active.mod",
+        name: "Active Mod",
+        position: 0,
+        groups: [{ id: 1, name: "Weapons", color: "red" }],
+        color: "teal",
+      }),
+    ];
     Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
       configurable: true,
       value: 400,
@@ -473,5 +489,126 @@ describe("ModsPage groups", () => {
       { command: "create_group", payload: { request: { name: "Utility", parent: null } } },
     ]);
     expect(wrapper.find('[data-testid="group-name-dialog"]').exists()).toBe(false);
+  });
+
+  describe("dropping on the group tree", () => {
+    /** Fires a drag event and returns whether the drop was accepted (the event cancelled). */
+    function fire(
+      wrapper: Awaited<ReturnType<typeof mountAt>>,
+      selector: string,
+      type: string,
+      types: string[] = [],
+    ) {
+      const event = new Event(type, { bubbles: true, cancelable: true });
+      Object.defineProperty(event, "dataTransfer", { value: { types, setData: () => {} } });
+      wrapper.get(selector).element.dispatchEvent(event);
+      return event.defaultPrevented;
+    }
+
+    it("adds the dragged row to the group and sends only add_group_members", async () => {
+      const wrapper = await mountAt(1900);
+      const row = '[data-testid="mod-row-active.mod"]';
+      await wrapper.get('[data-testid="mod-row-select-active.mod"] input').setValue(true);
+
+      fire(wrapper, row, "dragstart");
+      await flushPromises();
+      expect(wrapper.get('[data-testid="group-drop-hint"]').text()).toBe(
+        "Drop 1 mod on a group to add it",
+      );
+      expect(fire(wrapper, '[data-key="group-2"]', "dragover", [ROW_DRAG_TYPE])).toBe(true);
+      expect(fire(wrapper, '[data-key="group-2"]', "drop", [ROW_DRAG_TYPE])).toBe(true);
+      await flushPromises();
+      fire(wrapper, row, "dragend");
+      await flushPromises();
+
+      expect(calls).toEqual([
+        { command: "add_group_members", payload: { request: { id: 2, modIds: ["active.mod"] } } },
+      ]);
+      expect(toastAddSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ summary: "Added 1 mod to Armor", severity: "success" }),
+      );
+      // The drag is over, and the selection is untouched.
+      expect(wrapper.find('[data-testid="group-drop-hint"]').exists()).toBe(false);
+      expect(
+        wrapper.get<HTMLInputElement>('[data-testid="mod-row-select-active.mod"] input').element
+          .checked,
+      ).toBe(true);
+    });
+
+    it("nests a dragged group and sends only reparent_group", async () => {
+      const wrapper = await mountAt(1900);
+
+      fire(wrapper, '[data-key="group-2"]', "dragstart");
+      expect(fire(wrapper, '[data-key="group-1"]', "dragover", [GROUP_DRAG_TYPE])).toBe(true);
+      fire(wrapper, '[data-key="group-1"]', "drop", [GROUP_DRAG_TYPE]);
+      await flushPromises();
+
+      expect(calls).toEqual([
+        { command: "reparent_group", payload: { request: { id: 2, parent: 1 } } },
+      ]);
+      expect(toastAddSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ summary: "Armor moved inside Weapons" }),
+      );
+    });
+
+    it("sends nothing for a group dropped on itself", async () => {
+      const wrapper = await mountAt(1900);
+
+      fire(wrapper, '[data-key="group-2"]', "dragstart");
+      expect(fire(wrapper, '[data-key="group-2"]', "dragover", [GROUP_DRAG_TYPE])).toBe(false);
+      fire(wrapper, '[data-key="group-2"]', "drop", [GROUP_DRAG_TYPE]);
+      await flushPromises();
+
+      expect(calls).toEqual([]);
+    });
+
+    it("carries a selected row the filter hides, says so before the drop and in the toast", async () => {
+      activeRows = [
+        modRow({ modId: "shown.mod", position: 0 }),
+        modRow({ modId: "other.mod", position: 1 }),
+      ];
+      addOutcome = { kind: "added", added: 1, already: 1 };
+      const wrapper = await mountAt(1900);
+      await wrapper.get('[data-testid="mod-row-select-other.mod"] input').setValue(true);
+      vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+      try {
+        await wrapper
+          .get('[data-testid="mods-pane-active"] [data-testid="mods-search"]')
+          .setValue("shown");
+        vi.advanceTimersByTime(400);
+        await flushPromises();
+      } finally {
+        vi.useRealTimers();
+      }
+      expect(wrapper.find('[data-testid="mod-row-other.mod"]').exists()).toBe(false);
+      await wrapper.get('[data-testid="mod-row-select-shown.mod"] input').setValue(true);
+      const row = '[data-testid="mod-row-shown.mod"]';
+
+      fire(wrapper, row, "dragstart");
+      await flushPromises();
+      expect(wrapper.get('[data-testid="group-drop-hint"]').text()).toBe(
+        "Drop 2 mods on a group to add them (1 not shown)",
+      );
+      fire(wrapper, '[data-key="group-2"]', "dragover", [ROW_DRAG_TYPE]);
+      await flushPromises();
+      expect(wrapper.get('[data-testid="group-drop-hint"]').text()).toBe(
+        "Add 2 mods to Armor (1 not shown)",
+      );
+      fire(wrapper, '[data-key="group-2"]', "drop", [ROW_DRAG_TYPE]);
+      await flushPromises();
+      fire(wrapper, row, "dragend");
+
+      const added = calls.find((call) => call.command === "add_group_members");
+      const request = (added?.payload as { request: { id: number; modIds: string[] } } | undefined)
+        ?.request;
+      expect(request?.id).toBe(2);
+      expect([...(request?.modIds ?? [])].sort()).toEqual(["other.mod", "shown.mod"]);
+      expect(toastAddSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          summary: "Added 1 mod to Armor",
+          detail: "1 was already in the group\n1 selected mod that a filter hides was included",
+        }),
+      );
+    });
   });
 });

@@ -2,6 +2,7 @@ import { ref, watch } from "vue";
 
 import type { DropMode } from "@/components/mods/ModTable.vue";
 import { useDragAutoScroll } from "@/composables/useDragAutoScroll";
+import { ROW_DRAG_TYPE } from "@/utils/groupDrop";
 
 /** What a drag tells the table's caller. */
 export interface RowDragActions {
@@ -61,8 +62,9 @@ export function useRowDrag({
       return;
     }
     if (event.dataTransfer) {
-      // Some engines refuse to start a drag with no data.
-      event.dataTransfer.setData("text/plain", modId);
+      // Some engines refuse to start a drag with no data. A private type, not text, so the drop
+      // targets that take mods can tell this drag from a file or text dragged in from elsewhere.
+      event.dataTransfer.setData(ROW_DRAG_TYPE, modId);
       event.dataTransfer.effectAllowed = "move";
     }
     actions.dragStart(modId);
