@@ -98,6 +98,21 @@ here or in the two interface apps; `rim-resolve`/`rim-merge`/
   `MAX_PLAUSIBLE_SECONDS` (9999-12-31, the same bound on the `About.xml` mtime) is no time:
   the UI's date formatting throws on anything larger. A missing file, an implausible time or
   a time under the wrong section is `Unavailable(Unknown)`. Local only, no network.
+- **`saves.rs`**: `list_saves(folder)` lists the `.rws` files directly in
+  RimWorld's `Saves` folder for the desktop's "Import from a save" list. A plain
+  function, not a port (directory metadata, no decision: the caller picks the
+  folder). Directory metadata only, never a save's contents. A regular file whose
+  name ends in `.rws` (ASCII case-insensitive) counts; the entry's own metadata
+  never follows a link, so a symlink or junction named like a save and a folder
+  named `x.rws` are skipped (the `Saves` folder itself is opened as given, so a
+  player's moved folder still lists). At most `MAX_SAVE_DIR_ENTRIES` (10,000)
+  entries are examined and `MAX_LISTED_SAVES` (200) returned, `omitted` counting
+  the qualifying rest (past the examination bound the listing covers the first
+  entries the file system hands out). Newest modified time first, ties by file
+  name ordinal, a missing or implausible time (`plausible_time.rs`, shared with
+  `mod_timestamps.rs`: zero or past 9999-12-31 is no time) `None` and last. A
+  single entry that cannot be inspected is skipped; an unlistable folder is an
+  `io::Error`.
 - Tests only ever touch `tempfile` copies of `tests/fixtures/` — never
   the real install, and never anything "near" it: every path an
   end-to-end test touches, `ModsConfig.xml` included, is a scratch copy

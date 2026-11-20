@@ -75,14 +75,16 @@ file with no live install or profile involved at all.
 - **`order import <file | ->`**: reads a `.rml`, a `ModsConfig.xml`-shaped
   file, the text list, or a RimWorld save `.rws` (detected by content, also
   on stdin with `-`; a list over 4 MiB is rejected, and for a save the 4 MiB
-  bound is on its header, since only the `<meta>` header is read and never
-  the rest of the file, which can be hundreds of megabytes) and prints what
+  bound is on its header, since only the `<meta>` header is read: it stops
+  reading within 64 KiB after the header and never decodes or changes the
+  rest of the file, which can be hundreds of megabytes) and prints what
   it would change. It first prints a `source:` line (`RimWorld save (header
   only)`, `RimWorld mod list (.rml)`, ...), a `version: saved with RimWorld
   ...` line whenever the list carries one (plus a note when this install is
-  a different major.minor release), and one line for each names or Steam-id
+  a different major.minor release), and one line for each names or Workshop-id
   list that had a different length from the ids and was left out (`names: 3
-  for 4 ids, not shown`). Then: mods activated and
+  for 4 ids, not shown`, `workshop ids: 3 for 2 ids, no Workshop links
+  shown`). Then: mods activated and
   deactivated, how many move, mods that are not installed (with their
   Steam Workshop link when the list has one), duplicates and lines it
   could not read. It then writes the list as `<activeMods>` in

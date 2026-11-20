@@ -4,7 +4,7 @@ import { useI18n } from "vue-i18n";
 
 import { useTranslateMessage } from "@/composables/useTranslateMessage";
 import { useAdoptImportedSession } from "@/queries/orderShare";
-import { pickModListFile, pickModListSavePath } from "@/services/dialogs";
+import { pickModListFile, pickModListSavePath, pickSaveFile } from "@/services/dialogs";
 import {
   exportOrderFile,
   exportOrderText,
@@ -31,8 +31,9 @@ function fileNameOf(path: string): string {
 }
 
 /**
- * Exporting and importing a load order from the Load order page: the four entry points
- * (save a `.rml`, copy as text, open a file, paste), the preview they lead to and the import.
+ * Exporting and importing a load order from the Load order page: the five entry points
+ * (save a `.rml`, copy as text, open a file, import from a save, paste), the preview they lead
+ * to and the import.
  *
  * Export, preview and import call the services directly rather than through mutations: the
  * app-wide mutation `onError` would toast every failure with its generic wording, in the
@@ -53,6 +54,7 @@ export function useOrderShare() {
 
   const isBusy = ref(false);
   const isPasteOpen = ref(false);
+  const isSavesOpen = ref(false);
   const isPreviewOpen = ref(false);
   const outcome = ref<OrderImportOutcomeDto | null>(null);
 
@@ -171,6 +173,7 @@ export function useOrderShare() {
   function showPreview(result: OrderImportOutcomeDto): void {
     outcome.value = result;
     isPasteOpen.value = false;
+    isSavesOpen.value = false;
     isPreviewOpen.value = true;
   }
 
@@ -203,6 +206,47 @@ export function useOrderShare() {
     }
     await exclusive(async () => {
       try {
+        showPreview(await previewOrderImportFile({ path }));
+      } catch (error: unknown) {
+        toastFailure(null, error);
+      }
+    });
+  }
+
+  /** Opens the "Import from a save" list; the dialog loads the Saves folder itself. */
+  function openSaves(): void {
+    if (!isBusy.value) {
+      isSavesOpen.value = true;
+    }
+  }
+
+  /**
+   * Previews the save at `path` (one the list showed, or one Browse picked): the same file
+   * preview as "Open a mod list file", which reads the save's header only. The saves list
+   * closes when the preview opens; a failure is toasted and leaves the list open.
+   */
+  async function previewSave(path: string): Promise<void> {
+    await exclusive(async () => {
+      try {
+        showPreview(await previewOrderImportFile({ path }));
+      } catch (error: unknown) {
+        toastFailure(null, error);
+      }
+    });
+  }
+
+  /** Browse inside the saves list: a native picker starting in the Saves folder, then the preview. */
+  async function browseSave(defaultPath: string | null): Promise<void> {
+    await exclusive(async () => {
+      try {
+        const path = await pickSaveFile({
+          filterName: t("orderShare.saves.fileFilter"),
+          allFilesName: t("orderShare.import.allFiles"),
+          defaultPath,
+        });
+        if (path === null) {
+          return;
+        }
         showPreview(await previewOrderImportFile({ path }));
       } catch (error: unknown) {
         toastFailure(null, error);
@@ -318,12 +362,16 @@ export function useOrderShare() {
     isBusy,
     isImporting,
     isPasteOpen,
+    isSavesOpen,
     isPreviewOpen,
     outcome,
     saveAsFile,
     copyAsText,
     openFile,
     previewModsConfig,
+    openSaves,
+    previewSave,
+    browseSave,
     openPaste,
     previewPasted,
     confirmImport,

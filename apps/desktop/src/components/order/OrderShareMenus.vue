@@ -9,6 +9,7 @@ import { useI18n } from "vue-i18n";
 
 import ImportPreviewDialog from "@/components/order/ImportPreviewDialog.vue";
 import PasteOrderDialog from "@/components/order/PasteOrderDialog.vue";
+import SaveImportDialog from "@/components/order/SaveImportDialog.vue";
 import { useOrderShare } from "@/composables/useOrderShare";
 import { usePendingActiveChangesQuery } from "@/queries/activeSet";
 
@@ -17,11 +18,15 @@ const {
   isBusy,
   isImporting,
   isPasteOpen,
+  isSavesOpen,
   isPreviewOpen,
   outcome,
   saveAsFile,
   copyAsText,
   openFile,
+  openSaves,
+  previewSave,
+  browseSave,
   openPaste,
   previewPasted,
   confirmImport,
@@ -64,6 +69,11 @@ const importItems = computed<MenuItem[]>(() => [
     label: t("orderShare.import.openFile"),
     testId: "order-import-file",
     command: () => void openFile(),
+  },
+  {
+    label: t("orderShare.import.fromSave"),
+    testId: "order-import-save",
+    command: openSaves,
   },
   {
     label: t("orderShare.import.paste"),
@@ -144,6 +154,12 @@ const importItems = computed<MenuItem[]>(() => [
       v-model:visible="isPasteOpen"
       :is-busy="isBusy"
       @preview="previewPasted"
+    />
+    <SaveImportDialog
+      v-model:visible="isSavesOpen"
+      :is-busy="isBusy"
+      @preview="previewSave"
+      @browse="browseSave"
     />
     <ImportPreviewDialog
       v-model:visible="isPreviewOpen"

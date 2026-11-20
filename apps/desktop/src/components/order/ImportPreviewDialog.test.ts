@@ -183,7 +183,7 @@ describe("ImportPreviewDialog", () => {
     expect(noVersion.find('[data-testid="import-preview-listed-version"]').exists()).toBe(false);
   });
 
-  it("says when the names or the Steam ids were left out for not lining up", async () => {
+  it("says when the names or the Workshop ids were left out for not lining up", async () => {
     const wrapper = mountDialog(
       ready({
         names: { kind: "misaligned", ids: 4, values: 3 },
@@ -194,8 +194,8 @@ describe("ImportPreviewDialog", () => {
 
     const notes = wrapper.findAll('[data-testid="import-preview-misaligned"]');
     expect(notes.map((note) => note.text())).toEqual([
-      "The list has 3 names for 4 mods, so the sender's names aren't shown.",
-      "The list has 5 Steam ids for 4 mods, so no Workshop links are shown.",
+      "The number of names in the list (3) doesn't match the number of mods (4), so the sender's names aren't shown.",
+      "The number of Workshop ids in the list (5) doesn't match the number of mods (4), so no Workshop links are shown.",
     ]);
   });
 

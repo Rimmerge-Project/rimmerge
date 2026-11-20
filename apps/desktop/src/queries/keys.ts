@@ -53,6 +53,8 @@ export const queryKeys = {
    * `ruleDatabases()` invalidation (refresh, enable) refreshes this too.
    */
   recommendedRulesStep: () => ["rules", "ruleDatabases", "recommendedStep"] as const,
+  /** `list_saves`'s result — the "Import from a save" list. */
+  saves: () => ["saves"] as const,
   /** `list_tags`'s result. */
   tags: () => ["tags"] as const,
   /** `list_mods`'s result for one filter. */

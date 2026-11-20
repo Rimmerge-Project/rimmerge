@@ -162,6 +162,10 @@ const ERROR_CODE_KEYS = {
     title: "error.code.mod_list_io_failed.title",
     detail: "error.code.mod_list_io_failed.detail",
   },
+  saves_folder_unreadable: {
+    title: "error.code.saves_folder_unreadable.title",
+    detail: "error.code.saves_folder_unreadable.detail",
+  },
   nothing_to_export: {
     title: "error.code.nothing_to_export.title",
     detail: "error.code.nothing_to_export.detail",

@@ -60,6 +60,7 @@ pub fn run() {
             commands::order_share::export_order_file,
             commands::order_share::export_order_text,
             commands::order_share::suggested_mod_list_path,
+            commands::order_share::list_saves,
             commands::order_share::preview_order_import_file,
             commands::order_share::preview_order_import_text,
             commands::order_share::import_order,

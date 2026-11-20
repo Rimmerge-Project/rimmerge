@@ -722,6 +722,15 @@ fn mod_list_file_error_maps_to_mod_list_io_failed() {
 }
 
 #[test]
+fn an_unreadable_saves_folder_ships_its_own_snake_case_code() {
+    let error = CommandError::new(CommandErrorCode::SavesFolderUnreadable, "denied");
+
+    let value = serde_json::to_value(&error).expect("serializes");
+
+    assert_eq!(value["code"], "saves_folder_unreadable");
+}
+
+#[test]
 fn export_nothing_active_maps_to_nothing_to_export() {
     let error: CommandError = rim_session::use_cases::ExportOrderError::List(
         rim_session::mod_list::ExportListError::NothingActive,

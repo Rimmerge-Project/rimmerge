@@ -1,5 +1,5 @@
-// Sharing a load order: exporting the order in ModsConfig.xml, previewing an imported list,
-// importing it, and opening a missing mod's Workshop page.
+// Sharing a load order: exporting the order in ModsConfig.xml, listing RimWorld's saves,
+// previewing an imported list, importing it, and opening a missing mod's Workshop page.
 
 import type { ExportOrderFileRequestDto } from "@/types/generated/ExportOrderFileRequestDto";
 import type { ExportResultDto } from "@/types/generated/ExportResultDto";
@@ -10,6 +10,7 @@ import type { OrderImportOutcomeDto } from "@/types/generated/OrderImportOutcome
 import type { PreviewOrderImportFileRequestDto } from "@/types/generated/PreviewOrderImportFileRequestDto";
 import type { PreviewOrderImportTextRequestDto } from "@/types/generated/PreviewOrderImportTextRequestDto";
 import type { ProjectSummaryDto } from "@/types/generated/ProjectSummaryDto";
+import type { SaveListingDto } from "@/types/generated/SaveListingDto";
 import { call } from "./core";
 
 /**
@@ -31,6 +32,15 @@ export function exportOrderText(): Promise<ExportTextDto> {
  */
 export function suggestedModListPath(): Promise<string | null> {
   return call("suggested_mod_list_path");
+}
+
+/**
+ * RimWorld's `Saves` folder (beside the folder holding `ModsConfig.xml`): file names and
+ * modified times, newest first, at most 200. No save is opened. `folder` is `null` when the
+ * folder does not exist.
+ */
+export function listSaves(): Promise<SaveListingDto> {
+  return call("list_saves");
 }
 
 /** Previews importing a mod list file. Read-only; an unreadable list is a `rejected` outcome. */

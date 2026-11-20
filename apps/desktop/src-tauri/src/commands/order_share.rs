@@ -1,5 +1,5 @@
 //! Sharing a load order: `export_order_file`, `export_order_text`,
-//! `suggested_mod_list_path`, `preview_order_import_file`,
+//! `suggested_mod_list_path`, `list_saves`, `preview_order_import_file`,
 //! `preview_order_import_text`, `import_order` and `open_workshop_page`.
 //!
 //! Every rule lives in `rim-session` (`ExportOrder`, `PreviewOrderImport`,
@@ -9,6 +9,10 @@
 //!   and writes only where the frontend's save dialog pointed. It never
 //!   touches `ModsConfig.xml`, so it is not probe-gated.
 //! - Previews are read-only.
+//! - `list_saves` lists file names and modified times in RimWorld's `Saves`
+//!   folder (beside `Config`) and never opens a save; the save the user
+//!   picks goes through `preview_order_import_file`, which reads its header
+//!   only.
 //! - `import_order` is `rescan_with` over `ScanRequest::Import`: the
 //!   order is validated, scanned and swapped in under one `load_lock`, and
 //!   never staged in the working set. It emits `session://changed` with
@@ -20,6 +24,7 @@ use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 
 use rim_analyzer::domain::ModId;
+use rim_session::Session;
 use rim_session::mod_info::workshop_url;
 use rim_session::mod_list::WorkshopId;
 use rim_session::use_cases::{
@@ -31,7 +36,7 @@ use crate::commands::{EVENT_PROJECT_PROGRESS, emit_session_changed};
 use crate::dto::order_share::{
     ExportOrderFileRequestDto, ExportResultDto, ExportTextDto, ImportOrderRequestDto,
     OpenWorkshopPageRequestDto, OrderImportOutcomeDto, PreviewOrderImportFileRequestDto,
-    PreviewOrderImportTextRequestDto,
+    PreviewOrderImportTextRequestDto, SaveListingDto,
 };
 use crate::dto::project::{ProgressEventDto, ProjectSummaryDto, SessionChangeReasonDto};
 use crate::error::{CommandError, CommandErrorCode};
@@ -43,6 +48,23 @@ const SUGGESTED_FILE_NAME: &str = "rimmerge-load-order.rml";
 
 /// The `ModLists` folder name beside RimWorld's `Config` folder.
 const MOD_LISTS_FOLDER: &str = "ModLists";
+
+/// The `Saves` folder name beside RimWorld's `Config` folder.
+const SAVES_FOLDER: &str = "Saves";
+
+/// The folder `name` that sits beside the `Config` folder holding
+/// `ModsConfig.xml` (RimWorld keeps `Config`, `ModLists` and `Saves` as
+/// siblings of one user-data root, which `-savedatafolder=` moves as a
+/// whole), or `None` when it does not exist. Never creates it.
+fn user_data_folder(session: &Session, name: &str) -> Option<PathBuf> {
+    session
+        .paths()
+        .mods_config
+        .parent()
+        .and_then(Path::parent)
+        .map(|user_data_root| user_data_root.join(name))
+        .filter(|folder| folder.is_dir())
+}
 
 fn parse_path(raw: &str) -> Result<PathBuf, CommandError> {
     if raw.trim().is_empty() {
@@ -198,13 +220,7 @@ pub(crate) async fn suggested_mod_list_path_inner(
     state: &AppState,
 ) -> Result<Option<String>, CommandError> {
     with_session(state, |session| {
-        let mod_lists = session
-            .paths()
-            .mods_config
-            .parent()
-            .and_then(Path::parent)
-            .map(|config_root| config_root.join(MOD_LISTS_FOLDER))
-            .filter(|folder| folder.is_dir());
+        let mod_lists = user_data_folder(session, MOD_LISTS_FOLDER);
         Ok(mod_lists.map(|folder| folder.join(SUGGESTED_FILE_NAME).display().to_string()))
     })
     .await
@@ -220,6 +236,41 @@ pub async fn suggested_mod_list_path(
     state: tauri::State<'_, AppState>,
 ) -> Result<Option<String>, CommandError> {
     suggested_mod_list_path_inner(&state).await
+}
+
+/// Lists RimWorld's `Saves` folder (beside the `Config` folder holding
+/// `ModsConfig.xml`): `.rws` files, newest first, at most 200, with the
+/// count of older ones left out. Directory metadata only; no save is opened.
+/// A missing `Saves` folder is `folder: null`, not an error.
+///
+/// # Errors
+///
+/// Returns [`CommandError::no_project_loaded`] when no project is loaded, or
+/// `saves_folder_unreadable` when the folder exists but cannot be listed.
+pub(crate) async fn list_saves_inner(state: &AppState) -> Result<SaveListingDto, CommandError> {
+    with_session(state, |session| {
+        let Some(folder) = user_data_folder(session, SAVES_FOLDER) else {
+            return Ok(SaveListingDto::no_folder());
+        };
+        let listing = rim_io::list_saves(&folder).map_err(|error| {
+            CommandError::new(
+                CommandErrorCode::SavesFolderUnreadable,
+                format!("{}: {error}", folder.display()),
+            )
+        })?;
+        Ok(SaveListingDto::from_listing(&folder, listing))
+    })
+    .await
+}
+
+/// See `list_saves_inner`.
+///
+/// # Errors
+///
+/// See `list_saves_inner`.
+#[tauri::command]
+pub async fn list_saves(state: tauri::State<'_, AppState>) -> Result<SaveListingDto, CommandError> {
+    list_saves_inner(&state).await
 }
 
 fn outcome(preview: &ImportPreview, target: &ImportTarget) -> OrderImportOutcomeDto {
@@ -778,6 +829,97 @@ mod tests {
             PathBuf::from(path),
             mod_lists.join("rimmerge-load-order.rml")
         );
+    }
+
+    // --- the saves list ---
+
+    fn user_data_root(paths: &ProjectPathsDto) -> PathBuf {
+        Path::new(&paths.mods_config)
+            .parent()
+            .and_then(Path::parent)
+            .expect("ModsConfig.xml sits two levels below the user-data root")
+            .to_path_buf()
+    }
+
+    #[tokio::test]
+    async fn list_saves_has_no_folder_when_saves_is_absent() {
+        let (_scratch, state, _paths) = loaded_game().await;
+
+        let listing = list_saves_inner(&state).await.expect("a project is loaded");
+
+        assert_eq!(listing, SaveListingDto::no_folder());
+    }
+
+    #[tokio::test]
+    async fn list_saves_lists_the_saves_folder_beside_config_newest_first() {
+        let (_scratch, state, paths) = loaded_game().await;
+        let saves = user_data_root(&paths).join("Saves");
+        std::fs::create_dir_all(&saves).expect("create Saves");
+        for (name, seconds) in [
+            ("Older.rws", 1_600_000_000_u64),
+            ("Newer.rws", 1_700_000_000),
+        ] {
+            let file = std::fs::File::create(saves.join(name)).expect("create save");
+            file.set_modified(
+                std::time::SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(seconds),
+            )
+            .expect("set mtime");
+        }
+        std::fs::write(saves.join("readme.txt"), "not a save").expect("write");
+
+        let listing = list_saves_inner(&state).await.expect("lists");
+
+        assert_eq!(listing.folder, Some(saves.display().to_string()));
+        let listed: Vec<(&str, Option<u64>)> = listing
+            .saves
+            .iter()
+            .map(|save| (save.name.as_str(), save.saved_at))
+            .collect();
+        assert_eq!(
+            listed,
+            [
+                ("Newer", Some(1_700_000_000)),
+                ("Older", Some(1_600_000_000))
+            ]
+        );
+        assert_eq!(listing.omitted, 0);
+    }
+
+    #[tokio::test]
+    async fn a_listed_save_previews_through_the_existing_file_preview() {
+        let (_scratch, state, paths) = loaded_game().await;
+        let saves = user_data_root(&paths).join("Saves");
+        std::fs::create_dir_all(&saves).expect("create Saves");
+        std::fs::write(
+            saves.join("Colony.rws"),
+            save_text(&["ludeon.rimworld", "sample.mod"], &["Core", "Sample"]),
+        )
+        .expect("write save");
+        let listing = list_saves_inner(&state).await.expect("lists");
+
+        let preview = ready(
+            preview_order_import_file_inner(
+                &state,
+                PreviewOrderImportFileRequestDto {
+                    path: listing.saves[0].path.clone(),
+                },
+            )
+            .await
+            .expect("previews"),
+        );
+
+        assert_eq!(preview.format, ListFormatDto::SaveHeader);
+    }
+
+    #[tokio::test]
+    async fn list_saves_needs_a_loaded_project() {
+        let state = AppState::default();
+
+        let error = list_saves_inner(&state)
+            .await
+            .expect_err("no project is loaded");
+
+        assert_eq!(error.code, CommandErrorCode::NoProjectLoaded);
     }
 
     // --- previews ---

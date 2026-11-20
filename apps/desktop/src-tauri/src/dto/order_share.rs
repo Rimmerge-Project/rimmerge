@@ -1,6 +1,6 @@
 //! DTOs for sharing a load order: `export_order_file`, `export_order_text`,
-//! `preview_order_import_file`, `preview_order_import_text`, `import_order`
-//! and `open_workshop_page`.
+//! `list_saves`, `preview_order_import_file`, `preview_order_import_text`,
+//! `import_order` and `open_workshop_page`.
 //!
 //! Every outcome is a `kind`-tagged union mirrored from a closed
 //! `rim-session` type by an exhaustive `From` (no `_` arm), so a new
@@ -647,9 +647,104 @@ fn entry_dto(entry: &ImportedEntry, inventory: &ModInventory) -> ImportedEntryDt
     }
 }
 
+/// One save in RimWorld's `Saves` folder, for the "Import from a save"
+/// list. A save's name is the player's own text: render it as text only.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export, export_to = "../../src/types/generated/")]
+pub struct SaveFileDto {
+    /// The file's full path, sent back unchanged to `preview_order_import_file`.
+    pub path: String,
+    /// The file name without its extension.
+    pub name: String,
+    /// When the file was last modified, in seconds since the Unix epoch;
+    /// `null` when the file system gave no plausible time.
+    #[ts(type = "number | null")]
+    pub saved_at: Option<u64>,
+}
+
+/// `list_saves`' answer: the saves, newest first, at most 200.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export, export_to = "../../src/types/generated/")]
+pub struct SaveListingDto {
+    /// The `Saves` folder that was listed, or `null` when RimWorld's
+    /// `Saves` folder was not found beside the `Config` folder.
+    pub folder: Option<String>,
+    /// The saves, newest first.
+    pub saves: Vec<SaveFileDto>,
+    /// How many further saves exist but are not listed.
+    #[ts(type = "number")]
+    pub omitted: u64,
+}
+
+impl SaveListingDto {
+    /// The answer when there is no `Saves` folder to list.
+    pub(crate) fn no_folder() -> Self {
+        Self {
+            folder: None,
+            saves: Vec::new(),
+            omitted: 0,
+        }
+    }
+
+    /// Maps a listing of `folder`.
+    pub(crate) fn from_listing(folder: &std::path::Path, listing: rim_io::SaveListing) -> Self {
+        Self {
+            folder: Some(folder.display().to_string()),
+            saves: listing
+                .saves
+                .into_iter()
+                .map(|save| SaveFileDto {
+                    path: save.path.display().to_string(),
+                    name: save.name,
+                    saved_at: save.saved_at,
+                })
+                .collect(),
+            // Saturating, as the other count conversions here: the examination bound makes
+            // overflow unreachable, but a wrong count must never wrap silently.
+            omitted: u64::try_from(listing.omitted).unwrap_or(u64::MAX),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_save_listing_ships_camel_case_fields_and_a_numeric_time() {
+        let listing = SaveListingDto {
+            folder: Some("Saves".to_string()),
+            saves: vec![
+                SaveFileDto {
+                    path: "Saves/A.rws".to_string(),
+                    name: "A".to_string(),
+                    saved_at: Some(1_700_000_000),
+                },
+                SaveFileDto {
+                    path: "Saves/B.rws".to_string(),
+                    name: "B".to_string(),
+                    saved_at: None,
+                },
+            ],
+            omitted: 2,
+        };
+
+        let value = serde_json::to_value(&listing).expect("serializes");
+
+        assert_eq!(
+            value,
+            serde_json::json!({
+                "folder": "Saves",
+                "saves": [
+                    {"path": "Saves/A.rws", "name": "A", "savedAt": 1_700_000_000_u64},
+                    {"path": "Saves/B.rws", "name": "B", "savedAt": null},
+                ],
+                "omitted": 2,
+            })
+        );
+    }
 
     #[test]
     fn every_request_rejects_a_field_it_does_not_define() {

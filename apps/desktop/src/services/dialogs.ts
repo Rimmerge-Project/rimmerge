@@ -49,19 +49,47 @@ export type PickModListFilterNames = {
 };
 
 /**
- * Opens a native file picker for a shared mod list: RimWorld's own `.rml`, a
- * ModsConfig.xml-shaped `.xml` or a `.txt` text list first, then every file, since the
- * import detects the format from content and never from the name. Returns `null` when the
- * user cancels. Uses `dialog:allow-open`, already granted.
+ * Opens a native file picker for a shared mod list: RimWorld's own `.rml`, a RimWorld save
+ * `.rws` (only its header is read), a ModsConfig.xml-shaped `.xml` or a `.txt` text list
+ * first, then every file, since the import detects the format from content and never from
+ * the name. Returns `null` when the user cancels. Uses `dialog:allow-open`, already granted.
  */
 export async function pickModListFile(names: PickModListFilterNames): Promise<string | null> {
   const selected = await open({
     directory: false,
     multiple: false,
     filters: [
-      { name: names.modLists, extensions: ["rml", "xml", "txt"] },
+      { name: names.modLists, extensions: ["rml", "rws", "xml", "txt"] },
       { name: names.allFiles, extensions: ["*"] },
     ],
+  });
+  return selected ?? null;
+}
+
+/** What {@link pickSaveFile} needs from the caller. */
+export type SaveFilePickerOptions = {
+  /** The translated name of the `.rws` filter. */
+  readonly filterName: string;
+  /** The translated name of the all-files filter. */
+  readonly allFilesName: string;
+  /** Where the dialog starts (RimWorld's `Saves` folder), or `null` for the OS default. */
+  readonly defaultPath: string | null;
+};
+
+/**
+ * Opens a native file picker for a RimWorld save (`.rws`, then every file), starting in the
+ * `Saves` folder when it is known. Returns `null` when the user cancels. Uses
+ * `dialog:allow-open`, already granted.
+ */
+export async function pickSaveFile(options: SaveFilePickerOptions): Promise<string | null> {
+  const selected = await open({
+    directory: false,
+    multiple: false,
+    filters: [
+      { name: options.filterName, extensions: ["rws"] },
+      { name: options.allFilesName, extensions: ["*"] },
+    ],
+    ...(options.defaultPath !== null && { defaultPath: options.defaultPath }),
   });
   return selected ?? null;
 }

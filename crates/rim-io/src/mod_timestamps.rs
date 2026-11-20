@@ -18,7 +18,6 @@
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-use std::time::UNIX_EPOCH;
 
 use rim_analyzer::domain::{ModId, Source};
 use rim_analyzer::infra::read_bounded_with_limit;
@@ -26,13 +25,11 @@ use rim_session::ModTimeSubject;
 use rim_session::ports::ModTimestampReader;
 use rim_session::{UnixSeconds, UpdateTime, UpdateUnavailable};
 
+use crate::plausible_time::{modified_seconds, plausible};
+
 /// The `.acf` is a few hundred KB on a large install; 4 MiB is far past
 /// any real file and still refuses a hostile one.
 const MAX_ACF_BYTES: u64 = 4 * 1024 * 1024;
-
-/// 9999-12-31T23:59:59Z, the last second a date formatter can show. A
-/// larger `timeupdated` or mtime is corrupt, not a time.
-const MAX_PLAUSIBLE_SECONDS: u64 = 253_402_300_799;
 
 /// The `.acf` nests three levels deep; anything past this is not one.
 const MAX_ACF_DEPTH: usize = 16;
@@ -89,11 +86,8 @@ fn update_time(subject: &ModTimeSubject, steam_times: &BTreeMap<u64, u64>) -> Up
 
 fn about_modified(mod_root: &Path) -> UpdateTime {
     let seconds = std::fs::metadata(mod_root.join("About").join("About.xml"))
-        .and_then(|meta| meta.modified())
         .ok()
-        .and_then(|time| time.duration_since(UNIX_EPOCH).ok())
-        .map(|elapsed| elapsed.as_secs())
-        .and_then(plausible);
+        .and_then(|meta| modified_seconds(&meta));
     seconds.map_or(UpdateTime::Unavailable(UpdateUnavailable::Unknown), |s| {
         UpdateTime::Known(UnixSeconds::new(s))
     })
@@ -199,14 +193,6 @@ impl Iterator for Tokens<'_> {
         }
         None
     }
-}
-
-/// A time past the year 9999 is not a Steam or file time: it would make
-/// the display's date formatting throw. Zero is no time either.
-fn plausible(seconds: u64) -> Option<u64> {
-    (1..=MAX_PLAUSIBLE_SECONDS)
-        .contains(&seconds)
-        .then_some(seconds)
 }
 
 /// Walks the token stream, collecting `timeupdated` of each item directly
@@ -472,16 +458,6 @@ mod tests {
 
             assert_eq!(time, unknown(), "timeupdated: {huge}");
         }
-    }
-
-    #[test]
-    fn the_last_plausible_second_is_still_a_time() {
-        assert_eq!(
-            plausible(MAX_PLAUSIBLE_SECONDS),
-            Some(MAX_PLAUSIBLE_SECONDS)
-        );
-        assert_eq!(plausible(MAX_PLAUSIBLE_SECONDS + 1), None);
-        assert_eq!(plausible(0), None);
     }
 
     #[test]

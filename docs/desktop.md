@@ -192,11 +192,20 @@ on the clipboard for a chat message. A mod Rimmerge cannot list is left out
 and the toast says how many.
 
 **Import** takes a `.rml`, a `ModsConfig.xml`-shaped file, a RimWorld save
-(`.rws`, from *Open a mod list file…*, by choosing the file; only the mod list
-in its header is read) or a text list, from a file or a paste, and always
-shows a preview first. The preview says which RimWorld version the list was
+(`.rws`; only the mod list in its header is read) or a text list, from a file
+or a paste, and always
+shows a preview first. *Import from a save…* opens a list of the saves in
+RimWorld's `Saves` folder (the one beside the `Config` folder that holds
+`ModsConfig.xml`), newest first, with the save's name and the date it was last
+saved, at most 200 of them (it says how many older ones are not shown). *Preview*
+on a save opens the same preview as any other import; *Browse…* opens the file
+dialog in that folder for a save kept elsewhere. When the `Saves` folder is not
+found next to your `ModsConfig.xml`, or cannot be listed, the dialog says so and
+Browse still works. The list itself reads only file names and dates; no save is
+opened until you press *Preview* or pick one. *Open a mod list file…* accepts a
+save too. The preview says which RimWorld version the list was
 made with ("From a save made with RimWorld ..." for a save), adds a note when
-this install is a different release, and says when the names or the Steam ids
+this install is a different release, and says when the names or the Workshop ids
 had a different length from the ids and were left out. It names
 what will be activated and deactivated, measured against the active list you have
 in Rimmerge now (the Mods page's Active list, pending changes included; the list is

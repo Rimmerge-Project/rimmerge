@@ -327,7 +327,11 @@ fn print_source(ready: &ReadyImport) {
         );
     }
     print_misalignment("names", "not shown", ready.names);
-    print_misalignment("steam ids", "no Workshop links shown", ready.workshop_ids);
+    print_misalignment(
+        "workshop ids",
+        "no Workshop links shown",
+        ready.workshop_ids,
+    );
 }
 
 fn print_misalignment(label: &str, consequence: &str, alignment: ListAlignment) {

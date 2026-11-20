@@ -564,6 +564,24 @@ fn a_save_with_too_few_names_discloses_that_the_names_were_left_out() {
 }
 
 #[test]
+fn a_save_with_too_few_steam_ids_discloses_that_the_workshop_ids_were_left_out() {
+    let scratch = scratch();
+    let whole = save_text(&SAVE_ORDER, &["Core", "Zzz", "Sample", "Aaa"]);
+    // Two of the four `0` entries removed: 2 Steam ids for 4 package ids.
+    let two_steam_ids = whole.replacen("\t\t\t<li>0</li>\r\n", "", 2);
+    let save = write_save(&scratch, "short-steam.rws", &two_steam_ids);
+
+    let text = stdout_of(scratch.cmd(&["import", &save.to_string_lossy(), "--dry-run"]));
+
+    assert!(
+        text.lines()
+            .any(|line| line == "workshop ids: 2 for 4 ids, no Workshop links shown"),
+        "got:\n{text}"
+    );
+    assert!(!text.contains("names: "), "got:\n{text}");
+}
+
+#[test]
 fn a_save_name_with_a_line_separator_prints_on_one_line() {
     let scratch = scratch();
     // A mod that is not installed is the one whose listed name is printed.

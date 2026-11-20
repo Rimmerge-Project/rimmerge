@@ -131,6 +131,10 @@ pub enum CommandErrorCode {
     /// that was read but is not an importable list is not this: that is an
     /// outcome of the preview, not an error.
     ModListIoFailed,
+    /// RimWorld's `Saves` folder exists but its files could not be listed
+    /// (no permission, or it vanished). Its own code, not
+    /// `mod_list_io_failed`, because the way out differs: browse for a save.
+    SavesFolderUnreadable,
     /// An export found no active mod it could put in a list (an empty
     /// `ModsConfig.xml` list, or only ids a mod list cannot hold).
     NothingToExport,

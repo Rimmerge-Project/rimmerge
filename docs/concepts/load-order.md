@@ -273,7 +273,8 @@ shapes, whatever its name. A save that ends before its header does (damaged,
 or still being written), one whose first element is not `<meta>`, and one
 whose header is larger than 4 MiB are refused with their own reason. The
 "Steam id" the game writes is the `steamAppId` a mod's own `About.xml`
-declares, not its Workshop item id: the DLCs carry their app id, most mods
+declares, not its Workshop item id (Rimmerge shows these as "Workshop
+ids" all the same, since that is where they are used: the Workshop link): the DLCs carry their app id, most mods
 carry none, so a save links a missing mod to the Steam Workshop only when
 its author put an id there, and few do. The package ids, which are what the
 import uses, are always there (a Workshop copy's id can end in `_steam`, and

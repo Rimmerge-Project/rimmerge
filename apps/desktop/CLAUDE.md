@@ -159,7 +159,25 @@ of that command surface — no direct filesystem or process access outside
   toasts "preview again" with the code's sentence. `isBusy` makes every entry point a
   no-op while a dialog, export or preview is in flight. The save dialog starts at
   `suggested_mod_list_path` (null when RimWorld's `ModLists` folder is absent)
-  and offers `.rml` only; `dialog:allow-save` is the capability it needs. The
+  and offers `.rml` only; `dialog:allow-save` is the capability it needs.
+  "Import from a save…" (`SaveImportDialog.vue`, owned by `OrderShareMenus` with
+  `isSavesOpen`/`openSaves`/`previewSave`/`browseSave` in `useOrderShare`) lists RimWorld's
+  `Saves` folder through `list_saves` (`rim_io::list_saves`, called inside `with_session`:
+  `<user-data root>/Saves`, the sibling of the `Config` folder holding `ModsConfig.xml`, found by
+  the same `user_data_folder` helper `suggested_mod_list_path` uses). The query
+  (`useSavesQuery`, `queryKeys.saves()`, `staleTime: 0`) is enabled only while the dialog is
+  open. The backend orders and bounds the list (newest first, at most 200, `omitted` counts
+  the rest) and the page never re-sorts it; a missing folder is `folder: null` (the dialog says
+  so, Browse still works), an unlistable one is `saves_folder_unreadable` shown inside the
+  dialog in place of the list (it is a state of the list, not a toast). A failed preview of a
+  listed save is a toast: the order-share group renders above the modal mask and stays
+  clickable (`order-share-save.spec.ts`), so the dialog stays open under it. Directory metadata only: no save is
+  opened for the list; "Preview" and "Browse…" (`pickSaveFile`, starting in the `Saves` folder)
+  both go through `preview_order_import_file`, and the list closes when the preview opens
+  (`showPreview`). A save's name is the player's text and renders as text. The mock
+  (`list_saves` in `scenario.ts`) mirrors the ordering and cap over `window.__SAVES__` (any
+  order in), `__LIST_SAVES_ERROR__` makes it fail, `__LIST_SAVES_CALLS__` counts calls and
+  `__OPEN_DIALOG_OPTIONS__` records every file picker's options. The
   preview's "Use this order" is enabled exactly when `importBlocked` is `null`
   (never re-derived from the entries). `importBlocked` is the backend's reason
   (`ImportBlockedDto`, from `ImportOrder::import_blocker`, the one rule behind

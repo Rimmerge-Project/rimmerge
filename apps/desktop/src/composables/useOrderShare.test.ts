@@ -16,15 +16,17 @@ import { useSessionStore } from "@/stores/session";
 import type { OrderImportOutcomeDto } from "@/types/generated/OrderImportOutcomeDto";
 import { setToastService, toastError } from "@/utils/toast";
 
-const { toastAdd, pickSave, pickOpen } = vi.hoisted(() => ({
+const { toastAdd, pickSave, pickOpen, pickSaveGame } = vi.hoisted(() => ({
   toastAdd: vi.fn(),
   pickSave: vi.fn(),
   pickOpen: vi.fn(),
+  pickSaveGame: vi.fn(),
 }));
 vi.mock("primevue/usetoast", () => ({ useToast: () => ({ add: toastAdd }) }));
 vi.mock("@/services/dialogs", () => ({
   pickModListSavePath: pickSave,
   pickModListFile: pickOpen,
+  pickSaveFile: pickSaveGame,
 }));
 
 const READY: OrderImportOutcomeDto = {
@@ -49,6 +51,7 @@ const READY: OrderImportOutcomeDto = {
 };
 
 type Calls = {
+  previewFile: unknown[];
   exportFile: unknown[];
   importOrder: unknown[];
   workshop: unknown[];
@@ -59,7 +62,7 @@ function mountComposable(
   colada: PiniaColadaOptions = {},
   { withActiveMergeModQuery = false }: { withActiveMergeModQuery?: boolean } = {},
 ) {
-  const calls: Calls = { exportFile: [], importOrder: [], workshop: [] };
+  const calls: Calls = { previewFile: [], exportFile: [], importOrder: [], workshop: [] };
   installMockIpc({
     suggested_mod_list_path: "C:/Saves/ModLists/rimmerge-load-order.rml",
     export_order_file: (payload: unknown) => {
@@ -109,6 +112,7 @@ describe("useOrderShare", () => {
     toastAdd.mockClear();
     pickSave.mockReset();
     pickOpen.mockReset();
+    pickSaveGame.mockReset();
     Object.defineProperty(navigator, "clipboard", {
       value: { writeText: vi.fn().mockResolvedValue(undefined) },
       configurable: true,
@@ -365,6 +369,89 @@ describe("useOrderShare", () => {
     const toast = toastAdd.mock.calls[0]?.[0];
     expect(toast.severity).toBe("error");
     expect(toast.summary).toBe("Couldn't copy to the clipboard.");
+  });
+
+  it("previews a save from the list, closing the list and recording the exact path", async () => {
+    const { share, calls } = mountComposable({
+      preview_order_import_file: (payload: unknown) => {
+        calls.previewFile.push((payload as { request: unknown }).request);
+        return READY;
+      },
+    });
+    share.openSaves();
+    expect(share.isSavesOpen.value).toBe(true);
+
+    await share.previewSave("C:/Saves/Colony.rws");
+
+    expect(calls.previewFile).toEqual([{ path: "C:/Saves/Colony.rws" }]);
+    expect(share.isSavesOpen.value).toBe(false);
+    expect(share.isPreviewOpen.value).toBe(true);
+    expect(share.outcome.value).toEqual(READY);
+  });
+
+  it("browses for a save starting in the Saves folder, then previews the pick", async () => {
+    const { share, calls } = mountComposable({
+      preview_order_import_file: (payload: unknown) => {
+        calls.previewFile.push((payload as { request: unknown }).request);
+        return READY;
+      },
+    });
+    pickSaveGame.mockResolvedValue("D:/elsewhere/Other.rws");
+
+    await share.browseSave("C:/Saves");
+
+    expect(pickSaveGame).toHaveBeenCalledWith({
+      filterName: "RimWorld saves (.rws)",
+      allFilesName: "All files",
+      defaultPath: "C:/Saves",
+    });
+    expect(calls.previewFile).toEqual([{ path: "D:/elsewhere/Other.rws" }]);
+    expect(share.isPreviewOpen.value).toBe(true);
+  });
+
+  it("previews nothing when the Browse dialog is cancelled", async () => {
+    const { share, calls } = mountComposable();
+    pickSaveGame.mockResolvedValue(null);
+    share.openSaves();
+
+    await share.browseSave(null);
+
+    expect(calls.previewFile).toEqual([]);
+    expect(share.isPreviewOpen.value).toBe(false);
+    expect(share.isSavesOpen.value).toBe(true);
+  });
+
+  it("toasts a failed save preview once and keeps the list open", async () => {
+    const { share } = mountComposable({
+      preview_order_import_file: () => {
+        throw { code: "mod_list_io_failed", message: "C:/Saves/Colony.rws: locked" };
+      },
+    });
+    share.openSaves();
+
+    await share.previewSave("C:/Saves/Colony.rws");
+
+    expect(toastAdd).toHaveBeenCalledTimes(1);
+    expect(share.isSavesOpen.value).toBe(true);
+    expect(share.isPreviewOpen.value).toBe(false);
+  });
+
+  it("does not open the saves list while another entry point is in flight", async () => {
+    let release: () => void = () => undefined;
+    const { share } = mountComposable({
+      export_order_text: () =>
+        new Promise((resolve) => {
+          release = () => resolve({ text: "x", count: 1, unrepresentable: [] });
+        }),
+    });
+
+    const first = share.copyAsText();
+    await flush();
+    share.openSaves();
+    release();
+    await first;
+
+    expect(share.isSavesOpen.value).toBe(false);
   });
 
   it("sends the Workshop id as digits, never a URL", async () => {

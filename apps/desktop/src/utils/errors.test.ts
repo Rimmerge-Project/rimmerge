@@ -65,6 +65,7 @@ describe("describeCommandError", () => {
       "steam_launch_failed",
       "game_start_failed",
       "mod_list_io_failed",
+      "saves_folder_unreadable",
       "nothing_to_export",
       "move_anchor_not_active",
       "revert_order_pending_changes",

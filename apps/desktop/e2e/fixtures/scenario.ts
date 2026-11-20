@@ -100,6 +100,7 @@ import type { RuleDatabaseViewDto } from "../../src/types/generated/RuleDatabase
 import type { RuleDto } from "../../src/types/generated/RuleDto";
 import type { RuleKeyDto } from "../../src/types/generated/RuleKeyDto";
 import type { RuleSetDto } from "../../src/types/generated/RuleSetDto";
+import type { SaveListingDto } from "../../src/types/generated/SaveListingDto";
 import type { SectionReferenceDto } from "../../src/types/generated/SectionReferenceDto";
 import type { SetAssignmentRowRequestDto } from "../../src/types/generated/SetAssignmentRowRequestDto";
 import type { SetManualTagRequestDto } from "../../src/types/generated/SetManualTagRequestDto";
@@ -378,6 +379,19 @@ declare global {
      * folder does not exist. Defaults to `null`.
      */
     __SUGGESTED_MOD_LIST_PATH__?: string | null;
+    /**
+     * What RimWorld's `Saves` folder holds, as `list_saves` reads it: `folder` is `null` when
+     * the folder does not exist. The mock sorts, caps and counts like the backend (newest
+     * first, no time last, ties by name, 200 listed, `omitted` counts the rest), so a spec
+     * lists saves in any order. Defaults to no folder.
+     */
+    __SAVES__?: SaveListingDto;
+    /** When set, `list_saves` fails with this code (`saves_folder_unreadable`). */
+    __LIST_SAVES_ERROR__?: string;
+    /** How many `list_saves` calls the mock received. */
+    __LIST_SAVES_CALLS__?: number;
+    /** Every options object `plugin:dialog|open` received for a file picker, in order. */
+    __OPEN_DIALOG_OPTIONS__?: unknown[];
     /**
      * The files `preview_order_import_file` can read, by path. A path not listed here fails
      * with `mod_list_io_failed`, like a file that is not there.
@@ -7006,6 +7020,8 @@ export function installScenario(): void {
   window.__IMPORT_ORDER_CALLS__ = [];
   window.__OPEN_WORKSHOP_PAGE_CALLS__ = [];
   window.__SAVE_DIALOG_OPTIONS__ = [];
+  window.__OPEN_DIALOG_OPTIONS__ = [];
+  window.__LIST_SAVES_CALLS__ = 0;
   window.__GAME_LAUNCH_STATUS_CALLS__ = 0;
   window.__GET_RECOMMENDED_RULES_CALLS__ = 0;
   window.__SKIP_RECOMMENDED_RULES_CALLS__ = 0;
@@ -8295,6 +8311,35 @@ export function installScenario(): void {
       };
     },
     suggested_mod_list_path: () => window.__SUGGESTED_MOD_LIST_PATH__ ?? null,
+    // Mirrors `rim_io::list_saves` and `commands::order_share::list_saves`: newest first, a
+    // missing or implausible time last, ties by name, at most 200 listed.
+    list_saves: (): SaveListingDto => {
+      window.__LIST_SAVES_CALLS__ = (window.__LIST_SAVES_CALLS__ ?? 0) + 1;
+      if (window.__LIST_SAVES_ERROR__ !== undefined) {
+        throw {
+          code: window.__LIST_SAVES_ERROR__,
+          message: "the Saves folder could not be listed",
+        };
+      }
+      const held = window.__SAVES__;
+      if (held === undefined || held.folder === null) {
+        return { folder: null, saves: [], omitted: 0 };
+      }
+      const MAX_LISTED_SAVES = 200;
+      const sorted = [...held.saves].sort((left, right) => {
+        const byTime =
+          (right.savedAt ?? Number.NEGATIVE_INFINITY) - (left.savedAt ?? Number.NEGATIVE_INFINITY);
+        if (byTime !== 0 && !Number.isNaN(byTime)) {
+          return byTime;
+        }
+        return left.name < right.name ? -1 : left.name > right.name ? 1 : 0;
+      });
+      return {
+        folder: held.folder,
+        saves: sorted.slice(0, MAX_LISTED_SAVES),
+        omitted: held.omitted + Math.max(0, sorted.length - MAX_LISTED_SAVES),
+      };
+    },
     preview_order_import_file: (payload: unknown): OrderImportOutcomeDto => {
       const request = (payload as { request: PreviewOrderImportFileRequestDto }).request;
       window.__PREVIEW_ORDER_IMPORT_FILE_CALLS__?.push(request);
@@ -9420,6 +9465,9 @@ export function installScenario(): void {
     // a file picker never does.
     "plugin:dialog|open": (payload: unknown) => {
       const options = (payload as { options?: { directory?: boolean } } | undefined)?.options;
+      if (!options?.directory) {
+        window.__OPEN_DIALOG_OPTIONS__?.push(options);
+      }
       return options?.directory
         ? (window.__PICK_FOLDER_RESULT__ ?? null)
         : (window.__PICK_FILE_RESULT__ ?? null);

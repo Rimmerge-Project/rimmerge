@@ -364,7 +364,7 @@ test.describe("sharing a load order", () => {
     await expect(page.getByTestId("import-preview-version")).toHaveCount(0);
     await expect(page.getByTestId("import-preview-summary")).toHaveText("3 mods in the list");
     await expect(page.getByTestId("import-preview-misaligned")).toHaveText(
-      "The list has 2 names for 3 mods, so the sender's names aren't shown.",
+      "The number of names in the list (2) doesn't match the number of mods (3), so the sender's names aren't shown.",
     );
   });
 

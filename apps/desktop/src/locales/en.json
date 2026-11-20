@@ -568,6 +568,10 @@
         "title": "RimWorld didn't start",
         "detail": "Windows couldn't start RimWorldWin64.exe."
       },
+      "saves_folder_unreadable": {
+        "title": "Couldn't read the Saves folder",
+        "detail": "Rimmerge couldn't list the files in RimWorld's Saves folder. Browse for a save instead."
+      },
       "mod_list_io_failed": {
         "title": "Couldn't read or write the mod list",
         "detail": "The mod list file couldn't be read or written. Check that the file (or, when saving, its folder) exists and that you have permission to open or save it there."
@@ -1736,7 +1740,8 @@
       "button": "Import",
       "openFile": "Open a mod list file…",
       "paste": "Paste a list…",
-      "fileFilter": "Mod lists (.rml, .xml, .txt)",
+      "fromSave": "Import from a save…",
+      "fileFilter": "Mod lists and saves (.rml, .rws, .xml, .txt)",
       "allFiles": "All files",
       "pasteTitle": "Paste a load order",
       "pasteHint": "One mod per line: the text from \"Copy as text\", or one package id per line.",
@@ -1750,8 +1755,8 @@
       "madeWith": "Made with RimWorld {version}.",
       "versionDiffers": "You have RimWorld {game}, a different release.",
       "misaligned": {
-        "names": "The list has {values} names for {ids} mods, so the sender's names aren't shown.",
-        "workshopIds": "The list has {values} Steam ids for {ids} mods, so no Workshop links are shown."
+        "names": "The number of names in the list ({values}) doesn't match the number of mods ({ids}), so the sender's names aren't shown.",
+        "workshopIds": "The number of Workshop ids in the list ({values}) doesn't match the number of mods ({ids}), so no Workshop links are shown."
       },
       "replacesPending": "Activation changes you haven't rescanned yet will be replaced.",
       "replacesUnwritten": "This import replaces your Current order, which hasn't been applied yet.",
@@ -1793,6 +1798,19 @@
       "importing": "Importing…",
       "whatHappens": "Rimmerge rescans with this order and shows it as Current. Nothing is written until you Apply.",
       "confirm": "Use this order"
+    },
+    "saves": {
+      "title": "Import from a save",
+      "intro": "Only the save's mod list is read. The save itself is never changed.",
+      "savedAt": "Saved {date}",
+      "unknownDate": "Date unknown",
+      "preview": "Preview",
+      "previewLabel": "Preview the mod list of {name}",
+      "browse": "Browse…",
+      "fileFilter": "RimWorld saves (.rws)",
+      "empty": "No saves in RimWorld's Saves folder.",
+      "noFolder": "RimWorld's Saves folder wasn't found next to your ModsConfig.xml. Browse for a save instead.",
+      "omitted": "{count} older save not shown. | {count} older saves not shown."
     },
     "imported": "Imported order ready. Review it, then Apply to save it as your active order.",
     "notInFile": "This isn't your active order yet.",

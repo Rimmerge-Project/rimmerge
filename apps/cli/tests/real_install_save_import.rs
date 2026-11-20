@@ -154,7 +154,13 @@ fn a_real_save_previews_from_its_header_alone() {
     fs::copy(&real_mods_config, &mods_config_copy)
         .unwrap_or_else(|error| panic!("copy the real ModsConfig.xml: {error}"));
 
-    let expected_entries = independent_entry_count(&header_prefix(&save));
+    let prefix = header_prefix(&save);
+    let header_bytes = prefix
+        .windows(END_OF_HEADER.len())
+        .position(|window| window == END_OF_HEADER)
+        .map(|at| at + END_OF_HEADER.len())
+        .unwrap_or_else(|| panic!("header_prefix returned a prefix without </meta>"));
+    let expected_entries = independent_entry_count(&prefix);
     let started = Instant::now();
     let read = rim_io::RmlFileStore::new()
         .read(&save)
@@ -173,6 +179,12 @@ fn a_real_save_previews_from_its_header_alone() {
     assert!(
         elapsed < READ_BUDGET,
         "reading the header took {elapsed:?}: the body was read"
+    );
+    // Proof the test ran on a real save, without naming the file or any mod.
+    eprintln!(
+        "read a real save header: {header_bytes} header bytes, {expected_entries} entries ({} listed, {} skipped), read in {elapsed:?}",
+        parsed.list.entries().len(),
+        parsed.skipped.len() + parsed.omitted_skipped
     );
     let first = dry_run_stdout(
         &save,
