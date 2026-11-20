@@ -568,6 +568,10 @@
         "title": "RimWorld ist nicht gestartet",
         "detail": "Windows konnte RimWorldWin64.exe nicht starten."
       },
+      "saves_folder_unreadable": {
+        "title": "Der Ordner „Saves“ konnte nicht gelesen werden",
+        "detail": "Rimmerge konnte die Dateien im Ordner „Saves“ von RimWorld nicht auflisten. Wähle stattdessen über „Durchsuchen…“ einen Speicherstand aus."
+      },
       "mod_list_io_failed": {
         "title": "Mod-Liste konnte nicht gelesen oder geschrieben werden",
         "detail": "Die Datei mit der Mod-Liste konnte nicht gelesen oder geschrieben werden. Prüfe, ob die Datei (beim Speichern ihr Ordner) existiert und ob du die Berechtigung hast, sie dort zu öffnen oder zu speichern."
@@ -590,7 +594,7 @@
       },
       "organization_unavailable": {
         "title": "Gruppen können gerade nicht geändert werden",
-        "detail": "Rimmerge konnte deine gespeicherten Gruppen und Farben nicht verwenden, daher sind sie schreibgeschützt. Fang neu an, um sie neu anzulegen, oder repariere die Datei und scanne erneut."
+        "detail": "Rimmerge konnte organization.json nicht lesen, daher sind deine Gruppen und Farben schreibgeschützt. Wähle auf der Seite „Mods“ „Neu anfangen…“, um neu zu beginnen (eine Kopie der Datei wird aufbewahrt), oder repariere die Datei und scanne erneut."
       },
       "group_not_found": {
         "title": "Diese Gruppe gibt es nicht mehr",
@@ -606,7 +610,7 @@
       },
       "organization_limit": {
         "title": "Ein Limit für Gruppen wurde erreicht",
-        "detail": "Du hast ein Limit erreicht: für die Anzahl der Gruppen, der Verschachtelungsebenen, der Mods in Gruppen oder der Mods mit Farbe. Entferne einige und versuche es erneut."
+        "detail": "Du hast ein Limit für Gruppen und Farben erreicht: wie viele Gruppen es gibt, wie tief sie verschachtelt sind, wie viele Mods in Gruppen sind oder eine Farbe haben, oder wie groß die gespeicherte Datei sein darf. Es wurde nichts geändert. Wenn du einige davon entfernst, kann wieder Platz entstehen."
       }
     }
   },
@@ -1283,7 +1287,8 @@
         "removed": "Entfernt",
         "addedTitle": "Noch nicht in deiner gespeicherten aktiven Mod-Liste. Beim Anwenden wird sie hinzugefügt.",
         "removedTitle": "In deiner gespeicherten aktiven Mod-Liste. Beim Anwenden wird sie entfernt."
-      }
+      },
+      "rowActionsButton": "Aktionen für {name}"
     },
     "sort": {
       "groupLabel": "Sortierung",
@@ -1404,8 +1409,9 @@
       "selectAllShown": "{count} angezeigte auswählen | Alle {count} angezeigten auswählen",
       "selectAllEmpty": "Alle auswählen",
       "selectedCount": "{count} ausgewählt | {count} ausgewählt",
-      "notShown": "({count} nicht angezeigt) | ({count} nicht angezeigt)",
-      "clear": "Auswahl aufheben"
+      "clear": "Auswahl aufheben",
+      "selectedCountHidden": "{selected} ({hidden})",
+      "hiddenPart": "{count} nicht angezeigt | {count} nicht angezeigt"
     },
     "move": {
       "up": "Nach oben verschieben",
@@ -1413,7 +1419,6 @@
       "top": "Ganz nach oben verschieben",
       "bottom": "Ganz nach unten verschieben",
       "after": "Verschieben hinter…",
-      "menuButton": "{name} verschieben",
       "activateAtButton": "{name} an Position aktivieren…",
       "afterDialogHeader": "Hinter eine andere Mod verschieben",
       "activateAtDialogHeader": "An einer Position aktivieren",
@@ -1434,7 +1439,142 @@
       "viewSuggested": "Vorgeschlagene anzeigen",
       "suggestedNote": "„Anwenden“ schreibt die vorgeschlagene Reihenfolge. Wenn du eine Mod verschiebst, wechselst du zu deiner eigenen Reihenfolge.",
       "coreStaysActive": "Core kann nicht deaktiviert werden.",
-      "inactiveNotOrdered": "Diese Liste hat keine eigene Reihenfolge. Ziehe Mods in die aktive Liste, um sie zu aktivieren."
+      "inactiveNotOrdered": "Diese Liste hat keine eigene Reihenfolge. Ziehe Mods in die aktive Liste, um sie zu aktivieren.",
+      "activateAtItem": "An Position aktivieren…"
+    },
+    "colors": {
+      "names": {
+        "red": "Rot",
+        "orange": "Orange",
+        "amber": "Gelb",
+        "lime": "Hellgrün",
+        "green": "Grün",
+        "teal": "Petrol",
+        "cyan": "Türkis",
+        "blue": "Blau",
+        "indigo": "Indigo",
+        "violet": "Violett",
+        "pink": "Pink",
+        "slate": "Grau"
+      },
+      "rowColor": "Farbe: {name}",
+      "groupTitle": "Gruppenfarbe",
+      "modTitle": "Mod-Farbe",
+      "groupHelp": "Eine Farbe markiert die Gruppe im Baum und in den Mod-Zeilen. Sonst ändert sie nichts.",
+      "modHelp": "Eine Farbe markiert diese Mod in ihrer Zeile. Deine Ladereihenfolge ändert sie nicht.",
+      "legend": "Farbe",
+      "none": "Keine Farbe",
+      "apply": "Anwenden",
+      "toast": {
+        "groupChanged": "Gruppenfarbe geändert",
+        "modChanged": "Farbe für {name} geändert",
+        "modCleared": "Farbe von {name} entfernt"
+      }
+    },
+    "groups": {
+      "regionLabel": "Gruppen",
+      "heading": "Gruppen",
+      "help": "Gruppen helfen dir nur, Mods zu finden. Sie verschieben nie Dateien und ändern nie deine Ladereihenfolge.",
+      "openButton": "Gruppen",
+      "close": "Gruppen schließen",
+      "treeLabel": "Gruppen",
+      "allMods": "Alle Mods",
+      "ungrouped": "Ohne Gruppe",
+      "newGroup": "Neue Gruppe",
+      "actions": "Gruppenaktionen",
+      "actionsFor": "Aktionen für {name}",
+      "searchLabel": "Gruppen durchsuchen",
+      "searchPlaceholder": "Gruppen durchsuchen…",
+      "empty": "Noch keine Gruppen. Erstelle eine, um deine Mods zu ordnen.",
+      "noMatches": "Keine passende Gruppe.",
+      "nodeModCount": "{count} Mod, einschließlich Untergruppen | {count} Mods, einschließlich Untergruppen",
+      "nodeSubgroupCount": "{count} Untergruppe | {count} Untergruppen",
+      "chipWithColor": "{name} ({color})",
+      "allGroups": "In Gruppen: {groups}",
+      "rowMenu": {
+        "groups": "Gruppen…",
+        "color": "Farbe…",
+        "colorCurrent": "Farbe ({name})…"
+      },
+      "menu": {
+        "newSubgroup": "Neue Untergruppe…",
+        "rename": "Umbenennen…",
+        "color": "Farbe…",
+        "move": "Gruppe verschieben nach…",
+        "checkingUninstalled": "Suche nach nicht installierten Mods…",
+        "uninstalledUnavailable": "Nicht installierte Mods konnten nicht geprüft werden",
+        "removeUninstalled": "{count} nicht installierte Mod entfernen | {count} nicht installierte Mods entfernen",
+        "noUninstalled": "Alle Mods in dieser Gruppe sind installiert",
+        "delete": "Löschen…"
+      },
+      "dialog": {
+        "createTitle": "Neue Gruppe",
+        "subgroupTitle": "Neue Untergruppe",
+        "renameTitle": "Gruppe umbenennen",
+        "inside": "In {parent}",
+        "nameLabel": "Name",
+        "nameHelp": "Bis zu 64 Zeichen. Zwei Gruppen auf derselben Ebene dürfen nicht denselben Namen haben, unabhängig von Groß- und Kleinschreibung.",
+        "createButton": "Erstellen",
+        "renameButton": "Umbenennen",
+        "deleteTitle": "Gruppe löschen",
+        "deleteQuestion": "{name} löschen?",
+        "deleteNoMods": "In dieser Gruppe sind keine Mods.",
+        "deleteMods": "{count} Mod ist in dieser Gruppe, einschließlich ihrer Untergruppen. | {count} Mods sind in dieser Gruppe, einschließlich ihrer Untergruppen.",
+        "modeLegend": "Was mit ihrer {count} Untergruppe geschieht | Was mit ihren {count} Untergruppen geschieht",
+        "keepSubgroups": "Untergruppen behalten und eine Ebene nach oben verschieben",
+        "deleteSubgroups": "Untergruppen ebenfalls löschen",
+        "deleteSafety": "Keine Mod wird gelöscht oder deinstalliert. Mods bleiben in allen anderen Gruppen, zu denen sie gehören.",
+        "deleteButton": "Gruppe löschen",
+        "moveTitle": "Gruppe verschieben",
+        "moveQuestion": "{name} verschieben nach:",
+        "moveLegend": "Neuer Platz für die Gruppe",
+        "topLevel": "Oberste Ebene",
+        "moveInvalid": "Eine Gruppe kann nicht in sich selbst oder ihren eigenen Untergruppen liegen",
+        "moveCurrent": "Bereits hier",
+        "moveButton": "Verschieben",
+        "modGroupsTitle": "Gruppen für {name}",
+        "modGroupsHelp": "Hake eine Gruppe an, um diese Mod hinzuzufügen. Entferne den Haken, um die Mod herauszunehmen. Jede Änderung wird sofort gespeichert.",
+        "modGroupsEmpty": "Es gibt noch keine Gruppen. Erstelle eine im Bereich „Gruppen“.",
+        "modGroupsList": "Gruppen",
+        "done": "Fertig",
+        "removeUninstalledTitle": "Nicht installierte Mods entfernen",
+        "removeUninstalledBody": "Laut dem letzten Scan ist {count} Mod in der Gruppe {name} und ihren Untergruppen nicht installiert. Aus diesen Gruppen entfernen? Sie kommt nur zurück, wenn du sie wieder einer Gruppe hinzufügst. | Laut dem letzten Scan sind {count} Mods in der Gruppe {name} und ihren Untergruppen nicht installiert. Aus diesen Gruppen entfernen? Sie kommen nur zurück, wenn du sie wieder einer Gruppe hinzufügst.",
+        "removeUninstalledList": "Zu entfernende Mods",
+        "removeUninstalledLoading": "Es wird geprüft, welche Mods nicht installiert sind…",
+        "removeUninstalledFailed": "Es konnte nicht geprüft werden, welche Mods nicht installiert sind. Schließe dies und versuche es erneut.",
+        "removeUninstalledButton": "Entfernen"
+      },
+      "startOver": {
+        "title": "Mit Gruppen neu anfangen",
+        "body": "Rimmerge legt neben der unlesbaren Datei eine Kopie davon ab und beginnt dann ohne Gruppen und ohne Farben. Deine Mods und deine Ladereihenfolge sind davon nicht betroffen.",
+        "confirm": "Neu anfangen"
+      },
+      "notice": {
+        "notLoaded": "Gruppen und Farben sind in dieser Sitzung nicht verfügbar.",
+        "unreadable": "Rimmerge konnte deine Gruppen und Farben nicht lesen. Sie sind vorerst schreibgeschützt. Wenn ein anderes Programm die Datei geöffnet hat, schließe es und scanne erneut.",
+        "tooLarge": "Die Datei mit deinen Gruppen und Farben ist zu groß zum Lesen. Sie sind schreibgeschützt, bis du neu anfängst.",
+        "malformed": "Die Datei mit deinen Gruppen und Farben ist beschädigt. Sie sind schreibgeschützt, bis du neu anfängst.",
+        "newerVersion": "Deine Gruppen und Farben wurden von einer neueren Version von Rimmerge gespeichert. Hier sind sie schreibgeschützt, damit sie nicht überschrieben werden.",
+        "invalid": "Die Datei mit deinen Gruppen und Farben verstößt gegen eine Regel und kann nicht verwendet werden. Sie sind schreibgeschützt, bis du neu anfängst.",
+        "tryAgain": "Erneut scannen und wiederholen",
+        "startOver": "Neu anfangen…"
+      },
+      "scope": {
+        "ungrouped": "Angezeigt werden die Mods, die in keiner Gruppe sind",
+        "group": "Angezeigt wird {name}: {count} Mod, einschließlich Untergruppen | Angezeigt wird {name}: {count} Mods, einschließlich Untergruppen",
+        "notInstalled": "{count} Mod ist nicht installiert | {count} Mods sind nicht installiert",
+        "note": "Suche und Filter wirken innerhalb dieser Gruppe. Die aktive Liste bleibt in Ladereihenfolge.",
+        "showAll": "Alle Mods anzeigen"
+      },
+      "toast": {
+        "created": "Gruppe erstellt",
+        "renamed": "Gruppe umbenannt",
+        "moved": "Gruppe verschoben",
+        "deleted": "Gruppe gelöscht",
+        "removedUninstalled": "{count} nicht installierte Mod entfernt | {count} nicht installierte Mods entfernt",
+        "keptInstalledAgain": "{count} Mod ist wieder installiert und blieb daher in der Gruppe | {count} Mods sind wieder installiert und blieben daher in der Gruppe",
+        "startedOver": "Ohne Gruppen neu angefangen"
+      }
     }
   },
   "rules": {
@@ -1736,7 +1876,8 @@
       "button": "Importieren",
       "openFile": "Mod-Liste aus Datei öffnen…",
       "paste": "Liste einfügen…",
-      "fileFilter": "Mod-Listen (.rml, .xml, .txt)",
+      "fromSave": "Aus Speicherstand importieren…",
+      "fileFilter": "Mod-Listen und Speicherstände (.rml, .rws, .xml, .txt)",
       "allFiles": "Alle Dateien",
       "pasteTitle": "Ladereihenfolge einfügen",
       "pasteHint": "Eine Mod pro Zeile: der Text aus „Als Text kopieren“ oder eine Package-ID pro Zeile.",
@@ -1750,8 +1891,8 @@
       "madeWith": "Erstellt mit RimWorld {version}.",
       "versionDiffers": "Du hast RimWorld {game}, eine andere Version.",
       "misaligned": {
-        "names": "Die Anzahl der Namen ({values}) passt nicht zur Anzahl der Mods ({ids}), daher werden die Namen des Absenders nicht angezeigt.",
-        "workshopIds": "Die Anzahl der Steam-IDs ({values}) passt nicht zur Anzahl der Mods ({ids}), daher werden keine Workshop-Links angezeigt."
+        "names": "Die Anzahl der Namen in der Liste ({values}) passt nicht zur Anzahl der Mods ({ids}), daher werden die Namen des Absenders nicht angezeigt.",
+        "workshopIds": "Die Anzahl der Workshop-IDs in der Liste ({values}) passt nicht zur Anzahl der Mods ({ids}), daher werden keine Workshop-Links angezeigt."
       },
       "replacesPending": "Aktivierungsänderungen, die du noch nicht erneut gescannt hast, werden ersetzt.",
       "replacesUnwritten": "Dieser Import ersetzt deine aktuelle Reihenfolge, die noch nicht angewendet wurde.",
@@ -1793,6 +1934,19 @@
       "importing": "Wird importiert…",
       "whatHappens": "Rimmerge scannt mit dieser Reihenfolge erneut und zeigt sie als aktuelle Reihenfolge an. Bis du sie anwendest, wird nichts geschrieben.",
       "confirm": "Diese Reihenfolge verwenden"
+    },
+    "saves": {
+      "title": "Aus Speicherstand importieren",
+      "intro": "Nur die Mod-Liste des Speicherstands wird gelesen. Der Speicherstand selbst wird nie verändert.",
+      "savedAt": "Gespeichert: {date}",
+      "unknownDate": "Datum unbekannt",
+      "preview": "Vorschau",
+      "previewLabel": "Vorschau der Mod-Liste von {name}",
+      "browse": "Durchsuchen…",
+      "fileFilter": "RimWorld-Speicherstände (.rws)",
+      "empty": "Keine Speicherstände im Ordner „Saves“ von RimWorld.",
+      "noFolder": "Der Ordner „Saves“ von RimWorld wurde nicht neben deiner ModsConfig.xml gefunden. Wähle stattdessen über „Durchsuchen…“ einen Speicherstand aus.",
+      "omitted": "{count} älterer Speicherstand nicht angezeigt. | {count} ältere Speicherstände nicht angezeigt."
     },
     "imported": "Importierte Reihenfolge bereit. Sieh sie durch und wende sie dann an, um sie als deine aktive Reihenfolge zu speichern.",
     "notInFile": "Das ist noch nicht deine aktive Reihenfolge.",

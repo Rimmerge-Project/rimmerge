@@ -568,6 +568,10 @@
         "title": "RimWorld no se inició",
         "detail": "Windows no pudo iniciar RimWorldWin64.exe."
       },
+      "saves_folder_unreadable": {
+        "title": "No se pudo leer la carpeta Saves",
+        "detail": "Rimmerge no pudo listar los archivos de la carpeta Saves de RimWorld. En su lugar, busca la partida guardada con «Examinar…»."
+      },
       "mod_list_io_failed": {
         "title": "No se pudo leer o escribir la lista de mods",
         "detail": "No se pudo leer o escribir el archivo de la lista de mods. Comprueba que el archivo (o, al guardar, su carpeta) existe y que tienes permiso para abrirlo o guardarlo ahí."
@@ -590,7 +594,7 @@
       },
       "organization_unavailable": {
         "title": "Ahora mismo no se pueden cambiar los grupos",
-        "detail": "Rimmerge no pudo usar tus grupos y colores guardados, así que son de solo lectura. Empieza de cero para crear un conjunto nuevo, o corrige el archivo y vuelve a escanear."
+        "detail": "Rimmerge no pudo leer organization.json, así que tus grupos y colores son de solo lectura. Elige «Empezar de cero…» en la página Mods para crear un conjunto nuevo (se conserva una copia del archivo), o corrige el archivo y vuelve a escanear."
       },
       "group_not_found": {
         "title": "Ese grupo ya no existe",
@@ -606,7 +610,7 @@
       },
       "organization_limit": {
         "title": "Se alcanzó un límite de grupos",
-        "detail": "Alcanzaste un límite de cuántos grupos, niveles de anidación, mods en grupos o mods con color puede haber. Quita algunos y vuelve a intentarlo."
+        "detail": "Alcanzaste un límite de grupos y colores: cuántos grupos puede haber, cuántos niveles de anidación, cuántos mods en grupos o con color, o qué tamaño puede tener el archivo guardado. No se cambió nada. Quitar algunos de estos elementos puede dejar sitio."
       }
     }
   },
@@ -1283,7 +1287,8 @@
         "removed": "Quitado",
         "addedTitle": "Aún no está en tu lista de mods activos guardada. Al aplicar, se añade.",
         "removedTitle": "Está en tu lista de mods activos guardada. Al aplicar, se quita."
-      }
+      },
+      "rowActionsButton": "Acciones de {name}"
     },
     "sort": {
       "groupLabel": "Criterio de ordenación",
@@ -1404,8 +1409,9 @@
       "selectAllShown": "Seleccionar {count} mod mostrado | Seleccionar los {count} mods mostrados",
       "selectAllEmpty": "Seleccionar todo",
       "selectedCount": "{count} seleccionado | {count} seleccionados",
-      "notShown": "({count} no mostrado) | ({count} no mostrados)",
-      "clear": "Anular la selección"
+      "clear": "Anular la selección",
+      "selectedCountHidden": "{selected} ({hidden})",
+      "hiddenPart": "{count} no mostrado | {count} no mostrados"
     },
     "move": {
       "up": "Subir",
@@ -1413,7 +1419,6 @@
       "top": "Mover al principio",
       "bottom": "Mover al final",
       "after": "Mover después de…",
-      "menuButton": "Mover {name}",
       "activateAtButton": "Activar {name} en la posición…",
       "afterDialogHeader": "Mover después de otro mod",
       "activateAtDialogHeader": "Activar en una posición",
@@ -1434,7 +1439,142 @@
       "viewSuggested": "Ver orden sugerido",
       "suggestedNote": "Al aplicar se escribirá el orden sugerido. Si mueves un mod, pasas a usar tu propio orden.",
       "coreStaysActive": "Core no se puede desactivar.",
-      "inactiveNotOrdered": "Esta lista no tiene orden propio. Arrastra mods a la lista de activos para activarlos."
+      "inactiveNotOrdered": "Esta lista no tiene orden propio. Arrastra mods a la lista de activos para activarlos.",
+      "activateAtItem": "Activar en la posición…"
+    },
+    "colors": {
+      "names": {
+        "red": "Rojo",
+        "orange": "Naranja",
+        "amber": "Ámbar",
+        "lime": "Lima",
+        "green": "Verde",
+        "teal": "Verde azulado",
+        "cyan": "Cian",
+        "blue": "Azul",
+        "indigo": "Índigo",
+        "violet": "Violeta",
+        "pink": "Rosa",
+        "slate": "Gris pizarra"
+      },
+      "rowColor": "Color: {name}",
+      "groupTitle": "Color del grupo",
+      "modTitle": "Color del mod",
+      "groupHelp": "Un color marca el grupo en el árbol y en las filas de mods. No cambia nada más.",
+      "modHelp": "Un color marca este mod en su fila. No cambia tu orden de carga.",
+      "legend": "Color",
+      "none": "Sin color",
+      "apply": "Aplicar",
+      "toast": {
+        "groupChanged": "Se cambió el color del grupo",
+        "modChanged": "Se cambió el color de {name}",
+        "modCleared": "Se quitó el color de {name}"
+      }
+    },
+    "groups": {
+      "regionLabel": "Grupos",
+      "heading": "Grupos",
+      "help": "Los grupos solo te ayudan a encontrar mods. Nunca mueven archivos ni cambian tu orden de carga.",
+      "openButton": "Grupos",
+      "close": "Cerrar grupos",
+      "treeLabel": "Grupos",
+      "allMods": "Todos los mods",
+      "ungrouped": "Sin grupo",
+      "newGroup": "Nuevo grupo",
+      "actions": "Acciones de grupo",
+      "actionsFor": "Acciones de {name}",
+      "searchLabel": "Buscar grupos",
+      "searchPlaceholder": "Buscar grupos…",
+      "empty": "Aún no hay grupos. Crea uno para empezar a organizar tus mods.",
+      "noMatches": "Ningún grupo coincide.",
+      "nodeModCount": "{count} mod, incluidos los subgrupos | {count} mods, incluidos los subgrupos",
+      "nodeSubgroupCount": "{count} subgrupo | {count} subgrupos",
+      "chipWithColor": "{name} ({color})",
+      "allGroups": "En los grupos: {groups}",
+      "rowMenu": {
+        "groups": "Grupos…",
+        "color": "Color…",
+        "colorCurrent": "Color ({name})…"
+      },
+      "menu": {
+        "newSubgroup": "Nuevo subgrupo…",
+        "rename": "Renombrar…",
+        "color": "Color…",
+        "move": "Mover el grupo a…",
+        "checkingUninstalled": "Buscando mods que no están instalados…",
+        "uninstalledUnavailable": "No se pudo comprobar qué mods no están instalados",
+        "removeUninstalled": "Quitar {count} mod que no está instalado | Quitar {count} mods que no están instalados",
+        "noUninstalled": "Todos los mods de este grupo están instalados",
+        "delete": "Borrar…"
+      },
+      "dialog": {
+        "createTitle": "Nuevo grupo",
+        "subgroupTitle": "Nuevo subgrupo",
+        "renameTitle": "Renombrar grupo",
+        "inside": "Dentro de {parent}",
+        "nameLabel": "Nombre",
+        "nameHelp": "Hasta 64 caracteres. Dos grupos del mismo nivel no pueden tener el mismo nombre, sin importar mayúsculas y minúsculas.",
+        "createButton": "Crear",
+        "renameButton": "Renombrar",
+        "deleteTitle": "Borrar grupo",
+        "deleteQuestion": "¿Borrar {name}?",
+        "deleteNoMods": "Este grupo no tiene ningún mod.",
+        "deleteMods": "Hay {count} mod en este grupo, incluidos sus subgrupos. | Hay {count} mods en este grupo, incluidos sus subgrupos.",
+        "modeLegend": "Qué pasa con su {count} subgrupo | Qué pasa con sus {count} subgrupos",
+        "keepSubgroups": "Conservar los subgrupos y subirlos un nivel",
+        "deleteSubgroups": "Borrar también los subgrupos",
+        "deleteSafety": "No se borra ni se desinstala ningún mod. Los mods siguen en cualquier otro grupo al que pertenezcan.",
+        "deleteButton": "Borrar grupo",
+        "moveTitle": "Mover grupo",
+        "moveQuestion": "Mover {name} a:",
+        "moveLegend": "Nuevo lugar para el grupo",
+        "topLevel": "Nivel superior",
+        "moveInvalid": "Un grupo no puede ir dentro de sí mismo ni de sus propios subgrupos",
+        "moveCurrent": "Ya está aquí",
+        "moveButton": "Mover",
+        "modGroupsTitle": "Grupos de {name}",
+        "modGroupsHelp": "Marca un grupo para añadirle este mod. Desmárcalo para sacar el mod. Cada cambio se guarda al momento.",
+        "modGroupsEmpty": "Aún no hay grupos. Crea uno desde el panel Grupos.",
+        "modGroupsList": "Grupos",
+        "done": "Hecho",
+        "removeUninstalledTitle": "Quitar mods que no están instalados",
+        "removeUninstalledBody": "Según el último escaneo, {count} mod de {name} y sus subgrupos no está instalado. ¿Quitarlo de esos grupos? Solo volverá si lo añades de nuevo a un grupo. | Según el último escaneo, {count} mods de {name} y sus subgrupos no están instalados. ¿Quitarlos de esos grupos? Solo volverán si los añades de nuevo a un grupo.",
+        "removeUninstalledList": "Mods que se quitarán",
+        "removeUninstalledLoading": "Comprobando qué mods no están instalados…",
+        "removeUninstalledFailed": "No se pudo comprobar qué mods no están instalados. Cierra esto y vuelve a intentarlo.",
+        "removeUninstalledButton": "Quitar"
+      },
+      "startOver": {
+        "title": "Empezar de cero con los grupos",
+        "body": "Rimmerge guarda una copia del archivo ilegible junto a él y después empieza sin grupos ni colores. Tus mods y tu orden de carga no se ven afectados.",
+        "confirm": "Empezar de cero"
+      },
+      "notice": {
+        "notLoaded": "Los grupos y colores no están disponibles en esta sesión.",
+        "unreadable": "Rimmerge no pudo leer tus grupos y colores. Por ahora son de solo lectura. Si otro programa tiene el archivo abierto, ciérralo y vuelve a escanear.",
+        "tooLarge": "Tu archivo de grupos y colores es demasiado grande para leerlo. Serán de solo lectura hasta que empieces de cero.",
+        "malformed": "Tu archivo de grupos y colores está dañado. Serán de solo lectura hasta que empieces de cero.",
+        "newerVersion": "Tus grupos y colores se guardaron con una versión más reciente de Rimmerge. Aquí son de solo lectura para que no se sobreescriban.",
+        "invalid": "Tu archivo de grupos y colores incumple una regla y no se puede usar. Serán de solo lectura hasta que empieces de cero.",
+        "tryAgain": "Volver a escanear e intentarlo de nuevo",
+        "startOver": "Empezar de cero…"
+      },
+      "scope": {
+        "ungrouped": "Se muestran los mods que no están en ningún grupo",
+        "group": "Se muestra {name}: {count} mod, incluidos los subgrupos | Se muestra {name}: {count} mods, incluidos los subgrupos",
+        "notInstalled": "{count} mod no está instalado | {count} mods no están instalados",
+        "note": "La búsqueda y los filtros funcionan dentro de este grupo. La lista de activos sigue en orden de carga.",
+        "showAll": "Mostrar todos los mods"
+      },
+      "toast": {
+        "created": "Grupo creado",
+        "renamed": "Grupo renombrado",
+        "moved": "Grupo movido",
+        "deleted": "Grupo borrado",
+        "removedUninstalled": "Se quitó {count} mod que no está instalado | Se quitaron {count} mods que no están instalados",
+        "keptInstalledAgain": "{count} mod vuelve a estar instalado, así que se quedó en el grupo | {count} mods vuelven a estar instalados, así que se quedaron en el grupo",
+        "startedOver": "Se empezó de cero, sin grupos"
+      }
     }
   },
   "rules": {
@@ -1736,7 +1876,8 @@
       "button": "Importar",
       "openFile": "Abrir un archivo de lista de mods…",
       "paste": "Pegar una lista…",
-      "fileFilter": "Listas de mods (.rml, .xml, .txt)",
+      "fromSave": "Importar desde una partida guardada…",
+      "fileFilter": "Listas de mods y partidas guardadas (.rml, .rws, .xml, .txt)",
       "allFiles": "Todos los archivos",
       "pasteTitle": "Pegar un orden de carga",
       "pasteHint": "Un mod por línea: el texto de «Copiar como texto» o un ID de paquete por línea.",
@@ -1750,8 +1891,8 @@
       "madeWith": "Lista creada con RimWorld {version}.",
       "versionDiffers": "Tienes RimWorld {game}, una versión distinta.",
       "misaligned": {
-        "names": "La lista tiene {values} nombres para {ids} mods, así que no se muestran los nombres de quien la envió.",
-        "workshopIds": "La lista tiene {values} ID de Steam para {ids} mods, así que no se muestra ningún enlace de Workshop."
+        "names": "El número de nombres de la lista ({values}) no coincide con el número de mods ({ids}), así que no se muestran los nombres de quien la envió.",
+        "workshopIds": "El número de ID de Workshop de la lista ({values}) no coincide con el número de mods ({ids}), así que no se muestra ningún enlace de Workshop."
       },
       "replacesPending": "Se reemplazarán los cambios de activación pendientes que aún no has vuelto a escanear.",
       "replacesUnwritten": "Esta importación reemplaza tu orden actual, que aún no se ha aplicado.",
@@ -1793,6 +1934,19 @@
       "importing": "Importando…",
       "whatHappens": "Rimmerge vuelve a escanear con este orden y lo muestra como orden «Actual». No se escribe nada hasta que lo apliques.",
       "confirm": "Usar este orden"
+    },
+    "saves": {
+      "title": "Importar desde una partida guardada",
+      "intro": "Solo se lee la lista de mods de la partida guardada. La partida en sí nunca se modifica.",
+      "savedAt": "Guardada el {date}",
+      "unknownDate": "Fecha desconocida",
+      "preview": "Previsualizar",
+      "previewLabel": "Previsualizar la lista de mods de {name}",
+      "browse": "Examinar…",
+      "fileFilter": "Partidas guardadas de RimWorld (.rws)",
+      "empty": "No hay partidas guardadas en la carpeta Saves de RimWorld.",
+      "noFolder": "No se encontró la carpeta Saves de RimWorld junto a tu ModsConfig.xml. En su lugar, busca la partida guardada con «Examinar…».",
+      "omitted": "No se muestra {count} partida guardada más antigua. | No se muestran {count} partidas guardadas más antiguas."
     },
     "imported": "Orden importado listo. Revísalo y luego aplícalo para guardarlo como tu orden activo.",
     "notInFile": "Este aún no es tu orden activo.",

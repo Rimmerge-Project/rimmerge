@@ -568,6 +568,10 @@
         "title": "RimWorldが起動しませんでした",
         "detail": "WindowsがRimWorldWin64.exeを起動できませんでした。"
       },
+      "saves_folder_unreadable": {
+        "title": "Savesフォルダーを読み取れませんでした",
+        "detail": "RimmergeはRimWorldのSavesフォルダー内のファイルを一覧表示できませんでした。代わりにセーブデータを参照して選んでください。"
+      },
       "mod_list_io_failed": {
         "title": "MODリストを読み書きできませんでした",
         "detail": "MODリストのファイルを読み取りまたは書き込みできませんでした。ファイル（保存時はその保存先フォルダー）が存在し、そこでファイルを開く、または保存する権限があるか確認してください。"
@@ -590,7 +594,7 @@
       },
       "organization_unavailable": {
         "title": "グループを今は変更できません",
-        "detail": "保存済みのグループと色をRimmergeが使用できなかったため、読み取り専用になっています。最初からやり直して新しく作成するか、ファイルを修正して再スキャンしてください。"
+        "detail": "Rimmergeがorganization.jsonを読み取れなかったため、グループと色は読み取り専用になっています。新しく作り直すには「MOD」ページで「最初からやり直す…」を選択する（ファイルのコピーは残ります）か、ファイルを修正して再スキャンしてください。"
       },
       "group_not_found": {
         "title": "そのグループはもう存在しません",
@@ -606,7 +610,7 @@
       },
       "organization_limit": {
         "title": "グループの上限に達しました",
-        "detail": "グループの数、入れ子の深さ、グループ内のMODの数、色付きのMODの数のいずれかが上限に達しました。いくつか減らしてから再度お試しください。"
+        "detail": "グループと色の上限（グループの数、入れ子の深さ、グループ内または色付きのMODの数、保存ファイルのサイズのいずれか）に達しました。何も変更されていません。これらの一部を減らすと、空きができる場合があります。"
       }
     }
   },
@@ -1283,7 +1287,8 @@
         "removed": "除外",
         "addedTitle": "保存済みの有効なMODリストにはまだありません。適用すると追加されます。",
         "removedTitle": "保存済みの有効なMODリストにあります。適用すると外されます。"
-      }
+      },
+      "rowActionsButton": "{name}の操作"
     },
     "sort": {
       "groupLabel": "並べ替え順",
@@ -1404,8 +1409,9 @@
       "selectAllShown": "表示中の{count}個をすべて選択",
       "selectAllEmpty": "すべて選択",
       "selectedCount": "{count}個を選択中",
-      "notShown": "（{count}個は非表示）",
-      "clear": "選択を解除"
+      "clear": "選択を解除",
+      "selectedCountHidden": "{selected}（{hidden}）",
+      "hiddenPart": "{count}個は非表示"
     },
     "move": {
       "up": "上へ移動",
@@ -1413,7 +1419,6 @@
       "top": "一番上へ移動",
       "bottom": "一番下へ移動",
       "after": "別のMODの後へ移動…",
-      "menuButton": "{name}を移動",
       "activateAtButton": "位置を指定して{name}を有効化…",
       "afterDialogHeader": "別のMODの後へ移動",
       "activateAtDialogHeader": "位置を指定して有効化",
@@ -1434,7 +1439,142 @@
       "viewSuggested": "提案を表示",
       "suggestedNote": "「適用」すると提案された順序が書き込まれます。MODを移動すると、独自の順序に切り替わります。",
       "coreStaysActive": "Coreは無効化できません。",
-      "inactiveNotOrdered": "このリストに順序はありません。MODを有効化するには、「有効」リストへドラッグしてください。"
+      "inactiveNotOrdered": "このリストに順序はありません。MODを有効化するには、「有効」リストへドラッグしてください。",
+      "activateAtItem": "位置を指定して有効化…"
+    },
+    "colors": {
+      "names": {
+        "red": "赤",
+        "orange": "オレンジ",
+        "amber": "黄色",
+        "lime": "黄緑",
+        "green": "緑",
+        "teal": "青緑",
+        "cyan": "水色",
+        "blue": "青",
+        "indigo": "藍色",
+        "violet": "紫",
+        "pink": "ピンク",
+        "slate": "灰色"
+      },
+      "rowColor": "色：{name}",
+      "groupTitle": "グループの色",
+      "modTitle": "MODの色",
+      "groupHelp": "色はツリー内とMODの行でグループを示す印です。ほかには何も変わりません。",
+      "modHelp": "色はこのMODの行に付く印です。ロード順は変わりません。",
+      "legend": "色",
+      "none": "色なし",
+      "apply": "適用",
+      "toast": {
+        "groupChanged": "グループの色を変更しました",
+        "modChanged": "{name}の色を変更しました",
+        "modCleared": "{name}の色を外しました"
+      }
+    },
+    "groups": {
+      "regionLabel": "グループ",
+      "heading": "グループ",
+      "help": "グループはMODを見つけやすくするためだけのものです。ファイルを移動したり、ロード順を変更したりすることはありません。",
+      "openButton": "グループ",
+      "close": "グループを閉じる",
+      "treeLabel": "グループ",
+      "allMods": "すべてのMOD",
+      "ungrouped": "グループなし",
+      "newGroup": "新しいグループ",
+      "actions": "グループの操作",
+      "actionsFor": "{name}の操作",
+      "searchLabel": "グループを検索",
+      "searchPlaceholder": "グループを検索…",
+      "empty": "グループはまだありません。グループを作成して、MODの整理を始めてください。",
+      "noMatches": "一致するグループはありません。",
+      "nodeModCount": "MOD{count}個（サブグループを含む）",
+      "nodeSubgroupCount": "サブグループ{count}個",
+      "chipWithColor": "{name}（{color}）",
+      "allGroups": "所属グループ：{groups}",
+      "rowMenu": {
+        "groups": "グループ…",
+        "color": "色…",
+        "colorCurrent": "色（{name}）…"
+      },
+      "menu": {
+        "newSubgroup": "新しいサブグループ…",
+        "rename": "名前を変更…",
+        "color": "色…",
+        "move": "グループの移動先…",
+        "checkingUninstalled": "インストールされていないMODを確認中…",
+        "uninstalledUnavailable": "インストールされていないMODを確認できませんでした",
+        "removeUninstalled": "インストールされていないMOD{count}個を外す",
+        "noUninstalled": "このグループのMODはすべてインストール済みです",
+        "delete": "削除…"
+      },
+      "dialog": {
+        "createTitle": "新しいグループ",
+        "subgroupTitle": "新しいサブグループ",
+        "renameTitle": "グループの名前を変更",
+        "inside": "{parent}の中",
+        "nameLabel": "名前",
+        "nameHelp": "64文字まで。同じ親の下にある2つのグループに同じ名前は付けられません（大文字と小文字は区別しません）。",
+        "createButton": "作成",
+        "renameButton": "名前を変更",
+        "deleteTitle": "グループを削除",
+        "deleteQuestion": "{name}を削除しますか？",
+        "deleteNoMods": "このグループにMODはありません。",
+        "deleteMods": "このグループには、サブグループを含めて{count}個のMODがあります。",
+        "modeLegend": "{count}個のサブグループの扱い",
+        "keepSubgroups": "サブグループを残し、1段上へ移動する",
+        "deleteSubgroups": "サブグループも削除する",
+        "deleteSafety": "MODが削除されたりアンインストールされたりすることはありません。MODは所属しているほかのグループにそのまま残ります。",
+        "deleteButton": "グループを削除",
+        "moveTitle": "グループを移動",
+        "moveQuestion": "{name}の移動先：",
+        "moveLegend": "グループの新しい場所",
+        "topLevel": "最上位",
+        "moveInvalid": "グループをそれ自体やそのサブグループの中には入れられません",
+        "moveCurrent": "現在の場所",
+        "moveButton": "移動",
+        "modGroupsTitle": "{name}のグループ",
+        "modGroupsHelp": "グループにチェックを入れると、このMODがそのグループに追加されます。チェックを外すとグループから外れます。変更はそのつどすぐに保存されます。",
+        "modGroupsEmpty": "グループはまだありません。「グループ」パネルから作成してください。",
+        "modGroupsList": "グループ",
+        "done": "完了",
+        "removeUninstalledTitle": "インストールされていないMODを外す",
+        "removeUninstalledBody": "前回のスキャンの時点で、{name}とそのサブグループにある{count}個のMODがインストールされていません。これらのグループから外しますか？外したMODは、もう一度グループに追加しない限り戻りません。",
+        "removeUninstalledList": "外すMOD",
+        "removeUninstalledLoading": "インストールされていないMODを確認中…",
+        "removeUninstalledFailed": "インストールされていないMODを確認できませんでした。これを閉じてから再度お試しください。",
+        "removeUninstalledButton": "外す"
+      },
+      "startOver": {
+        "title": "グループを最初からやり直す",
+        "body": "Rimmergeは読み取れないファイルのコピーを同じ場所に残し、グループも色もない状態から始めます。MODとロード順には影響しません。",
+        "confirm": "最初からやり直す"
+      },
+      "notice": {
+        "notLoaded": "このセッションではグループと色を使用できません。",
+        "unreadable": "Rimmergeはグループと色を読み取れませんでした。今は読み取り専用になっています。ほかのプログラムがファイルを開いている場合は、そのプログラムを閉じてから再スキャンしてください。",
+        "tooLarge": "グループと色のファイルが大きすぎて読み取れません。最初からやり直すまで読み取り専用になります。",
+        "malformed": "グループと色のファイルが破損しています。最初からやり直すまで読み取り専用になります。",
+        "newerVersion": "グループと色は新しいバージョンのRimmergeで保存されています。上書きされないよう、ここでは読み取り専用になります。",
+        "invalid": "グループと色のファイルがルールに違反しているため使用できません。最初からやり直すまで読み取り専用になります。",
+        "tryAgain": "再スキャンして再試行",
+        "startOver": "最初からやり直す…"
+      },
+      "scope": {
+        "ungrouped": "どのグループにも属していないMODを表示中",
+        "group": "{name}を表示中：MOD{count}個（サブグループを含む）",
+        "notInstalled": "{count}個のMODがインストールされていません",
+        "note": "検索とフィルターはこのグループ内で機能します。「有効」リストはロード順のままです。",
+        "showAll": "すべてのMODを表示"
+      },
+      "toast": {
+        "created": "グループを作成しました",
+        "renamed": "グループの名前を変更しました",
+        "moved": "グループを移動しました",
+        "deleted": "グループを削除しました",
+        "removedUninstalled": "インストールされていないMOD{count}個を外しました",
+        "keptInstalledAgain": "{count}個のMODは再びインストールされているため、グループに残しました",
+        "startedOver": "グループなしの状態から最初からやり直しました"
+      }
     }
   },
   "rules": {
@@ -1736,7 +1876,8 @@
       "button": "インポート",
       "openFile": "MODリストのファイルを開く…",
       "paste": "リストを貼り付け…",
-      "fileFilter": "MODリスト（.rml、.xml、.txt）",
+      "fromSave": "セーブデータからインポート…",
+      "fileFilter": "MODリストとセーブデータ（.rml、.rws、.xml、.txt）",
       "allFiles": "すべてのファイル",
       "pasteTitle": "ロード順を貼り付け",
       "pasteHint": "1行に1つのMOD：「テキストとしてコピー」で得たテキスト、または1行に1つのパッケージID。",
@@ -1750,8 +1891,8 @@
       "madeWith": "RimWorld {version}で作成されました。",
       "versionDiffers": "お使いのRimWorldは{game}で、異なるリリースです。",
       "misaligned": {
-        "names": "リストには{ids}個のMODに対して名前が{values}個あるため、共有元の名前は表示されません。",
-        "workshopIds": "リストには{ids}個のMODに対してワークショップIDが{values}個あるため、ワークショップリンクは表示されません。"
+        "names": "リスト内の名前の数（{values}）がMODの数（{ids}）と一致しないため、共有元の名前は表示されません。",
+        "workshopIds": "リスト内のワークショップIDの数（{values}）がMODの数（{ids}）と一致しないため、ワークショップリンクは表示されません。"
       },
       "replacesPending": "まだ再スキャンしていない保留中の有効化／無効化の変更は置き換えられます。",
       "replacesUnwritten": "このインポートで、まだ適用されていない「現在」の順序が置き換えられます。",
@@ -1793,6 +1934,19 @@
       "importing": "インポート中…",
       "whatHappens": "Rimmergeはこの順序で再スキャンし、「現在」の順序として表示します。適用するまで何も書き込まれません。",
       "confirm": "この順序を使用"
+    },
+    "saves": {
+      "title": "セーブデータからインポート",
+      "intro": "読み取るのはセーブデータのMODリストだけです。セーブデータ自体が変更されることはありません。",
+      "savedAt": "保存日時：{date}",
+      "unknownDate": "日付不明",
+      "preview": "プレビュー",
+      "previewLabel": "{name}のMODリストをプレビュー",
+      "browse": "参照…",
+      "fileFilter": "RimWorldのセーブデータ（.rws）",
+      "empty": "RimWorldのSavesフォルダーにセーブデータがありません。",
+      "noFolder": "ModsConfig.xmlと同じ場所にRimWorldのSavesフォルダーが見つかりませんでした。代わりにセーブデータを参照して選んでください。",
+      "omitted": "ほかに古いセーブデータ{count}件は表示されていません。"
     },
     "imported": "インポートした順序の準備ができました。内容を確認してから適用し、有効なMODの順序として保存してください。",
     "notInFile": "この順序はまだ有効なMODの順序に反映されていません。",

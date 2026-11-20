@@ -568,6 +568,10 @@
         "title": "RimWorld başlamadı",
         "detail": "Windows, RimWorldWin64.exe dosyasını başlatamadı."
       },
+      "saves_folder_unreadable": {
+        "title": "Saves klasörü okunamadı",
+        "detail": "Rimmerge, RimWorld'ün Saves klasöründeki dosyaları listeleyemedi. Bunun yerine Gözat düğmesiyle bir oyun kaydı seç."
+      },
       "mod_list_io_failed": {
         "title": "Mod listesi okunamadı ya da yazılamadı",
         "detail": "Mod listesi dosyası okunamadı ya da yazılamadı. Dosyanın (kaydederken klasörünün) var olduğunu ve onu orada açma ya da kaydetme iznin olduğunu denetle."
@@ -590,7 +594,7 @@
       },
       "organization_unavailable": {
         "title": "Gruplar şu anda değiştirilemez",
-        "detail": "Rimmerge kayıtlı gruplarını ve renklerini kullanamadı, bu yüzden bunlar salt okunur. Baştan başlayıp yeni gruplar oluştur ya da dosyayı düzeltip yeniden tara."
+        "detail": "Rimmerge organization.json dosyasını okuyamadı, bu yüzden grupların ve renklerin salt okunur. Yeni bir başlangıç için Modlar sayfasında \"Baştan başla…\" seçeneğini seç (dosyanın bir kopyası saklanır) ya da dosyayı düzeltip yeniden tara."
       },
       "group_not_found": {
         "title": "Bu grup artık yok",
@@ -606,7 +610,7 @@
       },
       "organization_limit": {
         "title": "Gruplar için bir sınıra ulaşıldı",
-        "detail": "Grup sayısı, iç içe düzey sayısı, gruplardaki mod sayısı ya da renklendirilmiş mod sayısı için bir sınıra ulaştın. Bazılarını kaldırıp yeniden dene."
+        "detail": "Gruplar ve renkler için bir sınıra ulaştın: grup sayısı, iç içe geçme derinliği, gruplardaki ya da renklendirilmiş mod sayısı veya kayıtlı dosyanın boyutu. Hiçbir şey değiştirilmedi. Bunların bir kısmını kaldırmak yer açabilir."
       }
     }
   },
@@ -1283,7 +1287,8 @@
         "removed": "Kaldırıldı",
         "addedTitle": "Kayıtlı etkin mod listende henüz yok. Uygula'ya bastığında eklenir.",
         "removedTitle": "Kayıtlı etkin mod listende var. Uygula'ya bastığında kaldırılır."
-      }
+      },
+      "rowActionsButton": "{name} modu için işlemler"
     },
     "sort": {
       "groupLabel": "Sıralama düzeni",
@@ -1404,8 +1409,9 @@
       "selectAllShown": "Gösterilen {count} modun tümünü seç | Gösterilen {count} modun tümünü seç",
       "selectAllEmpty": "Tümünü seç",
       "selectedCount": "{count} seçili | {count} seçili",
-      "notShown": "({count} gösterilmiyor) | ({count} gösterilmiyor)",
-      "clear": "Seçimi temizle"
+      "clear": "Seçimi temizle",
+      "selectedCountHidden": "{selected} ({hidden})",
+      "hiddenPart": "{count} gösterilmiyor | {count} gösterilmiyor"
     },
     "move": {
       "up": "Yukarı taşı",
@@ -1413,7 +1419,6 @@
       "top": "En üste taşı",
       "bottom": "En alta taşı",
       "after": "Bir modun ardına taşı…",
-      "menuButton": "{name} modunu taşı",
       "activateAtButton": "{name} modunu belirli bir konumda etkinleştir…",
       "afterDialogHeader": "Başka bir modun ardına taşı",
       "activateAtDialogHeader": "Belirli bir konumda etkinleştir",
@@ -1434,7 +1439,142 @@
       "viewSuggested": "Önerilen sırayı göster",
       "suggestedNote": "Uygula işlemi önerilen sırayı yazacak. Bir modu taşırsan kendi sırana geçilir.",
       "coreStaysActive": "Ana İçerik devre dışı bırakılamaz.",
-      "inactiveNotOrdered": "Bu listenin kendine ait bir sırası yok. Modları etkinleştirmek için Etkin listeye sürükle."
+      "inactiveNotOrdered": "Bu listenin kendine ait bir sırası yok. Modları etkinleştirmek için Etkin listeye sürükle.",
+      "activateAtItem": "Belirli bir konumda etkinleştir…"
+    },
+    "colors": {
+      "names": {
+        "red": "Kırmızı",
+        "orange": "Turuncu",
+        "amber": "Sarı",
+        "lime": "Açık yeşil",
+        "green": "Yeşil",
+        "teal": "Deniz yeşili",
+        "cyan": "Camgöbeği",
+        "blue": "Mavi",
+        "indigo": "Lacivert",
+        "violet": "Mor",
+        "pink": "Pembe",
+        "slate": "Kurşuni"
+      },
+      "rowColor": "Renk: {name}",
+      "groupTitle": "Grup rengi",
+      "modTitle": "Mod rengi",
+      "groupHelp": "Renk, grubu ağaçta ve mod satırlarında işaretler. Başka hiçbir şeyi değiştirmez.",
+      "modHelp": "Renk, bu modu kendi satırında işaretler. Yükleme sıranı değiştirmez.",
+      "legend": "Renk",
+      "none": "Renk yok",
+      "apply": "Kaydet",
+      "toast": {
+        "groupChanged": "Grup rengi değiştirildi",
+        "modChanged": "{name} modunun rengi değiştirildi",
+        "modCleared": "{name} modunun rengi kaldırıldı"
+      }
+    },
+    "groups": {
+      "regionLabel": "Gruplar",
+      "heading": "Gruplar",
+      "help": "Gruplar yalnızca modları bulmana yardım eder. Hiçbir zaman dosya taşımaz ya da yükleme sıranı değiştirmez.",
+      "openButton": "Gruplar",
+      "close": "Grupları kapat",
+      "treeLabel": "Gruplar",
+      "allMods": "Tüm modlar",
+      "ungrouped": "Grupsuz",
+      "newGroup": "Yeni grup",
+      "actions": "Grup işlemleri",
+      "actionsFor": "{name} grubu için işlemler",
+      "searchLabel": "Grupları ara",
+      "searchPlaceholder": "Grupları ara…",
+      "empty": "Henüz grup yok. Modlarını düzenlemeye başlamak için bir grup oluştur.",
+      "noMatches": "Eşleşen grup yok.",
+      "nodeModCount": "Alt gruplar dahil {count} mod | Alt gruplar dahil {count} mod",
+      "nodeSubgroupCount": "{count} alt grup | {count} alt grup",
+      "chipWithColor": "{name} ({color})",
+      "allGroups": "Bulunduğu gruplar: {groups}",
+      "rowMenu": {
+        "groups": "Gruplar…",
+        "color": "Renk…",
+        "colorCurrent": "Renk ({name})…"
+      },
+      "menu": {
+        "newSubgroup": "Yeni alt grup…",
+        "rename": "Yeniden adlandır…",
+        "color": "Renk…",
+        "move": "Grubu taşı…",
+        "checkingUninstalled": "Kurulu olmayan modlar denetleniyor…",
+        "uninstalledUnavailable": "Kurulu olmayan modlar denetlenemedi",
+        "removeUninstalled": "Kurulu olmayan {count} modu kaldır | Kurulu olmayan {count} modu kaldır",
+        "noUninstalled": "Bu gruptaki tüm modlar kurulu",
+        "delete": "Sil…"
+      },
+      "dialog": {
+        "createTitle": "Yeni grup",
+        "subgroupTitle": "Yeni alt grup",
+        "renameTitle": "Grubu yeniden adlandır",
+        "inside": "Üst grup: {parent}",
+        "nameLabel": "Ad",
+        "nameHelp": "En fazla 64 karakter. Aynı düzeydeki iki grup, büyük/küçük harf farkı gözetilmeksizin aynı adı taşıyamaz.",
+        "createButton": "Oluştur",
+        "renameButton": "Yeniden adlandır",
+        "deleteTitle": "Grubu sil",
+        "deleteQuestion": "{name} grubu silinsin mi?",
+        "deleteNoMods": "Bu grupta hiç mod yok.",
+        "deleteMods": "Alt grupları dahil bu grupta {count} mod var. | Alt grupları dahil bu grupta {count} mod var.",
+        "modeLegend": "{count} alt gruba ne olacak | {count} alt gruba ne olacak",
+        "keepSubgroups": "Alt grupları koru ve bir düzey yukarı taşı",
+        "deleteSubgroups": "Alt grupları da sil",
+        "deleteSafety": "Hiçbir mod silinmez ya da kurulumu kaldırılmaz. Modlar, ait oldukları diğer gruplarda kalır.",
+        "deleteButton": "Grubu sil",
+        "moveTitle": "Grubu taşı",
+        "moveQuestion": "{name} grubunu şuraya taşı:",
+        "moveLegend": "Grubun yeni yeri",
+        "topLevel": "En üst düzey",
+        "moveInvalid": "Bir grup kendi içine ya da kendi alt gruplarının içine taşınamaz",
+        "moveCurrent": "Zaten burada",
+        "moveButton": "Taşı",
+        "modGroupsTitle": "{name} modunun grupları",
+        "modGroupsHelp": "Bu modu bir gruba eklemek için grubu işaretle. Modu gruptan çıkarmak için işareti kaldır. Her değişiklik hemen kaydedilir.",
+        "modGroupsEmpty": "Henüz grup yok. Gruplar panelinden bir grup oluştur.",
+        "modGroupsList": "Gruplar",
+        "done": "Bitti",
+        "removeUninstalledTitle": "Kurulu olmayan modları kaldır",
+        "removeUninstalledBody": "Son taramaya göre {name} grubunda ve alt gruplarında {count} mod kurulu değil. Bu mod o gruplardan kaldırılsın mı? Yalnızca onu yeniden bir gruba eklersen geri gelir. | Son taramaya göre {name} grubunda ve alt gruplarında {count} mod kurulu değil. Bu modlar o gruplardan kaldırılsın mı? Yalnızca onları yeniden bir gruba eklersen geri gelirler.",
+        "removeUninstalledList": "Kaldırılacak modlar",
+        "removeUninstalledLoading": "Hangi modların kurulu olmadığı denetleniyor…",
+        "removeUninstalledFailed": "Hangi modların kurulu olmadığı denetlenemedi. Bunu kapatıp yeniden dene.",
+        "removeUninstalledButton": "Kaldır"
+      },
+      "startOver": {
+        "title": "Gruplara baştan başla",
+        "body": "Rimmerge okunamayan dosyanın bir kopyasını yanında saklar, sonra hiç grup ve renk olmadan başlar. Modların ve yükleme sıran etkilenmez.",
+        "confirm": "Baştan başla"
+      },
+      "notice": {
+        "notLoaded": "Gruplar ve renkler bu oturumda kullanılamıyor.",
+        "unreadable": "Rimmerge grup ve renklerini okuyamadı. Şimdilik salt okunurlar. Dosya başka bir programda açıksa o programı kapat ve yeniden tara.",
+        "tooLarge": "Grup ve renk dosyan okunamayacak kadar büyük. Baştan başlayana kadar salt okunurlar.",
+        "malformed": "Grup ve renk dosyan bozuk. Baştan başlayana kadar salt okunurlar.",
+        "newerVersion": "Grupların ve renklerin daha yeni bir Rimmerge sürümüyle kaydedilmiş. Üzerlerine yazılmasın diye burada salt okunurlar.",
+        "invalid": "Grup ve renk dosyan bir kurala uymuyor ve kullanılamıyor. Baştan başlayana kadar salt okunurlar.",
+        "tryAgain": "Yeniden tara ve tekrar dene",
+        "startOver": "Baştan başla…"
+      },
+      "scope": {
+        "ungrouped": "Hiçbir grupta olmayan modlar gösteriliyor",
+        "group": "{name} grubu gösteriliyor: alt gruplar dahil {count} mod | {name} grubu gösteriliyor: alt gruplar dahil {count} mod",
+        "notInstalled": "{count} mod kurulu değil | {count} mod kurulu değil",
+        "note": "Arama ve filtreler bu grubun içinde çalışır. Etkin liste yükleme sırasında kalır.",
+        "showAll": "Tüm modları göster"
+      },
+      "toast": {
+        "created": "Grup oluşturuldu",
+        "renamed": "Grup yeniden adlandırıldı",
+        "moved": "Grup taşındı",
+        "deleted": "Grup silindi",
+        "removedUninstalled": "Kurulu olmayan {count} mod kaldırıldı | Kurulu olmayan {count} mod kaldırıldı",
+        "keptInstalledAgain": "{count} mod yeniden kurulu olduğu için grupta kaldı | {count} mod yeniden kurulu olduğu için grupta kaldı",
+        "startedOver": "Hiç grup olmadan baştan başlandı"
+      }
     }
   },
   "rules": {
@@ -1736,7 +1876,8 @@
       "button": "İçe aktar",
       "openFile": "Mod listesi dosyası aç…",
       "paste": "Liste yapıştır…",
-      "fileFilter": "Mod listeleri (.rml, .xml, .txt)",
+      "fromSave": "Oyun kaydından içe aktar…",
+      "fileFilter": "Mod listeleri ve oyun kayıtları (.rml, .rws, .xml, .txt)",
       "allFiles": "Tüm dosyalar",
       "pasteTitle": "Yükleme sırasını yapıştır",
       "pasteHint": "Her satıra bir mod: \"Metin olarak kopyala\" ile alınan metin ya da her satıra bir paket ID'si.",
@@ -1750,8 +1891,8 @@
       "madeWith": "RimWorld {version} ile hazırlanmış.",
       "versionDiffers": "Sende RimWorld {game} var; bu farklı bir sürüm.",
       "misaligned": {
-        "names": "Listede {ids} mod için {values} ad var, bu yüzden gönderenin verdiği adlar gösterilmiyor.",
-        "workshopIds": "Listede {ids} mod için {values} Steam ID'si var, bu yüzden Atölye bağlantıları gösterilmiyor."
+        "names": "Listedeki ad sayısı ({values}) mod sayısıyla ({ids}) eşleşmiyor, bu yüzden gönderenin verdiği adlar gösterilmiyor.",
+        "workshopIds": "Listedeki Atölye ID'si sayısı ({values}) mod sayısıyla ({ids}) eşleşmiyor, bu yüzden Atölye bağlantıları gösterilmiyor."
       },
       "replacesPending": "Henüz yeniden taramadığın etkinleştirme değişikliklerinin yerini bu içe aktarma alacak.",
       "replacesUnwritten": "Bu içe aktarma, henüz uygulanmamış Mevcut sıranın yerini alır.",
@@ -1793,6 +1934,19 @@
       "importing": "İçe aktarılıyor…",
       "whatHappens": "Rimmerge bu sırayla yeniden tarar ve onu Mevcut sıra olarak gösterir. Uygula'ya basana kadar hiçbir şey yazılmaz.",
       "confirm": "Bu sırayı kullan"
+    },
+    "saves": {
+      "title": "Oyun kaydından içe aktar",
+      "intro": "Yalnızca oyun kaydının mod listesi okunur. Oyun kaydının kendisi hiçbir zaman değiştirilmez.",
+      "savedAt": "Kaydedildi: {date}",
+      "unknownDate": "Tarih bilinmiyor",
+      "preview": "Önizle",
+      "previewLabel": "{name} adlı oyun kaydının mod listesini önizle",
+      "browse": "Gözat…",
+      "fileFilter": "RimWorld oyun kayıtları (.rws)",
+      "empty": "RimWorld'ün Saves klasöründe oyun kaydı yok.",
+      "noFolder": "RimWorld'ün Saves klasörü ModsConfig.xml dosyanın yanında bulunamadı. Bunun yerine Gözat düğmesiyle bir oyun kaydı seç.",
+      "omitted": "Daha eski {count} oyun kaydı gösterilmiyor. | Daha eski {count} oyun kaydı gösterilmiyor."
     },
     "imported": "İçe aktarılan sıra hazır. Gözden geçir, sonra etkin sıran olarak kaydetmek için Uygula'ya bas.",
     "notInFile": "Bu henüz etkin sıran değil.",

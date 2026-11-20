@@ -568,6 +568,10 @@
         "title": "RimWorld się nie uruchomił",
         "detail": "System Windows nie mógł uruchomić pliku RimWorldWin64.exe."
       },
+      "saves_folder_unreadable": {
+        "title": "Nie można odczytać folderu Saves",
+        "detail": "Rimmerge nie mógł wyświetlić plików w folderze Saves gry RimWorld. Zamiast tego wskaż zapis gry przyciskiem „Przeglądaj…”."
+      },
       "mod_list_io_failed": {
         "title": "Nie udało się odczytać ani zapisać listy modów",
         "detail": "Nie udało się odczytać ani zapisać pliku listy modów. Sprawdź, czy plik (a przy zapisywaniu także jego folder) istnieje i czy masz uprawnienia, aby go tam otworzyć lub zapisać."
@@ -590,7 +594,7 @@
       },
       "organization_unavailable": {
         "title": "Nie można teraz zmieniać grup",
-        "detail": "Rimmerge nie mógł użyć zapisanych grup i kolorów, więc są tylko do odczytu. Zacznij od nowa, aby utworzyć nowy zestaw, albo napraw plik i przeskanuj ponownie."
+        "detail": "Rimmerge nie mógł odczytać pliku organization.json, więc grupy i kolory są tylko do odczytu. Wybierz „Zacznij od nowa…” na stronie „Mody”, aby utworzyć nowy zestaw (kopia pliku zostanie zachowana), albo napraw plik i przeskanuj ponownie."
       },
       "group_not_found": {
         "title": "Ta grupa już nie istnieje",
@@ -606,7 +610,7 @@
       },
       "organization_limit": {
         "title": "Osiągnięto limit grup",
-        "detail": "Osiągnięto limit liczby grup, poziomów zagnieżdżenia, modów w grupach lub modów z kolorem. Usuń część z nich i spróbuj ponownie."
+        "detail": "Osiągnięto limit dla grup i kolorów: liczby grup, głębokości zagnieżdżenia, liczby modów w grupach lub z kolorem albo rozmiaru zapisanego pliku. Nic nie zostało zmienione. Usunięcie części z nich może zwolnić miejsce."
       }
     }
   },
@@ -1283,7 +1287,8 @@
         "removed": "Usunięty",
         "addedTitle": "Tego moda nie ma jeszcze na zapisanej liście aktywnych modów. Zastosowanie go doda.",
         "removedTitle": "Ten mod jest na zapisanej liście aktywnych modów. Zastosowanie go z niej usunie."
-      }
+      },
+      "rowActionsButton": "Działania dla moda {name}"
     },
     "sort": {
       "groupLabel": "Kolejność sortowania",
@@ -1404,8 +1409,9 @@
       "selectAllShown": "Zaznacz widoczny mod ({count}) | Zaznacz widoczne mody ({count}) | Zaznacz widoczne mody ({count})",
       "selectAllEmpty": "Zaznacz wszystkie",
       "selectedCount": "{count} zaznaczony | {count} zaznaczone | {count} zaznaczonych",
-      "notShown": "({count} niewidoczny) | ({count} niewidoczne) | ({count} niewidocznych)",
-      "clear": "Odznacz wszystkie"
+      "clear": "Odznacz wszystkie",
+      "selectedCountHidden": "{selected} ({hidden})",
+      "hiddenPart": "{count} niewidoczny | {count} niewidoczne | {count} niewidocznych"
     },
     "move": {
       "up": "Przenieś wyżej",
@@ -1413,7 +1419,6 @@
       "top": "Przenieś na górę",
       "bottom": "Przenieś na dół",
       "after": "Przenieś za…",
-      "menuButton": "Przenieś mod {name}",
       "activateAtButton": "Włącz mod {name} na pozycji…",
       "afterDialogHeader": "Przenieś za inny mod",
       "activateAtDialogHeader": "Włącz na wybranej pozycji",
@@ -1434,7 +1439,142 @@
       "viewSuggested": "Pokaż sugerowaną",
       "suggestedNote": "„Zastosuj” zapisze sugerowaną kolejność. Przeniesienie moda przełączy na twoją własną kolejność.",
       "coreStaysActive": "Modu Core nie można wyłączyć.",
-      "inactiveNotOrdered": "Ta lista nie ma własnej kolejności. Przeciągnij mody na listę aktywnych, aby je włączyć."
+      "inactiveNotOrdered": "Ta lista nie ma własnej kolejności. Przeciągnij mody na listę aktywnych, aby je włączyć.",
+      "activateAtItem": "Włącz na pozycji…"
+    },
+    "colors": {
+      "names": {
+        "red": "Czerwony",
+        "orange": "Pomarańczowy",
+        "amber": "Bursztynowy",
+        "lime": "Limonkowy",
+        "green": "Zielony",
+        "teal": "Morski",
+        "cyan": "Błękitny",
+        "blue": "Niebieski",
+        "indigo": "Indygo",
+        "violet": "Fioletowy",
+        "pink": "Różowy",
+        "slate": "Grafitowy"
+      },
+      "rowColor": "Kolor: {name}",
+      "groupTitle": "Kolor grupy",
+      "modTitle": "Kolor moda",
+      "groupHelp": "Kolor oznacza grupę w drzewie i w wierszach modów. Nic poza tym nie zmienia.",
+      "modHelp": "Kolor oznacza ten mod w jego wierszu. Nie zmienia kolejności ładowania.",
+      "legend": "Kolor",
+      "none": "Bez koloru",
+      "apply": "Zastosuj",
+      "toast": {
+        "groupChanged": "Zmieniono kolor grupy",
+        "modChanged": "Zmieniono kolor moda {name}",
+        "modCleared": "Usunięto kolor moda {name}"
+      }
+    },
+    "groups": {
+      "regionLabel": "Grupy",
+      "heading": "Grupy",
+      "help": "Grupy służą tylko do odnajdywania modów. Nigdy nie przenoszą plików ani nie zmieniają kolejności ładowania.",
+      "openButton": "Grupy",
+      "close": "Zamknij grupy",
+      "treeLabel": "Grupy",
+      "allMods": "Wszystkie mody",
+      "ungrouped": "Bez grupy",
+      "newGroup": "Nowa grupa",
+      "actions": "Działania na grupach",
+      "actionsFor": "Działania dla grupy {name}",
+      "searchLabel": "Szukaj grup",
+      "searchPlaceholder": "Szukaj grup…",
+      "empty": "Nie ma jeszcze grup. Utwórz grupę, aby zacząć porządkować mody.",
+      "noMatches": "Żadna grupa nie pasuje.",
+      "nodeModCount": "{count} mod, łącznie z podgrupami | {count} mody, łącznie z podgrupami | {count} modów, łącznie z podgrupami",
+      "nodeSubgroupCount": "{count} podgrupa | {count} podgrupy | {count} podgrup",
+      "chipWithColor": "{name} ({color})",
+      "allGroups": "W grupach: {groups}",
+      "rowMenu": {
+        "groups": "Grupy…",
+        "color": "Kolor…",
+        "colorCurrent": "Kolor ({name})…"
+      },
+      "menu": {
+        "newSubgroup": "Nowa podgrupa…",
+        "rename": "Zmień nazwę…",
+        "color": "Kolor…",
+        "move": "Przenieś grupę do…",
+        "checkingUninstalled": "Sprawdzanie niezainstalowanych modów…",
+        "uninstalledUnavailable": "Nie można sprawdzić niezainstalowanych modów",
+        "removeUninstalled": "Usuń z grupy {count} niezainstalowany mod | Usuń z grupy {count} niezainstalowane mody | Usuń z grupy {count} niezainstalowanych modów",
+        "noUninstalled": "Wszystkie mody w tej grupie są zainstalowane",
+        "delete": "Usuń…"
+      },
+      "dialog": {
+        "createTitle": "Nowa grupa",
+        "subgroupTitle": "Nowa podgrupa",
+        "renameTitle": "Zmień nazwę grupy",
+        "inside": "W grupie {parent}",
+        "nameLabel": "Nazwa",
+        "nameHelp": "Do 64 znaków. Dwie grupy na tym samym poziomie nie mogą mieć tej samej nazwy, niezależnie od wielkości liter.",
+        "createButton": "Utwórz",
+        "renameButton": "Zmień nazwę",
+        "deleteTitle": "Usuń grupę",
+        "deleteQuestion": "Usunąć grupę {name}?",
+        "deleteNoMods": "W tej grupie nie ma żadnych modów.",
+        "deleteMods": "W tej grupie (łącznie z jej podgrupami) jest {count} mod. | W tej grupie (łącznie z jej podgrupami) są {count} mody. | W tej grupie (łącznie z jej podgrupami) jest {count} modów.",
+        "modeLegend": "Co stanie się z jej {count} podgrupą | Co stanie się z jej {count} podgrupami | Co stanie się z jej {count} podgrupami",
+        "keepSubgroups": "Zachowaj podgrupy i przenieś je o poziom wyżej",
+        "deleteSubgroups": "Usuń także podgrupy",
+        "deleteSafety": "Żaden mod nie zostanie usunięty ani odinstalowany. Mody pozostaną w innych grupach, do których należą.",
+        "deleteButton": "Usuń grupę",
+        "moveTitle": "Przenieś grupę",
+        "moveQuestion": "Przenieś grupę {name} do:",
+        "moveLegend": "Nowe miejsce grupy",
+        "topLevel": "Najwyższy poziom",
+        "moveInvalid": "Grupy nie można umieścić w niej samej ani w jej podgrupach",
+        "moveCurrent": "Już tutaj",
+        "moveButton": "Przenieś",
+        "modGroupsTitle": "Grupy moda {name}",
+        "modGroupsHelp": "Zaznacz grupę, aby dodać do niej ten mod. Odznacz ją, aby go z niej wyjąć. Każda zmiana zapisuje się od razu.",
+        "modGroupsEmpty": "Nie ma jeszcze grup. Utwórz grupę w panelu „Grupy”.",
+        "modGroupsList": "Grupy",
+        "done": "Gotowe",
+        "removeUninstalledTitle": "Usuń niezainstalowane mody z grup",
+        "removeUninstalledBody": "Według ostatniego skanowania {count} mod w grupie {name} i jej podgrupach nie jest zainstalowany. Usunąć go z tych grup? Wróci do nich tylko wtedy, gdy ponownie dodasz go do grupy. | Według ostatniego skanowania {count} mody w grupie {name} i jej podgrupach nie są zainstalowane. Usunąć je z tych grup? Wrócą do nich tylko wtedy, gdy ponownie dodasz je do grupy. | Według ostatniego skanowania {count} modów w grupie {name} i jej podgrupach nie jest zainstalowanych. Usunąć je z tych grup? Wrócą do nich tylko wtedy, gdy ponownie dodasz je do grupy.",
+        "removeUninstalledList": "Mody do usunięcia z grup",
+        "removeUninstalledLoading": "Sprawdzanie, które mody nie są zainstalowane…",
+        "removeUninstalledFailed": "Nie można sprawdzić, które mody nie są zainstalowane. Zamknij to okno i spróbuj ponownie.",
+        "removeUninstalledButton": "Usuń z grup"
+      },
+      "startOver": {
+        "title": "Zacznij grupy od nowa",
+        "body": "Rimmerge zachowa kopię nieczytelnego pliku obok niego, a potem zacznie bez grup i bez kolorów. Nie wpływa to na mody ani na kolejność ładowania.",
+        "confirm": "Zacznij od nowa"
+      },
+      "notice": {
+        "notLoaded": "Grupy i kolory nie są dostępne w tej sesji.",
+        "unreadable": "Rimmerge nie mógł odczytać grup i kolorów. Na razie są tylko do odczytu. Jeśli plik jest otwarty w innym programie, zamknij go i przeskanuj ponownie.",
+        "tooLarge": "Plik grup i kolorów jest zbyt duży, aby go odczytać. Grupy i kolory są tylko do odczytu, dopóki nie zaczniesz od nowa.",
+        "malformed": "Plik grup i kolorów jest uszkodzony. Grupy i kolory są tylko do odczytu, dopóki nie zaczniesz od nowa.",
+        "newerVersion": "Grupy i kolory zapisała nowsza wersja Rimmerge. Tutaj są tylko do odczytu, aby nie zostały nadpisane.",
+        "invalid": "Plik grup i kolorów narusza regułę i nie może zostać użyty. Grupy i kolory są tylko do odczytu, dopóki nie zaczniesz od nowa.",
+        "tryAgain": "Przeskanuj i spróbuj ponownie",
+        "startOver": "Zacznij od nowa…"
+      },
+      "scope": {
+        "ungrouped": "Widok: mody spoza wszystkich grup",
+        "group": "Widok: grupa {name} ({count} mod, łącznie z podgrupami) | Widok: grupa {name} ({count} mody, łącznie z podgrupami) | Widok: grupa {name} ({count} modów, łącznie z podgrupami)",
+        "notInstalled": "{count} mod nie jest zainstalowany | {count} mody nie są zainstalowane | {count} modów nie jest zainstalowanych",
+        "note": "Wyszukiwanie i filtry działają w obrębie tej grupy. Lista aktywnych pozostaje w kolejności ładowania.",
+        "showAll": "Pokaż wszystkie mody"
+      },
+      "toast": {
+        "created": "Utworzono grupę",
+        "renamed": "Zmieniono nazwę grupy",
+        "moved": "Przeniesiono grupę",
+        "deleted": "Usunięto grupę",
+        "removedUninstalled": "Usunięto z grup {count} niezainstalowany mod | Usunięto z grup {count} niezainstalowane mody | Usunięto z grup {count} niezainstalowanych modów",
+        "keptInstalledAgain": "{count} mod jest znów zainstalowany, więc pozostał w grupie | {count} mody są znów zainstalowane, więc pozostały w grupie | {count} modów jest znów zainstalowanych, więc pozostało w grupie",
+        "startedOver": "Zaczęto od nowa, bez grup"
+      }
     }
   },
   "rules": {
@@ -1736,7 +1876,8 @@
       "button": "Importuj",
       "openFile": "Otwórz plik listy modów…",
       "paste": "Wklej listę…",
-      "fileFilter": "Listy modów (.rml, .xml, .txt)",
+      "fromSave": "Importuj z zapisu gry…",
+      "fileFilter": "Listy modów i zapisy gry (.rml, .rws, .xml, .txt)",
       "allFiles": "Wszystkie pliki",
       "pasteTitle": "Wklej kolejność ładowania",
       "pasteHint": "Jeden mod w wierszu: tekst z „Kopiuj jako tekst” albo po jednym ID pakietu w wierszu.",
@@ -1751,7 +1892,7 @@
       "versionDiffers": "Masz RimWorld {game}, czyli inne wydanie.",
       "misaligned": {
         "names": "Liczba nazw na liście ({values}) nie zgadza się z liczbą modów ({ids}), więc nazwy nadawcy nie są pokazywane.",
-        "workshopIds": "Liczba ID Steam na liście ({values}) nie zgadza się z liczbą modów ({ids}), więc linki do Warsztatu nie są pokazywane."
+        "workshopIds": "Liczba ID Warsztatu na liście ({values}) nie zgadza się z liczbą modów ({ids}), więc linki do Warsztatu nie są pokazywane."
       },
       "replacesPending": "Zmiany włączenia i wyłączenia modów wprowadzone od ostatniego skanowania zostaną zastąpione.",
       "replacesUnwritten": "Ten import zastąpi bieżącą kolejność, która nie została jeszcze zastosowana.",
@@ -1793,6 +1934,19 @@
       "importing": "Importowanie…",
       "whatHappens": "Rimmerge przeskanuje ponownie z tą kolejnością i pokaże ją jako bieżącą. Nic nie zostanie zapisane, dopóki jej nie zastosujesz.",
       "confirm": "Użyj tej kolejności"
+    },
+    "saves": {
+      "title": "Importuj z zapisu gry",
+      "intro": "Odczytywana jest tylko lista modów z zapisu. Sam zapis nigdy nie jest zmieniany.",
+      "savedAt": "Zapisano {date}",
+      "unknownDate": "Nieznana data",
+      "preview": "Podgląd",
+      "previewLabel": "Podgląd listy modów zapisu {name}",
+      "browse": "Przeglądaj…",
+      "fileFilter": "Zapisy gry RimWorld (.rws)",
+      "empty": "W folderze Saves gry RimWorld nie ma zapisów.",
+      "noFolder": "Nie znaleziono folderu Saves gry RimWorld obok pliku ModsConfig.xml. Zamiast tego wskaż zapis gry przyciskiem „Przeglądaj…”.",
+      "omitted": "Nie pokazano {count} starszego zapisu. | Nie pokazano {count} starszych zapisów. | Nie pokazano {count} starszych zapisów."
     },
     "imported": "Zaimportowana kolejność jest gotowa. Przejrzyj ją, a potem zastosuj, aby zapisać ją jako kolejność aktywnych modów.",
     "notInFile": "To jeszcze nie jest kolejność aktywnych modów.",

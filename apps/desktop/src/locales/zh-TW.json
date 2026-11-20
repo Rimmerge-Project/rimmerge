@@ -568,6 +568,10 @@
         "title": "RimWorld 未能啟動",
         "detail": "Windows 無法啟動 RimWorldWin64.exe。"
       },
+      "saves_folder_unreadable": {
+        "title": "無法讀取存檔資料夾",
+        "detail": "Rimmerge 無法列出 RimWorld 存檔資料夾（Saves）中的檔案。請改為瀏覽並選擇存檔。"
+      },
       "mod_list_io_failed": {
         "title": "無法讀取或寫入模組清單",
         "detail": "無法讀取或寫入模組清單檔案。請確認該檔案（儲存時則為其所在資料夾）存在，且你有權限在該處開啟或儲存它。"
@@ -590,7 +594,7 @@
       },
       "organization_unavailable": {
         "title": "目前無法變更分組",
-        "detail": "Rimmerge 無法使用你已儲存的分組與顏色，因此它們目前為唯讀。請重新開始以建立一組新的分組，或修正該檔案後重新掃描。"
+        "detail": "Rimmerge 無法讀取 organization.json，因此你的分組與顏色目前為唯讀。請在「模組」頁面選擇「重新開始…」以建立一組新的分組（會保留該檔案的副本），或修正該檔案後重新掃描。"
       },
       "group_not_found": {
         "title": "該分組已不存在",
@@ -606,7 +610,7 @@
       },
       "organization_limit": {
         "title": "已達到分組的上限",
-        "detail": "分組數量、巢狀層級、分組中的模組數量或已設定顏色的模組數量已達上限。請移除一些後再試一次。"
+        "detail": "分組與顏色已達到某項上限：分組數量、巢狀層級深度、分組中或已設定顏色的模組數量，或儲存檔案的大小。未做任何變更。移除其中一些項目或許能騰出空間。"
       }
     }
   },
@@ -1283,7 +1287,8 @@
         "removed": "移除",
         "addedTitle": "尚未在你已儲存的已啟用模組清單中。套用後會將其加入。",
         "removedTitle": "仍在你已儲存的已啟用模組清單中。套用後會將其移除。"
-      }
+      },
+      "rowActionsButton": "{name} 的動作"
     },
     "sort": {
       "groupLabel": "排序方式",
@@ -1404,8 +1409,9 @@
       "selectAllShown": "全選顯示中的 {count} 個",
       "selectAllEmpty": "全選",
       "selectedCount": "已選取 {count} 個",
-      "notShown": "（{count} 個未顯示）",
-      "clear": "清除選取"
+      "clear": "清除選取",
+      "selectedCountHidden": "{selected}（{hidden}）",
+      "hiddenPart": "{count} 個未顯示"
     },
     "move": {
       "up": "上移",
@@ -1413,7 +1419,6 @@
       "top": "移到最上方",
       "bottom": "移到最下方",
       "after": "移到指定模組之後…",
-      "menuButton": "移動 {name}",
       "activateAtButton": "在指定位置啟用 {name}…",
       "afterDialogHeader": "移到另一個模組之後",
       "activateAtDialogHeader": "在指定位置啟用",
@@ -1434,7 +1439,142 @@
       "viewSuggested": "檢視建議順序",
       "suggestedNote": "套用會寫入建議順序。移動模組會切換為你自己的順序。",
       "coreStaysActive": "Core 無法停用。",
-      "inactiveNotOrdered": "此清單沒有自己的順序。將模組拖曳到「已啟用」清單即可啟用。"
+      "inactiveNotOrdered": "此清單沒有自己的順序。將模組拖曳到「已啟用」清單即可啟用。",
+      "activateAtItem": "在指定位置啟用…"
+    },
+    "colors": {
+      "names": {
+        "red": "紅色",
+        "orange": "橘色",
+        "amber": "琥珀色",
+        "lime": "萊姆綠",
+        "green": "綠色",
+        "teal": "藍綠色",
+        "cyan": "青色",
+        "blue": "藍色",
+        "indigo": "靛藍色",
+        "violet": "紫色",
+        "pink": "粉紅色",
+        "slate": "石板灰"
+      },
+      "rowColor": "顏色：{name}",
+      "groupTitle": "分組顏色",
+      "modTitle": "模組顏色",
+      "groupHelp": "顏色會在分組樹與模組列上標示此分組，不會變更其他任何內容。",
+      "modHelp": "顏色會在此模組的列上標示它，不會變更你的載入順序。",
+      "legend": "顏色",
+      "none": "無顏色",
+      "apply": "套用",
+      "toast": {
+        "groupChanged": "已變更分組顏色",
+        "modChanged": "已變更 {name} 的顏色",
+        "modCleared": "已移除 {name} 的顏色"
+      }
+    },
+    "groups": {
+      "regionLabel": "分組",
+      "heading": "分組",
+      "help": "分組只用來協助你尋找模組，絕不會移動檔案或變更你的載入順序。",
+      "openButton": "分組",
+      "close": "關閉分組",
+      "treeLabel": "分組",
+      "allMods": "所有模組",
+      "ungrouped": "未分組",
+      "newGroup": "新增分組",
+      "actions": "分組動作",
+      "actionsFor": "{name} 的動作",
+      "searchLabel": "搜尋分組",
+      "searchPlaceholder": "搜尋分組…",
+      "empty": "尚無分組。建立一個分組即可開始整理你的模組。",
+      "noMatches": "沒有符合的分組。",
+      "nodeModCount": "{count} 個模組（含子分組）",
+      "nodeSubgroupCount": "{count} 個子分組",
+      "chipWithColor": "{name}（{color}）",
+      "allGroups": "所屬分組：{groups}",
+      "rowMenu": {
+        "groups": "分組…",
+        "color": "顏色…",
+        "colorCurrent": "顏色（{name}）…"
+      },
+      "menu": {
+        "newSubgroup": "新增子分組…",
+        "rename": "重新命名…",
+        "color": "顏色…",
+        "move": "移動分組至…",
+        "checkingUninstalled": "正在檢查未安裝的模組…",
+        "uninstalledUnavailable": "無法檢查未安裝的模組",
+        "removeUninstalled": "移除 {count} 個未安裝的模組",
+        "noUninstalled": "此分組中的模組皆已安裝",
+        "delete": "刪除…"
+      },
+      "dialog": {
+        "createTitle": "新增分組",
+        "subgroupTitle": "新增子分組",
+        "renameTitle": "重新命名分組",
+        "inside": "位於 {parent} 之下",
+        "nameLabel": "名稱",
+        "nameHelp": "最多 64 個字元。同一層級的兩個分組不能使用相同名稱，不區分大小寫。",
+        "createButton": "建立",
+        "renameButton": "重新命名",
+        "deleteTitle": "刪除分組",
+        "deleteQuestion": "要刪除 {name} 嗎？",
+        "deleteNoMods": "此分組中沒有模組。",
+        "deleteMods": "此分組（含其子分組）中有 {count} 個模組。",
+        "modeLegend": "其 {count} 個子分組的處理方式",
+        "keepSubgroups": "保留子分組，並將它們上移一層",
+        "deleteSubgroups": "一併刪除子分組",
+        "deleteSafety": "不會刪除或解除安裝任何模組。模組仍會保留在它們所屬的其他分組中。",
+        "deleteButton": "刪除分組",
+        "moveTitle": "移動分組",
+        "moveQuestion": "將 {name} 移動至：",
+        "moveLegend": "分組的新位置",
+        "topLevel": "最上層",
+        "moveInvalid": "分組無法放入自身或其子分組之中",
+        "moveCurrent": "已在此處",
+        "moveButton": "移動",
+        "modGroupsTitle": "{name} 的分組",
+        "modGroupsHelp": "勾選分組即可將此模組加入其中，取消勾選則會將模組移出。每項變更都會立即儲存。",
+        "modGroupsEmpty": "尚無分組。請從「分組」面板建立一個。",
+        "modGroupsList": "分組",
+        "done": "完成",
+        "removeUninstalledTitle": "移除未安裝的模組",
+        "removeUninstalledBody": "依上次掃描結果，{name} 及其子分組中有 {count} 個模組未安裝。要將它們從這些分組中移除嗎？只有在你再次將它們加入分組時才會回來。",
+        "removeUninstalledList": "要移除的模組",
+        "removeUninstalledLoading": "正在檢查哪些模組未安裝…",
+        "removeUninstalledFailed": "無法檢查哪些模組未安裝。請關閉此視窗後再試一次。",
+        "removeUninstalledButton": "移除"
+      },
+      "startOver": {
+        "title": "重新開始建立分組",
+        "body": "Rimmerge 會在無法讀取的檔案旁保留一份副本，然後以沒有任何分組與顏色的狀態重新開始。你的模組與載入順序不受影響。",
+        "confirm": "重新開始"
+      },
+      "notice": {
+        "notLoaded": "此工作階段無法使用分組與顏色。",
+        "unreadable": "Rimmerge 無法讀取你的分組與顏色，因此它們暫時為唯讀。若有其他程式開啟了該檔案，請將其關閉後重新掃描。",
+        "tooLarge": "你的分組與顏色檔案過大，無法讀取。在你重新開始之前，它們皆為唯讀。",
+        "malformed": "你的分組與顏色檔案已損毀。在你重新開始之前，它們皆為唯讀。",
+        "newerVersion": "你的分組與顏色是由較新版本的 Rimmerge 儲存的。為避免被覆蓋，它們在此為唯讀。",
+        "invalid": "你的分組與顏色檔案違反了某項規則，無法使用。在你重新開始之前，它們皆為唯讀。",
+        "tryAgain": "重新掃描並再試一次",
+        "startOver": "重新開始…"
+      },
+      "scope": {
+        "ungrouped": "顯示不屬於任何分組的模組",
+        "group": "顯示 {name}：{count} 個模組（含子分組）",
+        "notInstalled": "{count} 個模組未安裝",
+        "note": "搜尋與篩選會在此分組內進行。「已啟用」清單仍依載入順序排列。",
+        "showAll": "顯示所有模組"
+      },
+      "toast": {
+        "created": "已建立分組",
+        "renamed": "已重新命名分組",
+        "moved": "已移動分組",
+        "deleted": "已刪除分組",
+        "removedUninstalled": "已移除 {count} 個未安裝的模組",
+        "keptInstalledAgain": "{count} 個模組已重新安裝，因此保留在分組中",
+        "startedOver": "已重新開始，目前沒有任何分組"
+      }
     }
   },
   "rules": {
@@ -1736,7 +1876,8 @@
       "button": "匯入",
       "openFile": "開啟模組清單檔案…",
       "paste": "貼上清單…",
-      "fileFilter": "模組清單（.rml、.xml、.txt）",
+      "fromSave": "從存檔匯入…",
+      "fileFilter": "模組清單與存檔（.rml、.rws、.xml、.txt）",
       "allFiles": "所有檔案",
       "pasteTitle": "貼上載入順序",
       "pasteHint": "每行一個模組：貼上「複製為文字」產生的文字，或每行一個 Package ID。",
@@ -1750,8 +1891,8 @@
       "madeWith": "以 RimWorld {version} 製作。",
       "versionDiffers": "你使用的是 RimWorld {game}，屬於不同的版本。",
       "misaligned": {
-        "names": "清單中有 {values} 個名稱，卻對應 {ids} 個模組，因此不顯示分享者提供的名稱。",
-        "workshopIds": "清單中有 {values} 個 Steam ID，卻對應 {ids} 個模組，因此不顯示任何創意工坊連結。"
+        "names": "清單中的名稱數量（{values}）與模組數量（{ids}）不符，因此不顯示分享者提供的名稱。",
+        "workshopIds": "清單中的創意工坊 ID 數量（{values}）與模組數量（{ids}）不符，因此不顯示任何創意工坊連結。"
       },
       "replacesPending": "尚未重新掃描的啟用／停用變更會被此次匯入取代。",
       "replacesUnwritten": "此次匯入會取代你的「目前」順序，而該順序尚未套用。",
@@ -1793,6 +1934,19 @@
       "importing": "正在匯入…",
       "whatHappens": "Rimmerge 會以此順序重新掃描，並將它顯示為「目前」順序。在你套用之前，不會寫入任何內容。",
       "confirm": "使用此順序"
+    },
+    "saves": {
+      "title": "從存檔匯入",
+      "intro": "只會讀取存檔中的模組清單，絕不會變更存檔本身。",
+      "savedAt": "儲存於 {date}",
+      "unknownDate": "日期不明",
+      "preview": "預覽",
+      "previewLabel": "預覽 {name} 的模組清單",
+      "browse": "瀏覽…",
+      "fileFilter": "RimWorld 存檔（.rws）",
+      "empty": "RimWorld 的存檔資料夾（Saves）中沒有存檔。",
+      "noFolder": "在你的 ModsConfig.xml 旁找不到 RimWorld 的存檔資料夾（Saves）。請改為瀏覽並選擇存檔。",
+      "omitted": "另有 {count} 個較舊的存檔未顯示。"
     },
     "imported": "匯入的順序已就緒。請檢查後再套用，將它儲存為已啟用模組的順序。",
     "notInFile": "此順序尚未成為已啟用模組的順序。",
