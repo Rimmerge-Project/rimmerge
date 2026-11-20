@@ -2,7 +2,7 @@
 import { useDebounceFn, useMediaQuery } from "@vueuse/core";
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
-import { computed, nextTick, ref, useTemplateRef } from "vue";
+import { type ComponentPublicInstance, computed, nextTick, ref, useTemplateRef, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 
@@ -10,14 +10,20 @@ import ActivateDialog from "@/components/mods/ActivateDialog.vue";
 import DeactivateDialog from "@/components/mods/DeactivateDialog.vue";
 import DefSearchBox from "@/components/mods/DefSearchBox.vue";
 import FileChangeNote from "@/components/mods/FileChangeNote.vue";
+import GroupRail from "@/components/mods/GroupRail.vue";
+import GroupScopeBar from "@/components/mods/GroupScopeBar.vue";
 import ModFilterBar from "@/components/mods/ModFilterBar.vue";
 import ModInfoPanel from "@/components/mods/ModInfoPanel.vue";
 import ModListPane from "@/components/mods/ModListPane.vue";
 import ModPositionDialog from "@/components/mods/ModPositionDialog.vue";
 import ModSortBar from "@/components/mods/ModSortBar.vue";
 import ModsRescanButton from "@/components/mods/ModsRescanButton.vue";
+import type { MenuAction } from "@/components/mods/ModTable.vue";
 import OrderSwitchedNote from "@/components/mods/OrderSwitchedNote.vue";
+import OrganizationDialogs from "@/components/mods/organization/OrganizationDialogs.vue";
+import OrganizationNotice from "@/components/mods/organization/OrganizationNotice.vue";
 import OrderNotInFileNote from "@/components/order/OrderNotInFileNote.vue";
+import { useGroupScope } from "@/composables/useGroupScope";
 import { useModActivation } from "@/composables/useModActivation";
 import { useModDeactivation } from "@/composables/useModDeactivation";
 import { useModListFilters } from "@/composables/useModListFilters";
@@ -25,7 +31,9 @@ import { useModListSort } from "@/composables/useModListSort";
 import { type ListKind, useModReorder } from "@/composables/useModReorder";
 import { useOrderSource } from "@/composables/useOrderSource";
 import { useInactiveModsQuery, useWorkingModsQuery } from "@/queries/activeSet";
+import type { ModListDto } from "@/types/generated/ModListDto";
 import { ACTIVE_SORT_KEYS, INACTIVE_SORT_KEYS } from "@/utils/modListSort";
+import { ALL_MODS, type OrganizationDialog } from "@/utils/organization";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -62,8 +70,10 @@ const hasPanelColumn = useMediaQuery("(min-width: 1800px)");
 // reordered is the backend's answer (`reorderable` on the list), never restated here.
 const { activeSort, inactiveSort } = useModListSort();
 
-const activeFilters = useModListFilters({ sort: activeSort, hasTag: true });
-const inactiveFilters = useModListFilters({ sort: inactiveSort, hasTag: false });
+// The group scope narrows both lists (a filter, never a reorder); the search runs inside it.
+const groups = useGroupScope();
+const activeFilters = useModListFilters({ sort: activeSort, group: groups.scope });
+const inactiveFilters = useModListFilters({ sort: inactiveSort, group: groups.scope });
 
 const {
   data: activeData,
@@ -76,6 +86,76 @@ const {
   isPending: inactivePending,
   error: inactiveError,
 } = useInactiveModsQuery(inactiveFilters.query);
+
+// A list that fails because its group scope is gone drops the scope instead of showing an error.
+watch(activeError, (failure) => groups.dropScopeIfStale(failure));
+watch(inactiveError, (failure) => groups.dropScopeIfStale(failure));
+
+/** The group panel: a column of its own on a very wide window, a left drawer otherwise. */
+const hasGroupColumn = hasPanelColumn;
+const isGroupDrawerOpen = ref(false);
+const isGroupPanelShown = computed(
+  () => groups.isUsable.value && (hasGroupColumn.value || isGroupDrawerOpen.value),
+);
+const groupsOpenButton = useTemplateRef<ComponentPublicInstance>("groupsOpenButton");
+const groupRail = useTemplateRef<{ focusTree: () => Promise<void> }>("groupRail");
+
+/**
+ * Closes the group drawer and hands keyboard focus back to the button that opened it: the drawer
+ * leaves the page (`v-if`), and focus on a removed element would fall to the document body.
+ */
+async function closeGroupDrawer(): Promise<void> {
+  if (!isGroupDrawerOpen.value) {
+    return;
+  }
+  isGroupDrawerOpen.value = false;
+  await nextTick();
+  const button = groupsOpenButton.value?.$el;
+  if (button instanceof HTMLElement) {
+    button.focus();
+  }
+}
+
+// Picking a scope in the drawer answers the question it was opened for, so it closes.
+watch(groups.scope, () => void closeGroupDrawer());
+
+// A drawer left open must not outlive what it shows: groups turning unusable (a rescan that came
+// back damaged) or the window growing wide enough for the column would otherwise leave it armed.
+watch([groups.isUsable, hasGroupColumn], ([isUsable, hasColumn]) => {
+  if (!isUsable || hasColumn) {
+    isGroupDrawerOpen.value = false;
+  }
+});
+
+const organizationDialog = ref<OrganizationDialog | null>(null);
+
+/** The list a row is in, to read its groups and colour when its row menu asks for them. */
+function rowIn(list: ModListDto | undefined, modId: string) {
+  return list?.items.find((row) => row.modId === modId);
+}
+
+/** The shown row of the mod open in the info panel, for the colour and groups it lists. */
+const selectedRow = computed(() => {
+  const modId = selectedModId.value;
+  return modId === null
+    ? undefined
+    : (rowIn(activeData.value, modId) ?? rowIn(inactiveData.value, modId));
+});
+
+function onMenuAction(modId: string, action: MenuAction, from: ListKind): void {
+  if (action !== "groups" && action !== "color") {
+    reorder.menuAction(modId, action);
+    return;
+  }
+  const row = rowIn(from === "active" ? activeData.value : inactiveData.value, modId);
+  if (row === undefined) {
+    return;
+  }
+  organizationDialog.value =
+    action === "groups"
+      ? { kind: "modGroups", modId, groupIds: row.groups.map((group) => group.id) }
+      : { kind: "modColor", modId, current: row.color };
+}
 
 const selectedActiveIds = ref<string[]>([]);
 const selectedInactiveIds = ref<string[]>([]);
@@ -175,18 +255,55 @@ const followFocus = useDebounceFn((modId: string) => {
 
 <template>
   <div class="flex h-full min-h-0 gap-4 p-4">
+    <GroupRail
+      v-if="isGroupPanelShown"
+      ref="groupRail"
+      v-model:scope="groups.scope.value"
+      :nodes="groups.nodes.value"
+      :is-overlay="!hasGroupColumn"
+      @create-group="(parent: number | null) => (organizationDialog = { kind: 'createGroup', parent })"
+      @rename-group="(id: number) => (organizationDialog = { kind: 'renameGroup', id })"
+      @change-color="(id: number) => (organizationDialog = { kind: 'groupColor', id })"
+      @move-group="(id: number) => (organizationDialog = { kind: 'moveGroup', id })"
+      @delete-group="(id: number) => (organizationDialog = { kind: 'deleteGroup', id })"
+      @remove-uninstalled="(id: number) => (organizationDialog = { kind: 'removeUninstalled', id })"
+      @close="() => void closeGroupDrawer()"
+    />
     <section class="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
       <div class="flex shrink-0 items-start justify-between gap-2">
         <h1 class="text-text text-xl font-semibold">
           {{ t("mods.page.heading") }}
         </h1>
         <div class="flex items-start gap-2">
+          <Button
+            v-if="groups.isUsable.value && !hasGroupColumn"
+            ref="groupsOpenButton"
+            :label="t('mods.groups.openButton')"
+            icon="pi pi-sitemap"
+            severity="secondary"
+            outlined
+            size="small"
+            aria-controls="group-rail"
+            :aria-expanded="isGroupDrawerOpen"
+            data-testid="groups-open"
+            @click="isGroupDrawerOpen = true"
+          />
           <ModsRescanButton />
           <DefSearchBox />
         </div>
       </div>
 
       <FileChangeNote />
+
+      <OrganizationNotice
+        :organization="groups.organization.value"
+        @start-over="organizationDialog = { kind: 'startOver' }"
+      />
+      <GroupScopeBar
+        :scope="groups.scope.value"
+        :nodes="groups.nodes.value"
+        @clear="groups.scope.value = ALL_MODS"
+      />
 
       <!-- A move settles into Current without writing the file: say so, with the Apply path. -->
       <OrderNotInFileNote allow-revert />
@@ -211,19 +328,19 @@ const followFocus = useDebounceFn((modId: string) => {
           :drop-mode="reorder.dropModeFor('inactive')"
           :refused-text="reorder.refusalFor('inactive')"
           row-menu="activate"
+          :has-organization-actions="groups.isUsable.value"
           @select-mod="(modId: string) => openMod(modId, 'inactive')"
           @focus-mod="followFocus"
           @drag-start="(modId: string) => reorder.startDrag('inactive', modId)"
           @drag-end="reorder.endDrag"
           @drop="(slot: number) => reorder.drop('inactive', slot)"
-          @menu-action="reorder.menuAction"
+          @menu-action="(modId: string, action: MenuAction) => onMenuAction(modId, action, 'inactive')"
         >
           <template #toolbar>
             <ModFilterBar
               v-model:search="inactiveFilters.search.value"
               v-model:tag="inactiveFilters.tag.value"
               v-model:source="inactiveFilters.source.value"
-              :has-tag-filter="false"
               :search-label="t('mods.page.searchInactiveLabel')"
             />
             <ModSortBar
@@ -266,6 +383,7 @@ const followFocus = useDebounceFn((modId: string) => {
           :drop-mode="reorder.dropModeFor('active')"
           :refused-text="reorder.refusalFor('active')"
           row-menu="move"
+          :has-organization-actions="groups.isUsable.value"
           :reorder-blocked-reason="reorder.reorderBlockedReason.value"
           @select-mod="(modId: string) => openMod(modId, 'active')"
           @focus-mod="followFocus"
@@ -273,14 +391,13 @@ const followFocus = useDebounceFn((modId: string) => {
           @drag-end="reorder.endDrag"
           @drop="(slot: number) => reorder.drop('active', slot)"
           @move-step="reorder.step"
-          @menu-action="reorder.menuAction"
+          @menu-action="(modId: string, action: MenuAction) => onMenuAction(modId, action, 'active')"
         >
           <template #toolbar>
             <ModFilterBar
               v-model:search="activeFilters.search.value"
               v-model:tag="activeFilters.tag.value"
               v-model:source="activeFilters.source.value"
-              :has-tag-filter="true"
               :search-label="t('mods.page.searchActiveLabel')"
             />
             <ModSortBar
@@ -322,6 +439,8 @@ const followFocus = useDebounceFn((modId: string) => {
 
     <ModInfoPanel
       :mod-id="selectedModId"
+      :color="selectedRow?.color ?? null"
+      :groups="selectedRow?.groups ?? []"
       :is-overlay="!hasPanelColumn"
       @close="() => void closePanel()"
     />
@@ -340,6 +459,12 @@ const followFocus = useDebounceFn((modId: string) => {
       :error="deactivateError"
       :is-submitting="deactivating"
       @confirm="confirmDeactivate"
+    />
+
+    <OrganizationDialogs
+      v-model:dialog="organizationDialog"
+      :nodes="groups.nodes.value"
+      @group-deleted="() => void groupRail?.focusTree()"
     />
 
     <ModPositionDialog

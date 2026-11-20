@@ -60,6 +60,21 @@ export {
   suggestedModListPath,
 } from "./ipc/orderShare";
 export {
+  addGroupMembers,
+  createGroup,
+  deleteGroup,
+  getOrganization,
+  moveGroupMembers,
+  planGroupScope,
+  removeGroupMembers,
+  removeUninstalledMembers,
+  renameGroup,
+  reparentGroup,
+  resetOrganization,
+  setGroupColor,
+  setModColors,
+} from "./ipc/organization";
+export {
   createPatch,
   decidePatch,
   deletePatch,

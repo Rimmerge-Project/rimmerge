@@ -5041,12 +5041,12 @@ export function installScenario(): void {
     const activeIds = [...workingActiveIds].filter((modId) => scope.has(baseOf(modId)));
     const activeBases = new Set([...workingActiveIds].map(baseOf));
     const inactiveIds: string[] = [];
-    let notInstalled = 0;
+    const notInstalledIds: string[] = [];
     for (const base of [...scope].toSorted()) {
       if (activeBases.has(base)) continue;
       const copies = inventory.filter((modId) => baseOf(modId) === base).toSorted();
       const copy = copies.includes(base) ? base : copies[0];
-      if (copy === undefined) notInstalled += 1;
+      if (copy === undefined) notInstalledIds.push(base);
       else inactiveIds.push(copy);
     }
     return {
@@ -5054,7 +5054,8 @@ export function installScenario(): void {
       modCount: scope.size,
       activeIds,
       inactiveIds,
-      notInstalled,
+      notInstalled: notInstalledIds.length,
+      notInstalledIds,
     };
   }
 
@@ -5094,7 +5095,7 @@ export function installScenario(): void {
 
   type ModRowStateMock =
     | { kind: "scanned"; tags: string[]; hardDependents: number }
-    | { kind: "pendingScan" }
+    | { kind: "pendingScan"; manualTags: string[] }
     | { kind: "missing" };
 
   /** One `ModListRowDto`, as the mock sends it. */
@@ -5148,14 +5149,16 @@ export function installScenario(): void {
   function stateOf(row: (typeof mods)[number], isScanned: boolean): ModRowStateMock {
     return isScanned
       ? { kind: "scanned", tags: row.tags, hardDependents: row.hardDependents }
-      : { kind: "pendingScan" };
+      : // An unscanned mod has no evidence to infer from, so every tag it holds was added by hand.
+        { kind: "pendingScan", manualTags: [...(tagsByMod.get(row.modId) ?? [])] };
   }
 
   /**
    * `Session::working_mod_list` / `inactive_mod_list`: the Active list is the working set in its
    * own order (a row is scanned, pending its scan, or missing), the Inactive list is every
-   * discovered mod outside it, sorted by id. Search matches id or name; the tag filter applies to
-   * scanned rows of the Active list only; a source filter excludes a missing row. Bounded by
+   * discovered mod outside it, sorted by id. Search matches id or name; the tag filter matches a
+   * scanned row's every tag and an unscanned row's manual tags, in both lists; a source filter
+   * excludes a missing row. Bounded by
    * `MAX_MOD_LIST_ROWS` with `total` reported before the cut.
    */
   function modListFor(which: "working" | "inactive", query: ModListQueryMock) {
@@ -5208,8 +5211,10 @@ export function installScenario(): void {
       )
       .filter((row) => query.source === null || row.source === query.source)
       .filter((row) => {
-        if (which === "inactive" || query.tag === null) return true;
-        return row.state.kind === "scanned" && row.state.tags.includes(query.tag);
+        const wanted = query.tag;
+        if (wanted === null) return true;
+        if (row.state.kind === "scanned") return row.state.tags.includes(wanted);
+        return row.state.kind === "pendingScan" && row.state.manualTags.includes(wanted);
       });
     // The Active default is the working order itself; the Inactive default is name, A to Z, and
     // an Inactive list has no load order to sort by, so that key means the default there.
@@ -8139,6 +8144,27 @@ export function installScenario(): void {
           else organizationModColors.set(id, color);
         }
         return { kind: "colored", changed: changed.length, unchanged: mods.size - changed.length };
+      });
+    },
+    remove_uninstalled_members: (payload: unknown) => {
+      const request = (payload as { request: { id: number; modIds: string[] } }).request;
+      const requested = organizedIds(request.modIds);
+      return editOrganization("remove_uninstalled_members", request, () => {
+        requireGroup(request.id);
+        // `RemoveUninstalledMembers`: only the requested mods that are still not installed.
+        const gone = new Set(
+          resolveGroupScope(request.id).notInstalledIds.filter((id) => requested.has(id)),
+        );
+        const removed = new Set<string>();
+        for (const groupId of groupSubtree(request.id)) {
+          const group = requireGroup(groupId);
+          for (const member of [...group.members]) {
+            if (!gone.has(member)) continue;
+            group.members.delete(member);
+            removed.add(member);
+          }
+        }
+        return { kind: "removed", removed: removed.size, absent: gone.size - removed.size };
       });
     },
     plan_group_scope: (payload: unknown) => {

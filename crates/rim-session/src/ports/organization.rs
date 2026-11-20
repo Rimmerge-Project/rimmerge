@@ -6,6 +6,23 @@ use std::sync::Arc;
 use super::StoreError;
 use crate::organization::{ModOrganization, OrganizationLoad};
 
+/// Why saving `organization.json` failed.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+pub enum OrganizationSaveError {
+    /// The document is larger than the file may hold (the reader would
+    /// refuse it). A limit the user can act on, not an I/O failure.
+    #[error("the organization is {bytes} bytes, more than the {limit} bytes the file may hold")]
+    TooLarge {
+        /// The size the document would have.
+        bytes: usize,
+        /// The most bytes the file may hold.
+        limit: usize,
+    },
+    /// The write itself failed.
+    #[error(transparent)]
+    Failed(#[from] StoreError),
+}
+
 /// Loads and saves a profile's organization (groups and mod colours).
 ///
 /// `load` has no error type: every outcome is a state the session models
@@ -20,8 +37,11 @@ pub trait OrganizationStore {
     ///
     /// # Errors
     ///
-    /// Returns [`StoreError`] when the write fails.
-    fn save(&self, dir: &Path, organization: &ModOrganization) -> Result<(), StoreError>;
+    /// [`OrganizationSaveError::TooLarge`] when the document is over the
+    /// file's size limit (nothing is written), [`OrganizationSaveError::Failed`]
+    /// when the write fails.
+    fn save(&self, dir: &Path, organization: &ModOrganization)
+    -> Result<(), OrganizationSaveError>;
 
     /// Keeps a copy of the unusable file beside it
     /// (`organization.json.unusable-<unix seconds>`) so "start over" loses
@@ -41,7 +61,11 @@ impl<T: OrganizationStore + ?Sized> OrganizationStore for &T {
         (**self).load(dir)
     }
 
-    fn save(&self, dir: &Path, organization: &ModOrganization) -> Result<(), StoreError> {
+    fn save(
+        &self,
+        dir: &Path,
+        organization: &ModOrganization,
+    ) -> Result<(), OrganizationSaveError> {
         (**self).save(dir, organization)
     }
 
@@ -57,7 +81,11 @@ impl<T: OrganizationStore + ?Sized> OrganizationStore for Arc<T> {
         (**self).load(dir)
     }
 
-    fn save(&self, dir: &Path, organization: &ModOrganization) -> Result<(), StoreError> {
+    fn save(
+        &self,
+        dir: &Path,
+        organization: &ModOrganization,
+    ) -> Result<(), OrganizationSaveError> {
         (**self).save(dir, organization)
     }
 

@@ -1073,7 +1073,9 @@ mod tests {
             .expect("the activated mod is listed at once");
         assert_eq!(
             activated.state,
-            crate::dto::mod_lists::ModRowStateDto::PendingScan
+            crate::dto::mod_lists::ModRowStateDto::PendingScan {
+                manual_tags: Vec::new()
+            }
         );
     }
 

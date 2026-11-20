@@ -34,6 +34,20 @@
   --color-status-override-soft: var(--status-override-soft);
   --color-status-danger: var(--status-danger);
   --color-status-danger-soft: var(--status-danger-soft);
+
+  /* The twelve colours a mod or a group can be marked with (`ColorTokenDto`). */
+  --color-mark-red: var(--mark-red);
+  --color-mark-orange: var(--mark-orange);
+  --color-mark-amber: var(--mark-amber);
+  --color-mark-lime: var(--mark-lime);
+  --color-mark-green: var(--mark-green);
+  --color-mark-teal: var(--mark-teal);
+  --color-mark-cyan: var(--mark-cyan);
+  --color-mark-blue: var(--mark-blue);
+  --color-mark-indigo: var(--mark-indigo);
+  --color-mark-violet: var(--mark-violet);
+  --color-mark-pink: var(--mark-pink);
+  --color-mark-slate: var(--mark-slate);
 }
 
 :root {
@@ -61,6 +75,22 @@
   --status-override-soft: #ede9fe;
   --status-danger: #b91c1c;
   --status-danger-soft: #fee2e2;
+
+  /* Mark colours: each at least 3:1 (WCAG non-text contrast) against `surface-0`, `surface-1`,
+     `surface-2` and `accent-soft`, the four backgrounds a swatch or stripe sits on, in both
+     themes. The light amber, green, orange, teal and cyan are Tailwind 700 shades for that. */
+  --mark-red: #dc2626;
+  --mark-orange: #c2410c;
+  --mark-amber: #b45309;
+  --mark-lime: #4d7c0f;
+  --mark-green: #15803d;
+  --mark-teal: #0f766e;
+  --mark-cyan: #0e7490;
+  --mark-blue: #2563eb;
+  --mark-indigo: #4f46e5;
+  --mark-violet: #7c3aed;
+  --mark-pink: #db2777;
+  --mark-slate: #64748b;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -88,6 +118,18 @@
     --status-override-soft: #2e1065;
     --status-danger: #f87171;
     --status-danger-soft: #450a0a;
+    --mark-red: #f87171;
+    --mark-orange: #fb923c;
+    --mark-amber: #fbbf24;
+    --mark-lime: #a3e635;
+    --mark-green: #4ade80;
+    --mark-teal: #2dd4bf;
+    --mark-cyan: #22d3ee;
+    --mark-blue: #60a5fa;
+    --mark-indigo: #818cf8;
+    --mark-violet: #a78bfa;
+    --mark-pink: #f472b6;
+    --mark-slate: #94a3b8;
   }
 }
 

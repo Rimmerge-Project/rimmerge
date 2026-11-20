@@ -9,14 +9,14 @@
 //! existing `plan_activate_mods`/`plan_deactivate_mods` dialogs.
 
 use rim_session::organization::OrganizationEdit;
-use rim_session::use_cases::{EditOrganization, ResetOrganization};
+use rim_session::use_cases::{EditOrganization, RemoveUninstalledMembers, ResetOrganization};
 
 use crate::commands::emit_session_changed;
 use crate::dto::organization::{
     CreateGroupRequestDto, DeleteGroupRequestDto, GroupMembersRequestDto, GroupScopePlanDto,
     GroupScopeRequestDto, MoveGroupMembersRequestDto, OrganizationDto, OrganizationEditOutcomeDto,
-    RenameGroupRequestDto, ReparentGroupRequestDto, SetGroupColorRequestDto,
-    SetModColorsRequestDto, parse_group_id,
+    RemoveUninstalledMembersRequestDto, RenameGroupRequestDto, ReparentGroupRequestDto,
+    SetGroupColorRequestDto, SetModColorsRequestDto, parse_group_id, parse_mod_ids,
 };
 use crate::dto::project::SessionChangeReasonDto;
 use crate::error::{CommandError, CommandErrorCode};
@@ -172,6 +172,30 @@ pub(crate) async fn set_mod_colors_inner(
     request: SetModColorsRequestDto,
 ) -> Result<OrganizationEditOutcomeDto, CommandError> {
     edit_inner(state, request.try_into()?).await
+}
+
+/// Removes the confirmed mods that are still found nowhere on disk from a
+/// group and its subgroups in one save ("Remove mods that aren't
+/// installed"). Installed mods, mods the request did not name and every other
+/// group are untouched.
+///
+/// # Errors
+///
+/// Returns [`CommandError::no_project_loaded`] when no project is loaded,
+/// [`CommandError::invalid_input`] for group id `0` or a bad mod id, or the
+/// `organization_unavailable`/`group_not_found`/`profile_io_failed` code.
+pub(crate) async fn remove_uninstalled_members_inner(
+    state: &AppState,
+    request: RemoveUninstalledMembersRequestDto,
+) -> Result<OrganizationEditOutcomeDto, CommandError> {
+    let group = parse_group_id(request.id)?;
+    let requested = parse_mod_ids(&request.mod_ids)?;
+    let store = state.adapters.organization_store.clone();
+    with_session(state, move |session| {
+        let outcome = RemoveUninstalledMembers::new(store).execute(session, group, &requested)?;
+        Ok(outcome.into())
+    })
+    .await
 }
 
 /// A group's mods (subgroups included) resolved against the install: the
@@ -361,6 +385,23 @@ pub async fn set_mod_colors(
     request: SetModColorsRequestDto,
 ) -> Result<OrganizationEditOutcomeDto, CommandError> {
     let result = set_mod_colors_inner(&state, request).await;
+    emit_when_stale_or_changed(&app, &result);
+    result
+}
+
+/// See `remove_uninstalled_members_inner`; also emits
+/// `organizationChanged` on success.
+///
+/// # Errors
+///
+/// See `remove_uninstalled_members_inner`.
+#[tauri::command]
+pub async fn remove_uninstalled_members(
+    state: tauri::State<'_, AppState>,
+    app: tauri::AppHandle,
+    request: RemoveUninstalledMembersRequestDto,
+) -> Result<OrganizationEditOutcomeDto, CommandError> {
+    let result = remove_uninstalled_members_inner(&state, request).await;
     emit_when_stale_or_changed(&app, &result);
     result
 }
@@ -861,6 +902,114 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn remove_uninstalled_members_removes_only_missing_mods_from_the_whole_scope() {
+        let (state, store) = app();
+        let parent = create(&state, "Parent", None).await;
+        let child = create(&state, "Child", Some(parent)).await;
+        let other = create(&state, "Other", None).await;
+        for (group, ids) in [
+            (parent, &["a", "gone"][..]),
+            (child, &["idle", "gone2"][..]),
+            (other, &["gone"][..]),
+        ] {
+            add_group_members_inner(
+                &state,
+                GroupMembersRequestDto {
+                    id: group,
+                    mod_ids: mod_ids(ids),
+                },
+            )
+            .await
+            .expect("add");
+        }
+        let saves_before = store.save_count();
+
+        let outcome = remove_uninstalled_members_inner(
+            &state,
+            RemoveUninstalledMembersRequestDto {
+                id: parent,
+                mod_ids: mod_ids(&["gone", "gone2", "idle"]),
+            },
+        )
+        .await
+        .expect("remove");
+        let after = plan_group_scope_inner(&state, GroupScopeRequestDto { id: parent })
+            .await
+            .expect("plan");
+        let untouched = plan_group_scope_inner(&state, GroupScopeRequestDto { id: other })
+            .await
+            .expect("plan");
+
+        assert_eq!(
+            outcome,
+            OrganizationEditOutcomeDto::Removed {
+                removed: 2,
+                absent: 0
+            }
+        );
+        assert_eq!(
+            store.save_count(),
+            saves_before + 1,
+            "one save for the scope"
+        );
+        assert_eq!(after.not_installed, 0);
+        assert_eq!(after.mod_count, 2, "installed members stay");
+        assert_eq!(
+            untouched.not_installed, 1,
+            "a group outside the scope keeps its member"
+        );
+    }
+
+    #[tokio::test]
+    async fn remove_uninstalled_members_refuses_a_missing_group_and_a_read_only_organization() {
+        let (state, _) = app();
+        let stale = remove_uninstalled_members_inner(
+            &state,
+            RemoveUninstalledMembersRequestDto {
+                id: 99,
+                mod_ids: mod_ids(&["gone"]),
+            },
+        )
+        .await;
+
+        let unavailable_state = AppState::default();
+        *unavailable_state.session.write().expect("lock") =
+            Some(session_fixture_with_inactive(&["a"], &[]));
+        let unavailable = remove_uninstalled_members_inner(
+            &unavailable_state,
+            RemoveUninstalledMembersRequestDto {
+                id: 1,
+                mod_ids: mod_ids(&["gone"]),
+            },
+        )
+        .await;
+
+        assert_eq!(code_of(stale), CommandErrorCode::GroupNotFound);
+        assert_eq!(
+            code_of(unavailable),
+            CommandErrorCode::OrganizationUnavailable
+        );
+    }
+
+    #[tokio::test]
+    async fn an_organization_too_big_for_its_file_is_the_limit_code() {
+        let (state, store) = app();
+        let group = create(&state, "G", None).await;
+        store.fail_next_save_too_large();
+
+        let refused = add_group_members_inner(
+            &state,
+            GroupMembersRequestDto {
+                id: group,
+                mod_ids: mod_ids(&["a"]),
+            },
+        )
+        .await;
+
+        assert_eq!(code_of(refused), CommandErrorCode::OrganizationLimit);
+    }
+
+    #[tokio::test]
     async fn plan_group_scope_resolves_active_inactive_and_missing_mods() {
         let (state, _) = app();
         let group = create(&state, "G", None).await;
@@ -884,6 +1033,7 @@ mod tests {
         assert_eq!(plan.active_ids, ["a"]);
         assert_eq!(plan.inactive_ids, ["idle"]);
         assert_eq!(plan.not_installed, 1);
+        assert_eq!(plan.not_installed_ids, ["gone"]);
         assert_eq!(code_of(missing), CommandErrorCode::GroupNotFound);
     }
 

@@ -7,11 +7,14 @@ import { computed, ref, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
 
 import MembershipBadge from "@/components/mods/MembershipBadge.vue";
+import ModRowColor from "@/components/mods/ModRowColor.vue";
+import ModRowGroups from "@/components/mods/ModRowGroups.vue";
 import ModRowMenuButton from "@/components/mods/ModRowMenuButton.vue";
 import ModRowPosition from "@/components/mods/ModRowPosition.vue";
 import ModRowScanFacts from "@/components/mods/ModRowScanFacts.vue";
 import ModRowStatePill from "@/components/mods/ModRowStatePill.vue";
 import SourceBadge from "@/components/mods/SourceBadge.vue";
+import { isKeyboardOpen, markFirstMenuItem } from "@/composables/popupMenuFocus";
 import { useModLabel } from "@/composables/useModLabel";
 import { useRowDrag } from "@/composables/useRowDrag";
 import { useRowKeys } from "@/composables/useRowKeys";
@@ -20,6 +23,7 @@ import { descriptor } from "@/i18n/messageDescriptor";
 import type { ModListRowDto } from "@/types/generated/ModListRowDto";
 import { updateUnavailableLabel } from "@/utils/modListSort";
 import { anchorForStep, moveSetFor } from "@/utils/modMove";
+import { COLOR_NAME_KEY } from "@/utils/organization";
 
 /** What this table's rows may be dragged to, set by the page from the drag in progress. */
 export type DropMode =
@@ -35,8 +39,8 @@ export type DropMode =
 /** Which row action button the rows carry. */
 export type RowMenu = "none" | "move" | "activate";
 
-/** A Move menu entry that is not a one-step move. */
-export type MenuAction = "top" | "bottom" | "after" | "activateAt";
+/** A row menu entry that is not a one-step move: a position, or one of the mod own organization dialogs. */
+export type MenuAction = "top" | "bottom" | "after" | "activateAt" | "groups" | "color";
 
 const {
   mods,
@@ -50,6 +54,7 @@ const {
   dropMode = "off",
   refusedText = "",
   rowMenu = "none",
+  hasOrganizationActions = false,
   reorderBlockedReason = null,
 } = defineProps<{
   mods: ModListRowDto[];
@@ -80,8 +85,10 @@ const {
   dropMode?: DropMode;
   /** Why a refused drag is refused, shown over the list while it hovers. */
   refusedText?: string;
-  /** The per-row action: a Move menu (Active), "Activate at…" (Inactive) or none. */
+  /** The per-row position actions: Move entries (Active), "Activate at…" (Inactive) or none. */
   rowMenu?: RowMenu;
+  /** Whether the row menu also offers the mod own "Groups…" and "Colour…" (organization is usable). */
+  hasOrganizationActions?: boolean;
   /** Why moving is off (set while the list is not in load order); `null` when it is on. */
   reorderBlockedReason?: string | null;
 }>();
@@ -201,12 +208,22 @@ function onCheckboxClick(event: MouseEvent, modId: string): void {
   }
 }
 
+/** Whether rows carry a ⋮ button and a menu at all. */
+const hasRowMenu = computed(() => rowMenu !== "none" || hasOrganizationActions);
+
+/**
+ * Whether the menu would hold one entry only: the Inactive list's "Activate at…" while
+ * organization is not usable. The button then runs it directly instead of opening a one-item menu.
+ */
+const isDirectActivate = computed(() => rowMenu === "activate" && !hasOrganizationActions);
+
 const { rovingIndex, onRowFocus, onRowKeydown, focusRow } = useRowKeys({
   mods: () => mods,
   focusedId: lastFocusedId,
   isSelectable: () => selectable,
   hasSelection: () => selectedIds.length > 0,
   rowMenu: () => rowMenu,
+  hasRowMenu: () => hasRowMenu.value,
   scrollToIndex: (index) => virtualizer.value.scrollToIndex(index),
   getScroller: () => scrollElementRef.value,
   actions: {
@@ -256,9 +273,48 @@ const menuItems = computed<MenuItem[]>(() => {
   if (modId === null) {
     return [];
   }
+  // `testId` rides along on the item (a MenuItem accepts extra keys) for the item template.
+  const positionItems = rowMenu === "move" ? moveItems(modId) : activateItems(modId);
+  if (!hasOrganizationActions) {
+    return positionItems;
+  }
+  const color = mods.find((mod) => mod.modId === modId)?.color ?? null;
+  const organizationItems: MenuItem[] = [
+    {
+      label: t("mods.groups.rowMenu.groups"),
+      testId: "mod-menu-groups",
+      command: () => emit("menuAction", modId, "groups"),
+    },
+    {
+      label:
+        color === null
+          ? t("mods.groups.rowMenu.color")
+          : t("mods.groups.rowMenu.colorCurrent", { name: t(COLOR_NAME_KEY[color]) }),
+      testId: "mod-menu-color",
+      command: () => emit("menuAction", modId, "color"),
+    },
+  ];
+  return positionItems.length === 0
+    ? organizationItems
+    : [...positionItems, { separator: true }, ...organizationItems];
+});
+
+function activateItems(modId: string): MenuItem[] {
+  if (rowMenu !== "activate") {
+    return [];
+  }
+  return [
+    {
+      label: t("mods.move.activateAtItem"),
+      testId: "mod-activate-at",
+      command: () => emit("menuAction", modId, "activateAt"),
+    },
+  ];
+}
+
+function moveItems(modId: string): MenuItem[] {
   const moving = new Set(moveSetFor(modId, selectedIds, mods));
   const isBlocked = reorderBlockedReason !== null;
-  // `testId` rides along on the item (a MenuItem accepts extra keys) for the item template.
   return [
     {
       label: t("mods.move.up"),
@@ -291,16 +347,29 @@ const menuItems = computed<MenuItem[]>(() => {
       command: () => emit("menuAction", modId, "after"),
     },
   ];
-});
+}
 
-/** The row button: the Active list opens the Move menu, the Inactive list goes straight to "Activate at…". */
+/** Whether the open menu came from the keyboard, so its first item is marked once it shows. */
+let isMenuFromKeyboard = false;
+
+/**
+ * The row button (and Shift+F10): opens the one shared menu for this row, or, with a single
+ * possible entry, runs it.
+ */
 function onRowMenuClick(event: Event, modId: string): void {
-  if (rowMenu === "activate") {
+  if (isDirectActivate.value) {
     emit("menuAction", modId, "activateAt");
     return;
   }
   menuModId.value = modId;
+  isMenuFromKeyboard = isKeyboardOpen(event);
   menu.value?.toggle(event);
+}
+
+function onMenuShown(): void {
+  if (isMenuFromKeyboard) {
+    markFirstMenuItem();
+  }
 }
 </script>
 
@@ -356,6 +425,10 @@ function onRowMenuClick(event: Event, modId: string): void {
           @dragstart="onRowDragStart($event, mod.modId)"
           @dragend="onRowDragEnd"
         >
+          <ModRowColor
+            :color="mod.color"
+            part="stripe"
+          />
           <div
             v-if="selectable"
             role="gridcell"
@@ -379,6 +452,10 @@ function onRowMenuClick(event: Event, modId: string): void {
               :mod-id="mod.modId"
               :position="mod.position"
             />
+            <ModRowColor
+              :color="mod.color"
+              part="name"
+            />
             <SourceBadge :source="mod.source" />
             <span
               class="text-text min-w-12 flex-1 truncate font-medium"
@@ -390,6 +467,7 @@ function onRowMenuClick(event: Event, modId: string): void {
               :state="mod.state"
               :show-pending-scan="showActiveColumns"
             />
+            <ModRowGroups :groups="mod.groups" />
             <span
               v-if="showUpdated"
               class="text-text-muted w-20 min-w-0 truncate text-right text-xs @lg:w-28 @lg:shrink-0"
@@ -397,19 +475,19 @@ function onRowMenuClick(event: Event, modId: string): void {
               :data-testid="`mod-row-updated-${mod.modId}`"
             >{{ updatedText(mod) }}</span>
             <ModRowScanFacts
-              v-if="showActiveColumns"
               :state="mod.state"
+              :show-dependents="showActiveColumns"
             />
           </div>
           <div
-            v-if="rowMenu !== 'none'"
+            v-if="hasRowMenu"
             role="gridcell"
             class="contents"
           >
             <ModRowMenuButton
               :mod-id="mod.modId"
-              :menu="rowMenu"
               :name="modLabel.label(mod.modId)"
+              :is-direct="isDirectActivate"
               @open="onRowMenuClick($event, mod.modId)"
             />
           </div>
@@ -424,11 +502,12 @@ function onRowMenuClick(event: Event, modId: string): void {
       {{ refusedText }}
     </p>
     <Menu
-      v-if="rowMenu === 'move'"
+      v-if="hasRowMenu"
       ref="moveMenu"
       popup
       :model="menuItems"
       data-testid="mod-move-menu"
+      @show="onMenuShown"
     >
       <template #item="{ item, props }">
         <a
@@ -439,7 +518,7 @@ function onRowMenuClick(event: Event, modId: string): void {
         </a>
       </template>
       <template
-        v-if="reorderBlockedReason !== null"
+        v-if="rowMenu === 'move' && reorderBlockedReason !== null"
         #end
       >
         <p

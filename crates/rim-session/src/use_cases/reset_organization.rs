@@ -2,7 +2,7 @@
 
 use crate::Session;
 use crate::organization::{ModOrganization, OrganizationState};
-use crate::ports::{OrganizationStore, StoreError};
+use crate::ports::{OrganizationSaveError, OrganizationStore, StoreError};
 
 /// Why "start over" did not happen.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
@@ -16,7 +16,7 @@ pub enum ResetOrganizationError {
     Archive(StoreError),
     /// Saving the fresh, empty organization failed.
     #[error("saving the organization: {0}")]
-    Store(StoreError),
+    Store(OrganizationSaveError),
 }
 
 /// Copies the unusable file aside, then saves an empty organization over

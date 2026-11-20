@@ -178,8 +178,12 @@ pub enum ModRowStateDto {
     },
     /// No scan facts, only identity. In the Active list: activated since
     /// the last rescan. In the Inactive list: an ordinary inactive mod
-    /// (inactive mods are never scanned).
-    PendingScan,
+    /// (inactive mods are never scanned). Tags added by hand still show.
+    #[serde(rename_all = "camelCase")]
+    PendingScan {
+        /// The tags added to the mod by hand.
+        manual_tags: Vec<String>,
+    },
     /// Listed in the working set but found nowhere on disk.
     Missing,
 }
@@ -194,7 +198,9 @@ impl From<&RowState> for ModRowStateDto {
                 tags: tags.iter().map(ToString::to_string).collect(),
                 hard_dependents: *hard_dependents,
             },
-            RowState::PendingScan => Self::PendingScan,
+            RowState::PendingScan { manual_tags } => Self::PendingScan {
+                manual_tags: manual_tags.iter().map(ToString::to_string).collect(),
+            },
             RowState::Missing => Self::Missing,
         }
     }

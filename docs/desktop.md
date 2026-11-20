@@ -228,7 +228,7 @@ Lists every discovered mod and lets you activate, deactivate and reorder
 them. The **Inactive** list is on the left and the **Active** list on the
 right, side by side on a window about 1,024 pixels wide or more, and stacked
 (Inactive above Active) below that. Each list has its own search, source
-filter (the Active list also a tag filter), sort and selection. A change is
+filter, tag filter, sort and selection. A change is
 staged in the app, not written to `ModsConfig.xml`: it reaches the file's
 `<activeMods>` list only when you Apply (after a Rescan, when mods were added
 or removed). Until then a pending-changes banner shows it, and a stale-order
@@ -304,8 +304,11 @@ which place is meant.
   Move down, Move to top, Move to bottom, and **Move after…**, which opens a
   search over the Active mods and puts the row right after the one you pick.
   Each Inactive row has an **Activate at…** button with the same search, plus
-  "At the start of the list" and "At the end of the list". Up and Down move
-  one shown row, so they follow a filtered view.
+  "At the start of the list" and "At the end of the list". While groups are
+  usable (see Groups and colours below) both lists' ⋮ buttons open a menu that
+  also holds **Groups…** and **Colour…**; the Inactive button then opens a menu
+  with **Activate at…** as its first entry instead of acting at once. Up and
+  Down move one shown row, so they follow a filtered view.
 - *The keyboard.* **Alt+Up** and **Alt+Down** on a focused Active row move it
   one row (with the same selection rule); plain arrow keys still move the
   focus. **Shift+F10** or the **Menu** key on a focused row opens its row menu
@@ -485,6 +488,52 @@ Rescanning brings everything back in sync:
 
 ![Apply dialog after rescan](screenshots/mods-page/apply-dialog-after-rescan.png)
 ![Mods page after rescan](screenshots/mods-page/mods-page-after-rescan.png)
+
+### Groups and colours
+
+Groups are a way to find mods, nothing more. A group is virtual: it never
+moves a file, never activates or deactivates a mod, and never changes your
+load order. They live in the profile's `organization.json`, separate from the
+sorter's rules, keyed by a mod's package id so they survive updates and
+rescans.
+
+- **The Groups panel** is a column on the left of a window 1,800 pixels wide
+  or more, and a drawer opened by the **Groups** button on narrower windows.
+  It lists **All mods**, **Ungrouped** and your group tree. Each group shows
+  how many mods it holds, counting its subgroups (each mod once). It follows
+  the usual tree keys: Up and Down move, Right opens a group or enters it,
+  Left closes it or goes to its parent, Home and End jump, typing a name
+  jumps to it, Enter selects, F2 renames, Delete deletes, and Shift+F10 or
+  the menu key opens the group menu (a right click does too).
+- **Choosing a group** narrows both lists to its mods and its subgroups' mods.
+  This is a filter, not a reorder: the Active list stays in load order and
+  can still be reordered. Search and the other filters work inside the
+  group. A bar above the lists names the group, counts its mods and says
+  how many are not installed.
+- **The group menu** offers a new subgroup, rename, colour, **Move group to**
+  (a group cannot go inside itself or its own subgroups; those places are
+  listed and disabled with the reason), **Remove mods that aren't
+  installed** (the dialog lists those mods, as of the last scan, and removes
+  only the ones still not installed when you confirm), and **Delete**. Deleting asks what to do with subgroups (keep
+  them one level up, the default, or delete them too) and says that no mod
+  is deleted or uninstalled. Names are unique among groups at the same level,
+  not case sensitive; groups nest at most 8 levels.
+- **On a row**, a group shows as a chip with its name (the first two, then
+  "+N" with every name in its tooltip), and a mod's own colour as a stripe on
+  the row's edge, also named in text for screen readers. A colour is never
+  the only cue: the info panel names the mod's colour and lists its groups
+  too, and a narrow row, which hides the chips, keeps the group names as
+  screen-reader text. A mod does not inherit its group's colour. The row's ⋮
+  menu has **Groups…** (check a group to add the mod to it, clear it to remove
+  it; each click is saved at once) and **Colour…** (twelve named colours, or
+  none).
+- **Tags** you added by hand now show on every row, Inactive included, and the
+  tag filter works on both lists.
+- If `organization.json` cannot be read, a notice says so and groups are
+  read-only. If another program only has the file open, **Rescan and try
+  again** reads it again (it is a full rescan of your mods, the only thing that
+  reads the file); otherwise **Start over** keeps a copy of the file and begins
+  with no groups. Your mods and load order are never affected.
 
 ## Rules
 

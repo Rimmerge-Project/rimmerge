@@ -497,6 +497,48 @@ fn remove_members_reports_absent_and_keeps_other_groups() {
 }
 
 #[test]
+fn remove_members_from_groups_counts_each_mod_once_and_leaves_other_groups() {
+    let mut organization = ModOrganization::new();
+    let parent = root(&mut organization, "Parent");
+    let other = root(&mut organization, "Other");
+    organization
+        .add_members(parent, &mods(&["a", "b"]))
+        .expect("add");
+    organization.add_members(other, &mods(&["a"])).expect("add");
+
+    let outcome = organization
+        .remove_members_from_groups(&BTreeSet::from([parent]), &mods(&["a", "zzz"]))
+        .expect("remove");
+
+    assert_eq!(
+        outcome,
+        MembershipRemoval {
+            removed: 1,
+            absent: 1
+        }
+    );
+    assert_eq!(
+        organization.groups_of(&organized("a")),
+        BTreeSet::from([other])
+    );
+}
+
+#[test]
+fn remove_members_from_groups_changes_nothing_when_a_group_is_missing() {
+    let mut organization = ModOrganization::new();
+    let one = root(&mut organization, "One");
+    organization.add_members(one, &mods(&["a"])).expect("add");
+    let before = organization.clone();
+    let missing = GroupId::new(99).expect("non-zero");
+
+    let result =
+        organization.remove_members_from_groups(&BTreeSet::from([one, missing]), &mods(&["a"]));
+
+    assert_eq!(result, Err(OrganizationError::GroupNotFound(missing)));
+    assert_eq!(organization, before);
+}
+
+#[test]
 fn move_members_refuses_the_same_group() {
     let mut organization = ModOrganization::new();
     let group = root(&mut organization, "G");
@@ -1091,10 +1133,7 @@ fn creating_a_group_is_refused_once_the_id_space_is_used_up() {
 
     let result = organization.create_group(name("Late"), None);
 
-    assert!(matches!(
-        result,
-        Err(OrganizationError::TooManyGroups { .. })
-    ));
+    assert_eq!(result, Err(OrganizationError::GroupIdsExhausted));
 }
 
 // ---- limits, exactly at them -----------------------------------------------
@@ -1266,7 +1305,7 @@ mod resolving {
             [ModId::new("b.local"), ModId::new("idle")],
             "the primary copy is picked over the Workshop one"
         );
-        assert_eq!(resolved.not_installed, 1);
+        assert_eq!(resolved.not_installed_count(), 1);
     }
 
     #[test]

@@ -14,6 +14,10 @@ import type { ModListDto } from "@/types/generated/ModListDto";
 import type { ModListRowDto } from "@/types/generated/ModListRowDto";
 import { assertNever } from "@/utils/assertNever";
 import { describeCommandError } from "@/utils/errors";
+
+/** The row menu entries that place a mod; Groups and Color are the page's own dialogs. */
+type PositionMenuAction = Exclude<MenuAction, "groups" | "color">;
+
 import { anchorForSlot, anchorForStep, isNoopSlot, moveSetFor } from "@/utils/modMove";
 
 /** Which of the two lists a drag started in or a drop landed on. */
@@ -279,7 +283,7 @@ export function useModReorder({
   }
 
   /** The Move menu's other entries, and an inactive row's "Activate at…". */
-  async function menuAction(modId: string, action: MenuAction): Promise<void> {
+  async function menuAction(modId: string, action: PositionMenuAction): Promise<void> {
     switch (action) {
       case "top":
       case "bottom": {

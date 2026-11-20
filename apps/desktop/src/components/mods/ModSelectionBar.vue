@@ -42,6 +42,26 @@ const selectAllLabel = computed(() =>
     : t("mods.selection.selectAllEmpty"),
 );
 
+/**
+ * One whole sentence, so the note about hidden rows (and any space or bracket around it) belongs
+ * to the translation. Each number is worded by its own plural rule: "{selected}" and "{hidden}"
+ * are two parts, each agreeing with its own count (ru, pl and uk change the noun with the number).
+ */
+const selectedText = computed(() => {
+  const selected = t(
+    "mods.selection.selectedCount",
+    { count: selection.selectedCount.value },
+    selection.selectedCount.value,
+  );
+  const hiddenCount = selection.hiddenSelectedCount.value;
+  return hiddenCount > 0
+    ? t("mods.selection.selectedCountHidden", {
+        selected,
+        hidden: t("mods.selection.hiddenPart", { count: hiddenCount }, hiddenCount),
+      })
+    : selected;
+});
+
 function toggleSelectAll(): void {
   if (selection.areAllShownSelected.value) {
     selection.deselectShown();
@@ -74,23 +94,7 @@ function toggleSelectAll(): void {
       data-testid="mods-selected-count"
     >
       <template v-if="selection.selectedCount.value > 0 && !selection.isCountPaused.value">
-        {{
-          t(
-            "mods.selection.selectedCount",
-            { count: selection.selectedCount.value },
-            selection.selectedCount.value,
-          )
-        }}<span
-          v-if="selection.hiddenSelectedCount.value > 0"
-          class="ms-1"
-          data-testid="mods-selected-hidden"
-        >{{
-          t(
-            "mods.selection.notShown",
-            { count: selection.hiddenSelectedCount.value },
-            selection.hiddenSelectedCount.value,
-          )
-        }}</span>
+        {{ selectedText }}
       </template>
     </span>
     <Button

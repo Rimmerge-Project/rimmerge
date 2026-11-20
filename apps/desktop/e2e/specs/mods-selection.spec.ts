@@ -105,8 +105,8 @@ test.describe("mods selection", () => {
     await expect(modsPane(page, "inactive").getByTestId("mods-selected-count")).toContainText(
       "10 selected",
     );
-    await expect(modsPane(page, "inactive").getByTestId("mods-selected-hidden")).toHaveText(
-      "(8 not shown)",
+    await expect(modsPane(page, "inactive").getByTestId("mods-selected-count")).toHaveText(
+      "10 selected (8 not shown)",
     );
 
     await modsPane(page, "inactive").getByTestId("mods-clear-selection").click();
@@ -231,8 +231,8 @@ test.describe("mods multi-select gestures", () => {
     await inactiveRow(page, 10).click({ modifiers: ["Shift"] });
 
     await expect(inactiveCount(page)).toHaveText(/4 selected/);
-    await expect(modsPane(page, "inactive").getByTestId("mods-selected-hidden")).toHaveText(
-      "(2 not shown)",
+    await expect(modsPane(page, "inactive").getByTestId("mods-selected-count")).toHaveText(
+      "4 selected (2 not shown)",
     );
   });
 

@@ -4,8 +4,8 @@ import type {} from "../../src/e2e-mock-bootstrap";
 import { loadScenario } from "./support";
 
 /**
- * The library organization has no UI yet; these specs drive the mock's organization commands
- * directly (as the UI batches will) and pin the mock to the backend's rules: cycle refusal,
+ * These specs drive the mock's organization commands directly (the UI is covered by
+ * `mods-groups.spec.ts`) and pin the mock to the backend's rules: cycle refusal,
  * base-id keys, descendant scope with dedupe, one outcome per action, nothing else touched.
  */
 
@@ -293,10 +293,36 @@ test.describe("organization (mock)", () => {
       activeIds: [active],
       inactiveIds: [inactive],
       notInstalled: 1,
+      notInstalledIds: ["gone.for.good"],
     });
     expect(await codeOf(page, "plan_group_scope", { request: { id: 999 } })).toBe(
       "group_not_found",
     );
+  });
+
+  test("remove_uninstalled_members removes only the requested mods that are still not installed", async ({
+    page,
+  }) => {
+    await loadScenario(page);
+    const active = (await activeRows(page)).items[0]?.modId ?? "";
+    const group = await create(page, "Wishlist");
+    await ok(page, "add_group_members", {
+      request: { id: group, modIds: [active, "gone.one", "gone.two"] },
+    });
+
+    // `active` is installed (so kept even though it is named) and `gone.two` was never requested.
+    const outcome = await ok(page, "remove_uninstalled_members", {
+      request: { id: group, modIds: [active, "gone.one"] },
+    });
+    const plan = await ok<{ notInstalledIds: string[]; modCount: number }>(
+      page,
+      "plan_group_scope",
+      { request: { id: group } },
+    );
+
+    expect(outcome).toEqual({ kind: "removed", removed: 1, absent: 0 });
+    expect(plan.notInstalledIds).toEqual(["gone.two"]);
+    expect(plan.modCount).toBe(2);
   });
 
   test("organization actions leave the working set, the orders and the pending changes alone", async ({

@@ -95,8 +95,8 @@ pub struct ModListQuery {
     /// Only mods whose id or name contains this substring
     /// (case-insensitive).
     pub search: Option<String>,
-    /// Only scanned mods carrying this tag. Ignored by the Inactive list:
-    /// a tag is a scan result, and most inactive mods have none.
+    /// Only mods carrying this tag: a scanned mod's every tag, an unscanned
+    /// (or inactive) mod's tags added by hand.
     pub tag: Option<Tag>,
     /// Only mods from this source (a missing row has none, so a specific
     /// source excludes it).
@@ -154,8 +154,12 @@ pub enum RowState {
     },
     /// No scan facts, only identity. In the Active list: activated since
     /// the last rescan. In the Inactive list: an ordinary inactive mod
-    /// (inactive mods are never scanned).
-    PendingScan,
+    /// (inactive mods are never scanned). An unscanned mod has no inferred
+    /// tags, but a tag added by hand is real, so it shows here too.
+    PendingScan {
+        /// The tags added to the mod by hand (rules page or a decision).
+        manual_tags: BTreeSet<Tag>,
+    },
     /// In the working set but found nowhere on disk.
     Missing,
 }
@@ -233,6 +237,25 @@ fn matches(row: &ModListRow, query: &ModListQuery, needle: Option<&str>) -> bool
     search_ok && query.source.is_none_or(|source| row.source == Some(source))
 }
 
+/// Whether the row carries the query's tag (always, with no tag asked for):
+/// a scanned mod's every tag, an unscanned mod's tags added by hand.
+fn has_tag(row: &ModListRow, query: &ModListQuery) -> bool {
+    query.tag.as_ref().is_none_or(|tag| match &row.state {
+        RowState::Scanned { tags, .. } => tags.contains(tag),
+        RowState::PendingScan { manual_tags } => manual_tags.contains(tag),
+        RowState::Missing => false,
+    })
+}
+
+fn admitted(
+    organized: Option<&ListOrganization>,
+    row: &ModListRow,
+    query: &ModListQuery,
+    needle: Option<&str>,
+) -> bool {
+    ListOrganization::admits(organized, row) && matches(row, query, needle)
+}
+
 fn scanned_row(
     mod_entry: &rim_analyzer::domain::Mod,
     tagging: &Tagging,
@@ -260,6 +283,7 @@ fn scanned_row(
 
 fn pending_row(
     mod_entry: &rim_analyzer::domain::InactiveMod,
+    tagging: &Tagging,
     times: &ModUpdateTimes,
     position: Option<usize>,
     membership: MembershipMark,
@@ -269,7 +293,11 @@ fn pending_row(
         name: mod_entry.name.clone(),
         source: Some(mod_entry.source),
         position,
-        state: RowState::PendingScan,
+        // An unscanned mod has no evidence to infer from, so every tag the
+        // tagging holds for it was added by hand.
+        state: RowState::PendingScan {
+            manual_tags: tagging.tags_of(&mod_entry.id).clone(),
+        },
         workshop_id: mod_entry.workshop_id,
         generated: mod_entry.generated.clone(),
         updated: times.get(&mod_entry.id),
@@ -368,7 +396,7 @@ pub(crate) fn working_list(
             return scanned_row(mod_entry, tagging, times, Some(position), membership);
         }
         if let Some(mod_entry) = unscanned.get(id) {
-            return pending_row(mod_entry, times, Some(position), membership);
+            return pending_row(mod_entry, tagging, times, Some(position), membership);
         }
         ModListRow {
             mod_id: id.clone(),
@@ -387,13 +415,7 @@ pub(crate) fn working_list(
     let mut rows: Vec<ModListRow> = rows
         .map(|row| ListOrganization::decorate(organized.as_ref(), row))
         .filter(|row| {
-            let tag_ok = query.tag.as_ref().is_none_or(|tag| match &row.state {
-                RowState::Scanned { tags, .. } => tags.contains(tag),
-                RowState::PendingScan | RowState::Missing => false,
-            });
-            tag_ok
-                && ListOrganization::admits(organized.as_ref(), row)
-                && matches(row, query, needle.as_deref())
+            has_tag(row, query) && admitted(organized.as_ref(), row, query, needle.as_deref())
         })
         .collect();
     let sort = query.sort.unwrap_or(ListSort::ACTIVE_DEFAULT);
@@ -436,12 +458,11 @@ pub(crate) fn inactive_list(
                 .inactive_mods
                 .iter()
                 .filter(|m| is_inactive(&m.id))
-                .map(|m| pending_row(m, times, None, file.mark_inactive(&m.id))),
+                .map(|m| pending_row(m, tagging, times, None, file.mark_inactive(&m.id))),
         )
         .map(|row| ListOrganization::decorate(organized.as_ref(), row))
         .filter(|row| {
-            ListOrganization::admits(organized.as_ref(), row)
-                && matches(row, query, needle.as_deref())
+            has_tag(row, query) && admitted(organized.as_ref(), row, query, needle.as_deref())
         })
         .collect();
     // An inactive mod has no load-order position, so that key means the
@@ -629,7 +650,12 @@ mod tests {
         );
 
         assert!(matches!(list.items[0].state, RowState::Scanned { .. }));
-        assert_eq!(list.items[1].state, RowState::PendingScan);
+        assert_eq!(
+            list.items[1].state,
+            RowState::PendingScan {
+                manual_tags: BTreeSet::new()
+            }
+        );
         assert_eq!(list.items[2].state, RowState::Missing);
         assert_eq!(list.items[2].source, None);
         assert_eq!(list.items[2].name, "ghost");
@@ -706,6 +732,53 @@ mod tests {
         assert_eq!(ids(&by_tag), ["a"]);
         assert_eq!(ids(&by_search), ["b"]);
         assert_eq!(by_search.total, 1);
+    }
+
+    #[test]
+    fn a_manual_tag_on_an_unscanned_inactive_mod_shows_on_its_row_and_filters_it() {
+        let tag = Tag::new("framework").expect("valid tag");
+        let tagging = Tagging::new(vec![TagAssignment {
+            mod_id: ModId::new("idle"),
+            tag: tag.clone(),
+            provenance: TagProvenance::Manual,
+        }]);
+        let report = ReportBuilder::new()
+            .mod_("a")
+            .inactive("idle")
+            .inactive("other")
+            .build();
+        let active = working(&["a"]);
+
+        let tagged = inactive_list(
+            &report,
+            &tagging,
+            &active,
+            &ModListQuery {
+                tag: Some(tag.clone()),
+                ..ModListQuery::default()
+            },
+        );
+        let untagged_active = working_list(
+            &report,
+            &tagging,
+            &active,
+            &ModListQuery {
+                tag: Some(tag.clone()),
+                ..ModListQuery::default()
+            },
+        );
+
+        assert_eq!(ids(&tagged), ["idle"]);
+        assert_eq!(
+            tagged.items[0].state,
+            RowState::PendingScan {
+                manual_tags: BTreeSet::from([tag])
+            }
+        );
+        assert_eq!(
+            untagged_active.total, 0,
+            "the Active list's own mods carry no such tag"
+        );
     }
 
     #[test]

@@ -61,6 +61,13 @@ pub enum OrganizationEdit {
         /// The mods.
         mods: BTreeSet<OrganizedModId>,
     },
+    /// Remove mods from every group of a scope (a group and its subgroups).
+    RemoveMembersFromGroups {
+        /// The groups.
+        groups: BTreeSet<GroupId>,
+        /// The mods.
+        mods: BTreeSet<OrganizedModId>,
+    },
     /// Move mods from one group to another.
     MoveMembers {
         /// The source group.
@@ -129,6 +136,9 @@ impl OrganizationEdit {
             }
             Self::RemoveMembers { id, mods } => organization
                 .remove_members(id, &mods)
+                .map(EditOutcome::Removed),
+            Self::RemoveMembersFromGroups { groups, mods } => organization
+                .remove_members_from_groups(&groups, &mods)
                 .map(EditOutcome::Removed),
             Self::MoveMembers { from, to, mods } => organization
                 .move_members(from, to, &mods)

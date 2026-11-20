@@ -590,7 +590,7 @@
       },
       "organization_unavailable": {
         "title": "Groups can't be changed right now",
-        "detail": "Rimmerge couldn't use your saved groups and colours, so they are read-only. Start over to make a fresh set, or fix the file and rescan."
+        "detail": "Rimmerge couldn't read organization.json, so your groups and colours are read-only. Choose Start over… on the Mods page for a fresh set (a copy of the file is kept), or fix the file and rescan."
       },
       "group_not_found": {
         "title": "That group no longer exists",
@@ -606,7 +606,7 @@
       },
       "organization_limit": {
         "title": "A limit for groups was reached",
-        "detail": "You reached a limit on how many groups, levels of nesting, mods in groups or coloured mods there can be. Remove some and try again."
+        "detail": "You reached a limit for groups and colours: how many groups, how deep they nest, how many mods are in groups or coloured, or how large the saved file may be. Nothing was changed. Removing some of these may make room."
       }
     }
   },
@@ -1283,7 +1283,8 @@
         "removed": "Removed",
         "addedTitle": "Not in your saved active mod list yet. Applying adds it.",
         "removedTitle": "In your saved active mod list. Applying removes it."
-      }
+      },
+      "rowActionsButton": "Actions for {name}"
     },
     "sort": {
       "groupLabel": "Sort order",
@@ -1404,8 +1405,9 @@
       "selectAllShown": "Select all {count} shown | Select all {count} shown",
       "selectAllEmpty": "Select all",
       "selectedCount": "{count} selected | {count} selected",
-      "notShown": "({count} not shown) | ({count} not shown)",
-      "clear": "Clear selection"
+      "clear": "Clear selection",
+      "selectedCountHidden": "{selected} ({hidden})",
+      "hiddenPart": "{count} not shown | {count} not shown"
     },
     "move": {
       "up": "Move up",
@@ -1413,7 +1415,6 @@
       "top": "Move to top",
       "bottom": "Move to bottom",
       "after": "Move after…",
-      "menuButton": "Move {name}",
       "activateAtButton": "Activate {name} at…",
       "afterDialogHeader": "Move after another mod",
       "activateAtDialogHeader": "Activate at a position",
@@ -1434,7 +1435,142 @@
       "viewSuggested": "View suggested",
       "suggestedNote": "Apply will write the suggested order. Moving a mod switches to your own order.",
       "coreStaysActive": "Core can't be deactivated.",
-      "inactiveNotOrdered": "This list has no order of its own. Drag mods to the Active list to activate them."
+      "inactiveNotOrdered": "This list has no order of its own. Drag mods to the Active list to activate them.",
+      "activateAtItem": "Activate at…"
+    },
+    "colors": {
+      "names": {
+        "red": "Red",
+        "orange": "Orange",
+        "amber": "Amber",
+        "lime": "Lime",
+        "green": "Green",
+        "teal": "Teal",
+        "cyan": "Cyan",
+        "blue": "Blue",
+        "indigo": "Indigo",
+        "violet": "Violet",
+        "pink": "Pink",
+        "slate": "Slate"
+      },
+      "rowColor": "Colour: {name}",
+      "groupTitle": "Group colour",
+      "modTitle": "Mod colour",
+      "groupHelp": "A colour marks the group in the tree and on mod rows. It changes nothing else.",
+      "modHelp": "A colour marks this mod on its row. It does not change your load order.",
+      "legend": "Colour",
+      "none": "No colour",
+      "apply": "Apply",
+      "toast": {
+        "groupChanged": "Group colour changed",
+        "modChanged": "Colour changed for {name}",
+        "modCleared": "Colour removed from {name}"
+      }
+    },
+    "groups": {
+      "regionLabel": "Groups",
+      "heading": "Groups",
+      "help": "Groups only help you find mods. They never move files or change your load order.",
+      "openButton": "Groups",
+      "close": "Close groups",
+      "treeLabel": "Groups",
+      "allMods": "All mods",
+      "ungrouped": "Ungrouped",
+      "newGroup": "New group",
+      "actions": "Group actions",
+      "actionsFor": "Actions for {name}",
+      "searchLabel": "Search groups",
+      "searchPlaceholder": "Search groups…",
+      "empty": "No groups yet. Create one to start organizing your mods.",
+      "noMatches": "No group matches.",
+      "nodeModCount": "{count} mod, including subgroups | {count} mods, including subgroups",
+      "nodeSubgroupCount": "{count} subgroup | {count} subgroups",
+      "chipWithColor": "{name} ({color})",
+      "allGroups": "In groups: {groups}",
+      "rowMenu": {
+        "groups": "Groups…",
+        "color": "Colour…",
+        "colorCurrent": "Colour ({name})…"
+      },
+      "menu": {
+        "newSubgroup": "New subgroup…",
+        "rename": "Rename…",
+        "color": "Colour…",
+        "move": "Move group to…",
+        "checkingUninstalled": "Checking for mods that aren't installed…",
+        "uninstalledUnavailable": "Couldn't check for mods that aren't installed",
+        "removeUninstalled": "Remove {count} mod that isn't installed | Remove {count} mods that aren't installed",
+        "noUninstalled": "All mods in this group are installed",
+        "delete": "Delete…"
+      },
+      "dialog": {
+        "createTitle": "New group",
+        "subgroupTitle": "New subgroup",
+        "renameTitle": "Rename group",
+        "inside": "Inside {parent}",
+        "nameLabel": "Name",
+        "nameHelp": "Up to 64 characters. Two groups at the same level can't share a name, in any letter case.",
+        "createButton": "Create",
+        "renameButton": "Rename",
+        "deleteTitle": "Delete group",
+        "deleteQuestion": "Delete {name}?",
+        "deleteNoMods": "No mods are in this group.",
+        "deleteMods": "{count} mod is in this group, including its subgroups. | {count} mods are in this group, including its subgroups.",
+        "modeLegend": "What happens to its {count} subgroup | What happens to its {count} subgroups",
+        "keepSubgroups": "Keep the subgroups and move them up one level",
+        "deleteSubgroups": "Delete the subgroups too",
+        "deleteSafety": "No mod is deleted or uninstalled. Mods stay in any other group they belong to.",
+        "deleteButton": "Delete group",
+        "moveTitle": "Move group",
+        "moveQuestion": "Move {name} to:",
+        "moveLegend": "New place for the group",
+        "topLevel": "Top level",
+        "moveInvalid": "A group can't go inside itself or its own subgroups",
+        "moveCurrent": "Already here",
+        "moveButton": "Move",
+        "modGroupsTitle": "Groups for {name}",
+        "modGroupsHelp": "Check a group to add this mod to it. Clear it to take the mod out. Each change is saved at once.",
+        "modGroupsEmpty": "There are no groups yet. Create one from the Groups panel.",
+        "modGroupsList": "Groups",
+        "done": "Done",
+        "removeUninstalledTitle": "Remove mods that aren't installed",
+        "removeUninstalledBody": "As of the last scan, {count} mod in {name} and its subgroups isn't installed. Remove it from those groups? It comes back only if you add it to a group again. | As of the last scan, {count} mods in {name} and its subgroups aren't installed. Remove them from those groups? They come back only if you add them to a group again.",
+        "removeUninstalledList": "Mods to remove",
+        "removeUninstalledLoading": "Checking which mods aren't installed…",
+        "removeUninstalledFailed": "Couldn't check which mods aren't installed. Close this and try again.",
+        "removeUninstalledButton": "Remove"
+      },
+      "startOver": {
+        "title": "Start over with groups",
+        "body": "Rimmerge keeps a copy of the unreadable file next to it, then starts with no groups and no colours. Your mods and load order are not affected.",
+        "confirm": "Start over"
+      },
+      "notice": {
+        "notLoaded": "Groups and colours are not available in this session.",
+        "unreadable": "Rimmerge couldn't read your groups and colours. They are read-only for now. If another program has the file open, close it and rescan.",
+        "tooLarge": "Your groups and colours file is too large to read. They are read-only until you start over.",
+        "malformed": "Your groups and colours file is damaged. They are read-only until you start over.",
+        "newerVersion": "Your groups and colours were saved by a newer version of Rimmerge. They are read-only here so they are not overwritten.",
+        "invalid": "Your groups and colours file breaks a rule and can't be used. They are read-only until you start over.",
+        "tryAgain": "Rescan and try again",
+        "startOver": "Start over…"
+      },
+      "scope": {
+        "ungrouped": "Showing the mods that are in no group",
+        "group": "Showing {name}: {count} mod, including subgroups | Showing {name}: {count} mods, including subgroups",
+        "notInstalled": "{count} mod isn't installed | {count} mods aren't installed",
+        "note": "Search and filters work inside this group. The Active list stays in load order.",
+        "showAll": "Show all mods"
+      },
+      "toast": {
+        "created": "Group created",
+        "renamed": "Group renamed",
+        "moved": "Group moved",
+        "deleted": "Group deleted",
+        "removedUninstalled": "Removed {count} mod that isn't installed | Removed {count} mods that aren't installed",
+        "keptInstalledAgain": "{count} mod is installed again, so it stayed in the group | {count} mods are installed again, so they stayed in the group",
+        "startedOver": "Started over with no groups"
+      }
     }
   },
   "rules": {

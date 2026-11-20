@@ -75,10 +75,17 @@ function defaultFixtures(overrides: IpcFixtures = {}): IpcFixtures {
   };
 }
 
-async function mountPanel(modId: string | null, fixtures: IpcFixtures) {
+async function mountPanel(
+  modId: string | null,
+  fixtures: IpcFixtures,
+  organization: {
+    color?: "teal" | null;
+    groups?: { id: number; name: string; color: null }[];
+  } = {},
+) {
   installMockIpc(defaultFixtures(fixtures));
   const wrapper = mount(ModInfoPanel, {
-    props: { modId },
+    props: { modId, ...organization },
     global: { plugins: [createPinia(), PiniaColada, router] },
   });
   await router.isReady();
@@ -127,6 +134,32 @@ describe("ModInfoPanel", () => {
 
     expect(wrapper.get('[data-testid="mod-info-name"]').text()).toBe("Fixture Mod");
     expect(wrapper.find('[data-testid="mod-info-pending"]').exists()).toBe(true);
+  });
+
+  it("names the mod's colour and lists its groups in text, as the row does", async () => {
+    const wrapper = await mountPanel(
+      "fixture.mod",
+      { get_mod_info: activeModInfo() },
+      {
+        color: "teal",
+        groups: [
+          { id: 1, name: "Weapons", color: null },
+          { id: 2, name: "Armor", color: null },
+        ],
+      },
+    );
+
+    expect(wrapper.get('[data-testid="mod-info-color"]').text()).toBe("Colour: Teal");
+    expect(wrapper.get('[data-testid="mod-info-groups"]').text()).toBe(
+      "In groups: Weapons and Armor",
+    );
+  });
+
+  it("says nothing about colour or groups for a mod with neither", async () => {
+    const wrapper = await mountPanel("fixture.mod", { get_mod_info: activeModInfo() });
+
+    expect(wrapper.find('[data-testid="mod-info-color"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="mod-info-groups"]').exists()).toBe(false);
   });
 
   it("clicking the close button emits close", async () => {
@@ -323,6 +356,24 @@ describe("ModInfoPanel", () => {
 
       expect(wrapper.emitted("close")).toHaveLength(1);
       wrapper.unmount();
+    });
+
+    it("keeps the drawer open when Escape comes from inside a popup menu", async () => {
+      const drawer = mountDrawer("fixture.mod", true);
+      await flushPromises();
+      const menu = document.createElement("div");
+      menu.setAttribute("data-pc-name", "menu");
+      const item = document.createElement("button");
+      menu.append(item);
+      document.body.append(menu);
+
+      item.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+      expect(drawer.emitted("close")).toBeUndefined();
+
+      document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+      expect(drawer.emitted("close")).toHaveLength(1);
+      menu.remove();
+      drawer.unmount();
     });
 
     it("closes on Escape from anywhere on the page, but a column panel only from inside", async () => {
