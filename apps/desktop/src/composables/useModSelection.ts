@@ -74,3 +74,6 @@ export function useModSelection({
     pruneToShown,
   };
 }
+
+/** One list's selection, as {@link useModSelection} returns it. */
+export type ModSelection = ReturnType<typeof useModSelection>;
