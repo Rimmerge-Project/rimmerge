@@ -3,7 +3,7 @@
 This changelog starts at the first public release. Development history
 before that point is not summarized here.
 
-## [Unreleased]
+## [1.2.6] - 2026-11-20
 
 - **New: import a load order from a RimWorld save.** The Load order page's
   Import menu has **Import from a save…**, which lists the saves in
