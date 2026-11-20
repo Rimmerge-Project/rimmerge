@@ -587,6 +587,26 @@
       "revert_order_membership_differs": {
         "title": "Die gespeicherte Liste enthält andere Mods",
         "detail": "Deine gespeicherten aktiven Mods unterscheiden sich von deiner aktuellen Reihenfolge, daher gibt es keine Reihenfolge, zu der du zurückkehren kannst. Um stattdessen die gespeicherte Liste zu verwenden, öffne sie über „Importieren“ auf der Seite „Ladereihenfolge“. Andernfalls wende deine eigene Reihenfolge an."
+      },
+      "organization_unavailable": {
+        "title": "Gruppen können gerade nicht geändert werden",
+        "detail": "Rimmerge konnte deine gespeicherten Gruppen und Farben nicht verwenden, daher sind sie schreibgeschützt. Fang neu an, um sie neu anzulegen, oder repariere die Datei und scanne erneut."
+      },
+      "group_not_found": {
+        "title": "Diese Gruppe gibt es nicht mehr",
+        "detail": "Sie wurde möglicherweise gelöscht. Die Gruppen wurden aktualisiert, versuche es also erneut."
+      },
+      "group_name_taken": {
+        "title": "Dieser Gruppenname wird bereits verwendet",
+        "detail": "Eine andere Gruppe auf derselben Ebene hat diesen Namen. Groß- und Kleinschreibung spielt bei Namen keine Rolle."
+      },
+      "group_cycle": {
+        "title": "Eine Gruppe kann nicht in sich selbst liegen",
+        "detail": "Wähle einen Platz außerhalb dieser Gruppe und ihrer Untergruppen."
+      },
+      "organization_limit": {
+        "title": "Ein Limit für Gruppen wurde erreicht",
+        "detail": "Du hast ein Limit erreicht: für die Anzahl der Gruppen, der Verschachtelungsebenen, der Mods in Gruppen oder der Mods mit Farbe. Entferne einige und versuche es erneut."
       }
     }
   },
@@ -1726,7 +1746,13 @@
     "preview": {
       "title": "Ladereihenfolge importieren",
       "summary": "{count} Mod in der Liste | {count} Mods in der Liste",
-      "versionDiffers": "Erstellt mit RimWorld {listed}; du hast {game}.",
+      "fromSave": "Aus einem Speicherstand, erstellt mit RimWorld {version}.",
+      "madeWith": "Erstellt mit RimWorld {version}.",
+      "versionDiffers": "Du hast RimWorld {game}, eine andere Version.",
+      "misaligned": {
+        "names": "Die Anzahl der Namen ({values}) passt nicht zur Anzahl der Mods ({ids}), daher werden die Namen des Absenders nicht angezeigt.",
+        "workshopIds": "Die Anzahl der Steam-IDs ({values}) passt nicht zur Anzahl der Mods ({ids}), daher werden keine Workshop-Links angezeigt."
+      },
       "replacesPending": "Aktivierungsänderungen, die du noch nicht erneut gescannt hast, werden ersetzt.",
       "replacesUnwritten": "Dieser Import ersetzt deine aktuelle Reihenfolge, die noch nicht angewendet wurde.",
       "moved": "{count} Mod ändert ihre Position. | {count} Mods ändern ihre Position.",
@@ -1738,6 +1764,7 @@
       "missingExplanation": "Rimmerge lädt nie Mods herunter. Abonniere sie selbst und importiere dann erneut.",
       "openWorkshop": "Im Steam Workshop öffnen",
       "openWorkshopLabel": "{name} im Steam Workshop öffnen",
+      "workshopIdFromFile": "Workshop-ID {id}, entnommen aus der Datei, die du importiert hast.",
       "missingKind": {
         "dlc": "Ein DLC, das du nicht installiert hast.",
         "rimmergeMergeMod": "Die Merge-Mod des Absenders, von Rimmerge auf dessen Computer erstellt; du brauchst sie nicht.",
@@ -1778,9 +1805,12 @@
       "malformedXml": "Die Datei ist kein gültiges XML.",
       "dtdNotAllowed": "Die Datei deklariert eine DTD, was Mod-Listen nie tun.",
       "tooDeep": "Die Datei ist zu tief verschachtelt, um eine Mod-Liste zu sein.",
-      "unrecognizedFormat": "Das ist weder eine RimWorld-Mod-Liste (.rml) noch eine ModsConfig.xml noch eine Textliste.",
+      "unrecognizedFormat": "Das ist weder eine RimWorld-Mod-Liste (.rml) noch ein RimWorld-Speicherstand (.rws) noch eine ModsConfig.xml noch eine Textliste.",
       "missingModList": "Die Datei enthält keine Mod-Liste.",
-      "noEntries": "Es wurden keine Package-IDs gefunden."
+      "noEntries": "Es wurden keine Package-IDs gefunden.",
+      "saveHeaderTruncated": "Der Speicherstand endet vor dem Ende seiner Mod-Liste. Er ist möglicherweise beschädigt, oder das Spiel schreibt ihn noch.",
+      "saveHeaderMissing": "Dieser Speicherstand enthält in seinem Kopfbereich keine Mod-Liste.",
+      "saveHeaderTooLarge": "Der Kopfbereich des Speicherstands mit der Mod-Liste ist größer als {limit}."
     },
     "importedWithWarnings": "Der Scan hat {count} Warnung gemeldet. | Der Scan hat {count} Warnungen gemeldet.",
     "importedRuleWarnings": "Importiert; manche Regeln konnten nicht geladen werden",

@@ -587,6 +587,26 @@
       "revert_order_membership_differs": {
         "title": "Zapisana lista zawiera inne mody",
         "detail": "Zapisane aktywne mody różnią się od bieżącej kolejności, więc nie ma kolejności, do której można wrócić. Aby użyć zapisanej listy, otwórz ją przez „Importuj” na stronie „Kolejność ładowania”. W przeciwnym razie zastosuj własną kolejność."
+      },
+      "organization_unavailable": {
+        "title": "Nie można teraz zmieniać grup",
+        "detail": "Rimmerge nie mógł użyć zapisanych grup i kolorów, więc są tylko do odczytu. Zacznij od nowa, aby utworzyć nowy zestaw, albo napraw plik i przeskanuj ponownie."
+      },
+      "group_not_found": {
+        "title": "Ta grupa już nie istnieje",
+        "detail": "Mogła zostać usunięta. Grupy zostały odświeżone, spróbuj ponownie."
+      },
+      "group_name_taken": {
+        "title": "Ta nazwa grupy jest już zajęta",
+        "detail": "Inna grupa na tym samym poziomie ma już tę nazwę. Wielkość liter w nazwach nie ma znaczenia."
+      },
+      "group_cycle": {
+        "title": "Grupy nie można umieścić w niej samej",
+        "detail": "Wybierz miejsce poza tą grupą i jej podgrupami."
+      },
+      "organization_limit": {
+        "title": "Osiągnięto limit grup",
+        "detail": "Osiągnięto limit liczby grup, poziomów zagnieżdżenia, modów w grupach lub modów z kolorem. Usuń część z nich i spróbuj ponownie."
       }
     }
   },
@@ -1726,7 +1746,13 @@
     "preview": {
       "title": "Importuj kolejność ładowania",
       "summary": "{count} mod na liście | {count} mody na liście | {count} modów na liście",
-      "versionDiffers": "Utworzono w RimWorld {listed}; masz wersję {game}.",
+      "fromSave": "Z zapisu gry utworzonego w RimWorld {version}.",
+      "madeWith": "Utworzono w RimWorld {version}.",
+      "versionDiffers": "Masz RimWorld {game}, czyli inne wydanie.",
+      "misaligned": {
+        "names": "Liczba nazw na liście ({values}) nie zgadza się z liczbą modów ({ids}), więc nazwy nadawcy nie są pokazywane.",
+        "workshopIds": "Liczba ID Steam na liście ({values}) nie zgadza się z liczbą modów ({ids}), więc linki do Warsztatu nie są pokazywane."
+      },
       "replacesPending": "Zmiany włączenia i wyłączenia modów wprowadzone od ostatniego skanowania zostaną zastąpione.",
       "replacesUnwritten": "Ten import zastąpi bieżącą kolejność, która nie została jeszcze zastosowana.",
       "moved": "{count} mod zmienia pozycję. | {count} mody zmieniają pozycję. | {count} modów zmienia pozycję.",
@@ -1738,6 +1764,7 @@
       "missingExplanation": "Rimmerge nigdy nie pobiera modów. Zasubskrybuj je samodzielnie, a potem zaimportuj ponownie.",
       "openWorkshop": "Otwórz w Warsztacie Steam",
       "openWorkshopLabel": "Otwórz mod {name} w Warsztacie Steam",
+      "workshopIdFromFile": "ID Warsztatu {id}, odczytane z zaimportowanego pliku.",
       "missingKind": {
         "dlc": "DLC, którego nie masz zainstalowanego.",
         "rimmergeMergeMod": "Mod scalający nadawcy, utworzony przez Rimmerge na jego komputerze; nie jest ci potrzebny.",
@@ -1778,9 +1805,12 @@
       "malformedXml": "Plik nie jest prawidłowym plikiem XML.",
       "dtdNotAllowed": "Plik deklaruje DTD, czego listy modów nigdy nie robią.",
       "tooDeep": "Plik jest zbyt głęboko zagnieżdżony jak na listę modów.",
-      "unrecognizedFormat": "To nie jest lista modów RimWorld (.rml), plik ModsConfig.xml ani lista tekstowa.",
+      "unrecognizedFormat": "To nie jest lista modów RimWorld (.rml), zapis gry RimWorld (.rws), plik ModsConfig.xml ani lista tekstowa.",
       "missingModList": "Plik nie zawiera listy modów.",
-      "noEntries": "Nie znaleziono żadnego ID pakietu."
+      "noEntries": "Nie znaleziono żadnego ID pakietu.",
+      "saveHeaderTruncated": "Zapis gry kończy się przed końcem listy modów. Może być uszkodzony albo gra wciąż go zapisuje.",
+      "saveHeaderMissing": "Nagłówek tego zapisu gry nie zawiera listy modów.",
+      "saveHeaderTooLarge": "Nagłówek z listą modów w zapisie gry jest większy niż {limit}."
     },
     "importedWithWarnings": "Skanowanie zgłosiło {count} ostrzeżenie. | Skanowanie zgłosiło {count} ostrzeżenia. | Skanowanie zgłosiło {count} ostrzeżeń.",
     "importedRuleWarnings": "Zaimportowano, ale części reguł nie udało się wczytać",

@@ -587,6 +587,26 @@
       "revert_order_membership_differs": {
         "title": "La lista guardada tiene otros mods",
         "detail": "Tus mods activos guardados no coinciden con los de tu orden actual, así que no hay ningún orden al que volver. Para usar la lista guardada, ábrela desde «Importar» en la página Orden de carga. Si no, aplica tu propio orden."
+      },
+      "organization_unavailable": {
+        "title": "Ahora mismo no se pueden cambiar los grupos",
+        "detail": "Rimmerge no pudo usar tus grupos y colores guardados, así que son de solo lectura. Empieza de cero para crear un conjunto nuevo, o corrige el archivo y vuelve a escanear."
+      },
+      "group_not_found": {
+        "title": "Ese grupo ya no existe",
+        "detail": "Puede que se haya borrado. Los grupos se han actualizado; vuelve a intentarlo."
+      },
+      "group_name_taken": {
+        "title": "Ese nombre de grupo ya está en uso",
+        "detail": "Otro grupo del mismo nivel tiene este nombre. Los nombres no distinguen entre mayúsculas y minúsculas."
+      },
+      "group_cycle": {
+        "title": "Un grupo no puede ir dentro de sí mismo",
+        "detail": "Elige un lugar fuera de ese grupo y de sus propios subgrupos."
+      },
+      "organization_limit": {
+        "title": "Se alcanzó un límite de grupos",
+        "detail": "Alcanzaste un límite de cuántos grupos, niveles de anidación, mods en grupos o mods con color puede haber. Quita algunos y vuelve a intentarlo."
       }
     }
   },
@@ -1726,7 +1746,13 @@
     "preview": {
       "title": "Importar orden de carga",
       "summary": "{count} mod en la lista | {count} mods en la lista",
-      "versionDiffers": "Lista creada con RimWorld {listed}; tú tienes {game}.",
+      "fromSave": "De una partida guardada con RimWorld {version}.",
+      "madeWith": "Lista creada con RimWorld {version}.",
+      "versionDiffers": "Tienes RimWorld {game}, una versión distinta.",
+      "misaligned": {
+        "names": "La lista tiene {values} nombres para {ids} mods, así que no se muestran los nombres de quien la envió.",
+        "workshopIds": "La lista tiene {values} ID de Steam para {ids} mods, así que no se muestra ningún enlace de Workshop."
+      },
       "replacesPending": "Se reemplazarán los cambios de activación pendientes que aún no has vuelto a escanear.",
       "replacesUnwritten": "Esta importación reemplaza tu orden actual, que aún no se ha aplicado.",
       "moved": "{count} mod cambia de posición. | {count} mods cambian de posición.",
@@ -1738,6 +1764,7 @@
       "missingExplanation": "Rimmerge nunca descarga mods. Suscríbete a ellos y luego vuelve a importar la lista.",
       "openWorkshop": "Abrir en Steam Workshop",
       "openWorkshopLabel": "Abrir {name} en Steam Workshop",
+      "workshopIdFromFile": "ID de Workshop {id}, tomado del archivo que importaste.",
       "missingKind": {
         "dlc": "Un DLC que no tienes instalado.",
         "rimmergeMergeMod": "El mod de fusión de quien envió la lista, creado por Rimmerge en su ordenador; no lo necesitas.",
@@ -1778,9 +1805,12 @@
       "malformedXml": "El archivo no es un XML válido.",
       "dtdNotAllowed": "El archivo declara una DTD, algo que las listas de mods nunca hacen.",
       "tooDeep": "El archivo tiene demasiados niveles de anidación para ser una lista de mods.",
-      "unrecognizedFormat": "No es una lista de mods de RimWorld (.rml), un ModsConfig.xml ni una lista de texto.",
+      "unrecognizedFormat": "No es una lista de mods de RimWorld (.rml), una partida guardada de RimWorld (.rws), un ModsConfig.xml ni una lista de texto.",
       "missingModList": "El archivo no contiene ninguna lista de mods.",
-      "noEntries": "No se encontró ningún ID de paquete."
+      "noEntries": "No se encontró ningún ID de paquete.",
+      "saveHeaderTruncated": "La partida guardada se corta antes de que termine su lista de mods. Puede que esté dañada o que el juego aún la esté escribiendo.",
+      "saveHeaderMissing": "Esta partida guardada no tiene ninguna lista de mods en su cabecera.",
+      "saveHeaderTooLarge": "La cabecera con la lista de mods de la partida guardada ocupa más de {limit}."
     },
     "importedWithWarnings": "El escaneo informó de {count} advertencia. | El escaneo informó de {count} advertencias.",
     "importedRuleWarnings": "Importado, con reglas que no se pudieron cargar",

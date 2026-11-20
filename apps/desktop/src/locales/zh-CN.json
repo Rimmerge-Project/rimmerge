@@ -587,6 +587,26 @@
       "revert_order_membership_differs": {
         "title": "已保存的列表包含不同的 Mod",
         "detail": "你已保存的已启用 Mod 与当前顺序中的不同，因此没有可恢复的顺序。如需改用已保存的列表，请在“加载顺序”页通过“导入”打开它。否则，请应用你自己的顺序。"
+      },
+      "organization_unavailable": {
+        "title": "暂时无法更改分组",
+        "detail": "Rimmerge 无法使用你已保存的分组和颜色，因此它们为只读。你可以重新开始，创建一套新的分组，或修复该文件后重新扫描。"
+      },
+      "group_not_found": {
+        "title": "该分组已不存在",
+        "detail": "它可能已被删除。分组已刷新，请重试。"
+      },
+      "group_name_taken": {
+        "title": "该分组名称已被使用",
+        "detail": "同一层级的另一个分组已使用此名称。名称不区分大小写。"
+      },
+      "group_cycle": {
+        "title": "分组不能放入自身",
+        "detail": "请选择该分组及其子分组之外的位置。"
+      },
+      "organization_limit": {
+        "title": "已达到分组的数量上限",
+        "detail": "分组数量、嵌套层数、分组中的 Mod 数量或带颜色的 Mod 数量已达到上限。请移除一些后重试。"
       }
     }
   },
@@ -1726,7 +1746,13 @@
     "preview": {
       "title": "导入加载顺序",
       "summary": "列表中有 {count} 个 Mod",
-      "versionDiffers": "此列表由 RimWorld {listed} 制作；你的版本是 {game}。",
+      "fromSave": "来自用 RimWorld {version} 创建的存档。",
+      "madeWith": "由 RimWorld {version} 制作。",
+      "versionDiffers": "你使用的是 RimWorld {game}，版本不同。",
+      "misaligned": {
+        "names": "列表中有 {values} 个名称，却对应 {ids} 个 Mod，因此不显示发送者的名称。",
+        "workshopIds": "列表中有 {values} 个 Steam ID，却对应 {ids} 个 Mod，因此不显示创意工坊链接。"
+      },
       "replacesPending": "你尚未重新扫描的启用状态更改将被替换。",
       "replacesUnwritten": "此次导入会替换你的当前顺序，而该顺序尚未应用。",
       "moved": "{count} 个 Mod 的位置会改变。",
@@ -1738,6 +1764,7 @@
       "missingExplanation": "Rimmerge 从不下载 Mod。请自行订阅这些 Mod，然后重新导入。",
       "openWorkshop": "在 Steam 创意工坊中打开",
       "openWorkshopLabel": "在 Steam 创意工坊中打开 {name}",
+      "workshopIdFromFile": "创意工坊 ID {id}，取自你导入的文件。",
       "missingKind": {
         "dlc": "你未安装的 DLC。",
         "rimmergeMergeMod": "发送者的合并 Mod，由 Rimmerge 在其电脑上生成；你不需要它。",
@@ -1778,9 +1805,12 @@
       "malformedXml": "该文件不是有效的 XML。",
       "dtdNotAllowed": "该文件声明了 DTD，而 Mod 列表从不这样做。",
       "tooDeep": "该文件嵌套层级过深，不可能是 Mod 列表。",
-      "unrecognizedFormat": "这不是 RimWorld Mod 列表（.rml）、ModsConfig.xml 或文本列表。",
+      "unrecognizedFormat": "这不是 RimWorld Mod 列表（.rml）、RimWorld 存档（.rws）、ModsConfig.xml 或文本列表。",
       "missingModList": "该文件中没有 Mod 列表。",
-      "noEntries": "未找到任何 ID。"
+      "noEntries": "未找到任何 ID。",
+      "saveHeaderTruncated": "该存档在其 Mod 列表结束之前就已结束。存档可能已损坏，或游戏可能仍在写入它。",
+      "saveHeaderMissing": "此存档的头部没有 Mod 列表。",
+      "saveHeaderTooLarge": "存档头部的 Mod 列表超过 {limit}。"
     },
     "importedWithWarnings": "扫描报告了 {count} 条警告。",
     "importedRuleWarnings": "已导入，但有规则无法载入",

@@ -587,6 +587,26 @@
       "revert_order_membership_differs": {
         "title": "La liste enregistrée contient d’autres mods",
         "detail": "Vos mods actifs enregistrés diffèrent de ceux de votre ordre actuel : il n’y a donc aucun ordre à rétablir. Pour utiliser plutôt la liste enregistrée, ouvrez-la depuis Importer sur la page Ordre de chargement. Sinon, appliquez votre propre ordre."
+      },
+      "organization_unavailable": {
+        "title": "Impossible de modifier les groupes pour le moment",
+        "detail": "Rimmerge n’a pas pu utiliser vos groupes et couleurs enregistrés : ils sont en lecture seule. Repartez de zéro pour en créer de nouveaux, ou corrigez le fichier et réanalysez."
+      },
+      "group_not_found": {
+        "title": "Ce groupe n’existe plus",
+        "detail": "Il a peut-être été supprimé. Les groupes ont été actualisés ; réessayez."
+      },
+      "group_name_taken": {
+        "title": "Ce nom de groupe est déjà utilisé",
+        "detail": "Un autre groupe du même niveau porte ce nom. La casse n’est pas prise en compte dans les noms."
+      },
+      "group_cycle": {
+        "title": "Un groupe ne peut pas être placé dans lui-même",
+        "detail": "Choisissez un emplacement en dehors de ce groupe et de ses sous-groupes."
+      },
+      "organization_limit": {
+        "title": "Une limite liée aux groupes a été atteinte",
+        "detail": "Vous avez atteint une limite sur le nombre de groupes, de niveaux d’imbrication, de mods dans des groupes ou de mods colorés. Retirez-en quelques-uns et réessayez."
       }
     }
   },
@@ -1726,7 +1746,13 @@
     "preview": {
       "title": "Importer un ordre de chargement",
       "summary": "{count} mod dans la liste | {count} mods dans la liste",
-      "versionDiffers": "Liste créée avec RimWorld {listed} ; vous avez la version {game}.",
+      "fromSave": "Provient d’une sauvegarde créée avec RimWorld {version}.",
+      "madeWith": "Liste créée avec RimWorld {version}.",
+      "versionDiffers": "Vous avez RimWorld {game}, une version différente.",
+      "misaligned": {
+        "names": "La liste contient {values} noms pour {ids} mods : les noms de l’expéditeur ne sont donc pas affichés.",
+        "workshopIds": "La liste contient {values} ID Steam pour {ids} mods : aucun lien Workshop n’est donc affiché."
+      },
       "replacesPending": "Les modifications d’activation que vous n’avez pas encore réanalysées seront remplacées.",
       "replacesUnwritten": "Cette importation remplacera votre ordre « Actuel », qui n’a pas encore été appliqué.",
       "moved": "{count} mod change de position. | {count} mods changent de position.",
@@ -1738,6 +1764,7 @@
       "missingExplanation": "Rimmerge ne télécharge jamais de mods. Abonnez-vous vous-même à ces mods, puis importez de nouveau.",
       "openWorkshop": "Ouvrir sur le Steam Workshop",
       "openWorkshopLabel": "Ouvrir {name} sur le Steam Workshop",
+      "workshopIdFromFile": "ID Workshop {id}, provenant du fichier que vous avez importé.",
       "missingKind": {
         "dlc": "Un DLC que vous n’avez pas installé.",
         "rimmergeMergeMod": "Le mod de fusion de l’expéditeur, créé par Rimmerge sur son ordinateur ; vous n’en avez pas besoin.",
@@ -1778,9 +1805,12 @@
       "malformedXml": "Le contenu du fichier n’est pas du XML valide.",
       "dtdNotAllowed": "Le fichier déclare une DTD, ce que les listes de mods ne font jamais.",
       "tooDeep": "Le fichier est trop profondément imbriqué pour être une liste de mods.",
-      "unrecognizedFormat": "Ce n’est ni une liste de mods RimWorld (.rml), ni un ModsConfig.xml, ni une liste en texte.",
+      "unrecognizedFormat": "Ce n’est ni une liste de mods RimWorld (.rml), ni une sauvegarde RimWorld (.rws), ni un ModsConfig.xml, ni une liste en texte.",
       "missingModList": "Le fichier ne contient aucune liste de mods.",
-      "noEntries": "Aucun ID de paquet n’a été trouvé."
+      "noEntries": "Aucun ID de paquet n’a été trouvé.",
+      "saveHeaderTruncated": "La sauvegarde se termine avant la fin de sa liste de mods. Elle est peut-être endommagée, ou le jeu est peut-être encore en train de l’écrire.",
+      "saveHeaderMissing": "L’en-tête de cette sauvegarde ne contient aucune liste de mods.",
+      "saveHeaderTooLarge": "L’en-tête de la sauvegarde, qui contient sa liste de mods, dépasse {limit}."
     },
     "importedWithWarnings": "L’analyse a signalé {count} avertissement. | L’analyse a signalé {count} avertissements.",
     "importedRuleWarnings": "Importé, mais certaines règles n’ont pas pu être chargées",

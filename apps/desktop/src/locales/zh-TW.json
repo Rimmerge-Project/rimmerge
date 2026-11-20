@@ -587,6 +587,26 @@
       "revert_order_membership_differs": {
         "title": "已儲存的清單中的模組不同",
         "detail": "你已儲存的已啟用模組與目前順序不同，因此沒有可還原的順序。若要改用已儲存的清單，請在「載入順序」頁面用「匯入」開啟它。否則，請套用你自己的順序。"
+      },
+      "organization_unavailable": {
+        "title": "目前無法變更分組",
+        "detail": "Rimmerge 無法使用你已儲存的分組與顏色，因此它們目前為唯讀。請重新開始以建立一組新的分組，或修正該檔案後重新掃描。"
+      },
+      "group_not_found": {
+        "title": "該分組已不存在",
+        "detail": "它可能已被刪除。分組已重新整理，請再試一次。"
+      },
+      "group_name_taken": {
+        "title": "該分組名稱已被使用",
+        "detail": "同一層級中已有另一個分組使用此名稱。名稱不區分大小寫。"
+      },
+      "group_cycle": {
+        "title": "分組無法放入自身之中",
+        "detail": "請選擇該分組及其子分組以外的位置。"
+      },
+      "organization_limit": {
+        "title": "已達到分組的上限",
+        "detail": "分組數量、巢狀層級、分組中的模組數量或已設定顏色的模組數量已達上限。請移除一些後再試一次。"
       }
     }
   },
@@ -1726,7 +1746,13 @@
     "preview": {
       "title": "匯入載入順序",
       "summary": "清單中有 {count} 個模組",
-      "versionDiffers": "此清單以 RimWorld {listed} 製作；你的版本是 {game}。",
+      "fromSave": "來自以 RimWorld {version} 建立的存檔。",
+      "madeWith": "以 RimWorld {version} 製作。",
+      "versionDiffers": "你使用的是 RimWorld {game}，屬於不同的版本。",
+      "misaligned": {
+        "names": "清單中有 {values} 個名稱，卻對應 {ids} 個模組，因此不顯示分享者提供的名稱。",
+        "workshopIds": "清單中有 {values} 個 Steam ID，卻對應 {ids} 個模組，因此不顯示任何創意工坊連結。"
+      },
       "replacesPending": "尚未重新掃描的啟用／停用變更會被此次匯入取代。",
       "replacesUnwritten": "此次匯入會取代你的「目前」順序，而該順序尚未套用。",
       "moved": "{count} 個模組的位置會改變。",
@@ -1738,6 +1764,7 @@
       "missingExplanation": "Rimmerge 從不下載模組。請自行訂閱這些模組，然後再匯入一次。",
       "openWorkshop": "在 Steam 創意工坊開啟",
       "openWorkshopLabel": "在 Steam 創意工坊開啟 {name}",
+      "workshopIdFromFile": "創意工坊 ID {id}，取自你匯入的檔案。",
       "missingKind": {
         "dlc": "你未安裝的 DLC。",
         "rimmergeMergeMod": "分享者的合併模組，由 Rimmerge 在對方的電腦上產生；你不需要它。",
@@ -1778,9 +1805,12 @@
       "malformedXml": "此檔案不是有效的 XML。",
       "dtdNotAllowed": "此檔案宣告了 DTD，但模組清單從不這樣做。",
       "tooDeep": "此檔案的巢狀層級過深，不可能是模組清單。",
-      "unrecognizedFormat": "這不是 RimWorld 模組清單（.rml）、ModsConfig.xml 或文字清單。",
+      "unrecognizedFormat": "這不是 RimWorld 模組清單（.rml）、RimWorld 存檔（.rws）、ModsConfig.xml 或文字清單。",
       "missingModList": "檔案中沒有模組清單。",
-      "noEntries": "找不到任何 Package ID。"
+      "noEntries": "找不到任何 Package ID。",
+      "saveHeaderTruncated": "存檔在其模組清單結束之前就已中斷。檔案可能已損毀，或遊戲可能仍在寫入此存檔。",
+      "saveHeaderMissing": "此存檔的標頭中沒有模組清單。",
+      "saveHeaderTooLarge": "此存檔含有模組清單的標頭大於 {limit}。"
     },
     "importedWithWarnings": "掃描回報了 {count} 個警告。",
     "importedRuleWarnings": "已匯入，但有規則無法載入",

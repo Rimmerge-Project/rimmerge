@@ -587,6 +587,26 @@
       "revert_order_membership_differs": {
         "title": "保存されたリストのMODが異なります",
         "detail": "保存済みの有効なMODが現在の順序と異なるため、戻せる順序がありません。保存済みのリストを使う場合は、「ロード順」ページの「インポート」から開いてください。それ以外の場合は、独自の順序を適用してください。"
+      },
+      "organization_unavailable": {
+        "title": "グループを今は変更できません",
+        "detail": "保存済みのグループと色をRimmergeが使用できなかったため、読み取り専用になっています。最初からやり直して新しく作成するか、ファイルを修正して再スキャンしてください。"
+      },
+      "group_not_found": {
+        "title": "そのグループはもう存在しません",
+        "detail": "削除された可能性があります。グループを最新の状態に更新したので、再度お試しください。"
+      },
+      "group_name_taken": {
+        "title": "そのグループ名はすでに使われています",
+        "detail": "同じ親の下にある別のグループがこの名前を使っています。名前の大文字と小文字は区別されません。"
+      },
+      "group_cycle": {
+        "title": "グループをそれ自体の中には入れられません",
+        "detail": "そのグループとそのサブグループの外にある場所を選択してください。"
+      },
+      "organization_limit": {
+        "title": "グループの上限に達しました",
+        "detail": "グループの数、入れ子の深さ、グループ内のMODの数、色付きのMODの数のいずれかが上限に達しました。いくつか減らしてから再度お試しください。"
       }
     }
   },
@@ -1726,7 +1746,13 @@
     "preview": {
       "title": "ロード順をインポート",
       "summary": "リスト内のMOD：{count}個",
-      "versionDiffers": "RimWorld {listed}で作成されたリストです。お使いのバージョンは{game}です。",
+      "fromSave": "RimWorld {version}で作成されたセーブデータです。",
+      "madeWith": "RimWorld {version}で作成されました。",
+      "versionDiffers": "お使いのRimWorldは{game}で、異なるリリースです。",
+      "misaligned": {
+        "names": "リストには{ids}個のMODに対して名前が{values}個あるため、共有元の名前は表示されません。",
+        "workshopIds": "リストには{ids}個のMODに対してワークショップIDが{values}個あるため、ワークショップリンクは表示されません。"
+      },
       "replacesPending": "まだ再スキャンしていない保留中の有効化／無効化の変更は置き換えられます。",
       "replacesUnwritten": "このインポートで、まだ適用されていない「現在」の順序が置き換えられます。",
       "moved": "{count}個のMODの位置が変わります。",
@@ -1738,6 +1764,7 @@
       "missingExplanation": "RimmergeがMODをダウンロードすることはありません。これらのMODをご自身でサブスクライブしてから、再度インポートしてください。",
       "openWorkshop": "Steamワークショップで開く",
       "openWorkshopLabel": "{name}をSteamワークショップで開く",
+      "workshopIdFromFile": "ワークショップID：{id}（インポートしたファイルから取得したもの）",
       "missingKind": {
         "dlc": "インストールされていないDLCです。",
         "rimmergeMergeMod": "共有元のコンピューターでRimmergeが作成したマージMODです。このMODは必要ありません。",
@@ -1778,9 +1805,12 @@
       "malformedXml": "ファイルが有効なXMLではありません。",
       "dtdNotAllowed": "ファイルでDTDが宣言されています。MODリストでDTDが宣言されることはありません。",
       "tooDeep": "ファイルの入れ子が深すぎるため、MODリストとは見なせません。",
-      "unrecognizedFormat": "RimWorldのMODリスト（.rml）、ModsConfig.xml、テキストのリストのいずれでもありません。",
+      "unrecognizedFormat": "RimWorldのMODリスト（.rml）、RimWorldのセーブデータ（.rws）、ModsConfig.xml、テキストのリストのいずれでもありません。",
       "missingModList": "ファイルにMODリストが含まれていません。",
-      "noEntries": "パッケージIDが見つかりませんでした。"
+      "noEntries": "パッケージIDが見つかりませんでした。",
+      "saveHeaderTruncated": "セーブデータがMODリストの途中で終わっています。破損しているか、ゲームがまだ書き込み中の可能性があります。",
+      "saveHeaderMissing": "このセーブデータのヘッダーにMODリストがありません。",
+      "saveHeaderTooLarge": "セーブデータのヘッダーにあるMODリストのサイズが{limit}を超えています。"
     },
     "importedWithWarnings": "スキャンで{count}件の警告が報告されました。",
     "importedRuleWarnings": "インポートしましたが、読み込めなかったルールがあります",

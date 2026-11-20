@@ -587,6 +587,26 @@
       "revert_order_membership_differs": {
         "title": "Kayıtlı listede farklı modlar var",
         "detail": "Kayıtlı etkin modların mevcut sırandakilerden farklı, bu yüzden geri dönülecek bir sıra yok. Kayıtlı listeyi kullanmak istiyorsan Yükleme sırası sayfasında İçe aktar ile aç. Aksi halde kendi sıranı uygula."
+      },
+      "organization_unavailable": {
+        "title": "Gruplar şu anda değiştirilemez",
+        "detail": "Rimmerge kayıtlı gruplarını ve renklerini kullanamadı, bu yüzden bunlar salt okunur. Baştan başlayıp yeni gruplar oluştur ya da dosyayı düzeltip yeniden tara."
+      },
+      "group_not_found": {
+        "title": "Bu grup artık yok",
+        "detail": "Silinmiş olabilir. Gruplar yenilendi, yeniden dene."
+      },
+      "group_name_taken": {
+        "title": "Bu grup adı zaten kullanılıyor",
+        "detail": "Aynı düzeydeki başka bir grup bu adı taşıyor. Adlarda büyük/küçük harf ayrımı yapılmaz."
+      },
+      "group_cycle": {
+        "title": "Bir grup kendi içine taşınamaz",
+        "detail": "O grubun ve onun alt gruplarının dışında bir yer seç."
+      },
+      "organization_limit": {
+        "title": "Gruplar için bir sınıra ulaşıldı",
+        "detail": "Grup sayısı, iç içe düzey sayısı, gruplardaki mod sayısı ya da renklendirilmiş mod sayısı için bir sınıra ulaştın. Bazılarını kaldırıp yeniden dene."
       }
     }
   },
@@ -1726,7 +1746,13 @@
     "preview": {
       "title": "Yükleme sırasını içe aktar",
       "summary": "Listede {count} mod | Listede {count} mod",
-      "versionDiffers": "RimWorld {listed} ile hazırlanmış; sende {game} var.",
+      "fromSave": "RimWorld {version} ile kaydedilmiş bir oyundan alındı.",
+      "madeWith": "RimWorld {version} ile hazırlanmış.",
+      "versionDiffers": "Sende RimWorld {game} var; bu farklı bir sürüm.",
+      "misaligned": {
+        "names": "Listede {ids} mod için {values} ad var, bu yüzden gönderenin verdiği adlar gösterilmiyor.",
+        "workshopIds": "Listede {ids} mod için {values} Steam ID'si var, bu yüzden Atölye bağlantıları gösterilmiyor."
+      },
       "replacesPending": "Henüz yeniden taramadığın etkinleştirme değişikliklerinin yerini bu içe aktarma alacak.",
       "replacesUnwritten": "Bu içe aktarma, henüz uygulanmamış Mevcut sıranın yerini alır.",
       "moved": "{count} modun konumu değişiyor. | {count} modun konumu değişiyor.",
@@ -1738,6 +1764,7 @@
       "missingExplanation": "Rimmerge hiçbir zaman mod indirmez. Bunlara kendin abone ol, sonra yeniden içe aktar.",
       "openWorkshop": "Steam Atölyesi'nde aç",
       "openWorkshopLabel": "{name} modunu Steam Atölyesi'nde aç",
+      "workshopIdFromFile": "Atölye ID'si {id}; içe aktardığın dosyadan alındı.",
       "missingKind": {
         "dlc": "Sende kurulu olmayan bir DLC.",
         "rimmergeMergeMod": "Gönderenin birleştirme modu; Rimmerge onun bilgisayarında oluşturdu. Sana gerekmez.",
@@ -1778,9 +1805,12 @@
       "malformedXml": "Dosya geçerli bir XML değil.",
       "dtdNotAllowed": "Dosya bir DTD bildiriyor; mod listeleri bunu asla yapmaz.",
       "tooDeep": "Dosya, mod listesi olamayacak kadar çok iç içe geçmiş.",
-      "unrecognizedFormat": "Bu bir RimWorld mod listesi (.rml), ModsConfig.xml ya da metin listesi değil.",
+      "unrecognizedFormat": "Bu bir RimWorld mod listesi (.rml), RimWorld oyun kaydı (.rws), ModsConfig.xml ya da metin listesi değil.",
       "missingModList": "Dosyada mod listesi yok.",
-      "noEntries": "Hiç paket ID'si bulunamadı."
+      "noEntries": "Hiç paket ID'si bulunamadı.",
+      "saveHeaderTruncated": "Oyun kaydı, mod listesi bitmeden sona eriyor. Kayıt bozulmuş olabilir ya da oyun onu hâlâ yazıyor olabilir.",
+      "saveHeaderMissing": "Bu oyun kaydının başlığında mod listesi yok.",
+      "saveHeaderTooLarge": "Oyun kaydının mod listesi başlığı {limit} boyutundan büyük."
     },
     "importedWithWarnings": "Tarama {count} uyarı bildirdi. | Tarama {count} uyarı bildirdi.",
     "importedRuleWarnings": "İçe aktarıldı, ancak bazı kurallar yüklenemedi",
