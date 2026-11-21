@@ -5,7 +5,9 @@ import {
   ALL_MODS,
   COLOR_NAME_KEY,
   COLOR_SWATCH_CLASS,
+  COLOR_TEXT_CLASS,
   COLOR_TOKENS,
+  firstColoredGroup,
   groupFilterOf,
   isSameScope,
   pathTo,
@@ -83,5 +85,26 @@ describe("searchTree", () => {
   it("is no search for an empty query and finds nothing for an unknown name", () => {
     expect(searchTree(TREE, "  ")).toBeNull();
     expect(searchTree(TREE, "zzz")?.shown.size).toBe(0);
+  });
+});
+
+describe("firstColoredGroup", () => {
+  it("is the first group with a colour, in the order given (the backend's tree order)", () => {
+    const groups = [
+      { id: 1, name: "Plain", color: null },
+      { id: 2, name: "Armor", color: "teal" as const },
+      { id: 3, name: "Loot", color: "red" as const },
+    ];
+
+    expect(firstColoredGroup(groups)).toEqual({ id: 2, name: "Armor", color: "teal" });
+  });
+
+  it("is null when no group has a colour, or the mod has none", () => {
+    expect(firstColoredGroup([{ id: 1, name: "Plain", color: null }])).toBeNull();
+    expect(firstColoredGroup([])).toBeNull();
+  });
+
+  it("has a text class for every palette colour", () => {
+    expect(Object.keys(COLOR_TEXT_CLASS).toSorted()).toEqual([...COLOR_TOKENS].toSorted());
   });
 });

@@ -12,12 +12,15 @@ use super::{
 /// objects, never raw text.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum OrganizationEdit {
-    /// Create an empty group.
+    /// Create a group, with `mods` as its first members (empty for an empty
+    /// group), in one step.
     CreateGroup {
         /// Its name.
         name: GroupName,
         /// Its parent, `None` for top level.
         parent: Option<GroupId>,
+        /// The mods that join it as it is created.
+        mods: BTreeSet<OrganizedModId>,
     },
     /// Rename a group.
     RenameGroup {
@@ -90,7 +93,12 @@ pub enum OrganizationEdit {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EditOutcome {
     /// A group was created.
-    Created(GroupId),
+    Created {
+        /// Its id.
+        id: GroupId,
+        /// How many mods it holds as it is created.
+        members: usize,
+    },
     /// A rename, move or colour change of a group: nothing to count.
     Done,
     /// A group was deleted.
@@ -116,9 +124,12 @@ impl OrganizationEdit {
         organization: &mut ModOrganization,
     ) -> Result<EditOutcome, OrganizationError> {
         match self {
-            Self::CreateGroup { name, parent } => organization
-                .create_group(name, parent)
-                .map(EditOutcome::Created),
+            Self::CreateGroup { name, parent, mods } => organization
+                .create_group_with_members(name, parent, &mods)
+                .map(|id| EditOutcome::Created {
+                    id,
+                    members: mods.len(),
+                }),
             Self::RenameGroup { id, name } => organization
                 .rename_group(id, name)
                 .map(|()| EditOutcome::Done),

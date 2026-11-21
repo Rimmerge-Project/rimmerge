@@ -874,7 +874,9 @@ through `ports::OrganizationStore` (`rim-io`'s `JsonOrganizationStore`).
   reload.
 - **One use case, one closed command type.** `EditOrganization::execute`
   applies an `OrganizationEdit` (create, rename, reparent, delete, group
-  colour, add/remove/move members, mod colours), snapshots, saves once and
+  colour, add/remove/move members, mod colours; `CreateGroup` carries the mods
+  that join the new group, checked for room before the group exists, so
+  "create and add" is one edit and one save), snapshots, saves once and
   restores on a failed save; an edit that changes nothing writes nothing.
   `ResetOrganization` ("start over") is the only way out of `Recovered`:
   `OrganizationStore::archive_unusable` keeps a copy
@@ -896,7 +898,7 @@ through `ports::OrganizationStore` (`rim-io`'s `JsonOrganizationStore`).
   for group-level activate/deactivate planning.
 - **`mod_lists`** gains `ModListQuery::group` (`GroupFilter::InScope`,
   descendants included and deduplicated, or `Ungrouped`), `ModListRow::groups`
-  (direct labels by name) and `ModListRow::color`. Both list functions now
+  (direct labels in group-tree order: depth first, siblings by name, so a row's first coloured group is the tree's first) and `ModListRow::color`. Both list functions now
   return `Result<_, ModListError>`: a stale group id is `UnknownGroup`, and
   a filter with unavailable organization is refused, never read as "no
   filter". A group filter is a filter: `reorderable` stays on.

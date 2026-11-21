@@ -550,12 +550,13 @@ mod tests {
             CreateGroupRequestDto {
                 name: name.to_string(),
                 parent,
+                mod_ids: None,
             },
         )
         .await
         .expect("create group");
         match outcome {
-            OrganizationEditOutcomeDto::Created { id } => id,
+            OrganizationEditOutcomeDto::Created { id, .. } => id,
             other => panic!("expected a created group, got {other:?}"),
         }
     }
@@ -575,6 +576,7 @@ mod tests {
             CreateGroupRequestDto {
                 name: "G".to_string(),
                 parent: None,
+                mod_ids: None,
             },
         )
         .await;
@@ -601,6 +603,7 @@ mod tests {
             CreateGroupRequestDto {
                 name: "G".to_string(),
                 parent: None,
+                mod_ids: None,
             },
         )
         .await;
@@ -682,6 +685,7 @@ mod tests {
             CreateGroupRequestDto {
                 name: "a".to_string(),
                 parent: None,
+                mod_ids: None,
             },
         )
         .await;
@@ -714,6 +718,7 @@ mod tests {
             CreateGroupRequestDto {
                 name: "   ".to_string(),
                 parent: None,
+                mod_ids: None,
             },
         )
         .await;
@@ -749,6 +754,7 @@ mod tests {
             CreateGroupRequestDto {
                 name: "too deep".to_string(),
                 parent,
+                mod_ids: None,
             },
         )
         .await;
@@ -766,6 +772,7 @@ mod tests {
             CreateGroupRequestDto {
                 name: "G".to_string(),
                 parent: None,
+                mod_ids: None,
             },
         )
         .await;
@@ -832,6 +839,57 @@ mod tests {
                 absent: 1
             }
         );
+    }
+
+    #[tokio::test]
+    async fn creating_a_group_with_members_is_one_save_and_a_refusal_leaves_nothing() {
+        let (state, store) = app();
+        let parent = create(&state, "Parent", None).await;
+        let saves = store.save_count();
+
+        let created = create_group_inner(
+            &state,
+            CreateGroupRequestDto {
+                name: "New".to_string(),
+                parent: Some(parent),
+                mod_ids: Some(mod_ids(&["a", "b_steam", "b"])),
+            },
+        )
+        .await
+        .expect("create with members");
+        let clash = create_group_inner(
+            &state,
+            CreateGroupRequestDto {
+                name: "new".to_string(),
+                parent: Some(parent),
+                mod_ids: Some(mod_ids(&["a"])),
+            },
+        )
+        .await;
+        let bad_id = create_group_inner(
+            &state,
+            CreateGroupRequestDto {
+                name: "Other".to_string(),
+                parent: None,
+                mod_ids: Some(mod_ids(&[""])),
+            },
+        )
+        .await;
+
+        assert!(
+            matches!(
+                created,
+                OrganizationEditOutcomeDto::Created { members: 2, .. }
+            ),
+            "the outcome counts mods, so b_steam and b are one: {created:?}"
+        );
+        assert_eq!(store.save_count(), saves + 1, "one save for create and add");
+        assert_eq!(code_of(clash), CommandErrorCode::GroupNameTaken);
+        assert_eq!(code_of(bad_id), CommandErrorCode::InvalidInput);
+        let groups = loaded_groups(&get_organization_inner(&state).await.expect("get"));
+        assert_eq!(groups.len(), 2, "the refusals created nothing");
+        let new_group = groups.iter().find(|g| g.name == "New").expect("created");
+        assert_eq!(new_group.direct_count, 2, "b_steam and b are one mod");
     }
 
     #[tokio::test]

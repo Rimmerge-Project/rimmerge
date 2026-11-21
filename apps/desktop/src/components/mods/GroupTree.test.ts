@@ -44,6 +44,7 @@ function mountTree(
     shown?: Set<number> | null;
     scope?: GroupScopeChoice;
     rowDrag?: { count: number; hiddenCount?: number } | null;
+    openModGroupIds?: Set<number>;
   } = {},
 ) {
   const scope = ref<GroupScopeChoice>(options.scope ?? ALL_MODS);
@@ -52,6 +53,7 @@ function mountTree(
     props: {
       nodes: TREE,
       shown: options.shown ?? null,
+      openModGroupIds: options.openModGroupIds ?? new Set<number>(),
       rowDrag:
         options.rowDrag === undefined || options.rowDrag === null
           ? null
@@ -473,5 +475,40 @@ describe("GroupTree drops", () => {
     dragGroup(item(wrapper, "group-5"), "dragstart");
 
     expect(dragGroup(item(wrapper, "group-4"), "dragover")).toBe(true);
+  });
+  describe("folder icons and the open mod's groups", () => {
+    it("draws a filled folder in the group's colour and an outlined one when it has none", () => {
+      const { wrapper } = mountTree();
+
+      const coloured = wrapper.get(
+        '[data-testid="group-node-5"] [data-testid="group-folder-icon"]',
+      );
+      expect(coloured.attributes("fill")).toBe("currentColor");
+      expect(coloured.classes()).toContain("text-mark-teal");
+      expect(coloured.attributes("data-color")).toBe("teal");
+      const plain = wrapper.get('[data-testid="group-node-1"] [data-testid="group-folder-icon"]');
+      expect(plain.attributes("fill")).toBe("none");
+      expect(plain.attributes("data-color")).toBeUndefined();
+    });
+
+    it("highlights the groups the open mod is in, with a screen-reader cue, and no others", () => {
+      const { wrapper } = mountTree({ openModGroupIds: new Set([5]) });
+
+      const member = wrapper.get('[data-testid="group-node-5"]');
+      expect(member.find('[data-testid="group-node-open-dot"]').exists()).toBe(true);
+      expect(member.classes()).not.toContain("bg-accent-soft");
+      expect(member.get('[data-testid="group-node-open-mod"]').text()).toBe(
+        "The open mod is in this group",
+      );
+      const other = wrapper.get('[data-testid="group-node-1"]');
+      expect(other.find('[data-testid="group-node-open-dot"]').exists()).toBe(false);
+      expect(other.find('[data-testid="group-node-open-mod"]').exists()).toBe(false);
+    });
+
+    it("highlights nothing while no mod is open", () => {
+      const { wrapper } = mountTree();
+
+      expect(wrapper.find('[data-testid="group-node-open-mod"]').exists()).toBe(false);
+    });
   });
 });

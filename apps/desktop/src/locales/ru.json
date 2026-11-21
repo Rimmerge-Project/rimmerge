@@ -1553,7 +1553,6 @@
       "noMatches": "Нет подходящих групп.",
       "nodeModCount": "{count} мод с учётом подгрупп | {count} мода с учётом подгрупп | {count} модов с учётом подгрупп",
       "nodeSubgroupCount": "{count} подгруппа | {count} подгруппы | {count} подгрупп",
-      "chipWithColor": "{name} ({color})",
       "allGroups": "В группах: {groups}",
       "rowMenu": {
         "groups": "Группы…",

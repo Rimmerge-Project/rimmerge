@@ -789,12 +789,13 @@ mod tests {
                 .execute(paths(), &mut |_| {})
                 .expect("load must succeed");
             let edit = EditOrganization::new(&*store);
-            let EditOutcome::Created(group) = edit
+            let EditOutcome::Created { id: group, .. } = edit
                 .execute(
                     &mut session,
                     OrganizationEdit::CreateGroup {
                         name: name("Weapons"),
                         parent: None,
+                        mods: BTreeSet::new(),
                     },
                 )
                 .expect("create")

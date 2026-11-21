@@ -326,6 +326,8 @@ pub enum OrganizationEditOutcomeDto {
     Created {
         /// Its id.
         id: u32,
+        /// How many mods it holds as it is created (each mod once, whatever copies it had).
+        members: usize,
     },
     /// A rename, move or colour change of a group.
     Done,
@@ -373,7 +375,10 @@ pub enum OrganizationEditOutcomeDto {
 impl From<EditOutcome> for OrganizationEditOutcomeDto {
     fn from(value: EditOutcome) -> Self {
         match value {
-            EditOutcome::Created(id) => Self::Created { id: id.get() },
+            EditOutcome::Created { id, members } => Self::Created {
+                id: id.get(),
+                members,
+            },
             EditOutcome::Done => Self::Done,
             EditOutcome::Deleted(DeleteOutcome {
                 groups_removed,
@@ -460,6 +465,11 @@ pub struct CreateGroupRequestDto {
     pub name: String,
     /// Its parent, `null` for top level.
     pub parent: Option<u32>,
+    /// Mods that join the group as it is created (by any id), in the same
+    /// save; absent or empty creates an empty group.
+    #[serde(default)]
+    #[ts(optional = nullable)]
+    pub mod_ids: Option<Vec<String>>,
 }
 
 /// Request shape for `rename_group`.
@@ -625,6 +635,7 @@ impl TryFrom<CreateGroupRequestDto> for OrganizationEdit {
         Ok(Self::CreateGroup {
             name: parse_group_name(&value.name)?,
             parent: value.parent.map(parse_group_id).transpose()?,
+            mods: parse_mod_ids(value.mod_ids.as_deref().unwrap_or_default())?,
         })
     }
 }

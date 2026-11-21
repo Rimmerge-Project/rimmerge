@@ -19,7 +19,8 @@ enum Admit {
 /// The organization as one list call reads it.
 pub(super) struct ListOrganization<'a> {
     organization: &'a ModOrganization,
-    /// Each mod's direct groups, in name order (then id).
+    /// Each mod's direct groups in group-tree order (depth first, siblings
+    /// by name then id), the order the groups panel lists them in.
     memberships: BTreeMap<&'a OrganizedModId, Vec<GroupId>>,
     admit: Admit,
 }
@@ -54,24 +55,21 @@ impl<'a> ListOrganization<'a> {
         };
         Ok(Some(Self {
             organization,
-            memberships: Self::memberships_in_name_order(organization),
+            memberships: Self::memberships_in_tree_order(organization),
             admit,
         }))
     }
 
-    fn memberships_in_name_order(
+    fn memberships_in_tree_order(
         organization: &'a ModOrganization,
     ) -> BTreeMap<&'a OrganizedModId, Vec<GroupId>> {
-        let mut groups: Vec<_> = organization.groups().collect();
-        groups.sort_by(|(left_id, left), (right_id, right)| {
-            left.name()
-                .display_order(right.name())
-                .then_with(|| left_id.cmp(right_id))
-        });
         let mut memberships: BTreeMap<&OrganizedModId, Vec<GroupId>> = BTreeMap::new();
-        for (id, group) in groups {
+        for node in organization.tree() {
+            let Some(group) = organization.group(node.id) else {
+                continue;
+            };
             for member in group.members() {
-                memberships.entry(member).or_default().push(id);
+                memberships.entry(member).or_default().push(node.id);
             }
         }
         memberships

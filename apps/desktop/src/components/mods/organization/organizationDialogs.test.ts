@@ -311,6 +311,6 @@ describe("ModGroupsDialog", () => {
       isBusy: false,
     });
 
-    expect(wrapper.get('[data-testid="mod-groups-empty"]').text()).toContain("no groups yet");
+    expect(wrapper.get('[data-testid="mod-groups-empty"]').text()).toContain("No groups yet");
   });
 });

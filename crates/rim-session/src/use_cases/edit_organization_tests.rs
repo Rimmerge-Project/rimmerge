@@ -46,6 +46,7 @@ fn every_edit(weapons: GroupId, armor: GroupId) -> Vec<OrganizationEdit> {
         OrganizationEdit::CreateGroup {
             name: name("New"),
             parent: Some(weapons),
+            mods: BTreeSet::new(),
         },
         OrganizationEdit::RenameGroup {
             id: armor,

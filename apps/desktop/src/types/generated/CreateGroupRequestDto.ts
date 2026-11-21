@@ -11,4 +11,9 @@ name: string,
 /**
  * Its parent, `null` for top level.
  */
-parent: number | null, };
+parent: number | null, 
+/**
+ * Mods that join the group as it is created (by any id), in the same
+ * save; absent or empty creates an empty group.
+ */
+modIds?: Array<string> | null, };

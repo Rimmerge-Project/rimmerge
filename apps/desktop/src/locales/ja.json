@@ -1553,7 +1553,6 @@
       "noMatches": "一致するグループはありません。",
       "nodeModCount": "MOD{count}個（サブグループを含む）",
       "nodeSubgroupCount": "サブグループ{count}個",
-      "chipWithColor": "{name}（{color}）",
       "allGroups": "所属グループ：{groups}",
       "rowMenu": {
         "groups": "グループ…",

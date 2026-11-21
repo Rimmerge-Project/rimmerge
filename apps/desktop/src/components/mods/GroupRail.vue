@@ -25,6 +25,7 @@ const {
   nodes,
   isOverlay = false,
   rowDrag = null,
+  openModGroupIds = new Set<number>(),
 } = defineProps<{
   /** Every group, depth first, siblings by name. */
   nodes: readonly GroupNodeDto[];
@@ -32,6 +33,8 @@ const {
   isOverlay?: boolean;
   /** The mods being dragged from a list, so the tree can take them as a drop. */
   rowDrag?: { readonly count: number; readonly hiddenCount: number } | null;
+  /** The groups the mod open in the info panel is a direct member of: highlighted in the tree. */
+  openModGroupIds?: ReadonlySet<number>;
 }>();
 const emit = defineEmits<{
   createGroup: [parent: number | null];
@@ -340,6 +343,7 @@ watch(
       :nodes="nodes"
       :shown="shown"
       :row-drag="rowDrag"
+      :open-mod-group-ids="openModGroupIds"
       @menu="openMenu"
       @rename="(id: number) => emit('renameGroup', id)"
       @delete="(id: number) => emit('deleteGroup', id)"

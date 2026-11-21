@@ -522,6 +522,17 @@ impl ModOrganization {
         name: GroupName,
         parent: Option<GroupId>,
     ) -> Result<GroupId, OrganizationError> {
+        self.insert_group(name, parent, BTreeSet::new())
+    }
+
+    /// Validates everything about a new group, then inserts it holding
+    /// `members`; no fallible step follows the insertion.
+    fn insert_group(
+        &mut self,
+        name: GroupName,
+        parent: Option<GroupId>,
+        members: BTreeSet<OrganizedModId>,
+    ) -> Result<GroupId, OrganizationError> {
         let too_many = OrganizationError::TooManyGroups {
             limit: OrganizationLimits::MAX_GROUPS,
         };
@@ -552,11 +563,30 @@ impl ModOrganization {
                 name,
                 parent,
                 color: None,
-                members: BTreeSet::new(),
+                members,
             },
         );
         self.next_id = next_id;
         Ok(id)
+    }
+
+    /// Creates a group under `parent` and makes `mods` its direct members in
+    /// the same step, so a refusal of either leaves nothing behind (the
+    /// room for the members is checked first, and the group is inserted
+    /// already holding them).
+    ///
+    /// # Errors
+    ///
+    /// Everything [`Self::create_group`] refuses with, and
+    /// [`OrganizationError::TooManyMembers`] when the members would not fit.
+    pub fn create_group_with_members(
+        &mut self,
+        name: GroupName,
+        parent: Option<GroupId>,
+        mods: &BTreeSet<OrganizedModId>,
+    ) -> Result<GroupId, OrganizationError> {
+        self.ensure_room_for_new_group(mods.len())?;
+        self.insert_group(name, parent, mods.clone())
     }
 
     /// Renames a group.
@@ -910,6 +940,21 @@ impl ModOrganization {
     fn ensure_room(&self, id: GroupId, extra: usize) -> Result<(), OrganizationError> {
         let in_group = self.require(id)?.members.len();
         if in_group + extra > OrganizationLimits::MAX_MEMBERS_PER_GROUP {
+            return Err(OrganizationError::TooManyMembers {
+                limit: OrganizationLimits::MAX_MEMBERS_PER_GROUP,
+            });
+        }
+        if self.membership_count() + extra > OrganizationLimits::MAX_TOTAL_MEMBERSHIPS {
+            return Err(OrganizationError::TooManyMembers {
+                limit: OrganizationLimits::MAX_TOTAL_MEMBERSHIPS,
+            });
+        }
+        Ok(())
+    }
+
+    /// Whether a group that does not exist yet could hold `extra` members.
+    fn ensure_room_for_new_group(&self, extra: usize) -> Result<(), OrganizationError> {
+        if extra > OrganizationLimits::MAX_MEMBERS_PER_GROUP {
             return Err(OrganizationError::TooManyMembers {
                 limit: OrganizationLimits::MAX_MEMBERS_PER_GROUP,
             });

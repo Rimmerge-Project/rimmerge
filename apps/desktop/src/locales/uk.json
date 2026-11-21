@@ -1553,7 +1553,6 @@
       "noMatches": "Немає відповідних груп.",
       "nodeModCount": "{count} мод разом із підгрупами | {count} моди разом із підгрупами | {count} модів разом із підгрупами",
       "nodeSubgroupCount": "{count} підгрупа | {count} підгрупи | {count} підгруп",
-      "chipWithColor": "{name} ({color})",
       "allGroups": "У групах: {groups}",
       "rowMenu": {
         "groups": "Групи…",

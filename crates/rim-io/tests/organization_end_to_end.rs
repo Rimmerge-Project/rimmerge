@@ -103,12 +103,13 @@ fn groups_persist_to_organization_json_and_survive_a_rescan_without_touching_any
         .expect("the sample game has active mods");
     let edit = EditOrganization::new(store.clone());
 
-    let EditOutcome::Created(group) = edit
+    let EditOutcome::Created { id: group, .. } = edit
         .execute(
             &mut session,
             OrganizationEdit::CreateGroup {
                 name: name("Favourites").expect("valid name"),
                 parent: None,
+                mods: BTreeSet::new(),
             },
         )
         .expect("create")
@@ -170,6 +171,7 @@ fn a_damaged_file_comes_up_recovered_refuses_edits_and_start_over_keeps_a_copy()
         OrganizationEdit::CreateGroup {
             name: name("Nope").expect("valid name"),
             parent: None,
+            mods: BTreeSet::new(),
         },
     );
     assert!(matches!(
@@ -233,9 +235,10 @@ fn an_edit_that_would_write_more_than_the_reader_accepts_is_refused_and_rolled_b
             OrganizationEdit::CreateGroup {
                 name: name(&format!("group {saved_groups}")).expect("valid name"),
                 parent: None,
+                mods: BTreeSet::new(),
             },
         );
-        let Ok(EditOutcome::Created(group)) = outcome else {
+        let Ok(EditOutcome::Created { id: group, .. }) = outcome else {
             panic!("creating an empty group is small enough: {outcome:?}");
         };
         let members: BTreeSet<_> = (0

@@ -1553,7 +1553,6 @@
       "noMatches": "Eşleşen grup yok.",
       "nodeModCount": "Alt gruplar dahil {count} mod | Alt gruplar dahil {count} mod",
       "nodeSubgroupCount": "{count} alt grup | {count} alt grup",
-      "chipWithColor": "{name} ({color})",
       "allGroups": "Bulunduğu gruplar: {groups}",
       "rowMenu": {
         "groups": "Gruplar…",

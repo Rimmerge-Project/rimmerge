@@ -1553,7 +1553,6 @@
       "noMatches": "Nenhum grupo corresponde.",
       "nodeModCount": "{count} mod, incluindo subgrupos | {count} mods, incluindo subgrupos",
       "nodeSubgroupCount": "{count} subgrupo | {count} subgrupos",
-      "chipWithColor": "{name} ({color})",
       "allGroups": "Nos grupos: {groups}",
       "rowMenu": {
         "groups": "Grupos…",

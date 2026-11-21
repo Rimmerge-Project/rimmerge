@@ -1520,6 +1520,10 @@
         "slate": "Slate"
       },
       "rowColor": "Colour: {name}",
+      "rowColorFromGroup": "Colour from group {group}: {name}",
+      "swatchesLabel": "Set the mod's colour",
+      "swatch": "Colour {name}",
+      "swatchNone": "No colour",
       "groupTitle": "Group colour",
       "modTitle": "Mod colour",
       "groupHelp": "A colour marks the group in the tree and on mod rows. It changes nothing else.",
@@ -1553,8 +1557,10 @@
       "noMatches": "No group matches.",
       "nodeModCount": "{count} mod, including subgroups | {count} mods, including subgroups",
       "nodeSubgroupCount": "{count} subgroup | {count} subgroups",
-      "chipWithColor": "{name} ({color})",
+      "chipScope": "Show only the mods in the group {name}.",
+      "chipScopeWithColor": "Show only the mods in the group {name} ({color}).",
       "allGroups": "In groups: {groups}",
+      "openModIsMember": "The open mod is in this group",
       "rowMenu": {
         "groups": "Groups…",
         "color": "Colour…",
@@ -1604,7 +1610,7 @@
         "moveButton": "Move",
         "modGroupsTitle": "Groups for {name}",
         "modGroupsHelp": "Check a group to add this mod to it. Clear it to take the mod out. Each change is saved at once.",
-        "modGroupsEmpty": "There are no groups yet. Create one from the Groups panel.",
+        "modGroupsEmpty": "No groups yet. Type a name above to create one.",
         "modGroupsList": "Groups",
         "done": "Done",
         "removeUninstalledTitle": "Remove mods that aren't installed",
@@ -1653,8 +1659,18 @@
         "movedTop": "{name} is now a top-level group",
         "movedInside": "{name} moved inside {parent}"
       },
+      "search": {
+        "label": "Search the groups, or type a name to create a new one",
+        "placeholder": "Search or create a group",
+        "noMatch": "No group matches your search.",
+        "createOption": "Create group “{name}”",
+        "createHintBulk": "Creating it also adds the mods you chose, in one save.",
+        "createHintSingle": "Creating it also adds this mod, in one save.",
+        "parentLabel": "Create it inside"
+      },
       "toast": {
         "created": "Group created",
+        "createdAndAdded": "Created {name} and added {count} mod to it | Created {name} and added {count} mods to it",
         "renamed": "Group renamed",
         "moved": "Group moved",
         "deleted": "Group deleted",

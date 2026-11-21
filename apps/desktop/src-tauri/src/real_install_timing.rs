@@ -1224,12 +1224,13 @@ async fn organization_against_the_real_install() {
     );
     *state.session.write().expect("lock") = Some(session);
 
-    let crate::dto::organization::OrganizationEditOutcomeDto::Created { id: group } =
+    let crate::dto::organization::OrganizationEditOutcomeDto::Created { id: group, .. } =
         create_group_inner(
             &state,
             CreateGroupRequestDto {
                 name: "Perf".to_string(),
                 parent: None,
+                mod_ids: None,
             },
         )
         .await

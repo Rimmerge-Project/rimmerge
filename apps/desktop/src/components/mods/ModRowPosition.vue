@@ -2,8 +2,9 @@
 import { useI18n } from "vue-i18n";
 
 /**
- * A mod row's load-order position, shown while the Active list is sorted by anything but load
- * order: the visible `#n` is decoration, the screen-reader text names it.
+ * A mod row's load-order position, shown on every Active row whatever the sort (a sort by name
+ * or update time still shows where the mod loads): the visible `#n` is decoration, the
+ * screen-reader text names it.
  */
 const { modId, position } = defineProps<{
   modId: string;

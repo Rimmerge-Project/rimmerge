@@ -1553,7 +1553,6 @@
       "noMatches": "沒有符合的分組。",
       "nodeModCount": "{count} 個模組（含子分組）",
       "nodeSubgroupCount": "{count} 個子分組",
-      "chipWithColor": "{name}（{color}）",
       "allGroups": "所屬分組：{groups}",
       "rowMenu": {
         "groups": "分組…",

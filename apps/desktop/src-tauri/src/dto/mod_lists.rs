@@ -231,7 +231,7 @@ pub struct ModListRowDto {
     pub updated: UpdateTimeDto,
     /// How its membership differs from the file's active list, by base id.
     pub membership: MembershipMarkDto,
-    /// The groups the mod is a direct member of, by name. Empty while
+    /// The groups the mod is a direct member of, in group-tree order. Empty while
     /// organization is unavailable.
     pub groups: Vec<GroupLabelDto>,
     /// The mod's own colour; a group's colour is never inherited.

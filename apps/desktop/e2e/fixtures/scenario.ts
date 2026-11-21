@@ -4921,6 +4921,22 @@ export function installScenario(): void {
     }
   }
 
+  /** `ModOrganization::ensure_room_for_new_group`: a group not created yet could hold `extra`. */
+  function ensureOrganizationRoomForNewGroup(extra: number): void {
+    if (extra > ORGANIZATION_MAX_MEMBERS_PER_GROUP) {
+      organizationError(
+        "organization_limit",
+        `too many mods in groups (limit ${ORGANIZATION_MAX_MEMBERS_PER_GROUP})`,
+      );
+    }
+    if (organizationMembershipCount() + extra > ORGANIZATION_MAX_TOTAL_MEMBERSHIPS) {
+      organizationError(
+        "organization_limit",
+        `too many mods in groups (limit ${ORGANIZATION_MAX_TOTAL_MEMBERSHIPS})`,
+      );
+    }
+  }
+
   function groupDepth(id: number): number {
     let depth = 1;
     let parent = organizationGroups.get(id)?.parent ?? null;
@@ -4980,6 +4996,22 @@ export function installScenario(): void {
       for (const member of organizationGroups.get(key)?.members ?? []) mods.add(member);
     }
     return mods;
+  }
+
+  /** The group ids in `ModOrganization::tree` order: depth first, siblings by name. */
+  function organizationTreeIds(): number[] {
+    const ids: number[] = [];
+    const walk = (parent: number | null): void => {
+      const siblings = [...organizationGroups]
+        .filter(([, group]) => group.parent === parent)
+        .toSorted(compareGroupNames);
+      for (const [id] of siblings) {
+        ids.push(id);
+        walk(id);
+      }
+    };
+    walk(null);
+    return ids;
   }
 
   /** `ModOrganization::tree`: depth first, siblings by name, with direct and scope counts. */
@@ -5093,7 +5125,10 @@ export function installScenario(): void {
     }
     if (filter?.kind === "inScope") requireGroup(filter.groupId);
     const scope = filter?.kind === "inScope" ? groupScopeMods(filter.groupId) : null;
-    const labelled = [...organizationGroups].toSorted(compareGroupNames);
+    // Labels come in group-tree order (`ModOrganization::tree`): depth first, siblings by name.
+    const labelled = organizationTreeIds().map(
+      (id) => [id, organizationGroups.get(id)] as [number, OrganizationGroupMock],
+    );
     return rows
       .map((row) => {
         const base = baseOf(row.modId);
@@ -5131,7 +5166,7 @@ export function installScenario(): void {
     workshopId: number | null;
     updated: UpdateTimeMock;
     membership: MembershipMock;
-    /** The groups the mod is a direct member of (joined from organization), by name. */
+    /** The groups the mod is a direct member of (joined from organization), in group-tree order. */
     groups: unknown[];
     /** The mod's own colour; never inherited from a group. */
     color: string | null;
@@ -8067,9 +8102,17 @@ export function installScenario(): void {
     // The library organization (`rim_session::organization`); the model and its rules are above.
     get_organization: () => organizationDto(),
     create_group: (payload: unknown) => {
-      const request = (payload as { request: { name: string; parent: number | null } }).request;
+      const request = (
+        payload as {
+          request: { name: string; parent: number | null; modIds?: string[] | null };
+        }
+      ).request;
       const name = parseGroupName(request.name);
+      const mods = organizedIds(request.modIds ?? []);
       return editOrganization("create_group", request, () => {
+        // The room for the members is checked before the group exists, as the backend does, so a
+        // refusal leaves nothing behind.
+        ensureOrganizationRoomForNewGroup(mods.size);
         if (organizationGroups.size >= ORGANIZATION_MAX_GROUPS) {
           organizationError("organization_limit", "there can be at most 1,000 groups");
         }
@@ -8088,9 +8131,9 @@ export function installScenario(): void {
           name,
           parent: request.parent,
           color: null,
-          members: new Set(),
+          members: new Set(mods),
         });
-        return { kind: "created", id };
+        return { kind: "created", id, members: mods.size };
       });
     },
     rename_group: (payload: unknown) => {

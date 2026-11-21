@@ -29,4 +29,16 @@ describe("ModRowGroups", () => {
       "Weapons, Armor e Loot",
     );
   });
+
+  it("keeps focus on the row when a chip or dot is pressed", () => {
+    const wrapper = mountFor("en", [label(1, "Weapons")]);
+    const targets = ['[data-testid="mod-row-group-1"]', '[data-testid="mod-row-dot-1"]'];
+
+    for (const selector of targets) {
+      const pressed = new MouseEvent("mousedown", { bubbles: true, cancelable: true });
+      wrapper.get(selector).element.dispatchEvent(pressed);
+
+      expect(pressed.defaultPrevented).toBe(true);
+    }
+  });
 });

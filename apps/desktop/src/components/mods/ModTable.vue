@@ -20,10 +20,11 @@ import { useRowDrag } from "@/composables/useRowDrag";
 import { useRowKeys } from "@/composables/useRowKeys";
 import { useTranslateMessage } from "@/composables/useTranslateMessage";
 import { descriptor } from "@/i18n/messageDescriptor";
+import type { ColorTokenDto } from "@/types/generated/ColorTokenDto";
 import type { ModListRowDto } from "@/types/generated/ModListRowDto";
 import { updateUnavailableLabel } from "@/utils/modListSort";
 import { anchorForStep, moveSetFor } from "@/utils/modMove";
-import { COLOR_NAME_KEY } from "@/utils/organization";
+import { COLOR_NAME_KEY, COLOR_SWATCH_CLASS, COLOR_TOKENS } from "@/utils/organization";
 
 /** What this table's rows may be dragged to, set by the page from the drag in progress. */
 export type DropMode =
@@ -49,6 +50,7 @@ const {
   showActiveColumns = true,
   showUpdated = false,
   showPosition = false,
+  openModId = null,
   draggable = false,
   draggingIds = [],
   dropMode = "off",
@@ -73,10 +75,12 @@ const {
   /** Adds each row's last-updated time (or why it has none), shown while the list is sorted by it. */
   showUpdated?: boolean;
   /**
-   * Adds each row's load-order position, for the Active list while it is sorted
-   * by anything but load order: the sort must not be mistaken for the order.
+   * Adds each row's load-order position: always on in the Active list (a row's number is its
+   * place in the load order, whatever the list is sorted by), never in Inactive, which has none.
    */
   showPosition?: boolean;
+  /** The mod open in the info panel: its row is drawn with the accent ring and tint. */
+  openModId?: string | null;
   /** Whether a row can be picked up with the pointer. */
   draggable?: boolean;
   /** The ids being dragged (from this or the other list), drawn dimmed where shown. */
@@ -114,6 +118,12 @@ const emit = defineEmits<{
   /** One shown row up or down, from the Move menu or Alt+Arrow. */
   moveStep: [modId: string, direction: "up" | "down"];
   menuAction: [modId: string, action: MenuAction];
+  /** A double click: activate this inactive mod or deactivate this active one, as the buttons do. */
+  toggleActive: [modId: string];
+  /** A swatch in the row menu: set this mod's own colour, `null` for no colour. */
+  setColor: [modId: string, color: ColorTokenDto | null];
+  /** A group chip or dot on a row: scope the lists to that group. */
+  scopeGroup: [groupId: number];
 }>();
 const { t, locale } = useI18n();
 const tm = useTranslateMessage();
@@ -196,6 +206,32 @@ function onRowClick(event: MouseEvent, modId: string): void {
   openRow(modId);
 }
 
+/** Descendants of a row that handle their own clicks, so a double click on them is not the row's. */
+const ROW_CONTROL_SELECTOR = 'button, input, a, [role="checkbox"], .p-checkbox';
+
+/** A double click would also select the word under the pointer; the row toggles instead. */
+function onRowMouseDown(event: MouseEvent): void {
+  if (event.detail > 1) {
+    event.preventDefault();
+  }
+}
+
+/**
+ * A plain double click (no Ctrl/Cmd/Shift, which belong to selection) asks to toggle the row's
+ * activation. Its two clicks already ran `onRowClick`, which only opens the info panel and moves
+ * the anchor, so it never fights the single click.
+ */
+function onRowDblClick(event: MouseEvent, modId: string): void {
+  if (event.ctrlKey || event.metaKey || event.shiftKey) {
+    return;
+  }
+  // A double click on a control inside the row (checkbox, menu button, group chip) belongs to it.
+  if (event.target instanceof Element && event.target.closest(ROW_CONTROL_SELECTOR) !== null) {
+    return;
+  }
+  emit("toggleActive", modId);
+}
+
 /**
  * A Shift+click on the row checkbox extends a range like one on the row; any other click is left
  * to the checkbox, which toggles through its own change event.
@@ -267,6 +303,18 @@ const {
 // One popup menu for the whole table: a menu per virtualized row would be a menu per row.
 const menu = useTemplateRef<MenuMethods>("moveMenu");
 const menuModId = ref<string | null>(null);
+const menuModColor = computed<ColorTokenDto | null>(
+  () => mods.find((mod) => mod.modId === menuModId.value)?.color ?? null,
+);
+
+/** A swatch in the menu: set the colour in one click and close the menu. */
+function pickColor(color: ColorTokenDto | null): void {
+  const modId = menuModId.value;
+  menu.value?.hide();
+  if (modId !== null) {
+    emit("setColor", modId, color);
+  }
+}
 
 const menuItems = computed<MenuItem[]>(() => {
   const modId = menuModId.value;
@@ -406,13 +454,16 @@ function onMenuShown(): void {
           role="row"
           :aria-rowindex="virtualRow.index + 1"
           :tabindex="rovingIndex === null ? (virtualRow.index === 0 ? 0 : -1) : virtualRow.index === rovingIndex ? 0 : -1"
-          :aria-current="mod.modId === lastFocusedId ? 'true' : undefined"
+          :aria-current="mod.modId === openModId ? 'true' : undefined"
           :aria-selected="selectable ? isSelected(mod.modId) : undefined"
           :draggable="draggable"
-          class="border-border-subtle hover:bg-surface-2 focus-visible:bg-accent-soft absolute top-0 left-0 flex w-full cursor-pointer items-center gap-2 overflow-hidden border-b @lg:gap-3 px-3 text-sm focus-visible:outline"
+          class="border-border-subtle focus-visible:bg-accent-soft absolute top-0 left-0 flex w-full cursor-pointer items-center gap-2 overflow-hidden border-b @lg:gap-3 px-3 text-sm focus-visible:outline"
           :class="[
             draggingSet.has(mod.modId) ? 'opacity-50' : '',
-            selectable && isSelected(mod.modId) ? 'inset-ring-accent inset-ring-2' : '',
+            mod.modId === openModId ? 'bg-accent-soft' : 'hover:bg-surface-2',
+            (selectable && isSelected(mod.modId)) || mod.modId === openModId
+              ? 'inset-ring-accent inset-ring-2'
+              : '',
           ]"
           :style="{
             height: `${virtualRow.size}px`,
@@ -420,6 +471,8 @@ function onMenuShown(): void {
           }"
           :data-testid="`mod-row-${mod.modId}`"
           @click="onRowClick($event, mod.modId)"
+          @mousedown="onRowMouseDown"
+          @dblclick="onRowDblClick($event, mod.modId)"
           @keydown="onRowKeydown($event, mod.modId)"
           @focus="onRowFocus(mod.modId)"
           @dragstart="onRowDragStart($event, mod.modId)"
@@ -427,6 +480,7 @@ function onMenuShown(): void {
         >
           <ModRowColor
             :color="mod.color"
+            :groups="mod.groups"
             part="stripe"
           />
           <div
@@ -440,6 +494,7 @@ function onMenuShown(): void {
               :model-value="isSelected(mod.modId)"
               :data-testid="`mod-row-select-${mod.modId}`"
               @click.stop="onCheckboxClick($event, mod.modId)"
+              @dblclick.stop
               @update:model-value="emit('toggleSelect', mod.modId)"
             />
           </div>
@@ -454,6 +509,7 @@ function onMenuShown(): void {
             />
             <ModRowColor
               :color="mod.color"
+              :groups="mod.groups"
               part="name"
             />
             <SourceBadge :source="mod.source" />
@@ -467,7 +523,10 @@ function onMenuShown(): void {
               :state="mod.state"
               :show-pending-scan="showActiveColumns"
             />
-            <ModRowGroups :groups="mod.groups" />
+            <ModRowGroups
+              :groups="mod.groups"
+              @scope="(groupId: number) => emit('scopeGroup', groupId)"
+            />
             <span
               v-if="showUpdated"
               class="text-text-muted w-20 min-w-0 truncate text-right text-xs @lg:w-28 @lg:shrink-0"
@@ -509,6 +568,47 @@ function onMenuShown(): void {
       data-testid="mod-move-menu"
       @show="onMenuShown"
     >
+      <template
+        v-if="hasOrganizationActions"
+        #start
+      >
+        <div
+          role="group"
+          class="flex flex-wrap items-center gap-1 px-3 pt-2 pb-1"
+          :aria-label="t('mods.colors.swatchesLabel')"
+          data-testid="mod-menu-swatches"
+        >
+          <button
+            v-for="color in COLOR_TOKENS"
+            :key="color"
+            type="button"
+            class="focus-visible:outline-accent size-5 cursor-pointer rounded-full focus-visible:outline-2"
+            :class="[
+              COLOR_SWATCH_CLASS[color],
+              menuModColor === color ? 'ring-text ring-2 ring-offset-1' : '',
+            ]"
+            :aria-label="t('mods.colors.swatch', { name: t(COLOR_NAME_KEY[color]) })"
+            :title="t(COLOR_NAME_KEY[color])"
+            :aria-pressed="menuModColor === color"
+            :data-testid="`mod-menu-swatch-${color}`"
+            @click="pickColor(color)"
+          />
+          <button
+            type="button"
+            class="border-border-strong text-text-muted focus-visible:outline-accent flex size-5 cursor-pointer items-center justify-center rounded-full border border-dashed focus-visible:outline-2"
+            :aria-label="t('mods.colors.swatchNone')"
+            :title="t('mods.colors.swatchNone')"
+            :aria-pressed="menuModColor === null"
+            data-testid="mod-menu-swatch-none"
+            @click="pickColor(null)"
+          >
+            <i
+              class="pi pi-times text-[0.6rem]"
+              aria-hidden="true"
+            />
+          </button>
+        </div>
+      </template>
       <template #item="{ item, props }">
         <a
           v-bind="props.action"

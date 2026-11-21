@@ -188,8 +188,9 @@ pub struct ModListRow {
     /// id: `Added` on an Active row the file lacks, `Removed` on an
     /// Inactive row the file lists. Order never makes a mark.
     pub membership: MembershipMark,
-    /// The groups the mod is a **direct** member of, by name. Empty while
-    /// organization is unavailable.
+    /// The groups the mod is a **direct** member of, in group-tree order
+    /// (depth first, siblings by name). Empty while organization is
+    /// unavailable.
     pub groups: Vec<GroupLabel>,
     /// The mod's own colour. A mod never inherits a group's colour.
     pub color: Option<ColorToken>,
@@ -1301,7 +1302,7 @@ mod tests {
         }
 
         #[test]
-        fn rows_carry_labels_by_base_id_sorted_by_name_and_their_own_colour() {
+        fn rows_carry_labels_by_base_id_in_group_tree_order_and_their_own_colour() {
             let (report, set, state, parent, kid) = fixture();
             let query = ModListQuery::default();
 
@@ -1312,8 +1313,8 @@ mod tests {
                 |row: &ModListRow| row.groups.iter().map(|label| label.id).collect::<Vec<_>>();
             assert_eq!(
                 labels(&active.items[0]),
-                [kid, parent],
-                "Kid sorts before Parent"
+                [parent, kid],
+                "tree order lists a group before its subgroup, though Kid sorts first by name"
             );
             assert_eq!(
                 labels(&active.items[1]),
@@ -1327,6 +1328,31 @@ mod tests {
                 "no colour is inherited from a group"
             );
             assert_eq!(labels(&inactive.items[0]), [parent]);
+        }
+
+        #[test]
+        fn labels_follow_the_tree_depth_first_with_siblings_by_name_not_creation_order() {
+            let report = ReportBuilder::new().mod_("a").build();
+            let mut organization = ModOrganization::new();
+            // Created Zeta, Alpha, Child, Beta: ids 1..=4, which is not the tree order.
+            let zeta = group(&mut organization, "Zeta", None);
+            let alpha = group(&mut organization, "Alpha", None);
+            let child = group(&mut organization, "Child", Some(alpha));
+            let beta = group(&mut organization, "Beta", None);
+            for id in [zeta, alpha, child, beta] {
+                organization.add_members(id, &set(&["a"])).expect("add");
+            }
+            let state = OrganizationState::Loaded(organization);
+
+            let active = active_list(&report, &working(&["a"]), &state, &ModListQuery::default())
+                .expect("ok");
+
+            let names: Vec<_> = active.items[0]
+                .groups
+                .iter()
+                .map(|label| label.name.as_str())
+                .collect();
+            assert_eq!(names, ["Alpha", "Child", "Beta", "Zeta"]);
         }
 
         #[test]

@@ -11,6 +11,7 @@ import ModTable, {
   type RowMenu,
 } from "@/components/mods/ModTable.vue";
 import { useModSelection } from "@/composables/useModSelection";
+import type { ColorTokenDto } from "@/types/generated/ColorTokenDto";
 import type { ListSortKeyDto } from "@/types/generated/ListSortKeyDto";
 import type { ModListDto } from "@/types/generated/ModListDto";
 import type { ModListRowDto } from "@/types/generated/ModListRowDto";
@@ -25,6 +26,7 @@ const {
   showActiveColumns = true,
   sortKey,
   showPosition = false,
+  openModId = null,
   draggable = false,
   draggingIds = [],
   dropMode = "off",
@@ -48,8 +50,10 @@ const {
   showActiveColumns?: boolean;
   /** The list's display sort criterion; sorting by last updated shows each row's time. */
   sortKey: ListSortKeyDto;
-  /** Passed through to {@link ModTable}: each row's load-order position, while the Active list is sorted by something else. */
+  /** Passed through to {@link ModTable}: each row's load-order position (the Active list always shows it). */
   showPosition?: boolean;
+  /** Passed through to {@link ModTable}: the mod open in the info panel. */
+  openModId?: string | null;
   /** Passed through to {@link ModTable}: whether rows can be picked up. */
   draggable?: boolean;
   /** Passed through to {@link ModTable}: the ids being dragged. */
@@ -73,6 +77,12 @@ const emit = defineEmits<{
   drop: [slot: number];
   moveStep: [modId: string, direction: "up" | "down"];
   menuAction: [modId: string, action: MenuAction];
+  /** A double click on a row: activate (Inactive) or deactivate (Active) that mod. */
+  toggleActive: [modId: string];
+  /** A colour swatch in a row's menu. */
+  setColor: [modId: string, color: ColorTokenDto | null];
+  /** A group chip or dot on a row: scope the lists to that group. */
+  scopeGroup: [groupId: number];
   /** An organization or tag action on this list's whole selection (hidden-by-filter mods included). */
   bulkAction: [action: BulkAction];
 }>();
@@ -163,6 +173,7 @@ defineExpose({ focusRow });
       :show-active-columns="showActiveColumns"
       :show-updated="sortKey === 'lastUpdated'"
       :show-position="showPosition"
+      :open-mod-id="openModId"
       :draggable="draggable"
       :dragging-ids="draggingIds"
       :drop-mode="dropMode"
@@ -183,6 +194,9 @@ defineExpose({ focusRow });
       @drop="(slot: number) => emit('drop', slot)"
       @move-step="(modId: string, direction: 'up' | 'down') => emit('moveStep', modId, direction)"
       @menu-action="(modId: string, action: MenuAction) => emit('menuAction', modId, action)"
+      @toggle-active="(modId: string) => emit('toggleActive', modId)"
+      @set-color="(modId: string, color: ColorTokenDto | null) => emit('setColor', modId, color)"
+      @scope-group="(groupId: number) => emit('scopeGroup', groupId)"
     />
   </section>
 </template>

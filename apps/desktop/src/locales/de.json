@@ -1553,7 +1553,6 @@
       "noMatches": "Keine passende Gruppe.",
       "nodeModCount": "{count} Mod, einschließlich Untergruppen | {count} Mods, einschließlich Untergruppen",
       "nodeSubgroupCount": "{count} Untergruppe | {count} Untergruppen",
-      "chipWithColor": "{name} ({color})",
       "allGroups": "In Gruppen: {groups}",
       "rowMenu": {
         "groups": "Gruppen…",

@@ -44,7 +44,7 @@ type Row = {
   color: string | null;
 };
 type RowList = { total: number; items: Row[]; reorderable: boolean };
-type Created = { kind: "created"; id: number };
+type Created = { kind: "created"; id: number; members: number };
 /** `OrganizationDto`: one tagged variant per state, each with only its own fields. */
 type Organization =
   | {
@@ -152,7 +152,26 @@ test.describe("organization (mock)", () => {
       active.items.map((row) => row.position).slice(0, 3),
     );
     const secondRow = scoped.items.find((row) => row.modId === second);
-    expect(secondRow?.groups.map((label) => label.name)).toEqual(["Kid", "Parent"]);
+    expect(secondRow?.groups.map((label) => label.name)).toEqual(["Parent", "Kid"]);
+  });
+
+  test("a row's group labels follow the tree depth first, siblings by name, not creation order", async ({
+    page,
+  }) => {
+    await loadScenario(page);
+    const modId = (await activeRows(page)).items[0]?.modId ?? "";
+    const zeta = await create(page, "Zeta");
+    const alpha = await create(page, "Alpha");
+    const child = await create(page, "Child", alpha);
+    const beta = await create(page, "Beta");
+    for (const id of [zeta, alpha, child, beta]) {
+      await ok(page, "add_group_members", { request: { id, modIds: [modId] } });
+    }
+
+    const rows = await activeRows(page);
+
+    const row = rows.items.find((candidate) => candidate.modId === modId);
+    expect(row?.groups.map((label) => label.name)).toEqual(["Alpha", "Child", "Beta", "Zeta"]);
   });
 
   test("members are keyed by base id: a _steam copy and its base are one mod", async ({ page }) => {

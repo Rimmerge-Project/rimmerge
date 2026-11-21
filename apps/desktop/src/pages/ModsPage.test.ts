@@ -442,15 +442,13 @@ describe("ModsPage", () => {
     });
   });
 
-  it("shows a row's load-order position only when the backend says the Active list is not reorderable", async () => {
+  it("shows a row's load-order position in the Active list whether or not it is reorderable", async () => {
     const row = modRow({ modId: "active.mod", position: 4 });
     const reorderableWrapper = await mountAndNavigate({
       list_working_mods: () => modList([row], true),
     });
 
-    expect(reorderableWrapper.find('[data-testid="mod-row-position-active.mod"]').exists()).toBe(
-      false,
-    );
+    expect(reorderableWrapper.get('[data-testid="mod-row-position-active.mod"]').text()).toBe("#5");
     reorderableWrapper.unmount();
 
     const sortedWrapper = await mountAndNavigate({
@@ -458,6 +456,14 @@ describe("ModsPage", () => {
     });
 
     expect(sortedWrapper.get('[data-testid="mod-row-position-active.mod"]').text()).toBe("#5");
+  });
+
+  it("shows no position in the Inactive list, which has none", async () => {
+    const wrapper = await mountAndNavigate();
+
+    expect(pane(wrapper, "inactive").find('[data-testid^="mod-row-position-"]').exists()).toBe(
+      false,
+    );
   });
 
   it("offers Apply for an order that is not your active order yet, such as after a move", async () => {

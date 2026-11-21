@@ -2,6 +2,7 @@
 import { useDebounceFn, useMediaQuery } from "@vueuse/core";
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
+import { useToast } from "primevue/usetoast";
 import { type ComponentPublicInstance, computed, nextTick, ref, useTemplateRef, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
@@ -29,11 +30,14 @@ import { useGroupScope } from "@/composables/useGroupScope";
 import { useGroupScopeActions } from "@/composables/useGroupScopeActions";
 import { useModActivation } from "@/composables/useModActivation";
 import { useModDeactivation } from "@/composables/useModDeactivation";
+import { useModLabel } from "@/composables/useModLabel";
 import { useModListFilters } from "@/composables/useModListFilters";
 import { useModListSort } from "@/composables/useModListSort";
 import { type ListKind, useModReorder } from "@/composables/useModReorder";
 import { useOrderSource } from "@/composables/useOrderSource";
 import { useInactiveModsQuery, useWorkingModsQuery } from "@/queries/activeSet";
+import { useOrganizationMutations } from "@/queries/organization";
+import type { ColorTokenDto } from "@/types/generated/ColorTokenDto";
 import type { ModListDto } from "@/types/generated/ModListDto";
 import { assertNever } from "@/utils/assertNever";
 import { ACTIVE_SORT_KEYS, INACTIVE_SORT_KEYS } from "@/utils/modListSort";
@@ -43,6 +47,7 @@ import { selectionSummary } from "@/utils/selectionText";
 const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
+const modLabel = useModLabel();
 
 const selectedModId = computed(() => {
   const param = route.params["modId"];
@@ -146,6 +151,40 @@ const selectedRow = computed(() => {
     ? undefined
     : (rowIn(activeData.value, modId) ?? rowIn(inactiveData.value, modId));
 });
+
+/** The groups the open mod is a direct member of, for the groups panel to highlight. */
+const openModGroupIds = computed<ReadonlySet<number>>(
+  () => new Set(selectedRow.value?.groups.map((group) => group.id) ?? []),
+);
+
+/** A group chip or dot on a row: the same scope the groups panel sets. */
+function scopeToGroup(groupId: number): void {
+  groups.scope.value = { kind: "group", id: groupId };
+}
+
+const toast = useToast();
+const organizationEdits = useOrganizationMutations();
+
+/**
+ * A swatch in a row menu: one click sets (or clears) the mod's own colour through the same
+ * command as the "Colour..." dialog. A failure is already toasted by the app-wide mutation handler.
+ */
+async function setRowColor(modId: string, color: ColorTokenDto | null): Promise<void> {
+  try {
+    await organizationEdits.setModColors.mutateAsync({ modIds: [modId], color });
+  } catch {
+    return;
+  }
+  const name = modLabel.label(modId);
+  toast.add({
+    severity: "success",
+    summary:
+      color === null
+        ? t("mods.colors.toast.modCleared", { name })
+        : t("mods.colors.toast.modChanged", { name }),
+    life: 4000,
+  });
+}
 
 function onMenuAction(modId: string, action: MenuAction, from: ListKind): void {
   if (action !== "groups" && action !== "color") {
@@ -350,6 +389,7 @@ const followFocus = useDebounceFn((modId: string) => {
       :nodes="groups.nodes.value"
       :is-overlay="!hasGroupColumn"
       :row-drag="rowDrag"
+      :open-mod-group-ids="openModGroupIds"
       @create-group="(parent: number | null) => (organizationDialog = { kind: 'createGroup', parent })"
       @rename-group="(id: number) => (organizationDialog = { kind: 'renameGroup', id })"
       @change-color="(id: number) => (organizationDialog = { kind: 'groupColor', id })"
@@ -416,6 +456,7 @@ const followFocus = useDebounceFn((modId: string) => {
           :is-filtered="inactiveFilters.isFiltered.value"
           :sort-key="inactiveSort.key"
           :show-active-columns="false"
+          :open-mod-id="selectedModId"
           draggable
           :dragging-ids="reorder.drag.value?.ids ?? []"
           :drop-mode="reorder.dropModeFor('inactive')"
@@ -428,6 +469,9 @@ const followFocus = useDebounceFn((modId: string) => {
           @drag-end="reorder.endDrag"
           @drop="(slot: number) => reorder.drop('inactive', slot)"
           @menu-action="(modId: string, action: MenuAction) => onMenuAction(modId, action, 'inactive')"
+          @toggle-active="(modId: string) => openActivateFor([modId])"
+          @set-color="setRowColor"
+          @scope-group="scopeToGroup"
           @bulk-action="(action: BulkAction) => onBulkAction('inactive', action)"
         >
           <template #toolbar>
@@ -471,7 +515,8 @@ const followFocus = useDebounceFn((modId: string) => {
           :error="activeError"
           :is-filtered="activeFilters.isFiltered.value"
           :sort-key="activeSort.key"
-          :show-position="activeData?.reorderable === false"
+          show-position
+          :open-mod-id="selectedModId"
           draggable
           :dragging-ids="reorder.drag.value?.ids ?? []"
           :drop-mode="reorder.dropModeFor('active')"
@@ -486,6 +531,9 @@ const followFocus = useDebounceFn((modId: string) => {
           @drop="(slot: number) => reorder.drop('active', slot)"
           @move-step="reorder.step"
           @menu-action="(modId: string, action: MenuAction) => onMenuAction(modId, action, 'active')"
+          @toggle-active="(modId: string) => openDeactivateFor([modId])"
+          @set-color="setRowColor"
+          @scope-group="scopeToGroup"
           @bulk-action="(action: BulkAction) => onBulkAction('active', action)"
         >
           <template #toolbar>

@@ -5,14 +5,17 @@ import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
 import GroupRadioList from "@/components/mods/organization/GroupRadioList.vue";
+import GroupSearchCreate from "@/components/mods/organization/GroupSearchCreate.vue";
 import OrganizationError from "@/components/mods/organization/OrganizationError.vue";
 import type { GroupNodeDto } from "@/types/generated/GroupNodeDto";
 import type { CommandErrorDescriptor } from "@/utils/errors";
-import type { BulkGroupMode } from "@/utils/organization";
+import { type BulkGroupMode, filterGroupsByName } from "@/utils/organization";
 
 /**
  * Add the selected mods to a group, remove them from a group, or move them from one chosen
- * source group to another. Adding never removes; moving is the only way to replace a membership
+ * source group to another. Adding can also create the group: the search field filters the list
+ * and offers "Create group" for a name no group has, which creates it and adds the mods in one
+ * save (`createAndAdd`). Adding never removes; moving is the only way to replace a membership
  * and only touches mods that are direct members of the source. The selection sentence says how
  * many mods this acts on and how many of them the list's filter hides.
  */
@@ -32,6 +35,8 @@ const { mode, nodes, selectionText, counts, countsFailed, error, isSubmitting } 
 const emit = defineEmits<{
   choose: [groupId: number];
   move: [from: number, to: number];
+  /** Create a group (inside `parent`, `null` for top level) and add the selected mods to it. */
+  createAndAdd: [name: string, parent: number | null];
   /** The dialog has finished leaving the page. */
   afterHide: [];
 }>();
@@ -41,11 +46,21 @@ const { t } = useI18n();
 
 const target = ref<number | null>(null);
 const source = ref<number | null>(null);
+const query = ref("");
 
 watch(visible, (isOpen) => {
   if (isOpen) {
     target.value = null;
     source.value = null;
+    query.value = "";
+  }
+});
+
+/** The add list, narrowed by the search; a target the search hides is no longer chosen. */
+const matchingNodes = computed(() => filterGroupsByName(nodes, query.value));
+watch(matchingNodes, (shown) => {
+  if (mode === "add" && target.value !== null && !shown.some((node) => node.id === target.value)) {
+    target.value = null;
   }
 });
 
@@ -129,7 +144,7 @@ function submit(): void {
         {{ selectionText }}
       </p>
       <p
-        v-if="nodes.length === 0"
+        v-if="nodes.length === 0 && mode !== 'add'"
         data-testid="bulk-groups-empty"
       >
         {{ t("mods.bulk.dialog.noGroups") }}
@@ -159,9 +174,31 @@ function submit(): void {
         <p class="text-text-muted">
           {{ t("mods.bulk.dialog.addHelp") }}
         </p>
-        <GroupRadioList
-          v-model="target"
+        <GroupSearchCreate
+          v-model:query="query"
           :nodes="nodes"
+          :is-busy="isSubmitting"
+          target="selection"
+          @create="(name, parent) => emit('createAndAdd', name, parent)"
+        />
+        <p
+          v-if="nodes.length === 0"
+          class="text-text-muted"
+          data-testid="bulk-groups-empty"
+        >
+          {{ t("mods.groups.dialog.modGroupsEmpty") }}
+        </p>
+        <p
+          v-else-if="matchingNodes.length === 0"
+          class="text-text-muted"
+          data-testid="bulk-groups-no-match"
+        >
+          {{ t("mods.groups.search.noMatch") }}
+        </p>
+        <GroupRadioList
+          v-else
+          v-model="target"
+          :nodes="matchingNodes"
           :legend="t('mods.bulk.dialog.targetLegend')"
           name="bulk-target"
         />

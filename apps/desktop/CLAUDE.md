@@ -395,6 +395,24 @@ of that command surface — no direct filesystem or process access outside
   menu items are disabled with the reason in the menu, Alt+Arrow announces the
   reason, and a note above the list says why. A mod dragged in from Inactive
   still activates, with `anchor: null`.
+- **Row polish on the Mods page (#54).** The open row is `ModsPage`'s route `modId`, passed down as
+  `openModId` (never the last focused row): it gets `aria-current`, the accent ring and the
+  `bg-accent-soft` tint; selection keeps only the ring. A plain double click emits `toggleActive`
+  and the page runs `openActivateFor`/`openDeactivateFor` with that one id, the same plan and
+  dialog as the buttons (Ctrl/Shift double clicks are selection and do nothing, and a double click
+  on the row's checkbox, menu button or chip is ignored). The row menu's colour swatches sit in
+  the `Menu`'s `#start` slot (pointer-only real buttons, one `set_mod_colors` call, no dialog);
+  keyboard users have the "Colour..." entry. A group chip or dot on a row is a pointer-only
+  `<button tabindex="-1" aria-hidden>` (the grid keeps one tab stop per row; its `mousedown` is
+  prevented so focus stays on the row) that sets the page's group scope; the keyboard route to the
+  same scope is the groups panel. There, the groups the open mod belongs to carry a small accent
+  dot (not the scope tint) and every group a folder icon. The row stripe is the mod's own colour,
+  else its first coloured group (`ModListRowDto.groups` arrives in group-tree order from
+  `rim-session`, never re-sorted in Vue), faded, with screen-reader text that names the group.
+  "Create group" in the Add to group dialogs is `create_group` with `modIds`: one backend edit and
+  one save, and the outcome's `members` is the count the toast reports (never counted in Vue); the
+  dialogs offer it only when no group has that exact name (case-insensitive), and the backend still
+  decides sibling clashes and limits.
 - **Drag and drop is native HTML5, with no dependency, and the page owns the
   drag.** `useModReorder` holds the one `DragState` (source list, moving ids,
   whether Core is among them) and answers `dropModeFor(list)`: `position` (a line

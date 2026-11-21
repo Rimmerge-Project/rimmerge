@@ -272,9 +272,9 @@ changes the load order, a pending edit or `ModsConfig.xml`, and it is not
 saved (it is kept while the page stays open and starts over when another
 project is loaded). While the sort is Last updated, each row also shows its
 date (shortened when a narrow list runs out of room; hover it for the full
-date). While Active is sorted by anything other than Load order, each of its
-rows also shows its load-order position (`#12`), so the sort cannot be
-mistaken for the order.
+date). Each Active row always shows its load-order position (`#12`), whatever
+the list is sorted by, so a sort cannot be mistaken for the order; the Inactive
+list has no positions.
 
 **What "Last updated" means.** It depends on where the mod comes from. A
 Steam Workshop mod uses when the installed version was published on the
@@ -538,14 +538,39 @@ selection and lists the groups:
   is deleted or uninstalled. Names are unique among groups at the same level,
   not case sensitive; groups nest at most 8 levels.
 - **On a row**, a group shows as a chip with its name (the first two, then
-  "+N" with every name in its tooltip), and a mod's own colour as a stripe on
-  the row's edge, also named in text for screen readers. A colour is never
-  the only cue: the info panel names the mod's colour and lists its groups
-  too, and a narrow row, which hides the chips, keeps the group names as
-  screen-reader text. A mod does not inherit its group's colour. The row's ⋮
-  menu has **Groups…** (check a group to add the mod to it, clear it to remove
-  it; each click is saved at once) and **Colour…** (twelve named colours, or
-  none).
+  "+N" with every name in its tooltip). On a narrow row the chips become
+  small dots instead (up to four, then "+N"): a coloured group is a filled dot
+  in its colour, a group with no colour an outlined dot, and the tooltip of each
+  has the group's name. Clicking a chip or a dot narrows both lists to that
+  group, the same as choosing it in the Groups panel (with the mouse only: the
+  keyboard way is the panel). A mod's own colour is a stripe on the row's
+  edge. A mod with no colour of its own shows the stripe in the colour of its
+  first coloured group, in the order of the group tree, but fainter, so you can
+  tell an inherited colour from one you set. A colour is never the only cue:
+  the row names the colour and the group in text for screen readers, the info
+  panel names the mod's colour and lists its groups, and a narrow row keeps the
+  group names as screen-reader text. The row's ⋮ menu starts with the twelve
+  colours as small swatches and one more to clear the colour (one click sets
+  it and closes the menu; they are for the mouse, and the **Colour…** entry
+  does the same from the keyboard). It also has **Groups…** (check a group to
+  add the mod to it, clear it to remove it; each click is saved at once).
+- **Creating a group from the dialog.** The Add to group dialogs (the bulk one
+  and a single mod's **Groups…**) have a search box that filters the list of
+  groups. When no group has the name you typed (not case sensitive), the
+  dialog offers **Create group** with that name and an optional parent group
+  (the top level by default). One click creates the group and puts the mods in
+  it, in one save, and says how many mods it took in. If the name is already
+  used at that level, or a limit is reached, nothing is created.
+- **The open row.** The mod whose info panel is open is marked on its row with
+  a ring and a tint, and the row says so to screen readers. Selecting rows with
+  the checkboxes only draws the ring, so a selected row and the open row can be
+  told apart. In the Groups panel the groups the open mod belongs to have a
+  small dot before their name, and each group has a folder icon that is filled
+  with the group's colour (outlined when it has none).
+- **Double click.** A double click on a row (not on its checkbox, its ⋮ button
+  or a chip) opens the same Activate or Deactivate dialog as the buttons, for
+  that one mod, and nothing changes until you confirm. Ctrl or Shift with a
+  double click is for selecting rows, so it does nothing else.
 - **Tags** you added by hand now show on every row, Inactive included, and the
   tag filter works on both lists.
 - **Bulk actions** appear above a list while it has a selection (each list

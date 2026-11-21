@@ -1553,7 +1553,6 @@
       "noMatches": "일치하는 그룹이 없습니다.",
       "nodeModCount": "하위 그룹 포함 모드 {count}개",
       "nodeSubgroupCount": "하위 그룹 {count}개",
-      "chipWithColor": "{name} ({color})",
       "allGroups": "소속 그룹: {groups}",
       "rowMenu": {
         "groups": "그룹…",

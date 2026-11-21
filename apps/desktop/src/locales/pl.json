@@ -1553,7 +1553,6 @@
       "noMatches": "Żadna grupa nie pasuje.",
       "nodeModCount": "{count} mod, łącznie z podgrupami | {count} mody, łącznie z podgrupami | {count} modów, łącznie z podgrupami",
       "nodeSubgroupCount": "{count} podgrupa | {count} podgrupy | {count} podgrup",
-      "chipWithColor": "{name} ({color})",
       "allGroups": "W grupach: {groups}",
       "rowMenu": {
         "groups": "Grupy…",

@@ -49,7 +49,7 @@ updated: UpdateTimeDto,
  */
 membership: MembershipMarkDto, 
 /**
- * The groups the mod is a direct member of, by name. Empty while
+ * The groups the mod is a direct member of, in group-tree order. Empty while
  * organization is unavailable.
  */
 groups: Array<GroupLabelDto>, 
