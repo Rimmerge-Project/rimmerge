@@ -18,6 +18,8 @@ import type { DefaultPathsDto } from "@/types/generated/DefaultPathsDto";
 import type { DefaultPathsRequestDto } from "@/types/generated/DefaultPathsRequestDto";
 import type { DefCacheCarrierDto } from "@/types/generated/DefCacheCarrierDto";
 import type { GameLogSummaryDto } from "@/types/generated/GameLogSummaryDto";
+import type { GroupedListQueryDto } from "@/types/generated/GroupedListQueryDto";
+import type { GroupedModListDto } from "@/types/generated/GroupedModListDto";
 import type { ImportGameLogRequestDto } from "@/types/generated/ImportGameLogRequestDto";
 import type { LedgerStatsDto } from "@/types/generated/LedgerStatsDto";
 import type { ModCostRowDto } from "@/types/generated/ModCostRowDto";
@@ -129,6 +131,19 @@ export function listWorkingMods(query: ModListQueryDto): Promise<ModListDto> {
  */
 export function listInactiveMods(query: ModListQueryDto): Promise<ModListDto> {
   return call("list_inactive_mods", { query });
+}
+
+/**
+ * The Active pane in Groups view: the rows of {@link listWorkingMods} laid out as folders by the
+ * backend. Needs organization loaded (`organization_unavailable` otherwise).
+ */
+export function listWorkingModsGrouped(query: GroupedListQueryDto): Promise<GroupedModListDto> {
+  return call("list_working_mods_grouped", { query });
+}
+
+/** The Inactive pane in Groups view; see {@link listWorkingModsGrouped}. */
+export function listInactiveModsGrouped(query: GroupedListQueryDto): Promise<GroupedModListDto> {
+  return call("list_inactive_mods_grouped", { query });
 }
 
 /**

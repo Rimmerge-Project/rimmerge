@@ -10,6 +10,7 @@ use rim_session::use_cases::{ReadModAbout, ReadModPreview};
 #[cfg(test)]
 use rim_session::MAX_PAGE_SIZE;
 
+use crate::dto::grouped_mod_lists::{GroupedListQueryDto, GroupedModListDto};
 use crate::dto::mod_info::{ModInfoDto, ModPreviewDto, mod_info_dto};
 use crate::dto::mod_lists::{ModListDto, ModListQueryDto};
 use crate::dto::mods::{ModDetailDto, ModFilterDto, ModNamesDto, ModPageDto, mod_page_dto};
@@ -82,6 +83,41 @@ pub async fn list_working_mods(
     query: ModListQueryDto,
 ) -> Result<ModListDto, CommandError> {
     list_working_mods_inner(&state, query).await
+}
+
+/// The Active pane in Groups view: the rows of [`list_working_mods_inner`]
+/// laid out as folders by [`rim_session::Session::working_mod_groups`]; this
+/// only maps the DTO in and out.
+///
+/// # Errors
+///
+/// Returns [`CommandError::no_project_loaded`] when no project is loaded,
+/// [`CommandError::invalid_input`] for a bad tag, a zero group id or too
+/// many collapsed folders, or the `group_not_found`/
+/// `organization_unavailable` code (the view needs groups loaded, even with
+/// no group filter).
+pub(crate) async fn list_working_mods_grouped_inner(
+    state: &AppState,
+    query: GroupedListQueryDto,
+) -> Result<GroupedModListDto, CommandError> {
+    with_session(state, move |session| {
+        let query: rim_session::GroupedListQuery = query.try_into()?;
+        Ok(session.working_mod_groups(&query)?.into())
+    })
+    .await
+}
+
+/// See `list_working_mods_grouped_inner`.
+///
+/// # Errors
+///
+/// See `list_working_mods_grouped_inner`.
+#[tauri::command]
+pub async fn list_working_mods_grouped(
+    state: tauri::State<'_, AppState>,
+    query: GroupedListQueryDto,
+) -> Result<GroupedModListDto, CommandError> {
+    list_working_mods_grouped_inner(&state, query).await
 }
 
 /// One mod's full detail for the selected order: declared order, edges

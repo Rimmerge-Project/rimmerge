@@ -27,6 +27,7 @@ use crate::dto::active_set::{
     DeactivateModsResultDto, DeactivatePlanDto, DeactivateRequestDto, MoveModsResultDto,
     MoveRequestDto, PendingActiveChangesDto,
 };
+use crate::dto::grouped_mod_lists::{GroupedListQueryDto, GroupedModListDto};
 use crate::dto::mod_lists::{ModListDto, ModListQueryDto};
 use crate::dto::project::{ProgressEventDto, ProjectSummaryDto, SessionChangeReasonDto};
 use crate::error::CommandError;
@@ -67,6 +68,37 @@ pub async fn list_inactive_mods(
     query: ModListQueryDto,
 ) -> Result<ModListDto, CommandError> {
     list_inactive_mods_inner(&state, query).await
+}
+
+/// The Inactive pane in Groups view, laid out as folders by
+/// [`rim_session::Session::inactive_mod_groups`]; this only maps the DTO in
+/// and out.
+///
+/// # Errors
+///
+/// See [`crate::commands::mods::list_working_mods_grouped_inner`].
+pub(crate) async fn list_inactive_mods_grouped_inner(
+    state: &AppState,
+    query: GroupedListQueryDto,
+) -> Result<GroupedModListDto, CommandError> {
+    with_session(state, move |session| {
+        let query: rim_session::GroupedListQuery = query.try_into()?;
+        Ok(session.inactive_mod_groups(&query)?.into())
+    })
+    .await
+}
+
+/// See `list_inactive_mods_grouped_inner`.
+///
+/// # Errors
+///
+/// See `list_inactive_mods_grouped_inner`.
+#[tauri::command]
+pub async fn list_inactive_mods_grouped(
+    state: tauri::State<'_, AppState>,
+    query: GroupedListQueryDto,
+) -> Result<GroupedModListDto, CommandError> {
+    list_inactive_mods_grouped_inner(&state, query).await
 }
 
 /// Plans what `activate_mods` would do — the confirm dialog's own read,

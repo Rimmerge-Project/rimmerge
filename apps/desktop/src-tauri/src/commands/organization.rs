@@ -506,11 +506,15 @@ mod tests {
     };
 
     use super::*;
+    use crate::dto::grouped_mod_lists::{
+        FolderDto, FolderKeyDto, GroupedEntryDto, GroupedListQueryDto, GroupedModListDto,
+    };
     use crate::dto::mod_lists::{GroupFilterDto, ModListQueryDto};
     use crate::dto::organization::{
         ColorTokenDto, DeleteModeDto, GroupNodeDto, OrganizationIssueDto,
     };
     use crate::state::Adapters;
+    use rim_session::MAX_COLLAPSED_FOLDERS;
 
     /// An app over active `a`, `b_steam`, inactive `idle`, with a loaded
     /// (empty) organization and an in-memory store the test can inspect.
@@ -997,6 +1001,177 @@ mod tests {
             ["idle"]
         );
         assert_eq!(code_of(stale), CommandErrorCode::GroupNotFound);
+    }
+
+    fn grouped_query(list: ModListQueryDto, collapsed: Vec<FolderKeyDto>) -> GroupedListQueryDto {
+        GroupedListQueryDto { list, collapsed }
+    }
+
+    #[tokio::test]
+    async fn the_grouped_lists_lay_each_pane_out_as_folders_and_never_reorder() {
+        let (state, _) = app();
+        let weapons = create(&state, "Weapons", None).await;
+        let kid = create(&state, "Kid", Some(weapons)).await;
+        for (id, ids) in [(kid, &["b_steam"][..]), (weapons, &["a", "idle"][..])] {
+            add_group_members_inner(
+                &state,
+                GroupMembersRequestDto {
+                    id,
+                    mod_ids: mod_ids(ids),
+                },
+            )
+            .await
+            .expect("add");
+        }
+
+        let active = crate::commands::mods::list_working_mods_grouped_inner(
+            &state,
+            grouped_query(ModListQueryDto::default(), Vec::new()),
+        )
+        .await
+        .expect("grouped");
+        let inactive = crate::commands::active_set::list_inactive_mods_grouped_inner(
+            &state,
+            grouped_query(
+                ModListQueryDto::default(),
+                vec![FolderKeyDto::Group { group_id: kid }],
+            ),
+        )
+        .await
+        .expect("grouped");
+
+        let lines = |list: &GroupedModListDto| -> Vec<String> {
+            list.entries
+                .iter()
+                .map(|entry| match entry {
+                    GroupedEntryDto::Folder {
+                        folder: FolderDto::Group { name, .. },
+                        depth,
+                        matched,
+                        is_collapsed,
+                    } => format!("{depth} {name} {matched} {is_collapsed}"),
+                    GroupedEntryDto::Folder {
+                        folder: FolderDto::Ungrouped,
+                        depth,
+                        matched,
+                        ..
+                    } => format!("{depth} ~ {matched}"),
+                    GroupedEntryDto::Mod { mod_id, depth, .. } => format!("{depth} - {mod_id}"),
+                })
+                .collect()
+        };
+        assert_eq!(
+            lines(&active),
+            ["1 Weapons 2 false", "2 Kid 1 false", "3 - b_steam", "2 - a"]
+        );
+        assert_eq!(
+            lines(&inactive),
+            ["1 Weapons 1 false", "2 Kid 0 true", "2 - idle"]
+        );
+        assert!(!active.reorderable);
+        assert!(!inactive.reorderable);
+        assert_eq!(active.total, 2);
+        assert_eq!(active.items.len(), 2);
+        assert_eq!(active.total_entries, 4);
+    }
+
+    #[tokio::test]
+    async fn the_grouped_lists_refuse_what_the_view_cannot_show() {
+        let (state, _) = app();
+        let too_many: Vec<FolderKeyDto> = (1..=u32::try_from(MAX_COLLAPSED_FOLDERS + 1)
+            .expect("fits"))
+            .map(|group_id| FolderKeyDto::Group { group_id })
+            .collect();
+        let at_the_bound: Vec<FolderKeyDto> = too_many[..MAX_COLLAPSED_FOLDERS].to_vec();
+
+        let stale = crate::commands::mods::list_working_mods_grouped_inner(
+            &state,
+            grouped_query(
+                ModListQueryDto {
+                    group: Some(GroupFilterDto::InScope { group_id: 999 }),
+                    ..ModListQueryDto::default()
+                },
+                Vec::new(),
+            ),
+        )
+        .await;
+        let too_many_keys = crate::commands::mods::list_working_mods_grouped_inner(
+            &state,
+            grouped_query(ModListQueryDto::default(), too_many),
+        )
+        .await;
+        let bound_is_fine = crate::commands::active_set::list_inactive_mods_grouped_inner(
+            &state,
+            grouped_query(ModListQueryDto::default(), at_the_bound),
+        )
+        .await;
+        let zero_fold = crate::commands::mods::list_working_mods_grouped_inner(
+            &state,
+            grouped_query(
+                ModListQueryDto::default(),
+                vec![FolderKeyDto::Group { group_id: 0 }],
+            ),
+        )
+        .await;
+        let bad_tag = crate::commands::mods::list_working_mods_grouped_inner(
+            &state,
+            grouped_query(
+                ModListQueryDto {
+                    tag: Some("Not A Slug!".to_string()),
+                    ..ModListQueryDto::default()
+                },
+                Vec::new(),
+            ),
+        )
+        .await;
+
+        assert_eq!(code_of(stale), CommandErrorCode::GroupNotFound);
+        assert_eq!(code_of(too_many_keys), CommandErrorCode::InvalidInput);
+        assert!(bound_is_fine.is_ok());
+        assert_eq!(code_of(zero_fold), CommandErrorCode::InvalidInput);
+        assert_eq!(code_of(bad_tag), CommandErrorCode::InvalidInput);
+    }
+
+    #[tokio::test]
+    async fn the_grouped_lists_need_loaded_organization_even_without_a_group_filter() {
+        for unavailable in [
+            OrganizationState::NotLoaded,
+            OrganizationState::Recovered {
+                issue: OrganizationIssue::Malformed,
+            },
+        ] {
+            let (state, _) = app();
+            let mut session = session_fixture_with_inactive(&["a"], &["idle"]);
+            set_organization_state(&mut session, unavailable);
+            *state.session.write().expect("lock") = Some(session);
+
+            let active = crate::commands::mods::list_working_mods_grouped_inner(
+                &state,
+                grouped_query(ModListQueryDto::default(), Vec::new()),
+            )
+            .await;
+            let inactive = crate::commands::active_set::list_inactive_mods_grouped_inner(
+                &state,
+                grouped_query(ModListQueryDto::default(), Vec::new()),
+            )
+            .await;
+
+            assert_eq!(code_of(active), CommandErrorCode::OrganizationUnavailable);
+            assert_eq!(code_of(inactive), CommandErrorCode::OrganizationUnavailable);
+        }
+    }
+
+    #[tokio::test]
+    async fn the_grouped_lists_need_a_loaded_project() {
+        let state = AppState::default();
+
+        let result = crate::commands::mods::list_working_mods_grouped_inner(
+            &state,
+            grouped_query(ModListQueryDto::default(), Vec::new()),
+        )
+        .await;
+
+        assert_eq!(code_of(result), CommandErrorCode::NoProjectLoaded);
     }
 
     #[tokio::test]

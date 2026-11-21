@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { handleSessionChanged, ORGANIZATION_QUERY_KEYS } from "@/composables/useSessionEvents";
 import { queryKeys } from "@/queries/keys";
+import type { GroupedListQueryDto } from "@/types/generated/GroupedListQueryDto";
 import type { ModListQueryDto } from "@/types/generated/ModListQueryDto";
 import type { SessionChangeReasonDto } from "@/types/generated/SessionChangeReasonDto";
 
@@ -66,6 +67,24 @@ describe("handleSessionChanged for organization", () => {
 
     expect(invalidateOrganization).toHaveBeenCalledOnce();
     expect(invalidateAll).not.toHaveBeenCalled();
+  });
+
+  it("covers both Groups-view list queries through the Mods list prefixes", () => {
+    const grouped: GroupedListQueryDto = {
+      list: { search: null, tag: null, source: null, sort: null },
+      collapsed: [{ kind: "ungrouped" }],
+    };
+    const concreteKeys = [
+      queryKeys.workingModsGrouped(grouped),
+      queryKeys.inactiveModsGrouped(grouped),
+    ];
+
+    for (const concrete of concreteKeys) {
+      const covered = ORGANIZATION_QUERY_KEYS.some((prefix) =>
+        prefix.every((part, index) => concrete[index] === part),
+      );
+      expect(covered, JSON.stringify(concrete)).toBe(true);
+    }
   });
 
   it("targets the organization query and both Mods lists, as queryKeys builds them", () => {

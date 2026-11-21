@@ -21,8 +21,13 @@ use crate::organization::{
     ColorToken, GroupId, GroupName, OrganizationState, OrganizationUnavailable,
 };
 
+mod grouped;
 mod organized;
 
+pub use grouped::{
+    Folder, FolderKey, GroupedEntry, GroupedListQuery, GroupedModList, MAX_COLLAPSED_FOLDERS,
+    MAX_GROUPED_ENTRIES, TooManyCollapsedFolders,
+};
 use organized::ListOrganization;
 
 /// The most rows either list returns. Real installs hold a few thousand
@@ -385,6 +390,34 @@ pub(crate) fn working_list(
     organization: &OrganizationState,
     query: &ModListQuery,
 ) -> Result<ModList, ModListError> {
+    let rows = working_rows(report, tagging, working, times, file, organization, query)?;
+    Ok(ModList::from_rows(rows.into_iter(), is_reorderable(query)))
+}
+
+/// Whether the Active list answering `query` may be reordered: it is shown
+/// in the working set's own order.
+fn is_reorderable(query: &ModListQuery) -> bool {
+    query
+        .sort
+        .unwrap_or(ListSort::ACTIVE_DEFAULT)
+        .is_load_order()
+}
+
+/// Every Active row `query` admits, decorated and sorted, before the
+/// [`MAX_MOD_LIST_ROWS`] cut.
+///
+/// # Errors
+///
+/// [`ModListError`] when the query's group filter cannot be applied.
+pub(crate) fn working_rows(
+    report: &Report,
+    tagging: &Tagging,
+    working: &ActiveSet,
+    times: &ModUpdateTimes,
+    file: &FileMembership,
+    organization: &OrganizationState,
+    query: &ModListQuery,
+) -> Result<Vec<ModListRow>, ModListError> {
     let organized = ListOrganization::open(organization, query.group)?;
     let needle = query.search.as_deref().map(str::to_lowercase);
     let scanned: BTreeMap<&ModId, &rim_analyzer::domain::Mod> =
@@ -425,7 +458,7 @@ pub(crate) fn working_list(
     if !sort.is_load_order() {
         sort_rows(&mut rows, sort);
     }
-    Ok(ModList::from_rows(rows.into_iter(), sort.is_load_order()))
+    Ok(rows)
 }
 
 /// The Inactive list: every mod found on disk whose base id is not in
@@ -444,6 +477,25 @@ pub(crate) fn inactive_list(
     organization: &OrganizationState,
     query: &ModListQuery,
 ) -> Result<ModList, ModListError> {
+    let rows = inactive_rows(report, tagging, working, times, file, organization, query)?;
+    Ok(ModList::from_rows(rows.into_iter(), false))
+}
+
+/// Every Inactive row `query` admits, decorated and sorted, before the
+/// [`MAX_MOD_LIST_ROWS`] cut.
+///
+/// # Errors
+///
+/// [`ModListError`] when the query's group filter cannot be applied.
+pub(crate) fn inactive_rows(
+    report: &Report,
+    tagging: &Tagging,
+    working: &ActiveSet,
+    times: &ModUpdateTimes,
+    file: &FileMembership,
+    organization: &OrganizationState,
+    query: &ModListQuery,
+) -> Result<Vec<ModListRow>, ModListError> {
     let organized = ListOrganization::open(organization, query.group)?;
     let needle = query.search.as_deref().map(str::to_lowercase);
     let working_bases: BTreeSet<ModId> = working.ids().iter().map(ModId::base).collect();
@@ -473,7 +525,63 @@ pub(crate) fn inactive_list(
         Some(_) | None => ListSort::INACTIVE_DEFAULT,
     };
     sort_rows(&mut rows, sort);
-    Ok(ModList::from_rows(rows.into_iter(), false))
+    Ok(rows)
+}
+
+/// The Active pane as folders: [`working_rows`] laid out by
+/// [`grouped::build`].
+///
+/// # Errors
+///
+/// [`ModListError`] when organization is unavailable (the view needs
+/// groups) or the query's group filter names a missing group.
+pub(crate) fn working_groups(
+    report: &Report,
+    tagging: &Tagging,
+    working: &ActiveSet,
+    times: &ModUpdateTimes,
+    file: &FileMembership,
+    organization: &OrganizationState,
+    query: &GroupedListQuery,
+) -> Result<GroupedModList, ModListError> {
+    let loaded = organization.loaded()?;
+    let rows = working_rows(
+        report,
+        tagging,
+        working,
+        times,
+        file,
+        organization,
+        &query.list,
+    )?;
+    grouped::build(loaded, rows, query)
+}
+
+/// The Inactive pane as folders; see [`working_groups`].
+///
+/// # Errors
+///
+/// See [`working_groups`].
+pub(crate) fn inactive_groups(
+    report: &Report,
+    tagging: &Tagging,
+    working: &ActiveSet,
+    times: &ModUpdateTimes,
+    file: &FileMembership,
+    organization: &OrganizationState,
+    query: &GroupedListQuery,
+) -> Result<GroupedModList, ModListError> {
+    let loaded = organization.loaded()?;
+    let rows = inactive_rows(
+        report,
+        tagging,
+        working,
+        times,
+        file,
+        organization,
+        &query.list,
+    )?;
+    grouped::build(loaded, rows, query)
 }
 
 #[cfg(test)]

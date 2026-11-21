@@ -15,7 +15,9 @@ use crate::file_baseline::{
 };
 use crate::game_launch::{OrderOnDisk, UnappliedReason};
 use crate::mod_index::{self, ModFilter, ModPage};
-use crate::mod_lists::{self, ModList, ModListError, ModListQuery};
+use crate::mod_lists::{
+    self, GroupedListQuery, GroupedModList, ModList, ModListError, ModListQuery,
+};
 use crate::ports::ModsConfigFile;
 use crate::settings::SortProvenance;
 
@@ -87,6 +89,49 @@ impl Session {
     /// See [`Session::working_mod_list`].
     pub fn inactive_mod_list(&self, query: &ModListQuery) -> Result<ModList, ModListError> {
         mod_lists::inactive_list(
+            &self.report,
+            &self.tagging,
+            &self.working,
+            &self.update_times,
+            &FileMembership::of(&self.file_active_mods),
+            &self.organization,
+            query,
+        )
+    }
+
+    /// The Mods page's Active pane in Groups view: the rows of
+    /// [`Session::working_mod_list`] laid out as folders. Pure (`&self`).
+    ///
+    /// # Errors
+    ///
+    /// [`ModListError::OrganizationUnavailable`] unless groups are loaded
+    /// (even with no group filter), [`ModListError::UnknownGroup`] for a
+    /// stale group scope.
+    pub fn working_mod_groups(
+        &self,
+        query: &GroupedListQuery,
+    ) -> Result<GroupedModList, ModListError> {
+        mod_lists::working_groups(
+            &self.report,
+            &self.tagging,
+            &self.working,
+            &self.update_times,
+            &FileMembership::of(&self.file_active_mods),
+            &self.organization,
+            query,
+        )
+    }
+
+    /// The Inactive pane in Groups view. See [`Session::working_mod_groups`].
+    ///
+    /// # Errors
+    ///
+    /// See [`Session::working_mod_groups`].
+    pub fn inactive_mod_groups(
+        &self,
+        query: &GroupedListQuery,
+    ) -> Result<GroupedModList, ModListError> {
+        mod_lists::inactive_groups(
             &self.report,
             &self.tagging,
             &self.working,

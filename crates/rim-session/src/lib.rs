@@ -69,8 +69,9 @@ pub use mod_index::{ModFilter, ModPage, ModSummary};
 pub use mod_inventory::{InventoryEntry, ModInventory};
 pub use mod_knowledge::ModKnowledge;
 pub use mod_lists::{
-    GroupFilter, GroupLabel, ListSort, ListSortKey, MAX_MOD_LIST_ROWS, ModList, ModListError,
-    ModListQuery, ModListRow, RowState, SortDirection,
+    Folder, FolderKey, GroupFilter, GroupLabel, GroupedEntry, GroupedListQuery, GroupedModList,
+    ListSort, ListSortKey, MAX_COLLAPSED_FOLDERS, MAX_GROUPED_ENTRIES, MAX_MOD_LIST_ROWS, ModList,
+    ModListError, ModListQuery, ModListRow, RowState, SortDirection, TooManyCollapsedFolders,
 };
 pub use mod_times::{ModTimeSubject, ModUpdateTimes, UnixSeconds, UpdateTime, UpdateUnavailable};
 pub use order_rows::OrderRow;

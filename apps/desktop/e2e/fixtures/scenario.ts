@@ -129,6 +129,12 @@ type RecordedModListQuery = {
   sort: { key: string; direction: string } | null;
 };
 
+/** A `list_*_mods_grouped` query as the mock records it: the pane query plus the folded folders. */
+type RecordedGroupedListQuery = {
+  list: RecordedModListQuery;
+  collapsed: ({ kind: "group"; groupId: number } | { kind: "ungrouped" })[];
+};
+
 declare global {
   interface Window {
     /** Tauri's in-page IPC bridge (installed by `mockIPC`) — used to emit mocked events from a fixture. */
@@ -239,6 +245,10 @@ declare global {
     __LIST_WORKING_MODS_CALLS__?: RecordedModListQuery[];
     /** Every `list_inactive_mods` query the mock received, in order — for the mods sort spec. */
     __LIST_INACTIVE_MODS_CALLS__?: RecordedModListQuery[];
+    /** Every `list_working_mods_grouped` query the mock received, in order. */
+    __LIST_WORKING_MODS_GROUPED_CALLS__?: RecordedGroupedListQuery[];
+    /** Every `list_inactive_mods_grouped` query the mock received, in order. */
+    __LIST_INACTIVE_MODS_GROUPED_CALLS__?: RecordedGroupedListQuery[];
     /**
      * Set before the scenario installs: whether the mock session can use organization
      * (`loaded`, the default), was built without a store (`notLoaded`) or found an unusable
@@ -5229,6 +5239,17 @@ export function installScenario(): void {
    * `MAX_MOD_LIST_ROWS` with `total` reported before the cut.
    */
   function modListFor(which: "working" | "inactive", query: ModListQueryMock) {
+    const { ordered, isLoadOrder } = orderedModRows(which, query);
+    return {
+      total: ordered.length,
+      items: ordered.slice(0, MAX_MOD_LIST_ROWS),
+      // `ModList::reorderable`: the Active list in its own load order; a filter keeps it on.
+      reorderable: which === "working" && isLoadOrder,
+    };
+  }
+
+  /** Every row `modListFor` answers with, filtered and sorted, before the `MAX_MOD_LIST_ROWS` cut. */
+  function orderedModRows(which: "working" | "inactive", query: ModListQueryMock) {
     const pool = [...mods, ...extraModsFromFixtures()];
     const poolById = new Map(pool.map((row) => [row.modId, row]));
     const unscannedById = new Map(
@@ -5294,11 +5315,164 @@ export function installScenario(): void {
           : requested;
     const isLoadOrder = sort.key === "loadOrder" && sort.direction === "ascending";
     const ordered = isLoadOrder ? matching : sortModListRows(matching, sort);
+    return { ordered, isLoadOrder };
+  }
+
+  /** `rim_session::MAX_GROUPED_ENTRIES`: the most entries a Groups view answers with. */
+  const MAX_GROUPED_ENTRIES = 10_000;
+  /** `rim_session::MAX_COLLAPSED_FOLDERS`: every group (at most 1,000) plus "Not in a group". */
+  const MAX_COLLAPSED_FOLDERS = 1_001;
+
+  type FolderKeyMock = { kind: "group"; groupId: number } | { kind: "ungrouped" };
+  type GroupedListQueryMock = { list: ModListQueryMock; collapsed: FolderKeyMock[] };
+  type GroupedEntryMock =
+    | {
+        kind: "folder";
+        folder:
+          | { kind: "group"; id: number; name: string; color: string | null }
+          | { kind: "ungrouped" };
+        depth: number;
+        matched: number;
+        isCollapsed: boolean;
+      }
+    | { kind: "mod"; modId: string; folder: FolderKeyMock; depth: number; alsoIn: number };
+
+  /**
+   * `Session::working_mod_groups` / `inactive_mod_groups` (`rim_session::mod_lists::grouped`),
+   * over the rows `orderedModRows` builds, so the filter, the sort and the labels are the List
+   * mock's own. Rules mirrored: the view needs organization (`organization_unavailable` even with
+   * no group filter); placement by each row's direct labels; a folder's subfolders before its own
+   * mods, mods in the pane order; "Not in a group" last, only when it holds a mod, and absent
+   * under a group scope; a group scope walks only its subtree with depths rebased so it is level
+   * 1; an `ungrouped` scope is the one folder; with no search, tag or source filter every folder
+   * shows (empty ones at 0), under one a folder with no match is left out; `matched` counts
+   * distinct mods in the folder and its subfolders and ignores folds; a folded folder keeps its
+   * header and omits everything below; a fold naming no folder is ignored; at most
+   * `MAX_COLLAPSED_FOLDERS` fold keys, counted before duplicates collapse (`invalid_input`); `reorderable` is always false;
+   * `totalEntries` counts past `MAX_GROUPED_ENTRIES`. A row past `MAX_MOD_LIST_ROWS` is counted,
+   * never emitted. The entry cut itself is not reachable with the fixture; it is pinned in Rust.
+   */
+  function groupedModListFor(which: "working" | "inactive", query: GroupedListQueryMock) {
+    // The raw array is bounded before it is read, as the command's DTO conversion does.
+    if (query.collapsed.length > MAX_COLLAPSED_FOLDERS) {
+      organizationError(
+        "invalid_input",
+        `${query.collapsed.length} collapsed folders, at most ${MAX_COLLAPSED_FOLDERS} allowed`,
+      );
+    }
+    const foldedKeys = new Set<string>();
+    for (const key of query.collapsed) {
+      if (key.kind === "group" && key.groupId === 0) {
+        organizationError("invalid_input", "a group id is never 0");
+      }
+      foldedKeys.add(key.kind === "group" ? `g${key.groupId}` : "u");
+    }
+    if (query.list.group?.kind === "inScope" && query.list.group.groupId === 0) {
+      organizationError("invalid_input", "a group id is never 0");
+    }
+    if (foldedKeys.size > MAX_COLLAPSED_FOLDERS) {
+      organizationError(
+        "invalid_input",
+        `${foldedKeys.size} collapsed folders, at most ${MAX_COLLAPSED_FOLDERS} allowed`,
+      );
+    }
+    requireLoadedOrganization();
+    const { ordered } = orderedModRows(which, query.list);
+    const hasRowFilter =
+      (query.list.search ?? "") !== "" || query.list.tag !== null || query.list.source !== null;
+    const scope = query.list.group ?? null;
+
+    // Row indices per direct group, ascending (the pane order), and the ungrouped ones.
+    const direct = new Map<number, number[]>();
+    const ungrouped: number[] = [];
+    ordered.forEach((row, index) => {
+      const labels = row.groups as { id: number }[];
+      if (labels.length === 0) ungrouped.push(index);
+      for (const label of labels) direct.set(label.id, [...(direct.get(label.id) ?? []), index]);
+    });
+    const matchedIn = (id: number): number => {
+      const indices = new Set<number>();
+      for (const member of groupSubtree(id)) {
+        for (const index of direct.get(member) ?? []) indices.add(index);
+      }
+      return indices.size;
+    };
+    const childrenOf = (parent: number | null): number[] =>
+      organizationTreeIds().filter((id) => organizationGroups.get(id)?.parent === parent);
+    const depthOf = (id: number): number => {
+      const parent = organizationGroups.get(id)?.parent ?? null;
+      return parent === null ? 1 : depthOf(parent) + 1;
+    };
+
+    const entries: GroupedEntryMock[] = [];
+    let totalEntries = 0;
+    const push = (entry: GroupedEntryMock): void => {
+      totalEntries += 1;
+      if (entries.length < MAX_GROUPED_ENTRIES) entries.push(entry);
+    };
+    const pushMod = (index: number, folder: FolderKeyMock, depth: number): void => {
+      if (index >= MAX_MOD_LIST_ROWS) {
+        totalEntries += 1;
+        return;
+      }
+      const row = ordered[index];
+      if (row === undefined) return;
+      push({
+        kind: "mod",
+        modId: row.modId,
+        folder,
+        depth,
+        alsoIn: Math.max(0, row.groups.length - 1),
+      });
+    };
+    const emitGroup = (id: number, baseDepth: number): void => {
+      const matched = matchedIn(id);
+      if (hasRowFilter && matched === 0) return;
+      const group = organizationGroups.get(id);
+      if (group === undefined) return;
+      const depth = depthOf(id) + 1 - baseDepth;
+      const isCollapsed = foldedKeys.has(`g${id}`);
+      push({
+        kind: "folder",
+        folder: { kind: "group", id, name: group.name, color: group.color },
+        depth,
+        matched,
+        isCollapsed,
+      });
+      if (isCollapsed) return;
+      for (const child of childrenOf(id)) emitGroup(child, baseDepth);
+      for (const index of direct.get(id) ?? []) {
+        pushMod(index, { kind: "group", groupId: id }, depth + 1);
+      }
+    };
+    const emitUngrouped = (): void => {
+      if (ungrouped.length === 0) return;
+      const isCollapsed = foldedKeys.has("u");
+      push({
+        kind: "folder",
+        folder: { kind: "ungrouped" },
+        depth: 1,
+        matched: ungrouped.length,
+        isCollapsed,
+      });
+      if (isCollapsed) return;
+      for (const index of ungrouped) pushMod(index, { kind: "ungrouped" }, 2);
+    };
+
+    if (scope?.kind === "ungrouped") {
+      emitUngrouped();
+    } else if (scope?.kind === "inScope") {
+      emitGroup(scope.groupId, depthOf(scope.groupId));
+    } else {
+      for (const root of childrenOf(null)) emitGroup(root, 1);
+      emitUngrouped();
+    }
     return {
       total: ordered.length,
       items: ordered.slice(0, MAX_MOD_LIST_ROWS),
-      // `ModList::reorderable`: the Active list in its own load order; a filter keeps it on.
-      reorderable: which === "working" && isLoadOrder,
+      reorderable: false,
+      entries,
+      totalEntries,
     };
   }
 
@@ -7082,6 +7256,8 @@ export function installScenario(): void {
   window.__ACTIVATE_CALLS__ = [];
   window.__LIST_WORKING_MODS_CALLS__ = [];
   window.__LIST_INACTIVE_MODS_CALLS__ = [];
+  window.__LIST_WORKING_MODS_GROUPED_CALLS__ = [];
+  window.__LIST_INACTIVE_MODS_GROUPED_CALLS__ = [];
   window.__DEACTIVATE_CALLS__ = [];
   window.__MOVE_MODS_CALLS__ = [];
   window.__ORGANIZATION_CALLS__ = [];
@@ -8146,6 +8322,17 @@ export function installScenario(): void {
       const query = (payload as { query: ModListQueryMock }).query;
       window.__LIST_INACTIVE_MODS_CALLS__?.push(query);
       return modListFor("inactive", query);
+    },
+    // The Groups view of each pane (`rim_session::mod_lists::grouped`).
+    list_working_mods_grouped: (payload: unknown) => {
+      const query = (payload as { query: GroupedListQueryMock }).query;
+      window.__LIST_WORKING_MODS_GROUPED_CALLS__?.push(query);
+      return groupedModListFor("working", query);
+    },
+    list_inactive_mods_grouped: (payload: unknown) => {
+      const query = (payload as { query: GroupedListQueryMock }).query;
+      window.__LIST_INACTIVE_MODS_GROUPED_CALLS__?.push(query);
+      return groupedModListFor("inactive", query);
     },
     // The library organization (`rim_session::organization`); the model and its rules are above.
     get_organization: () => organizationDto(),

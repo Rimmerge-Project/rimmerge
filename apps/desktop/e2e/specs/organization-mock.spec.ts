@@ -454,6 +454,25 @@ test.describe("organization (mock)", () => {
     expect(tree.groups.find((node) => node.id === eleventh)?.directCount).toBe(0);
   });
 
+  test("a grouped list request bounds its raw collapsed array like the command's DTO conversion", async ({
+    page,
+  }) => {
+    await loadScenario(page);
+    const request = (count: number) => ({
+      query: {
+        list: { ...NO_QUERY.query },
+        // One repeated key: distinct keys stay at one, so only the raw length can trip the bound.
+        collapsed: Array.from({ length: count }, () => ({ kind: "ungrouped" })),
+      },
+    });
+
+    const atTheBound = await call(page, "list_working_mods_grouped", request(1_001));
+    const pastTheBound = await codeOf(page, "list_working_mods_grouped", request(1_002));
+
+    expect(atTheBound).toHaveProperty("ok");
+    expect(pastTheBound).toBe("invalid_input");
+  });
+
   test("a C1 control character in a name or an id is refused like the backend's", async ({
     page,
   }) => {

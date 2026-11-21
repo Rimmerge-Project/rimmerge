@@ -286,6 +286,22 @@ fn no_organization_edit_touches_the_working_set_orders_sort_or_ledger() {
     }
 }
 
+#[test]
+fn reading_the_groups_view_of_either_pane_changes_nothing_else() {
+    use crate::mod_lists::{GroupedListQuery, ModListQuery};
+
+    let (mut session, _, _) = session_with_groups();
+    let before = world(&mut session);
+    let query = GroupedListQuery::new(ModListQuery::default(), BTreeSet::new())
+        .expect("no folds is within the bound");
+
+    let active = session.working_mod_groups(&query).expect("loaded");
+    let inactive = session.inactive_mod_groups(&query).expect("loaded");
+
+    assert!(!active.entries.is_empty() && !inactive.entries.is_empty());
+    assert_eq!(world(&mut session), before);
+}
+
 /// A session whose sort and ledger have something to say: `a` must load
 /// after `c`, so the sorted order differs from the scanned one and the
 /// ledger holds the edge. An organization that leaked into either would

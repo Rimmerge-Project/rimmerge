@@ -25,6 +25,7 @@ pub mod finding;
 pub mod game_launch;
 pub mod game_log;
 pub mod game_log_coverage;
+pub mod grouped_mod_lists;
 pub mod links;
 pub mod merge;
 pub mod mod_info;

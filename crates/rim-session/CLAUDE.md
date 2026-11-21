@@ -917,6 +917,27 @@ through `ports::OrganizationStore` (`rim-io`'s `JsonOrganizationStore`).
   A row's `RowState::PendingScan` carries the mod's `manual_tags` (an
   unscanned mod has no evidence, so every tag it holds was added by hand);
   the tag filter matches scanned tags and these, in both lists.
+  **The Groups view is a second read model over the same rows**
+  (`mod_lists/grouped.rs`): `Session::working_mod_groups` /
+  `inactive_mod_groups` take a `GroupedListQuery` (the pane's `ModListQuery`
+  plus the folded `FolderKey`s, at most `MAX_COLLAPSED_FOLDERS` = `OrganizationLimits::MAX_GROUPS` + 1;
+  an unknown id is ignored) and return a `GroupedModList`: the List view's own
+  `ModList` (same rows, `reorderable` always `false`) plus a flat, preorder
+  `entries` sequence of folder headers (`depth`, distinct `matched` count,
+  `is_collapsed`) and mod copies (`folder`, `depth`, `also_in`), capped at
+  `MAX_GROUPED_ENTRIES` (10,000) with `total_entries` counted before the cut.
+  It is built from `working_rows`/`inactive_rows` (the uncut, decorated,
+  filtered and sorted rows the List view cuts), so placement uses the labels a
+  row carries and the pane's sort is never repeated: a folder's subfolders
+  come first, then its mods in pane order; "Not in a group" is last and only
+  when it holds a mod; a group scope walks only its subtree, rebased to level
+  1; with no search, tag or source filter empty folders show at 0, under one a
+  folder with no match is left out. Counts are merged bottom up over one
+  `tree()` call (never `tree()`/`scope()` per node) and are taken before any
+  cut; a row past `MAX_MOD_LIST_ROWS` is counted, never emitted. The view needs
+  organization: `NotLoaded`/`Recovered` is `OrganizationUnavailable` even with
+  no group filter (the List view still degrades to no labels). It reads no
+  cache and changes none (organization is still never on the sort path).
 
 ## Sharing a load order (`mod_list`, `ExportOrder`, `PreviewOrderImport`, `ImportOrder`)
 
