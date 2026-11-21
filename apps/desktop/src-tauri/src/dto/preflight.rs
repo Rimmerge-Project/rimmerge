@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use super::common::{EdgeKindDto, OrderSourceDto};
+use super::file_baseline::ExternalFileChangeDto;
 
 /// Mirrors [`Availability`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -201,7 +202,12 @@ pub struct ApplyPreflightDto {
     pub source: OrderSourceDto,
     /// The problems, sorted by kind and then by id.
     pub items: Vec<PreflightItemDto>,
-    /// Whether some problem is still unanswered. Computed in Rust
+    /// What someone else changed in `ModsConfig.xml` that writing this
+    /// order would overwrite, read from the file when the preflight was
+    /// asked for. `none` when nothing would be lost.
+    pub outside_change: ExternalFileChangeDto,
+    /// Whether some problem is still unanswered or the write would
+    /// overwrite an outside change. Computed in Rust
     /// ([`ApplyPreflight::requires_confirmation`]), never re-derived by
     /// the frontend.
     pub requires_confirmation: bool,
@@ -213,6 +219,7 @@ impl From<ApplyPreflight> for ApplyPreflightDto {
         Self {
             source: value.source.into(),
             items: value.items.into_iter().map(Into::into).collect(),
+            outside_change: value.outside_change.into(),
             requires_confirmation,
         }
     }
@@ -321,11 +328,33 @@ mod tests {
                 },
                 true,
             )],
+            outside_change: rim_session::ExternalFileChange::None,
         };
         let mut open = decided.clone();
         open.items[0].acknowledged = false;
 
         assert!(!ApplyPreflightDto::from(decided).requires_confirmation);
         assert!(ApplyPreflightDto::from(open).requires_confirmation);
+    }
+
+    #[test]
+    fn an_outside_change_alone_requires_confirmation_and_serializes_tagged() {
+        let preflight = ApplyPreflight {
+            source: OrderSource::Current,
+            items: Vec::new(),
+            outside_change: rim_session::ExternalFileChange::Membership {
+                added: 2,
+                removed: 1,
+            },
+        };
+
+        let dto = ApplyPreflightDto::from(preflight);
+        let json = serde_json::to_value(&dto).expect("serializes");
+
+        assert!(dto.requires_confirmation);
+        assert_eq!(
+            json["outsideChange"],
+            serde_json::json!({ "kind": "membership", "added": 2, "removed": 1 })
+        );
     }
 }

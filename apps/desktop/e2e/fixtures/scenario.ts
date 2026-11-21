@@ -225,8 +225,8 @@ declare global {
      * What the mock's on-disk active mod list is, as an outside editor leaves it: a valid list
      * (`ok`, in file order) or a file the next baseline refresh cannot read. Unset means the file
      * is whatever the session last loaded or wrote. Never reset by the scenario, so a spec can set
-     * it before load; the mock reads it only when `refresh_mods_config_baseline`, a rescan or an
-     * import runs, like the real refresh reads the file.
+     * it before load; the mock reads it only when `refresh_mods_config_baseline`, `get_apply_preflight`,
+     * a rescan or an import runs, like the real refresh reads the file.
      */
     __MODS_CONFIG_FILE__?:
       | { status: "ok"; activeMods: string[] }
@@ -7657,13 +7657,30 @@ export function installScenario(): void {
       selected = (payload as { source: OrderSourceDto }).source;
       return stats();
     },
-    get_apply_preflight: (payload: unknown): ApplyPreflightDto => {
+    get_apply_preflight: async (payload: unknown): Promise<ApplyPreflightDto> => {
       const source = (payload as { source: OrderSourceDto }).source;
+      // The real command reads the file fresh (the refresh path) and announces the baseline's
+      // one-shot change like the poll does; it reports an outside change only when writing this
+      // order would overwrite it.
+      if (observeModsConfigFile()) {
+        // Before the answer goes out, as the real command emits before it returns: the webview
+        // sees the event first, so the click's own call must not depend on its query entry.
+        window.__BASELINE_CHANGED_EMITS__ = (window.__BASELINE_CHANGED_EMITS__ ?? 0) + 1;
+        void window.__TAURI_INTERNALS__.invoke("plugin:event|emit", {
+          event: "session://changed",
+          payload: { reason: "fileBaselineChanged" },
+        });
+      }
       const items = hardProblemsFor(source);
+      const outsideChange = sameOrderIgnoringMergeMod(orderFor(source), fileOrder)
+        ? ({ kind: "none" } as const)
+        : fileBaselineDto().externalChange;
       return {
         source,
         items,
-        requiresConfirmation: items.some((item) => !item.acknowledged),
+        outsideChange,
+        requiresConfirmation:
+          outsideChange.kind !== "none" || items.some((item) => !item.acknowledged),
       };
     },
     list_order: (payload: unknown) => {

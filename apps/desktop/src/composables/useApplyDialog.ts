@@ -1,5 +1,6 @@
 // The apply dialog's own state and actions, shared with its panels through provide/inject.
 
+import { useQueryCache } from "@pinia/colada";
 import { useToast } from "primevue/usetoast";
 import { computed, type InjectionKey, inject, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
@@ -12,11 +13,14 @@ import { usePendingActiveChangesQuery, useRescanMutation } from "@/queries/activ
 import { useApplyMutation, useApplyPreflightQuery } from "@/queries/apply";
 import { useDashboardQuery } from "@/queries/dashboard";
 import { useDefCacheCarrierQuery } from "@/queries/defCache";
+import { queryKeys } from "@/queries/keys";
 import { useRulesQuery, useUpsertRuleMutation } from "@/queries/rules";
 import { useVerifyOrderMutation } from "@/queries/verify";
-import { RimmergeError } from "@/services/ipc";
+import { getApplyPreflight, RimmergeError } from "@/services/ipc";
 import { useSessionStore } from "@/stores/session";
+import type { ApplyPreflightDto } from "@/types/generated/ApplyPreflightDto";
 import type { ApplyReportDto } from "@/types/generated/ApplyReportDto";
+import type { OrderSourceDto } from "@/types/generated/OrderSourceDto";
 import type { VerifyOperationDto } from "@/types/generated/VerifyOperationDto";
 import type { VerifyProgressEventDto } from "@/types/generated/VerifyProgressEventDto";
 import type { VerifyReorderDto } from "@/types/generated/VerifyReorderDto";
@@ -55,10 +59,16 @@ export function useApplyDialog(visible: () => boolean, emit: ApplyDialogEmit) {
    * dialog is visible. `requiresConfirmation` is computed in Rust; the
    * dialog only asks it.
    */
-  const { data: preflight, refresh: refreshPreflight } = useApplyPreflightQuery(
-    () => session.selected,
-    visible,
-  );
+  const { data: preflight } = useApplyPreflightQuery(() => session.selected, visible);
+  const queryCache = useQueryCache();
+  /**
+   * The answer the Apply click itself got, kept so the confirmation panel renders exactly what
+   * was decided on. The query's entry can be replaced by an invalidation's refetch meanwhile
+   * (the backend's change event reaches the webview before the command's response).
+   */
+  const clickPreflight = ref<ApplyPreflightDto | null>(null);
+  /** What the confirmation panel shows: the click's own answer, else the query's. */
+  const confirmPreflight = computed(() => clickPreflight.value ?? preflight.value);
   const { mutateAsync: runVerify, isLoading: verifying } = useVerifyOrderMutation();
   const { mutateAsync: upsertRule, isLoading: creatingPairRule } = useUpsertRuleMutation();
   /**
@@ -550,6 +560,7 @@ export function useApplyDialog(visible: () => boolean, emit: ApplyDialogEmit) {
       writeModsConfigBeforeStale = isStaleActiveSet.value ? true : null;
       writeMergeMod.value = false;
       awaitingProblemConfirm.value = false;
+      clickPreflight.value = null;
       awaitingForceConfirm.value = false;
       errorMessage.value = null;
       lastReport.value = null;
@@ -638,24 +649,26 @@ export function useApplyDialog(visible: () => boolean, emit: ApplyDialogEmit) {
   }
 
   /**
-   * Whether the order has a hard problem the user still has to answer.
-   * Always asks a current preflight: `refresh` fetches when the held one is
-   * stale (an invalidation keeps the old data and only marks it stale) or
-   * errored, and joins a fetch already in flight, so a decision made since
-   * the dialog opened can never be missed. A failed fetch is shown and stops
-   * the apply (`null`) rather than skipping the check; neither data nor an
-   * error is a broken invariant, never "nothing to confirm".
+   * Whether the order has a hard problem the user still has to answer, or
+   * the file changed outside Rimmerge.
+   * Always asks a new preflight and decides from **that call's own answer**, never from the
+   * query entry: the command reads the file again on every call, and when it is the first to see
+   * an outside edit it emits `session://changed` before it returns, so the event's invalidation
+   * supersedes a Colada `refetch()` and resolves it with the entry's old state (no outside change).
+   * The answer is also written into the cache and kept for the panel. A failed call is shown and
+   * stops the apply (`null`) rather than skipping the check.
    */
   async function needsProblemConfirmation(): Promise<boolean | null> {
-    const fresh = await refreshPreflight();
-    if (fresh.error) {
-      errorMessage.value = describeCommandError(fresh.error);
+    const source = session.selected;
+    try {
+      const fresh = await getApplyPreflight(source);
+      clickPreflight.value = fresh;
+      queryCache.setQueryData(queryKeys.applyPreflight(source), fresh);
+      return fresh.requiresConfirmation;
+    } catch (error: unknown) {
+      errorMessage.value = describeCommandError(error);
       return null;
     }
-    if (!fresh.data) {
-      throw new Error("the apply preflight resolved with neither data nor an error");
-    }
-    return fresh.data.requiresConfirmation;
   }
 
   /** The Apply click: confirm unanswered hard problems first, unless nothing is written. */
@@ -671,7 +684,7 @@ export function useApplyDialog(visible: () => boolean, emit: ApplyDialogEmit) {
         return;
       }
     }
-    await performApply();
+    await performApply(session.selected);
   }
 
   /** "Apply anyway" on the confirmation panel. */
@@ -682,21 +695,28 @@ export function useApplyDialog(visible: () => boolean, emit: ApplyDialogEmit) {
     if (!writeModsConfig.value) {
       return;
     }
-    await performApply();
+    // The panel only exists after a click's own answer, and that answer's order is what the user
+    // confirmed: write it, never whatever is selected by now.
+    const confirmed = clickPreflight.value;
+    if (confirmed === null) {
+      throw new Error("the apply confirmation was accepted without the click's preflight");
+    }
+    await performApply(confirmed.source);
   }
 
   /** "Go back" on the confirmation panel. */
   function goBackFromConfirm(): void {
     awaitingProblemConfirm.value = false;
+    clickPreflight.value = null;
   }
 
-  async function performApply(): Promise<void> {
+  async function performApply(source: OrderSourceDto): Promise<void> {
     errorMessage.value = null;
     try {
       const wroteModsConfig = writeModsConfig.value;
       const wroteMergeMod = writeMergeMod.value;
       const report = await runApply({
-        source: session.selected,
+        source,
         writeModsConfig: wroteModsConfig,
         writeMergeMod: wroteMergeMod,
         force: false,
@@ -743,6 +763,7 @@ export function useApplyDialog(visible: () => boolean, emit: ApplyDialogEmit) {
     defCacheNote,
     writeModsConfig,
     preflight,
+    confirmPreflight,
     awaitingProblemConfirm,
     pendingActiveChanges,
     isStaleActiveSet,

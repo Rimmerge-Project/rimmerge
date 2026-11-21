@@ -5,6 +5,22 @@ before that point is not summarized here.
 
 ## Unreleased
 
+- **New: Apply asks first when the active mod list was changed outside
+  Rimmerge.** When you press Apply, Rimmerge now reads `ModsConfig.xml`
+  again, right then, instead of trusting the last check (it re-reads every
+  5 seconds). If someone else changed the list since Rimmerge last read or
+  wrote it, and your order would overwrite that change, the "Apply anyway?"
+  panel says so, with how many mods were added and removed, or that the
+  order was changed, next to any problems you still have to confirm. It is
+  one panel, with **Go back** focused and **Apply anyway** never the default.
+  Applying anyway still saves a timestamped backup of the changed file
+  first, and the success message names it. Nothing is asked when the file
+  already holds the order you are about to write.
+- **New: a note on every page when the active mod list changed outside
+  Rimmerge.** Under the pending-changes banner, a short note says the list
+  was changed elsewhere and links to the Mods page, where the existing note
+  explains it. It goes away after a rescan, an import or an Apply. The Mods
+  page keeps its own note and does not show this one.
 - **Fixed: a rule or decision saved while a rescan, a load or an import was
   running could be lost.** Rimmerge reads your rules, decisions, patches and
   patch maker projects from disk while it scans, and then swaps the scanned

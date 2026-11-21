@@ -95,6 +95,10 @@
   "shell": {
     "brand": "Rimmerge",
     "mainNavigation": "Main navigation",
+    "outsideChange": {
+      "text": "Your active mod list was changed outside Rimmerge. Applying would overwrite those changes.",
+      "link": "Review on the Mods page"
+    },
     "nav": {
       "dashboard": "Dashboard",
       "inbox": "Findings",
@@ -2212,6 +2216,9 @@
     "confirm": {
       "heading": "Apply anyway?",
       "intro": "The {order} order has {count} problem to confirm before writing: | The {order} order has {count} problems to confirm before writing:",
+      "outsideHeading": "The active mod list changed outside Rimmerge",
+      "outsideMembership": "Since Rimmerge last read it, the active mod list was edited elsewhere (+{added}, -{removed}). Applying writes the {order} order over those edits. A backup of the changed file is made first.",
+      "outsideReordered": "Since Rimmerge last read it, the active order was changed elsewhere. Applying writes the {order} order over it. A backup of the changed file is made first.",
       "acknowledgedHeading": "Already decided in Findings",
       "reviewInInbox": "Review in Findings",
       "goBackButton": "Go back",

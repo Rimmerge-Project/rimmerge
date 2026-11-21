@@ -39,6 +39,7 @@ function mountShell(openAppLinkCalls: string[] = []) {
       unapplied: { added: [], removed: [] },
       orderUnapplied: false,
     },
+    get_mods_config_baseline: { state: { kind: "fresh" }, externalChange: { kind: "none" } },
     open_app_link: (payload: unknown) => {
       openAppLinkCalls.push((payload as { target: string }).target);
       return null;

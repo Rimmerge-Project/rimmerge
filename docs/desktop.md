@@ -110,6 +110,19 @@ Apply while any is still undecided replaces the buttons with an "Apply
 anyway?" panel: the undecided problems, the ones already decided in the
 Inbox (listed apart), a link to the Inbox, and **Go back** (focused) and
 **Apply anyway**. If every problem was already decided, nothing is asked.
+Pressing Apply also reads `ModsConfig.xml` again, right then (not the
+5-second check described under the Mods page); what it finds is then what the
+Mods page marks, the note on other pages and the Launch button follow too, even
+if you go back. If the list was changed
+outside Rimmerge since it last read or wrote it, and the order you are
+applying would overwrite that change, the same panel names it first: how
+many mods were added and removed, or that the order was changed. The
+outside change and any undecided problems share one panel, so **Go back**
+stays the focused button. Nothing is asked when the file already holds the
+order you are applying. **Apply anyway** still saves a timestamped backup of
+the changed file before writing, and the success message names it. If the
+file changes again after that check, while you are deciding, the backup still
+keeps whatever it held when Apply wrote.
 With "Write your active mod list" unchecked, `ModsConfig.xml` is not written, so it skips the question.
 If RimWorld looks like it is running, a separate "Write anyway" prompt
 comes after this one; the two are never one button.
@@ -404,7 +417,9 @@ Rimmerge. Applying would overwrite that order." (with the same "Your pending
 changes are kept." sentence when you have some). If the file is missing, cannot be read, or is only
 partly written, a note says which, and the marks keep using the last list that
 could be read; the next good read clears the note. Rescan and an import read the file fresh as well, and after an Apply the
-saved list is what Rimmerge wrote.
+saved list is what Rimmerge wrote. On every other page, a short note under the
+pending-changes banner says the list was changed outside Rimmerge and links
+here; it goes away after a rescan, an import or an Apply.
 
 **Rescan mods** (top right of the page, always available) re-scans the
 mods in the active list in their current order, exactly as the pending

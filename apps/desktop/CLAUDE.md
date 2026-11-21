@@ -354,16 +354,39 @@ of that command surface — no direct filesystem or process access outside
 - **The Apply dialog confirms hard problems; it has no needs-input gate.**
   `useApplyPreflightQuery(source)` (enabled while the dialog is visible)
   holds `get_apply_preflight`; `submit()` asks `requiresConfirmation` (computed
-  in Rust, never re-derived in TypeScript), always awaiting a **fresh**
-  preflight first (`refreshPreflight()`: refetches when stale or errored, joins
-  an in-flight call) because Colada keeps stale data after an invalidation, so
-  held data may predate an undone decision or a rescan. A fetch error shows
-  and writes nothing; resolving with neither data nor an error is an
-  invariant breach and throws — never read as "nothing to confirm". When it is true and `writeModsConfig` is on, `awaitingProblemConfirm`
+  in Rust, never re-derived in TypeScript), always calling
+  `getApplyPreflight` **itself** and deciding from that call's own answer (written into the
+  query cache and kept for the panel as `confirmPreflight`), never from the query entry: held data
+  may predate an undone decision, a rescan or an outside edit, and the entry cannot be trusted
+  at the click (below). A failed call shows and writes nothing. When it is true and `writeModsConfig` is on, `awaitingProblemConfirm`
   swaps the action row for `ApplyConfirm.vue` ("Go back" focused, "Apply
   anyway" never default); only "Apply anyway" calls `performApply`. The
   running-game refusal (`awaitingForceConfirm`, "Write anyway") is a separate,
-  later step, never merged into the same button. The needs-input count is
+  later step, never merged into the same button. **An outside change of the file is
+  the same confirm, not a second one.** `get_apply_preflight` reads the file
+  **fresh** (it calls `refresh_mods_config_baseline_inner`: probe under the lock,
+  read in a bare `spawn_blocking`, commit under the lock) and then
+  runs `PreflightApply`, whose `outside_change` (`ApplyPreflightDto.outsideChange`,
+  the `ExternalFileChangeDto` union) is the live outside change **only when
+  `file_matches(source)` is false**, i.e. only when writing that order would
+  overwrite something. `requiresConfirmation` is true for it alone; `ApplyConfirm.vue`
+  shows one panel with an outside section (whole sentence per kind, never
+  concatenated) above the unanswered problems, hiding the problem list and Findings
+  link when only the outside change asks. "Go back" stays focused. Committing the
+  fresh read is the baseline's one-shot change notice (the next poll reads the same list
+  and reports nothing), so the command returns the `BaselineChange` and `get_apply_preflight`
+  emits `session://changed` (`fileBaselineChanged`) only when it is `Changed`; the refetch
+  that causes reads the same file, finds it unchanged and emits nothing, so it cannot loop.
+  The command emits **before** it returns, so the event's invalidation reaches the webview first
+  and supersedes a Colada `refetch()` made at the click, resolving it with the entry's old state
+  (no outside change): `submit()` therefore never reads the entry (`ApplyDialog.confirm.test.ts`
+  pins it). This is a *live*
+  fact: it feeds the confirm and `OutsideChangeHint` only, never an "unsaved work"
+  copy. The mock's `get_apply_preflight` calls `observeModsConfigFile()` first, emits
+  `fileBaselineChanged` **before** returning when it returned true (the backend's order: the event reaches the webview before the response), and mirrors the rule. `OutsideChangeHint.vue` (shell, under `PendingChangesBanner`) is
+  the other reader: a note on every page except `mods`/`mod-detail`, shown while
+  `externalChange.kind !== "none"` and gone by itself after a rescan, import or
+  apply (the backend resets the fact). The needs-input count is
   information only (a count and an Inbox link); the old `applyAnyway` /
   `canSubmit` checkboxes in the dialog and on the Dashboard are gone.
 - **The Mods page's selection is a client-side view of the backend's lists.**

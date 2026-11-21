@@ -6,6 +6,7 @@ import { useI18n } from "vue-i18n";
 import ApplyDialog from "@/components/apply/ApplyDialog.vue";
 import BaseProgressBar from "@/components/base/BaseProgressBar.vue";
 import LaunchGameButton from "@/components/launch/LaunchGameButton.vue";
+import OutsideChangeHint from "@/components/mods/OutsideChangeHint.vue";
 import PendingChangesBanner from "@/components/mods/PendingChangesBanner.vue";
 import PendingChangesCloseGuard from "@/components/mods/PendingChangesCloseGuard.vue";
 import NotificationBell from "@/components/notifications/NotificationBell.vue";
@@ -361,6 +362,7 @@ const NAV_ITEMS: { to: string; labelKey: string; testId: string; icon: string }[
         data-testid="shell-progress"
       />
       <PendingChangesBanner />
+      <OutsideChangeHint />
       <main
         ref="pageScroller"
         class="bg-surface-0 min-h-0 flex-1 overflow-y-auto"

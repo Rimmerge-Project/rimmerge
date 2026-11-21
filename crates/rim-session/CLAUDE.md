@@ -60,8 +60,13 @@ the other way around.
 - `PreflightApply` is read-only (no ports): it lists
   `rim_resolve::preflight` problems for the order named by `source`, through
   `Session::hard_problems` (the ledger cache is built lazily, hence `&mut`).
-  `ApplyPreflight::requires_confirmation` is derived from the items, never
-  stored. `Session::file_matches(source)` compares that order with the
+  `ApplyPreflight::requires_confirmation` is derived from the items and
+  `outside_change`, never stored. `outside_change` is
+  `Session::external_file_change()` (the live baseline against the acknowledged
+  list) but `None` when `file_matches(source)`: it names only what writing
+  `source` would overwrite. The use case reads the baseline as it is; a caller
+  wanting the file now refreshes it first (the desktop does, see its CLAUDE.md).
+  The CLI loads a fresh session, so its preflight is always `None` there. `Session::file_matches(source)` compares that order with the
   file's live baseline list, ignoring the generated merge mod's package id on
   both sides.
 - **Module layout**: a facade file keeps the public API (and usually the
