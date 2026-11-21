@@ -176,6 +176,35 @@ flag, distinct from `--build-jobs`, which controls compile
 parallelism) to either real-install command if you see this; it trades
 wall-clock time for headroom.
 
+## Timing guards run alone
+
+A real-install test that asserts a wall-clock budget (the desktop's
+`def_graphics_real_install`, `def_inspector_timing` and
+`real_install_timing` modules, the analyzer's `real_install_scan_timing` and
+`real_install_post_scan_analysis` binaries, the CLI's
+`real_install_save_import`, and `rim-resolve`'s
+`full_size_report_invariants_and_runtime_budget`) is sensitive to load: beside
+other tests in the same run, the def-graphics median measured 63 ms against a
+50 ms budget, and 29 ms alone. `.config/nextest.toml` puts exactly these tests
+in the `timing` test group (`max-threads = 1`) and sets
+`threads-required = "num-test-threads"` on them, so each one occupies every
+test thread and nothing else runs while it measures, at any `--test-threads`
+value (including the `--test-threads 4` the section above recommends). The cost
+is that the desktop real-install tier (and the other timing tests) now run one
+at a time: wall clock goes up, peak memory comes down. Budgets are never raised
+and nothing is retried to make a guard pass. Every other test keeps nextest's
+defaults, so the default gate is unchanged. A new timing guard joins the filter
+in that file; a drift guard in `real_install_support.rs` (desktop) and
+`sort_golden.rs` fails when a name the filter relies on is renamed. See the
+placement with
+`cargo nextest show-config test-groups --workspace --all-features --run-ignored all`.
+
+The Vitest side: a guard that only scans source files with `node:fs`
+(`style.guard.test.ts`, `progressbar.guard.test.ts`, `invalidation.guard.test.ts`,
+`i18n/locales.unusedKeys.test.ts`) declares `// @vitest-environment node`
+so it does not pay for a happy-dom window, and stays well inside the default
+5 s test timeout on a loaded machine. The timeout is not raised.
+
 ## The pins file pattern
 
 A real-install test's *exact* assertions (naming a specific mod, a

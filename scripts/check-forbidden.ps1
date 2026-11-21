@@ -33,7 +33,9 @@ if ($usingLocalList) {
     $patterns += Get-PatternLines $localTokenFile
 }
 
-$mergedTokenFile = Join-Path $env:TEMP "rimmerge-forbidden-tokens-merged.txt"
+# A unique file per run: two concurrent runs (a local gate beside CI-style
+# re-runs, two agents) must never read or delete each other's merged list.
+$mergedTokenFile = (New-TemporaryFile).FullName
 try {
     Set-Content -Path $mergedTokenFile -Value $patterns -Encoding utf8
 

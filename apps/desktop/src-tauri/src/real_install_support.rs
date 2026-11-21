@@ -177,3 +177,35 @@ fn assert_active_mod_floor(mods_config: &Path, rerun_command: &str) {
         rim_io::MODS_CONFIG_VAR
     );
 }
+
+/// The repo's nextest config, read at compile time so a test can check it names the tests it
+/// is meant to serialize.
+const NEXTEST_CONFIG: &str = include_str!("../../../../.config/nextest.toml");
+
+/// Asserts that the `timing` override filter in `.config/nextest.toml` lists the module at
+/// `module_path` (`module_path!()` of a timing module). A module renamed without its filter
+/// entry would silently lose its exclusive run, and its load-sensitive budgets would flake again.
+pub(crate) fn assert_nextest_timing_filter_names(module_path: &str) {
+    let module = module_path.rsplit("::").next().unwrap_or(module_path);
+    let alternation = NEXTEST_CONFIG
+        .split("test(/^(")
+        .nth(1)
+        .and_then(|rest| rest.split(")::/").next())
+        .expect("invariant: .config/nextest.toml keeps its `test(/^(a|b)::/)` timing filter");
+    assert!(
+        alternation.split('|').any(|name| name == module),
+        "`{module}` is a timing module but .config/nextest.toml's timing filter does not name it \
+         (it names: {alternation})"
+    );
+}
+
+#[test]
+fn the_nextest_timing_filter_names_every_timing_module() {
+    for module_path in [
+        crate::def_graphics_real_install::MODULE_PATH,
+        crate::def_inspector_timing::MODULE_PATH,
+        crate::real_install_timing::MODULE_PATH,
+    ] {
+        assert_nextest_timing_filter_names(module_path);
+    }
+}

@@ -905,6 +905,9 @@ The UI is localized in `en` plus twelve translated locales (`zh-CN`,
 - Biome's `useLiteralKeys` is off because `noPropertyAccessFromIndexSignature`
   forces bracket access on `route.params`. Vitest files are type-checked
   through `tsconfig.vitest.json`.
+- A Vitest guard that only scans sources with `node:fs` declares
+  `// @vitest-environment node` (no happy-dom window), so it stays inside the 5 s
+  default timeout under load.
 - **An imported game log's facts follow its coverage.** `GameLogSummaryDto.coverage`
   is a `kind`-tagged union whose variant is the log's kind (`playerLog` /
   `consoleSnapshot`); a consumer of the summary checks it

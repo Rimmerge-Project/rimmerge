@@ -1865,3 +1865,19 @@ fn full_size_report_invariants_and_runtime_budget() {
         );
     }
 }
+
+/// Keeps `.config/nextest.toml`'s `timing` filter in step with the full-size timing test: the
+/// function coercion fails to compile on a rename, and the name must appear in the config.
+#[test]
+fn the_nextest_timing_filter_names_the_full_size_test() {
+    let _: fn() = full_size_report_invariants_and_runtime_budget;
+    let config = include_str!("../../../.config/nextest.toml");
+    assert!(
+        config.contains(concat!(
+            "test(",
+            stringify!(full_size_report_invariants_and_runtime_budget),
+            ")"
+        )),
+        ".config/nextest.toml's timing filter must name the full-size sort timing test"
+    );
+}

@@ -12,6 +12,10 @@
 //! Run with:
 //! `RIMMERGE_GAME_DIR=<your install> RIMMERGE_PERF_PROFILE_DIR=<scratch copy> cargo nextest run -p rimmerge-desktop --all-features --release --run-ignored ignored-only -E 'test(def_inspector_timing)'`
 
+/// This module's path, checked against `.config/nextest.toml`'s `timing` filter by
+/// `real_install_support`'s drift guard.
+pub(crate) const MODULE_PATH: &str = module_path!();
+
 use std::collections::BTreeMap;
 use std::time::{Duration, Instant};
 
