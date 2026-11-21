@@ -4,14 +4,15 @@
 use std::collections::BTreeMap;
 
 use rim_analyzer::domain::ModId;
+use rim_session::ModNotActive;
 use rim_session::use_cases::{ReadModAbout, ReadModPreview};
-use rim_session::{FindingFilter, MAX_PAGE_SIZE};
+// Only the tests below still page against the bound themselves.
+#[cfg(test)]
+use rim_session::MAX_PAGE_SIZE;
 
 use crate::dto::mod_info::{ModInfoDto, ModPreviewDto, mod_info_dto};
 use crate::dto::mod_lists::{ModListDto, ModListQueryDto};
-use crate::dto::mods::{
-    ModDetailDto, ModEdgeDto, ModFilterDto, ModNamesDto, ModPageDto, mod_page_dto,
-};
+use crate::dto::mods::{ModDetailDto, ModFilterDto, ModNamesDto, ModPageDto, mod_page_dto};
 use crate::error::CommandError;
 use crate::state::{AppState, with_session};
 
@@ -83,13 +84,11 @@ pub async fn list_working_mods(
     list_working_mods_inner(&state, query).await
 }
 
-/// One mod's full detail: declared order, edges grouped by direction and
-/// evaluated against the selected order, tags, and live finding keys.
-/// Resolves `mod_id` by [`ModId::base`] on both sides, so an active
-/// `_steam` variant is found by its base id and vice versa; every
-/// subsequent per-mod lookup (edges, tags, findings) then uses the
-/// resolved canonical id rather than the raw request, so those can't miss
-/// the same way.
+/// One mod's full detail for the selected order: declared order, edges
+/// grouped by direction, tags, and live finding keys. Resolution and the
+/// join live in [`rim_session::Session::mod_detail`] (by [`ModId::base`],
+/// so an active `_steam` variant is found by its base id and vice versa);
+/// this only maps the DTO in and out.
 ///
 /// # Errors
 ///
@@ -100,72 +99,13 @@ pub(crate) async fn get_mod_inner(
     mod_id: String,
 ) -> Result<ModDetailDto, CommandError> {
     with_session(state, move |session| {
-        let target = ModId::new(&mod_id).base();
         let source = session.selected();
-        let order = session.orders().get(source).clone();
-
-        let mod_entry = session
-            .report()
-            .mods
-            .iter()
-            .find(|m| m.id.base() == target)
-            .cloned()
-            .ok_or_else(|| CommandError::mod_not_found(&mod_id))?;
-        // The resolved, canonical id — used for every lookup below
-        // instead of the raw request, so a `_steam`-suffixed active id
-        // reached via its base (or vice versa) doesn't then miss again.
-        let id = mod_entry.id.clone();
-
-        let (edges_in, edges_out) = {
-            let report = session.report();
-            let mut edges_in = Vec::new();
-            let mut edges_out = Vec::new();
-            for report_edge in &report.edges {
-                let status = rim_resolve::evaluate::edge_status(&report_edge.edge, &order);
-                if report_edge.edge.after == id {
-                    edges_in.push(ModEdgeDto::incoming(&report_edge.edge, status));
-                } else if report_edge.edge.before == id {
-                    edges_out.push(ModEdgeDto::outgoing(&report_edge.edge, status));
-                }
-            }
-            (edges_in, edges_out)
-        };
-
-        let finding_page = session.findings(
-            source,
-            &FindingFilter {
-                mod_id: Some(id.clone()),
-                offset: 0,
-                limit: MAX_PAGE_SIZE,
-                ..FindingFilter::default()
-            },
-        );
-        let finding_keys_total = finding_page.total;
-        let finding_keys = finding_page.items.iter().map(ToString::to_string).collect();
-
-        Ok(ModDetailDto {
-            mod_id: mod_entry.id.as_str().to_string(),
-            name: mod_entry.name.clone(),
-            authors: mod_entry.authors.clone(),
-            url: mod_entry.url.clone(),
-            source: mod_entry.source.into(),
-            supported_versions: mod_entry.supported_versions.clone(),
-            declared: (&mod_entry.declared).into(),
-            tags: session
-                .tagging()
-                .tags_of(&id)
-                .iter()
-                .map(ToString::to_string)
-                .collect(),
-            hard_dependents: mod_entry.hard_dependents,
-            is_framework_candidate: mod_entry.is_framework_candidate,
-            generated: mod_entry.generated.as_ref().map(Into::into),
-            workshop_id: mod_entry.workshop_id,
-            edges_in,
-            edges_out,
-            finding_keys,
-            finding_keys_total,
-        })
+        let detail = session
+            .mod_detail(&ModId::new(&mod_id), source)
+            // The raw request text: the parsed id is trimmed and lowercased,
+            // and the message has always named what the caller sent.
+            .map_err(|ModNotActive(_)| CommandError::mod_not_found(&mod_id))?;
+        Ok(detail.into())
     })
     .await
 }

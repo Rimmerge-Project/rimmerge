@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use rim_analyzer::domain::{
     DeclaredOrder, Edge, EdgeStatus, GeneratedKind, GeneratedMarker, ModDependency, ModId, Report,
 };
-use rim_session::{ModFilter, ModPage, ModSummary};
+use rim_session::{ModDetail, ModFilter, ModPage, ModSummary};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
@@ -328,6 +328,42 @@ pub struct ModDetailDto {
     pub finding_keys_total: usize,
 }
 
+impl From<ModDetail> for ModDetailDto {
+    fn from(detail: ModDetail) -> Self {
+        let entry = detail.entry;
+        Self {
+            mod_id: entry.id.as_str().to_string(),
+            name: entry.name,
+            authors: entry.authors,
+            url: entry.url,
+            source: entry.source.into(),
+            supported_versions: entry.supported_versions,
+            declared: (&entry.declared).into(),
+            tags: detail.tags.iter().map(ToString::to_string).collect(),
+            hard_dependents: entry.hard_dependents,
+            is_framework_candidate: entry.is_framework_candidate,
+            generated: entry.generated.as_ref().map(Into::into),
+            workshop_id: entry.workshop_id,
+            edges_in: detail
+                .edges_in
+                .iter()
+                .map(|edge| ModEdgeDto::incoming(&edge.edge, edge.status))
+                .collect(),
+            edges_out: detail
+                .edges_out
+                .iter()
+                .map(|edge| ModEdgeDto::outgoing(&edge.edge, edge.status))
+                .collect(),
+            finding_keys: detail
+                .finding_keys
+                .iter()
+                .map(ToString::to_string)
+                .collect(),
+            finding_keys_total: detail.finding_keys_total,
+        }
+    }
+}
+
 /// `list_mod_names`'s result: every active mod's id (as-is) mapped to its
 /// display name, plus — for a `_steam`-suffixed active id — a second entry
 /// under its base id, so a lookup by either resolves. Wraps
@@ -412,6 +448,33 @@ mod tests {
         let dto = ModEdgeDto::outgoing(&e, EdgeStatus::Violated);
         assert_eq!(dto.other_mod_id, "addon");
         assert_eq!(dto.status, EdgeStatusDto::Violated);
+    }
+
+    #[test]
+    fn mod_detail_dto_keeps_each_edge_on_its_own_side() {
+        let detail = ModDetail {
+            entry: bare_mod("addon"),
+            tags: BTreeSet::new(),
+            edges_in: vec![rim_session::ModEdge {
+                edge: edge("addon", "framework"),
+                status: EdgeStatus::Satisfied,
+            }],
+            edges_out: vec![rim_session::ModEdge {
+                edge: edge("other", "addon"),
+                status: EdgeStatus::Violated,
+            }],
+            finding_keys: Vec::new(),
+            finding_keys_total: 0,
+        };
+
+        let dto = ModDetailDto::from(detail);
+
+        assert_eq!(dto.edges_in.len(), 1);
+        assert_eq!(dto.edges_in[0].other_mod_id, "framework");
+        assert_eq!(dto.edges_in[0].status, EdgeStatusDto::Satisfied);
+        assert_eq!(dto.edges_out.len(), 1);
+        assert_eq!(dto.edges_out[0].other_mod_id, "other");
+        assert_eq!(dto.edges_out[0].status, EdgeStatusDto::Violated);
     }
 
     fn bare_mod(id: &str) -> Mod {

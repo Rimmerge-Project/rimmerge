@@ -18,6 +18,7 @@ mod finding_index;
 mod game_launch;
 mod import_sources;
 mod merge_workspace;
+mod mod_detail;
 mod mod_index;
 pub mod mod_info;
 mod mod_inventory;
@@ -25,6 +26,7 @@ mod mod_knowledge;
 pub mod mod_list;
 mod mod_lists;
 mod mod_times;
+mod order_rows;
 pub mod organization;
 mod paths;
 mod recommended_rules;
@@ -62,6 +64,7 @@ pub use import_sources::{resolve_from_cache, resolve_from_rimsort_dir, should_im
 pub use merge_workspace::{
     MergeFieldFilter, MergeFieldPage, MergeFieldTotals, MergePreview, PreviewSlot,
 };
+pub use mod_detail::{ModDetail, ModEdge, ModNotActive};
 pub use mod_index::{ModFilter, ModPage, ModSummary};
 pub use mod_inventory::{InventoryEntry, ModInventory};
 pub use mod_knowledge::ModKnowledge;
@@ -70,6 +73,7 @@ pub use mod_lists::{
     ModListQuery, ModListRow, RowState, SortDirection,
 };
 pub use mod_times::{ModTimeSubject, ModUpdateTimes, UnixSeconds, UpdateTime, UpdateUnavailable};
+pub use order_rows::OrderRow;
 pub use paths::ProjectPaths;
 pub use recommended_rules::{
     FirstRun, RecommendedRulesFacts, RecommendedRulesStep, SourceNeed, StepSkip, Unavailable,

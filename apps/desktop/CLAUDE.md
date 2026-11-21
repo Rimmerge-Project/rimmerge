@@ -17,7 +17,7 @@ license first.
 `src-tauri` is a composition root: every `#[tauri::command]` maps a DTO
 to a `rim-session` call and maps the result back. Filtering, paging,
 and aggregation live in `rim-session` (`FindingIndex`, `Session::mods`,
-`working_mod_list`/`inactive_mod_list`), never in a command handler or in Vue. The adapters a
+`working_mod_list`/`inactive_mod_list`, `order_rows`, `mod_detail`), never in a command handler or in Vue. The adapters a
 command needs for the loaded project (scanner, decision/rule/patch
 stores, def reader, asset locator, release feed, ...) come from
 `AppState::adapters`, never constructed inline. The narrow exception is
