@@ -11,6 +11,7 @@ import type { ApplyRequestDto } from "@/types/generated/ApplyRequestDto";
 import type { AppSettingsDto } from "@/types/generated/AppSettingsDto";
 import type { AppSettingsResponseDto } from "@/types/generated/AppSettingsResponseDto";
 import type { DashboardDto } from "@/types/generated/DashboardDto";
+import type { DeactivateModsResultDto } from "@/types/generated/DeactivateModsResultDto";
 import type { DeactivatePlanDto } from "@/types/generated/DeactivatePlanDto";
 import type { DeactivateRequestDto } from "@/types/generated/DeactivateRequestDto";
 import type { DefaultPathsDto } from "@/types/generated/DefaultPathsDto";
@@ -212,8 +213,11 @@ export function planDeactivateMods(request: DeactivateRequestDto): Promise<Deact
   return call("plan_deactivate_mods", { request });
 }
 
-/** Commits a deactivation onto the working (unscanned) active-mod set. */
-export function deactivateMods(request: DeactivateRequestDto): Promise<PendingActiveChangesDto> {
+/**
+ * Commits a deactivation onto the working (unscanned) active-mod set. The result names the ids the
+ * commit really removed and the requested ones that were not active (a refused Core is in neither).
+ */
+export function deactivateMods(request: DeactivateRequestDto): Promise<DeactivateModsResultDto> {
   return call("deactivate_mods", { request });
 }
 

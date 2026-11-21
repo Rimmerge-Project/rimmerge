@@ -19,17 +19,18 @@ import { isPlainActivation, type PlanMode } from "@/utils/modMove";
  * anchor and commits straight away when the plan adds exactly the dropped mods with no warning,
  * and otherwise opens the same dialog, whose confirm then commits the same anchored request.
  *
- * A successful commit closes the dialog, takes the committed mods out of `selectedIds` and
- * toasts; a failed one keeps both and shows the error in the dialog. A failed plan opens the
- * dialog too, with the error and no plan. A stale anchor refreshes the lists, which the error
- * text promises.
+ * A successful commit closes the dialog, takes out of `selectedIds` every id the backend's commit-time
+ * plan names (`activated`: the requested mods and any pulled-in dependencies, including one a filter
+ * hides; `alreadyActive`: requested mods that were active by then, by base id) and toasts; a failed
+ * one keeps both and shows the error in the dialog. A failed plan opens the dialog too, with the
+ * error and no plan. A stale anchor refreshes the lists, which the error text promises.
  */
 export function useModActivation({
   selectedIds,
   withDependencies,
   onSwitchedToCurrent,
 }: {
-  /** The inactive mods the button activates; the committed ones leave it after a commit. */
+  /** The inactive mods the button activates; what the commit activated or found active leaves it. */
   selectedIds: Ref<string[]>;
   /** Whether the plan and the commit also pull in declared dependencies. */
   withDependencies: MaybeRefOrGetter<boolean>;
@@ -57,8 +58,8 @@ export function useModActivation({
   async function commit(request: ActivateRequestDto): Promise<void> {
     const result = await commitActivate(request);
     isDialogVisible.value = false;
-    const committed = new Set(request.ids);
-    selectedIds.value = selectedIds.value.filter((id) => !committed.has(id));
+    const left = new Set([...result.activated, ...result.alreadyActive]);
+    selectedIds.value = selectedIds.value.filter((id) => !left.has(id));
     toast.add({ severity: "success", summary: t("mods.page.activatedToast"), life: 4000 });
     if (result.didSwitchToCurrent) {
       onSwitchedToCurrent();

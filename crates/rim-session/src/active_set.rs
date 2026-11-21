@@ -468,6 +468,9 @@ pub struct DeactivatePlan {
     pub dependents_still_active: BTreeMap<ModId, Vec<ModId>>,
     /// Requested ids refused because they're Core.
     pub refused: Vec<ModId>,
+    /// Requested ids (not Core) that are not active, so there is nothing
+    /// to remove: skipped, not an error.
+    pub not_active: Vec<ModId>,
 }
 
 /// Plans an activation: the dependency closure order, unresolvable
@@ -577,6 +580,8 @@ pub fn plan_deactivate(
             plan.refused.push(id.clone());
         } else if active.contains(id) {
             plan.to_remove.push(id.clone());
+        } else {
+            plan.not_active.push(id.clone());
         }
     }
     for id in &plan.to_remove {
@@ -939,6 +944,18 @@ mod tests {
             plan.dependents_still_active.get(&ModId::new("target.mod")),
             Some(&vec![ModId::new("dependent.mod")])
         );
+    }
+
+    #[test]
+    fn plan_deactivate_reports_a_requested_id_that_is_not_active() {
+        let inv = ModInventory::from_report(&report_fixture_with_inactive(&["a"], &["b"]));
+        let active = ActiveSet::trusted(vec![ModId::new("a")]);
+
+        let plan = plan_deactivate(&active, &inv, &[ModId::new("a"), ModId::new("b")]);
+
+        assert_eq!(plan.to_remove, [ModId::new("a")]);
+        assert_eq!(plan.not_active, [ModId::new("b")]);
+        assert!(plan.refused.is_empty());
     }
 
     fn ids_of(set: &ActiveSet) -> Vec<&str> {

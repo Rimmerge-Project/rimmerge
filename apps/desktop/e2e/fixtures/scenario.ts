@@ -26,6 +26,7 @@ import type { CopyAssignmentRowFromRequestDto } from "../../src/types/generated/
 import type { CorePlacementDto } from "../../src/types/generated/CorePlacementDto";
 import type { CreateAssignmentRequestDto } from "../../src/types/generated/CreateAssignmentRequestDto";
 import type { CreatePatchRequestDto } from "../../src/types/generated/CreatePatchRequestDto";
+import type { DeactivateModsResultDto } from "../../src/types/generated/DeactivateModsResultDto";
 import type { DeactivateRequestDto } from "../../src/types/generated/DeactivateRequestDto";
 import type { DecidePatchRequestDto } from "../../src/types/generated/DecidePatchRequestDto";
 import type { DecideRequestDto } from "../../src/types/generated/DecideRequestDto";
@@ -2019,12 +2020,21 @@ export function installScenario(): void {
   }));
 
   /**
-   * The Mods page's own Inactive-tab pool — ~10 discovered-but-inactive
-   * mods, neutral ids
-   * (`mod.9xx`), never part of the generic `mods`/`ASSIGNMENT_FIXTURE_MODS`
-   * pools. `mod.905` declares `mod.906` as a `modDependencies` entry —
-   * the one declared dependency chain `activateMods`'s own
-   * "also activate dependencies" checkbox exercises.
+   * Declared dependencies of the inactive pool, by index: `mod.905` needs `mod.906`; `mod.907`
+   * needs `mod.908`, which needs `mod.909` (a two-level chain); `mod.910` needs a mod that is
+   * installed nowhere (an unresolvable dependency).
+   */
+  const INACTIVE_DEPENDENCIES: Record<number, string[]> = {
+    4: ["mod.906"],
+    6: ["mod.908"],
+    7: ["mod.909"],
+    9: ["missing.dependency"],
+  };
+
+  /**
+   * The Mods page's own Inactive-tab pool: ~10 discovered-but-inactive mods with neutral ids
+   * (`mod.9xx`), never part of the generic `mods`/`ASSIGNMENT_FIXTURE_MODS` pools. Their declared
+   * dependencies are `INACTIVE_DEPENDENCIES` above.
    */
   const inactiveMods: {
     modId: string;
@@ -2035,7 +2045,7 @@ export function installScenario(): void {
     modId: `mod.9${(index + 1).toString().padStart(2, "0")}`,
     name: `Inactive Mod ${index + 1}`,
     source: index % 2 === 0 ? "local" : ("workshop" as const),
-    dependsOn: index === 4 ? ["mod.906"] : [],
+    dependsOn: INACTIVE_DEPENDENCIES[index] ?? [],
   }));
 
   /**
@@ -5411,51 +5421,89 @@ export function installScenario(): void {
       .map((mod) => mod.modId);
   }
 
+  /**
+   * `plan_activate`: the requested ids in order, each preceded by its not-yet-active dependency
+   * closure. Everything compares by base id, as `ActiveSet::contains_base` and
+   * `visit_dependency_closure` do, so a `_steam` copy of an active mod is "already active".
+   */
   function planActivateMods(ids: string[], withDependencies: boolean) {
     const toAdd: string[] = [];
     const alreadyActive: string[] = [];
     const unresolvableDependencies: Record<string, string[]> = {};
+    const activeBases = new Set([...workingActiveIds].map(baseOf));
     const scheduled = new Set<string>();
+    const installed = installedInventory().map((mod) => mod.modId);
+
+    /** `ModInventory::find_by_base`: the base id itself, else the smallest id sharing it. */
+    function findByBase(base: string): string | undefined {
+      if (installed.includes(base)) return base;
+      return installed.filter((id) => baseOf(id) === base).sort()[0];
+    }
+
+    function visitClosure(id: string): void {
+      const missing: string[] = [];
+      for (const dependency of inactiveMods.find((mod) => mod.modId === id)?.dependsOn ?? []) {
+        const base = baseOf(dependency);
+        if (activeBases.has(base) || scheduled.has(base)) continue;
+        const resolved = findByBase(base);
+        if (resolved === undefined) {
+          missing.push(dependency);
+          continue;
+        }
+        scheduled.add(baseOf(resolved));
+        visitClosure(resolved);
+        toAdd.push(resolved);
+      }
+      if (missing.length > 0) {
+        unresolvableDependencies[id] = [...(unresolvableDependencies[id] ?? []), ...missing];
+      }
+    }
+
     for (const id of ids) {
-      if (workingActiveIds.has(id) || scheduled.has(id)) {
+      const base = baseOf(id);
+      if (activeBases.has(base) || scheduled.has(base)) {
         alreadyActive.push(id);
         continue;
       }
-      if (withDependencies) {
-        for (const dep of inactiveMods.find((mod) => mod.modId === id)?.dependsOn ?? []) {
-          if (workingActiveIds.has(dep) || scheduled.has(dep)) continue;
-          if (!inactiveMods.some((mod) => mod.modId === dep)) {
-            unresolvableDependencies[id] = [...(unresolvableDependencies[id] ?? []), dep];
-            continue;
-          }
-          scheduled.add(dep);
-          toAdd.push(dep);
-        }
+      if (withDependencies) visitClosure(id);
+      if (!scheduled.has(base)) {
+        scheduled.add(base);
+        toAdd.push(id);
       }
-      scheduled.add(id);
-      toAdd.push(id);
     }
     return { toAdd, unresolvableDependencies, alreadyActive };
   }
 
-  function planDeactivateMods(ids: string[]) {
+  /**
+   * `plan_deactivate`: `notActive` is the requested non-Core ids that are not active, which the
+   * plan DTO does not carry but the commit's result does.
+   */
+  function deactivationOutcome(ids: string[]) {
     const toRemove: string[] = [];
     const refused: string[] = [];
+    const notActive: string[] = [];
     const dependentsStillActive: Record<string, string[]> = {};
     for (const id of ids) {
-      // `ActiveSet::deactivate`'s own rule: Core is never removable.
-      if (id === "ludeon.rimworld") {
+      // `ActiveSet::deactivate`'s own rule: Core (by base id) is never removable.
+      if (baseOf(id) === "ludeon.rimworld") {
         refused.push(id);
         continue;
       }
-      if (!workingActiveIds.has(id)) continue;
+      if (!workingActiveIds.has(id)) {
+        notActive.push(id);
+        continue;
+      }
       toRemove.push(id);
     }
     for (const id of toRemove) {
       const dependents = dependentsOf(id);
       if (dependents.length > 0) dependentsStillActive[id] = dependents;
     }
-    return { toRemove, dependentsStillActive, refused };
+    return { plan: { toRemove, dependentsStillActive, refused }, notActive };
+  }
+
+  function planDeactivateMods(ids: string[]) {
+    return deactivationOutcome(ids).plan;
   }
 
   /** Every mod named as a source of the generated mod's content — every non-base owner of every decided entry. */
@@ -8324,7 +8372,14 @@ export function installScenario(): void {
       const didSwitchToCurrent =
         request.anchor !== null && plan.toAdd.length > 0 && selected === "suggested";
       if (didSwitchToCurrent) selected = "current";
-      return { pending: pendingActiveChanges(), selected, didSwitchToCurrent };
+      // `activated` and `alreadyActive` are what the commit re-planned, whatever the dialog showed.
+      return {
+        pending: pendingActiveChanges(),
+        activated: plan.toAdd,
+        alreadyActive: plan.alreadyActive,
+        selected,
+        didSwitchToCurrent,
+      };
     },
     move_mods: (payload: unknown): MoveModsResultDto => {
       const request = (payload as { request: MoveRequestDto }).request;
@@ -8400,15 +8455,16 @@ export function installScenario(): void {
       const request = (payload as { request: DeactivateRequestDto }).request;
       return planDeactivateMods(request.ids);
     },
-    deactivate_mods: (payload: unknown) => {
+    deactivate_mods: (payload: unknown): DeactivateModsResultDto => {
       const request = (payload as { request: DeactivateRequestDto }).request;
       window.__DEACTIVATE_CALLS__?.push(request);
-      const plan = planDeactivateMods(request.ids);
+      const { plan, notActive } = deactivationOutcome(request.ids);
       for (const id of plan.toRemove) {
         workingActiveIds.delete(id);
       }
       settleCurrentOntoWorking();
-      return pendingActiveChanges();
+      // `removed` and `notActive` are what the commit re-planned (a refused Core is in neither).
+      return { pending: pendingActiveChanges(), removed: plan.toRemove, notActive };
     },
     get_pending_active_changes: () => pendingActiveChanges(),
     get_mods_config_baseline: () => fileBaselineDto(),

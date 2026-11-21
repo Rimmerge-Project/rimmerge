@@ -3,8 +3,8 @@ import type { ActiveSetDiffDto } from "./ActiveSetDiffDto";
 
 /**
  * Mirrors [`PendingActiveChanges`]. `get_pending_active_changes`'s
- * result, and `activate_mods`/`deactivate_mods`/`rescan_project`'s own
- * updated reading of it — a non-empty `unscanned` is what the Rescan
+ * result, and the `pending` of `activate_mods`/`deactivate_mods`'s results and
+ * `rescan_project`'s own updated reading of it — a non-empty `unscanned` is what the Rescan
  * banner reads, a non-empty `unapplied` is what the apply dialog warns
  * about. Everything here is the user's own unsaved work: `unapplied` and
  * `order_unapplied` compare with what Rimmerge last loaded or wrote, so an

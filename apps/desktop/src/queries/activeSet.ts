@@ -87,7 +87,9 @@ export function usePlanActivateModsMutation() {
  * trip — the same reasoning `useApplyMutation` already documents. An
  * anchored activation (a drop position) can switch the selected order from
  * Suggested to Current; the store adopts the backend's answer here, and the
- * result's `didSwitchToCurrent` lets the caller say so.
+ * result's `didSwitchToCurrent` lets the caller say so. `activated` is what the commit really
+ * added and `alreadyActive` the requested mods its own plan found active (the backend re-plans, so
+ * both can differ from the plan the dialog showed); the caller drops both from its selection.
  */
 export function useActivateModsMutation() {
   const queryCache = useQueryCache();
@@ -143,7 +145,11 @@ export function usePlanDeactivateModsMutation() {
   });
 }
 
-/** Commits a deactivation onto the working set. See {@link useActivateModsMutation}. */
+/**
+ * Commits a deactivation onto the working set. See {@link useActivateModsMutation}; the result's
+ * `removed` is what the commit really removed and `notActive` the requested mods that were no
+ * longer active, which the caller drops from its selection (a refused Core is in neither).
+ */
 export function useDeactivateModsMutation() {
   const queryCache = useQueryCache();
   return useMutation({

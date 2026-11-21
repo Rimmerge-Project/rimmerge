@@ -69,6 +69,8 @@ function mountModsPage(fixtureOverrides: Record<string, unknown> = {}, attachTo?
           unapplied: { added: [], removed: [] },
           orderUnapplied: false,
         },
+        activated: ["inactive.mod"],
+        alreadyActive: [],
         selected: "current",
         didSwitchToCurrent: false,
       };
@@ -81,9 +83,13 @@ function mountModsPage(fixtureOverrides: Record<string, unknown> = {}, attachTo?
     deactivate_mods: (payload: unknown) => {
       deactivateCalls.push((payload as { request: DeactivateRequestDto }).request);
       return {
-        unscanned: { added: [], removed: ["active.mod"] },
-        unapplied: { added: [], removed: [] },
-        orderUnapplied: false,
+        pending: {
+          unscanned: { added: [], removed: ["active.mod"] },
+          unapplied: { added: [], removed: [] },
+          orderUnapplied: false,
+        },
+        removed: ["active.mod"],
+        notActive: [],
       };
     },
     ...fixtureOverrides,
@@ -1678,6 +1684,8 @@ describe("ModsPage", () => {
                 unapplied: { added: [], removed: [] },
                 orderUnapplied: false,
               },
+              activated: ["x"],
+              alreadyActive: [],
               selected: "current",
               didSwitchToCurrent: true,
             };

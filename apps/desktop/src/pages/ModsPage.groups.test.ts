@@ -9,7 +9,10 @@ import ToastService from "primevue/toastservice";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
-import { dashboardFixture } from "@/components/apply/ApplyDialog.test-support";
+import {
+  dashboardFixture,
+  EMPTY_PENDING_ACTIVE_CHANGES,
+} from "@/components/apply/ApplyDialog.test-support";
 import { modList, modRow } from "@/components/mods/modListRow.test-support";
 import GroupDeleteDialog from "@/components/mods/organization/GroupDeleteDialog.vue";
 import ModsPage from "@/pages/ModsPage.vue";
@@ -138,8 +141,18 @@ function mountPage() {
       planCalls.push({ command: "plan_deactivate_mods", ids });
       return { toRemove: ids, dependentsStillActive: {}, refused: [] };
     },
-    activate_mods: record("activate_mods", null),
-    deactivate_mods: record("deactivate_mods", null),
+    activate_mods: record("activate_mods", {
+      pending: EMPTY_PENDING_ACTIVE_CHANGES,
+      activated: [],
+      alreadyActive: [],
+      selected: "current",
+      didSwitchToCurrent: false,
+    }),
+    deactivate_mods: record("deactivate_mods", {
+      pending: EMPTY_PENDING_ACTIVE_CHANGES,
+      removed: [],
+      notActive: [],
+    }),
     move_mods: record("move_mods", null),
     apply: record("apply", null),
   });

@@ -23,8 +23,9 @@ use tauri::async_runtime::spawn_blocking;
 use crate::commands::project::finish_loaded_session;
 use crate::commands::{EVENT_PROJECT_PROGRESS, emit_session_changed};
 use crate::dto::active_set::{
-    ActivateModsResultDto, ActivatePlanDto, ActivateRequestDto, DeactivatePlanDto,
-    DeactivateRequestDto, MoveModsResultDto, MoveRequestDto, PendingActiveChangesDto,
+    ActivateCommitted, ActivateModsResultDto, ActivatePlanDto, ActivateRequestDto,
+    DeactivateModsResultDto, DeactivatePlanDto, DeactivateRequestDto, MoveModsResultDto,
+    MoveRequestDto, PendingActiveChangesDto,
 };
 use crate::dto::mod_lists::{ModListDto, ModListQueryDto};
 use crate::dto::project::{ProgressEventDto, ProjectSummaryDto, SessionChangeReasonDto};
@@ -117,22 +118,29 @@ pub async fn plan_activate_mods(
 /// to the current report, or `move_anchor_not_active` for a stale anchor.
 /// An anchored activation also switches a selected Suggested to Current
 /// (the result says so); an un-anchored one never changes the selection.
+/// Either way the result's `activated` lists the ids the commit really added
+/// and `already_active` the requested ones its own plan found already active.
 pub(crate) async fn activate_mods_inner(
     state: &AppState,
     request: ActivateRequestDto,
 ) -> Result<ActivateModsResultDto, CommandError> {
     with_session(state, move |session| {
         let plan = ActivateMods::plan(session, &request.mod_ids(), request.with_dependencies);
-        let outcome = match request.anchor {
-            Some(anchor) => Some(ActivateMods::execute_at(session, &plan, &anchor.into())?),
-            None => {
-                ActivateMods::execute(session, &plan)?;
-                None
+        let (activated, did_switch_to_current) = match request.anchor {
+            Some(anchor) => {
+                let outcome = ActivateMods::execute_at(session, &plan, &anchor.into())?;
+                (outcome.activated, outcome.did_switch_to_current)
             }
+            None => (ActivateMods::execute(session, &plan)?, false),
+        };
+        let committed = ActivateCommitted {
+            activated,
+            already_active: plan.already_active,
+            did_switch_to_current,
         };
         Ok(ActivateModsResultDto::new(
             &session.pending_changes(),
-            outcome.as_ref(),
+            &committed,
             session.selected(),
         ))
     })
@@ -190,7 +198,9 @@ pub async fn plan_deactivate_mods(
 /// Commits a deactivation onto the working set — re-plans first, the same
 /// as [`activate_mods_inner`]; unlike activation this is infallible
 /// (`DeactivateMods::execute` returns no `Result`), since a since-become-
-/// unknown id simply isn't in the working set to remove.
+/// unknown id simply isn't in the working set to remove. The result names
+/// the ids really removed and the requested ones that were not active (a
+/// refused Core is in neither).
 ///
 /// # Errors
 ///
@@ -198,11 +208,15 @@ pub async fn plan_deactivate_mods(
 pub(crate) async fn deactivate_mods_inner(
     state: &AppState,
     request: DeactivateRequestDto,
-) -> Result<PendingActiveChangesDto, CommandError> {
+) -> Result<DeactivateModsResultDto, CommandError> {
     with_session(state, move |session| {
         let plan = DeactivateMods::plan(session, &request.mod_ids());
-        DeactivateMods::execute(session, &plan);
-        Ok((&session.pending_changes()).into())
+        let removed = DeactivateMods::execute(session, &plan);
+        Ok(DeactivateModsResultDto::new(
+            &session.pending_changes(),
+            &removed,
+            &plan.not_active,
+        ))
     })
     .await
 }
@@ -218,7 +232,7 @@ pub async fn deactivate_mods(
     state: tauri::State<'_, AppState>,
     app: tauri::AppHandle,
     request: DeactivateRequestDto,
-) -> Result<PendingActiveChangesDto, CommandError> {
+) -> Result<DeactivateModsResultDto, CommandError> {
     let result = deactivate_mods_inner(&state, request).await;
     if result.is_ok() {
         emit_session_changed(&app, SessionChangeReasonDto::ActiveSetChanged);
@@ -633,8 +647,24 @@ mod tests {
     use crate::dto::mods::ModFilterDto;
 
     fn state_with(active: &[&str], inactive: &[&str]) -> AppState {
+        state_over(active, report_fixture_with_inactive(active, inactive))
+    }
+
+    /// `needs` (inactive) declares `base` (inactive) as a dependency.
+    fn state_with_dependency(active: &[&str]) -> AppState {
+        state_over(
+            active,
+            rim_resolve::test_support::ReportBuilder::new()
+                .mod_("a")
+                .inactive("needs")
+                .inactive("base")
+                .inactive_dependency("needs", "base")
+                .build(),
+        )
+    }
+
+    fn state_over(active: &[&str], report: rim_analyzer::domain::Report) -> AppState {
         let state = AppState::default();
-        let report = report_fixture_with_inactive(active, inactive);
         let session = rim_session::Session::new(
             rim_session::ProjectPaths {
                 game_dir: "game".into(),
@@ -802,6 +832,49 @@ mod tests {
         .expect("must succeed");
 
         assert_eq!(result.pending.unscanned.added, vec!["b".to_string()]);
+        assert_eq!(result.activated, vec!["b".to_string()]);
+    }
+
+    #[tokio::test]
+    async fn activate_mods_reports_the_pulled_in_dependencies_as_activated() {
+        let state = state_with_dependency(&["a"]);
+
+        let result = activate_mods_inner(
+            &state,
+            ActivateRequestDto {
+                ids: vec!["needs".to_string()],
+                with_dependencies: true,
+                anchor: None,
+            },
+        )
+        .await
+        .expect("must succeed");
+
+        assert_eq!(
+            result.activated,
+            vec!["base".to_string(), "needs".to_string()]
+        );
+    }
+
+    #[tokio::test]
+    async fn anchored_activate_mods_reports_the_pulled_in_dependencies_as_activated() {
+        let state = state_with_dependency(&["a"]);
+
+        let result = activate_mods_inner(
+            &state,
+            ActivateRequestDto {
+                ids: vec!["needs".to_string()],
+                with_dependencies: true,
+                anchor: Some(crate::dto::active_set::AnchorDto::Start),
+            },
+        )
+        .await
+        .expect("must succeed");
+
+        assert_eq!(
+            result.activated,
+            vec!["base".to_string(), "needs".to_string()]
+        );
     }
 
     #[tokio::test]
@@ -845,7 +918,7 @@ mod tests {
     async fn deactivate_mods_commits_and_reports_it_as_unscanned() {
         let state = state_with(&["a", "b"], &[]);
 
-        let pending = deactivate_mods_inner(
+        let result = deactivate_mods_inner(
             &state,
             DeactivateRequestDto {
                 ids: vec!["b".to_string()],
@@ -854,7 +927,99 @@ mod tests {
         .await
         .expect("must succeed");
 
-        assert_eq!(pending.unscanned.removed, vec!["b".to_string()]);
+        assert_eq!(result.pending.unscanned.removed, vec!["b".to_string()]);
+        assert_eq!(result.removed, vec!["b".to_string()]);
+    }
+
+    #[tokio::test]
+    async fn deactivate_mods_does_not_report_a_refused_core_as_removed() {
+        let state = state_with(&["ludeon.rimworld", "a"], &[]);
+
+        let result = deactivate_mods_inner(
+            &state,
+            DeactivateRequestDto {
+                ids: vec!["ludeon.rimworld".to_string(), "a".to_string()],
+            },
+        )
+        .await
+        .expect("must succeed");
+
+        assert_eq!(result.removed, vec!["a".to_string()]);
+        assert!(result.not_active.is_empty());
+    }
+
+    #[tokio::test]
+    async fn deactivate_mods_reports_a_requested_id_that_is_not_active_as_not_active() {
+        let state = state_with(&["a"], &["b"]);
+
+        let result = deactivate_mods_inner(
+            &state,
+            DeactivateRequestDto {
+                ids: vec!["a".to_string(), "b".to_string()],
+            },
+        )
+        .await
+        .expect("must succeed");
+
+        assert_eq!(result.removed, vec!["a".to_string()]);
+        assert_eq!(result.not_active, vec!["b".to_string()]);
+    }
+
+    #[tokio::test]
+    async fn activate_mods_reports_a_requested_id_already_active_apart_from_activated() {
+        let state = state_with(&["a"], &["b"]);
+
+        let result = activate_mods_inner(
+            &state,
+            ActivateRequestDto {
+                ids: vec!["a".to_string(), "b".to_string()],
+                with_dependencies: false,
+                anchor: None,
+            },
+        )
+        .await
+        .expect("must succeed");
+
+        assert_eq!(result.activated, vec!["b".to_string()]);
+        assert_eq!(result.already_active, vec!["a".to_string()]);
+    }
+
+    #[tokio::test]
+    async fn anchored_activate_mods_reports_an_already_active_id_apart_from_activated() {
+        let state = state_with(&["a"], &["b"]);
+
+        let result = activate_mods_inner(
+            &state,
+            ActivateRequestDto {
+                ids: vec!["a".to_string(), "b".to_string()],
+                with_dependencies: false,
+                anchor: Some(crate::dto::active_set::AnchorDto::End),
+            },
+        )
+        .await
+        .expect("must succeed");
+
+        assert_eq!(result.activated, vec!["b".to_string()]);
+        assert_eq!(result.already_active, vec!["a".to_string()]);
+    }
+
+    #[tokio::test]
+    async fn activate_mods_reports_a_base_id_duplicate_as_already_active() {
+        let state = state_with(&["a"], &["b", "b_steam"]);
+
+        let result = activate_mods_inner(
+            &state,
+            ActivateRequestDto {
+                ids: vec!["b".to_string(), "b_steam".to_string()],
+                with_dependencies: false,
+                anchor: None,
+            },
+        )
+        .await
+        .expect("must succeed");
+
+        assert_eq!(result.activated, vec!["b".to_string()]);
+        assert_eq!(result.already_active, vec!["b_steam".to_string()]);
     }
 
     #[tokio::test]

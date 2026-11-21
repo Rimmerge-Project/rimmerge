@@ -295,6 +295,10 @@ removes those too. A selection is never saved and changes nothing by
 itself: Activate selected and Deactivate selected still open their plan
 and confirmation first, and if the plan cannot be made the dialog opens
 with the reason and no way to confirm.
+After an activation or a deactivation, the mods that moved (and any that
+were already where you sent them) leave the selection, including a
+dependency the filter was hiding; Core, which is never deactivated, stays
+selected.
 
 **Moving mods.** Three ways move a mod, and all of them end in the same
 thing: the mod is placed next to a neighbour mod, named by its package id,

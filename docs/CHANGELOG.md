@@ -15,6 +15,14 @@ before that point is not summarized here.
   only when something really changed. If one of the files cannot be read
   again, Rimmerge keeps what the scan read and shows a notice saying that an
   edit made during the scan may be missing.
+- **Fixed: a mod you activated or deactivated could stay selected, hidden
+  behind a filter.** Activating a mod together with its dependencies took
+  only the mod you asked for out of the Inactive selection, so a dependency
+  that a filter was hiding stayed selected, and the next "Activate selected"
+  quietly included it. Deactivating also took Core out of the selection,
+  although Core is never deactivated. Both lists now drop the mods the change
+  really moved, and the ones that were already where you sent them, and the
+  "N selected (M not shown)" count stays right.
 
 ## [1.2.6] - 2026-11-20
 

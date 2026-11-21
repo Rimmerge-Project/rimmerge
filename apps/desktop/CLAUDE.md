@@ -278,9 +278,12 @@ of that command surface — no direct filesystem or process access outside
   `session://changed` with `activeSetChanged`; `move_mods` also returns the
   selection it left (`MoveModsResultDto`), because the first reorder while
   Suggested is selected switches to Current, and the caller adopts it and
-  says so. An *anchored* `activate_mods` (an explicit drop position) switches
-  the same way and so returns `ActivateModsResultDto { pending, selected,
-  didSwitchToCurrent }`; an un-anchored one (the button) never switches.
+  says so. `activate_mods` (every placement) returns `ActivateModsResultDto { pending,
+  activated, alreadyActive, selected, didSwitchToCurrent }`; an *anchored* one (an explicit drop
+  position) switches Suggested to Current the same way, an un-anchored one (the
+  button) never does. `deactivate_mods` returns `DeactivateModsResultDto { pending,
+  removed, notActive }`. These lists come from the commit's own plan (it re-plans, so
+  they can differ from the dialog's plan; a refused Core is in neither).
   `PendingActiveChangesDto.orderUnapplied` is Current differing from the list Rimmerge
   last loaded or wrote (the acknowledged list), not from the live file: a
   settled reorder changes no membership, so `unscanned`/`unapplied` are empty
@@ -369,7 +372,12 @@ of that command surface — no direct filesystem or process access outside
   all N shown" never re-implements a filter in Vue. A selected id a later filter
   hides stays selected and is counted ("N not shown"); Clear removes all. An
   *unfiltered* response is the whole list, so a selected id missing from it is
-  pruned (`ModListPane`'s watcher); under a filter it is only hidden. The "(N not
+  pruned (`ModListPane`'s watcher); under a filter it is only hidden. After a commit,
+  `useModActivation`/`useModDeactivation` drop from that list's selection every id the
+  backend's commit-time plan names, never just the requested ids: `activated` plus
+  `alreadyActive` (requested mods found active by base id) for Inactive, `removed` plus
+  `notActive` (requested mods no longer active) for Active. So a dependency pulled in under a
+  filter that hides it leaves the selection, and a refused Core stays. The "(N not
   shown)" brackets are part of the `mods.selection.notShown` message, never the
   template, but the gap before them is the span's `ms-1` margin, not whitespace:
   vue-i18n trims whitespace around each plural form, so a leading space in the

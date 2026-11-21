@@ -9,7 +9,16 @@ import { defineComponent } from "vue";
 import { EMPTY_PENDING_ACTIVE_CHANGES } from "@/components/apply/ApplyDialog.test-support";
 import { useActivateModsMutation } from "@/queries/activeSet";
 import { installMockIpc } from "@/services/ipc.mock";
+import type { ActivateModsResultDto } from "@/types/generated/ActivateModsResultDto";
 import type { ActivateRequestDto } from "@/types/generated/ActivateRequestDto";
+
+const RESULT: ActivateModsResultDto = {
+  pending: EMPTY_PENDING_ACTIVE_CHANGES,
+  activated: [],
+  alreadyActive: [],
+  selected: "current",
+  didSwitchToCurrent: false,
+};
 
 /**
  * A committed activation must stay a success when an unrelated query's refetch fails: Colada
@@ -25,7 +34,7 @@ describe("useActivateModsMutation", () => {
   it("stays successful, with no error toast, when an unrelated refetch fails", async () => {
     let reads = 0;
     installMockIpc({
-      activate_mods: () => EMPTY_PENDING_ACTIVE_CHANGES,
+      activate_mods: () => RESULT,
       unrelated_read: () => {
         reads += 1;
         if (reads > 1) {
@@ -56,7 +65,7 @@ describe("useActivateModsMutation", () => {
       withDependencies: false,
       anchor: null,
     };
-    await expect(mutation.mutateAsync(request)).resolves.toEqual(EMPTY_PENDING_ACTIVE_CHANGES);
+    await expect(mutation.mutateAsync(request)).resolves.toEqual(RESULT);
 
     expect(reads).toBe(2);
     expect(mutation.status.value).toBe("success");
