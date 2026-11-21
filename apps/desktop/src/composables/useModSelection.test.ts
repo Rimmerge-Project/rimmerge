@@ -381,3 +381,124 @@ describe("useModSelection", () => {
     });
   });
 });
+
+describe("useModSelection over a range line", () => {
+  /** Two folders: `a b` then a header then `b c`, so `b` has a copy in each. */
+  const LINE = [
+    { key: "f:1", modId: null },
+    { key: "m:1:a", modId: "a" },
+    { key: "m:1:b", modId: "b" },
+    { key: "f:2", modId: null },
+    { key: "m:2:b", modId: "b" },
+    { key: "m:2:c", modId: "c" },
+  ];
+
+  function setupLine(selected: string[] = []) {
+    const rows = ref<ModListRowDto[]>(["a", "b", "c"].map((modId) => modRow({ modId })));
+    const selectedIds = ref<string[]>(selected);
+    const selection = useModSelection({ selectedIds, rows, rangeLine: () => LINE });
+    return { rows, selectedIds, selection };
+  }
+
+  it("counts mods, not rows: three mods are shown though the line has six rows", () => {
+    const { selection } = setupLine();
+
+    expect(selection.shownCount.value).toBe(3);
+  });
+
+  it("selects the mods between two rows once each, and a header adds nothing", () => {
+    const { selectedIds, selection } = setupLine();
+    selection.setAnchor("m:1:a");
+
+    selection.selectRange("m:2:c");
+
+    expect(selectedIds.value).toEqual(["a", "b", "c"]);
+  });
+
+  it("anchors by row key: the same mod's other row is a different anchor", () => {
+    const { selectedIds, selection } = setupLine();
+    selection.setAnchor("m:2:b");
+
+    selection.selectRange("m:2:c");
+
+    expect(selectedIds.value).toEqual(["b", "c"]);
+  });
+
+  it("runs a range from a header, which selects nothing itself", () => {
+    const { selectedIds, selection } = setupLine();
+    selection.setAnchor("f:2");
+
+    selection.selectRange("m:2:c");
+
+    expect(selectedIds.value).toEqual(["b", "c"]);
+  });
+
+  it("keeps what was selected before the range and adds nothing twice", () => {
+    const { selectedIds, selection } = setupLine(["c"]);
+    selection.setAnchor("m:1:a");
+
+    selection.selectRange("m:1:b");
+
+    expect(selectedIds.value).toEqual(["c", "a", "b"]);
+  });
+
+  it("shrinks the range when the target moves back toward the anchor", () => {
+    const { selectedIds, selection } = setupLine();
+    selection.setAnchor("m:1:a");
+    selection.selectRange("m:2:c");
+
+    selection.selectRange("m:1:b");
+
+    expect(selectedIds.value).toEqual(["a", "b"]);
+  });
+
+  it("toggles by mod id but anchors on the row it was done on", () => {
+    const { selectedIds, selection } = setupLine();
+
+    selection.toggle("b", "m:2:b");
+    selection.selectRange("m:2:c");
+
+    expect(selectedIds.value).toEqual(["b", "c"]);
+  });
+
+  it("starts from the focused row when Shift+Arrow finds no anchor", () => {
+    const { selectedIds, selection } = setupLine();
+
+    selection.extendSelection("f:2", "m:2:b");
+
+    expect(selectedIds.value).toEqual(["b"]);
+  });
+
+  it("selects every mod of the answer for Select all, whatever the line shows", () => {
+    const { selectedIds, selection } = setupLine();
+
+    selection.selectAllShown();
+
+    expect(selectedIds.value).toEqual(["a", "b", "c"]);
+  });
+
+  it("ignores a row key that is not in the line", () => {
+    const { selectedIds, selection } = setupLine();
+    selection.setAnchor("m:1:a");
+
+    selection.selectRange("m:9:zzz");
+
+    expect(selectedIds.value).toEqual([]);
+  });
+
+  it("ends the range when the line changes, like a refetch of the rows", async () => {
+    const line = ref(LINE);
+    const rows = ref<ModListRowDto[]>(["a", "b", "c"].map((modId) => modRow({ modId })));
+    const selectedIds = ref<string[]>([]);
+    const selection = useModSelection({ selectedIds, rows, rangeLine: line });
+    selection.setAnchor("m:1:a");
+    selection.selectRange("m:1:b");
+
+    line.value = LINE.filter((row) => row.key !== "m:1:b");
+    await nextTick();
+    selection.selectRange("m:2:c");
+
+    // The new range starts again from what was selected, and `a` is still the anchor.
+    expect(selectedIds.value).toEqual(["a", "b", "c"]);
+  });
+});

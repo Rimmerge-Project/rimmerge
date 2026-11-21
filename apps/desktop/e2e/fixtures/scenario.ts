@@ -250,6 +250,12 @@ declare global {
     /** Every `list_inactive_mods_grouped` query the mock received, in order. */
     __LIST_INACTIVE_MODS_GROUPED_CALLS__?: RecordedGroupedListQuery[];
     /**
+     * Set before the Groups view is shown: a smaller entry cap than `MAX_GROUPED_ENTRIES`, so the
+     * mock's own slicing cuts the answer (`entries` shortened, `totalEntries` still counting every
+     * line) without a fixture of ten thousand rows.
+     */
+    __GROUPED_ENTRY_CAP__?: number;
+    /**
      * Set before the scenario installs: whether the mock session can use organization
      * (`loaded`, the default), was built without a store (`notLoaded`) or found an unusable
      * `organization.json` (`recovered`, read-only until `reset_organization`).
@@ -5350,7 +5356,8 @@ export function installScenario(): void {
    * header and omits everything below; a fold naming no folder is ignored; at most
    * `MAX_COLLAPSED_FOLDERS` fold keys, counted before duplicates collapse (`invalid_input`); `reorderable` is always false;
    * `totalEntries` counts past `MAX_GROUPED_ENTRIES`. A row past `MAX_MOD_LIST_ROWS` is counted,
-   * never emitted. The entry cut itself is not reachable with the fixture; it is pinned in Rust.
+   * never emitted. The entry cut is reachable with `window.__GROUPED_ENTRY_CAP__` (a smaller cap
+   * for the slicing below); its real size is pinned in Rust.
    */
   function groupedModListFor(which: "working" | "inactive", query: GroupedListQueryMock) {
     // The raw array is bounded before it is read, as the command's DTO conversion does.
@@ -5405,10 +5412,11 @@ export function installScenario(): void {
     };
 
     const entries: GroupedEntryMock[] = [];
+    const entryCap = window.__GROUPED_ENTRY_CAP__ ?? MAX_GROUPED_ENTRIES;
     let totalEntries = 0;
     const push = (entry: GroupedEntryMock): void => {
       totalEntries += 1;
-      if (entries.length < MAX_GROUPED_ENTRIES) entries.push(entry);
+      if (entries.length < entryCap) entries.push(entry);
     };
     const pushMod = (index: number, folder: FolderKeyMock, depth: number): void => {
       if (index >= MAX_MOD_LIST_ROWS) {

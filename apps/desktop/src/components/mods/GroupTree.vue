@@ -474,7 +474,8 @@ function onDragOver(event: DragEvent, entry: Entry): void {
   }
   event.preventDefault();
   if (event.dataTransfer) {
-    event.dataTransfer.dropEffect = "move";
+    // Mods dropped on a group are added to it (they stay where they are), as on a Groups view header.
+    event.dataTransfer.dropEffect = kind === "mods" ? "copy" : "move";
   }
 }
 

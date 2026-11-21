@@ -1508,7 +1508,8 @@
       "suggestedNote": "Apply will write the suggested order. Moving a mod switches to your own order.",
       "coreStaysActive": "Core can't be deactivated.",
       "inactiveNotOrdered": "This list has no order of its own. Drag mods to the Active list to activate them.",
-      "activateAtItem": "Activate at…"
+      "activateAtItem": "Activate at…",
+      "groupsViewOff": "Moving is off in Groups view. Switch this list to List view to reorder mods."
     },
     "colors": {
       "names": {
@@ -1544,6 +1545,36 @@
         "modChanged": "Colour changed for {name}",
         "modCleared": "Colour removed from {name}"
       }
+    },
+    "groupsView": {
+      "regionLabel": "Mods by group",
+      "rovingHint": "Use the arrow keys to move, Right and Left to open and close folders, Enter to open a mod, Space to select",
+      "switchHeading": "View",
+      "switchLabel": "How this list is shown",
+      "viewList": "List",
+      "viewGroups": "Groups",
+      "unavailable": "Groups view needs your groups, which can't be used right now.",
+      "collapseAll": "Collapse all",
+      "expandAll": "Expand all",
+      "ungrouped": "Not in a group",
+      "modCount": "{count} mod | {count} mods",
+      "folderActions": "Actions for the folder {name}",
+      "folderLabelExpanded": "{name}, {count} mod, open | {name}, {count} mods, open",
+      "folderLabelCollapsed": "{name}, {count} mod, collapsed | {name}, {count} mods, collapsed",
+      "alsoInShort": "also in {count}",
+      "alsoInLong": "Also in {count} other group: {groups} | Also in {count} other groups: {groups}",
+      "alsoInTitle": "Also in: {groups}",
+      "menu": {
+        "select": "Select all in folder",
+        "activate": "Activate all…",
+        "deactivate": "Deactivate all…"
+      },
+      "folderSelected": "Selected {count} mod in {name}. | Selected {count} mods in {name}.",
+      "folderSelectedNone": "No mods to select in {name}.",
+      "empty": "There are no mods to show here.",
+      "emptyFiltered": "No mods match the current search, tag, source or group.",
+      "cutNote": "{hidden} line is not shown. Fold some folders or narrow the search to see it. | {hidden} lines are not shown. Fold some folders or narrow the search to see them.",
+      "ungroupedRefusesDrop": "Mods can't be added to Not in a group. To take a mod out of its groups, use Remove from group."
     },
     "groups": {
       "regionLabel": "Groups",

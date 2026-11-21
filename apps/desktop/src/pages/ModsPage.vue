@@ -19,7 +19,7 @@ import ModListPane from "@/components/mods/ModListPane.vue";
 import ModPositionDialog from "@/components/mods/ModPositionDialog.vue";
 import ModSortBar from "@/components/mods/ModSortBar.vue";
 import ModsRescanButton from "@/components/mods/ModsRescanButton.vue";
-import type { MenuAction } from "@/components/mods/ModTable.vue";
+import ModViewSwitch from "@/components/mods/ModViewSwitch.vue";
 import OrderSwitchedNote from "@/components/mods/OrderSwitchedNote.vue";
 import BulkTagsDialog from "@/components/mods/organization/BulkTagsDialog.vue";
 import OrganizationDialogs from "@/components/mods/organization/OrganizationDialogs.vue";
@@ -28,6 +28,7 @@ import OrderNotInFileNote from "@/components/order/OrderNotInFileNote.vue";
 import { useGroupDrop } from "@/composables/useGroupDrop";
 import { useGroupScope } from "@/composables/useGroupScope";
 import { useGroupScopeActions } from "@/composables/useGroupScopeActions";
+import { useGroupsView } from "@/composables/useGroupsView";
 import { useModActivation } from "@/composables/useModActivation";
 import { useModDeactivation } from "@/composables/useModDeactivation";
 import { useModLabel } from "@/composables/useModLabel";
@@ -35,12 +36,13 @@ import { useModListFilters } from "@/composables/useModListFilters";
 import { useModListSort } from "@/composables/useModListSort";
 import { type ListKind, useModReorder } from "@/composables/useModReorder";
 import { useOrderSource } from "@/composables/useOrderSource";
-import { useInactiveModsQuery, useWorkingModsQuery } from "@/queries/activeSet";
 import { useOrganizationMutations } from "@/queries/organization";
 import type { ColorTokenDto } from "@/types/generated/ColorTokenDto";
+import type { FolderKeyDto } from "@/types/generated/FolderKeyDto";
 import type { ModListDto } from "@/types/generated/ModListDto";
 import { assertNever } from "@/utils/assertNever";
 import { ACTIVE_SORT_KEYS, INACTIVE_SORT_KEYS } from "@/utils/modListSort";
+import type { FolderAction, MenuAction } from "@/utils/modRowMenu";
 import { ALL_MODS, type BulkAction, type OrganizationDialog } from "@/utils/organization";
 import { selectionSummary } from "@/utils/selectionText";
 
@@ -85,17 +87,33 @@ const groups = useGroupScope();
 const activeFilters = useModListFilters({ sort: activeSort, group: groups.scope });
 const inactiveFilters = useModListFilters({ sort: inactiveSort, group: groups.scope });
 
+const selectedActiveIds = ref<string[]>([]);
+const selectedInactiveIds = ref<string[]>([]);
+
+// Each pane is a flat list or the Groups view; a view's own query is the only one that runs. The
+// callbacks reach composables set up further down (read only when a menu choice is made).
+const groupsView = useGroupsView({
+  groups,
+  queries: { active: activeFilters.query, inactive: inactiveFilters.query },
+  selections: { active: selectedActiveIds, inactive: selectedInactiveIds },
+  announce: (text) => reorder.announce(text),
+  activateGroup: (groupId) => groupActions.activateGroup(groupId),
+  deactivateGroup: (groupId) => groupActions.deactivateGroup(groupId),
+});
 const {
   data: activeData,
+  grouped: activeGrouped,
   isPending: activePending,
+  isPlaceholder: activePlaceholder,
   error: activeError,
-} = useWorkingModsQuery(activeFilters.query);
-
+} = groupsView.active;
 const {
   data: inactiveData,
+  grouped: inactiveGrouped,
   isPending: inactivePending,
+  isPlaceholder: inactivePlaceholder,
   error: inactiveError,
-} = useInactiveModsQuery(inactiveFilters.query);
+} = groupsView.inactive;
 
 // A list that fails because its group scope is gone drops the scope instead of showing an error.
 watch(activeError, (failure) => groups.dropScopeIfStale(failure));
@@ -201,8 +219,6 @@ function onMenuAction(modId: string, action: MenuAction, from: ListKind): void {
       : { kind: "modColor", modId, current: row.color };
 }
 
-const selectedActiveIds = ref<string[]>([]);
-const selectedInactiveIds = ref<string[]>([]);
 const withDependencies = ref(false);
 const { selected: selectedOrder } = useOrderSource();
 const isSwitchNoteShown = ref(false);
@@ -309,6 +325,7 @@ const reorder = useModReorder({
   activeList: activeData,
   inactiveList: inactiveData,
   isActiveFiltered: activeFilters.isFiltered,
+  isActiveGrouped: () => groupsView.isActiveGrouped.value,
   selectedActiveIds,
   selectedInactiveIds,
   activation: { activateAt },
@@ -330,6 +347,15 @@ const groupDrop = useGroupDrop({
   endDrag: reorder.endDrag,
   announce: reorder.announce,
 });
+
+/**
+ * Mods dropped on a group, on its rail entry or on a Groups view header. Not awaited on purpose:
+ * `dropMods` never rejects (a failed edit is toasted by the app-wide mutation handler, the result
+ * is announced) and nothing here waits for it.
+ */
+function dropMods(groupId: number): void {
+  void groupDrop.dropMods(groupId);
+}
 
 /** The tree's view of a drag from a list: how many mods it carries, `null` when none. */
 const rowDrag = computed(() =>
@@ -398,7 +424,7 @@ const followFocus = useDebounceFn((modId: string) => {
       @remove-uninstalled="(id: number) => (organizationDialog = { kind: 'removeUninstalled', id })"
       @activate-group="(id: number) => void groupActions.activateGroup(id)"
       @deactivate-group="(id: number) => void groupActions.deactivateGroup(id)"
-      @drop-mods="(id: number) => void groupDrop.dropMods(id)"
+      @drop-mods="dropMods"
       @drop-group="(id: number, parent: number | null) => void groupDrop.dropGroup(id, parent)"
       @close="() => void closeGroupDrawer()"
     />
@@ -451,7 +477,9 @@ const followFocus = useDebounceFn((modId: string) => {
           v-model:selected-ids="selectedInactiveIds"
           kind="inactive"
           :mod-list="inactiveData"
+          :grouped="inactiveGrouped"
           :is-pending="inactivePending"
+          :is-placeholder="inactivePlaceholder"
           :error="inactiveError"
           :is-filtered="inactiveFilters.isFiltered.value"
           :sort-key="inactiveSort.key"
@@ -473,6 +501,9 @@ const followFocus = useDebounceFn((modId: string) => {
           @set-color="setRowColor"
           @scope-group="scopeToGroup"
           @bulk-action="(action: BulkAction) => onBulkAction('inactive', action)"
+          @set-folded="(folder: FolderKeyDto, isCollapsed: boolean) => groupsView.setFolded('inactive', folder, isCollapsed)"
+          @drop-on-folder="dropMods"
+          @folder-action="(folder: FolderKeyDto, action: FolderAction) => groupsView.onFolderAction('inactive', folder, action)"
         >
           <template #toolbar>
             <ModFilterBar
@@ -484,6 +515,12 @@ const followFocus = useDebounceFn((modId: string) => {
             <ModSortBar
               v-model:sort="inactiveSort"
               :keys="INACTIVE_SORT_KEYS"
+            />
+            <ModViewSwitch
+              v-model:view="groupsView.inactiveView.value"
+              :is-groups-available="groups.isUsable.value"
+              @collapse-all="groupsView.collapseAll('inactive')"
+              @expand-all="groupsView.expandAll('inactive')"
             />
           </template>
           <template #actions>
@@ -511,7 +548,9 @@ const followFocus = useDebounceFn((modId: string) => {
           v-model:selected-ids="selectedActiveIds"
           kind="active"
           :mod-list="activeData"
+          :grouped="activeGrouped"
           :is-pending="activePending"
+          :is-placeholder="activePlaceholder"
           :error="activeError"
           :is-filtered="activeFilters.isFiltered.value"
           :sort-key="activeSort.key"
@@ -535,6 +574,9 @@ const followFocus = useDebounceFn((modId: string) => {
           @set-color="setRowColor"
           @scope-group="scopeToGroup"
           @bulk-action="(action: BulkAction) => onBulkAction('active', action)"
+          @set-folded="(folder: FolderKeyDto, isCollapsed: boolean) => groupsView.setFolded('active', folder, isCollapsed)"
+          @drop-on-folder="dropMods"
+          @folder-action="(folder: FolderKeyDto, action: FolderAction) => groupsView.onFolderAction('active', folder, action)"
         >
           <template #toolbar>
             <ModFilterBar
@@ -546,6 +588,12 @@ const followFocus = useDebounceFn((modId: string) => {
             <ModSortBar
               v-model:sort="activeSort"
               :keys="ACTIVE_SORT_KEYS"
+            />
+            <ModViewSwitch
+              v-model:view="groupsView.activeView.value"
+              :is-groups-available="groups.isUsable.value"
+              @collapse-all="groupsView.collapseAll('active')"
+              @expand-all="groupsView.expandAll('active')"
             />
           </template>
           <template #notes>

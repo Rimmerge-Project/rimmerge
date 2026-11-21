@@ -620,6 +620,49 @@ selection and lists the groups:
   or makes it top level, a row's ⋮ menu **Groups…** adds that one mod to
   groups, and to add a whole selection, select the rows and use the bulk
   actions' **Add to group…**.
+- **Groups view.** Each list has a **List | Groups** switch under its sort
+  buttons. **Groups** shows the same mods as folders: your group tree, each
+  folder with its colour icon, its name and how many mods it holds (counting its
+  subfolders, each mod once). Inside a folder its subfolders come first, then its
+  own mods in the list's sort order, and **Not in a group** comes last (only
+  when it holds mods). A mod in two groups appears under each, with an "also in
+  1" mark whose tooltip names the other groups. Selection is per mod: ticking
+  either copy ticks both. Rows keep their load-order number on the Active list.
+  The two lists switch separately, and the choice is not remembered after you
+  restart or load another project. Groups view needs a usable groups file; while
+  it is not, the switch says so and stays on List.
+  - **Folding.** Click a folder, or use the keys, to fold it (its mods leave
+    the screen, its count stays). **Collapse all** and **Expand all** sit beside
+    the switch. Each list remembers its own folded folders per profile on this
+    computer, and a folder you delete drops out of the memory.
+  - **Keys.** The list is one tab stop. Up, Down, Home and End move across
+    headers and mods. On a folder, Right opens a folded one or enters an open
+    one, Left folds an open one or goes to the folder above, and Enter or Space
+    toggles it. On a mod, Left goes to its folder, Enter opens the info panel and
+    Space selects it. Shift with Up or Down, or Space, selects a range over the
+    rows you can see (a folder header adds nothing, and a mod seen twice counts
+    once). Ctrl+A selects every mod the filter matches, including mods inside
+    folded folders. The menu key (or Shift+F10) opens a folder's menu. For
+    screen readers the list is a tree grid: every row has a level, and folders
+    say whether they are open.
+  - **Folder menu** (the ⋮ button on a folder): **Select all in folder** (every
+    mod in it and its subfolders that the list's search, tag and source filters
+    match, folded or not), **Activate all…** and **Deactivate all…** (the same
+    dialogs as the group menu in the Groups panel). **Not in a group** offers
+    only the selection.
+  - **Dragging onto a folder.** Drop rows on a folder's header to add them to
+    that group. A drop only adds: it never activates, deactivates or moves a mod,
+    even for an Inactive mod dropped on a folder in the Active list. Dropping on
+    **Not in a group** is refused, with the reason on screen. A folded folder
+    opens after a drag has hovered it for a moment.
+  - **Moving is off.** The Active list cannot be reordered in Groups view (a
+    note says so, the row menu's Move entries are disabled and Alt+Arrow does
+    nothing); switch to List to move mods. Dragging an Inactive mod to the
+    Active list outside a folder header still activates it at the end.
+  - **Empty folders** show with 0 while the list has no search, tag or source
+    filter, and are left out when it has one. When nothing matches, the list says
+    so. A very large library is cut at 10,000 lines; a note says how many lines
+    are not shown, and folding folders or searching brings the rest back.
 - If `organization.json` cannot be read, a notice says so and groups are
   read-only. If another program only has the file open, **Rescan and try
   again** reads it again (it is a full rescan of your mods, the only thing that

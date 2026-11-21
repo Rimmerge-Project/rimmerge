@@ -3,24 +3,27 @@ import { computed, useTemplateRef, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
 import ModBulkBar from "@/components/mods/ModBulkBar.vue";
+import ModGroupsTable from "@/components/mods/ModGroupsTable.vue";
 import ModListStatus from "@/components/mods/ModListStatus.vue";
 import ModSelectionBar from "@/components/mods/ModSelectionBar.vue";
-import ModTable, {
-  type DropMode,
-  type MenuAction,
-  type RowMenu,
-} from "@/components/mods/ModTable.vue";
+import ModTable from "@/components/mods/ModTable.vue";
 import { useModSelection } from "@/composables/useModSelection";
 import type { ColorTokenDto } from "@/types/generated/ColorTokenDto";
+import type { FolderKeyDto } from "@/types/generated/FolderKeyDto";
+import type { GroupedModListDto } from "@/types/generated/GroupedModListDto";
 import type { ListSortKeyDto } from "@/types/generated/ListSortKeyDto";
 import type { ModListDto } from "@/types/generated/ModListDto";
 import type { ModListRowDto } from "@/types/generated/ModListRowDto";
+import { rangeLineOf, treeRows } from "@/utils/groupedEntries";
+import type { DropMode, FolderAction, MenuAction, RowMenu } from "@/utils/modRowMenu";
 import type { BulkAction } from "@/utils/organization";
 
 const {
   kind,
   modList,
+  grouped = undefined,
   isPending,
+  isPlaceholder,
   error,
   isFiltered,
   showActiveColumns = true,
@@ -39,7 +42,17 @@ const {
   kind: "active" | "inactive";
   /** The query's current list; `undefined` until the first response. */
   modList: ModListDto | undefined;
+  /**
+   * The Groups view's answer, set only while the pane shows Groups (its `items` are `modList`'s):
+   * the pane then draws the folder table instead of the flat one.
+   */
+  grouped?: GroupedModListDto | undefined;
   isPending: boolean;
+  /**
+   * The rows are the previous query's answer, kept on screen while the current one loads. They are
+   * not yet the whole list even when `isFiltered` is false, so nothing is pruned from the selection.
+   */
+  isPlaceholder: boolean;
   error: Error | null;
   /**
    * Whether the list query carries a search/tag/source/group filter. An unfiltered
@@ -85,6 +98,12 @@ const emit = defineEmits<{
   scopeGroup: [groupId: number];
   /** An organization or tag action on this list's whole selection (hidden-by-filter mods included). */
   bulkAction: [action: BulkAction];
+  /** Groups view: a folder was folded (`true`) or opened (`false`). */
+  setFolded: [folder: FolderKeyDto, isCollapsed: boolean];
+  /** Groups view: mods were dropped on a group's folder header. */
+  dropOnFolder: [groupId: number];
+  /** Groups view: a choice in a folder's menu. */
+  folderAction: [folder: FolderKeyDto, action: FolderAction];
 }>();
 const selectedIds = defineModel<string[]>("selectedIds", { required: true });
 defineSlots<{
@@ -107,15 +126,25 @@ const rows = computed<ModListRowDto[] | null>(() =>
   isPending || error || modList === undefined ? null : modList.items,
 );
 
-const selection = useModSelection({ selectedIds, rows: () => rows.value ?? [] });
+// In Groups view a mod is a row under each of its folders, so a Shift range runs over the lines as
+// they stand on screen (headers included, selecting nothing), while the counts stay per mod.
+const rangeLine = computed(() =>
+  grouped === undefined ? undefined : rangeLineOf(treeRows(grouped.entries)),
+);
+const selection = useModSelection({
+  selectedIds,
+  rows: () => rows.value ?? [],
+  rangeLine,
+});
 
 // An unfiltered response is the whole list, so an id missing from it left the
 // list (activated elsewhere, gone after a rescan). Under a filter a missing id
-// is only hidden, and stays selected.
+// is only hidden, and stays selected. A placeholder is the previous (possibly filtered) answer, so
+// it waits: the watch runs again when the real answer lands.
 watch(
-  () => [rows.value, isFiltered] as const,
-  ([current, filtered]) => {
-    if (current !== null && !filtered) {
+  () => [rows.value, isFiltered, isPlaceholder] as const,
+  ([current, filtered, isStale]) => {
+    if (current !== null && !filtered && !isStale) {
       selection.pruneToShown();
     }
   },
@@ -164,8 +193,45 @@ defineExpose({ focusRow });
       :has-organization-actions="hasOrganizationActions"
       @action="(action: BulkAction) => emit('bulkAction', action)"
     />
+    <ModGroupsTable
+      v-if="rows && grouped"
+      ref="table"
+      :grouped="grouped"
+      :selected-ids="selectedIds"
+      :show-active-columns="showActiveColumns"
+      :show-updated="sortKey === 'lastUpdated'"
+      :show-position="showPosition"
+      :open-mod-id="openModId"
+      :draggable="draggable"
+      :dragging-ids="draggingIds"
+      :drop-mode="dropMode"
+      :refused-text="refusedText"
+      :row-menu="rowMenu"
+      :has-organization-actions="hasOrganizationActions"
+      :reorder-blocked-reason="reorderBlockedReason"
+      :is-filtered="isFiltered"
+      @anchor-row="selection.setAnchor"
+      @toggle-select="selection.toggle"
+      @range-select="selection.selectRange"
+      @extend-select="selection.extendSelection"
+      @select-all="selection.selectAllShown"
+      @clear-selection="selection.clear"
+      @select-mod="(modId: string) => emit('selectMod', modId)"
+      @focus-mod="(modId: string) => emit('focusMod', modId)"
+      @drag-start="(modId: string) => emit('dragStart', modId)"
+      @drag-end="emit('dragEnd')"
+      @drop="(slot: number) => emit('drop', slot)"
+      @move-step="(modId: string, direction: 'up' | 'down') => emit('moveStep', modId, direction)"
+      @menu-action="(modId: string, action: MenuAction) => emit('menuAction', modId, action)"
+      @toggle-active="(modId: string) => emit('toggleActive', modId)"
+      @set-color="(modId: string, color: ColorTokenDto | null) => emit('setColor', modId, color)"
+      @scope-group="(groupId: number) => emit('scopeGroup', groupId)"
+      @set-folded="(folder: FolderKeyDto, isCollapsed: boolean) => emit('setFolded', folder, isCollapsed)"
+      @drop-on-folder="(groupId: number) => emit('dropOnFolder', groupId)"
+      @folder-action="(folder: FolderKeyDto, action: FolderAction) => emit('folderAction', folder, action)"
+    />
     <ModTable
-      v-if="rows"
+      v-else-if="rows"
       ref="table"
       :mods="rows"
       selectable

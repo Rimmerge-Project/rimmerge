@@ -1,8 +1,7 @@
 import { ref, watch } from "vue";
-
-import type { DropMode } from "@/components/mods/ModTable.vue";
 import { useDragAutoScroll } from "@/composables/useDragAutoScroll";
 import { ROW_DRAG_TYPE } from "@/utils/groupDrop";
+import type { DropMode } from "@/utils/modRowMenu";
 
 /** What a drag tells the table's caller. */
 export interface RowDragActions {
@@ -65,7 +64,8 @@ export function useRowDrag({
       // Some engines refuse to start a drag with no data. A private type, not text, so the drop
       // targets that take mods can tell this drag from a file or text dragged in from elsewhere.
       event.dataTransfer.setData(ROW_DRAG_TYPE, modId);
-      event.dataTransfer.effectAllowed = "move";
+      // `copyMove`: a row dropped on a group folder is added to it (a copy), anywhere else it moves.
+      event.dataTransfer.effectAllowed = "copyMove";
     }
     actions.dragStart(modId);
   }
@@ -138,5 +138,6 @@ export function useRowDrag({
     onDragOver,
     onDragLeave,
     onDrop,
+    clearHover,
   };
 }

@@ -295,7 +295,24 @@ function dragGroup(target: { element: Element }, type: string): boolean {
   return drag(target, type, [GROUP_DRAG_TYPE]);
 }
 
+/** The `dropEffect` the tree set on a dragover carrying `types`. */
+function dropEffectOf(target: { element: Element }, types: string[]): string | undefined {
+  const dataTransfer = { types, dropEffect: undefined as string | undefined };
+  const event = new Event("dragover", { bubbles: true, cancelable: true });
+  Object.defineProperty(event, "dataTransfer", { value: dataTransfer });
+  target.element.dispatchEvent(event);
+  return dataTransfer.dropEffect;
+}
+
 describe("GroupTree drops", () => {
+  it("shows the copy cursor for mods (an add) and the move cursor for a group (a reparent)", () => {
+    const { wrapper } = mountTree({ rowDrag: { count: 2 }, expanded: [1] });
+
+    expect(dropEffectOf(item(wrapper, "group-5"), [ROW_DRAG_TYPE])).toBe("copy");
+    drag(item(wrapper, "group-4"), "dragstart");
+    expect(dropEffectOf(item(wrapper, "all"), [GROUP_DRAG_TYPE])).toBe("move");
+  });
+
   it("accepts mods dragged onto a group, says what it would do, and emits the drop", async () => {
     const { wrapper } = mountTree({ rowDrag: { count: 12 } });
 

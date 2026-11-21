@@ -428,6 +428,36 @@ of that command surface — no direct filesystem or process access outside
   one save, and the outcome's `members` is the count the toast reports (never counted in Vue); the
   dialogs offer it only when no group has that exact name (case-insensitive), and the backend still
   decides sibling clashes and limits.
+- **Groups view (#54) is a second table over the backend's own layout, never a branch in
+  `ModTable`.** Each pane's view (`usePaneViews`, page-local, back to List on a project switch
+  and while organization is unusable) picks its query in `usePaneList` (only the current view's
+  query is enabled); the backend answers `GroupedModListDto` (`entries` plus the rows once in
+  `items`, `reorderable: false`) and `ModGroupsTable.vue` only draws it: a virtualized
+  `role="treegrid"` at a fixed 40 px with `aria-level` on every row, `aria-expanded` on headers
+  only and `aria-selected` on mod rows only. Placement, counts, which folders show and what a fold
+  hides are the backend's (`entries`, `matched`, `isCollapsed`); Vue never derives folder
+  membership. Rows are keyed by **entry key** (`f:<id>`/`f:u`/`m:<folder>:<modId>`,
+  `utils/groupedEntries.ts`), since one mod can appear in several folders: roving focus
+  (`useTreeRowKeys`), the `data-entry-key`/`mod-entry-<folder>-<modId>` test ids and a Shift range
+  use it, while **selection, counts, Select all, drag sets and the info panel stay per mod id**
+  (`useModSelection`'s optional `rangeLine`, headers in the line with `modId: null`; the List view
+  passes none and is unchanged). The mod `data-testid`s inside a row (`mod-row-select-<id>`,
+  `mod-row-name-<id>`, ...) repeat across copies: scope them through the entry. `ModRowCells`,
+  `ModRowMenu`, `useRowPointer` and the menu types and `hasRowMenuFor`/`isDirectActivateFor` in
+  `utils/modRowMenu.ts` are shared with `ModTable`; `ModFolderMenu` is the headers' one menu, and
+  `useGroupsView` holds the page's wiring (views, folds, prune, folder actions). While a pane's
+  rows are a placeholder (`usePaneList`'s `isPlaceholder`) nothing prunes the selection. Folds are
+  request input
+  (`useGroupsCollapse`: `localStorage` key `rimmerge.groupsView.collapsed.v1:<profileDir>`, one
+  array per pane, parsed with a bound and falling back to nothing folded, pruned to known group
+  ids once organization is loaded, every access in `try`/`catch`), sent sorted so the same set is
+  the same cache entry. A header takes a mod drag whatever the pane's drop mode
+  (`useFolderDropTarget`): a group's header is `useGroupDrop.dropMods` (organization edit only,
+  never a position or an activation, D12), "Not in a group" refuses, a folded header opens after
+  800 ms; `useRowDrag` offers `copyMove` so the header can say `copy`. "Select all in folder"
+  (`useFolderSelect`) asks the pane's own list query again with the folder as the group filter
+  and adds the returned ids; Activate/Deactivate all are `useGroupScopeActions`. Moving is off in
+  Groups view with its own wording (`useModReorder`'s `isActiveGrouped`), not the sort's.
 - **Drag and drop is native HTML5, with no dependency, and the page owns the
   drag.** `useModReorder` holds the one `DragState` (source list, moving ids,
   whether Core is among them) and answers `dropModeFor(list)`: `position` (a line
