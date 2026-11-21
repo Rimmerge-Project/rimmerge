@@ -25,7 +25,6 @@ fn rule_set_dto(session: &Session) -> RuleSetDto {
     RuleSetDto {
         warnings: session
             .rule_load_warnings()
-            .iter()
             .map(ToString::to_string)
             .collect(),
         ..session.rules().into()
@@ -488,5 +487,44 @@ mod tests {
         .expect("a no-op promote still returns Ok");
 
         assert!(result.pairs.is_empty());
+    }
+
+    /// A rule or decision edit must never wait behind a scan: it takes only
+    /// the session lock, so the swap that re-reads the files is the one
+    /// place that can see an edit made mid-scan.
+    #[tokio::test]
+    async fn rule_and_decision_commands_never_wait_on_the_load_lock() {
+        let (_temp_dir, session) = session_fixture_with_temp_paths(&["a", "b"]);
+        let state = AppState::default();
+        *state.session.write().expect("lock") = Some(session);
+        let scan_in_progress = state.load_lock.lock().await;
+        let rule = RuleDto::Pair(PairRuleDto {
+            after: "a".to_string(),
+            before: "b".to_string(),
+            origin: RuleOriginDto::UserDecision,
+            comment: None,
+            promoted_from: None,
+            already_promoted: false,
+            overrides_declared: false,
+        });
+        let decision = crate::dto::finding::DecideRequestDto {
+            key: "unsupported_version:a".to_string(),
+            action: crate::dto::finding::ActionDto::Ignore,
+            note: None,
+        };
+
+        let outcome = tokio::time::timeout(std::time::Duration::from_secs(5), async {
+            upsert_rule_inner(&state, rule).await?;
+            crate::commands::findings::decide_inner(&state, decision).await
+        })
+        .await;
+
+        drop(scan_in_progress);
+        assert!(
+            outcome
+                .expect("the commands must not wait for the load lock")
+                .is_ok(),
+            "both commands succeed while a scan holds the load lock"
+        );
     }
 }

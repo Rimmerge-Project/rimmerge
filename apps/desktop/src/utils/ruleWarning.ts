@@ -2,6 +2,7 @@ import { formatList } from "@/i18n/format";
 import type { Translate } from "@/i18n/messageDescriptor";
 import { descriptor, type MessageDescriptor, renderMessage } from "@/i18n/messageDescriptor";
 import type { ModKnowledgeValueKindDto } from "@/types/generated/ModKnowledgeValueKindDto";
+import type { PersistedKindDto } from "@/types/generated/PersistedKindDto";
 import type { RuleWarningDto } from "@/types/generated/RuleWarningDto";
 import { assertNever } from "@/utils/assertNever";
 
@@ -30,6 +31,14 @@ const KNOWLEDGE_VALUE_MESSAGES = {
   idTooLong: { sentence: "ruleWarning.refusedRow.idTooLong" },
   templateUncompilable: { sentence: "ruleWarning.refusedRow.templateUncompilable" },
 } as const satisfies Record<ModKnowledgeValueKindDto, KnowledgeValueMessage>;
+
+/** The sentence for a saved file that could not be re-read after a scan, one whole key per file. */
+const RELOAD_FAILED_MESSAGES = {
+  decisions: "ruleWarning.reloadFailed.decisions",
+  rules: "ruleWarning.reloadFailed.rules",
+  patches: "ruleWarning.reloadFailed.patches",
+  assignments: "ruleWarning.reloadFailed.assignments",
+} as const satisfies Record<PersistedKindDto, string>;
 
 function describeUnknownValue(
   kind: ModKnowledgeValueKindDto,
@@ -75,6 +84,8 @@ export function describeRuleWarning(warning: RuleWarningDto, locale: string): Me
       });
     case "modKnowledgeCacheUnreadable":
       return descriptor("ruleWarning.modKnowledgeCacheUnreadableHeadline");
+    case "persistedReloadFailed":
+      return descriptor(RELOAD_FAILED_MESSAGES[warning.file]);
     default:
       return assertNever(warning);
   }
@@ -84,6 +95,7 @@ export function describeRuleWarning(warning: RuleWarningDto, locale: string): Me
 export function ruleWarningTechnicalDetail(warning: RuleWarningDto): string | null {
   switch (warning.kind) {
     case "modKnowledgeCacheUnreadable":
+    case "persistedReloadFailed":
       return warning.reason;
     case "droppedClusterRules":
     case "unknownModKnowledgeValue":

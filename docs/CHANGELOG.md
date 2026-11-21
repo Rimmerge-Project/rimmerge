@@ -3,6 +3,19 @@
 This changelog starts at the first public release. Development history
 before that point is not summarized here.
 
+## Unreleased
+
+- **Fixed: a rule or decision saved while a rescan, a load or an import was
+  running could be lost.** Rimmerge reads your rules, decisions, patches and
+  patch maker projects from disk while it scans, and then swaps the scanned
+  copy in. A rule, decision, patch or patch maker edit saved in between was
+  in the file but missing from the new copy, and the next save wrote the
+  stale copy over it. The swap now reads those files again just before it
+  replaces the old copy, so the edit is kept and the order is sorted again
+  only when something really changed. If one of the files cannot be read
+  again, Rimmerge keeps what the scan read and shows a notice saying that an
+  edit made during the scan may be missing.
+
 ## [1.2.6] - 2026-11-20
 
 - **New: import a load order from a RimWorld save.** The Load order page's

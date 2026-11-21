@@ -101,6 +101,18 @@ interface apps.
   the sorter and the ledger never read; its file is
   `<profile>/organization.json`, behind `ports::OrganizationStore`. A fact
   that changes the load order is not organization: that is a rule.
+- Anything the desktop reads while a scan runs and a swap could drop → read
+  it again under the session write lock, just before the swap
+  (`Session::reload_persisted` for the rules, decisions, patches and
+  assignments, `Session::reload_organization` for the organization). A scan
+  builds its session outside that lock and every edit saves while holding
+  it, so an edit saved during the scan is on disk by the swap. The sort and
+  the ledger are recomputed once, and only when the rules or decisions
+  changed; a file that cannot be re-read keeps the scanned copy and adds a
+  load warning (`RulesLoadWarning::PersistedReloadFailed`), never failing the
+  swap. Each swap reads the four stores under the session write lock, so the
+  cost scales with the user's own patch and assignment count, the same
+  precedent as the organization reload.
 - A new notice → a `Notification` variant, its `NotificationKind` (the
   declaration order is display priority) and a rule in
   `rim-session::notifications::evaluate`; the kind's on-disk spelling in

@@ -245,6 +245,12 @@
     "modKnowledgeCacheUnreadableHeadline": "Couldn't read the cached Rimmerge rules; using the bundled snapshot",
     "rowsOverRoleLimit": "Ignored {count} row over the per-role limit for the {role} role in the {section} rules | Ignored {count} rows over the per-role limit for the {role} role in the {section} rules",
     "precedenceRuleMissingFramework": "Ignored the precedence rule for {defType}: it names no framework",
+    "reloadFailed": {
+      "decisions": "Couldn't re-read your saved decisions after the scan, so a decision made while it ran may be missing",
+      "rules": "Couldn't re-read your saved rules after the scan, so a rule changed while it ran may be missing",
+      "patches": "Couldn't re-read your saved compatibility patches after the scan, so a change made while it ran may be missing",
+      "assignments": "Couldn't re-read your saved patch maker projects after the scan, so a change made while it ran may be missing"
+    },
     "what": {
       "precedenceRule": "precedence rule",
       "behaviour": "behaviour",

@@ -864,7 +864,19 @@ through `ports::OrganizationStore` (`rim-io`'s `JsonOrganizationStore`).
   rescan swap): every organization edit saves while holding that lock, so
   an edit that landed after `LoadProject` read the file is on disk by then
   and the swap cannot drop it (and the next save cannot erase it). A
-  `NotLoaded` session is left alone. `set_organization_state` is
+  `NotLoaded` session is left alone. The rules, decisions, patches and
+  assignments are re-read the same way by `Session::reload_persisted` (the
+  desktop calls it through `reload_persisted_state`, right after
+  `reload_organization`): it sets what differs, calls `recompute_sort` once
+  and only when rules or decisions changed, drops the scoped ledger and previews of
+  only the patches that were added, removed or changed (an unchanged patch
+  keeps its caches) or the assignment coverage cache. `rule_load_warnings()`
+  chains three separate fields in a fixed order (the rules file's own
+  warnings, the reload failures, the mod-knowledge notes), so a reload
+  replaces its own group and no setter order can misfile one. A store that
+  fails to re-read keeps the scanned copy and adds
+  `RulesLoadWarning::PersistedReloadFailed`; a failed rules re-read also
+  keeps the scan's rules-file warnings. `set_organization_state` is
   crate-private (fixtures in other crates use
   `test_support::set_organization_state`). Errors split by origin: an edit
   reports `OrganizationError`, reading a document reports

@@ -3,7 +3,7 @@
 
 use rim_session::ProjectPaths;
 use rim_session::ports::{
-    ModKnowledgeValueKind, RulesLoadWarning, ScanProgress, ScanProgressStage,
+    ModKnowledgeValueKind, PersistedKind, RulesLoadWarning, ScanProgress, ScanProgressStage,
 };
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
@@ -256,6 +256,52 @@ pub enum RuleWarningDto {
         /// line only.
         reason: String,
     },
+    /// See [`RulesLoadWarning::PersistedReloadFailed`].
+    PersistedReloadFailed {
+        /// Which saved file could not be re-read.
+        file: PersistedKindDto,
+        /// The underlying error's English text — a technical-details
+        /// line only.
+        reason: String,
+    },
+}
+
+/// Which saved file a re-read failed on. Mirrors [`PersistedKind`]; the
+/// frontend renders the sentence.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export, export_to = "../../src/types/generated/")]
+pub enum PersistedKindDto {
+    /// The decisions file.
+    Decisions,
+    /// The rules file.
+    Rules,
+    /// The compat patch projects.
+    Patches,
+    /// The assignment (patch maker) projects.
+    Assignments,
+}
+
+impl From<PersistedKind> for PersistedKindDto {
+    fn from(value: PersistedKind) -> Self {
+        match value {
+            PersistedKind::Decisions => Self::Decisions,
+            PersistedKind::Rules => Self::Rules,
+            PersistedKind::Patches => Self::Patches,
+            PersistedKind::Assignments => Self::Assignments,
+        }
+    }
+}
+
+impl ProjectSummaryDto {
+    /// Replaces the summary's rule warnings with `warnings`: the ones the
+    /// session had after the swap's re-read of the persisted files, which
+    /// may differ from the ones the scan read.
+    #[must_use]
+    pub(crate) fn with_rule_warnings(mut self, warnings: &[RulesLoadWarning]) -> Self {
+        self.rule_warnings = warnings.iter().map(RuleWarningDto::from).collect();
+        self
+    }
 }
 
 impl From<&RulesLoadWarning> for RuleWarningDto {
@@ -289,6 +335,12 @@ impl From<&RulesLoadWarning> for RuleWarningDto {
             }
             RulesLoadWarning::ModKnowledgeCacheUnreadable(reason) => {
                 Self::ModKnowledgeCacheUnreadable {
+                    reason: reason.clone(),
+                }
+            }
+            RulesLoadWarning::PersistedReloadFailed { kind, reason } => {
+                Self::PersistedReloadFailed {
+                    file: (*kind).into(),
                     reason: reason.clone(),
                 }
             }
@@ -545,6 +597,22 @@ mod tests {
             RuleWarningDto::from(&missing),
             RuleWarningDto::PrecedenceRuleMissingFramework {
                 def_type: "example.PartDef".to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn a_failed_re_read_names_its_file_and_keeps_the_reason_for_the_details_line() {
+        let warning = RulesLoadWarning::PersistedReloadFailed {
+            kind: PersistedKind::Patches,
+            reason: "disk gone".to_string(),
+        };
+
+        assert_eq!(
+            RuleWarningDto::from(&warning),
+            RuleWarningDto::PersistedReloadFailed {
+                file: PersistedKindDto::Patches,
+                reason: "disk gone".to_string(),
             }
         );
     }

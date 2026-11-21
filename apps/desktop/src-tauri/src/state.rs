@@ -13,12 +13,12 @@ use rim_io::{
     ModsConfigFileStore, RmlFileStore,
 };
 pub use rim_io::{GameProcessProbe, SysinfoGameProcessProbe};
-use rim_session::Session;
 use rim_session::mod_info::ExternalUrl;
 use rim_session::ports::{
     AssetLocator, DefSourceReader, GameLauncher, ModAboutReader, ModTimestampReader,
-    OrganizationStore, ReleaseFeed,
+    OrganizationStore, ReleaseFeed, RulesLoadWarning,
 };
+use rim_session::{PersistedStores, Session};
 use tauri::async_runtime::spawn_blocking;
 use tokio::sync::Mutex as AsyncMutex;
 
@@ -382,30 +382,58 @@ where
     })
 }
 
-/// Replaces the loaded session with `session`, on a blocking thread for
-/// the same reason [`with_session`] does.
+/// Brings a freshly built `session` level with what is on disk now:
+/// the organization, then the rules, decisions, patches and assignments
+/// ([`Session::reload_persisted`]).
 ///
-/// The new session's organization is re-read from its store **under the
-/// write lock, just before the swap**. The session was built (and its
-/// organization read) outside the lock, possibly seconds earlier; every
-/// organization edit saves while holding this lock, so an edit that landed
-/// in between is on disk by now, and this read picks it up instead of the
-/// swap dropping it from memory (where the next save would erase it from
-/// disk).
+/// Call it **under the session write lock, just before the session is
+/// swapped in**. The session was built (and these files read) outside the
+/// lock, possibly seconds earlier; every edit saves while holding that
+/// lock, so an edit that landed in between is on disk by now, and this
+/// read picks it up instead of the swap dropping it from memory (where the
+/// next save would erase it from disk). A file that cannot be re-read keeps
+/// the scanned copy and adds a load warning; this never fails.
+pub(crate) fn reload_persisted_state(session: &mut Session, adapters: &Adapters) {
+    session.reload_organization(&*adapters.organization_store);
+    let changed = session.reload_persisted(PersistedStores {
+        decisions: &adapters.decision_store,
+        rules: &adapters.rule_store,
+        patches: &adapters.patch_store,
+        assignments: &adapters.assignment_store,
+    });
+    if !changed.is_empty() {
+        tracing::info!(
+            changed = ?changed,
+            "an edit made during the scan was picked up before the swap"
+        );
+    }
+}
+
+/// Replaces the loaded session with `session`, on a blocking thread for
+/// the same reason [`with_session`] does, and returns the new session's
+/// rule load warnings (they may differ from what the scan read, see below).
+///
+/// The new session is brought level with the files on disk **under the
+/// write lock, just before the swap** ([`reload_persisted_state`]).
 ///
 /// # Errors
 ///
 /// Returns [`CommandError::internal`] when the blocking task panics.
-pub async fn replace_session(state: &AppState, session: Session) -> Result<(), CommandError> {
+pub async fn replace_session(
+    state: &AppState,
+    session: Session,
+) -> Result<Vec<RulesLoadWarning>, CommandError> {
     let session_lock = Arc::clone(&state.session);
-    let organization_store = Arc::clone(&state.adapters.organization_store);
+    let adapters = state.adapters.clone();
     spawn_blocking(move || {
         let mut session = session;
         let mut guard = session_lock
             .write()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
-        session.reload_organization(&*organization_store);
+        reload_persisted_state(&mut session, &adapters);
+        let warnings = session.rule_load_warnings().cloned().collect();
         *guard = Some(session);
+        warnings
     })
     .await
     .map_err(|join_error| {
@@ -521,6 +549,59 @@ mod tests {
             next_command.unwrap_err().code,
             crate::error::CommandErrorCode::NoProjectLoaded,
             "the next command must fail for its own honest reason, not the previous panic"
+        );
+    }
+
+    // -- `replace_session`: the swap re-reads what the scan read too early --
+
+    #[tokio::test]
+    async fn replace_session_keeps_a_rule_and_a_decision_saved_after_the_scan_read_them() {
+        let (_scratch, paths) = crate::test_support::scratch_sample_game();
+        let state = AppState::default();
+        let project_paths: rim_session::ProjectPaths = paths.into();
+        let scanned = crate::test_support::scanned_session(&state.adapters, &project_paths, None);
+        let mod_id = scanned.working().ids()[0].clone();
+        assert!(scanned.rules().placements.is_empty(), "sanity check");
+        let key =
+            crate::test_support::save_late_rule_and_decision(&project_paths.profile_dir, &mod_id);
+
+        replace_session(&state, scanned)
+            .await
+            .expect("replace_session must succeed");
+
+        let guard = state.session.read().expect("lock");
+        let live = guard.as_ref().expect("the session was swapped in");
+        assert_eq!(live.rules().placements.len(), 1, "the late rule survives");
+        assert!(
+            live.decisions().get(&key).is_some(),
+            "the late decision survives"
+        );
+    }
+
+    #[tokio::test]
+    async fn replace_session_keeps_the_scan_and_warns_when_a_file_cannot_be_re_read() {
+        let (_scratch, paths) = crate::test_support::scratch_sample_game();
+        let state = AppState::default();
+        let project_paths: rim_session::ProjectPaths = paths.into();
+        let scanned = crate::test_support::scanned_session(&state.adapters, &project_paths, None);
+        std::fs::create_dir_all(&project_paths.profile_dir).expect("profile dir");
+        std::fs::write(project_paths.profile_dir.join("rules.json"), b"{ not json")
+            .expect("corrupt the rules file");
+
+        let warnings = replace_session(&state, scanned)
+            .await
+            .expect("an unreadable file must never fail the swap");
+
+        assert!(warnings.iter().any(|warning| matches!(
+            warning,
+            RulesLoadWarning::PersistedReloadFailed {
+                kind: rim_session::ports::PersistedKind::Rules,
+                ..
+            }
+        )));
+        assert!(
+            state.session.read().expect("lock").is_some(),
+            "the scanned session is still swapped in"
         );
     }
 }

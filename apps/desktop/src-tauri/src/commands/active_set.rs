@@ -12,6 +12,7 @@
 use std::time::Instant;
 
 use rim_analyzer::domain::ModId;
+use rim_session::ports::RulesLoadWarning;
 use rim_session::use_cases::{
     ActivateMods, DeactivateMods, DiscardPendingChanges, ImportOrder, LoadProject, MoveMods,
     RevertOrderToFile, ValidatedImport,
@@ -28,7 +29,7 @@ use crate::dto::active_set::{
 use crate::dto::mod_lists::{ModListDto, ModListQueryDto};
 use crate::dto::project::{ProgressEventDto, ProjectSummaryDto, SessionChangeReasonDto};
 use crate::error::CommandError;
-use crate::state::{Adapters, AppState, with_session};
+use crate::state::{Adapters, AppState, reload_persisted_state, with_session};
 
 /// The Mods page's Inactive list: every mod on disk whose base id is not
 /// in the working set, so a mod deactivated since the last scan appears at
@@ -468,6 +469,13 @@ pub(crate) async fn rescan_project_inner(
 /// set would silently discard that change, so this refuses instead and
 /// asks for a retry.
 ///
+/// That same swap call first re-reads the organization, rules, decisions,
+/// patches and assignments from disk ([`reload_persisted_state`]), because
+/// the scan read them outside the session lock: an edit saved while it ran
+/// would otherwise be dropped from the new session and erased by its next
+/// save. The summary's `rule_warnings` are rebuilt from the swapped-in
+/// session, so they follow that re-read.
+///
 /// An import's validation happens in phase 1, with `load_lock` already
 /// held, so validate, scan and swap all happen under one `load_lock`: no
 /// other load or rescan can change the inventory the order was checked
@@ -498,27 +506,49 @@ pub(crate) async fn rescan_with(
     .await?;
     let scan_ids = scan.scan_ids(&working_ids);
 
-    let (new_session, mut summary) =
+    let (new_session, summary) =
         scan_detached(state.adapters.clone(), paths, scan_ids, on_progress).await?;
 
-    let organization_store = state.adapters.organization_store.clone();
-    let selected = with_session(state, move |session| {
+    swap_scanned(state, new_session, working_ids, scan, summary).await
+}
+
+/// Phase 3 of [`rescan_with`]: swaps `new_session` in as the live session,
+/// and returns `summary` carrying the selection it ended on and its rule
+/// load warnings.
+///
+/// Refuses (`scan.working_changed_error()`) when the live working set no
+/// longer matches `working_ids`. Before the swap it re-reads the persisted
+/// files ([`reload_persisted_state`]): the scan read them outside the
+/// session lock, and every edit saves while holding it, so an edit that
+/// landed after the scan read a file is on disk by now.
+///
+/// # Errors
+///
+/// Returns [`CommandError`] when the working set changed, when the scan does
+/// not match what was validated (an import), or when no project is loaded.
+async fn swap_scanned(
+    state: &AppState,
+    new_session: Session,
+    working_ids: Vec<ModId>,
+    scan: ValidatedScan,
+    summary: ProjectSummaryDto,
+) -> Result<ProjectSummaryDto, CommandError> {
+    let adapters = state.adapters.clone();
+    let (selected, warnings) = with_session(state, move |session| {
         if session.working().ids() != working_ids.as_slice() {
             return Err(scan.working_changed_error());
         }
         let mut new_session = new_session;
-        // Under the write lock every organization edit holds while it
-        // saves: an edit that landed after the scan read the file is on
-        // disk, and this read sees it.
-        new_session.reload_organization(&*organization_store);
+        reload_persisted_state(&mut new_session, &adapters);
         scan.select_on(&mut new_session, session)?;
         let selected = new_session.selected();
+        let warnings: Vec<RulesLoadWarning> = new_session.rule_load_warnings().cloned().collect();
         *session = new_session;
-        Ok(selected)
+        Ok((selected, warnings))
     })
     .await?;
+    let mut summary = summary.with_rule_warnings(&warnings);
     summary.selected = selected.into();
-
     Ok(summary)
 }
 
@@ -1650,5 +1680,92 @@ mod tests {
         assert!(in_order.reorderable);
         assert!(!sorted.reorderable);
         assert!(!inactive.reorderable);
+    }
+
+    // -- `swap_scanned`: the rescan swap re-reads what the scan read too early --
+
+    /// What phase 1 and 2 of a rescan hand to the swap, built by hand so a
+    /// test can save an edit between them: the scanned session itself, the
+    /// working set it was scanned from, and the validated request.
+    async fn scanned_for_swap(
+        state: &AppState,
+    ) -> (
+        rim_session::ProjectPaths,
+        Vec<ModId>,
+        ValidatedScan,
+        Session,
+    ) {
+        let (paths, working_ids, scan) = with_session(state, |session| {
+            let scan = ValidatedScan::prepare(ScanRequest::Rescan, session)?;
+            Ok((
+                session.paths().clone(),
+                session.working().ids().to_vec(),
+                scan,
+            ))
+        })
+        .await
+        .expect("a project is loaded");
+        let scanned = crate::test_support::scanned_session(
+            &state.adapters,
+            &paths,
+            Some(scan.scan_ids(&working_ids)),
+        );
+        (paths, working_ids, scan, scanned)
+    }
+
+    fn blank_summary() -> ProjectSummaryDto {
+        ProjectSummaryDto {
+            mod_count: 0,
+            game_version: String::new(),
+            elapsed_ms: 0,
+            warnings: Vec::new(),
+            rule_warnings: Vec::new(),
+            selected: rim_resolve::domain::OrderSource::Current.into(),
+        }
+    }
+
+    #[tokio::test]
+    async fn swap_scanned_keeps_a_rule_and_a_decision_saved_after_the_scan_read_them() {
+        let (_scratch, state) = loaded_sample_state().await;
+        let (paths, working_ids, scan, scanned) = scanned_for_swap(&state).await;
+        let key =
+            crate::test_support::save_late_rule_and_decision(&paths.profile_dir, &working_ids[0]);
+
+        swap_scanned(&state, scanned, working_ids, scan, blank_summary())
+            .await
+            .expect("the swap must succeed");
+
+        let guard = state.session.read().expect("lock");
+        let live = guard.as_ref().expect("a session is loaded");
+        assert_eq!(live.rules().placements.len(), 1, "the late rule survives");
+        assert!(
+            live.decisions().get(&key).is_some(),
+            "the late decision survives"
+        );
+    }
+
+    #[tokio::test]
+    async fn swap_scanned_keeps_the_scan_and_reports_a_warning_when_a_file_cannot_be_re_read() {
+        let (_scratch, state) = loaded_sample_state().await;
+        let (paths, working_ids, scan, scanned) = scanned_for_swap(&state).await;
+        let scanned_rules = scanned.rules().clone();
+        std::fs::write(paths.profile_dir.join("rules.json"), b"{ not json")
+            .expect("corrupt the rules file");
+
+        let summary = swap_scanned(&state, scanned, working_ids, scan, blank_summary())
+            .await
+            .expect("an unreadable file must never fail the swap");
+
+        assert!(matches!(
+            summary.rule_warnings.as_slice(),
+            [crate::dto::project::RuleWarningDto::PersistedReloadFailed {
+                file: crate::dto::project::PersistedKindDto::Rules,
+                ..
+            }]
+        ));
+        let guard = state.session.read().expect("lock");
+        let live = guard.as_ref().expect("the scanned session was swapped in");
+        assert_eq!(live.rules(), &scanned_rules, "the scan's rules stay");
+        assert_eq!(live.rule_load_warnings().count(), 1);
     }
 }

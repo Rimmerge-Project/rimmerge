@@ -80,7 +80,8 @@ pub use recommended_rules::{
     recommended_rules_step,
 };
 pub use session::{
-    ManualTagsChange, PatchDecideError, RuleKey, Session, UnknownAssignment, UnknownPatch,
+    ManualTagsChange, PatchDecideError, PersistedStores, RuleKey, Session, UnknownAssignment,
+    UnknownPatch,
 };
 pub use settings::{Settings, SortProvenance, filter_imported_rules};
 

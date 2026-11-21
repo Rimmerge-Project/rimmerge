@@ -7,8 +7,8 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use rim_resolve::domain::OrderSource;
-use rim_session::ProjectPaths;
 use rim_session::ports::DefSourceReader;
+use rim_session::{ProjectPaths, Session};
 use tauri::async_runtime::spawn_blocking;
 
 use crate::dto::project::{
@@ -58,7 +58,6 @@ pub(crate) fn finish_loaded_session(
     // notes" (see `ProjectSummaryDto::rule_warnings`'s own doc comment).
     let rule_warnings: Vec<RuleWarningDto> = session
         .rule_load_warnings()
-        .iter()
         .map(RuleWarningDto::from)
         .collect();
 
@@ -93,6 +92,9 @@ pub(crate) fn finish_loaded_session(
 /// session, reporting progress through `on_progress` as the scan
 /// proceeds, then replaces [`AppState::session`][crate::state::AppState::session]
 /// with it via [`replace_session`].
+///
+/// The summary's `rule_warnings` are read after that swap, so they reflect the
+/// files as the swap re-read them.
 ///
 /// Held for the whole call under [`AppState::load_lock`][crate::state::AppState::load_lock]:
 /// two concurrent loads racing to scan and then replace the session could
@@ -143,8 +145,24 @@ pub(crate) async fn load_project_inner(
         Err(CommandError::internal("background task panicked"))
     })?;
 
-    replace_session(state, session).await?;
-    Ok(summary)
+    swap_loaded(state, session, summary).await
+}
+
+/// Phase 2 of [`load_project_inner`]: swaps `session` in and returns
+/// `summary` carrying the swapped-in session's rule warnings. The swap
+/// re-reads the persisted files, so the warnings that apply are the new
+/// session's, not the ones the scan read.
+///
+/// # Errors
+///
+/// Returns [`CommandError`] when the swap's blocking task panics.
+async fn swap_loaded(
+    state: &AppState,
+    session: Session,
+    summary: ProjectSummaryDto,
+) -> Result<ProjectSummaryDto, CommandError> {
+    let warnings = replace_session(state, session).await?;
+    Ok(summary.with_rule_warnings(&warnings))
 }
 
 /// See [`load_project_inner`]; the [`tauri::AppHandle`] here only exists
@@ -467,6 +485,37 @@ mod tests {
             .expect("replace_session must succeed");
 
         assert!(state.session.read().expect("lock").is_some());
+    }
+
+    // -- `swap_loaded` --
+
+    #[tokio::test]
+    async fn swap_loaded_puts_the_swapped_sessions_warnings_on_the_summary() {
+        let (_scratch, paths) = crate::test_support::scratch_sample_game();
+        let state = AppState::default();
+        let project_paths: ProjectPaths = paths.into();
+        let mut scanned =
+            crate::test_support::scanned_session(&state.adapters, &project_paths, None);
+        let summary = finish_loaded_session(
+            &mut scanned,
+            state.adapters.def_reader.clone(),
+            Instant::now(),
+        );
+        assert!(summary.rule_warnings.is_empty(), "sanity check");
+        std::fs::write(project_paths.profile_dir.join("rules.json"), b"{ not json")
+            .expect("corrupt the rules file");
+
+        let summary = swap_loaded(&state, scanned, summary)
+            .await
+            .expect("an unreadable file must never fail the swap");
+
+        assert!(matches!(
+            summary.rule_warnings.as_slice(),
+            [RuleWarningDto::PersistedReloadFailed {
+                file: crate::dto::project::PersistedKindDto::Rules,
+                ..
+            }]
+        ));
     }
 
     // -- `load_project_inner` --

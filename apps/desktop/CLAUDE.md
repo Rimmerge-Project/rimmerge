@@ -48,10 +48,17 @@ of that command surface — no direct filesystem or process access outside
   `state.load_lock` and swap the session in with `replace_session`, which
   (like the rescan swap) re-reads the organization under the session write
   lock just before the swap, so an organization edit that landed during the
-  scan is not lost. Organization commands take only the session lock, never
-  `load_lock` (a drag must not wait on a scan). Rules and decisions have a
-  wider version of the same window (read inside `LoadProject`, outside the
-  lock); it is a known, unfixed follow-up.
+  scan is not lost. Both swaps go through `state::reload_persisted_state`,
+  which re-reads the organization and (`Session::reload_persisted`) the
+  rules, decisions, patches and assignments the scan read outside the lock;
+  the rescan's swap is `active_set::swap_scanned`. The sort and ledger are
+  recomputed once, only when rules or decisions changed, and a file that
+  cannot be re-read keeps the scanned copy and adds a
+  `persistedReloadFailed` rule warning (never fails the swap). The summary's
+  `ruleWarnings` are read from the swapped-in session (`replace_session`
+  and `swap_scanned` return them). Organization, rule and decision commands
+  take only the session lock, never `load_lock` (an edit must not wait on a
+  scan).
   `import_order` (`commands/order_share.rs`) is the rescan shape too: it is
   `rescan_with(ScanRequest::Import(order))`, so the order is validated
   (`ImportOrder::validate`, including its size bound), scanned and swapped in

@@ -167,6 +167,78 @@ pub(crate) fn scratch_sample_game() -> (tempfile::TempDir, crate::dto::project::
     (temp_dir, paths)
 }
 
+/// Scans `paths` the way the load and rescan commands do (a [`rim_session::use_cases::LoadProject`]
+/// over `adapters`), but builds nothing around the result and swaps nothing
+/// in: the session a test then holds in its hand is exactly the one a scan
+/// produces *before* the swap, so an edit the test saves afterwards is the
+/// "edit that landed while the scan ran". `active` is the active list to
+/// scan, or `None` for the file's own.
+pub(crate) fn scanned_session(
+    adapters: &crate::state::Adapters,
+    paths: &ProjectPaths,
+    active: Option<Vec<ModId>>,
+) -> Session {
+    let adapters = adapters.clone();
+    let use_case = rim_session::use_cases::LoadProject::new(
+        adapters.scanner,
+        adapters.config_store,
+        adapters.decision_store,
+        adapters.rule_store,
+        adapters.patch_store,
+        adapters.assignment_store,
+        adapters.mod_knowledge_store.clone(),
+        false,
+    )
+    .with_organization_store(adapters.organization_store.clone());
+    match active {
+        Some(active) => use_case.execute_with_active_set(paths.clone(), active, &mut |_| {}),
+        None => use_case.execute(paths.clone(), &mut |_| {}),
+    }
+    .expect("scanning the scratch sample game must succeed")
+}
+
+/// What a late edit saves: a Top placement for `mod_id` in `rules.json`
+/// and an Ignore decision on that mod's unsupported-version finding in
+/// `decisions.json`, both written through the real stores into
+/// `profile_dir`, exactly as `upsert_rule`/`decide` would have saved them.
+/// Returns the decision's key.
+pub(crate) fn save_late_rule_and_decision(
+    profile_dir: &std::path::Path,
+    mod_id: &ModId,
+) -> rim_resolve::domain::FindingKey {
+    use rim_resolve::domain::{Action, Decision, FindingKey, Placement, PlacementRule, RuleOrigin};
+    use rim_session::ports::{DecisionStore, RuleStore};
+
+    let rules = StoredRules {
+        placements: vec![PlacementRule {
+            mod_id: mod_id.clone(),
+            placement: Placement::Top,
+            origin: RuleOrigin::UserDecision,
+            comment: None,
+        }],
+        ..StoredRules::default()
+    };
+    rim_io::JsonRuleStore
+        .save(profile_dir, &rules)
+        .expect("save the late rule");
+    let key = FindingKey::UnsupportedVersion {
+        mod_id: mod_id.clone(),
+    };
+    let mut decisions = DecisionSet::new();
+    decisions
+        .insert(Decision {
+            key: key.clone(),
+            action: Action::Ignore,
+            note: None,
+            decided_at: jiff::Timestamp::UNIX_EPOCH,
+        })
+        .expect("a valid decision");
+    rim_io::JsonDecisionStore
+        .save(profile_dir, &decisions)
+        .expect("save the late decision");
+    key
+}
+
 /// A [`GameLauncher`] that never starts anything: `route` answers a
 /// scripted result and `launch` records the route it was asked to start,
 /// failing instead when a failure was scripted. The seam every
