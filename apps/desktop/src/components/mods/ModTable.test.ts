@@ -746,6 +746,31 @@ describe("ModTable", () => {
       expect(wrapper.emitted("menuAction")).toEqual([["b", "activateAt"]]);
     });
 
+    it("offers Show in load order on an Active row only when told to, and emits it", async () => {
+      const without = mountTable({ mods: THREE, rowMenu: "move" });
+      const offered = mountTable({ mods: THREE, rowMenu: "move", canShowInLoadOrder: true });
+      const inactive = mountTable({
+        mods: THREE,
+        rowMenu: "activate",
+        hasOrganizationActions: true,
+        canShowInLoadOrder: true,
+      });
+      await flushPromises();
+
+      await without.get('[data-testid="mod-row-menu-b"]').trigger("click");
+      await flushPromises();
+      expect(without.find('[data-testid="mod-show-in-load-order"]').exists()).toBe(false);
+      await offered.get('[data-testid="mod-row-menu-b"]').trigger("click");
+      await flushPromises();
+      await offered.get('[data-testid="mod-show-in-load-order"]').trigger("click");
+
+      expect(offered.emitted("menuAction")).toEqual([["b", "showInLoadOrder"]]);
+      // An Inactive row has no load-order position, so its menu never carries the entry.
+      await inactive.get('[data-testid="mod-row-menu-b"]').trigger("click");
+      await flushPromises();
+      expect(inactive.find('[data-testid="mod-show-in-load-order"]').exists()).toBe(false);
+    });
+
     it("adds Groups and Colour to the row menu only while organization is usable", async () => {
       const without = mountTable({ mods: THREE, rowMenu: "move" });
       const withOrganization = mountTable({

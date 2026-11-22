@@ -3,17 +3,21 @@ import { computed, type MaybeRefOrGetter, type Ref, watch } from "vue";
 import { useFolderSelect } from "@/composables/useFolderSelect";
 import type { useGroupScope } from "@/composables/useGroupScope";
 import { useGroupsCollapse } from "@/composables/useGroupsCollapse";
-import { type PaneView, usePaneList, usePaneViews } from "@/composables/usePaneList";
+import { usePaneList, usePaneViews } from "@/composables/usePaneList";
 import { useSessionStore } from "@/stores/session";
 import type { FolderKeyDto } from "@/types/generated/FolderKeyDto";
 import type { ModListQueryDto } from "@/types/generated/ModListQueryDto";
 import type { PaneKind } from "@/utils/groupsCollapse";
 import type { FolderAction } from "@/utils/modRowMenu";
+import type { PaneView } from "@/utils/panePrefs";
 
 /** What {@link useGroupsView} reads from the page. */
 export interface GroupsViewOptions {
   /** The group scope and organization; the Groups view needs the groups to be usable. */
-  groups: Pick<ReturnType<typeof useGroupScope>, "isUsable" | "nodes" | "dropScopeIfStale">;
+  groups: Pick<
+    ReturnType<typeof useGroupScope>,
+    "isUsable" | "isKnownUnusable" | "nodes" | "dropScopeIfStale"
+  >;
   /** Each pane's own list query (filter, scope, sort). */
   queries: Readonly<Record<PaneKind, MaybeRefOrGetter<ModListQueryDto>>>;
   /** Each pane's selection, owned by the page. */
@@ -27,10 +31,11 @@ export interface GroupsViewOptions {
 }
 
 /**
- * The Mods page's Groups view wiring: each pane's view (List or Groups, back to List while the
- * groups are not usable), its list from whichever query that view runs, the folds kept per
- * profile (pruned to the groups that still exist), and what a folder header's menu does. The page
- * keeps the panes' selections and hands in what the folder actions need.
+ * The Mods page's Groups view wiring: each pane's view (List or Groups; the remembered choice is
+ * kept, but List is shown while the groups are not usable), its list from whichever query that
+ * view runs, the folds kept per profile (pruned to the groups that still exist), and what a folder
+ * header's menu does. The page keeps the panes' selections and hands in what the folder actions
+ * need.
  */
 export function useGroupsView({
   groups,
@@ -44,19 +49,14 @@ export function useGroupsView({
   const session = useSessionStore();
   const collapse = useGroupsCollapse(() => session.paths?.profileDir ?? null);
 
+  // List is shown only once an answer says the groups cannot be used; while organization is still
+  // loading, the remembered view is kept so a restored Groups view does not flash List first.
   const activeShownView = computed<PaneView>(() =>
-    groups.isUsable.value ? activeView.value : "list",
+    groups.isKnownUnusable.value ? "list" : activeView.value,
   );
   const inactiveShownView = computed<PaneView>(() =>
-    groups.isUsable.value ? inactiveView.value : "list",
+    groups.isKnownUnusable.value ? "list" : inactiveView.value,
   );
-
-  watch(groups.isUsable, (isUsable) => {
-    if (!isUsable) {
-      activeView.value = "list";
-      inactiveView.value = "list";
-    }
-  });
 
   const active = usePaneList({
     kind: "active",
@@ -109,8 +109,14 @@ export function useGroupsView({
   }
 
   return {
-    activeView,
-    inactiveView,
+    activeView: activeShownView,
+    inactiveView: inactiveShownView,
+    setActiveView: (view: PaneView) => {
+      activeView.value = view;
+    },
+    setInactiveView: (view: PaneView) => {
+      inactiveView.value = view;
+    },
     isActiveGrouped: computed(() => activeShownView.value === "groups"),
     active,
     inactive,

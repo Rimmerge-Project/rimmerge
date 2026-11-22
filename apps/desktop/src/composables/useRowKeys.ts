@@ -4,6 +4,9 @@ import { isInert } from "@/composables/shortcutTargets";
 import type { ModListRowDto } from "@/types/generated/ModListRowDto";
 import type { RowMenu } from "@/utils/modRowMenu";
 
+/** How many animation frames {@link useRowKeys}'s `focusRow` waits for a scrolled-to row to render. */
+const FOCUS_RETRY_FRAMES = 20;
+
 /** What a row key asks the table to do; the table owns the rows' events and menus. */
 export interface RowKeyActions {
   /** Opens the mod (Enter). */
@@ -86,6 +89,9 @@ export function useRowKeys({
     focusedId.value = modId;
   }
 
+  /** The latest `focusRow` call; an older call still waiting for its row gives up. */
+  let focusRequest = 0;
+
   /** Moves roving focus by `delta` rows (±1), or to the very first/last row when `toEnd` is given. */
   async function moveFocus(delta: number, toEnd?: "start" | "end"): Promise<string | null> {
     const rows = mods();
@@ -129,18 +135,33 @@ export function useRowKeys({
    * A row that is not in the list is ignored.
    */
   async function focusRow(modId: string): Promise<void> {
+    // Counted before the early return: a call for a mod that is gone still supersedes an older
+    // call that is waiting for its row.
+    focusRequest += 1;
+    const request = focusRequest;
     const index = mods().findIndex((mod) => mod.modId === modId);
     if (index === -1) {
       return;
     }
     scrollToIndex(index);
     focusedId.value = modId;
-    // The target row may not exist in the DOM yet (virtualization) until
-    // the scroll above re-renders `visibleRows` — wait for Vue to flush
-    // that render before focusing it.
-    await nextTick();
-    const element = getScroller()?.querySelector<HTMLElement>(`[data-testid="mod-row-${modId}"]`);
-    element?.focus();
+    // The target row may not exist in the DOM yet (virtualization) until the scroll above has
+    // re-rendered `visibleRows`: wait for Vue to flush, and for a far row the virtualizer's own
+    // scroll event, which lands a frame or two later. A newer call supersedes this one.
+    for (let frame = 0; frame <= FOCUS_RETRY_FRAMES; frame++) {
+      await nextTick();
+      if (request !== focusRequest) {
+        return;
+      }
+      const element = getScroller()?.querySelector<HTMLElement>(`[data-testid="mod-row-${modId}"]`);
+      if (element) {
+        element.focus();
+        return;
+      }
+      if (frame < FOCUS_RETRY_FRAMES) {
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      }
+    }
   }
 
   /**

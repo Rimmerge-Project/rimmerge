@@ -2,7 +2,7 @@
 import { nextTick, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
 
-import type { PaneView } from "@/composables/usePaneList";
+import type { PaneView } from "@/utils/panePrefs";
 
 /**
  * One Mods pane's `List | Groups` switch (a `radiogroup`: one tab stop, arrows move and choose),

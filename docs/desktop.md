@@ -483,6 +483,27 @@ One button per criterion sorts a list; the active one shows its direction:
 
 ![The sort buttons above the Active list, Name sorted A to Z](screenshots/mods-page/sort-toggle.png)
 
+Each list remembers its own sort and its own view (List or Groups) on this
+computer, so they are back after a restart and stay when you load another
+project (like the choice between mod names and ids, it is one setting for the
+whole app). A remembered choice the app no longer knows (a sort that was
+removed, a damaged value) falls back to that list's default: the Active list
+in load order, the Inactive list by name, both as a list. A remembered sort
+changes nothing about the load order: the Active list restored on a name sort
+still says moving is off and still shows each mod's load-order number.
+
+**Show in load order** (the Active row's ⋮ menu, and the mod info panel for an
+active mod) takes the Active list back to List view in load order, scrolls to
+that mod and puts keyboard focus on its row. The Inactive list keeps its own
+sort and view, and the Active list's new view and sort are remembered like any
+other choice. The filter stays
+when the mod is still shown under it. When the filter hides the mod, the
+search, the tag, the source and the group scope are all cleared (the group
+scope belongs to both lists, so the Inactive list is no longer narrowed by it;
+the Inactive list's own search, tag and source stay) and a note above the list
+says so. The action is not offered while the list already shows load order,
+and an inactive mod has none (it is not in the load order).
+
 Rows that differ from the saved active mod list carry an Added or Removed mark
 after their name (each list is narrowed to its marked row here):
 
@@ -643,9 +664,10 @@ selection and lists the groups:
   when it holds mods). A mod in two groups appears under each, with an "also in
   1" mark whose tooltip names the other groups. Selection is per mod: ticking
   either copy ticks both. Rows keep their load-order number on the Active list.
-  The two lists switch separately, and the choice is not remembered after you
-  restart or load another project. Groups view needs a usable groups file; while
-  it is not, the switch says so and stays on List.
+  The two lists switch separately, and each remembers its choice across restarts
+  and project switches. Groups view needs a usable groups file; while it is not,
+  the switch says so and shows List (the remembered choice comes back once the
+  file can be used).
   - **Folding.** Click a folder, or use the keys, to fold it (its mods leave
     the screen, its count stays). **Collapse all** and **Expand all** sit beside
     the switch. Each list remembers its own folded folders per profile on this

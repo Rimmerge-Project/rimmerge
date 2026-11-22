@@ -452,8 +452,9 @@ of that command surface — no direct filesystem or process access outside
   dialogs offer it only when no group has that exact name (case-insensitive), and the backend still
   decides sibling clashes and limits.
 - **Groups view (#54) is a second table over the backend's own layout, never a branch in
-  `ModTable`.** Each pane's view (`usePaneViews`, page-local, back to List on a project switch
-  and while organization is unusable) picks its query in `usePaneList` (only the current view's
+  `ModTable`.** Each pane's view (`usePaneViews`, a remembered display preference, see
+  "Remembered sort and view" below; List is *shown* while organization is unusable, the
+  remembered choice is kept) picks its query in `usePaneList` (only the current view's
   query is enabled); the backend answers `GroupedModListDto` (`entries` plus the rows once in
   `items`, `reorderable: false`) and `ModGroupsTable.vue` only draws it: a virtualized
   `role="treegrid"` at a fixed 40 px with `aria-level` on every row, `aria-expanded` on headers
@@ -481,6 +482,36 @@ of that command surface — no direct filesystem or process access outside
   (`useFolderSelect`) asks the pane's own list query again with the folder as the group filter
   and adds the returned ids; Activate/Deactivate all are `useGroupScopeActions`. Moving is off in
   Groups view with its own wording (`useModReorder`'s `isActiveGrouped`), not the sort's.
+- **Remembered sort and view, and "Show in load order" (#55, #56).** Each pane's sort and view
+  live in `usePreferencesStore().panes` (one value, `localStorage` key `rimmerge.modsPanes.v1`,
+  global like the id/name toggle, so a project switch keeps them). `utils/panePrefs.ts`
+  `parsePanePrefs` parses once at read against closed sets (the pane's own sort keys, the two
+  directions, the two views); each pane stands alone and a bad entry gives that pane its default,
+  malformed JSON or an oversized value gives both, and every storage access is in `try`/`catch`.
+  `useModListSort`/`usePaneViews` are writable computeds over the store, and the restored sort goes
+  into the list query like a chosen one: `reorderable` stays the backend's answer (a restored
+  non-load-order Active sort is not reorderable, the note and the position numbers follow). The
+  forced "back to List" watcher is gone: `useGroupsView` shows List only once an answer says the
+  groups cannot be used (`useGroupScope().isKnownUnusable`: organization answered not loaded, or
+  failed), never while organization is still loading, and never overwrites the remembered view.
+  "Show in load order" (`useShowInLoadOrder`) is Active only and offered by `ModRowMenu`
+  (`canShowInLoadOrder`) and `ModInfoPanel` only when the pane is not already List + `loadOrder`
+  ascending (`isLoadOrderSort`, used for the offer only, never for reorderability). It sets view and
+  sort through the preferences, waits a tick for Colada's key watcher, then asks the List query for
+  its current answer (`usePaneList().refreshList`, Colada's `refresh`: cached rows when fresh, else
+  the fetch; never rows already on screen, since a key used earlier answers from a stale cache at
+  once and an unobserved entry is only marked stale by an invalidation; when an invalidation
+  aborts the fetch it waits for the newest call, bounded, and answers only from a `success`
+  state, as the Launch button does) and looks for the mod there:
+  present, it focuses the row (`ModTable.focusRow`, which retries over animation frames since a far
+  row renders after the virtualizer's scroll event, and gives way to a newer call); absent under a
+  filter, it clears the search, tag, source (`useModListFilters.clear`, which also skips the 300 ms
+  search debounce) and the page-wide group scope, sets the `mods-show-in-load-order-note` and asks
+  again; absent unfiltered, it ends. One request is current at a time (a token): a newer request, a
+  sort or view change away from load order, a filter the user changes meanwhile
+  (`filterSignature`, the typed inputs) or a failed query ends the older one without touching
+  anything, and leaving load order clears the note.
+  An inactive mod has no action. In overlay (drawer) mode the panel's button closes the drawer first.
 - **Copying groups from another profile** (`commands/organization_copy.rs`,
   `components/mods/organization/CopyProfileDialog.vue`, `composables/useCopyProfile.ts`) is two
   commands over `CopyOrganization`: `preview_copy_organization` (a read) and `copy_organization`

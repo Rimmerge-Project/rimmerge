@@ -13,7 +13,14 @@ export type DropMode =
 export type RowMenu = "none" | "move" | "activate";
 
 /** A row menu entry that is not a one-step move: a position, or one of the mod's own organization dialogs. */
-export type MenuAction = "top" | "bottom" | "after" | "activateAt" | "groups" | "color";
+export type MenuAction =
+  | "top"
+  | "bottom"
+  | "after"
+  | "activateAt"
+  | "groups"
+  | "color"
+  | "showInLoadOrder";
 
 /** Whether rows have a menu at all: a position entry, or the mod's own organization entries. */
 export function hasRowMenuFor(rowMenu: RowMenu, hasOrganizationActions: boolean): boolean {

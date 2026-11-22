@@ -23,6 +23,7 @@ const {
   rowMenu = "none",
   hasOrganizationActions = false,
   reorderBlockedReason = null,
+  canShowInLoadOrder = false,
 } = defineProps<{
   /** The rows the table shows, to read a row's colour and to find the neighbour a step moves past. */
   mods: readonly ModListRowDto[];
@@ -33,6 +34,8 @@ const {
   hasOrganizationActions?: boolean;
   /** Why moving is off; `null` when it is on. */
   reorderBlockedReason?: string | null;
+  /** Whether to offer "Show in load order": the Active pane, unless it already shows load order. */
+  canShowInLoadOrder?: boolean;
 }>();
 const emit = defineEmits<{
   moveStep: [modId: string, direction: "up" | "down"];
@@ -64,7 +67,10 @@ const menuItems = computed<MenuItem[]>(() => {
     return [];
   }
   // `testId` rides along on the item (a MenuItem accepts extra keys) for the item template.
-  const positionItems = rowMenu === "move" ? moveItems(modId) : activateItems(modId);
+  const positionItems =
+    rowMenu === "move"
+      ? [...moveItems(modId), ...showInLoadOrderItems(modId)]
+      : activateItems(modId);
   if (!hasOrganizationActions) {
     return positionItems;
   }
@@ -88,6 +94,19 @@ const menuItems = computed<MenuItem[]>(() => {
     ? organizationItems
     : [...positionItems, { separator: true }, ...organizationItems];
 });
+
+function showInLoadOrderItems(modId: string): MenuItem[] {
+  if (!canShowInLoadOrder) {
+    return [];
+  }
+  return [
+    {
+      label: t("mods.showInLoadOrder.action"),
+      testId: "mod-show-in-load-order",
+      command: () => emit("menuAction", modId, "showInLoadOrder"),
+    },
+  ];
+}
 
 function activateItems(modId: string): MenuItem[] {
   if (rowMenu !== "activate") {

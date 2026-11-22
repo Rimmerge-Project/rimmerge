@@ -1,4 +1,6 @@
-import { computed, type MaybeRefOrGetter, ref, toValue, watch } from "vue";
+import { useQueryCache } from "@pinia/colada";
+import { storeToRefs } from "pinia";
+import { computed, type MaybeRefOrGetter, toValue } from "vue";
 
 import {
   useInactiveModsGroupedQuery,
@@ -6,33 +8,36 @@ import {
   useWorkingModsGroupedQuery,
   useWorkingModsQuery,
 } from "@/queries/activeSet";
-import { useSessionStore } from "@/stores/session";
+import { queryKeys } from "@/queries/keys";
+import { usePreferencesStore } from "@/stores/preferences";
 import type { FolderKeyDto } from "@/types/generated/FolderKeyDto";
 import type { GroupedListQueryDto } from "@/types/generated/GroupedListQueryDto";
 import type { GroupedModListDto } from "@/types/generated/GroupedModListDto";
 import type { ModListDto } from "@/types/generated/ModListDto";
 import type { ModListQueryDto } from "@/types/generated/ModListQueryDto";
 import type { PaneKind } from "@/utils/groupsCollapse";
+import type { PaneView } from "@/utils/panePrefs";
 
-/** How a Mods pane lays its rows out: one flat list, or folders by group. */
-export type PaneView = "list" | "groups";
+/** Bound on how many newer fetches {@link usePaneList}'s `refreshList` waits behind. */
+const MAX_SUPERSEDING_FETCHES = 10;
 
 /**
- * Each pane's view. Page-local like the sort: it resets to List when another project is loaded
- * and is not saved anywhere.
+ * Each pane's remembered view (a display preference kept by the preferences store, like the sort,
+ * so it survives a restart and a project switch). Whether Groups can be shown right now is the
+ * caller's question (`useGroupsView`), not part of the preference.
  */
 export function usePaneViews() {
-  const activeView = ref<PaneView>("list");
-  const inactiveView = ref<PaneView>("list");
+  const preferences = usePreferencesStore();
+  const { panes } = storeToRefs(preferences);
 
-  const session = useSessionStore();
-  watch(
-    () => session.paths?.profileDir ?? null,
-    () => {
-      activeView.value = "list";
-      inactiveView.value = "list";
-    },
-  );
+  const activeView = computed<PaneView>({
+    get: () => panes.value.active.view,
+    set: (view) => preferences.setPaneView("active", view),
+  });
+  const inactiveView = computed<PaneView>({
+    get: () => panes.value.inactive.view,
+    set: (view) => preferences.setPaneView("inactive", view),
+  });
 
   return { activeView, inactiveView };
 }
@@ -91,5 +96,43 @@ export function usePaneList({
     isGrouped.value ? groupedResult.error.value : listResult.error.value,
   );
 
-  return { data, grouped, isPending, isPlaceholder, error };
+  const queryCache = useQueryCache();
+
+  /** The call now fetching this pane's List entry, if any. */
+  function pendingListCall() {
+    const key =
+      kind === "active"
+        ? queryKeys.workingMods(toValue(query))
+        : queryKeys.inactiveMods(toValue(query));
+    return queryCache.get(key)?.pending ?? null;
+  }
+
+  /**
+   * The List query's answer once it is current: Colada's `refresh` returns the cached rows when
+   * they are fresh and otherwise the fetch (an entry nobody observes is only marked stale by an
+   * invalidation, and its old rows show at once on a key switch). Colada (1.4.5) aborts a fetch
+   * when a newer one starts on the same entry (an invalidation) and resolves the aborted call with
+   * the entry's OLD state, still `success`; so after our own refresh this waits for every call
+   * still pending on the entry (bounded) and reads the entry, as `useGameLaunch`'s
+   * `readFreshStatus` does. `null` unless the entry ends in `success`: an error state keeps the
+   * previous rows, which are not the answer.
+   */
+  async function refreshList(): Promise<ModListDto | null> {
+    await listResult.refresh();
+    for (let attempt = 0; attempt < MAX_SUPERSEDING_FETCHES; attempt++) {
+      const newer = pendingListCall();
+      if (newer === null) {
+        break;
+      }
+      await newer.refreshCall.catch(() => undefined);
+    }
+    // Still superseded after every retry: the held rows may be the old answer, so act on none.
+    if (pendingListCall() !== null) {
+      return null;
+    }
+    const state = listResult.state.value;
+    return state.status === "success" ? state.data : null;
+  }
+
+  return { data, grouped, isPending, isPlaceholder, error, refreshList };
 }

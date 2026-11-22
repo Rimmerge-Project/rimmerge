@@ -2,7 +2,7 @@ import { mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it } from "vitest";
 
 import ModViewSwitch from "@/components/mods/ModViewSwitch.vue";
-import type { PaneView } from "@/composables/usePaneList";
+import type { PaneView } from "@/utils/panePrefs";
 
 let wrappers: ReturnType<typeof mount>[] = [];
 

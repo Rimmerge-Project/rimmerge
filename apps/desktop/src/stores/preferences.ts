@@ -2,6 +2,15 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 
 import { isSupportedLocale, type StoredLocale } from "@/i18n/locales";
+import type { ListSortDto } from "@/types/generated/ListSortDto";
+import type { PaneKind } from "@/utils/groupsCollapse";
+import {
+  PANE_PREFS_STORAGE_KEY,
+  type PanePrefs,
+  type PaneView,
+  parsePanePrefs,
+  serializePanePrefs,
+} from "@/utils/panePrefs";
 
 const MOD_LABEL_MODE_KEY = "rimmerge.modLabelMode";
 const LOCALE_KEY = "rimmerge.locale";
@@ -59,18 +68,49 @@ function persistLocale(locale: StoredLocale): void {
   }
 }
 
+/** Reads the panes' preferences; a throwing `localStorage` is the same as nothing stored. */
+function readStoredPanePrefs(): PanePrefs {
+  try {
+    return parsePanePrefs(localStorage.getItem(PANE_PREFS_STORAGE_KEY));
+  } catch {
+    return parsePanePrefs(null);
+  }
+}
+
+/** Best-effort persistence, like {@link persistModLabelMode}. */
+function persistPanePrefs(prefs: PanePrefs): void {
+  try {
+    localStorage.setItem(PANE_PREFS_STORAGE_KEY, serializePanePrefs(prefs));
+  } catch {
+    // Not remembered after a restart; the in-memory choice still applies.
+  }
+}
+
 /**
  * Cross-route viewing preferences — never server data, and never anything
  * that needs to survive a different machine (that would belong in the
  * profile's settings file instead — a per-machine viewing preference is
  * what `localStorage` is for). Currently
- * the mod-id-vs-display-name toggle; `modLabelMode` is read from
+ * the mod-id-vs-display-name toggle, the language and each Mods pane's sort and view; `modLabelMode` is read from
  * `localStorage` once, at store creation ("hydrated once"), and every
  * change is persisted back immediately.
  */
 export const usePreferencesStore = defineStore("preferences", () => {
   const modLabelMode = ref<ModLabelMode>(readStoredModLabelMode());
   const locale = ref<StoredLocale>(readStoredLocale());
+  const panes = ref<PanePrefs>(readStoredPanePrefs());
+
+  /** Remembers one Mods pane's sort. */
+  function setPaneSort(kind: PaneKind, sort: ListSortDto): void {
+    panes.value = { ...panes.value, [kind]: { ...panes.value[kind], sort } };
+    persistPanePrefs(panes.value);
+  }
+
+  /** Remembers one Mods pane's view. */
+  function setPaneView(kind: PaneKind, view: PaneView): void {
+    panes.value = { ...panes.value, [kind]: { ...panes.value[kind], view } };
+    persistPanePrefs(panes.value);
+  }
 
   /** Sets the label mode explicitly, persisting the change. */
   function setModLabelMode(mode: ModLabelMode): void {
@@ -93,5 +133,14 @@ export const usePreferencesStore = defineStore("preferences", () => {
     persistLocale(value);
   }
 
-  return { modLabelMode, setModLabelMode, toggleModLabelMode, locale, setLocale };
+  return {
+    modLabelMode,
+    setModLabelMode,
+    toggleModLabelMode,
+    locale,
+    setLocale,
+    panes,
+    setPaneSort,
+    setPaneView,
+  };
 });

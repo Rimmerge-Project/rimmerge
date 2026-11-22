@@ -35,6 +35,7 @@ const {
   rowMenu = "none",
   hasOrganizationActions = false,
   reorderBlockedReason = null,
+  canShowInLoadOrder = false,
 } = defineProps<{
   mods: ModListRowDto[];
   /** Adds a checkbox column showing {@link selectedIds}; every change goes out as an event for the owner's selection. */
@@ -72,6 +73,8 @@ const {
   hasOrganizationActions?: boolean;
   /** Why moving is off (set while the list is not in load order); `null` when it is on. */
   reorderBlockedReason?: string | null;
+  /** Whether the row menu offers "Show in load order" (the Active pane while it is not already showing load order). */
+  canShowInLoadOrder?: boolean;
 }>();
 const emit = defineEmits<{
   selectMod: [modId: string];
@@ -304,6 +307,7 @@ const rowMenuRef = useTemplateRef<{ open: (event: Event, modId: string) => void 
       :row-menu="rowMenu"
       :has-organization-actions="hasOrganizationActions"
       :reorder-blocked-reason="reorderBlockedReason"
+      :can-show-in-load-order="canShowInLoadOrder"
       @move-step="(modId: string, direction: 'up' | 'down') => emit('moveStep', modId, direction)"
       @menu-action="(modId: string, action: MenuAction) => emit('menuAction', modId, action)"
       @set-color="(modId: string, color: ColorTokenDto | null) => emit('setColor', modId, color)"

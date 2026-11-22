@@ -52,6 +52,7 @@ const {
   rowMenu = "none",
   hasOrganizationActions = false,
   reorderBlockedReason = null,
+  canShowInLoadOrder = false,
   isFiltered = false,
 } = defineProps<{
   grouped: GroupedModListDto;
@@ -71,6 +72,8 @@ const {
   rowMenu?: RowMenu;
   hasOrganizationActions?: boolean;
   reorderBlockedReason?: string | null;
+  /** Whether the row menu offers "Show in load order" (the Active pane while it is not already showing load order). */
+  canShowInLoadOrder?: boolean;
   /** Whether the query carries a search, tag, source or group filter (words the empty state). */
   isFiltered?: boolean;
 }>();
@@ -456,6 +459,7 @@ function isHovered(row: FolderTreeRow): boolean {
       :row-menu="rowMenu"
       :has-organization-actions="hasOrganizationActions"
       :reorder-blocked-reason="reorderBlockedReason"
+      :can-show-in-load-order="canShowInLoadOrder"
       @move-step="(modId: string, direction: 'up' | 'down') => emit('moveStep', modId, direction)"
       @menu-action="(modId: string, action: MenuAction) => emit('menuAction', modId, action)"
       @set-color="(modId: string, color: ColorTokenDto | null) => emit('setColor', modId, color)"

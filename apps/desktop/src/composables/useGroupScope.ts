@@ -20,13 +20,20 @@ const STALE_SCOPE_CODES = new Set(["group_not_found", "organization_unavailable"
  */
 export function useGroupScope() {
   const queryCache = useQueryCache();
-  const { data: organization } = useOrganizationQuery();
+  const { data: organization, error: organizationError } = useOrganizationQuery();
   const scope = ref<GroupScopeChoice>(ALL_MODS);
 
   const nodes = computed<readonly GroupNodeDto[]>(() =>
     organization.value?.kind === "loaded" ? organization.value.groups : [],
   );
   const isUsable = computed(() => organization.value?.kind === "loaded");
+  // Unusable is an answer: a loaded-but-damaged file, or a failed read. Before the first answer
+  // nothing is known, and a remembered view must not be given up on a guess.
+  const isKnownUnusable = computed(() =>
+    organization.value === undefined
+      ? organizationError.value !== null
+      : organization.value.kind !== "loaded",
+  );
 
   watch(
     [organization, scope],
@@ -61,5 +68,5 @@ export function useGroupScope() {
     }
   }
 
-  return { organization, nodes, isUsable, scope, dropScopeIfStale };
+  return { organization, nodes, isUsable, isKnownUnusable, scope, dropScopeIfStale };
 }

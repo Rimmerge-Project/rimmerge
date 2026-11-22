@@ -43,6 +43,8 @@ const WEAPONS = node(1, "Weapons");
 const ARMOR = node(2, "Armor");
 
 let organization: OrganizationDto;
+/** Holds `get_organization` unanswered, as while the first read is still running. */
+let isOrganizationLoading = false;
 const activeQueries: ModListQueryDto[] = [];
 const inactiveQueries: ModListQueryDto[] = [];
 const calls: { command: string; payload: unknown }[] = [];
@@ -90,7 +92,7 @@ function mountPage() {
       ]);
     },
     list_mod_names: {},
-    get_organization: () => organization,
+    get_organization: () => (isOrganizationLoading ? new Promise(() => undefined) : organization),
     rescan_project: () => {
       if (afterRescan !== null) {
         organization = afterRescan;
@@ -198,7 +200,10 @@ function setViewport(width: number, height: number): void {
 
 describe("ModsPage groups", () => {
   beforeEach(() => {
+    // A sort or view remembered by an earlier test would otherwise carry into this one.
+    localStorage.clear();
     organization = { kind: "loaded", groups: [WEAPONS, ARMOR], coloredModCount: 1 };
+    isOrganizationLoading = false;
     refuseGroupFilter = null;
     afterRescan = null;
     addOutcome = { kind: "added", added: 1, already: 0 };
@@ -441,6 +446,34 @@ describe("ModsPage groups", () => {
     await flushPromises();
     expect(wrapper.find('[data-testid="mod-move-top"]').exists()).toBe(true);
     expect(wrapper.find('[data-testid="mod-menu-groups"]').exists()).toBe(false);
+  });
+
+  it("keeps the view switch usable, with no unavailable text, while organization is still loading", async () => {
+    isOrganizationLoading = true;
+
+    const wrapper = await mountAt(1900);
+
+    const switches = wrapper.findAll('[data-testid="mods-view-switch"]');
+    expect(switches).toHaveLength(2);
+    for (const viewSwitch of switches) {
+      expect(viewSwitch.get('[data-testid="mods-view-groups"]').attributes("aria-disabled")).toBe(
+        undefined,
+      );
+    }
+    expect(wrapper.find('[data-testid="mods-view-unavailable"]').exists()).toBe(false);
+  });
+
+  it("disables the Groups choice and says why once organization is known to be unusable", async () => {
+    organization = { kind: "recovered", issue: { kind: "malformed" } };
+
+    const wrapper = await mountAt(1900);
+
+    expect(
+      wrapper
+        .get('[data-testid="mods-view-switch"] [data-testid="mods-view-groups"]')
+        .attributes("aria-disabled"),
+    ).toBe("true");
+    expect(wrapper.find('[data-testid="mods-view-unavailable"]').exists()).toBe(true);
   });
 
   it("shows chips, colour and tags on rows, manual tags included on an inactive row", async () => {

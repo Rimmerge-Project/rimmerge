@@ -153,6 +153,8 @@ function pane(wrapper: Awaited<ReturnType<typeof mountAndNavigate>>, kind: "acti
 
 describe("ModsPage", () => {
   beforeEach(() => {
+    // A sort or view remembered by an earlier test would otherwise carry into this one.
+    localStorage.clear();
     // `@tanstack/vue-virtual` (via `ModTable`) — see `ModTable.test.ts`'s
     // identical comment.
     Object.defineProperty(HTMLElement.prototype, "offsetHeight", {

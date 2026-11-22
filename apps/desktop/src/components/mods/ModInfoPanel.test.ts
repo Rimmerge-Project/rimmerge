@@ -81,6 +81,7 @@ async function mountPanel(
   organization: {
     color?: "teal" | null;
     groups?: { id: number; name: string; color: null }[];
+    canShowInLoadOrder?: boolean;
   } = {},
 ) {
   installMockIpc(defaultFixtures(fixtures));
@@ -160,6 +161,43 @@ describe("ModInfoPanel", () => {
 
     expect(wrapper.find('[data-testid="mod-info-color"]').exists()).toBe(false);
     expect(wrapper.find('[data-testid="mod-info-groups"]').exists()).toBe(false);
+  });
+
+  it("offers Show in load order for an active mod when the page says it would do something, and emits the mod", async () => {
+    const wrapper = await mountPanel(
+      "fixture.mod",
+      { get_mod_info: activeModInfo() },
+      { canShowInLoadOrder: true },
+    );
+
+    await wrapper.get('[data-testid="mod-info-show-in-load-order"]').trigger("click");
+
+    expect(wrapper.emitted("showInLoadOrder")).toEqual([["fixture.mod"]]);
+  });
+
+  it("hides Show in load order when the page says it would do nothing", async () => {
+    const wrapper = await mountPanel(
+      "fixture.mod",
+      { get_mod_info: activeModInfo() },
+      { canShowInLoadOrder: false },
+    );
+
+    expect(wrapper.find('[data-testid="mod-info-show-in-load-order"]').exists()).toBe(false);
+  });
+
+  it("never offers Show in load order for an inactive mod, which has no position", async () => {
+    const inactive = {
+      ...activeModInfo(),
+      kind: "inactive",
+    } as unknown as ModInfoDto;
+    const wrapper = await mountPanel(
+      "fixture.mod",
+      { get_mod_info: inactive },
+      { canShowInLoadOrder: true },
+    );
+
+    expect(wrapper.find('[data-testid="mod-info-name"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="mod-info-show-in-load-order"]').exists()).toBe(false);
   });
 
   it("clicking the close button emits close", async () => {

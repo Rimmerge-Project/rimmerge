@@ -15,7 +15,7 @@ import { describeCommandError } from "@/utils/errors";
 import type { DropMode, MenuAction } from "@/utils/modRowMenu";
 
 /** The row menu entries that place a mod; Groups and Color are the page's own dialogs. */
-type PositionMenuAction = Exclude<MenuAction, "groups" | "color">;
+type PositionMenuAction = Exclude<MenuAction, "groups" | "color" | "showInLoadOrder">;
 
 import { anchorForSlot, anchorForStep, isNoopSlot, moveSetFor } from "@/utils/modMove";
 

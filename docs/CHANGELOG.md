@@ -5,6 +5,18 @@ before that point is not summarized here.
 
 ## Unreleased
 
+- **New: Show in load order.** From the Groups view or from any other sort, the
+  Active list's row menu and the mod info panel have a **Show in load order**
+  action. It switches the Active list to List view in load order, scrolls to the
+  mod and focuses its row. A filter that still shows the mod stays; one that
+  hides it (search, tag, source or the group scope) is cleared, and a note above
+  the list says so.
+- **New: each Mods list remembers its sort and its view.** The Active and
+  Inactive lists each come back after a restart with the sort (key and
+  direction) and the view (List or Groups) they had, and keep them when you load
+  another project. Before, both started over every time. A remembered value the
+  app no longer knows falls back to the default. A remembered sort other than
+  load order still turns reordering off and still shows the load-order numbers.
 - **New: copy groups and colours from another profile.** The Mods page's
   groups panel has a **Copy from another profile...** button. Choose the other
   profile's folder (the one holding its `organization.json`) and Rimmerge shows

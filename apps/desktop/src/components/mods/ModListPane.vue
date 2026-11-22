@@ -37,6 +37,7 @@ const {
   rowMenu = "none",
   hasOrganizationActions = false,
   reorderBlockedReason = null,
+  canShowInLoadOrder = false,
 } = defineProps<{
   /** Which list this is: names the pane's heading and its `data-testid`. */
   kind: "active" | "inactive";
@@ -81,6 +82,8 @@ const {
   hasOrganizationActions?: boolean;
   /** Passed through to {@link ModTable}: why moving is off, or `null`. */
   reorderBlockedReason?: string | null;
+  /** Whether the row menu offers "Show in load order" (the Active pane while it is not already showing load order). */
+  canShowInLoadOrder?: boolean;
 }>();
 const emit = defineEmits<{
   selectMod: [modId: string];
@@ -209,6 +212,7 @@ defineExpose({ focusRow });
       :row-menu="rowMenu"
       :has-organization-actions="hasOrganizationActions"
       :reorder-blocked-reason="reorderBlockedReason"
+      :can-show-in-load-order="canShowInLoadOrder"
       :is-filtered="isFiltered"
       @anchor-row="selection.setAnchor"
       @toggle-select="selection.toggle"
@@ -247,6 +251,7 @@ defineExpose({ focusRow });
       :row-menu="rowMenu"
       :has-organization-actions="hasOrganizationActions"
       :reorder-blocked-reason="reorderBlockedReason"
+      :can-show-in-load-order="canShowInLoadOrder"
       @anchor-row="selection.setAnchor"
       @toggle-select="selection.toggle"
       @range-select="selection.selectRange"

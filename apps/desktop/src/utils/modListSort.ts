@@ -7,6 +7,15 @@ import { assertNever } from "@/utils/assertNever";
 /** The Active list's own order: the working set as it stands. */
 export const ACTIVE_DEFAULT_SORT: ListSortDto = { key: "loadOrder", direction: "ascending" };
 
+/**
+ * Whether a sort is the Active list's own load order. Only used to decide whether to offer "Show in
+ * load order"; whether a list may be reordered is the backend's answer (`ModListDto.reorderable`),
+ * never derived from this.
+ */
+export function isLoadOrderSort(sort: ListSortDto): boolean {
+  return sort.key === ACTIVE_DEFAULT_SORT.key && sort.direction === ACTIVE_DEFAULT_SORT.direction;
+}
+
 /** The Inactive list's default, which the backend applies when no sort is sent. */
 export const INACTIVE_DEFAULT_SORT: ListSortDto = { key: "name", direction: "ascending" };
 

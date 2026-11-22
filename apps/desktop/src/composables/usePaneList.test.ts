@@ -1,18 +1,20 @@
-import { PiniaColada } from "@pinia/colada";
+import { PiniaColada, useQueryCache } from "@pinia/colada";
 import { clearMocks } from "@tauri-apps/api/mocks";
 import { flushPromises, mount } from "@vue/test-utils";
 import { createPinia } from "pinia";
 import { afterEach, describe, expect, it } from "vitest";
-import { defineComponent, nextTick, ref } from "vue";
+import { defineComponent, ref } from "vue";
 
-import { type PaneView, usePaneList, usePaneViews } from "@/composables/usePaneList";
+import { usePaneList, usePaneViews } from "@/composables/usePaneList";
+import { startInvalidation } from "@/queries/invalidation";
+import { queryKeys } from "@/queries/keys";
 import { installMockIpc } from "@/services/ipc.mock";
-import { useSessionStore } from "@/stores/session";
 import type { FolderKeyDto } from "@/types/generated/FolderKeyDto";
 import type { GroupedListQueryDto } from "@/types/generated/GroupedListQueryDto";
 import type { GroupedModListDto } from "@/types/generated/GroupedModListDto";
 import type { ModListDto } from "@/types/generated/ModListDto";
 import type { ModListQueryDto } from "@/types/generated/ModListQueryDto";
+import type { PaneView } from "@/utils/panePrefs";
 
 const LIST_QUERY: ModListQueryDto = { search: null, tag: null, source: null, sort: null };
 
@@ -173,15 +175,89 @@ describe("usePaneList", () => {
   });
 });
 
+describe("usePaneList refreshList", () => {
+  const rowsOf = (total: number): ModListDto => ({ total, items: [], reorderable: true });
+
+  function mountActive(answer: (call: number) => unknown) {
+    let calls = 0;
+    installMockIpc({
+      list_working_mods: () => {
+        calls += 1;
+        return answer(calls);
+      },
+    });
+    let pane: ReturnType<typeof usePaneList> | null = null;
+    let queryCache: ReturnType<typeof useQueryCache> | null = null;
+    wrappers.push(
+      mount(
+        defineComponent({
+          setup() {
+            queryCache = useQueryCache();
+            pane = usePaneList({
+              kind: "active",
+              view: "list",
+              query: LIST_QUERY,
+              collapsed: ref<FolderKeyDto[]>([]),
+            });
+            return () => null;
+          },
+        }),
+        { global: { plugins: [createPinia(), PiniaColada] } },
+      ),
+    );
+    return {
+      pane: pane as unknown as ReturnType<typeof usePaneList>,
+      queryCache: queryCache as unknown as ReturnType<typeof useQueryCache>,
+    };
+  }
+
+  it("answers with the newest rows when an invalidation supersedes the fetch it waited on", async () => {
+    const releases: ((answer: ModListDto) => void)[] = [];
+    const { pane, queryCache } = mountActive((call) =>
+      call === 1
+        ? rowsOf(1)
+        : new Promise<ModListDto>((resolve) => {
+            releases.push(resolve);
+          }),
+    );
+    await flushPromises();
+    // First invalidation starts call 2; the second aborts it and starts call 3.
+    startInvalidation(queryCache, { key: [...queryKeys.workingModsAll()] });
+    await flushPromises();
+    const pending = pane.refreshList();
+    await flushPromises();
+    startInvalidation(queryCache, { key: [...queryKeys.workingModsAll()] });
+    await flushPromises();
+    releases[0]?.(rowsOf(2));
+    await flushPromises();
+    releases[1]?.(rowsOf(3));
+
+    expect(await pending).toEqual(rowsOf(3));
+  });
+
+  it("answers null when the entry ends in an error, though it still holds older rows", async () => {
+    const { pane, queryCache } = mountActive((call) => {
+      if (call === 1) {
+        return rowsOf(1);
+      }
+      throw new Error("the list could not be read");
+    });
+    await flushPromises();
+    startInvalidation(queryCache, { key: [...queryKeys.workingModsAll()] });
+    await flushPromises();
+
+    expect(pane.data.value).toEqual(rowsOf(1));
+    expect(await pane.refreshList()).toBeNull();
+  });
+});
+
 describe("usePaneViews", () => {
-  it("starts both panes in List view and goes back to it when another project loads", async () => {
+  function mountViews() {
     installMockIpc({});
     let views: ReturnType<typeof usePaneViews> | null = null;
-    let session: ReturnType<typeof useSessionStore> | null = null;
     const wrapper = mount(
       defineComponent({
         setup() {
-          session = useSessionStore();
           views = usePaneViews();
           return () => null;
         },
@@ -189,27 +265,28 @@ describe("usePaneViews", () => {
       { global: { plugins: [createPinia(), PiniaColada] } },
     );
     wrappers.push(wrapper);
-    if (views === null || session === null) {
-      throw new Error("the composables did not run");
+    if (views === null) {
+      throw new Error("the composable did not run");
     }
-    const { activeView, inactiveView } = views as ReturnType<typeof usePaneViews>;
-    expect(activeView.value).toBe("list");
-    expect(inactiveView.value).toBe("list");
+    return views as ReturnType<typeof usePaneViews>;
+  }
 
-    activeView.value = "groups";
-    inactiveView.value = "groups";
-    (session as ReturnType<typeof useSessionStore>).setLoaded(
-      {
-        gameDir: "g",
-        modsConfig: "m",
-        workshopDir: null,
-        profileDir: "p-two",
-      } as never,
-      "current",
-    );
-    await nextTick();
+  it("starts both panes in List view", () => {
+    localStorage.clear();
+    const { activeView, inactiveView } = mountViews();
 
     expect(activeView.value).toBe("list");
     expect(inactiveView.value).toBe("list");
+  });
+
+  it("remembers each pane's view across a restart", () => {
+    localStorage.clear();
+    const first = mountViews();
+    first.activeView.value = "groups";
+
+    const restarted = mountViews();
+
+    expect(restarted.activeView.value).toBe("groups");
+    expect(restarted.inactiveView.value).toBe("list");
   });
 });

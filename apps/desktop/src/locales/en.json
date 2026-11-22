@@ -1550,6 +1550,11 @@
         "modCleared": "Colour removed from {name}"
       }
     },
+    "showInLoadOrder": {
+      "action": "Show in load order",
+      "announce": "Showing {name} in load order.",
+      "filterCleared": "{name} was hidden by the filter, so the filter was cleared."
+    },
     "groupsView": {
       "regionLabel": "Mods by group",
       "rovingHint": "Use the arrow keys to move, Right and Left to open and close folders, Enter to open a mod, Space to select",
