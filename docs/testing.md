@@ -201,7 +201,9 @@ placement with
 
 The Vitest side: a guard that only scans source files with `node:fs`
 (`style.guard.test.ts`, `progressbar.guard.test.ts`, `invalidation.guard.test.ts`,
-`i18n/locales.unusedKeys.test.ts`) declares `// @vitest-environment node`
+`i18n/locales.unusedKeys.test.ts`, and the colour contrast checks
+`markColors.contrast.test.ts` and `searchMatch.contrast.test.ts`, which read
+`style.css`) declares `// @vitest-environment node`
 so it does not pay for a happy-dom window, and stays well inside the default
 5 s test timeout on a loaded machine. The timeout is not raised.
 

@@ -25,6 +25,9 @@ async function expectRowFits(page: Page, modId: string): Promise<void> {
   const pane = modsPane(page, "active");
   await pane.getByTestId("mods-search").fill(modId);
   const row = pane.getByTestId(`mod-row-${modId}`);
+  // Measure only once the search answer has replaced the old rows: the table is
+  // rebuilt when the debounced search lands, and a row caught before that has no box.
+  await expect(pane.locator('[data-testid^="mod-row-mod."]')).toHaveCount(1);
   await expect(row).toBeVisible();
 
   const rowBox = await row.boundingBox();

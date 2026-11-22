@@ -22,6 +22,19 @@ const IS_ENABLED = process.env["RIMMERGE_DOCS_SCREENSHOTS"] === "1";
 const SCREENSHOTS_DIR = path.resolve(import.meta.dirname, "../../../../docs/screenshots");
 const MODS_PAGE_DIR = path.join(SCREENSHOTS_DIR, "mods-page");
 const SAVES_FOLDER = "C:/Users/example/Saves";
+const OTHER_PROFILE = "C:/Profiles/other";
+/** The other profile's `organization.json`, as the mock reads it for the copy dialog. */
+const COPY_SOURCES = {
+  [OTHER_PROFILE]: {
+    kind: "organization",
+    groups: [
+      { id: 1, name: "weapons", parent: null, color: "red", members: ["mod.003", "mod.004"] },
+      { id: 2, name: "Melee", parent: 1, color: null, members: ["mod.008"] },
+      { id: 3, name: "Armor", parent: null, color: "teal", members: ["mod.010"] },
+    ],
+    modColors: { "mod.003": "pink" },
+  },
+};
 
 /**
  * A dialog opens with keyboard focus on its close button, and blurring it did
@@ -299,6 +312,11 @@ test.describe("docs screenshots", () => {
         .getByTestId(`mod-row-${removedId}`)
         .getByTestId("membership-badge"),
     ).toContainText("Removed");
+    // The unfiltered inactive list already shows the Removed row, so wait for the
+    // filtered answer itself before taking the picture.
+    await expect(modsPane(page, "inactive").locator('[data-testid^="mod-row-mod."]')).toHaveCount(
+      1,
+    );
     await capture(page, path.join(MODS_PAGE_DIR, "membership-marks.png"));
   });
 
@@ -355,6 +373,93 @@ test.describe("docs screenshots", () => {
     await page.getByTestId("bulk-add-to-group-active").click();
     await expect(page.getByTestId("bulk-groups-dialog")).toBeVisible();
     await capture(page, path.join(MODS_PAGE_DIR, "bulk-add-to-group-dialog.png"));
+  });
+
+  test("mods page: the Groups view with folders, colours and a search", async ({ page }) => {
+    await startScenario(page, "dark");
+    await openMods(page);
+    await page.evaluate(async () => {
+      const invoke = window.__TAURI_INTERNALS__.invoke;
+      await invoke("create_group", {
+        request: { name: "Weapons", parent: null, modIds: ["mod.004", "mod.008"] },
+      });
+      await invoke("create_group", {
+        request: { name: "Armor", parent: null, modIds: ["mod.010", "mod.012"] },
+      });
+      await invoke("set_group_color", { request: { id: 1, color: "red" } });
+      await invoke("set_group_color", { request: { id: 2, color: "teal" } });
+      await invoke("set_mod_colors", { request: { modIds: ["mod.012"], color: "blue" } });
+    });
+    const activePane = modsPane(page, "active");
+    await activePane.getByTestId("mods-view-groups").click();
+    await expect(activePane.getByTestId("mod-groups-table")).toBeVisible();
+    await expect(activePane.getByTestId("mod-entry-1-mod.004")).toBeVisible();
+    await capture(page, path.join(MODS_PAGE_DIR, "groups-view.png"));
+
+    await activePane.getByTestId("mods-search").fill("d 1");
+    await expect(activePane.getByTestId("mod-entry-2-mod.012")).toBeVisible();
+    await expect(
+      activePane.getByTestId("mod-entry-2-mod.012").getByTestId("search-match"),
+    ).toHaveText("d 1");
+    await captureLocator(page, activePane, path.join(MODS_PAGE_DIR, "search-highlight.png"));
+  });
+
+  test("mods page: copying groups from another profile, the preview", async ({ page }) => {
+    // The copy button lives in the Groups panel, a column from 1,800 pixels wide.
+    await page.setViewportSize(WIDE);
+    await page.addInitScript((sources) => {
+      window.__COPY_PROFILE_SOURCES__ = sources as NonNullable<
+        typeof window.__COPY_PROFILE_SOURCES__
+      >;
+    }, COPY_SOURCES);
+    await startScenario(page, "dark");
+    await openMods(page);
+    await createGroup(page, "Weapons");
+    await page.evaluate((folder) => {
+      window.__PICK_FOLDER_RESULT__ = folder;
+    }, OTHER_PROFILE);
+    await page.getByTestId("group-copy-profile").click();
+    await expect(page.getByTestId("copy-profile-dialog")).toBeVisible();
+    await page.getByTestId("copy-choose").click();
+    await expect(page.getByTestId("copy-preview")).toContainText("2 groups added");
+    await capture(page, path.join(MODS_PAGE_DIR, "copy-groups-preview.png"));
+  });
+
+  test("apply: the file was changed outside Rimmerge, the confirm section", async ({ page }) => {
+    await startScenario(page, "dark");
+    await openMods(page);
+    const ids = await activeModIds(page);
+    await page.evaluate(
+      (next) => {
+        window.__MODS_CONFIG_FILE__ = { status: "ok", activeMods: next };
+      },
+      [...ids, "mod.905"],
+    );
+    await page.getByTestId("shell-apply-button").click();
+    await page.getByTestId("apply-dialog-submit").click();
+    await expect(page.getByTestId("apply-confirm-outside-text")).toContainText("(+1, -0)");
+    await capture(page, path.join(MODS_PAGE_DIR, "apply-outside-change-confirm.png"));
+  });
+
+  test("dashboard: the note on pages other than Mods when the file changed outside", async ({
+    page,
+  }) => {
+    await startScenario(page, "dark");
+    const ids = await activeModIds(page);
+    await page.evaluate(
+      (next) => {
+        window.__MODS_CONFIG_FILE__ = { status: "ok", activeMods: next };
+        window.dispatchEvent(new Event("blur"));
+        window.dispatchEvent(new Event("focus"));
+      },
+      [...ids, "mod.905"],
+    );
+    await expect(page.getByTestId("outside-change-hint")).toBeVisible();
+    await captureLocator(
+      page,
+      page.getByTestId("outside-change-hint"),
+      path.join(MODS_PAGE_DIR, "outside-change-hint.png"),
+    );
   });
 
   test("order page: importing a load order from a save", async ({ page }) => {

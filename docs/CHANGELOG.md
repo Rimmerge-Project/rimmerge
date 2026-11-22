@@ -3,9 +3,33 @@
 This changelog starts at the first public release. Development history
 before that point is not summarized here.
 
-## Unreleased
+## [Unreleased]
 
-- **Fixed: the Mods page controls stay readable at 1,024 pixels in every language.** In
+- **New: a Groups view in both Mods lists.** Each list has a **List | Groups**
+  switch under its sort buttons. **Groups** shows the same mods as folders: your
+  group tree, each folder with its colour icon, its name and how many mods it
+  holds, its subfolders first and then its mods in the list's sort order, with
+  **Not in a group** last. A mod in two groups appears under each, with an
+  "also in" mark, and selecting either copy selects the mod. Folders fold with a
+  click or the arrow keys, **Collapse all** and **Expand all** sit beside the
+  switch, and each list remembers its folded folders per profile. A folder's ⋮
+  menu has **Select all in folder**, **Activate all…** and **Deactivate all…**,
+  and dropping rows on a folder adds them to that group without activating or
+  moving them. The Active list keeps its load-order numbers but cannot be
+  reordered in Groups view; switch to List to move mods. Empty folders show
+  with 0 unless a search, tag or source filter is on.
+- **New: group colours on rows, an open-row mark and quicker group edits.**
+  Each Active row now always shows its load-order number, whatever the sort. A
+  mod with no colour of its own shows its first coloured group's colour as a
+  fainter stripe. On a narrow row the group chips become coloured dots, and
+  clicking a chip or dot narrows both lists to that group. The mod whose info
+  panel is open is marked on its row with a ring and a tint, and in the Groups
+  panel its groups have a small dot and every group a folder icon in its
+  colour. The row's ⋮ menu starts with the twelve colours as swatches. The Add
+  to group dialogs have a search box and offer **Create group** with the name
+  you typed, which creates the group and adds the mods in one save. A double
+  click on a row opens the Activate or Deactivate dialog for that mod.
+- **Fix: the Mods page controls stay readable at 1,024 pixels in every language.** In
   German, Russian, Polish and French the search and tag placeholders were cut
   off, the sort bar wrapped onto a second line, a freshly added row's date could
   shrink to a single character, and a Russian date overflowed its cell. The
@@ -36,13 +60,14 @@ before that point is not summarized here.
   app no longer knows falls back to the default. A remembered sort other than
   load order still turns reordering off and still shows the load-order numbers.
 - **New: copy groups and colours from another profile.** The Mods page's
-  groups panel has a **Copy from another profile...** button. Choose the other
+  groups panel has a **Copy from another profile…** button. Choose the other
   profile's folder (the one holding its `organization.json`) and Rimmerge shows
   what the copy would do before it does anything, for either mode.
   **Merge** combines the other profile's groups with yours: a group with the
   same name path (the same names from the top level, ignoring capitals) takes
   the other profile's mods, new groups are added under the same parent, and
-  where both profiles set a colour yours stays (listed as a clash). A colour
+  where both profiles set a colour yours stays (a differing group colour is
+  listed as a clash). A colour
   you have not set is filled in from the other profile. **Replace** removes all
   your groups and colours and puts the other profile's in their place, after a
   confirmation with **Cancel** focused. A copy that would pass a limit (groups,
@@ -52,7 +77,7 @@ before that point is not summarized here.
   groups, as they do today. The copy is one save, only reads from the other
   profile's folder, and never changes your load order, your active mods or your
   rules.
-- **Fixed: English text Rimmerge generates no longer uses em dashes.** Sort
+- **Fix: English text Rimmerge generates no longer uses em dashes.** Sort
   explanations, finding text, error messages, command-line output and
   `--help` pages, the description in a generated merge mod's `About.xml` and
   the comments in generated patches now use plain punctuation (colons, commas,
@@ -78,7 +103,7 @@ before that point is not summarized here.
   was changed elsewhere and links to the Mods page, where the existing note
   explains it. It goes away after a rescan, an import or an Apply. The Mods
   page keeps its own note and does not show this one.
-- **Fixed: a rule or decision saved while a rescan, a load or an import was
+- **Fix: a rule or decision saved while a rescan, a load or an import was
   running could be lost.** Rimmerge reads your rules, decisions, patches and
   patch maker projects from disk while it scans, and then swaps the scanned
   copy in. A rule, decision, patch or patch maker edit saved in between was
@@ -88,7 +113,7 @@ before that point is not summarized here.
   only when something really changed. If one of the files cannot be read
   again, Rimmerge keeps what the scan read and shows a notice saying that an
   edit made during the scan may be missing.
-- **Fixed: a mod you activated or deactivated could stay selected, hidden
+- **Fix: a mod you activated or deactivated could stay selected, hidden
   behind a filter.** Activating a mod together with its dependencies took
   only the mod you asked for out of the Inactive selection, so a dependency
   that a filter was hiding stayed selected, and the next "Activate selected"

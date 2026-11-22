@@ -447,6 +447,9 @@ test.describe("mods groups on a narrow row", () => {
     const pane = modsPane(page, "active");
     await pane.getByTestId("mods-search").fill("mod.004");
     const row = pane.getByTestId("mod-row-mod.004");
+    // Measure only once the search answer has replaced the old rows: a row caught
+    // mid re-render has no box.
+    await expect(pane.locator('[data-testid^="mod-row-mod."]')).toHaveCount(1);
     await expect(row.getByTestId("mod-row-color")).toBeVisible();
     const rowBox = await row.boundingBox();
     const nameBox = await pane.getByTestId("mod-row-name-mod.004").boundingBox();
