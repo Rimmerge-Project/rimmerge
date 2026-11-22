@@ -44,12 +44,18 @@ pub struct ModDetail {
     pub finding_keys_total: usize,
 }
 
-/// The first active report row sharing `id`'s [`ModId::base`]. Unlike
-/// [`crate::mod_info`]'s resolution there is no exact-id pass: only active
-/// rows are searched, and the first base match wins.
+/// The active report row for `id`: the one with exactly that id first, else
+/// the first sharing its [`ModId::base`]. The exact pass matters when both a
+/// plain and a `_steam` copy of a mod are active: asking for one copy must
+/// answer for that copy. Only active rows are searched (unlike
+/// [`crate::mod_info`]'s resolution, which also reads inactive rows).
 pub(crate) fn find_active<'report>(report: &'report Report, id: &ModId) -> Option<&'report Mod> {
     let target = id.base();
-    report.mods.iter().find(|entry| entry.id.base() == target)
+    report
+        .mods
+        .iter()
+        .find(|entry| entry.id == *id)
+        .or_else(|| report.mods.iter().find(|entry| entry.id.base() == target))
 }
 
 /// `id`'s incoming and outgoing report edges, each evaluated against

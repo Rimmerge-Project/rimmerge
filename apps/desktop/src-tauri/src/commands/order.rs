@@ -3,6 +3,7 @@
 
 use rim_analyzer::domain::ModId;
 use rim_resolve::domain::OrderSource;
+use rim_session::ModNotActive;
 
 use crate::dto::common::OrderSourceDto;
 use crate::dto::finding::LedgerStatsDto;
@@ -76,11 +77,10 @@ pub async fn list_order(
 }
 
 /// The full why-panel explanation for one mod's placement in the
-/// suggested order (the only order the sorter explains). Resolves
-/// `mod_id` by [`ModId::base`] on both sides, so an active `_steam`
-/// variant is found by its base id and vice versa — findings and other
-/// DTOs carry base ids, but the placements map (like the report itself)
-/// is keyed by whichever exact id is actually active.
+/// suggested order (the only order the sorter explains). The lookup lives
+/// in [`rim_session::Session::explain_placement`] (the exact id first, then
+/// [`ModId::base`], so an active `_steam` variant is found by its base id);
+/// this only maps the DTO in and out.
 ///
 /// # Errors
 ///
@@ -92,14 +92,11 @@ pub(crate) async fn explain_placement_inner(
     mod_id: String,
 ) -> Result<PlacementExplanationDto, CommandError> {
     with_session(state, move |session| {
-        let target = ModId::new(&mod_id).base();
         session
-            .sort_outcome()
-            .placements
-            .values()
-            .find(|explanation| explanation.mod_id.base() == target)
+            .explain_placement(&ModId::new(&mod_id))
             .map(Into::into)
-            .ok_or_else(|| CommandError::mod_not_found(&mod_id))
+            // The raw request text, as `get_mod` does.
+            .map_err(|ModNotActive(_)| CommandError::mod_not_found(&mod_id))
     })
     .await
 }

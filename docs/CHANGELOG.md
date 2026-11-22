@@ -5,6 +5,12 @@ before that point is not summarized here.
 
 ## [Unreleased]
 
+- **Fix: several views showed the wrong copy of a mod installed twice.** When
+  both a plain and a Steam Workshop copy of the same mod are active, opening one
+  copy's full details, the explanation of its place in the load order, one of
+  its textures or its scan cost could show the other copy. The def texture
+  viewer could also call one copy's image undecodable because the other copy's
+  was. Each now shows the copy you opened.
 - **New: a Groups view in both Mods lists.** Each list has a **List | Groups**
   switch under its sort buttons. **Groups** shows the same mods as folders: your
   group tree, each folder with its colour icon, its name and how many mods it

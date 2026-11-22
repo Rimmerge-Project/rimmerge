@@ -785,6 +785,24 @@ that same delta into `working` too (`ActiveSet::force_activate`, no
 inventory check — the caller just wrote this id to the real file) —
 otherwise a plain install-then-apply would read as stale for no reason.
 
+**The order and mod-detail read models are pure joins behind `Session`
+methods** (`order_rows.rs`, `mod_detail.rs`, `placement.rs`, `mod_names.rs`, each with a
+`session/` half): `order_rows(source)`, `mod_detail(id, source)`,
+`explain_placement(id)` and `mod_names()`. A lookup by id tries the **exact id
+first, then `ModId::base`** (`mod_detail`'s `find_active` over active mods,
+`explain_placement`'s `find_placement` over the sorter's placements), so with
+a plain and a `_steam` copy both active each request answers for its own copy;
+`mod_info`'s `resolve_installed_mod` has the same two passes and also reads
+inactive mods. `ReadTexture` (through `find_active`), the active mod info's cost
+row and `ReadDefTexture`'s undecodable check (against the exactly resolved
+owner) do the same. These lookups stay base-only on purpose: `is_own_export`
+(`assignment_coverage.rs`) and the two copies of `is_core`
+(`create_assignment.rs` and `export_assignment/validation.rs`). The fact each
+reads (is this Core, is this our own export) is the same for either copy, so
+which copy answers cannot change the result. A miss is `ModNotActive`, which the
+desktop maps to `mod_not_found`. `mod_names` keeps an active id's own name over
+a base-id alias or an inactive entry. The CLI has no equivalent lookup.
+
 `Session::mods` flows through `mod_index::query` (the **scanned** tier, paged
 and capped at `MAX_PAGE_SIZE`; patch scopes and rule pickers use it); it
 `.chain()`s a synthetic row per `report.missing_mods` entry so a missing mod

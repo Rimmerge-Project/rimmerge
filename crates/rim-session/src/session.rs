@@ -41,11 +41,13 @@ mod findings;
 mod merge;
 mod mod_detail;
 mod mod_info;
+mod mod_names;
 mod order;
 mod order_rows;
 mod organization;
 mod patches;
 mod persisted;
+mod placement;
 mod rules;
 
 pub use assignments::UnknownAssignment;

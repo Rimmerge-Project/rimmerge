@@ -739,3 +739,31 @@ fn reading_for_an_unknown_def_is_an_inspect_not_found() {
         ))
     ));
 }
+
+#[test]
+fn a_dds_broken_in_one_copy_does_not_mark_the_other_copy_undecodable() {
+    // Both copies of `x` are active; only the plain copy's `.dds` is broken.
+    let mut install = Install::new(&["x", "x_steam"])
+        .def("x_steam", "ThingDef", "X", SINGLE_THING)
+        .file("x_steam", "things/x");
+    install
+        .conflicts
+        .push(Conflict::UndecodableTexture(UndecodableTexture {
+            mod_id: ModId::new("x"),
+            path: "things/x".to_owned(),
+            width: 6,
+            height: 6,
+            fourcc: "DXT5".to_owned(),
+            has_png_sibling: false,
+        }));
+    let locator = locator_for("Mods/x_steam/Textures/Things/X.dds");
+
+    let texture = read(install, locator, "things/x");
+
+    assert_eq!(
+        texture,
+        Ok(DefTexture::DdsNotPreviewable {
+            owner: ModId::new("x_steam")
+        })
+    );
+}

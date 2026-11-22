@@ -145,7 +145,7 @@ impl<Reader: DefSourceReader, Locator: AssetLocator> ReadDefTexture<Reader, Loca
         if !is_dds(&path) {
             return Ok(self.read_image(&path, owner, ImageSource::Direct));
         }
-        if is_undecodable(session, owner, key) {
+        if is_undecodable(session, &mod_entry.id, key) {
             return Ok(DefTexture::UndecodableInGame {
                 owner: owner.clone(),
             });
@@ -193,13 +193,15 @@ fn is_dds(path: &Path) -> bool {
         .is_some_and(|extension| extension.eq_ignore_ascii_case("dds"))
 }
 
-/// Whether the report says the game cannot decode `owner`'s `.dds` at `key`.
-fn is_undecodable(session: &Session, owner: &ModId, key: &TextureKey) -> bool {
+/// Whether the report says the game cannot decode the `.dds` at `key` of the
+/// active mod with exactly this id. The conflict row carries the scanned
+/// (active) id, so a plain and a `_steam` copy of one mod are told apart.
+fn is_undecodable(session: &Session, active_id: &ModId, key: &TextureKey) -> bool {
     session.report().conflicts.iter().any(|conflict| {
         matches!(
             conflict,
             Conflict::UndecodableTexture(row)
-                if row.mod_id.base() == owner.base() && row.path == key.as_str()
+                if row.mod_id == *active_id && row.path == key.as_str()
         )
     })
 }

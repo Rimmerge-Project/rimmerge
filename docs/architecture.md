@@ -45,7 +45,9 @@ interface apps.
 - **`rim-session`** is the application layer. It orchestrates use cases over
   the three crates above, defines the ports (`trait`s) `rim-io`
   implements, and owns the `Session`/`Settings` types a profile is
-  built from.
+  built from. It also owns the read models the interfaces list from
+  (`Session::order_rows`, `mod_detail`, `explain_placement`, `mod_names`,
+  the Mods page's lists): a handler never joins or looks up on its own.
 - **`rim-io`** is infrastructure: every real filesystem/network/process
   adapter (reading the install, writing `ModsConfig.xml`, the rule
   database cache and fetcher, profile/patch/assignment persistence,

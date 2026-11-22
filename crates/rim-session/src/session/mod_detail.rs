@@ -9,8 +9,8 @@ use crate::finding_index::{FindingFilter, MAX_PAGE_SIZE};
 use crate::mod_detail::{ModDetail, ModNotActive, edges_of, find_active};
 
 impl Session {
-    /// Resolves `id` by [`ModId::base`] among the active mods and builds its
-    /// [`ModDetail`]: its tags, its report edges evaluated against `source`'s
+    /// Resolves `id` among the active mods (the exact id first, else the
+    /// first sharing its [`ModId::base`]) and builds its [`ModDetail`]: its tags, its report edges evaluated against `source`'s
     /// order, and the live finding keys naming it in `source`'s ledger. Every
     /// lookup after the resolution uses the resolved id, so a `_steam` copy
     /// reached through its base id (or the other way round) cannot miss
@@ -147,5 +147,31 @@ mod tests {
                 mod_id: ModId::new("x_steam"),
             }]
         );
+    }
+
+    #[test]
+    fn the_exact_copy_wins_when_a_plain_and_a_steam_copy_are_both_active() {
+        let mut session = session_fixture(&["x", "x_steam"]);
+
+        let plain = session
+            .mod_detail(&ModId::new("x"), OrderSource::Current)
+            .expect("x is active");
+        let steam = session
+            .mod_detail(&ModId::new("x_steam"), OrderSource::Current)
+            .expect("x_steam is active");
+
+        assert_eq!(plain.entry.id, ModId::new("x"));
+        assert_eq!(steam.entry.id, ModId::new("x_steam"));
+    }
+
+    #[test]
+    fn a_steam_request_falls_back_to_the_plain_copy_by_base_id() {
+        let mut session = session_fixture(&["x", "y"]);
+
+        let detail = session
+            .mod_detail(&ModId::new("x_steam"), OrderSource::Current)
+            .expect("x must be found by the base id of x_steam");
+
+        assert_eq!(detail.entry.id, ModId::new("x"));
     }
 }

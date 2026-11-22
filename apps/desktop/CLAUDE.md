@@ -17,7 +17,7 @@ license first.
 `src-tauri` is a composition root: every `#[tauri::command]` maps a DTO
 to a `rim-session` call and maps the result back. Filtering, paging,
 and aggregation live in `rim-session` (`FindingIndex`, `Session::mods`,
-`working_mod_list`/`inactive_mod_list` and their Groups-view layout `working_mod_groups`/`inactive_mod_groups`, `order_rows`, `mod_detail`), never in a command handler or in Vue. The adapters a
+`working_mod_list`/`inactive_mod_list` and their Groups-view layout `working_mod_groups`/`inactive_mod_groups`, `order_rows`, `mod_detail`, `explain_placement`, `mod_names`), never in a command handler or in Vue. The adapters a
 command needs for the loaded project (scanner, decision/rule/patch
 stores, def reader, asset locator, release feed, ...) come from
 `AppState::adapters`, never constructed inline. The narrow exception is
@@ -948,7 +948,10 @@ The UI is localized in `en` plus twelve translated locales (`zh-CN`,
   three existing ones, e.g. `LoadEventKindDto`), struct variants need
   their own `rename_all`, `FindingKey`/`FieldPath` cross as strings, `u64` fields carry `#[ts(type = "number")]`, request
   DTOs use `deny_unknown_fields`. Mod lookups compare `ModId::base()` so
-  a `_steam` copy resolves the same as the primary one.
+  a `_steam` copy resolves the same as the primary one, except the single-mod
+  lookups, which try the exact id first and then the base id (so a plain and a
+  `_steam` copy both active each answer for themselves): `get_mod`,
+  `explain_placement`, `get_mod_info`, `read_mod_preview` and `read_texture`.
 - **Rust module layout**: `commands/assignments.rs` keeps every
   `#[tauri::command]` function and delegates to `*_inner` functions in
   `assignments/{projects,sections,rows,coverage,export}.rs`.

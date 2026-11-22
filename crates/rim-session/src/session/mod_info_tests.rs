@@ -202,3 +202,36 @@ fn findings_total_reflects_a_live_finding_naming_the_mod() {
         "the DefOverride conflict must surface as a live finding naming b"
     );
 }
+
+#[test]
+fn each_copy_of_a_mod_installed_twice_reads_its_own_cost_row() {
+    let cost = |id: &str, def_count: usize| ModCost {
+        mod_id: ModId::new(id),
+        patch_ops: 0,
+        slow_xpath_ops: 0,
+        texture_files: 0,
+        texture_bytes: 0,
+        dds_files: 0,
+        assembly_count: 0,
+        assembly_bytes: 0,
+        def_count,
+        content_only: false,
+        overridden_texture_bytes: 0,
+        nameless_def_count: 0,
+    };
+    let report = rim_resolve::test_support::ReportBuilder::new()
+        .mod_("x")
+        .mod_("x_steam")
+        .with_mod_costs(vec![cost("x", 1), cost("x_steam", 2)])
+        .build();
+    let mut session = session_over(report, vec![ModId::new("x"), ModId::new("x_steam")]);
+
+    let info = session
+        .mod_info(&ModId::new("x_steam"), OrderSource::Current)
+        .expect("x_steam is active");
+
+    let ModInfo::Active(active) = info else {
+        panic!("expected Active, got {info:?}");
+    };
+    assert_eq!(active.cost.map(|c| c.def_count), Some(2));
+}

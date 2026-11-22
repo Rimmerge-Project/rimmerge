@@ -8128,7 +8128,14 @@ export function installScenario(): void {
       });
     },
     explain_placement: (payload: unknown) => {
-      const id = (payload as { modId: string }).modId;
+      const requested = (payload as { modId: string }).modId;
+      // Mirrors `find_placement`: the exact id first, then the first mod
+      // sharing its base id; a miss is `mod_not_found`, never a position-0
+      // answer. The answer carries the resolved id.
+      const id =
+        suggestedOrder.find((candidate) => candidate === requested) ??
+        suggestedOrder.find((candidate) => baseOf(candidate) === baseOf(requested));
+      if (id === undefined) throw { code: "mod_not_found", message: `${requested} is not active` };
       const position = suggestedOrder.indexOf(id);
       const previousIndex = currentOrder.indexOf(id);
       const otherId = suggestedOrder[(position + 1) % suggestedOrder.length] ?? modId(0);
@@ -9239,10 +9246,15 @@ export function installScenario(): void {
       // `example.bionicsfork`, ...) is a real, clickable `list_mods` row, so
       // its own detail page must resolve too (the def inspector's own
       // spec navigates through exactly this path).
-      const mod = [...mods, ...extraModsFromFixtures()].find((m) => m.modId === id);
+      // Mirrors `find_active`: the exact id first, then the first mod
+      // sharing its base id.
+      const detailPool = [...mods, ...extraModsFromFixtures()];
+      const mod =
+        detailPool.find((m) => m.modId === id) ??
+        detailPool.find((m) => baseOf(m.modId) === baseOf(id));
       if (!mod) throw { code: "mod_not_found", message: `${id} is not active` };
       const findingKeys = [...findings.values()]
-        .filter((entry) => entry.modIds.includes(id))
+        .filter((entry) => entry.modIds.some((owner) => baseOf(owner) === baseOf(mod.modId)))
         .map((entry) => entry.key);
       return {
         modId: mod.modId,
