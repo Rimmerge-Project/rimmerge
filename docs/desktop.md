@@ -281,7 +281,10 @@ disagree with it. The marked text is ordinary text, not a "mark" element, so a
 screen reader reads the label as one piece and announces nothing extra per row.
 
 **Sorting the lists.** Above each list, one button per criterion sorts what
-the list shows: Load order (Active only), Name, Package ID and Last updated.
+the list shows (when the buttons do not fit the list's width, because the
+window is narrow or the language has longer words, they collapse into one
+dropdown of the same criteria plus a button for the direction, so the bar never
+wraps onto a second line): Load order (Active only), Name, Package ID and Last updated.
 Clicking a button sorts by it in its first direction (A to Z, oldest first,
 or first to last); clicking the active one again flips the direction. The
 active button has a stronger border and an arrow for the direction, and its tooltip and accessible name say both the
@@ -299,6 +302,14 @@ date (shortened when a narrow list runs out of room; hover it for the full
 date). Each Active row always shows its load-order position (`#12`), whatever
 the list is sorted by, so a sort cannot be mistaken for the order; the Inactive
 list has no positions.
+
+**Narrow windows.** At the narrowest width where the two lists sit side by side
+(1,024 pixels), the controls stay readable in every language: the search box
+takes its own line above the tag and source filters, a placeholder that is still
+too long for its box is cut with an ellipsis and shows in full as a tooltip, the
+sort bar collapses as described above, the date next to a row never shrinks below
+a readable minimum, the Added and Removed marks show only their icon, and the buttons above a selection wrap onto more lines (a long
+label is cut with a tooltip) instead of running past the list.
 
 **What "Last updated" means.** It depends on where the mod comes from. A
 Steam Workshop mod uses when the installed version was published on the
@@ -397,9 +408,9 @@ outside Rimmerge (the outside-change note's own action covers that case). See
 **Added and Removed marks.** A row that differs from the active mod list saved
 on your computer carries a small mark. An Active row the saved list does not
 have is **Added** (Apply will add it), and an Inactive row the saved list still
-has is **Removed** (Apply will remove it). The mark has an icon and a word, and
-its tooltip says what Apply does, so it is never colour alone; it sits after
-the mod name. A mod counts as the same mod with or without its `_steam`
+has is **Removed** (Apply will remove it). The mark has an icon and a word (in a list narrower than about 512 pixels, which is any
+window narrower than about 1,300 pixels, the word gives way to the icon), and its tooltip says what Apply does, so it is never colour alone; it
+sits after the mod name. A mod counts as the same mod with or without its `_steam`
 suffix, and a reorder alone never makes a mark. "Removed" means a mod that is
 installed and still in the saved list: it stays easy to find in Inactive until
 you Apply or activate it again. A mod that is in the saved list but not

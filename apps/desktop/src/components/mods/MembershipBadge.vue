@@ -8,7 +8,9 @@ import { membershipLabel } from "@/utils/fileBaseline";
 /**
  * How a pending change differs from your saved active mod list: a pill with an icon and a word,
  * never colour alone, and visibly unlike the neutral source badge. Renders nothing for a row
- * that matches the saved list. The tooltip says what applying does to this mod.
+ * that matches the saved list. The tooltip says what applying does to this mod. In a narrow list
+ * the word gives way to the icon (the screen-reader text and the tooltip carry the meaning, as for
+ * the pending-scan pill), which keeps a freshly changed row from crowding out its date and menu.
  */
 const { mark } = defineProps<{ mark: MembershipMarkDto }>();
 
@@ -34,7 +36,7 @@ const label = computed(() => membershipLabel(mark));
       :class="['pi text-xs', mark === 'added' ? 'pi-plus' : 'pi-minus']"
       aria-hidden="true"
     />
-    <span>{{ tm(label.text) }}</span>
+    <span class="hidden @lg:inline">{{ tm(label.text) }}</span>
     <span class="sr-only">{{ tm(label.title) }}</span>
   </span>
 </template>

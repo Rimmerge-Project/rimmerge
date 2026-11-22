@@ -311,7 +311,8 @@ of that command surface — no direct filesystem or process access outside
   pending** (the call can wait behind a long command such as verify, and a tick per
   interval would queue). A failed poll is ignored. Each `ModListRowDto` carries
   `membership` (`none`/`added`/`removed`, by base id), drawn by `MembershipBadge.vue`
-  after the mod name (icon, word and tooltip, never colour alone). `FileChangeNote.vue`
+  after the mod name (icon, word and tooltip, never colour alone; below the table's `@lg` the word gives way to the icon, the
+  tooltip and the screen-reader text, so a changed row keeps room for its date and menu). `FileChangeNote.vue`
   on the Mods page shows two notes: the outside change (plain words, no file name; a
   membership change is the `(+N, -M)` sentence, a `reordered` change its own; each has a
   whole-sentence key with and without "Your pending changes are kept.", chosen by
@@ -422,7 +423,13 @@ of that command surface — no direct filesystem or process access outside
   active one flips its direction, another starts ascending (`nextSort` in
   `utils/modListSort.ts`). It has no `aria-pressed` (it never un-presses and its
   name changes); the active state is in its accessible name and title plus an
-  arrow and a thicker border. *Anchors name a neighbour by id, never an index*
+  arrow and a thicker border. It collapses to a `Select` of the criteria plus a direction button (`mods-sort-select`,
+  `mods-sort-direction`) when the buttons at their natural width do not fit the pane: `useCollapseToFit`
+  measures the always-rendered button group (`w-max`, hidden with `invisible absolute`, never `display: none`)
+  against the bar, so it is per-locale and cannot flip back and forth. Specs sort through `chooseSort` in
+  `e2e/specs/support.ts`, never a bare `mods-sort-<key>` click at a width or in a language where the bar may collapse. The pane
+  is a CSS container (`@container`); `ModFilterBar` gives the search its own line below `@md`, and the date cell
+  keeps a readable minimum (`w-24 min-w-10`, never a single character). `e2e/specs/mods-narrow-layout.spec.ts` pins all of it in en, de, ru, pl and fr at 1,024 px (the sort bar also at 1,280 px). The measured group is `shrink-0` with `whitespace-nowrap` buttons; without that it shrinks to min-content and wraps its labels instead of collapsing. Focus moves to the counterpart control when the form swaps. *Anchors name a neighbour by id, never an index*
   (`AnchorDto`, `utils/modMove.ts`): a drop gap, a one-step move and a "Move
   after…" choice are all turned into `before`/`after` a **shown** row that is not
   itself moving (`anchorForSlot`, `anchorForStep`), so a filtered view stays exact

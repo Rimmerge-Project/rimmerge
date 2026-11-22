@@ -164,7 +164,7 @@ defineExpose({ focusRow });
 
 <template>
   <section
-    class="flex min-h-0 min-w-0 flex-col gap-3"
+    class="@container flex min-h-0 min-w-0 flex-col gap-3"
     :aria-labelledby="`mods-pane-heading-${kind}`"
     :data-testid="`mods-pane-${kind}`"
   >

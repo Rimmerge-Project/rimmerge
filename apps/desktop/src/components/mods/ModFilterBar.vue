@@ -31,15 +31,18 @@ const sourceOptions = computed(() => [
   <div class="flex shrink-0 flex-wrap items-center gap-2">
     <InputText
       v-model="search"
-      class="min-w-0 flex-1"
+      class="min-w-0 flex-1 basis-full text-ellipsis @md:basis-auto"
       :placeholder="t('mods.page.searchPlaceholder')"
+      :title="t('mods.page.searchPlaceholder')"
       :aria-label="searchLabel"
       data-testid="mods-search"
     />
     <InputText
       v-model="tag"
-      class="min-w-0 flex-1"
+      class="min-w-0 flex-1 text-ellipsis"
       :placeholder="t('mods.page.tagFilterPlaceholder')"
+      :title="t('mods.page.tagFilterPlaceholder')"
+      :aria-label="t('mods.page.tagFilterLabel')"
       data-testid="mods-tag-filter"
     />
     <Select

@@ -1,5 +1,9 @@
+import Aura from "@primevue/themes/aura";
 import { mount } from "@vue/test-utils";
-import { describe, expect, it } from "vitest";
+import PrimeVue from "primevue/config";
+import Select from "primevue/select";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { nextTick } from "vue";
 
 import ModSortBar from "@/components/mods/ModSortBar.vue";
 import type { ListSortDto } from "@/types/generated/ListSortDto";
@@ -141,5 +145,146 @@ describe("ModSortBar", () => {
     const wrapper = mountBar();
 
     expect(wrapper.get('[role="group"]').attributes("aria-label")).toBe("Sort order");
+  });
+});
+
+/** Mounts the bar in a pane `paneWidth` wide whose buttons need `naturalWidth` (the size is measured, not styled). */
+async function mountMeasured(paneWidth: number, naturalWidth: number, sort = NAME_ASC) {
+  vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(paneWidth);
+  vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(naturalWidth);
+  const wrapper = mount(ModSortBar, {
+    props: { keys: ACTIVE_SORT_KEYS, sort },
+    global: { plugins: [[PrimeVue, { theme: { preset: Aura } }]] },
+  });
+  // The measurement runs on mount and flips the form on the next render.
+  await nextTick();
+  return wrapper;
+}
+
+describe("ModSortBar when the buttons do not fit", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("keeps the buttons while they fit the pane", async () => {
+    const wrapper = await mountMeasured(600, 480);
+
+    expect(wrapper.find('[data-testid="mods-sort-select"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="mods-sort-direction"]').exists()).toBe(false);
+  });
+
+  it("collapses to a select and a direction button when they are wider than the pane", async () => {
+    const wrapper = await mountMeasured(376, 528);
+
+    expect(wrapper.find('[data-testid="mods-sort-select"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="mods-sort-direction"]').exists()).toBe(true);
+  });
+
+  it("keeps the measured buttons out of reach while collapsed", async () => {
+    const wrapper = await mountMeasured(376, 528);
+
+    const measured = wrapper.get('[data-testid="mods-sort-name"]').element.closest("[inert]");
+    expect(measured).not.toBeNull();
+    expect(measured?.className).toContain("invisible");
+  });
+
+  it("flips the direction of the current criterion from the direction button", async () => {
+    const wrapper = await mountMeasured(376, 528, { key: "name", direction: "ascending" });
+
+    await wrapper.get('[data-testid="mods-sort-direction"]').trigger("click");
+
+    expect(wrapper.emitted("update:sort")).toEqual([[{ key: "name", direction: "descending" }]]);
+  });
+
+  it("names the direction button like the active criterion button", async () => {
+    const wrapper = await mountMeasured(376, 528, { key: "name", direction: "ascending" });
+
+    expect(wrapper.get('[data-testid="mods-sort-direction"]').attributes("aria-label")).toBe(
+      "Sorted by name, A to Z. Click for Z to A.",
+    );
+  });
+
+  it("selects another criterion ascending", async () => {
+    const wrapper = await mountMeasured(376, 528, { key: "name", direction: "descending" });
+
+    wrapper.getComponent(Select).vm.$emit("update:modelValue", "lastUpdated");
+
+    expect(wrapper.emitted("update:sort")).toEqual([
+      [{ key: "lastUpdated", direction: "ascending" }],
+    ]);
+  });
+
+  it("does not flip the direction when the current criterion is picked again", async () => {
+    const wrapper = await mountMeasured(376, 528, { key: "name", direction: "ascending" });
+
+    wrapper.getComponent(Select).vm.$emit("update:modelValue", "name");
+
+    expect(wrapper.emitted("update:sort")).toBeUndefined();
+  });
+
+  /** Mounts the bar attached to the document at a 600 px pane; `resize` fires the observers at a new width. */
+  async function mountResizable() {
+    const callbacks: Array<() => void> = [];
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(callback: () => void) {
+          callbacks.push(callback);
+        }
+        observe(): void {}
+        unobserve(): void {}
+        disconnect(): void {}
+      },
+    );
+    const widths = { pane: 600 };
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockImplementation(() => widths.pane);
+    vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(528);
+    const wrapper = mount(ModSortBar, {
+      props: { keys: ACTIVE_SORT_KEYS, sort: NAME_ASC },
+      global: { plugins: [[PrimeVue, { theme: { preset: Aura } }]] },
+      attachTo: document.body,
+    });
+    await nextTick();
+    const resize = async (pane: number) => {
+      widths.pane = pane;
+      callbacks.forEach((callback) => {
+        callback();
+      });
+      await nextTick();
+      await nextTick();
+    };
+    return { wrapper, resize };
+  }
+
+  const focused = () => document.activeElement?.getAttribute("data-testid");
+
+  it("moves focus to the counterpart control when the form swaps under it", async () => {
+    const { wrapper, resize } = await mountResizable();
+    (wrapper.get('[data-testid="mods-sort-name"]').element as HTMLElement).focus();
+
+    await resize(376);
+    expect(focused()).toBe("mods-sort-direction");
+
+    await resize(600);
+    expect(focused()).toBe("mods-sort-name");
+    wrapper.unmount();
+    vi.unstubAllGlobals();
+  });
+
+  it("leaves focus outside the bar alone when the form swaps", async () => {
+    const { wrapper, resize } = await mountResizable();
+    const outside = document.createElement("button");
+    outside.setAttribute("data-testid", "outside-button");
+    document.body.appendChild(outside);
+    outside.focus();
+
+    await resize(376);
+    expect(document.activeElement).toBe(outside);
+
+    await resize(600);
+    expect(document.activeElement).toBe(outside);
+    outside.remove();
+    wrapper.unmount();
+    vi.unstubAllGlobals();
   });
 });

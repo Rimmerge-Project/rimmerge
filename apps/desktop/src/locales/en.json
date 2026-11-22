@@ -1409,7 +1409,8 @@
       "deactivateButton": "Deactivate",
       "rescanButton": "Rescan mods",
       "searchActiveLabel": "Search the active mods",
-      "searchInactiveLabel": "Search the inactive mods"
+      "searchInactiveLabel": "Search the inactive mods",
+      "tagFilterLabel": "Filter the mods by tag"
     },
     "defSearch": {
       "ariaLabel": "Jump to a def",

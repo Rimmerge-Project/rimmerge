@@ -5,6 +5,16 @@ before that point is not summarized here.
 
 ## Unreleased
 
+- **Fixed: the Mods page controls stay readable at 1,024 pixels in every language.** In
+  German, Russian, Polish and French the search and tag placeholders were cut
+  off, the sort bar wrapped onto a second line, a freshly added row's date could
+  shrink to a single character, and a Russian date overflowed its cell. The
+  search box now has its own line in a narrow list, a long placeholder is cut
+  with an ellipsis and shown in full as a tooltip, the sort bar collapses into a
+  dropdown with a direction button when its buttons do not fit, the date cell
+  keeps a readable minimum width, the Added and Removed marks show only their icon
+  in a narrow list, and the buttons above a selection never wrap their
+  labels.
 - **New: search matches are highlighted in the Mods lists.** The text a search
   matched is marked in the mod's shown label, in both the List and the Groups
   view, whether the list shows names or package ids. A mod can be listed because

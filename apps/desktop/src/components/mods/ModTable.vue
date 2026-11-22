@@ -251,7 +251,7 @@ const rowMenuRef = useTemplateRef<{ open: (event: Event, modId: string) => void 
           :aria-current="mod.modId === openModId ? 'true' : undefined"
           :aria-selected="selectable ? isSelected(mod.modId) : undefined"
           :draggable="draggable"
-          class="border-border-subtle focus-visible:bg-accent-soft absolute top-0 left-0 flex w-full cursor-pointer items-center gap-2 overflow-hidden border-b @lg:gap-3 px-3 text-sm focus-visible:outline"
+          class="border-border-subtle focus-visible:bg-accent-soft absolute top-0 left-0 flex w-full cursor-pointer items-center gap-1.5 overflow-hidden border-b @lg:gap-3 px-3 text-sm focus-visible:outline"
           :class="[
             draggingSet.has(mod.modId) ? 'opacity-50' : '',
             mod.modId === openModId ? 'bg-accent-soft' : 'hover:bg-surface-2',

@@ -374,7 +374,7 @@ function isHovered(row: FolderTreeRow): boolean {
             :data-entry-key="item.row.key"
             :data-mod-id="item.row.modId"
             :data-testid="`mod-entry-${folderTestToken(item.row.folder)}-${item.row.modId}`"
-            class="border-border-subtle focus-visible:bg-accent-soft absolute top-0 left-0 flex w-full cursor-pointer items-center gap-2 overflow-hidden border-b @lg:gap-3 px-3 text-sm focus-visible:outline"
+            class="border-border-subtle focus-visible:bg-accent-soft absolute top-0 left-0 flex w-full cursor-pointer items-center gap-1.5 overflow-hidden border-b @lg:gap-3 px-3 text-sm focus-visible:outline"
             :class="[
               draggingSet.has(item.row.modId) ? 'opacity-50' : '',
               item.row.modId === openModId ? 'bg-accent-soft' : 'hover:bg-surface-2',

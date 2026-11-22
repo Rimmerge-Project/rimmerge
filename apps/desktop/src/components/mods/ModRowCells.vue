@@ -125,7 +125,7 @@ defineSlots<{
     />
     <span
       v-if="showUpdated"
-      class="text-text-muted w-20 min-w-0 truncate text-right text-xs @lg:w-28 @lg:shrink-0"
+      class="text-text-muted w-24 min-w-10 truncate text-right text-xs @lg:w-28 @lg:shrink-0"
       :title="updatedText"
       :data-testid="`mod-row-updated-${mod.modId}`"
     >{{ updatedText }}</span>
