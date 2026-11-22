@@ -95,6 +95,10 @@
   "shell": {
     "brand": "Rimmerge",
     "mainNavigation": "主要導覽",
+    "outsideChange": {
+      "text": "你的已啟用模組清單已在 Rimmerge 之外被變更。套用會覆蓋這些變更。",
+      "link": "在「模組」頁面上檢閱"
+    },
     "nav": {
       "dashboard": "總覽",
       "inbox": "檢查結果",
@@ -245,6 +249,12 @@
     "modKnowledgeCacheUnreadableHeadline": "無法讀取快取的 Rimmerge 規則；改用內建的快照",
     "rowsOverRoleLimit": "已忽略 {section} 規則中 {role} 角色下超過單一角色上限的 {count} 列",
     "precedenceRuleMissingFramework": "已忽略 {defType} 的優先規則：它沒有指定框架",
+    "reloadFailed": {
+      "decisions": "掃描後無法重新讀取你已儲存的決定，因此掃描期間做出的決定可能未包含在內",
+      "rules": "掃描後無法重新讀取你已儲存的規則，因此掃描期間變更的規則可能未包含在內",
+      "patches": "掃描後無法重新讀取你已儲存的相容性補丁，因此掃描期間所做的變更可能未包含在內",
+      "assignments": "掃描後無法重新讀取你已儲存的補丁製作器專案，因此掃描期間所做的變更可能未包含在內"
+    },
     "what": {
       "precedenceRule": "優先規則",
       "behaviour": "行為",
@@ -1399,7 +1409,8 @@
       "deactivateButton": "停用",
       "rescanButton": "重新掃描模組",
       "searchActiveLabel": "搜尋已啟用的模組",
-      "searchInactiveLabel": "搜尋未啟用的模組"
+      "searchInactiveLabel": "搜尋未啟用的模組",
+      "tagFilterLabel": "依標籤篩選模組"
     },
     "defSearch": {
       "ariaLabel": "跳至 Def",
@@ -1502,7 +1513,8 @@
       "suggestedNote": "套用會寫入建議順序。移動模組會切換為你自己的順序。",
       "coreStaysActive": "Core 無法停用。",
       "inactiveNotOrdered": "此清單沒有自己的順序。將模組拖曳到「已啟用」清單即可啟用。",
-      "activateAtItem": "在指定位置啟用…"
+      "activateAtItem": "在指定位置啟用…",
+      "groupsViewOff": "在「分組」檢視中無法移動模組。請將此清單切換為「清單」檢視，以重新排序模組。"
     },
     "colors": {
       "names": {
@@ -1520,6 +1532,10 @@
         "slate": "石板灰"
       },
       "rowColor": "顏色：{name}",
+      "rowColorFromGroup": "來自分組 {group} 的顏色：{name}",
+      "swatchesLabel": "設定模組的顏色",
+      "swatch": "顏色：{name}",
+      "swatchNone": "無顏色",
       "groupTitle": "分組顏色",
       "modTitle": "模組顏色",
       "groupHelp": "顏色會在分組樹與模組列上標示此分組，不會變更其他任何內容。",
@@ -1534,6 +1550,41 @@
         "modChanged": "已變更 {name} 的顏色",
         "modCleared": "已移除 {name} 的顏色"
       }
+    },
+    "showInLoadOrder": {
+      "action": "在載入順序中顯示",
+      "announce": "已在載入順序中顯示 {name}。",
+      "filterCleared": "{name} 被篩選條件隱藏，因此已清除篩選條件。"
+    },
+    "groupsView": {
+      "regionLabel": "依分組列出的模組",
+      "rovingHint": "使用方向鍵移動，向右鍵與向左鍵展開及收合資料夾，Enter 鍵開啟模組，空白鍵選取",
+      "switchHeading": "檢視",
+      "switchLabel": "此清單的顯示方式",
+      "viewList": "清單",
+      "viewGroups": "分組",
+      "unavailable": "「分組」檢視需要使用你的分組，但目前無法使用它們。",
+      "collapseAll": "全部收合",
+      "expandAll": "全部展開",
+      "ungrouped": "不在任何分組中",
+      "modCount": "{count} 個模組",
+      "folderActions": "資料夾 {name} 的動作",
+      "folderLabelExpanded": "{name}，{count} 個模組，已展開",
+      "folderLabelCollapsed": "{name}，{count} 個模組，已收合",
+      "alsoInShort": "另屬 {count} 組",
+      "alsoInLong": "也在其他 {count} 個分組中：{groups}",
+      "alsoInTitle": "也在這些分組中：{groups}",
+      "menu": {
+        "select": "全選資料夾中的模組",
+        "activate": "全部啟用…",
+        "deactivate": "全部停用…"
+      },
+      "folderSelected": "已選取 {name} 中的 {count} 個模組。",
+      "folderSelectedNone": "{name} 中沒有可選取的模組。",
+      "empty": "這裡沒有可顯示的模組。",
+      "emptyFiltered": "沒有符合目前搜尋、標籤、來源或分組的模組。",
+      "cutNote": "有 {hidden} 列未顯示。請收合一些資料夾或縮小搜尋範圍，以查看這些列。",
+      "ungroupedRefusesDrop": "無法將模組加入「不在任何分組中」。若要將模組移出其分組，請使用「從分組移除」。"
     },
     "groups": {
       "regionLabel": "分組",
@@ -1553,7 +1604,10 @@
       "noMatches": "沒有符合的分組。",
       "nodeModCount": "{count} 個模組（含子分組）",
       "nodeSubgroupCount": "{count} 個子分組",
+      "chipScope": "只顯示分組 {name} 中的模組。",
+      "chipScopeWithColor": "只顯示分組 {name}（{color}）中的模組。",
       "allGroups": "所屬分組：{groups}",
+      "openModIsMember": "開啟中的模組屬於此分組",
       "rowMenu": {
         "groups": "分組…",
         "color": "顏色…",
@@ -1603,7 +1657,7 @@
         "moveButton": "移動",
         "modGroupsTitle": "{name} 的分組",
         "modGroupsHelp": "勾選分組即可將此模組加入其中，取消勾選則會將模組移出。每項變更都會立即儲存。",
-        "modGroupsEmpty": "尚無分組。請從「分組」面板建立一個。",
+        "modGroupsEmpty": "尚無分組。請在上方輸入名稱來建立一個。",
         "modGroupsList": "分組",
         "done": "完成",
         "removeUninstalledTitle": "移除未安裝的模組",
@@ -1617,6 +1671,76 @@
         "title": "重新開始，不含任何分組",
         "body": "Rimmerge 會在無法讀取的檔案旁保留一份副本，然後以沒有任何分組與顏色的狀態重新開始。你的模組與載入順序不受影響。",
         "confirm": "重新開始"
+      },
+      "copy": {
+        "button": "從其他設定檔複製…",
+        "title": "從其他設定檔複製分組",
+        "intro": "選擇另一個設定檔的資料夾，從中複製其分組與顏色。你的模組、載入順序與規則不受影響，也不會在該資料夾中寫入任何內容。",
+        "choose": "選擇設定檔資料夾…",
+        "chooseAnother": "選擇其他資料夾…",
+        "folder": "複製來源：{path}",
+        "modeLegend": "複製方式",
+        "mode": {
+          "merge": "合併到我的分組",
+          "mergeHelp": "名稱路徑相同的分組會合併，並加入新的分組。兩個設定檔都設定了顏色時，保留你的顏色。",
+          "replace": "取代我的分組",
+          "replaceHelp": "你的所有分組與顏色都會被移除，改用該設定檔的分組與顏色。"
+        },
+        "previewHeading": "複製會變更以下內容：",
+        "nothingChanges": "不會有任何變更。該設定檔中的所有內容都已在這裡。",
+        "line": {
+          "groupsAdded": "新增 {count} 個分組",
+          "groupsMerged": "{count} 個分組併入此處名稱路徑相同的分組",
+          "membershipsAdded": "新增 {count} 筆分組歸屬",
+          "membershipsAlready": "{count} 筆分組歸屬原本就已存在",
+          "modColorsAdded": "新增 {count} 個模組顏色",
+          "modColorsKept": "{count} 個模組在這裡已有不同的顏色，因此保留你的顏色",
+          "groupColorsAdopted": "{count} 個沒有顏色的分組採用了另一個設定檔的顏色",
+          "notInstalled": "這些分組中有 {count} 個模組未安裝。它們會保留在所屬的分組中，你安裝後就會重新出現。"
+        },
+        "clashesHeading": "{count} 個分組在這裡已有不同的顏色，因此保留你的顏色：",
+        "clash": "{path}：你的是{kept}，對方的是{offered}",
+        "discard": {
+          "heading": "這會移除目前在這裡的內容：",
+          "groups": "{count} 個分組",
+          "memberships": "{count} 筆分組歸屬",
+          "modColors": "{count} 個模組顏色"
+        },
+        "mergeButton": "合併",
+        "replaceButton": "取代…",
+        "close": "關閉",
+        "confirm": {
+          "title": "要取代你的所有分組嗎？",
+          "body": "取代會移除下方的所有內容，並改用另一個設定檔的分組與顏色。你的模組、載入順序與規則不受影響。此動作無法復原。",
+          "button": "全部取代"
+        },
+        "done": {
+          "title": "已複製分組",
+          "merged": "已將另一個設定檔的分組與顏色合併到你的分組中。",
+          "replaced": "已用另一個設定檔的分組與顏色取代你的分組與顏色。"
+        },
+        "refused": {
+          "sameProfile": "這是此設定檔自己的資料夾。請選擇其他設定檔的資料夾。未變更任何內容。",
+          "notAFolder": "這不是資料夾。請選擇設定檔的資料夾。未變更任何內容。",
+          "missing": "該資料夾中沒有分組與顏色檔案。請選擇有分組的設定檔資料夾。未變更任何內容。",
+          "empty": "該設定檔沒有分組也沒有顏色，因此沒有可複製的內容。未變更任何內容。",
+          "nothingToCopy": "該設定檔的分組與顏色與你的完全相同，因此沒有可複製的內容。未變更任何內容。",
+          "tooLargeToSave": "結果會是 {bytes}，超過你的分組與顏色檔案可容納的 {limit}。未變更任何內容。",
+          "unusable": {
+            "unreadable": "無法讀取該資料夾中的分組與顏色檔案。未變更任何內容。",
+            "tooLarge": "該資料夾中的分組與顏色檔案過大，無法讀取。未變更任何內容。",
+            "malformed": "該資料夾中的分組與顏色檔案已損毀，或不是分組檔案。未變更任何內容。",
+            "newerVersion": "該資料夾中的分組與顏色檔案是由較新版本的 Rimmerge 儲存的。未變更任何內容。",
+            "invalid": "該資料夾中的分組與顏色檔案有彼此衝突的分組，例如形成循環或名稱重複。未變更任何內容。"
+          },
+          "limit": {
+            "tooDeep": "結果的分組巢狀層級會超過 Rimmerge 允許的深度。未變更任何內容。",
+            "tooManyGroups": "結果的分組數量會超過 Rimmerge 允許的上限。未變更任何內容。",
+            "tooManyMembers": "結果放入分組的模組數量會超過 Rimmerge 允許的上限（單一分組或總計）。未變更任何內容。",
+            "tooManyColors": "結果設定顏色的模組數量會超過 Rimmerge 允許的上限。未變更任何內容。",
+            "other": "結果會違反分組的規則。未變更任何內容。"
+          }
+        }
       },
       "notice": {
         "notLoaded": "此工作階段無法使用分組與顏色。",
@@ -1652,8 +1776,18 @@
         "movedTop": "{name} 現在是最上層分組",
         "movedInside": "已將 {name} 移入 {parent}"
       },
+      "search": {
+        "label": "搜尋分組，或輸入名稱以建立新分組",
+        "placeholder": "搜尋或建立分組",
+        "noMatch": "沒有符合搜尋的分組。",
+        "createOption": "建立分組「{name}」",
+        "createHintBulk": "建立時也會加入你選擇的模組，一次儲存完成。",
+        "createHintSingle": "建立時也會加入此模組，一次儲存完成。",
+        "parentLabel": "建立於"
+      },
       "toast": {
         "created": "已建立分組",
+        "createdAndAdded": "已建立 {name}，並將 {count} 個模組加入其中",
         "renamed": "已重新命名分組",
         "moved": "已移動分組",
         "deleted": "已刪除分組",
@@ -2158,6 +2292,9 @@
     "confirm": {
       "heading": "仍要套用嗎？",
       "intro": "{order}順序在寫入前有 {count} 個問題需要確認：",
+      "outsideHeading": "已啟用模組清單已在 Rimmerge 之外被變更",
+      "outsideMembership": "自 Rimmerge 上次讀取後，已啟用模組清單已在其他地方被編輯（+{added}，-{removed}）。套用會以{order}順序覆蓋這些編輯。寫入前會先備份已變更的檔案。",
+      "outsideReordered": "自 Rimmerge 上次讀取後，已啟用模組的順序已在其他地方被變更。套用會以{order}順序覆蓋該順序。寫入前會先備份已變更的檔案。",
       "acknowledgedHeading": "已在「檢查結果」中決定",
       "reviewInInbox": "在「檢查結果」中檢閱",
       "goBackButton": "返回",
