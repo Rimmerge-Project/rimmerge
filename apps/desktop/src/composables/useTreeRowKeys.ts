@@ -1,7 +1,8 @@
-import { computed, nextTick, type Ref, watch } from "vue";
+import { computed, type Ref, watch } from "vue";
 
 import { handleSelectionKey } from "@/composables/selectionKeys";
 import { isInert } from "@/composables/shortcutTargets";
+import { useFocusRequests } from "@/composables/useFocusRequests";
 import type { FolderKeyDto } from "@/types/generated/FolderKeyDto";
 import type { TreeRow } from "@/utils/groupedEntries";
 
@@ -67,6 +68,8 @@ export function useTreeRowKeys({
     focusedKey.value = key;
   }
 
+  const focusRequests = useFocusRequests();
+
   /** Whether DOM focus is on the row `key` or something inside it. */
   function isFocusWithin(key: string): boolean {
     const active = document.activeElement;
@@ -92,23 +95,26 @@ export function useTreeRowKeys({
     }
   });
 
-  /** Scrolls the row with `key` into view and focuses it. A key that is not shown is ignored. */
-  async function focusKey(key: string): Promise<void> {
+  /**
+   * Scrolls the row with `key` into view and focuses it, whether or not it is rendered yet. A key
+   * that is not shown is ignored.
+   */
+  function focusKey(key: string): Promise<void> {
+    // Counted before the early return: a call for a row that is gone still supersedes an older
+    // call that is waiting for its row.
+    const request = focusRequests.claim();
     const index = rows().findIndex((row) => row.key === key);
     if (index === -1) {
-      return;
+      return Promise.resolve();
     }
     scrollToIndex(index);
     focusedKey.value = key;
-    // The row may not be in the DOM yet (virtualization) until the scroll re-renders.
-    await nextTick();
-    const scroller = getScroller();
-    const element = scroller
-      ? [...scroller.querySelectorAll<HTMLElement>("[data-entry-key]")].find(
-          (candidate) => candidate.dataset["entryKey"] === key,
-        )
-      : undefined;
-    element?.focus();
+    // The row may not be in the DOM yet (virtualization); a newer call supersedes this one.
+    return focusRequests.focusWhenRendered(request, () =>
+      [...(getScroller()?.querySelectorAll<HTMLElement>("[data-entry-key]") ?? [])].find(
+        (candidate) => candidate.dataset["entryKey"] === key,
+      ),
+    );
   }
 
   /**

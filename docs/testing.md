@@ -333,7 +333,11 @@ Remove-Item -Recurse -Force $S                           # the scratch install
 
 That `rg` line checks the committed, shape-only public list. Maintainers who keep a
 private, gitignored project-specific list should also run
-`./scripts/check-forbidden.ps1`, which merges both automatically.
+`./scripts/check-forbidden.ps1`, which merges both automatically. The script
+scans hidden directories too (`.github/`, `.config/`, and the
+tracked `.claude/settings.json`). It excludes `.git`, `.journal/`, `target/`,
+`node_modules/` and the `rules/` submodule explicitly; the untracked rest of
+`.claude/` is hidden by `.gitignore`.
 
 Then **read** each `tests/snapshots/*.snap.new` file by hand before
 renaming it over the matching `.snap` to accept it. Never accept a

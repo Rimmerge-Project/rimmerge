@@ -10,6 +10,7 @@ use rim_analyzer::domain::{ModId, Report, Source};
 use rim_resolve::domain::{Tag, Tagging};
 
 use crate::MAX_PAGE_SIZE;
+use crate::search_fold::search_fold;
 
 /// Filters and paging for [`crate::Session::mods`]. `limit` is capped at
 /// [`MAX_PAGE_SIZE`] regardless of the requested value.
@@ -76,7 +77,7 @@ pub struct ModPage {
 /// [`crate::Session::mods`] can call it without borrowing more of `self`
 /// than `report`/`tagging`.
 pub(crate) fn query(report: &Report, tagging: &Tagging, filter: &ModFilter) -> ModPage {
-    let search = filter.search.as_deref().map(str::to_lowercase);
+    let search = filter.search.as_deref().map(search_fold);
 
     let mut matching: Vec<ModSummary> = report
         .mods
@@ -99,8 +100,8 @@ pub(crate) fn query(report: &Report, tagging: &Tagging, filter: &ModFilter) -> M
         }))
         .filter(|row| {
             search.as_deref().is_none_or(|needle| {
-                row.mod_id.as_str().to_lowercase().contains(needle)
-                    || row.name.to_lowercase().contains(needle)
+                search_fold(row.mod_id.as_str()).contains(needle)
+                    || search_fold(&row.name).contains(needle)
             })
         })
         .filter(|row| filter.tag.as_ref().is_none_or(|tag| row.tags.contains(tag)))
@@ -151,6 +152,34 @@ mod tests {
         );
         assert_eq!(page.total, 1);
         assert_eq!(page.items[0].mod_id, ModId::new("framework.core"));
+    }
+
+    #[test]
+    fn a_greek_search_matches_a_capital_sigma_wherever_it_stands() {
+        let report = rim_resolve::test_support::ReportBuilder::new()
+            .mod_with("g.one", |m| m.name = "ΑΣΑ".to_string())
+            .mod_with("g.two", |m| m.name = "ΚΟΣΜΟΣ".to_string())
+            .build();
+        let search = |text: &str| {
+            query(
+                &report,
+                &Tagging::default(),
+                &ModFilter {
+                    search: Some(text.to_string()),
+                    limit: 10,
+                    ..ModFilter::default()
+                },
+            )
+            .items
+            .into_iter()
+            .map(|row| row.mod_id)
+            .collect::<Vec<_>>()
+        };
+
+        // A search ending in a capital sigma finds it inside a word, and a typed word-final
+        // "ς" finds the capital: `str::to_lowercase` fails both.
+        assert_eq!(search("ΑΣ"), [ModId::new("g.one")]);
+        assert_eq!(search("κοσμος"), [ModId::new("g.two")]);
     }
 
     #[test]

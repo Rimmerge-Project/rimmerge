@@ -129,6 +129,28 @@ test.describe("search highlight in the Mods lists", () => {
     await expect.poll(() => marksOf(listLabel(page, "mod.012"))).toEqual(["od.012"]);
   });
 
+  test("a Greek search ending in a capital sigma finds it inside a name and marks that span", async ({
+    page,
+  }) => {
+    // The whole-string lowercase writes a word-final "Σ" as "ς", so "ΑΣ" never matched "ΑΣΑ".
+    await page.addInitScript(() => {
+      window.__INACTIVE_MOD_NAMES__ = { "mod.901": "Μοντέλο ΑΣΑ", "mod.902": "Μοντέλο ΟΔΟΣ" };
+    });
+    await openMods(page);
+    const pane = modsPane(page, "inactive");
+
+    await pane.getByTestId("mods-search").fill("ΑΣ");
+    await expect(pane.getByTestId("mod-row-name-mod.902")).toHaveCount(0);
+    const label = pane.getByTestId("mod-row-name-mod.901");
+    await expect(label).toHaveText("Μοντέλο ΑΣΑ");
+    await expect.poll(() => marksOf(label)).toEqual(["ΑΣ"]);
+
+    // A word-final "ς", as Greek is typed, finds the capital "Σ".
+    await pane.getByTestId("mods-search").fill("οδος");
+    await expect(pane.getByTestId("mod-row-name-mod.901")).toHaveCount(0);
+    await expect.poll(() => marksOf(pane.getByTestId("mod-row-name-mod.902"))).toEqual(["ΟΔΟΣ"]);
+  });
+
   test("the Inactive list marks its matches too", async ({ page }) => {
     await openMods(page);
     const label = modsPane(page, "inactive").getByTestId("mod-row-name-mod.901");

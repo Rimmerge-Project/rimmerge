@@ -511,7 +511,8 @@ of that command surface — no direct filesystem or process access outside
   aborts the fetch it waits for the newest call, bounded, and answers only from a `success`
   state, as the Launch button does) and looks for the mod there:
   present, it focuses the row (`ModTable.focusRow`, which retries over animation frames since a far
-  row renders after the virtualizer's scroll event, and gives way to a newer call); absent under a
+  row renders after the virtualizer's scroll event, and gives way to a newer call; the Groups
+  table's `focusKey` does the same, both through `useFocusRequests`); absent under a
   filter, it clears the search, tag, source (`useModListFilters.clear`, which also skips the 300 ms
   search debounce) and the page-wide group scope, sets the `mods-show-in-load-order-note` and asks
   again; absent unfiltered, it ends. One request is current at a time (a token): a newer request, a
@@ -519,6 +520,17 @@ of that command surface — no direct filesystem or process access outside
   (`filterSignature`, the typed inputs) or a failed query ends the older one without touching
   anything, and leaving load order clears the note.
   An inactive mod has no action. In overlay (drawer) mode the panel's button closes the drawer first.
+- **A vue-i18n warning fails the test that causes it.** `src/i18n/intlifyGuard.ts`, installed by
+  `test-setup.ts`, wraps `console.warn` once per test file and records every `[intlify]` message with
+  the current test's name; `afterEach` throws for that test's warnings and `afterAll` for any left
+  over (a late timer's; a zero-delay one is caught, a longer one is not). Other warnings still print.
+  A test that provokes warnings on purpose (the fallback-chain tests in `i18n.test.ts`) calls
+  `allowIntlifyWarnings()`. **Bypass:** a test that replaces `console.warn` itself
+  (`vi.spyOn(console, "warn").mockImplementation(...)` that does not call through) hides intlify
+  warnings from the guard while the spy is on. Every `<i18n-t>` names `scope="global"` (the default,
+  `parent`, warns on each render here), pinned by `i18nt-scope.guard.test.ts`. Vitest's minimal
+  reporter (picked in non-interactive runs) shows no console output of a passing test, which is
+  how those warnings went unseen.
 - **Search matches are marked from the backend's own ranges (#57).** `ModListRowDto.search`
   (`SearchHighlightDto { name, id }`, ranges `{ start, end }` in UTF-16 code units, converted once from
   `rim-session`'s byte ranges in `dto/mod_lists.rs`) is omitted when there is no search or no match, so a
@@ -531,7 +543,13 @@ of that command surface — no direct filesystem or process access outside
   A match is a styled `<span>` (`bg-search-match`, its own yellow token in both themes, at least 1.5:1 against every row background with 4.5:1 text on it, pinned in `searchMatch.contrast.test.ts`, plus a 2 px underline), not
   `<mark>`: `mark` has a role that screen readers may announce around each matched row. Never `v-html`
   (`no-v-html.guard.test.ts`). The mock (`matchRanges` in `scenario.ts`) mirrors the backend's fold and
-  widening in UTF-16 units. `ModPicker`'s lists (scanned tier, `list_mods`) are not marked.
+  widening in UTF-16 units; the fold (`foldSearch`) is `rim-session`'s `search_fold`: each character lowercased on its
+  own with `ς` written as `σ`, never the whole string, whose final-sigma rule would make `ΑΣ` miss `ΑΣΑ`
+  and a typed `κοσμος` miss `ΚΟΣΜΟΣ`. Every mock search box (`list_mods`, the findings, changes, merge
+  fields and def searches) uses it. The searches the frontend runs itself (`searchTree`,
+  `filterGroupsByName`, `CoverageList`'s filter, `GroupTree`'s type-ahead) use `utils/searchFold.ts`, the
+  same fold: never `toLowerCase()` on a name being searched. (`newGroupNameFor` compares sibling names for
+  equality, as the backend does, and is not a search.) `ModPicker`'s lists (scanned tier, `list_mods`) are not marked.
 - **Copying groups from another profile** (`commands/organization_copy.rs`,
   `components/mods/organization/CopyProfileDialog.vue`, `composables/useCopyProfile.ts`) is two
   commands over `CopyOrganization`: `preview_copy_organization` (a read) and `copy_organization`

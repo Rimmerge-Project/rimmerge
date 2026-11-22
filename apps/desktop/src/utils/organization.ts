@@ -2,6 +2,7 @@ import type { ColorTokenDto } from "@/types/generated/ColorTokenDto";
 import type { GroupFilterDto } from "@/types/generated/GroupFilterDto";
 import type { GroupLabelDto } from "@/types/generated/GroupLabelDto";
 import type { GroupNodeDto } from "@/types/generated/GroupNodeDto";
+import { searchFold } from "@/utils/searchFold";
 
 /** The twelve palette colours, in the order the picker lists them. */
 export const COLOR_TOKENS: readonly ColorTokenDto[] = [
@@ -163,16 +164,16 @@ export interface TreeSearchResult {
   readonly shown: ReadonlySet<number>;
 }
 
-/** Case-insensitive name search over the tree; `null` for an empty query (no search). */
+/** Case-insensitive (see `searchFold`) name search over the tree; `null` for an empty query (no search). */
 export function searchTree(nodes: readonly GroupNodeDto[], query: string): TreeSearchResult | null {
-  const needle = query.trim().toLowerCase();
+  const needle = searchFold(query.trim());
   if (needle === "") {
     return null;
   }
   const matches = new Set<number>();
   const shown = new Set<number>();
   for (const node of nodes) {
-    if (node.name.toLowerCase().includes(needle)) {
+    if (searchFold(node.name).includes(needle)) {
       matches.add(node.id);
       for (const ancestor of pathTo(nodes, node.id)) {
         shown.add(ancestor.id);
@@ -197,16 +198,16 @@ export function firstColoredGroup(
   return null;
 }
 
-/** The groups whose name contains `query` (trimmed, case-insensitive), in tree order; all for an empty one. */
+/** The groups whose name contains `query` (trimmed, folded by `searchFold`), in tree order; all for an empty one. */
 export function filterGroupsByName(
   nodes: readonly GroupNodeDto[],
   query: string,
 ): readonly GroupNodeDto[] {
-  const needle = query.trim().toLowerCase();
+  const needle = searchFold(query.trim());
   if (needle === "") {
     return nodes;
   }
-  return nodes.filter((node) => node.name.toLowerCase().includes(needle));
+  return nodes.filter((node) => searchFold(node.name).includes(needle));
 }
 
 /**

@@ -7,6 +7,8 @@ use std::collections::{BTreeMap, HashMap};
 use rim_analyzer::domain::ModId;
 use rim_resolve::domain::{FindingKey, Ledger, ResolutionStatus};
 
+use crate::search_fold::search_fold;
+
 /// The maximum number of entries [`FindingIndex::page`] ever returns in
 /// one call, regardless of the requested [`FindingFilter::limit`].
 pub const MAX_PAGE_SIZE: usize = 200;
@@ -302,7 +304,7 @@ impl FindingIndex {
     #[must_use]
     pub fn page(&self, ledger: &Ledger, filter: &FindingFilter) -> FindingPage {
         let limit = filter.limit.min(MAX_PAGE_SIZE);
-        let search = filter.search.as_deref().map(str::to_lowercase);
+        let search = filter.search.as_deref().map(search_fold);
 
         let matching: Vec<&FindingKey> = self
             .sorted
@@ -326,7 +328,7 @@ impl FindingIndex {
             .filter(|entry| {
                 search
                     .as_deref()
-                    .is_none_or(|needle| entry.key.to_string().to_lowercase().contains(needle))
+                    .is_none_or(|needle| search_fold(&entry.key.to_string()).contains(needle))
             })
             .map(|entry| &entry.key)
             .collect();
@@ -487,6 +489,43 @@ mod tests {
         );
 
         assert_eq!(page.total, 1);
+    }
+
+    #[test]
+    fn a_greek_search_matches_a_capital_sigma_wherever_it_stands() {
+        let ledger = Ledger {
+            source: OrderSource::Current,
+            entries: ["ΑΣΑ.mod", "ΚΟΣΜΟΣ.mod"]
+                .into_iter()
+                .map(|id| {
+                    resolution(
+                        FindingKey::MissingMod {
+                            mod_id: ModId::new(id),
+                        },
+                        ResolutionStatus::NeedsInput,
+                        50,
+                    )
+                })
+                .collect(),
+            stats: rim_resolve::domain::LedgerStats::default(),
+        };
+        let index = FindingIndex::build(&ledger);
+        let search = |text: &str| {
+            index
+                .page(
+                    &ledger,
+                    &FindingFilter {
+                        search: Some(text.to_string()),
+                        limit: 10,
+                        ..FindingFilter::default()
+                    },
+                )
+                .total
+        };
+
+        // `str::to_lowercase` fails both: "ΑΣ" would fold to "ας", "κοσμος" would not meet "ΚΟΣΜΟΣ".
+        assert_eq!(search("ΑΣ"), 1);
+        assert_eq!(search("κοσμος"), 1);
     }
 
     /// A ledger with more entries than [`MAX_PAGE_SIZE`] — the only way

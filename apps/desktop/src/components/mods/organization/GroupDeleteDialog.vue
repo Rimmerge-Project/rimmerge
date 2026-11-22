@@ -52,6 +52,7 @@ watch(visible, (isOpen) => {
     >
       <p>
         <i18n-t
+          scope="global"
           keypath="mods.groups.dialog.deleteQuestion"
           tag="span"
         >

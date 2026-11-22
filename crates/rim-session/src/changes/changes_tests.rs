@@ -424,6 +424,53 @@ fn search_matches_the_def_ref_or_asset_path_case_insensitively() {
 }
 
 #[test]
+fn a_greek_search_matches_a_capital_sigma_in_a_def_name_wherever_it_stands() {
+    let (mut sources, report) = owner_fixture();
+    let owner = ModId::new("owner.mod");
+    for name in ["ΑΣΑ", "ΚΟΣΜΟΣ"] {
+        let key = ("ThingDef".to_string(), name.to_string());
+        sources.defs.insert(
+            (owner.clone(), key.clone()),
+            vec![def_entry("ThingDef", name, None)],
+        );
+        sources.owners_by_def.insert(key, vec![owner.clone()]);
+    }
+    let total = |text: &str| {
+        query(
+            &owner,
+            &report,
+            &sources,
+            &ChangeFilter {
+                search: Some(text.to_string()),
+                limit: 10,
+                ..ChangeFilter::default()
+            },
+        )
+        .total
+    };
+
+    // `str::to_lowercase` fails both: "ΑΣ" would fold to "ας", "κοσμος" would not meet "ΚΟΣΜΟΣ".
+    assert_eq!(total("ΑΣ"), 1);
+    assert_eq!(total("κοσμος"), 1);
+}
+
+#[test]
+fn search_defs_matches_a_greek_name_and_type_through_the_same_fold() {
+    let mut sources = SourceIndex::default();
+    sources.owners_by_def.insert(
+        ("ThingDef".to_string(), "ΑΣΑ".to_string()),
+        vec![ModId::new("a.mod")],
+    );
+    sources.owners_by_def.insert(
+        ("ΚΟΣΜΟΣDef".to_string(), "Plain".to_string()),
+        vec![ModId::new("b.mod")],
+    );
+
+    assert_eq!(search("ΑΣ", 10, &sources).len(), 1);
+    assert_eq!(search("κοσμος", 10, &sources).len(), 1);
+}
+
+#[test]
 fn filtering_by_kind_narrows_the_page_and_total() {
     let (sources, report) = owner_fixture();
     let target = ModId::new("owner.mod");

@@ -1,11 +1,9 @@
-import { computed, nextTick, type Ref } from "vue";
+import { computed, type Ref } from "vue";
 import { handleSelectionKey } from "@/composables/selectionKeys";
 import { isInert } from "@/composables/shortcutTargets";
+import { useFocusRequests } from "@/composables/useFocusRequests";
 import type { ModListRowDto } from "@/types/generated/ModListRowDto";
 import type { RowMenu } from "@/utils/modRowMenu";
-
-/** How many animation frames {@link useRowKeys}'s `focusRow` waits for a scrolled-to row to render. */
-const FOCUS_RETRY_FRAMES = 20;
 
 /** What a row key asks the table to do; the table owns the rows' events and menus. */
 export interface RowKeyActions {
@@ -89,8 +87,7 @@ export function useRowKeys({
     focusedId.value = modId;
   }
 
-  /** The latest `focusRow` call; an older call still waiting for its row gives up. */
-  let focusRequest = 0;
+  const focusRequests = useFocusRequests();
 
   /** Moves roving focus by `delta` rows (±1), or to the very first/last row when `toEnd` is given. */
   async function moveFocus(delta: number, toEnd?: "start" | "end"): Promise<string | null> {
@@ -134,34 +131,22 @@ export function useRowKeys({
    * Scrolls the row for `modId` into view and focuses it, whether or not it is rendered yet.
    * A row that is not in the list is ignored.
    */
-  async function focusRow(modId: string): Promise<void> {
+  function focusRow(modId: string): Promise<void> {
     // Counted before the early return: a call for a mod that is gone still supersedes an older
     // call that is waiting for its row.
-    focusRequest += 1;
-    const request = focusRequest;
+    const request = focusRequests.claim();
     const index = mods().findIndex((mod) => mod.modId === modId);
     if (index === -1) {
-      return;
+      return Promise.resolve();
     }
     scrollToIndex(index);
     focusedId.value = modId;
-    // The target row may not exist in the DOM yet (virtualization) until the scroll above has
-    // re-rendered `visibleRows`: wait for Vue to flush, and for a far row the virtualizer's own
-    // scroll event, which lands a frame or two later. A newer call supersedes this one.
-    for (let frame = 0; frame <= FOCUS_RETRY_FRAMES; frame++) {
-      await nextTick();
-      if (request !== focusRequest) {
-        return;
-      }
-      const element = getScroller()?.querySelector<HTMLElement>(`[data-testid="mod-row-${modId}"]`);
-      if (element) {
-        element.focus();
-        return;
-      }
-      if (frame < FOCUS_RETRY_FRAMES) {
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-      }
-    }
+    // The target row may not exist in the DOM yet (virtualization); a newer call supersedes this one.
+    // Returned, not awaited in this function: the extra async layer would delay the caller's
+    // continuation by a few microtasks, which a keydown test observes.
+    return focusRequests.focusWhenRendered(request, () =>
+      getScroller()?.querySelector<HTMLElement>(`[data-testid="mod-row-${modId}"]`),
+    );
   }
 
   /**

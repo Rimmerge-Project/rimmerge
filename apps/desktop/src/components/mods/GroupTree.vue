@@ -18,6 +18,7 @@ import {
   isSameScope,
   visibleNodes,
 } from "@/utils/organization";
+import { searchFold } from "@/utils/searchFold";
 
 /**
  * The group tree, following the WAI-ARIA tree pattern: one roving tab stop; Up/Down move,
@@ -167,7 +168,7 @@ let typeAheadTimer: ReturnType<typeof setTimeout> | undefined;
 /** Jumps to the next entry whose name starts with the typed text. */
 function typeAheadTo(character: string, from: number): void {
   clearTimeout(typeAheadTimer);
-  typeAhead += character.toLowerCase();
+  typeAhead += searchFold(character);
   typeAheadTimer = setTimeout(() => {
     typeAhead = "";
   }, TYPE_AHEAD_RESET_MS);
@@ -179,7 +180,7 @@ function typeAheadTo(character: string, from: number): void {
   const start = isCycling || typeAhead.length === 1 ? from + 1 : from;
   for (let step = 0; step < all.length; step += 1) {
     const candidate = all[(start + step) % all.length];
-    if (candidate !== undefined && nameOf(candidate).toLowerCase().startsWith(prefix)) {
+    if (candidate !== undefined && searchFold(nameOf(candidate)).startsWith(prefix)) {
       void focusKey(candidate.key);
       return;
     }

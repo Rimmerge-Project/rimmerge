@@ -20,6 +20,7 @@ use crate::mod_times::{ModUpdateTimes, UpdateTime};
 use crate::organization::{
     ColorToken, GroupId, GroupName, OrganizationState, OrganizationUnavailable,
 };
+use crate::search_fold::search_fold;
 
 mod grouped;
 mod organized;
@@ -254,7 +255,7 @@ fn has_tag(row: &ModListRow, query: &ModListQuery) -> bool {
 /// The row as the list shows it when `query` admits it, `None` otherwise.
 ///
 /// The search is decided by the same ranges that mark it: a row is admitted
-/// when its lowercased name or id contains the lowercased `needle`, which is
+/// when its folded name or id contains the folded `needle`, which is
 /// exactly when [`SearchHighlight::of`] finds a range, so the filter and the
 /// marks have one source of truth. A missing or empty needle admits every
 /// row and marks nothing.
@@ -439,7 +440,7 @@ pub(crate) fn working_rows(
     query: &ModListQuery,
 ) -> Result<Vec<ModListRow>, ModListError> {
     let organized = ListOrganization::open(organization, query.group)?;
-    let needle = query.search.as_deref().map(str::to_lowercase);
+    let needle = query.search.as_deref().map(search_fold);
     let scanned: BTreeMap<&ModId, &rim_analyzer::domain::Mod> =
         report.mods.iter().map(|m| (&m.id, m)).collect();
     let unscanned: BTreeMap<&ModId, &rim_analyzer::domain::InactiveMod> =
@@ -516,7 +517,7 @@ pub(crate) fn inactive_rows(
     query: &ModListQuery,
 ) -> Result<Vec<ModListRow>, ModListError> {
     let organized = ListOrganization::open(organization, query.group)?;
-    let needle = query.search.as_deref().map(str::to_lowercase);
+    let needle = query.search.as_deref().map(search_fold);
     let working_bases: BTreeSet<ModId> = working.ids().iter().map(ModId::base).collect();
     let is_inactive = |id: &ModId| !working_bases.contains(&id.base());
 
@@ -897,6 +898,21 @@ mod tests {
     }
 
     #[test]
+    fn a_search_ending_in_capital_sigma_finds_it_inside_a_name() {
+        let (report, set) = named_report(&[("g.one", "Mod ΑΣΑ"), ("g.two", "Mod ΟΔΟΣ")]);
+
+        let list = working_list(&report, &Tagging::default(), &set, &searching("ΑΣ"));
+
+        // "ΑΣ" is 4 bytes; it starts after "Mod " (4 bytes).
+        assert_eq!(ids(&list), ["g.one"]);
+        assert_eq!(list.items[0].search.name, [span(4, 8)]);
+        assert_eq!(&list.items[0].name[4..8], "ΑΣ");
+        // The letter still matches at a word end.
+        let at_end = working_list(&report, &Tagging::default(), &set, &searching("ΟΔΟΣ"));
+        assert_eq!(ids(&at_end), ["g.two"]);
+    }
+
+    #[test]
     fn a_row_matching_in_both_texts_marks_both_and_an_inactive_row_is_marked_too() {
         let (report, _) = named_report(&[("pack.one", "One Pack"), ("other", "Zed")]);
 
@@ -991,22 +1007,21 @@ mod tests {
                     prop_assert_eq!(list.items.len(), mods.len());
                     prop_assert!(list.items.iter().all(|row| row.search.is_empty()));
                 } else {
-                    let folded_needle = needle.to_lowercase();
+                    let folded_needle = search_fold(&needle);
                     for row in &list.items {
                         prop_assert!(!row.search.is_empty());
                         for range in &row.search.name {
-                            let marked = row.name[range.clone()].to_lowercase().replace('ς', "σ");
-                            prop_assert!(marked.contains(&folded_needle.replace('ς', "σ")));
+                            let marked = search_fold(&row.name[range.clone()]);
+                            prop_assert!(marked.contains(&folded_needle));
                         }
                     }
-                    // The filter's long-standing definition, pinned as an oracle: a
-                    // row is listed exactly when its lowercased id or name holds
-                    // the lowercased search.
+                    // The filter's definition, pinned as an oracle: a row is listed
+                    // exactly when its folded id or name holds the folded search.
                     let expected: Vec<&str> = mods
                         .iter()
                         .filter(|(id, name)| {
-                            id.to_lowercase().contains(&folded_needle)
-                                || name.to_lowercase().contains(&folded_needle)
+                            search_fold(id).contains(&folded_needle)
+                                || search_fold(name).contains(&folded_needle)
                         })
                         .map(|(id, _)| id.as_str())
                         .collect();

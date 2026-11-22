@@ -294,6 +294,12 @@ declare global {
      */
     __EXTRA_INACTIVE_MODS__?: number;
     /**
+     * Set before the scenario installs: display names that replace the generated "Inactive Mod <n>"
+     * of the named inactive mods (`mod.9xx` ids), for a spec that needs a name of its own (a Greek
+     * one, to search through the filter's fold).
+     */
+    __INACTIVE_MOD_NAMES__?: Record<string, string>;
+    /**
      * Set before the scenario installs: ids that `ModsConfig.xml` lists but no folder on disk
      * backs, appended to the working, scanned and file sets (the backend's `missing_mods`).
      */
@@ -2082,12 +2088,15 @@ export function installScenario(): void {
     name: string;
     source: "local" | "workshop";
     dependsOn: string[];
-  }[] = Array.from({ length: 10 + (window.__EXTRA_INACTIVE_MODS__ ?? 0) }, (_, index) => ({
-    modId: `mod.9${(index + 1).toString().padStart(2, "0")}`,
-    name: `Inactive Mod ${index + 1}`,
-    source: index % 2 === 0 ? "local" : ("workshop" as const),
-    dependsOn: INACTIVE_DEPENDENCIES[index] ?? [],
-  }));
+  }[] = Array.from({ length: 10 + (window.__EXTRA_INACTIVE_MODS__ ?? 0) }, (_, index) => {
+    const modId = `mod.9${(index + 1).toString().padStart(2, "0")}`;
+    return {
+      modId,
+      name: window.__INACTIVE_MOD_NAMES__?.[modId] ?? `Inactive Mod ${index + 1}`,
+      source: index % 2 === 0 ? "local" : ("workshop" as const),
+      dependsOn: INACTIVE_DEPENDENCIES[index] ?? [],
+    };
+  });
 
   /**
    * The patch maker's own fixture universe — mirrors `crates/rim-io/tests/fixtures/assign_game`:
@@ -5579,21 +5588,36 @@ export function installScenario(): void {
   }
 
   /**
+   * `rim_session::search_fold::search_fold`, the fold of every search box: each character
+   * lowercased on its own, with `ς` written as `σ`. A whole-string `toLowerCase` applies the
+   * final-sigma rule (a word-final `Σ` becomes `ς`), so `ΑΣ` would not find `ΑΣΑ`; a one-character
+   * string has no preceding letter, so `Σ` always becomes `σ`, and the `ς` mapping lets a typed
+   * word-final `ς` find a capital `Σ`.
+   */
+  function foldChar(character: string): string {
+    return character.toLowerCase().replace("ς", "σ");
+  }
+
+  function foldSearch(text: string): string {
+    return Array.from(text, foldChar).join("");
+  }
+
+  /**
    * `rim_session::mod_lists::search::match_ranges`, in UTF-16 code units (the backend converts its
-   * byte ranges at the DTO boundary): every non-overlapping occurrence of the lowercased `needle`
-   * in the lowercased text, widened to the whole original characters it touches (a length-changing
+   * byte ranges at the DTO boundary): every non-overlapping occurrence of the folded `needle`
+   * in the folded text, widened to the whole original characters it touches (a length-changing
    * fold such as `İ` -> `i` + a combining dot marks the one character), overlapping hits merged,
    * touching ones kept apart. An empty needle marks nothing.
    */
   function matchRanges(text: string, needle: string): TextRangeMock[] {
     if (needle === "") return [];
-    const folded = text.toLowerCase();
+    const folded = foldSearch(text);
     if (!folded.includes(needle)) return [];
     const spans: { start: number; end: number; foldedStart: number; foldedEnd: number }[] = [];
     let unit = 0;
     let foldedUnit = 0;
     for (const character of text) {
-      const foldedLength = character.toLowerCase().length;
+      const foldedLength = foldChar(character).length;
       spans.push({
         start: unit,
         end: unit + character.length,
@@ -5623,7 +5647,7 @@ export function installScenario(): void {
     return ranges;
   }
 
-  /** The row with its `search` marks for the lowercased `needle`, when either text matched. */
+  /** The row with its `search` marks for the folded `needle`, when either text matched. */
   function withSearchMarks(row: ModListRowMock, needle: string): ModListRowMock {
     const name = matchRanges(row.name, needle);
     const id = matchRanges(row.modId, needle);
@@ -5719,12 +5743,12 @@ export function installScenario(): void {
       rows = [...deactivated, ...unscanned];
     }
     rows = joinOrganization(rows, query.group);
-    const needle = query.search?.toLowerCase() ?? null;
+    const needle = query.search == null ? null : foldSearch(query.search);
     const matching = rows
       .filter((row) =>
         needle === null
           ? true
-          : row.modId.toLowerCase().includes(needle) || row.name.toLowerCase().includes(needle),
+          : foldSearch(row.modId).includes(needle) || foldSearch(row.name).includes(needle),
       )
       .filter((row) => query.source === null || row.source === query.source)
       .filter((row) => {
@@ -8221,7 +8245,9 @@ export function installScenario(): void {
       if (filter.modId)
         matching = matching.filter((entry) => entry.modIds.includes(filter.modId as string));
       if (filter.search)
-        matching = matching.filter((entry) => entry.key.includes(filter.search as string));
+        matching = matching.filter((entry) =>
+          foldSearch(entry.key).includes(foldSearch(filter.search as string)),
+        );
       matching.sort((a, b) => a.confidence - b.confidence || a.key.localeCompare(b.key));
       const total = matching.length;
       const limit = Math.min(filter.limit, 200);
@@ -8305,8 +8331,8 @@ export function installScenario(): void {
       let matching = allFields;
       if (request.filter.onlyConflicts) matching = matching.filter((f) => f.class === "conflict");
       if (request.filter.search) {
-        const needle = request.filter.search.toLowerCase();
-        matching = matching.filter((f) => f.path.toLowerCase().includes(needle));
+        const needle = foldSearch(request.filter.search);
+        matching = matching.filter((f) => foldSearch(f.path).includes(needle));
       }
       const total = matching.length;
       const limit = Math.min(request.filter.limit, 200);
@@ -8754,10 +8780,9 @@ export function installScenario(): void {
       }));
       let matching = [...scannedRows, ...missingRows];
       if (filter.search) {
-        const needle = filter.search.toLowerCase();
+        const needle = foldSearch(filter.search);
         matching = matching.filter(
-          (mod) =>
-            mod.modId.toLowerCase().includes(needle) || mod.name.toLowerCase().includes(needle),
+          (mod) => foldSearch(mod.modId).includes(needle) || foldSearch(mod.name).includes(needle),
         );
       }
       if (filter.tag) matching = matching.filter((mod) => mod.tags.includes(filter.tag as string));
@@ -9406,8 +9431,8 @@ export function installScenario(): void {
       };
       let rows = defChangesFor(request.modId);
       if (request.filter.search) {
-        const needle = request.filter.search.toLowerCase();
-        rows = rows.filter((row) => row.defRef.toLowerCase().includes(needle));
+        const needle = foldSearch(request.filter.search);
+        rows = rows.filter((row) => foldSearch(row.defRef).includes(needle));
       }
       const kindCounts = {
         ownsDef: rows.filter((r) => r.kind === "ownsDef").length,
@@ -9494,13 +9519,13 @@ export function installScenario(): void {
     },
     search_defs: (payload: unknown) => {
       const request = payload as { query: string; limit: number };
-      const needle = request.query.toLowerCase();
+      const needle = foldSearch(request.query);
       if (needle.length === 0) return [];
       return [...mergeFixtures.values()]
         .filter(
           (fixture) =>
-            fixture.defKey.defName.toLowerCase().includes(needle) ||
-            fixture.defKey.defType.toLowerCase().includes(needle),
+            foldSearch(fixture.defKey.defName).includes(needle) ||
+            foldSearch(fixture.defKey.defType).includes(needle),
         )
         .map((fixture) => ({
           defRef: defRefOf(fixture),
@@ -9825,7 +9850,9 @@ export function installScenario(): void {
         matching = matching.filter(({ entry }) => entry.modIds.includes(filter.modId as string));
       }
       if (filter.search) {
-        matching = matching.filter(({ entry }) => entry.key.includes(filter.search as string));
+        matching = matching.filter(({ entry }) =>
+          foldSearch(entry.key).includes(foldSearch(filter.search as string)),
+        );
       }
       matching.sort(
         (a, b) => a.entry.confidence - b.entry.confidence || a.entry.key.localeCompare(b.entry.key),

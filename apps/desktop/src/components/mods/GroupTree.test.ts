@@ -40,6 +40,7 @@ let wrappers: ReturnType<typeof mount>[] = [];
 
 function mountTree(
   options: {
+    nodes?: GroupNodeDto[];
     expanded?: number[];
     shown?: Set<number> | null;
     scope?: GroupScopeChoice;
@@ -51,7 +52,7 @@ function mountTree(
   const expanded = ref<ReadonlySet<number>>(new Set(options.expanded ?? []));
   const wrapper = mount(GroupTree, {
     props: {
-      nodes: TREE,
+      nodes: options.nodes ?? TREE,
       shown: options.shown ?? null,
       openModGroupIds: options.openModGroupIds ?? new Set<number>(),
       rowDrag:
@@ -189,6 +190,15 @@ describe("GroupTree", () => {
     await item(wrapper, "group-4").trigger("keydown", { key: "a" });
     // The typed text grows to "ra", which still names Ranged, so focus stays on it.
     expect(document.activeElement?.getAttribute("data-key")).toBe("group-4");
+  });
+
+  it("finds a Greek group by a typed final sigma, which only the sigma fold matches", async () => {
+    // "ΣΑ" lowercases to "σα" on its own, so a plain toLowerCase of the typed "ς" would not prefix it.
+    const { wrapper } = mountTree({ nodes: [...TREE, node(6, "ΣΑ", null, 1)] });
+
+    await item(wrapper, "all").trigger("keydown", { key: "ς" });
+
+    expect(document.activeElement?.getAttribute("data-key")).toBe("group-6");
   });
 
   it("lets a space continue a name being typed, and scopes on a space only when none is", async () => {

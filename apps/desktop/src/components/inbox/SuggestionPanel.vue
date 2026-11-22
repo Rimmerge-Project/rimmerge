@@ -221,6 +221,7 @@ const runtimePatchRows = computed<RuntimePatchRow[]>(() => {
     >
       <template v-if="finding.kind === 'edgeDropped'">
         <i18n-t
+          scope="global"
           keypath="inbox.evidence.edgeDropped.sentence"
           tag="p"
         >
@@ -271,6 +272,7 @@ const runtimePatchRows = computed<RuntimePatchRow[]>(() => {
 
       <template v-else-if="finding.kind === 'textureOverride'">
         <i18n-t
+          scope="global"
           keypath="inbox.evidence.textureOverride.sentence"
           tag="p"
           class="font-medium"
@@ -288,6 +290,7 @@ const runtimePatchRows = computed<RuntimePatchRow[]>(() => {
 
       <template v-else-if="finding.kind === 'duplicateAssembly'">
         <i18n-t
+          scope="global"
           keypath="inbox.evidence.duplicateAssembly.sentence"
           tag="p"
         >
@@ -438,6 +441,7 @@ const runtimePatchRows = computed<RuntimePatchRow[]>(() => {
 
       <template v-else-if="finding.kind === 'soundOverride'">
         <i18n-t
+          scope="global"
           keypath="inbox.evidence.soundOverride.sentence"
           tag="p"
         >
@@ -458,6 +462,7 @@ const runtimePatchRows = computed<RuntimePatchRow[]>(() => {
 
       <template v-else-if="finding.kind === 'undeclaredTypeDependency'">
         <i18n-t
+          scope="global"
           keypath="inbox.evidence.undeclaredTypeDependency.sentence"
           tag="p"
         >
@@ -475,6 +480,7 @@ const runtimePatchRows = computed<RuntimePatchRow[]>(() => {
 
       <template v-else-if="finding.kind === 'runtimePatchCollision'">
         <i18n-t
+          scope="global"
           keypath="inbox.evidence.runtimePatchCollision.sentence"
           tag="p"
         >
@@ -515,6 +521,7 @@ const runtimePatchRows = computed<RuntimePatchRow[]>(() => {
 
       <template v-else-if="finding.kind === 'transpilerCollision'">
         <i18n-t
+          scope="global"
           keypath="inbox.evidence.transpilerCollision.sentence"
           tag="p"
         >
@@ -535,6 +542,7 @@ const runtimePatchRows = computed<RuntimePatchRow[]>(() => {
 
       <template v-else-if="finding.kind === 'tagInferred'">
         <i18n-t
+          scope="global"
           keypath="inbox.evidence.tagInferred.sentence"
           tag="p"
         >
@@ -685,6 +693,7 @@ const runtimePatchRows = computed<RuntimePatchRow[]>(() => {
 
       <template v-else-if="finding.kind === 'missingTexturePath'">
         <i18n-t
+          scope="global"
           keypath="inbox.evidence.missingTexturePath.sentence"
           tag="p"
         >
@@ -705,6 +714,7 @@ const runtimePatchRows = computed<RuntimePatchRow[]>(() => {
       <template v-else-if="finding.kind === 'undecodableTexture'">
         <p>
           <i18n-t
+            scope="global"
             keypath="inbox.evidence.undecodableTexture.sentence"
             tag="span"
           >
@@ -731,6 +741,7 @@ const runtimePatchRows = computed<RuntimePatchRow[]>(() => {
       </template>
       <template v-else-if="finding.kind === 'brokenInheritance'">
         <i18n-t
+          scope="global"
           :keypath="
             finding.problem.kind === 'parentTypeMismatch'
               ? 'inbox.evidence.brokenInheritance.wrongType'
@@ -821,6 +832,7 @@ const runtimePatchRows = computed<RuntimePatchRow[]>(() => {
       </template>
       <template v-else-if="finding.kind === 'nearMissModReference'">
         <i18n-t
+          scope="global"
           :keypath="
             finding.referenceKind === 'findModName'
               ? 'inbox.evidence.nearMissModReference.findModName'
@@ -840,6 +852,7 @@ const runtimePatchRows = computed<RuntimePatchRow[]>(() => {
         </i18n-t>
         <i18n-t
           v-if="finding.file"
+          scope="global"
           keypath="inbox.evidence.nearMissModReference.writtenIn"
           tag="p"
           class="text-text-muted text-xs"
@@ -851,6 +864,7 @@ const runtimePatchRows = computed<RuntimePatchRow[]>(() => {
       </template>
       <template v-else-if="finding.kind === 'patchWillFail'">
         <i18n-t
+          scope="global"
           :keypath="patchWillFailKeypath(finding.cause)"
           tag="p"
         >
@@ -872,6 +886,7 @@ const runtimePatchRows = computed<RuntimePatchRow[]>(() => {
         </i18n-t>
         <i18n-t
           v-if="finding.leafXpath"
+          scope="global"
           keypath="inbox.evidence.patchWillFail.specificField"
           tag="p"
           class="text-text-muted text-xs"
@@ -892,6 +907,7 @@ const runtimePatchRows = computed<RuntimePatchRow[]>(() => {
 
       <template v-else-if="finding.kind === 'discardedAddition'">
         <i18n-t
+          scope="global"
           keypath="inbox.evidence.discardedAddition.sentence"
           tag="p"
         >
@@ -913,6 +929,7 @@ const runtimePatchRows = computed<RuntimePatchRow[]>(() => {
       <template v-else-if="finding.kind === 'danglingDefReference'">
         <p>
           <i18n-t
+            scope="global"
             keypath="inbox.evidence.danglingDefReference.sentence"
             tag="span"
           >
@@ -925,6 +942,7 @@ const runtimePatchRows = computed<RuntimePatchRow[]>(() => {
           </i18n-t>
           <i18n-t
             v-if="finding.likelySound"
+            scope="global"
             keypath="inbox.evidence.danglingDefReference.likelySound"
             tag="span"
           >

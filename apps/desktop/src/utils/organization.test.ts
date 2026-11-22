@@ -7,6 +7,7 @@ import {
   COLOR_SWATCH_CLASS,
   COLOR_TEXT_CLASS,
   COLOR_TOKENS,
+  filterGroupsByName,
   firstColoredGroup,
   groupFilterOf,
   isSameScope,
@@ -29,7 +30,7 @@ const TREE = [
   node(5, "Armor", null, 1),
 ];
 
-const ids = (nodes: GroupNodeDto[]): number[] => nodes.map((entry) => entry.id);
+const ids = (nodes: readonly GroupNodeDto[]): number[] => nodes.map((entry) => entry.id);
 
 describe("palette tables", () => {
   it("name and style every colour token", () => {
@@ -85,6 +86,38 @@ describe("searchTree", () => {
   it("is no search for an empty query and finds nothing for an unknown name", () => {
     expect(searchTree(TREE, "  ")).toBeNull();
     expect(searchTree(TREE, "zzz")?.shown.size).toBe(0);
+  });
+});
+
+describe("searchTree with Greek names", () => {
+  const GREEK = [node(1, "ΚΟΣΜΟΣ", null, 1), node(2, "ΑΣΑ", null, 1)];
+
+  it("finds a capital-sigma name from a typed final sigma", () => {
+    expect([...(searchTree(GREEK, "κοσμος")?.matches ?? [])]).toEqual([1]);
+  });
+
+  it("finds a name that continues after a capital sigma", () => {
+    expect([...(searchTree(GREEK, "ΑΣ")?.matches ?? [])]).toEqual([2]);
+  });
+});
+
+describe("filterGroupsByName", () => {
+  const GREEK = [node(1, "ΚΟΣΜΟΣ", null, 1), node(2, "ΑΣΑ", null, 1)];
+
+  it("keeps every group for an empty query", () => {
+    expect(filterGroupsByName(GREEK, " ")).toEqual(GREEK);
+  });
+
+  it("filters by name, case-insensitively", () => {
+    expect(ids(filterGroupsByName(TREE, "ARM"))).toEqual([5]);
+  });
+
+  it("finds a capital-sigma name from a typed final sigma", () => {
+    expect(ids(filterGroupsByName(GREEK, "κοσμος"))).toEqual([1]);
+  });
+
+  it("finds a name that continues after a capital sigma", () => {
+    expect(ids(filterGroupsByName(GREEK, "ΑΣ"))).toEqual([2]);
   });
 });
 

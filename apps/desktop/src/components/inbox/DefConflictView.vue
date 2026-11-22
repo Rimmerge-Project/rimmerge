@@ -322,6 +322,7 @@ function kindLabel(kind: DefConflictKindDto): string {
             </template>
             <template v-else-if="problem.kind === 'missingTemplate'">
               <i18n-t
+                scope="global"
                 keypath="inbox.defConflictView.problemMissingTemplate"
                 tag="span"
               >

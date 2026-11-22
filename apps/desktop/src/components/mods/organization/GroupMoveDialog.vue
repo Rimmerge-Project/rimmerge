@@ -73,6 +73,7 @@ function submit(): void {
     >
       <p>
         <i18n-t
+          scope="global"
           keypath="mods.groups.dialog.moveQuestion"
           tag="span"
         >

@@ -13,7 +13,17 @@ function mountFor(locale: string, groups: GroupLabelDto[]) {
   const i18n = createI18n({
     legacy: false,
     locale,
-    messages: { [locale]: { mods: { groups: { allGroups: "{groups}" } } } },
+    messages: {
+      [locale]: {
+        mods: {
+          groups: {
+            allGroups: "{groups}",
+            chipScope: "Show only {name}.",
+            chipScopeWithColor: "Show only {name} ({color}).",
+          },
+        },
+      },
+    },
   });
   return mount(ModRowGroups, { props: { groups }, global: { plugins: [i18n] } });
 }

@@ -33,6 +33,7 @@ mod paths;
 mod placement;
 mod recommended_rules;
 mod replay_pool;
+mod search_fold;
 mod session;
 mod settings;
 

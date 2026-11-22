@@ -5,6 +5,14 @@ before that point is not summarized here.
 
 ## [Unreleased]
 
+- **Fix: searching in Greek missed names with a capital sigma.** A search that
+  ended in a capital "Σ" (such as "ΑΣ") did not find a name that continued after
+  it ("ΑΣΑ"), and a search typed with a final "ς" (such as "κοσμος") did not find
+  "ΚΟΣΜΟΣ", because the letter was lowercased differently at the end of the
+  search than in the middle of a name. Every search box now folds the letter the
+  same way: the two Mods lists (where the matching letters are highlighted), the
+  mod pickers, the Findings and Changes lists, the merge fields, the def
+  search, the group tree and group picker, and the assignments coverage list.
 - **Fix: several views showed the wrong copy of a mod installed twice.** When
   both a plain and a Steam Workshop copy of the same mod are active, opening one
   copy's full details, the explanation of its place in the load order, one of

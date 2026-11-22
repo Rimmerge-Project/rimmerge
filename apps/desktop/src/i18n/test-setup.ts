@@ -1,6 +1,7 @@
 import { config } from "@vue/test-utils";
 
 import { createAppI18n } from "@/i18n/i18n";
+import { installIntlifyGuard } from "@/i18n/intlifyGuard";
 
 // Wired into `vitest.config.ts`'s `test.setupFiles`. `@vue/test-utils`
 // merges (concatenates), rather than replaces, `config.global.plugins`
@@ -15,3 +16,6 @@ import { createAppI18n } from "@/i18n/i18n";
 // component test that renders a key absent from `en.json` fails loudly
 // instead of showing a raw dotted key.
 config.global.plugins.push(createAppI18n());
+
+// A test that makes vue-i18n warn fails (see `intlifyGuard.ts`).
+installIntlifyGuard();

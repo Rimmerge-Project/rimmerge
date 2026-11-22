@@ -289,6 +289,7 @@ function columnStyle(column: ColumnDefinition): { width: string } | undefined {
          as a keyboard-shortcut label; every other string in this block
          already goes through `t()`. -->
     <i18n-t
+      scope="global"
       keypath="startup.description"
       tag="p"
       class="text-text-muted text-sm"

@@ -1,7 +1,8 @@
 //! Where a Mods-list search matched inside a row's name and id.
 //!
-//! The list filter admits a row when its Unicode-lowercased id or name
-//! contains the Unicode-lowercased search text. This module answers the
+//! The list filter admits a row when its folded id or name contains the
+//! folded search text ([`search_fold`]: Unicode lowercase, one character at a
+//! time, final sigma written as `σ`). This module answers the
 //! same question for display: *which parts* of the original text matched,
 //! so an interface can mark them and never disagree with the filter.
 //!
@@ -13,6 +14,7 @@
 use std::ops::Range;
 
 use super::ModListRow;
+use crate::search_fold::{fold_char, search_fold};
 
 /// The matched parts of one row's two searchable texts. Both are empty
 /// when no search ran; under a search a row is listed only when at least
@@ -32,8 +34,8 @@ impl SearchHighlight {
         self.name.is_empty() && self.id.is_empty()
     }
 
-    /// The matches of `needle` (already Unicode-lowercased, as the filter
-    /// holds it) in `row`'s name and id.
+    /// The matches of `needle` (already [`search_fold`]ed, as the filter holds it)
+    /// in `row`'s name and id.
     pub(super) fn of(row: &ModListRow, needle: &str) -> Self {
         Self {
             name: match_ranges(&row.name, needle),
@@ -43,14 +45,14 @@ impl SearchHighlight {
 }
 
 /// One original character and where its lowercase form sits in the
-/// lowercased text.
+/// folded text.
 struct CharSpan {
     original: Range<usize>,
     folded: Range<usize>,
 }
 
-/// Every non-overlapping occurrence of `needle` in `text.to_lowercase()`,
-/// mapped back to byte ranges of `text`.
+/// Every non-overlapping occurrence of `needle` in [`search_fold`]`(text)`, mapped
+/// back to byte ranges of `text`.
 ///
 /// Lowercasing can change a text's length (`İ` becomes `i` plus a
 /// combining dot), so a hit in the folded text is widened to the whole
@@ -58,18 +60,14 @@ struct CharSpan {
 /// one character folds to marks that character. Two hits that end up
 /// sharing a character are merged; hits that merely touch stay separate.
 ///
-/// The result is non-empty exactly when `text.to_lowercase()` contains the
-/// non-empty `needle`: the list filter admits a row by asking this, so the
-/// marks and the filter cannot disagree. The folded text is
-/// `str::to_lowercase`. Per-character spans are measured with
-/// `char::to_lowercase`; the two differ only for the final sigma (`Σ`
-/// lowercases to `ς` at a word end and `σ` elsewhere), and both are two
-/// bytes, so the spans line up.
+/// The result is non-empty exactly when `search_fold(text)` contains the non-empty
+/// `needle` (itself folded): the list filter admits a row by asking this, so
+/// the marks and the filter cannot disagree.
 pub(super) fn match_ranges(text: &str, needle: &str) -> Vec<Range<usize>> {
     if needle.is_empty() {
         return Vec::new();
     }
-    let folded = text.to_lowercase();
+    let folded = search_fold(text);
     let mut hits = folded.match_indices(needle).peekable();
     if hits.peek().is_none() {
         return Vec::new();
@@ -101,7 +99,7 @@ pub(super) fn match_ranges(text: &str, needle: &str) -> Vec<Range<usize>> {
 }
 
 /// The answer when the folded text and the per-character spans disagree,
-/// which Unicode's lowercase rules never cause: the text matched (the
+/// which folding character by character never causes: the text matched (the
 /// filter's verdict must not change), so it is marked whole rather than
 /// left unmarked and wrongly dropped from the list. Tests fail loudly.
 fn whole_text_fallback(text: &str, why: &str) -> Vec<Range<usize>> {
@@ -117,7 +115,7 @@ fn char_spans(text: &str) -> Vec<CharSpan> {
     text.char_indices()
         .map(|(start, character)| {
             let folded_start = folded_end;
-            folded_end += character.to_lowercase().map(char::len_utf8).sum::<usize>();
+            folded_end += fold_char(character).map(char::len_utf8).sum::<usize>();
             CharSpan {
                 original: start..start + character.len_utf8(),
                 folded: folded_start..folded_end,
@@ -141,7 +139,7 @@ mod tests {
 
     /// The matched pieces of `text`, as a reader of the highlight sees them.
     fn pieces<'a>(text: &'a str, needle: &str) -> Vec<&'a str> {
-        match_ranges(text, &needle.to_lowercase())
+        match_ranges(text, &search_fold(needle))
             .into_iter()
             .map(|range| &text[range])
             .collect()
@@ -187,7 +185,7 @@ mod tests {
         // 'İ' (2 bytes) lowercases to "i" + U+0307 (3 bytes): the folded
         // text is longer than the original.
         let text = "xİy";
-        assert_eq!(text.to_lowercase().len(), text.len() + 1);
+        assert_eq!(search_fold(text).len(), text.len() + 1);
 
         // The needle covers the "i" only, the dot only, and both: each
         // marks the one original character.
@@ -216,13 +214,40 @@ mod tests {
     }
 
     #[test]
-    fn a_final_sigma_is_matched_the_way_the_filter_folds_it() {
-        // `str::to_lowercase` writes the word-final "Σ" as "ς", so that
-        // is what the filter compares; the ranges must agree with it.
+    fn a_final_sigma_folds_like_any_other_sigma() {
+        // `str::to_lowercase` would write the word-final "Σ" as "ς"; the
+        // search folds it to "σ" everywhere, so a needle ending in "Σ" finds
+        // the letter at a word end and inside a word alike.
         let text = "ΟΔΟΣ mod";
-        assert!(text.to_lowercase().contains("οδος"));
-        assert_eq!(match_ranges(text, "οδος"), [span(0, 8)]);
+        assert_eq!(search_fold("ΟΔΟΣ"), "οδοσ");
+        assert_eq!(match_ranges(text, &search_fold("ΟΔΟΣ")), [span(0, 8)]);
         assert_eq!(match_ranges(text, "mod"), [span(9, 12)]);
+    }
+
+    #[test]
+    fn a_needle_ending_in_sigma_matches_inside_a_word() {
+        // The bug: "ΑΣ" folded to "ας" and never matched "ΑΣΑ" ("ασα").
+        assert_eq!(match_ranges("ΑΣΑ", &search_fold("ΑΣ")), [span(0, 4)]);
+        assert_eq!(pieces("Mod ΑΣΑ", "ΑΣ"), ["ΑΣ"]);
+        assert_eq!(match_ranges("Mod ΑΣΑ", &search_fold("ΑΣ")), [span(4, 8)]);
+    }
+
+    #[test]
+    fn a_sigma_in_the_middle_of_a_haystack_matches_a_lowercase_needle() {
+        assert_eq!(pieces("ΑΣΑ ΑΣ", "ασ"), ["ΑΣ", "ΑΣ"]);
+        assert_eq!(pieces("ΑΣΑ", "σα"), ["ΣΑ"]);
+    }
+
+    #[test]
+    fn a_typed_final_sigma_finds_a_capital_sigma_and_the_other_way_round() {
+        // Greek is typed with "ς" at a word end; the capital has one form, "Σ".
+        assert_eq!(pieces("ΚΟΣΜΟΣ", "κοσμος"), ["ΚΟΣΜΟΣ"]);
+        assert_eq!(pieces("Mod ΟΔΟΣ", "οδος"), ["ΟΔΟΣ"]);
+        assert_eq!(pieces("οδος", "ΟΔΟΣ"), ["οδος"]);
+        assert_eq!(pieces("ασα", "ας"), ["ασ"]);
+        // "ς" and "σ" are one letter to the search, wherever either stands.
+        assert_eq!(pieces("οδοσ", "ς"), ["σ"]);
+        assert_eq!(pieces("οδος", "σ"), ["ς"]);
     }
 
     #[test]
@@ -236,12 +261,12 @@ mod tests {
         assert_eq!(match_ranges("\u{1D7D8}ab", "ab"), [span(4, 6)]);
     }
 
-    /// The bytes of `text.to_lowercase()` that the character starting at
+    /// The bytes of `search_fold(text)` that the character starting at
     /// `original_byte` folds to.
     fn folded_span_of_char_at(text: &str, original_byte: usize) -> Range<usize> {
         let mut folded_start = 0;
         for (start, character) in text.char_indices() {
-            let folded_len: usize = character.to_lowercase().map(char::len_utf8).sum();
+            let folded_len: usize = fold_char(character).map(char::len_utf8).sum();
             if start == original_byte {
                 return folded_start..folded_start + folded_len;
             }
@@ -256,9 +281,8 @@ mod tests {
             text in "[a-zA-ZİΣσςéÉ日 ._0-9]{0,24}",
             needle in "[a-zA-ZİΣσςéÉ日._0-9]{1,3}",
         ) {
-            let needle = needle.to_lowercase();
-            let hits: Vec<Range<usize>> = text
-                .to_lowercase()
+            let needle = search_fold(&needle);
+            let hits: Vec<Range<usize>> = search_fold(&text)
                 .match_indices(&needle)
                 .map(|(start, hit)| start..start + hit.len())
                 .collect();
@@ -292,12 +316,12 @@ mod tests {
             text in "[a-zA-ZİΣσςéÉ日 ._0-9]{0,24}",
             needle in "[a-zA-ZİΣσςéÉ日._0-9]{1,3}",
         ) {
-            let needle = needle.to_lowercase();
+            let needle = search_fold(&needle);
             let ranges = match_ranges(&text, &needle);
 
             // The filter and the marks agree: marks exist exactly when
             // the filter's own predicate admits the text.
-            prop_assert_eq!(!ranges.is_empty(), text.to_lowercase().contains(&needle));
+            prop_assert_eq!(!ranges.is_empty(), search_fold(&text).contains(&needle));
             let mut previous_end = 0;
             for range in &ranges {
                 // On character boundaries, ascending, never overlapping.
@@ -308,14 +332,9 @@ mod tests {
                 previous_end = range.end;
                 // Folded on its own, the marked text holds the needle (the
                 // range was widened to whole characters, never narrowed).
-                // A lone character's fold equals its fold in context except
-                // the final sigma, which the filter also folds to ς or σ.
-                let marked = text[range.clone()].to_lowercase();
-                let relaxed = marked.replace('ς', "σ");
-                prop_assert!(
-                    marked.contains(&needle) || relaxed.contains(&needle.replace('ς', "σ")),
-                    "{marked:?} lacks {needle:?}"
-                );
+                // A character folds the same alone as in context.
+                let marked = search_fold(&text[range.clone()]);
+                prop_assert!(marked.contains(&needle), "{marked:?} lacks {needle:?}");
             }
         }
     }

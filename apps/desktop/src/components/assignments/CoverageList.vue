@@ -8,6 +8,7 @@ import DefThumbnail from "@/components/graphics/DefThumbnail.vue";
 import { useModLabel } from "@/composables/useModLabel";
 import { defRefOf } from "@/types/brands";
 import type { CoverageRowDto } from "@/types/generated/CoverageRowDto";
+import { searchFold } from "@/utils/searchFold";
 
 /**
  * The editor's left pane: the coverage work queue, uncovered-first (the
@@ -43,7 +44,7 @@ const filtered = computed(() =>
     if (search.value.length === 0) {
       return true;
     }
-    return row.target.def.defName.toLowerCase().includes(search.value.toLowerCase());
+    return searchFold(row.target.def.defName).includes(searchFold(search.value));
   }),
 );
 

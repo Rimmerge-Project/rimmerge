@@ -838,14 +838,18 @@ never touches `working`/`orders`.
 carries `ModListRow::search: SearchHighlight` (`mod_lists/search.rs`): byte
 ranges into the row's original `name` and `mod_id`, empty without a search. It is
 filled by `admit`, which is also the search filter: a row is listed exactly when
-`SearchHighlight::of` finds a range in its `str::to_lowercase`d name or id, so the
+`SearchHighlight::of` finds a range in its folded name or id, so the
 marks and the filter are one computation and cannot drift (an empty needle admits
-everything unmarked). Every non-overlapping occurrence is marked. A hit in the lowercased
+everything unmarked). The fold is the crate-wide `search_fold` (`search_fold.rs`, shared by every search box:
+`mod_lists`, `mod_index`, `changes`, `finding_index`, `merge_workspace`): it lowercases **one character
+at a time** (`char::to_lowercase`) and writes `ς` as `σ`, for the needle and the searched text alike:
+`str::to_lowercase` writes a word-final `Σ` as `ς`, so `ΑΣ` would never find `ΑΣΑ`, and the `ς`
+mapping lets a typed `κοσμος` find `ΚΟΣΜΟΣ`. Sort keys keep `str::to_lowercase`. Every non-overlapping
+occurrence is marked. A hit in the folded
 text is widened to the whole original characters it touches (a fold can change
 length: `İ` lowercases to `i` plus a combining dot), overlapping hits merge and
-touching ones stay apart. Per-character spans use `char::to_lowercase`, which
-differs from the whole-string fold only for the final sigma, and both forms are
-two bytes; if the lengths ever stopped agreeing (a `debug_assert` fails in tests)
+touching ones stay apart. The per-character spans add up to the folded text by
+construction; if the lengths ever stopped agreeing (a `debug_assert` fails in tests)
 the row is marked whole, so the filter's verdict never changes. The unit stays bytes here; an interface converts once at its own
 boundary (the desktop to UTF-16). The proptests pin the ranges against
 the fold's own hits (never wider than a hit touches).

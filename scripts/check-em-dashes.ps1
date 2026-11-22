@@ -107,6 +107,8 @@ public static class RustLiteralScanner
         bool inHeader = false;         // inside a cfg(test) item's header, before its `{` or `;`
         string headerKeyword = null;
         int headerParen = 0;           // (...) and [...] nesting inside the header
+        int headerAngle = 0;           // <...> nesting inside the header (generic arguments)
+        int headerBrace = 0;           // {...} nesting inside a header's generic arguments (const generics)
         int visParen = 0;              // `pub(crate)` style parens while pending
         int attrDepth = 0;             // [...] nesting inside a non-cfg(test) attribute
         string lastIdent = null;
@@ -223,7 +225,7 @@ public static class RustLiteralScanner
                 string ident = s.Substring(i, j - i);
                 if (attrDepth == 0 && pending && !inHeader && visParen == 0)
                 {
-                    if (ItemKeywords.Contains(ident)) { inHeader = true; headerKeyword = ident; headerParen = 0; }
+                    if (ItemKeywords.Contains(ident)) { inHeader = true; headerKeyword = ident; headerParen = 0; headerAngle = 0; headerBrace = 0; }
                     else if (!Qualifiers.Contains(ident)) pending = false; // a field, variant, arm or expression
                 }
                 lastIdent = ident;
@@ -243,12 +245,28 @@ public static class RustLiteralScanner
             {
                 if (c == '(') { visParen++; i++; continue; }
                 if (c == ')' && visParen > 0) { visParen--; i++; continue; }
+                // Inside `pub(in crate::x)` the path's `::` is not an item: keep waiting.
+                if (visParen > 0) { i++; continue; }
                 if (!char.IsWhiteSpace(c)) { pending = false; visParen = 0; }
             }
             if (inHeader)
             {
+                // A `{ ... }` inside generic arguments (`impl Foo<{ 1 }>`) is a const expression,
+                // not the item's body: skip it whole.
+                if (headerBrace > 0)
+                {
+                    if (c == '{') headerBrace++;
+                    else if (c == '}') headerBrace--;
+                    i++;
+                    continue;
+                }
                 if (c == '(' || c == '[') headerParen++;
                 else if ((c == ')' || c == ']') && headerParen > 0) headerParen--;
+                // Angle brackets count only outside (...) and [...]: inside them `<` is a shift or a
+                // comparison (`[u8; 1 << 2]`, `(1 < 2)`), not a generic argument list.
+                else if (c == '<' && headerParen == 0) headerAngle++;
+                else if (c == '>' && headerParen == 0 && headerAngle > 0 && i > 0 && s[i - 1] != '-' && s[i - 1] != '=') headerAngle--;
+                else if (c == '{' && headerParen == 0 && headerAngle > 0) { headerBrace = 1; i++; continue; }
                 else if (c == '{' && headerParen == 0)
                 {
                     skipUntilDepth = depth;
@@ -417,6 +435,13 @@ if ($SelfTest) {
     Test-Fixture 'cfg(test) fn' "#[cfg(test)]`nfn g() { let _ = `"<D>`"; }`nfn h() { let _ = `"<D>`"; }" @('3')
     Test-Fixture 'cfg(test) const with a literal' "#[cfg(test)]`nconst M: &str = `"<D>`";`nfn h() { let _ = `"<D>`"; }" @('3')
     Test-Fixture 'cfg(test) const with an array type' "#[cfg(test)]`nconst X: [u8; 1] = [0];`nfn h() { let _ = `"<D>`"; }" @('3')
+    Test-Fixture 'cfg(test) fn with a pub(in path) visibility' "#[cfg(test)]`npub(in crate::x) fn g() { let _ = `"<D>`"; }`nfn h() { let _ = `"<D>`"; }" @('3')
+    Test-Fixture 'cfg(test) pub(crate) fn' "#[cfg(test)]`npub(crate) fn g() { let _ = `"<D>`"; }`nfn h() { let _ = `"<D>`"; }" @('3')
+    Test-Fixture 'cfg(test) impl with a const-generic block' "#[cfg(test)]`nimpl Foo<{ 1 }> {`n    fn g() { let _ = `"<D>`"; }`n}`nfn h() { let _ = `"<D>`"; }" @('5')
+    Test-Fixture 'cfg(test) impl with nested const-generic blocks and a return arrow' "#[cfg(test)]`nimpl<const N: usize> Foo<{ { N } }> where F: Fn() -> u8 {`n    fn g() { let _ = `"<D>`"; }`n}`nfn h() { let _ = `"<D>`"; }" @('5')
+    Test-Fixture 'cfg(test) fn with a shift in an array type, then production code' "#[cfg(test)]`nfn g() -> [u8; 1 << 2] { [0; 4] }`nfn h() { let _ = `"<D>`"; }" @('3')
+    Test-Fixture 'cfg(test) impl with a shift in a where bound, then production code' "#[cfg(test)]`nimpl<const N: usize> Foo<N> where [(); N << 1]: Sized {}`nfn h() { let _ = `"<D>`"; }" @('3')
+    Test-Fixture 'cfg(test) fn with a comparison in parentheses, then production code' "#[cfg(test)]`nfn g() -> [u8; (1 < 2) as usize] { [0] }`nfn h() { let _ = `"<D>`"; }" @('3')
     Test-Fixture 'cfg(test) before another attribute' "#[cfg(test)]`n#[derive(Debug)]`nstruct S { a: u8 }`nfn h() { let _ = `"<D>`"; }" @('4')
     Test-Fixture 'cfg(test) on a struct field' "struct R {`n    a: u8,`n    #[cfg(test)]`n    b: u8,`n}`nimpl R { fn m() -> &str { `"<D>`" } }" @('6')
     Test-Fixture 'cfg(test) on a pub(crate) field' "struct R {`n    #[cfg(test)]`n    pub(crate) b: u8,`n}`nimpl R { fn m() -> &str { `"<D>`" } }" @('5')

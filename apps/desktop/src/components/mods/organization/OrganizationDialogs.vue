@@ -615,6 +615,7 @@ function startOver(): Promise<void> {
       <template v-else-if="group">
         <p>
           <i18n-t
+            scope="global"
             keypath="mods.groups.dialog.removeUninstalledBody"
             tag="span"
             :plural="scopePlan.notInstalled"

@@ -7,12 +7,17 @@
 # present, `.journal/forbidden-tokens.local.txt` (maintainer-local,
 # gitignored). Lines starting with `#` in either file are ignored.
 #
+# Hidden directories are scanned (`--hidden`: `.github/`, `.config/`,
+# and the committed `.claude/settings.json`); `.git` is excluded explicitly,
+# since `--hidden` would otherwise read it.
+#
 # Excluded from the scan: the public list itself, build output
-# (`target/`, `node_modules/`), local-only material that is never
-# committed (`.journal/`, `.claude/`, `CLAUDE.local.md`), and `rules/` —
-# a separate repository (the `rimmerge-rules` git submodule), which
-# names real mods by design and is scanned by its own tooling, not this
-# one.
+# (`target/`, `node_modules/`), the maintainer's `.journal/` and
+# `CLAUDE.local.md` (never committed), and `rules/`, a separate repository
+# (the `rimmerge-rules` git submodule), which names real mods by design and is
+# scanned by its own tooling, not this one. The rest of `.claude/` (agent
+# memory, local agents and skills) is untracked and `.gitignore` already hides
+# it from `rg`; only `.claude/settings.json` is tracked, and it is scanned.
 #
 # Exits 0 when clean and throws (non-zero) when a token is found, so it
 # composes with `&&` and with CI's exit-code check.
@@ -39,12 +44,12 @@ $mergedTokenFile = (New-TemporaryFile).FullName
 try {
     Set-Content -Path $mergedTokenFile -Value $patterns -Encoding utf8
 
-    $hits = rg -i -f $mergedTokenFile `
+    $hits = rg -i --hidden -f $mergedTokenFile `
+        --glob '!.git' `
         --glob '!.github/forbidden-tokens.txt' `
         --glob '!target/**' `
         --glob '!**/node_modules/**' `
         --glob '!.journal/**' `
-        --glob '!.claude/**' `
         --glob '!CLAUDE.local.md' `
         --glob '!rules/**' `
         .
