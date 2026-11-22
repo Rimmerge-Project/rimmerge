@@ -71,7 +71,8 @@ pub use mod_knowledge::ModKnowledge;
 pub use mod_lists::{
     Folder, FolderKey, GroupFilter, GroupLabel, GroupedEntry, GroupedListQuery, GroupedModList,
     ListSort, ListSortKey, MAX_COLLAPSED_FOLDERS, MAX_GROUPED_ENTRIES, MAX_MOD_LIST_ROWS, ModList,
-    ModListError, ModListQuery, ModListRow, RowState, SortDirection, TooManyCollapsedFolders,
+    ModListError, ModListQuery, ModListRow, RowState, SearchHighlight, SortDirection,
+    TooManyCollapsedFolders,
 };
 pub use mod_times::{ModTimeSubject, ModUpdateTimes, UnixSeconds, UpdateTime, UpdateUnavailable};
 pub use order_rows::OrderRow;

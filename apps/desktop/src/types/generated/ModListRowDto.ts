@@ -4,6 +4,7 @@ import type { GeneratedMarkerDto } from "./GeneratedMarkerDto";
 import type { GroupLabelDto } from "./GroupLabelDto";
 import type { MembershipMarkDto } from "./MembershipMarkDto";
 import type { ModRowStateDto } from "./ModRowStateDto";
+import type { SearchHighlightDto } from "./SearchHighlightDto";
 import type { SourceDto } from "./SourceDto";
 import type { UpdateTimeDto } from "./UpdateTimeDto";
 
@@ -56,4 +57,11 @@ groups: Array<GroupLabelDto>,
 /**
  * The mod's own colour; a group's colour is never inherited.
  */
-color: ColorTokenDto | null, };
+color: ColorTokenDto | null, 
+/**
+ * Where the search matched in the name and in the id, so either can be
+ * marked whichever the list labels the row with. Absent without a
+ * search, and when the search matched neither text (a tag or source
+ * filter alone), which keeps a 10,000-row answer free of empty objects.
+ */
+search?: SearchHighlightDto, };

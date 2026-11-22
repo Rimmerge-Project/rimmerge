@@ -5562,7 +5562,12 @@ export function installScenario(): void {
     groups: unknown[];
     /** The mod's own colour; never inherited from a group. */
     color: string | null;
+    /** `ModListRowDto.search`: present only when a search matched the name or the id. */
+    search?: { name: TextRangeMock[]; id: TextRangeMock[] };
   };
+
+  /** A matched part of a text, in UTF-16 code units; `end` exclusive. */
+  type TextRangeMock = { start: number; end: number };
 
   type MembershipMock = "none" | "added" | "removed";
 
@@ -5571,6 +5576,58 @@ export function installScenario(): void {
     const isInFile = [...fileActiveIds].some((fileId) => baseOf(fileId) === baseOf(id));
     if (isActiveRow) return isInFile ? "none" : "added";
     return isInFile ? "removed" : "none";
+  }
+
+  /**
+   * `rim_session::mod_lists::search::match_ranges`, in UTF-16 code units (the backend converts its
+   * byte ranges at the DTO boundary): every non-overlapping occurrence of the lowercased `needle`
+   * in the lowercased text, widened to the whole original characters it touches (a length-changing
+   * fold such as `İ` -> `i` + a combining dot marks the one character), overlapping hits merged,
+   * touching ones kept apart. An empty needle marks nothing.
+   */
+  function matchRanges(text: string, needle: string): TextRangeMock[] {
+    if (needle === "") return [];
+    const folded = text.toLowerCase();
+    if (!folded.includes(needle)) return [];
+    const spans: { start: number; end: number; foldedStart: number; foldedEnd: number }[] = [];
+    let unit = 0;
+    let foldedUnit = 0;
+    for (const character of text) {
+      const foldedLength = character.toLowerCase().length;
+      spans.push({
+        start: unit,
+        end: unit + character.length,
+        foldedStart: foldedUnit,
+        foldedEnd: foldedUnit + foldedLength,
+      });
+      unit += character.length;
+      foldedUnit += foldedLength;
+    }
+    const ranges: TextRangeMock[] = [];
+    for (
+      let at = folded.indexOf(needle);
+      at !== -1;
+      at = folded.indexOf(needle, at + needle.length)
+    ) {
+      const hitEnd = at + needle.length;
+      const head = spans.find((span) => span.foldedEnd > at);
+      const tail = spans.findLast((span) => span.foldedStart < hitEnd);
+      if (head === undefined || tail === undefined) continue;
+      const previous = ranges.at(-1);
+      if (previous !== undefined && head.start < previous.end) {
+        previous.end = Math.max(previous.end, tail.end);
+      } else {
+        ranges.push({ start: head.start, end: tail.end });
+      }
+    }
+    return ranges;
+  }
+
+  /** The row with its `search` marks for the lowercased `needle`, when either text matched. */
+  function withSearchMarks(row: ModListRowMock, needle: string): ModListRowMock {
+    const name = matchRanges(row.name, needle);
+    const id = matchRanges(row.modId, needle);
+    return name.length === 0 && id.length === 0 ? row : { ...row, search: { name, id } };
   }
 
   /** A pool row (`mods`, fixture owners, `inactiveModRow`) shaped as a `ModListRowDto`. */
@@ -5686,7 +5743,8 @@ export function installScenario(): void {
           ? { key: "name", direction: "ascending" }
           : requested;
     const isLoadOrder = sort.key === "loadOrder" && sort.direction === "ascending";
-    const ordered = isLoadOrder ? matching : sortModListRows(matching, sort);
+    const marked = needle === null ? matching : matching.map((row) => withSearchMarks(row, needle));
+    const ordered = isLoadOrder ? marked : sortModListRows(marked, sort);
     return { ordered, isLoadOrder };
   }
 

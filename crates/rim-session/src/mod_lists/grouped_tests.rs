@@ -9,6 +9,7 @@ use rim_resolve::test_support::ReportBuilder;
 use super::*;
 use crate::active_set::ActiveSet;
 use crate::file_baseline::FileMembership;
+use crate::mod_lists::search::span;
 use crate::mod_lists::{
     ListSort, ListSortKey, ModListError, SortDirection, inactive_groups, working_groups,
 };
@@ -446,6 +447,23 @@ fn a_search_leaves_out_folders_with_no_match_and_counts_only_matches() {
         render(&list),
         ["1 Armor (1)", "2 - a +1", "1 Weapons (1)", "2 - a +1"]
     );
+}
+
+#[test]
+fn a_search_marks_the_matched_text_on_the_groups_view_rows_and_no_search_marks_nothing() {
+    let searching = ModListQuery {
+        search: Some("LPH".to_string()),
+        ..ModListQuery::default()
+    };
+
+    let marked = scene_active(&query(searching, &[]));
+    let unmarked = scene_active(&plain());
+
+    // Row `a` is "Alpha": bytes 1..4 are "lph".
+    assert_eq!(marked.list.items.len(), 1);
+    assert_eq!(marked.list.items[0].search.name, [span(1, 4)]);
+    assert!(marked.list.items[0].search.id.is_empty());
+    assert!(unmarked.list.items.iter().all(|row| row.search.is_empty()));
 }
 
 #[test]

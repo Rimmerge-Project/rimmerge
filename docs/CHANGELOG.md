@@ -5,6 +5,14 @@ before that point is not summarized here.
 
 ## Unreleased
 
+- **New: search matches are highlighted in the Mods lists.** The text a search
+  matched is marked in the mod's shown label, in both the List and the Groups
+  view, whether the list shows names or package ids. A mod can be listed because
+  of its id while the list shows its name: that label then has no mark, and
+  switching to package ids marks the match at once. The marks come from the same
+  matching that filters the list, so they never disagree with it, and every
+  match is marked, not just the first. The mark is a highlighted background with an underline
+  and adds nothing for a screen reader to announce.
 - **New: Show in load order.** From the Groups view or from any other sort, the
   Active list's row menu and the mod info panel have a **Show in load order**
   action. It switches the Active list to List view in load order, scrolls to the

@@ -17,8 +17,11 @@ function modRow(overrides: ModRowOverrides = {}) {
 
 let mountedWrappers: ReturnType<typeof mount>[] = [];
 
-function mountTable(props: InstanceType<typeof ModTable>["$props"]) {
-  installMockIpc({ list_mod_names: {} });
+function mountTable(
+  props: InstanceType<typeof ModTable>["$props"],
+  names: Record<string, string> = {},
+) {
+  installMockIpc({ list_mod_names: names });
   const wrapper = mount(ModTable, {
     props,
     // Connected to `document.body` — happy-dom only dispatches `focus`
@@ -70,6 +73,44 @@ describe("ModTable", () => {
     expect(wrapper.find('[data-testid="mod-row-select-fixture.mod"]').exists()).toBe(false);
     await wrapper.get('[data-testid="mod-row-fixture.mod"]').trigger("click");
     expect(wrapper.emitted("selectMod")).toEqual([["fixture.mod"]]);
+  });
+
+  it("marks the search match in the name the row is labelled with, and only there", async () => {
+    const row = {
+      ...modRow({ modId: "author.alpha", name: "Alpha Tools" }),
+      search: { name: [{ start: 0, end: 5 }], id: [{ start: 7, end: 12 }] },
+    };
+    const wrapper = mountTable({ mods: [row] }, { "author.alpha": "Alpha Tools" });
+    await flushPromises();
+
+    const label = wrapper.get('[data-testid="mod-row-name-author.alpha"]');
+    expect(label.text()).toBe("Alpha Tools");
+    expect(label.findAll('[data-testid="search-match"]').map((mark) => mark.text())).toEqual([
+      "Alpha",
+    ]);
+  });
+
+  it("marks the id's match when the label falls back to the id", async () => {
+    const row = {
+      ...modRow({ modId: "author.alpha", name: "Alpha Tools" }),
+      search: { name: [{ start: 0, end: 5 }], id: [{ start: 7, end: 12 }] },
+    };
+    // No resolved name, so the list labels the row with its id.
+    const wrapper = mountTable({ mods: [row] });
+    await flushPromises();
+
+    const label = wrapper.get('[data-testid="mod-row-name-author.alpha"]');
+    expect(label.text()).toBe("author.alpha");
+    expect(label.findAll('[data-testid="search-match"]').map((mark) => mark.text())).toEqual([
+      "alpha",
+    ]);
+  });
+
+  it("draws no mark on a row without a search", async () => {
+    const wrapper = mountTable({ mods: [modRow()] });
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="search-match"]').exists()).toBe(false);
   });
 
   it("renders a source badge per row instead of the raw source enum", async () => {

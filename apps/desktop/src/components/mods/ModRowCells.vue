@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Checkbox from "primevue/checkbox";
-
+import { computed } from "vue";
+import MarkedText from "@/components/mods/MarkedText.vue";
 import MembershipBadge from "@/components/mods/MembershipBadge.vue";
 import ModRowColor from "@/components/mods/ModRowColor.vue";
 import ModRowGroups from "@/components/mods/ModRowGroups.vue";
@@ -10,6 +11,7 @@ import ModRowScanFacts from "@/components/mods/ModRowScanFacts.vue";
 import ModRowStatePill from "@/components/mods/ModRowStatePill.vue";
 import SourceBadge from "@/components/mods/SourceBadge.vue";
 import type { ModListRowDto } from "@/types/generated/ModListRowDto";
+import { marksForLabel } from "@/utils/modRowMarks";
 
 /**
  * The cells of one mod row, shared by the List view's table and the Groups view's: the colour
@@ -44,7 +46,7 @@ const {
   hasRowMenu?: boolean;
   /** Whether the ⋮ button runs "Activate at…" itself. */
   isDirectActivate?: boolean;
-  /** The mod as the list labels it (its name, or its id in id mode). */
+  /** The mod as the list labels it (its name, or its id in id mode); the search's matches are marked in it. */
   label: string;
   /** The tooltip for the label, when it differs from what shows. */
   labelTitle: string | undefined;
@@ -60,6 +62,7 @@ const emit = defineEmits<{
   /** The ⋮ button. */
   openMenu: [event: MouseEvent];
 }>();
+const labelMarks = computed(() => marksForLabel(mod, label));
 defineSlots<{
   /** Extra content right after the mod's name. */
   afterName?(): unknown;
@@ -106,7 +109,10 @@ defineSlots<{
       class="text-text min-w-12 flex-1 truncate font-medium"
       :title="labelTitle"
       :data-testid="`mod-row-name-${mod.modId}`"
-    >{{ label }}</span>
+    ><MarkedText
+      :text="label"
+      :ranges="labelMarks"
+    /></span>
     <slot name="afterName" />
     <MembershipBadge :mark="mod.membership" />
     <ModRowStatePill

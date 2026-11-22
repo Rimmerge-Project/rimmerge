@@ -512,6 +512,19 @@ of that command surface — no direct filesystem or process access outside
   (`filterSignature`, the typed inputs) or a failed query ends the older one without touching
   anything, and leaving load order clears the note.
   An inactive mod has no action. In overlay (drawer) mode the panel's button closes the drawer first.
+- **Search matches are marked from the backend's own ranges (#57).** `ModListRowDto.search`
+  (`SearchHighlightDto { name, id }`, ranges `{ start, end }` in UTF-16 code units, converted once from
+  `rim-session`'s byte ranges in `dto/mod_lists.rs`) is omitted when there is no search or no match, so a
+  10,000-row answer carries no empty objects. It holds the ranges for **both** texts, so the id/name
+  toggle needs no refetch. `ModRowCells` draws the label through `MarkedText.vue`, with ranges chosen by
+  `marksForLabel` (`utils/modRowMarks.ts`) from what is *shown*: the name's when the label equals the row's
+  name, the id's when it equals the id, else none (a name-mode label that fell back to the id marks the
+  id). `splitMarked` (`utils/textMarks.ts`) drops a range that cannot be a slice (out of bounds, empty,
+  fractional, cutting a surrogate pair) with a dev-only `console.warn`, never clamping, and joins overlaps.
+  A match is a styled `<span>` (`bg-search-match`, its own yellow token in both themes, at least 1.5:1 against every row background with 4.5:1 text on it, pinned in `searchMatch.contrast.test.ts`, plus a 2 px underline), not
+  `<mark>`: `mark` has a role that screen readers may announce around each matched row. Never `v-html`
+  (`no-v-html.guard.test.ts`). The mock (`matchRanges` in `scenario.ts`) mirrors the backend's fold and
+  widening in UTF-16 units. `ModPicker`'s lists (scanned tier, `list_mods`) are not marked.
 - **Copying groups from another profile** (`commands/organization_copy.rs`,
   `components/mods/organization/CopyProfileDialog.vue`, `composables/useCopyProfile.ts`) is two
   commands over `CopyOrganization`: `preview_copy_organization` (a read) and `copy_organization`

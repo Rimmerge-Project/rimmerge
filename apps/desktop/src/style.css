@@ -34,6 +34,7 @@
   --color-status-override-soft: var(--status-override-soft);
   --color-status-danger: var(--status-danger);
   --color-status-danger-soft: var(--status-danger-soft);
+  --color-search-match: var(--search-match);
 
   /* The twelve colours a mod or a group can be marked with (`ColorTokenDto`). */
   --color-mark-red: var(--mark-red);
@@ -75,6 +76,12 @@
   --status-override-soft: #ede9fe;
   --status-danger: #b91c1c;
   --status-danger-soft: #fee2e2;
+
+  /* The background of the text a search matched in a Mods row: a yellow that stands out from
+     `surface-0/1/2` and `accent-soft` (at least 1.5:1 against each) while `text` on it keeps 4.5:1.
+     Both are checked in `searchMatch.contrast.test.ts`. The mark also underlines, so it never
+     depends on colour alone. */
+  --search-match: #eab308;
 
   /* Mark colours: each at least 3:1 (WCAG non-text contrast) against `surface-0`, `surface-1`,
      `surface-2` and `accent-soft`, the four backgrounds a swatch or stripe sits on, in both
@@ -118,6 +125,7 @@
     --status-override-soft: #2e1065;
     --status-danger: #f87171;
     --status-danger-soft: #450a0a;
+    --search-match: #5c4a0a;
     --mark-red: #f87171;
     --mark-orange: #fb923c;
     --mark-amber: #fbbf24;

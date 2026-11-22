@@ -269,6 +269,17 @@ scanned yet" until you Rescan (its tags and dependents are scan results);
 a mod you just deactivated is in Inactive at once. An active mod that is
 not installed is in Active with a "missing" mark.
 
+**Searching the lists.** A list's search keeps the mods whose name or package
+id contains the text, ignoring capitals, and marks every match in the mod's shown
+label: a highlighted background with an underline, so the mark does not rely on colour. It
+works the same in the List and the Groups view and in both lists. The list shows
+either names or package ids (the toggle in the sidebar), and a mod can match in
+one and not the other: a mod found by its id shows no mark while the list shows
+names, and switching to package ids marks the match without searching again.
+The marks come from the same matching that filters the list, so they never
+disagree with it. The marked text is ordinary text, not a "mark" element, so a
+screen reader reads the label as one piece and announces nothing extra per row.
+
 **Sorting the lists.** Above each list, one button per criterion sorts what
 the list shows: Load order (Active only), Name, Package ID and Last updated.
 Clicking a button sorts by it in its first direction (A to Z, oldest first,
