@@ -155,7 +155,7 @@ fn format_attribution(mods_by_id: &BTreeMap<ModId, &Mod>, attribution: &LogAttri
 
 fn print_stack_trace_detail(detail: &StackTraceDetail) {
     println!(
-        "    leaf: {} {} — {}",
+        "    leaf: {} {} - {}",
         TerminalSafe::line(&detail.leaf_class),
         TerminalSafe::line(detail.leaf_xpath.as_deref().unwrap_or("-")),
         TerminalSafe::line(&detail.leaf_reason)
@@ -166,7 +166,7 @@ fn print_stack_trace_detail(detail: &StackTraceDetail) {
             .as_deref()
             .map_or_else(String::new, |b| format!(" <{}>", TerminalSafe::line(b)));
         println!(
-            "    enclosing: {}{branch} — {}",
+            "    enclosing: {}{branch} - {}",
             TerminalSafe::line(&op.class),
             TerminalSafe::line(&op.reason)
         );
@@ -357,7 +357,7 @@ fn print_text(summary: &GameLogSummary, mods_by_id: &BTreeMap<ModId, &Mod>, is_k
         println!("timers:");
         for timer in &summary.timers {
             println!(
-                "  {} — {} ms ({})",
+                "  {} - {} ms ({})",
                 TerminalSafe::line(&timer.label),
                 timer.milliseconds,
                 format_attribution(mods_by_id, &timer.attribution)

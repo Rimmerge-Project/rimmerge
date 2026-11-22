@@ -136,7 +136,7 @@ function freshnessLabel(freshness: FreshnessDto): string {
             {{ t(DATABASE_LABEL_KEYS[database as keyof typeof DATABASE_LABEL_KEYS]) }}:
             {{ freshnessLabel(detail.freshness) }}
             <span v-if="detail.lastFailure">
-              — {{ t('notifications.ruleDatabasesStale.lastFailure', { reason: tm(describeFetchFailure(detail.lastFailure, locale)) }) }}
+              ({{ t('notifications.ruleDatabasesStale.lastFailure', { reason: tm(describeFetchFailure(detail.lastFailure, locale)) }) }})
             </span>
             <span
               v-if="detail.lastFailure && fetchFailureTechnicalDetail(detail.lastFailure)"

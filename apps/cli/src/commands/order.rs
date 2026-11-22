@@ -254,22 +254,22 @@ fn run_import(args: &ImportArgs, probe: &dyn GameProcessProbe) -> anyhow::Result
         .map_err(describe_invalid_order)?;
 
     if args.dry_run {
-        println!("(dry run — nothing written)");
+        println!("(dry run, nothing written)");
         return Ok(());
     }
     if let Some(loss) = ImportLoss::of(&ready.plan)
         && !args.yes
     {
-        println!("(blocked — nothing written; pass --yes to import anyway)");
+        println!("(blocked, nothing written; pass --yes to import anyway)");
         bail!(
             "this import deactivates {} active mod(s) and names {} mod(s) that are not \
-             installed — pass --yes to import anyway",
+             installed; pass --yes to import anyway",
             loss.deactivated,
             loss.not_installed
         );
     }
     if ready.plan.order == file.active_mods {
-        println!("(ModsConfig.xml already has this order — nothing written)");
+        println!("(ModsConfig.xml already has this order, nothing written)");
         return Ok(());
     }
 
@@ -430,7 +430,7 @@ fn missing_row(entry: &ImportedEntry) -> Option<String> {
         }
         MissingKind::NoLink => "no Workshop link in the list".to_string(),
     };
-    Some(format!("{label} — {detail}"))
+    Some(format!("{label} - {detail}"))
 }
 
 fn other_copy_row(entry: &ImportedEntry) -> Option<String> {

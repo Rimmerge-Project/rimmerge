@@ -118,7 +118,7 @@ pub(crate) fn read_app_settings_load() -> rim_session::ports::AppSettingsLoad {
 pub(crate) fn print_recovered_notice_if_any(load: &rim_session::ports::AppSettingsLoad) {
     if let rim_session::ports::AppSettingsLoad::Recovered { reason } = load {
         println!(
-            "app-settings.json couldn't be read ({}) — internet access is off until you \
+            "app-settings.json couldn't be read ({}); internet access is off until you \
              save settings again",
             TerminalSafe::line(reason)
         );

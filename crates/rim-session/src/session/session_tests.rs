@@ -2075,7 +2075,7 @@ fn a_guarded_preview_never_promotes_and_no_longer_offers_merge() {
     );
     assert_eq!(
         resolution.suggestion.rationale.to_string(),
-        "ParentName differs between owners — field-level merging is unsafe; confirm the \
+        "ParentName differs between owners, so field-level merging is unsafe. Confirm the \
              load-order winner",
         "the rationale must name the guard, not a field count"
     );

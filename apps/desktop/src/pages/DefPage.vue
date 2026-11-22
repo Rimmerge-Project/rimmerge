@@ -300,8 +300,8 @@ onScopeDispose(() => window.removeEventListener("keydown", handleKeydown));
             v-for="group in ambiguityByRegistrant(query.data.value.templateAmbiguity)"
             :key="group.registrant"
           >
-            <span class="font-medium">{{ modLabel.label(group.registrant) }}</span>
-            — {{ t("defPage.knownChildrenResolve", { count: group.children.length }, group.children.length) }}
+            <span class="font-medium">{{ modLabel.label(group.registrant) }}</span>:
+            {{ t("defPage.knownChildrenResolve", { count: group.children.length }, group.children.length) }}
             <span v-if="group.children.length > 0">
               ({{ formatList(locale, group.children.map((child) => modLabel.label(child))) }})
             </span>

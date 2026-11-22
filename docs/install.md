@@ -60,7 +60,7 @@ git submodule update --init
 ```
 
 A build without it fails immediately with
-`rules/rimmerge-rules.json not found — run: git submodule update --init`
+`rules/rimmerge-rules.json not found. Run: git submodule update --init`
 rather than silently shipping without any rule data.
 
 **Building the CLI from source.** Needs a stable Rust toolchain (see

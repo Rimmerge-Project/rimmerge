@@ -62,7 +62,7 @@ fn format_outcome(outcome: &CheckForUpdateOutcome) -> String {
         CheckForUpdateOutcome::Ran(UpdateCheckRunOutcome::Updated {
             latest: LatestRelease { version, .. },
         }) => format!(
-            "A newer version is available: {version} — {}",
+            "A newer version is available: {version} - {}",
             release_url(version)
         ),
         CheckForUpdateOutcome::Ran(UpdateCheckRunOutcome::Unchanged) => "Up to date.".to_string(),

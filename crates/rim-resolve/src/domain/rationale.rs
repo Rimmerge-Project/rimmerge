@@ -1,11 +1,9 @@
 //! [`Rationale`]: the ledger's own structured "why" for a [`super::Suggestion`]/
 //! [`super::Alternative`], replacing what used to be a hand-built
 //! `String` one template at a time: the frontend renders a localized
-//! sentence from a variant's own typed fields; `Display` reproduces the
-//! original English text, unchanged, for the CLI, `rimmerge verify`'s
-//! generated `--comment`, and every existing rationale-text assertion
-//! across this workspace — that byte-for-byte match was this migration's
-//! own oracle. Every `ledger::suggest` module
+//! sentence from a variant's own typed fields; `Display` renders the
+//! same English sentences as `en.json`'s `rationale.*` keys, for the CLI
+//! and `rimmerge verify`'s generated `--comment`. Every `ledger::suggest` module
 //! (`edges`/`rules`/`defs`/`assets`/`mods`) and `domain::resolution`'s
 //! own redecide functions construct a real, typed variant below; there is
 //! no untyped fallback — a caller with genuinely one-off text has no
@@ -59,25 +57,25 @@ fn relation_explanation(kind: EdgeKind) -> &'static str {
             "the type is resolved across every loaded assembly regardless of load order"
         }
         EdgeKind::PatchSelectsInjectedNode => {
-            "the selected node may already exist another way (written inline, injected by more than one active mod, or injected by the selecting mod's own patch), or lies deeper than the analyzer indexes to check — so this isn't a proven load-order requirement"
+            "the selected node may already exist another way (written inline, injected by more than one active mod, or injected by the selecting mod's own patch), or lies deeper than the analyzer indexes to check, so this isn't a proven load-order requirement"
         }
         EdgeKind::PatchRemovedNode => {
-            "the analyzer infers this from patch content: one mod removes a node another mod also patches, and the remover must load last or the other patch finds nothing left to touch — not an author's own declared load order, so it yields when a declaration or placement disagrees"
+            "the analyzer infers this from patch content: one mod removes a node another mod also patches, and the remover must load last or the other patch finds nothing left to touch. It is not an author's own declared load order, so it yields when a declaration or placement disagrees"
         }
         EdgeKind::RetextureAfterOwner => {
-            "the analyzer infers this from a shared texture path: a texture-only retexture pack must load after the content mod it reskins, or its replacement is overwritten by the content it's meant to retexture — not an author's own declared load order, so it yields when a declaration or placement disagrees"
+            "the analyzer infers this from a shared texture path: a texture-only retexture pack must load after the content mod it reskins, or its replacement is overwritten by the content it's meant to retexture. It is not an author's own declared load order, so it yields when a declaration or placement disagrees"
         }
         EdgeKind::DefOverrideAfterOrigin => {
-            "the analyzer infers this from template/def-count evidence: a mod that also ships a def belonging to another mod's own namespace must load after that namespace's owner, or its override lands under the origin's own definition instead of on top of it — not an author's own declared load order, so it yields when a declaration or placement disagrees"
+            "the analyzer infers this from template/def-count evidence: a mod that also ships a def belonging to another mod's own namespace must load after that namespace's owner, or its override lands under the origin's own definition instead of on top of it. It is not an author's own declared load order, so it yields when a declaration or placement disagrees"
         }
         EdgeKind::PatchInvalidatesPredicate => {
-            "the analyzer infers this from patch content: a Replace/Remove rewrites or deletes a node another mod's own xpath predicate reads, and the predicate-reading op must load first or its own predicate no longer matches — not an author's own declared load order, so it yields when a declaration or placement disagrees"
+            "the analyzer infers this from patch content: a Replace/Remove rewrites or deletes a node another mod's own xpath predicate reads, and the predicate-reading op must load first or its own predicate no longer matches. It is not an author's own declared load order, so it yields when a declaration or placement disagrees"
         }
         EdgeKind::PatchRemovedNodeCosmetic => {
-            "the analyzer infers this from patch content, but the final defs are identical either order here — only which mod's own op logs the failure changes — so it's weaker evidence than an author's own declared load order and yields when a declaration or placement disagrees"
+            "the analyzer infers this from patch content, but the final defs are identical in either order here (only which mod's own op logs the failure changes), so it's weaker evidence than an author's own declared load order and yields when a declaration or placement disagrees"
         }
         EdgeKind::ReplaceDiscardsAddition => {
-            "the analyzer infers this from patch content: a Replace swaps in a whole new node, silently discarding whatever an earlier addition wrote into it, so the addition must load after the replace or its own content is lost with no log line at all — not an author's own declared load order, so it yields when a declaration or placement disagrees"
+            "the analyzer infers this from patch content: a Replace swaps in a whole new node, silently discarding whatever an earlier addition wrote into it, so the addition must load after the replace or its own content is lost with no log line at all. It is not an author's own declared load order, so it yields when a declaration or placement disagrees"
         }
         EdgeKind::AssemblyRef
         | EdgeKind::ForceLoadAfter
@@ -942,7 +940,7 @@ impl std::fmt::Display for Rationale {
             ),
             Rationale::PatchWillFailDeadTarget { mod_id, xpath } => write!(
                 f,
-                "{mod_id}'s operation at '{xpath}' targets a node the winning owner's own resolved structure never has, regardless of load order — no reorder fixes this."
+                "{mod_id}'s operation at '{xpath}' targets a node the winning owner's own resolved structure never has, regardless of load order, so no reorder fixes this."
             ),
             Rationale::PatchWillFailUnknownCause { mod_id, xpath } => write!(
                 f,
@@ -951,7 +949,7 @@ impl std::fmt::Display for Rationale {
             Rationale::BrokenInheritance => write!(
                 f,
                 "This `ParentName` reference doesn't resolve the way the child's own \
-                 element type expects — the def loads with content missing or wrong. \
+                 element type expects. The def loads with content missing or wrong. \
                  Report this to the referencing mod's author."
             ),
             Rationale::DanglingDefReference {
@@ -976,14 +974,14 @@ impl std::fmt::Display for Rationale {
                     }
                 };
                 let sound_caveat = if *likely_sound {
-                    " This looks like a sound reference — a missing `SoundDef` logs a warning and silently \
-                     falls back to an undefined sound rather than failing to load."
+                    " This looks like a sound reference. A missing `SoundDef` logs a warning and silently \
+                     falls back to an undefined sound instead of failing to load."
                 } else {
                     ""
                 };
                 write!(
                     f,
-                    "This name resolves to no active def of any type — {cause_text}.{sound_caveat} \
+                    "This name resolves to no active def of any type: {cause_text}.{sound_caveat} \
                      Cross-references resolve after every mod's defs and patches have loaded, so this \
                      never depends on load order."
                 )
@@ -1034,15 +1032,15 @@ impl std::fmt::Display for Rationale {
             Rationale::ForceSoundWinner => write!(f, "Force one mod's sound to win."),
             Rationale::MissingTexturePath => write!(
                 f,
-                "This texture path is shipped by no active mod — the game will show a magenta placeholder in its place."
+                "This texture path is shipped by no active mod. The game will show a magenta placeholder in its place."
             ),
             Rationale::UndecodableTexture => write!(
                 f,
-                "This .dds file won't decode — the base game shows the bad-texture placeholder in its place."
+                "This .dds file won't decode. The base game shows the bad-texture placeholder in its place."
             ),
             Rationale::ContributesNothing { mod_id } => write!(
                 f,
-                "{mod_id} contributes nothing observable under this order: it ships no assembly, every def it owns is overridden by a later copy, every texture and translation it ships is overridden, and every patch operation it has either fails to apply or never runs — disabling it changes nothing in-game and saves its load cost."
+                "{mod_id} contributes nothing observable under this order: it ships no assembly, every def it owns is overridden by a later copy, every texture and translation it ships is overridden, and every patch operation it has either fails to apply or never runs. Disabling it changes nothing in game and saves its load cost."
             ),
             Rationale::UndeclaredTypeDependency { user, provider } => write!(
                 f,
@@ -1078,7 +1076,7 @@ impl std::fmt::Display for Rationale {
                 f,
                 "{owner_count} mods each rewrite {target_type}.{target_method}'s IL with a runtime-patch \
                  transpiler; the order they run in can decide whether a later one's own pattern still matches. \
-                 Most such collisions are harmless — if one of these mods logs a patching error, \
+                 Most such collisions are harmless. If one of these mods logs a patching error, \
                  state the working order with `rimmerge rule set-pair`."
             ),
             Rationale::DuplicateAssemblyFirstLoadedWins => write!(
@@ -1142,7 +1140,7 @@ impl std::fmt::Display for Rationale {
                 };
                 write!(
                     f,
-                    "This {field} '{written}' resolves to no active or installed mod, but closely resembles the active mod '{candidate_name}' — possibly a typo. Report this to the referencing mod's author."
+                    "This {field} '{written}' resolves to no active or installed mod, but closely resembles the active mod '{candidate_name}'. It may be a typo. Report this to the referencing mod's author."
                 )
             }
             Rationale::MergeCompleteNothingToMerge => write!(
@@ -1159,7 +1157,7 @@ impl std::fmt::Display for Rationale {
             Rationale::KeepLoadOrderWinner => write!(f, "Keep the load-order winner."),
             Rationale::MergeStructuralGuard { field } => write!(
                 f,
-                "{field} differs between owners — field-level merging is unsafe; confirm the load-order winner"
+                "{field} differs between owners, so field-level merging is unsafe. Confirm the load-order winner"
             ),
             Rationale::MergeFieldsNeedChoice { unresolved } => {
                 if *unresolved == 1 {

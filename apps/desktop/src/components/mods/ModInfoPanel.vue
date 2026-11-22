@@ -210,7 +210,7 @@ function pendingChangeText(pending: PendingChangeDto): string {
           {{ t("modInfo.panel.missingHeading") }}
         </h3>
         <p class="text-text-muted text-sm">
-          {{ data.modId }} — {{ t("modInfo.panel.missingBody") }}
+          {{ data.modId }}: {{ t("modInfo.panel.missingBody") }}
         </p>
       </header>
       <section v-if="data.requiredBy.length > 0">

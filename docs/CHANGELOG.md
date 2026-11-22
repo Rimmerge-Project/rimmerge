@@ -5,6 +5,16 @@ before that point is not summarized here.
 
 ## Unreleased
 
+- **Fixed: English text Rimmerge generates no longer uses em dashes.** Sort
+  explanations, finding text, error messages, command-line output and
+  `--help` pages, the description in a generated merge mod's `About.xml` and
+  the comments in generated patches now use plain punctuation (colons, commas,
+  full stops or " - "). The plain-text explanations (command line, saved rule
+  comments) now use the app's own wording. The meaning is otherwise unchanged,
+  and so is the order Rimmerge suggests. A new check,
+  `scripts/check-em-dashes.ps1`, and a test over the command-line help keep
+  em dashes out of those strings. Rimmerge's own source comments and its
+  empty-value placeholder in the app are not covered.
 - **New: Apply asks first when the active mod list was changed outside
   Rimmerge.** When you press Apply, Rimmerge now reads `ModsConfig.xml`
   again, right then, instead of trusting the last check (it re-reads every

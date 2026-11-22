@@ -96,7 +96,7 @@ pub struct SetPairArgs {
     /// overriding a `Declared`-strength author edge (`loadAfter`/
     /// `loadBefore`/`modDependencies`) between the same two mods, should
     /// one exist. An ordinary pair rule (this flag omitted) still loses
-    /// to a declaration — this is loud, explicit,
+    /// to a declaration; this is loud, explicit,
     /// per-pair opt-in, never a default, and it still loses to any
     /// `Hard`/any-of requirement regardless. Re-run `set-pair` for the
     /// same `--after`/`--before` without this flag to clear it (a second
@@ -144,7 +144,7 @@ fn run_set_placement(args: &SetPlacementArgs) -> anyhow::Result<()> {
     let mod_id = ModId::new(&args.mod_id);
     if !mod_is_active(&session, &mod_id) {
         bail!(
-            "no active mod named {mod_id} — a typo here would persist a placement rule that \
+            "no active mod named {mod_id}; a typo here would persist a placement rule that \
              matches nothing and can't be diagnosed from the rules page; pass an id from `rimmerge \
              sort`/`rimmerge ledger`'s own mod list"
         );
@@ -168,7 +168,7 @@ fn run_set_placement(args: &SetPlacementArgs) -> anyhow::Result<()> {
         PlacementArg::Bottom => "bottom",
     };
     println!(
-        "pinned {} to the {placement_word} as your own decision — this survives re-sorts and \
+        "pinned {} to the {placement_word} as your own decision; this survives re-sorts and \
          import toggles",
         args.mod_id
     );
@@ -184,14 +184,14 @@ fn run_set_pair(args: &SetPairArgs) -> anyhow::Result<()> {
     for (flag, mod_id) in [("--after", &after), ("--before", &before)] {
         if !mod_is_active(&session, mod_id) {
             bail!(
-                "no active mod named {mod_id} ({flag}) — a typo here would persist a pair rule \
+                "no active mod named {mod_id} ({flag}); a typo here would persist a pair rule \
                  that matches nothing and can't be diagnosed from the rules page; pass an id from \
                  `rimmerge sort`/`rimmerge ledger`'s own mod list"
             );
         }
     }
     if after.base() == before.base() {
-        bail!("--after and --before name the same mod ({after}) — a pair rule needs two");
+        bail!("--after and --before name the same mod ({after}); a pair rule needs two");
     }
 
     let use_case = UpsertRule::new(rim_io::JsonRuleStore::new());
@@ -211,7 +211,7 @@ fn run_set_pair(args: &SetPairArgs) -> anyhow::Result<()> {
     if args.override_declared {
         println!(
             "{} now loads after {} as your own decision, marked to override a declared edge \
-             between them if one exists — this beats the author's own loadAfter/modDependencies \
+             between them if one exists; this beats the author's own loadAfter/modDependencies \
              for this pair specifically, but never a hard dependency; survives re-sorts and \
              import toggles",
             args.after, args.before
@@ -219,7 +219,7 @@ fn run_set_pair(args: &SetPairArgs) -> anyhow::Result<()> {
         return Ok(());
     }
     println!(
-        "{} now loads after {} as your own decision — this survives re-sorts and import toggles",
+        "{} now loads after {} as your own decision; this survives re-sorts and import toggles",
         args.after, args.before
     );
     Ok(())

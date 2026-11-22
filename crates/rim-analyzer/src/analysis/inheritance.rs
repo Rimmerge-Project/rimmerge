@@ -708,7 +708,7 @@ pub fn broken_inheritance(
                 Some(mod_id),
                 format!(
                     "{} inherits '{parent_name}', which resolves to a registration of a \
-                     different element type — whether that type is a compatible subclass \
+                     different element type; whether that type is a compatible subclass \
                      could not be confirmed, so this is informational only",
                     child.label()
                 ),

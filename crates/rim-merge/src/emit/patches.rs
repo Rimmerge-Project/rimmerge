@@ -186,7 +186,7 @@ fn render_plan_block(plan: &MergePlan) -> Option<String> {
     let owners = join_ids(&plan.owners.iter().cloned().collect());
     let mut block = String::new();
     block.push_str(&format!(
-        "  <!-- {} — owners: {} -->\n",
+        "  <!-- {} - owners: {} -->\n",
         escape_text(&plan.key.to_string()),
         escape_text(&owners)
     ));

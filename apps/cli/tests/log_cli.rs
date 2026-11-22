@@ -171,7 +171,7 @@ fn log_import_flags_a_snapshot_at_the_console_cap_in_json_and_text() {
             "Console snapshot import (only the 1000 entries the console held):",
         ))
         .stdout(predicates::str::contains(
-            "coverage: console snapshot, 1000 entries \u{2014} at the console cap: older entries \
+            "coverage: console snapshot, 1000 entries - at the console cap: older entries \
              were dropped by the game",
         ));
 }

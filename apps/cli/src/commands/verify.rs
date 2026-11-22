@@ -260,14 +260,14 @@ pub struct VerifyArgs {
     #[command(flatten)]
     paths: PathsArgs,
     /// Which order to check every active patcher's own operations
-    /// against — `suggested` (the default) is the order `apply` would
+    /// against: `suggested` (the default) is the order `apply` would
     /// actually write without an explicit `--source current`.
     #[arg(long, value_enum, default_value_t = SourceArg::Suggested)]
     source: SourceArg,
     /// Print machine-readable JSON instead of text.
     #[arg(long)]
     json: bool,
-    /// Skip the counterfactual phase — the extra replay that asks
+    /// Skip the counterfactual phase: the extra replay that asks
     /// whether a different load order would have made each
     /// otherwise-unexplained failure succeed. On by default; this flag
     /// exists so before/after numbers come from one binary, not so the
@@ -538,7 +538,7 @@ fn print_text(
                 // PowerShell, so the relation is stated in prose rather
                 // than as a line that is safe in only one of them.
                 None => println!(
-                    "    fix: load {} before {} — not printed as a command: a mod id or its \
+                    "    fix: load {} before {}; not printed as a command: a mod id or its \
                      rationale contains a quote or control character, so quote the arguments by \
                      hand",
                     TerminalSafe::line(&reorder.before),
@@ -566,7 +566,7 @@ fn print_text(
                 // reprinting the user's own text, so it is disclosed.
                 if existing.has_comment {
                     println!(
-                        "    note: a user pair rule already exists for this pair — running the \
+                        "    note: a user pair rule already exists for this pair; running the \
                          line above replaces its comment with the one shown"
                     );
                 } else {
@@ -594,13 +594,13 @@ fn print_text(
                 continue;
             }
             printed_cosmetic.push(existing_merge);
-            println!("    cosmetic: the same final def either order — no set-pair rule offered");
+            println!("    cosmetic: the same final def either order, no set-pair rule offered");
             match existing_merge {
                 None => println!("    merge: no PatchCollision finding covers this target"),
                 Some(key) => match shell_quote(&key.to_string()) {
                     Some(quoted) => println!("    merge: rimmerge merge plan --key {quoted}"),
                     None => println!(
-                        "    merge: an existing PatchCollision finding covers this target — not \
+                        "    merge: an existing PatchCollision finding covers this target; not \
                          printed as a command: its key contains a quote or control character"
                     ),
                 },

@@ -163,8 +163,8 @@ impl std::fmt::Display for Stopper {
                 mod_id,
                 op_index,
                 error,
-            } => write!(f, "{mod_id}'s operation #{op_index} — {error}"),
-            Self::Inherit(error) => write!(f, "inheritance — {error}"),
+            } => write!(f, "{mod_id}'s operation #{op_index}: {error}"),
+            Self::Inherit(error) => write!(f, "inheritance: {error}"),
         }
     }
 }

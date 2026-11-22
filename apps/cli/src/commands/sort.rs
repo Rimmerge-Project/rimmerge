@@ -26,13 +26,13 @@ pub struct SortArgs {
     tie_break: TieBreakArg,
     /// Let imported (RimSort user/community/`SteamDb`) pair rules feed the
     /// sorter. Off by default: evidence first. No effect here today: `sort` is JSON-in only and loads no
-    /// rules file to filter — see `common::build_rules_and_tagging`.
+    /// rules file to filter; see `common::build_rules_and_tagging`.
     #[arg(long)]
     use_imported_pairs: bool,
     /// Exclude imported placement rules (`Top`/`Bottom` tier pins) from
     /// the sorter. On by default: a placement is a tier statement no
     /// file-level fact can reconstruct. No effect here today: `sort` is
-    /// JSON-in only and loads no rules file to filter — see
+    /// JSON-in only and loads no rules file to filter; see
     /// `common::build_rules_and_tagging`.
     #[arg(long)]
     no_imported_placements: bool,
@@ -49,7 +49,7 @@ pub struct SortArgs {
     /// `PatchRemovedNodeCosmetic`) from real
     /// ordering constraints, treating them as advisory-only instead. On
     /// (enforced) by default, unlike `--enforce-soft`/`--enforce-awareness`
-    /// — see `EnforcedLayers::inferred`'s own doc comment for why.
+    /// (see `EnforcedLayers::inferred`'s own doc comment for why).
     #[arg(long)]
     no_inferred: bool,
     /// After the summary, list every dropped edge: the edge, the cycle it
@@ -96,7 +96,7 @@ pub fn run(args: &SortArgs) -> anyhow::Result<()> {
 
 fn print_order(outcome: &SortOutcome, current: &LoadOrder) {
     println!(
-        "Suggested order ({} mods) — marker: = unchanged, +N moved N slots earlier, -N moved N slots later, NEW not in the current order",
+        "Suggested order ({} mods) - marker: = unchanged, +N moved N slots earlier, -N moved N slots later, NEW not in the current order",
         outcome.order.as_slice().len()
     );
     for (new_position, id) in outcome.order.as_slice().iter().enumerate() {

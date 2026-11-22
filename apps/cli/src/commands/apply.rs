@@ -248,7 +248,7 @@ fn print_dry_run_diff(
         );
     }
     println!(
-        "{changed} of {} mod(s) would change position (nothing written — this is a dry run)",
+        "{changed} of {} mod(s) would change position (nothing written: this is a dry run)",
         new_order.as_slice().len()
     );
     Ok(())

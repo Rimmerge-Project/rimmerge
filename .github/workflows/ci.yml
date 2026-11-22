@@ -56,6 +56,12 @@ jobs:
         shell: pwsh
         run: ./scripts/check-line-endings.ps1
 
+      - name: check-em-dashes (no em dash in user-facing strings)
+        shell: pwsh
+        run: |
+          ./scripts/check-em-dashes.ps1 -SelfTest
+          ./scripts/check-em-dashes.ps1
+
       - name: check-doc-links (every relative Markdown link/image resolves)
         shell: pwsh
         run: ./scripts/check-doc-links.ps1

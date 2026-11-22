@@ -1457,7 +1457,7 @@ impl RuleDatabaseFetcher for FakeRuleDatabaseFetcher {
             .map(|database| {
                 let outcome = self.outcomes.get(database).cloned().unwrap_or_else(|| {
                     panic!(
-                        "FakeRuleDatabaseFetcher: no scripted outcome for {database:?} — every \
+                        "FakeRuleDatabaseFetcher: no scripted outcome for {database:?}; every \
                          database `refresh` is actually called with must have one, unless it \
                          was explicitly passed to `omitting`"
                     )

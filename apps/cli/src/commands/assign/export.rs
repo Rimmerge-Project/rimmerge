@@ -18,7 +18,7 @@ pub struct ExportArgs {
     /// The assignment's id, from `assign list`.
     #[arg(long)]
     assignment: String,
-    /// The folder to render the assignment into — never `<game>/Mods` or
+    /// The folder to render the assignment into; never `<game>/Mods` or
     /// a subfolder of it (use `--install` instead).
     #[arg(long = "out")]
     out_dir: PathBuf,

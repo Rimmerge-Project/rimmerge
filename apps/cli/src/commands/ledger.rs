@@ -68,13 +68,13 @@ pub struct LedgerArgs {
     tie_break: TieBreakArg,
     /// Let imported (RimSort user/community/`SteamDb`) pair rules feed the
     /// sorter. Off by default: evidence first. No effect here today: `ledger` is JSON-in only and loads no
-    /// rules file to filter — see `common::build_rules_and_tagging`.
+    /// rules file to filter; see `common::build_rules_and_tagging`.
     #[arg(long)]
     use_imported_pairs: bool,
     /// Exclude imported placement rules (`Top`/`Bottom` tier pins) from
     /// the sorter. On by default: a placement is a tier statement no
     /// file-level fact can reconstruct. No effect here today: `ledger` is
-    /// JSON-in only and loads no rules file to filter — see
+    /// JSON-in only and loads no rules file to filter; see
     /// `common::build_rules_and_tagging`.
     #[arg(long)]
     no_imported_placements: bool,
@@ -90,7 +90,7 @@ pub struct LedgerArgs {
     /// `PatchRemovedNodeCosmetic`) from real
     /// ordering constraints, treating them as advisory-only instead. On
     /// (enforced) by default, unlike `--enforce-soft`/`--enforce-awareness`
-    /// — see `EnforcedLayers::inferred`'s own doc comment for why.
+    /// (see `EnforcedLayers::inferred`'s own doc comment for why).
     #[arg(long)]
     no_inferred: bool,
     /// The confidence threshold separating `Auto` from `NeedsInput`.
@@ -98,7 +98,7 @@ pub struct LedgerArgs {
     threshold: u8,
     /// Surface `DanglingDefReference` findings (a name written at a
     /// recognized reference site that no active def of any type
-    /// actually has). Off by default — see
+    /// actually has). Off by default; see
     /// `rim_session::Settings::show_dangling_def_references`'s own doc
     /// comment for the measured false-positive rate. Never changes sort
     /// output.
@@ -188,7 +188,7 @@ fn format_status(status: ResolutionStatus) -> &'static str {
 
 fn print_breakdown(ledger: &rim_resolve::domain::Ledger) {
     println!(
-        "Ledger for {} — {} finding(s):",
+        "Ledger for {} - {} finding(s):",
         format_order_source(ledger.source),
         ledger.entries.len()
     );

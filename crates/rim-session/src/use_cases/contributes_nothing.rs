@@ -384,7 +384,7 @@ fn mod_patch_ops_all_inert<Reader: DefSourceReader>(
         .is_some_and(|&count| count > 0)
     {
         return Err(DefSourceLookupError::MissingSource(format!(
-            "{mod_id}: has unscoped mutating patch ops with no def target — not replayable"
+            "{mod_id}: has unscoped mutating patch ops with no def target, not replayable"
         )));
     }
 
@@ -460,7 +460,7 @@ fn mod_patch_ops_all_inert<Reader: DefSourceReader>(
             // must make before trusting the outcomes list at all.
             if let Some(error) = &outcome.error {
                 return Err(DefSourceLookupError::MissingSource(format!(
-                    "{def_type}/{def_name}: replay stopped — {error}"
+                    "{def_type}/{def_name}: replay stopped: {error}"
                 )));
             }
             if outcome
@@ -475,7 +475,7 @@ fn mod_patch_ops_all_inert<Reader: DefSourceReader>(
 
         if !has_raw_owner(session, def_type, def_name, selector) {
             return Err(DefSourceLookupError::MissingSource(format!(
-                "{def_type}/{def_name}: owned only by a patch injection (no raw Defs/ source) — not replayable"
+                "{def_type}/{def_name}: owned only by a patch injection (no raw Defs/ source), not replayable"
             )));
         }
 
@@ -532,7 +532,7 @@ fn mod_patch_ops_all_inert<Reader: DefSourceReader>(
         // above).
         if let Completeness::Partial { stopped_at } = &effective.completeness {
             return Err(DefSourceLookupError::MissingSource(format!(
-                "{def_type}/{def_name}: replay stopped — {stopped_at}"
+                "{def_type}/{def_name}: replay stopped: {stopped_at}"
             )));
         }
 

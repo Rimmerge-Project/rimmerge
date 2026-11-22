@@ -50,7 +50,7 @@ pub enum RuleDatabaseArg {
     /// The Steam Workshop dependency database (~49 MB; on by default, fetched only by an explicit refresh).
     Steam,
     /// This project's own rimmerge-rules file (small; fetched by
-    /// default) — precedence rules, patch-operation behaviours,
+    /// default): precedence rules, patch-operation behaviours,
     /// def-cache carriers, tag rules.
     Rimmerge,
 }
@@ -96,7 +96,7 @@ pub struct DbRefreshArgs {
     /// Exit with a non-zero status if any requested source failed to
     /// refresh (e.g. the network is unreachable). Being offline or having
     /// a source turned off is never treated as a failure, with or without
-    /// this flag — pass it only to catch a genuine fetch error in a
+    /// this flag; pass it only to catch a genuine fetch error in a
     /// script.
     #[arg(long)]
     strict: bool,
@@ -146,7 +146,7 @@ fn run_status(args: &DbStatusArgs) -> anyhow::Result<()> {
 
     if any_stale && app_settings.network.allow_network && !rule_databases_stale_is_muted() {
         println!(
-            "Rule databases not refreshed in over {} days — run `rimmerge db refresh`",
+            "Rule databases not refreshed in over {} days; run `rimmerge db refresh`",
             threshold.get()
         );
     }

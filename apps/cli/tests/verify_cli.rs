@@ -494,7 +494,7 @@ fn verify_prints_a_cosmetic_notice_with_no_set_pair_for_a_cosmetic_row() {
         "a cosmetic row must never offer set-pair: {stdout}"
     );
     assert!(
-        stdout.contains("cosmetic: the same final def either order — no set-pair rule offered"),
+        stdout.contains("cosmetic: the same final def either order, no set-pair rule offered"),
         "expected the cosmetic notice: {stdout}"
     );
     assert!(

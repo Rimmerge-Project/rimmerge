@@ -482,7 +482,7 @@ impl Session {
             debug_assert!(
                 rule.origin() == origin,
                 "apply_import's caller must tag every rule in this arm's own Vec with {origin:?}; \
-                 got {:?} — storing it under the wrong origin would make it indistinguishable \
+                 got {:?}; storing it under the wrong origin would make it indistinguishable \
                  from a UserDecision rule (or outrank one) once a later import legitimately \
                  omits this source",
                 rule.origin()

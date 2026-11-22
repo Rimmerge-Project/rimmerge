@@ -220,7 +220,7 @@ fn run_show(args: &ShowArgs) -> anyhow::Result<()> {
     );
     println!();
     println!(
-        "scoped ledger ({}) — {} finding(s):",
+        "scoped ledger ({}) - {} finding(s):",
         format_order_source(ledger.source),
         ledger.entries.len()
     );
@@ -313,7 +313,7 @@ fn run_plan(args: &PlanArgs) -> anyhow::Result<()> {
             println!("state:  NeedsFieldInput ({unresolved}/{total} field(s) unresolved)");
         }
         MergeState::CannotMerge { reason } => {
-            println!("state:  CannotMerge — {}", TerminalSafe::line(reason));
+            println!("state:  CannotMerge: {}", TerminalSafe::line(reason));
         }
     }
 
@@ -378,7 +378,7 @@ pub struct DecideArgs {
     /// A finding key's canonical text form.
     #[arg(long)]
     key: String,
-    /// Suppress this finding — not addressed by this patch.
+    /// Suppress this finding: not addressed by this patch.
     #[arg(long, conflicts_with_all = ["ship_asset", "choice"])]
     ignore: bool,
     /// Ships one owner's texture file for a `TextureOverride` finding.
@@ -429,7 +429,7 @@ fn print_merge_state(state: &MergeState) {
             println!("state: NeedsFieldInput ({unresolved}/{total} field(s) unresolved)");
         }
         MergeState::CannotMerge { reason } => {
-            println!("state: CannotMerge — {}", TerminalSafe::line(reason));
+            println!("state: CannotMerge: {}", TerminalSafe::line(reason));
         }
     }
 }
@@ -593,7 +593,7 @@ pub struct ExportArgs {
     /// The patch's id, from `patch list`.
     #[arg(long)]
     patch: String,
-    /// The folder to render the patch into — never `<game>/Mods` or a
+    /// The folder to render the patch into; never `<game>/Mods` or a
     /// subfolder of it (use `--install` instead).
     #[arg(long = "out")]
     out_dir: PathBuf,

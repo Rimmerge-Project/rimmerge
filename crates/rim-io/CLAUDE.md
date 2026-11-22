@@ -475,7 +475,7 @@ gate block in the root `CLAUDE.md`.
   skips the cache entirely, for a caller with no cache directory and for
   tests. The bundled snapshot is **one file, not one per section**: `build.rs`
   fails the build with a clear message
-  (`rules/rimmerge-rules.json not found — run: git submodule update
+  (`rules/rimmerge-rules.json not found. Run: git submodule update
   --init`) when the `rimmerge-rules` git submodule at `rules/` (workspace
   root, sibling of `crates/`) hasn't been checked out, and
   `mod_knowledge.rs`'s own `EMBEDDED_RULES_BUNDLE` `include_str!`s

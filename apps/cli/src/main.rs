@@ -6,6 +6,8 @@
 mod commands;
 mod common;
 #[cfg(test)]
+mod help_text_tests;
+#[cfg(test)]
 mod test_fixtures;
 
 use std::process::ExitCode;
@@ -64,7 +66,7 @@ enum Command {
         command: commands::network::NetworkCommand,
     },
     /// A manual, explicit check for a newer Rimmerge release. Never
-    /// automatic — this is the only thing that makes this command run.
+    /// automatic. This is the only thing that makes this command run.
     CheckUpdate(commands::check_update::CheckUpdateArgs),
     /// Imports RimSort's rule databases into the current profile.
     Import(commands::import::ImportArgs),
@@ -122,11 +124,11 @@ enum Command {
     },
     /// Runs a real replay of every active cross-mod patcher against the
     /// chosen order and predicts which top-level operations RimWorld
-    /// itself would log as failed. Explicit, on-demand only — never
+    /// itself would log as failed. Explicit, on-demand only; never
     /// part of `sort`/`ledger`'s cached path.
     Verify(commands::verify::VerifyArgs),
     /// Prints the per-mod startup-cost table (patch ops, slow-shape
-    /// xpaths, texture/DLL counts and bytes) from a JSON `Report` — no
+    /// xpaths, texture/DLL counts and bytes) from a JSON `Report`, no
     /// timings.
     Startup(commands::startup::StartupArgs),
 }

@@ -392,7 +392,7 @@ impl<Reader: DefSourceReader + Sync> VerifyOrder<Reader> {
             tally.skipped.push((
                 target.def_key(),
                 *selector,
-                format!("{def_type}/{def_name}: owned only by a patch injection (no raw Defs/ source) — not replayable this pass"),
+                format!("{def_type}/{def_name}: owned only by a patch injection (no raw Defs/ source), not replayable this pass"),
             ));
             return tally;
         }

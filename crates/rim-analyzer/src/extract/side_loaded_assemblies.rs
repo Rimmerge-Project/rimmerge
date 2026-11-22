@@ -140,8 +140,8 @@ pub fn note(counts: SideLoadCounts, offending_top_level: &BTreeSet<String>) -> O
         .join(", ");
     let side_loaded_count = counts.side_loaded;
     Some(format!(
-        "{side_loaded_count} assemblies outside `Assemblies/` ({folders}) were not analyzed \
-         — runtime patches and assembly references in them are not represented \
+        "{side_loaded_count} assemblies outside `Assemblies/` ({folders}) were not analyzed: \
+         runtime patches and assembly references in them are not represented \
          in this report."
     ))
 }

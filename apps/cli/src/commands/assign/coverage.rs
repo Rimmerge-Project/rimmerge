@@ -16,7 +16,7 @@ pub struct CoverageArgs {
     /// The assignment's id, from `assign list`.
     #[arg(long)]
     assignment: String,
-    /// Which section (by def type) to build coverage for — optional when
+    /// Which section (by def type) to build coverage for; optional when
     /// the project has exactly one section.
     #[arg(long)]
     section: Option<String>,
@@ -73,7 +73,7 @@ pub(super) fn run_coverage(args: &CoverageArgs) -> anyhow::Result<()> {
     }
     if !coverage.applicable {
         println!(
-            "coverage not applicable — section {def_type:?} is free-standing (\"new def\"), with no TargetKey field to match a target through"
+            "coverage not applicable: section {def_type:?} is free-standing (\"new def\"), with no TargetKey field to match a target through"
         );
         return Ok(());
     }
