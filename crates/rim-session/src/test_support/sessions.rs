@@ -42,12 +42,20 @@ pub fn report_fixture_with_inactive(active: &[&str], inactive: &[&str]) -> Repor
 /// that don't care about the details of loading.
 #[must_use]
 pub fn session_fixture(ids: &[&str]) -> Session {
+    session_fixture_in_profile(ids, std::path::Path::new("profile"))
+}
+
+/// [`session_fixture`] with its profile folder at `profile_dir`, for a test that
+/// needs the session to name a real folder (a copy from another profile
+/// compares the two).
+#[must_use]
+pub fn session_fixture_in_profile(ids: &[&str], profile_dir: &std::path::Path) -> Session {
     Session::new(
         ProjectPaths {
             game_dir: "game".into(),
             workshop_dir: "workshop".into(),
             mods_config: "ModsConfig.xml".into(),
-            profile_dir: "profile".into(),
+            profile_dir: profile_dir.to_path_buf(),
         },
         report_fixture(ids),
         Vec::new(),

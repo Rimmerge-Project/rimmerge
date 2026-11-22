@@ -481,6 +481,32 @@ of that command surface — no direct filesystem or process access outside
   (`useFolderSelect`) asks the pane's own list query again with the folder as the group filter
   and adds the returned ids; Activate/Deactivate all are `useGroupScopeActions`. Moving is off in
   Groups view with its own wording (`useModReorder`'s `isActiveGrouped`), not the sort's.
+- **Copying groups from another profile** (`commands/organization_copy.rs`,
+  `components/mods/organization/CopyProfileDialog.vue`, `composables/useCopyProfile.ts`) is two
+  commands over `CopyOrganization`: `preview_copy_organization` (a read) and `copy_organization`
+  (plans afresh, never trusts a preview). The folder comes from the existing `pickFolder`
+  (`dialog:allow-open`, no new capability; it starts at the parent of `session.paths.profileDir`,
+  where the sibling profile folders are), is parsed once at the command (non-empty, absolute, no
+  NUL, and a file-system path: an allowlist on the parsed Windows prefix (`Disk`, `VerbatimDisk`, `UNC`,
+  `VerbatimUNC`), so `\\.\pipe\x`, `\\?\pipe\x`, `\\?\CONIN$` and `\\?\GLOBALROOT\x` are `invalid_input`,
+  since opening a named pipe could block under the session lock; `\\?\C:\` and UNC paths stay allowed) and must be a
+  folder other than this profile's own (`canonicalize` compare, as the export's same-file check),
+  then only `organization.json` inside it is read, and `JsonOrganizationStore::load` opens it only
+  when it is a regular file (anything else is `unreadable`). A source equal to this profile's whole
+  organization (an alias the path compare missed, or an identical copy) is `nothingToCopy`. Both
+  answer a `CopyAnswerDto`:
+  a `report` or a `refused` reason; a refusal is an answer, not an error (`organization_unavailable`
+  and `profile_io_failed` are errors). Only a `report` from `copy_organization` emits
+  `organizationChanged`. The dialog is four steps (pick, preview with a Merge/Replace radiogroup,
+  a Replace confirm with Cancel focused, result); one serial in `useCopyProfile` guards every call,
+  so a preview for an earlier mode never overwrites a later one (the radios stay enabled while a
+  preview loads) and a copy that outlives a reset writes nothing. While a copy runs
+  (`isCopying`) the dialog is not closable (`closable`/`close-on-escape` off, both Cancel buttons
+  disabled), and a copy that returns refused or failed to the preview moves focus to Choose. The
+  mock (`copy_organization` in `scenario.ts`, sources from `window.__COPY_PROFILE_SOURCES__`, the
+  picker from `__PICK_FOLDER_RESULT__`, its options in `__PICK_FOLDER_OPTIONS__`) mirrors the merge
+  rule, the clashes and every refusal, including the source validation `from_parts` does at load
+  (a source over a limit on its own is `sourceUnusable` / `invalid`, not a `limit` refusal).
 - **Drag and drop is native HTML5, with no dependency, and the page owns the
   drag.** `useModReorder` holds the one `DragState` (source list, moving ids,
   whether Core is among them) and answers `dropModeFor(list)`: `position` (a line

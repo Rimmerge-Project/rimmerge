@@ -185,6 +185,8 @@ pub fn run() {
             commands::organization::group_membership_counts,
             commands::organization::remove_uninstalled_members,
             commands::organization::reset_organization,
+            commands::organization_copy::preview_copy_organization,
+            commands::organization_copy::copy_organization,
         ])
         .run(tauri::generate_context!());
 

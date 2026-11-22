@@ -5,6 +5,23 @@ before that point is not summarized here.
 
 ## Unreleased
 
+- **New: copy groups and colours from another profile.** The Mods page's
+  groups panel has a **Copy from another profile...** button. Choose the other
+  profile's folder (the one holding its `organization.json`) and Rimmerge shows
+  what the copy would do before it does anything, for either mode.
+  **Merge** combines the other profile's groups with yours: a group with the
+  same name path (the same names from the top level, ignoring capitals) takes
+  the other profile's mods, new groups are added under the same parent, and
+  where both profiles set a colour yours stays (listed as a clash). A colour
+  you have not set is filled in from the other profile. **Replace** removes all
+  your groups and colours and puts the other profile's in their place, after a
+  confirmation with **Cancel** focused. A copy that would pass a limit (groups,
+  mods in groups, coloured mods, nesting), a folder with no groups file, a
+  damaged or too large file, a folder holding exactly what you already have, or
+  your own folder is refused with the reason, and nothing is changed. Mods that are not installed keep their places in the
+  groups, as they do today. The copy is one save, only reads from the other
+  profile's folder, and never changes your load order, your active mods or your
+  rules.
 - **Fixed: English text Rimmerge generates no longer uses em dashes.** Sort
   explanations, finding text, error messages, command-line output and
   `--help` pages, the description in a generated merge mod's `About.xml` and

@@ -139,8 +139,9 @@ impl From<&OrganizationError> for OrganizationRuleDto {
             OrganizationError::GroupNotFound(_) => Self::GroupNotFound,
             OrganizationError::WouldCreateCycle => Self::WouldCreateCycle,
             OrganizationError::TooDeep { .. } => Self::TooDeep,
-            // A file never produces this (it is an edit-time refusal); the
-            // nearest rule a document could break is the group limit.
+            // A file never produces `GroupIdsExhausted`; an edit or a copy
+            // (a replace on a profile with no ids left) does. The nearest
+            // rule to "no ids left" is the group limit.
             OrganizationError::TooManyGroups { .. } | OrganizationError::GroupIdsExhausted => {
                 Self::TooManyGroups
             }

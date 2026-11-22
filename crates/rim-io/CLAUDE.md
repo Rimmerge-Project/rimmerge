@@ -60,7 +60,10 @@ here or in the two interface apps; `rim-resolve`/`rim-merge`/
   reused after a reload, and it **refuses to write** a document larger than
   `MAX_FILE_BYTES` (a `StoreError`, so the edit rolls back): the app never
   writes a file its own reader would turn into `TooLarge`.
-  `archive_unusable` on a missing file is a no-op success.
+  `archive_unusable` on a missing file is a no-op success. `load` opens the file only
+  after `fs::metadata` says it is a regular file (a link to one still reads): a folder,
+  named pipe or device named `organization.json` is `Unreadable`, never opened, since
+  `load` runs under the session lock and a copy reads another profile's folder.
 - `net/` is this crate's only network dependency; its only two callers
   are `databases/cache.rs` and `release_feed.rs`. `net::http::UreqHttpGet`
   is the only thing anywhere in this workspace that opens a socket —

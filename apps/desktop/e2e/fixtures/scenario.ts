@@ -135,6 +135,24 @@ type RecordedGroupedListQuery = {
   collapsed: ({ kind: "group"; groupId: number } | { kind: "ungrouped" })[];
 };
 
+/** What another profile's folder holds, as the copy commands' mock reads it. */
+type CopyProfileSourceMock =
+  | { kind: "missing" }
+  | { kind: "unusable"; issue: { kind: string; [key: string]: unknown } }
+  | {
+      kind: "organization";
+      /** The file's `next_group_id`; left out, it agrees with this profile's. */
+      nextGroupId?: number;
+      groups: {
+        id: number;
+        name: string;
+        parent: number | null;
+        color: string | null;
+        members: string[];
+      }[];
+      modColors: Record<string, string>;
+    };
+
 declare global {
   interface Window {
     /** Tauri's in-page IPC bridge (installed by `mockIPC`) — used to emit mocked events from a fixture. */
@@ -261,6 +279,11 @@ declare global {
      * `organization.json` (`recovered`, read-only until `reset_organization`).
      */
     __ORGANIZATION_STATE__?: "loaded" | "notLoaded" | "recovered";
+    /**
+     * The other profiles' folders the copy commands can read, by path. A path not listed here (and
+     * not the profile's own folder, `C:/Profile/rimmerge`) is "not a folder".
+     */
+    __COPY_PROFILE_SOURCES__?: Record<string, CopyProfileSourceMock>;
     /** Every organization command the mock received, in order — for the organization specs. */
     __ORGANIZATION_CALLS__?: { command: string; request: unknown }[];
     /** How many `rescan_project` calls the mock received — for the active-set spec. */
@@ -412,6 +435,8 @@ declare global {
     __LIST_SAVES_CALLS__?: number;
     /** Every options object `plugin:dialog|open` received for a file picker, in order. */
     __OPEN_DIALOG_OPTIONS__?: unknown[];
+    /** Every options object `plugin:dialog|open` received for a folder picker, in order. */
+    __PICK_FOLDER_OPTIONS__?: unknown[];
     /**
      * The files `preview_order_import_file` can read, by path. A path not listed here fails
      * with `mod_list_io_failed`, like a file that is not there.
@@ -4853,6 +4878,7 @@ export function installScenario(): void {
   const ORGANIZATION_MAX_MEMBERS_PER_GROUP = 5_000;
   const ORGANIZATION_MAX_TOTAL_MEMBERSHIPS = 50_000;
   const ORGANIZATION_MAX_MOD_COLORS = 20_000;
+  const ORGANIZATION_MAX_GROUP_ID = 1_000_000;
 
   type OrganizationGroupMock = {
     name: string;
@@ -5137,6 +5163,346 @@ export function installScenario(): void {
       notInstalled: notInstalledIds.length,
       notInstalledIds,
     };
+  }
+
+  // ---- Copy groups and colours from another profile (`rim_session::organization::plan_copy`) ----
+  //
+  // Mirrors `plan_copy` and `CopyOrganization`: Merge matches a source group to a group here by
+  // its path (names compared ignoring case, siblings of the same parent), adds the members, keeps
+  // this profile's colours (a differing group colour is a listed clash, an unset one is filled
+  // in), and creates the rest under the parent its own parent matched or created; the same name at
+  // another depth is another group. Replace starts from nothing but this profile's next group id.
+  // Any limit refuses the whole copy and changes nothing. A refusal is an answer, not an error.
+
+  const COPY_PROFILE_DIR = "C:/Profile/rimmerge";
+
+  function copyNormalizedPath(path: string): string {
+    return path.replaceAll("\\", "/").replace(/\/+$/, "").toLowerCase();
+  }
+
+  function isAbsolutePath(path: string): boolean {
+    return /^[A-Za-z]:[\\/]/.test(path) || path.startsWith("/") || path.startsWith("\\\\");
+  }
+
+  /**
+   * `is_file_system_path`: an allowlist on the Windows prefix. A drive (`C:\`, `\\?\C:\`) and a
+   * share (`\\server\share`, `\\?\UNC\server\share`) are folders; any other `\\`-led prefix
+   * (`\\.\pipe\x`, `\\?\pipe\x`, `\\?\CONIN$`, `\\?\GLOBALROOT\x`) is a device.
+   */
+  function isFileSystemPath(raw: string): boolean {
+    const normalized = raw.replaceAll("/", "\\");
+    if (!normalized.startsWith("\\\\")) return true;
+    return (
+      /^\\\\\?\\[A-Za-z]:/.test(normalized) ||
+      /^\\\\\?\\UNC\\[^\\]+\\[^\\]+/i.test(normalized) ||
+      /^\\\\[^\\.?][^\\]*\\[^\\]+/.test(normalized)
+    );
+  }
+
+  /** `parse_source_dir`: never empty, absolute, free of NUL, not a device path. */
+  function parseCopySourceDir(raw: string): string {
+    if (raw.trim().length === 0) organizationError("invalid_input", "the profile folder is empty");
+    if (raw.includes("\u0000")) {
+      organizationError("invalid_input", "the profile folder holds a character a path cannot");
+    }
+    if (!isFileSystemPath(raw)) {
+      organizationError("invalid_input", "the profile folder must be a folder, not a device path");
+    }
+    if (!isAbsolutePath(raw)) {
+      organizationError("invalid_input", "the profile folder must be an absolute path");
+    }
+    return raw;
+  }
+
+  function copySourceFor(path: string): CopyProfileSourceMock | null {
+    const sources = window.__COPY_PROFILE_SOURCES__ ?? {};
+    const wanted = copyNormalizedPath(path);
+    const key = Object.keys(sources).find((known) => copyNormalizedPath(known) === wanted);
+    return key === undefined ? null : (sources[key] ?? null);
+  }
+
+  /** `refuse_folder`: not a folder, or this profile's own. */
+  function copyFolderRefusal(path: string): { kind: string } | null {
+    const isOwn = copyNormalizedPath(path) === copyNormalizedPath(COPY_PROFILE_DIR);
+    if (!isOwn && copySourceFor(path) === null) return { kind: "sourceNotAFolder" };
+    return isOwn ? { kind: "sameProfile" } : null;
+  }
+
+  function copyTreeOrder(groups: Map<number, OrganizationGroupMock>): number[] {
+    const ids: number[] = [];
+    const walk = (parent: number | null): void => {
+      const siblings = [...groups]
+        .filter(([, group]) => group.parent === parent)
+        .toSorted(compareGroupNames);
+      for (const [id] of siblings) {
+        ids.push(id);
+        walk(id);
+      }
+    };
+    walk(null);
+    return ids;
+  }
+
+  function copyPathOf(groups: Map<number, OrganizationGroupMock>, id: number): string[] {
+    const path: string[] = [];
+    for (let at: number | null = id; at !== null; at = groups.get(at)?.parent ?? null) {
+      path.unshift(groups.get(at)?.name ?? "");
+    }
+    return path;
+  }
+
+  /**
+   * What `JsonOrganizationStore::load` (through `ModOrganization::from_parts`) refuses in a source
+   * file that parsed: the rule it breaks, or `null`. Checked in `from_parts`' own order (counts,
+   * ids, dangling parents, chains, sibling names, member limits) so a source breaking several rules
+   * names the same one as the backend. A source over a limit on its own is unusable, whatever this
+   * profile holds; only the result of combining it with this profile is a `limit` refusal.
+   * Fixtures must be otherwise well-formed: the rim-io reader's own `malformed` checks (names,
+   * member ids, colour tokens) are not modelled.
+   */
+  function copySourceRule(
+    source: Extract<CopyProfileSourceMock, { kind: "organization" }>,
+  ): string | null {
+    if (source.groups.length > ORGANIZATION_MAX_GROUPS) return "tooManyGroups";
+    if (Object.keys(source.modColors).length > ORGANIZATION_MAX_MOD_COLORS) return "tooManyColors";
+    const byId = new Map<number, (typeof source.groups)[number]>();
+    for (const group of source.groups) {
+      if (group.id > ORGANIZATION_MAX_GROUP_ID) return "groupIdOutOfRange";
+      if (byId.has(group.id)) return "duplicateGroupId";
+      byId.set(group.id, group);
+    }
+    if (source.nextGroupId !== undefined) {
+      // `from_parts` checks the next id after the ids and before the forest.
+      if (source.nextGroupId > ORGANIZATION_MAX_GROUP_ID + 1) return "groupIdOutOfRange";
+      const minimum = Math.max(0, ...byId.keys()) + 1;
+      if (source.nextGroupId < minimum) return "nextIdBehind";
+    }
+    const ids = [...byId.keys()].toSorted((left, right) => left - right);
+    for (const id of ids) {
+      const parent = byId.get(id)?.parent ?? null;
+      if (parent !== null && !byId.has(parent)) return "danglingParent";
+    }
+    for (const id of ids) {
+      const visited = new Set([id]);
+      for (let at = byId.get(id)?.parent ?? null; at !== null; at = byId.get(at)?.parent ?? null) {
+        if (visited.has(at)) return "wouldCreateCycle";
+        visited.add(at);
+        if (visited.size > ORGANIZATION_MAX_DEPTH) return "tooDeep";
+      }
+    }
+    const names = new Set<string>();
+    for (const id of ids) {
+      const group = byId.get(id);
+      if (group === undefined) continue;
+      const key = `${group.parent}|${group.name.toLowerCase()}`;
+      if (names.has(key)) return "nameTaken";
+      names.add(key);
+    }
+    const sizes = source.groups.map((group) => new Set(group.members.map(organizedId)).size);
+    if (sizes.some((size) => size > ORGANIZATION_MAX_MEMBERS_PER_GROUP)) return "tooManyMembers";
+    if (sizes.reduce((sum, size) => sum + size, 0) > ORGANIZATION_MAX_TOTAL_MEMBERSHIPS) {
+      return "tooManyMembers";
+    }
+    return null;
+  }
+
+  /**
+   * `*target == source` in `CopyOrganization::plan`: the source is exactly this organization (an
+   * alias of this profile's own folder, or an identical copy), so there is nothing to copy. A
+   * source that names no `nextGroupId` is taken to agree with this profile's.
+   */
+  function copySourceIsThisOrganization(
+    source: Extract<CopyProfileSourceMock, { kind: "organization" }>,
+  ): boolean {
+    if (source.nextGroupId !== undefined && source.nextGroupId !== nextOrganizationGroupId) {
+      return false;
+    }
+    if (source.groups.length !== organizationGroups.size) return false;
+    const sameGroups = source.groups.every((group) => {
+      const here = organizationGroups.get(group.id);
+      const members = new Set(group.members.map(organizedId));
+      return (
+        here !== undefined &&
+        here.name === group.name &&
+        here.parent === group.parent &&
+        here.color === group.color &&
+        here.members.size === members.size &&
+        [...members].every((member) => here.members.has(member))
+      );
+    });
+    const colors = Object.entries(source.modColors);
+    return (
+      sameGroups &&
+      colors.length === organizationModColors.size &&
+      colors.every(([id, color]) => organizationModColors.get(organizedId(id)) === color)
+    );
+  }
+
+  class CopyLimit extends Error {
+    readonly rule: string;
+    constructor(rule: string) {
+      super(rule);
+      this.rule = rule;
+    }
+  }
+
+  /** The plan of one copy: the resulting model and the report, or the limit it would break. */
+  function planCopyOrganization(
+    source: Extract<CopyProfileSourceMock, { kind: "organization" }>,
+    mode: "merge" | "replace",
+  ) {
+    const isMerge = mode === "merge";
+    const groups = new Map<number, OrganizationGroupMock>();
+    if (isMerge) {
+      for (const [id, group] of organizationGroups) {
+        groups.set(id, { ...group, members: new Set(group.members) });
+      }
+    }
+    const colors = new Map(isMerge ? organizationModColors : []);
+    let nextId = nextOrganizationGroupId;
+    const report = {
+      mode,
+      groupsAdded: 0,
+      groupsMerged: 0,
+      membershipsAdded: 0,
+      membershipsAlready: 0,
+      modColorsAdded: 0,
+      modColorsKept: 0,
+      groupColorsAdopted: 0,
+      clashes: [] as { path: string[]; kept: string; offered: string }[],
+      discardedGroups: isMerge ? 0 : organizationGroups.size,
+      discardedMemberships: isMerge ? 0 : organizationMembershipCount(),
+      discardedModColors: isMerge ? 0 : organizationModColors.size,
+      notInstalledMods: 0,
+    };
+    const total = () => [...groups.values()].reduce((sum, group) => sum + group.members.size, 0);
+    const sourceGroups = new Map<number, OrganizationGroupMock>(
+      source.groups.map((group) => [
+        group.id,
+        {
+          name: group.name,
+          parent: group.parent,
+          color: group.color,
+          members: new Set(group.members.map(organizedId)),
+        },
+      ]),
+    );
+    const placed = new Map<number, number>();
+    for (const sourceId of copyTreeOrder(sourceGroups)) {
+      const group = sourceGroups.get(sourceId);
+      if (group === undefined) continue;
+      const parent = group.parent === null ? null : (placed.get(group.parent) ?? null);
+      const existing = [...groups].find(
+        ([, candidate]) =>
+          candidate.parent === parent && candidate.name.toLowerCase() === group.name.toLowerCase(),
+      );
+      if (existing !== undefined) {
+        const [id, here] = existing;
+        const added = [...group.members].filter((member) => !here.members.has(member)).length;
+        if (here.members.size + added > ORGANIZATION_MAX_MEMBERS_PER_GROUP) {
+          throw new CopyLimit("tooManyMembers");
+        }
+        if (total() + added > ORGANIZATION_MAX_TOTAL_MEMBERSHIPS) {
+          throw new CopyLimit("tooManyMembers");
+        }
+        for (const member of group.members) here.members.add(member);
+        report.groupsMerged += 1;
+        report.membershipsAdded += added;
+        report.membershipsAlready += group.members.size - added;
+        if (here.color === null && group.color !== null) {
+          here.color = group.color;
+          report.groupColorsAdopted += 1;
+        } else if (here.color !== null && group.color !== null && here.color !== group.color) {
+          report.clashes.push({
+            path: copyPathOf(groups, id),
+            kept: here.color,
+            offered: group.color,
+          });
+        }
+        placed.set(sourceId, id);
+        continue;
+      }
+      if (group.members.size > ORGANIZATION_MAX_MEMBERS_PER_GROUP) {
+        throw new CopyLimit("tooManyMembers");
+      }
+      if (total() + group.members.size > ORGANIZATION_MAX_TOTAL_MEMBERSHIPS) {
+        throw new CopyLimit("tooManyMembers");
+      }
+      if (groups.size >= ORGANIZATION_MAX_GROUPS) throw new CopyLimit("tooManyGroups");
+      if (nextId > ORGANIZATION_MAX_GROUP_ID) throw new CopyLimit("tooManyGroups");
+      const id = nextId;
+      nextId += 1;
+      groups.set(id, {
+        name: group.name,
+        parent,
+        color: group.color,
+        members: new Set(group.members),
+      });
+      report.groupsAdded += 1;
+      report.membershipsAdded += group.members.size;
+      placed.set(sourceId, id);
+    }
+    for (const [rawId, color] of Object.entries(source.modColors)) {
+      const id = organizedId(rawId);
+      const kept = colors.get(id);
+      if (kept === undefined) {
+        if (colors.size + 1 > ORGANIZATION_MAX_MOD_COLORS) throw new CopyLimit("tooManyColors");
+        colors.set(id, color);
+        report.modColorsAdded += 1;
+      } else if (kept !== color) {
+        report.modColorsKept += 1;
+      }
+    }
+    const members = new Set(source.groups.flatMap((group) => group.members.map(organizedId)));
+    const activeBases = new Set([...workingActiveIds].map(baseOf));
+    const installedBases = new Set(installedInventory().map((entry) => baseOf(entry.modId)));
+    report.notInstalledMods = [...members].filter(
+      (member) => !activeBases.has(member) && !installedBases.has(member),
+    ).length;
+    return { groups, colors, nextId, report };
+  }
+
+  /** `CopyOrganization::plan`: this organization usable, then the source read, then the plan. */
+  function copyAnswer(path: string, mode: "merge" | "replace", isCommit: boolean) {
+    const refusal = copyFolderRefusal(path);
+    if (refusal !== null) return { kind: "refused", reason: refusal };
+    requireLoadedOrganization();
+    const source = copySourceFor(path);
+    if (source === null || source.kind === "missing") {
+      return { kind: "refused", reason: { kind: "sourceMissing" } };
+    }
+    if (source.kind === "unusable") {
+      return { kind: "refused", reason: { kind: "sourceUnusable", issue: source.issue } };
+    }
+    const unusableRule = copySourceRule(source);
+    if (unusableRule !== null) {
+      return {
+        kind: "refused",
+        reason: { kind: "sourceUnusable", issue: { kind: "invalid", rule: unusableRule } },
+      };
+    }
+    if (source.groups.length === 0 && Object.keys(source.modColors).length === 0) {
+      return { kind: "refused", reason: { kind: "sourceEmpty" } };
+    }
+    if (copySourceIsThisOrganization(source)) {
+      return { kind: "refused", reason: { kind: "nothingToCopy" } };
+    }
+    try {
+      const plan = planCopyOrganization(source, mode);
+      if (isCommit) {
+        organizationGroups.clear();
+        for (const [id, group] of plan.groups) organizationGroups.set(id, group);
+        organizationModColors.clear();
+        for (const [id, color] of plan.colors) organizationModColors.set(id, color);
+        nextOrganizationGroupId = plan.nextId;
+      }
+      return { kind: "report", report: plan.report };
+    } catch (error) {
+      if (error instanceof CopyLimit) {
+        return { kind: "refused", reason: { kind: "limit", rule: error.rule } };
+      }
+      throw error;
+    }
   }
 
   /** Joins organization onto list rows (labels by base id, the mod's own colour) and applies the group filter. */
@@ -7302,6 +7668,7 @@ export function installScenario(): void {
   window.__OPEN_WORKSHOP_PAGE_CALLS__ = [];
   window.__SAVE_DIALOG_OPTIONS__ = [];
   window.__OPEN_DIALOG_OPTIONS__ = [];
+  window.__PICK_FOLDER_OPTIONS__ = [];
   window.__LIST_SAVES_CALLS__ = 0;
   window.__GAME_LAUNCH_STATUS_CALLS__ = 0;
   window.__GET_RECOMMENDED_RULES_CALLS__ = 0;
@@ -8567,6 +8934,20 @@ export function installScenario(): void {
       organizationAvailability = "loaded";
       await emitOrganizationChanged();
       return organizationDto();
+    },
+    preview_copy_organization: (payload: unknown) => {
+      const request = (payload as { request: { sourceDir: string; mode: "merge" | "replace" } })
+        .request;
+      recordOrganizationCall("preview_copy_organization", request);
+      return copyAnswer(parseCopySourceDir(request.sourceDir), request.mode, false);
+    },
+    copy_organization: async (payload: unknown) => {
+      const request = (payload as { request: { sourceDir: string; mode: "merge" | "replace" } })
+        .request;
+      recordOrganizationCall("copy_organization", request);
+      const answer = copyAnswer(parseCopySourceDir(request.sourceDir), request.mode, true);
+      if (answer.kind === "report") await emitOrganizationChanged();
+      return answer;
     },
     plan_activate_mods: (payload: unknown) => {
       const request = (payload as { request: ActivateRequestDto }).request;
@@ -9868,7 +10249,9 @@ export function installScenario(): void {
     // a file picker never does.
     "plugin:dialog|open": (payload: unknown) => {
       const options = (payload as { options?: { directory?: boolean } } | undefined)?.options;
-      if (!options?.directory) {
+      if (options?.directory) {
+        window.__PICK_FOLDER_OPTIONS__?.push(options);
+      } else {
         window.__OPEN_DIALOG_OPTIONS__?.push(options);
       }
       return options?.directory

@@ -234,6 +234,7 @@ export type OrganizationDialog =
   | { readonly kind: "modColor"; readonly modId: string; readonly current: ColorTokenDto | null }
   | { readonly kind: "modGroups"; readonly modId: string; readonly groupIds: readonly number[] }
   | { readonly kind: "startOver" }
+  | { readonly kind: "copyProfile" }
   | {
       readonly kind: "bulkGroups";
       readonly mode: BulkGroupMode;

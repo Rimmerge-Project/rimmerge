@@ -1,6 +1,7 @@
 //! An in-memory [`OrganizationStore`], and builders for organization tests.
 
-use std::path::Path;
+use std::collections::BTreeMap;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
@@ -27,6 +28,10 @@ pub struct InMemoryOrganizationStore {
     change_after_next_load: Mutex<Option<ModOrganization>>,
     saves: AtomicUsize,
     archives: AtomicUsize,
+    /// Other directories' files: `load` of one of these answers its own
+    /// seed, so a test can read a second profile beside the first.
+    other_dirs: Mutex<BTreeMap<PathBuf, OrganizationLoad>>,
+    saved_dirs: Mutex<Vec<PathBuf>>,
 }
 
 impl Default for InMemoryOrganizationStore {
@@ -53,6 +58,8 @@ impl InMemoryOrganizationStore {
             change_after_next_load: Mutex::new(None),
             saves: AtomicUsize::new(0),
             archives: AtomicUsize::new(0),
+            other_dirs: Mutex::new(BTreeMap::new()),
+            saved_dirs: Mutex::new(Vec::new()),
         }
     }
 
@@ -114,6 +121,24 @@ impl InMemoryOrganizationStore {
             .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(organization);
     }
 
+    /// Makes `load(dir)` answer `load` for that directory (every other
+    /// directory still answers the store's own file).
+    pub fn seed_dir(&self, dir: impl Into<PathBuf>, load: OrganizationLoad) {
+        self.other_dirs
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .insert(dir.into(), load);
+    }
+
+    /// The directory of every successful `save`, in order.
+    #[must_use]
+    pub fn saved_dirs(&self) -> Vec<PathBuf> {
+        self.saved_dirs
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .clone()
+    }
+
     fn lock(&self) -> std::sync::MutexGuard<'_, OrganizationLoad> {
         self.current
             .lock()
@@ -122,7 +147,15 @@ impl InMemoryOrganizationStore {
 }
 
 impl OrganizationStore for InMemoryOrganizationStore {
-    fn load(&self, _dir: &Path) -> OrganizationLoad {
+    fn load(&self, dir: &Path) -> OrganizationLoad {
+        if let Some(seeded) = self
+            .other_dirs
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .get(dir)
+        {
+            return seeded.clone();
+        }
         let answer = self.lock().clone();
         let late_change = self
             .change_after_next_load
@@ -137,7 +170,7 @@ impl OrganizationStore for InMemoryOrganizationStore {
 
     fn save(
         &self,
-        _dir: &Path,
+        dir: &Path,
         organization: &ModOrganization,
     ) -> Result<(), OrganizationSaveError> {
         if self.too_large_next_save.swap(false, Ordering::SeqCst) {
@@ -148,6 +181,10 @@ impl OrganizationStore for InMemoryOrganizationStore {
         }
         *self.lock() = OrganizationLoad::Loaded(organization.clone());
         self.saves.fetch_add(1, Ordering::SeqCst);
+        self.saved_dirs
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .push(dir.to_path_buf());
         Ok(())
     }
 

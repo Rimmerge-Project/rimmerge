@@ -913,6 +913,23 @@ through `ports::OrganizationStore` (`rim-io`'s `JsonOrganizationStore`).
   `find_by_base` rule, a copy already active wins, members found nowhere
   are counted, not dropped), reached through `Session::resolve_group_scope`
   for group-level activate/deactivate planning.
+- **Copying another profile's organization** is `organization::plan_copy` (pure:
+  `CopyMode::{Merge, Replace}`, a `CopyPlan` of the resulting `ModOrganization` and a
+  `CopyReport`) and the use case `CopyOrganization` (`preview` is a read; `execute` re-plans from a
+  fresh read of the source and saves once). The plan runs on a clone through the aggregate's own
+  mutators, so every limit and rule of an edit guards the copy, and any `OrganizationError` refuses
+  the whole copy (`CopyRefusal::Limit`) with nothing changed. The source is read through
+  `OrganizationStore::load(source_dir)` (its size bound and validation apply; missing, unusable
+  and empty are `CopyRefusal`s, and so is a source equal to this organization,
+  `NothingToCopy`: an alias of the own folder or an identical copy), never written. Merge matches groups by path (names compared with
+  `uniqueness_key`, siblings of one parent), keeps this profile's name spelling, id and colours
+  (a differing group colour is a `GroupColorClash`, a differing mod colour a count, an unset colour
+  is filled in); Replace starts from an empty organization that keeps this one's `next_group_id`
+  so no id it ever handed out is reused. A merge that changes nothing writes nothing; a failed
+  save leaves the session as it was and a `TooLarge` save is `CopyRefusal::TooLargeToSave`. The
+  desktop answers "is this profile's own folder" before the use case runs (it needs the
+  filesystem); the use case touches no order, working set, rule or `ModsConfig.xml`, and a test
+  pins that.
 - **`mod_lists`** gains `ModListQuery::group` (`GroupFilter::InScope`,
   descendants included and deduplicated, or `Ungrouped`), `ModListRow::groups`
   (direct labels in group-tree order: depth first, siblings by name, so a row's first coloured group is the tree's first) and `ModListRow::color`. Both list functions now

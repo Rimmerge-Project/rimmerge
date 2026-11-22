@@ -678,6 +678,34 @@ selection and lists the groups:
     filter, and are left out when it has one. When nothing matches, the list says
     so. A very large library is cut at 10,000 lines; a note says how many lines
     are not shown, and folding folders or searching brings the rest back.
+- **Copy from another profile...** (the groups panel) copies another
+  profile's groups and colours into this one. Each profile keeps its own
+  `organization.json`; pick the other profile's folder (the one holding that
+  file). Profile folders sit side by side, one per `ModsConfig.xml`, in the
+  `profiles` folder under `%LOCALAPPDATA%\rimmerge` and named by a short code
+  (the picker opens there, beside this profile's own folder). The dialog
+  previews the result, then you choose a mode:
+  - **Merge** matches a source group to one here by its path: the same names
+    from the top level, ignoring capitals. A match takes the source's members
+    and keeps its own name and id; groups with no match are created under the
+    parent their own parent matched or created, so the same name at another
+    depth is another group. Your colours win: a group or mod colour you have
+    set stays (a differing group colour is listed as a clash, a differing mod
+    colour is counted), and only a colour you have not set is filled in.
+  - **Replace** removes everything here and puts the other profile's groups
+    and colours in its place (new group numbers, never one this profile used
+    before). It asks for a confirmation with **Cancel** focused.
+  - Every copy is checked against the same limits as an edit (groups, nesting,
+    mods per group and in total, coloured mods, the size of the file) as a
+    whole: one over the limit is refused with the reason and nothing is
+    copied, in either mode. A folder that is not a folder, is this profile's own
+    folder, holds exactly what this profile already has, has no
+    `organization.json`, has an empty one, or has one that cannot
+    be read (too large, damaged, from a newer version, groups that do not fit
+    together) is refused the same way. The other profile's folder is only read,
+    and only its `organization.json`. A mod that is not installed keeps its
+    place in a group, as everywhere else. The copy is one save, and never
+    changes the load order, the active mods or the rules.
 - If `organization.json` cannot be read, a notice says so and groups are
   read-only. If another program only has the file open, **Rescan and try
   again** reads it again (it is a full rescan of your mods, the only thing that

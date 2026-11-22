@@ -35,6 +35,7 @@ pub mod notifications;
 pub mod order;
 pub mod order_share;
 pub mod organization;
+pub mod organization_copy;
 pub mod patch;
 pub mod preflight;
 pub mod project;

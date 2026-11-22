@@ -62,12 +62,14 @@ export {
 } from "./ipc/orderShare";
 export {
   addGroupMembers,
+  copyOrganization,
   createGroup,
   deleteGroup,
   getOrganization,
   groupMembershipCounts,
   moveGroupMembers,
   planGroupScope,
+  previewCopyOrganization,
   removeGroupMembers,
   removeUninstalledMembers,
   renameGroup,

@@ -43,6 +43,8 @@ const emit = defineEmits<{
   moveGroup: [groupId: number];
   deleteGroup: [groupId: number];
   removeUninstalled: [groupId: number];
+  /** Open the dialog that copies groups and colours from another profile. */
+  copyFromProfile: [];
   /** Activate every installed mod of the group and its subgroups (opens the Activate dialog). */
   activateGroup: [groupId: number];
   /** Deactivate every active mod of the group and its subgroups (opens the Deactivate dialog). */
@@ -297,6 +299,15 @@ watch(
         outlined
         data-testid="group-new"
         @click="emit('createGroup', null)"
+      />
+      <Button
+        :label="t('mods.groups.copy.button')"
+        icon="pi pi-copy"
+        size="small"
+        severity="secondary"
+        text
+        data-testid="group-copy-profile"
+        @click="emit('copyFromProfile')"
       />
       <Button
         :label="t('mods.groups.actions')"

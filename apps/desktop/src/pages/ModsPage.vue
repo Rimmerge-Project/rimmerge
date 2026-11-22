@@ -422,6 +422,7 @@ const followFocus = useDebounceFn((modId: string) => {
       @move-group="(id: number) => (organizationDialog = { kind: 'moveGroup', id })"
       @delete-group="(id: number) => (organizationDialog = { kind: 'deleteGroup', id })"
       @remove-uninstalled="(id: number) => (organizationDialog = { kind: 'removeUninstalled', id })"
+      @copy-from-profile="organizationDialog = { kind: 'copyProfile' }"
       @activate-group="(id: number) => void groupActions.activateGroup(id)"
       @deactivate-group="(id: number) => void groupActions.deactivateGroup(id)"
       @drop-mods="dropMods"

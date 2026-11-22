@@ -7,6 +7,7 @@ import { useI18n } from "vue-i18n";
 
 import BulkGroupsDialog from "@/components/mods/organization/BulkGroupsDialog.vue";
 import ColorPickerDialog from "@/components/mods/organization/ColorPickerDialog.vue";
+import CopyProfileDialog from "@/components/mods/organization/CopyProfileDialog.vue";
 import GroupDeleteDialog from "@/components/mods/organization/GroupDeleteDialog.vue";
 import GroupMoveDialog from "@/components/mods/organization/GroupMoveDialog.vue";
 import GroupNameDialog from "@/components/mods/organization/GroupNameDialog.vue";
@@ -108,6 +109,7 @@ const isRemoveUninstalledOpen = isOpen("removeUninstalled");
 const isModColorOpen = isOpen("modColor");
 const isModGroupsOpen = isOpen("modGroups");
 const isStartOverOpen = isOpen("startOver");
+const isCopyProfileOpen = isOpen("copyProfile");
 const isBulkGroupsOpen = isOpen("bulkGroups");
 const isBulkColorOpen = isOpen("bulkColor");
 
@@ -128,6 +130,7 @@ const groupId = computed(() => {
     case "modColor":
     case "modGroups":
     case "startOver":
+    case "copyProfile":
     case "bulkGroups":
     case "bulkColor":
       return null;
@@ -573,6 +576,7 @@ function startOver(): Promise<void> {
     @choose="bulkColor"
     @after-hide="onBulkDialogGone"
   />
+  <CopyProfileDialog v-model:visible="isCopyProfileOpen" />
   <StartOverDialog
     v-model:visible="isStartOverOpen"
     :error="error"

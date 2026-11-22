@@ -191,6 +191,17 @@ fn free_archive_path(dir: &Path, seconds: u64) -> Option<PathBuf> {
 impl OrganizationStore for JsonOrganizationStore {
     fn load(&self, dir: &Path) -> OrganizationLoad {
         let path = dir.join(FILE_NAME);
+        // A named pipe or device would block `open` while the session lock is
+        // held, so only a regular file is ever opened. `metadata` follows a
+        // link, so a link to a regular file still reads.
+        match fs::metadata(&path) {
+            Ok(metadata) if metadata.is_file() => {}
+            Ok(_) => return OrganizationLoad::Unusable(OrganizationIssue::Unreadable),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                return OrganizationLoad::Missing;
+            }
+            Err(_) => return OrganizationLoad::Unusable(OrganizationIssue::Unreadable),
+        }
         let bytes = match read_bounded_file(&path) {
             Ok(Some(bytes)) => bytes,
             Ok(None) => {
@@ -303,6 +314,33 @@ mod tests {
         assert_eq!(
             JsonOrganizationStore.load(dir.path()),
             OrganizationLoad::Missing
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_named_pipe_where_the_file_should_be_is_unreadable_and_never_opened() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let status = std::process::Command::new("mkfifo")
+            .arg(dir.path().join(FILE_NAME))
+            .status()
+            .expect("mkfifo runs");
+        assert!(status.success(), "mkfifo failed");
+        let folder = dir.path().to_path_buf();
+        let (sender, receiver) = std::sync::mpsc::channel();
+        // Opening a pipe with no writer blocks forever, so a regression would
+        // hang the load; the timeout turns that hang into a failure.
+        std::thread::spawn(move || {
+            let _ = sender.send(JsonOrganizationStore.load(&folder));
+        });
+
+        let loaded = receiver
+            .recv_timeout(std::time::Duration::from_secs(5))
+            .expect("load returned instead of blocking on the pipe");
+
+        assert_eq!(
+            loaded,
+            OrganizationLoad::Unusable(OrganizationIssue::Unreadable)
         );
     }
 
