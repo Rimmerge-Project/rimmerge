@@ -1566,7 +1566,6 @@
       "unavailable": "「分組」檢視需要使用你的分組，但目前無法使用它們。",
       "collapseAll": "全部收合",
       "expandAll": "全部展開",
-      "ungrouped": "不在任何分組中",
       "modCount": "{count} 個模組",
       "folderActions": "資料夾 {name} 的動作",
       "folderLabelExpanded": "{name}，{count} 個模組，已展開",

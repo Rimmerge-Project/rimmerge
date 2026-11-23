@@ -96,7 +96,7 @@ describe("useFolderSelect", () => {
 
   it("uses the Inactive command for the Inactive pane and leaves the other selection alone", async () => {
     const answer: ModListDto = { total: 1, items: [modRow({ modId: "x" })], reorderable: false };
-    const { folderSelect, active, inactive, requests } = setup(answer, ["keep"]);
+    const { folderSelect, active, inactive, requests, announce } = setup(answer, ["keep"]);
 
     await folderSelect.selectFolder("inactive", { kind: "ungrouped" });
 
@@ -106,6 +106,7 @@ describe("useFolderSelect", () => {
     });
     expect(inactive.value).toEqual(["x"]);
     expect(active.value).toEqual(["keep"]);
+    expect(announce).toHaveBeenCalledWith("Selected 1 mod in Ungrouped.");
   });
 
   it("says so, and changes nothing, for a folder with no mod under the filter", async () => {

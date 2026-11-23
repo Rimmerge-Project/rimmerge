@@ -546,7 +546,7 @@ of that command surface — no direct filesystem or process access outside
   ids once organization is loaded, every access in `try`/`catch`), sent sorted so the same set is
   the same cache entry. A header takes a mod drag whatever the pane's drop mode
   (`useFolderDropTarget`): a group's header is `useGroupDrop.dropMods` (organization edit only,
-  never a position or an activation, D12), "Not in a group" refuses, a folded header opens after
+  never a position or an activation, D12), "Ungrouped" refuses, a folded header opens after
   800 ms; `useRowDrag` offers `copyMove` so the header can say `copy`. "Select all in folder"
   (`useFolderSelect`) asks the pane's own list query again with the folder as the group filter
   and adds the returned ids; Activate/Deactivate all are `useGroupScopeActions`. Moving is off in

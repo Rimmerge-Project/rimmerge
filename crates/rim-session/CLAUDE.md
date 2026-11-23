@@ -1014,7 +1014,7 @@ through `ports::OrganizationStore` (`rim-io`'s `JsonOrganizationStore`).
   It is built from `working_rows`/`inactive_rows` (the uncut, decorated,
   filtered and sorted rows the List view cuts), so placement uses the labels a
   row carries and the pane's sort is never repeated: a folder's subfolders
-  come first, then its mods in pane order; "Not in a group" is last and only
+  come first, then its mods in pane order; "Ungrouped" is last and only
   when it holds a mod; a group scope walks only its subtree, rebased to level
   1; with no search, tag or source filter empty folders show at 0, under one a
   folder with no match is left out. Counts are merged bottom up over one

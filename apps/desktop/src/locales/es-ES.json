@@ -1566,7 +1566,6 @@
       "unavailable": "La vista Grupos necesita tus grupos, que ahora no se pueden usar.",
       "collapseAll": "Contraer todo",
       "expandAll": "Expandir todo",
-      "ungrouped": "Sin grupo",
       "modCount": "{count} mod | {count} mods",
       "folderActions": "Acciones de la carpeta {name}",
       "folderLabelExpanded": "{name}, {count} mod, abierta | {name}, {count} mods, abierta",

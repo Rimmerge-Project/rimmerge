@@ -84,7 +84,7 @@ describe("useFolderDropTarget", () => {
     expect(target.isRefusedHover.value).toBe(false);
   });
 
-  it("refuses a drag over Not in a group: the drop is not allowed and the refusal shows", () => {
+  it("refuses a drag over Ungrouped: the drop is not allowed and the refusal shows", () => {
     const { target } = setup();
     const event = dragEvent();
 
@@ -133,7 +133,7 @@ describe("useFolderDropTarget", () => {
     expect(target.hoverKey.value).toBeNull();
   });
 
-  it("reports nothing for a drop on Not in a group", () => {
+  it("reports nothing for a drop on Ungrouped", () => {
     const { target, dropOnGroup } = setup();
 
     target.onHeaderDrop(dragEvent(), folderRow("ungrouped"));

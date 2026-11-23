@@ -1566,7 +1566,6 @@
       "unavailable": "「グループ」表示にはグループが必要ですが、今はグループを使用できません。",
       "collapseAll": "すべて閉じる",
       "expandAll": "すべて開く",
-      "ungrouped": "グループなし",
       "modCount": "MOD{count}個",
       "folderActions": "フォルダー「{name}」の操作",
       "folderLabelExpanded": "{name}、MOD{count}個、開いています",

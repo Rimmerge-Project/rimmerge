@@ -71,7 +71,7 @@ before that point is not summarized here.
   switch under its sort buttons. **Groups** shows the same mods as folders: your
   group tree, each folder with its colour icon, its name and how many mods it
   holds, its subfolders first and then its mods in the list's sort order, with
-  **Not in a group** last. A mod in two groups appears under each, with an
+  **Ungrouped** last. A mod in two groups appears under each, with an
   "also in" mark, and selecting either copy selects the mod. Folders fold with a
   click or the arrow keys, **Collapse all** and **Expand all** sit beside the
   switch, and each list remembers its folded folders per profile. A folder's ⋮
@@ -89,8 +89,8 @@ before that point is not summarized here.
   panel its groups have a small dot and every group a folder icon in its
   colour. The row's ⋮ menu starts with the twelve colours as swatches. The Add
   to group dialogs have a search box and offer **Create group** with the name
-  you typed, which creates the group and adds the mods in one save. A double
-  click on a row opens the Activate or Deactivate dialog for that mod.
+  you typed, which creates the group and adds the mods, saving both at once. A
+  double click on a row opens the Activate or Deactivate dialog for that mod.
 - **Fix: the Mods page controls stay readable at 1,024 pixels in every language.** In
   German, Russian, Polish and French the search and tag placeholders were cut
   off, the sort bar wrapped onto a second line, a freshly added row's date could
@@ -126,10 +126,10 @@ before that point is not summarized here.
   profile's folder (the one holding its `organization.json`) and Rimmerge shows
   what the copy would do before it does anything, for either mode.
   **Merge** combines the other profile's groups with yours: a group with the
-  same name path (the same names from the top level, ignoring capitals) takes
-  the other profile's mods, new groups are added under the same parent, and
-  where both profiles set a colour yours stays (a differing group colour is
-  listed as a clash). A colour
+  same name in the same place (the same names from the top level, ignoring
+  capitals) takes the other profile's mods, new groups are added under the
+  same parent, and where both profiles set a colour yours stays (a differing
+  group colour is listed as a clash). A colour
   you have not set is filled in from the other profile. **Replace** removes all
   your groups and colours and puts the other profile's in their place, after a
   confirmation with **Cancel** focused. A copy that would pass a limit (groups,

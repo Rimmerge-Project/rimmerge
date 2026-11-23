@@ -1583,10 +1583,9 @@
       "unavailable": "Groups view needs your groups, which can't be used right now.",
       "collapseAll": "Collapse all",
       "expandAll": "Expand all",
-      "ungrouped": "Not in a group",
       "modCount": "{count} mod | {count} mods",
       "folderActions": "Actions for the folder {name}",
-      "folderLabelExpanded": "{name}, {count} mod, open | {name}, {count} mods, open",
+      "folderLabelExpanded": "{name}, {count} mod, expanded | {name}, {count} mods, expanded",
       "folderLabelCollapsed": "{name}, {count} mod, collapsed | {name}, {count} mods, collapsed",
       "alsoInShort": "also in {count}",
       "alsoInLong": "Also in {count} other group: {groups} | Also in {count} other groups: {groups}",
@@ -1601,7 +1600,7 @@
       "empty": "There are no mods to show here.",
       "emptyFiltered": "No mods match the current search, tag, source or group.",
       "cutNote": "{hidden} line is not shown. Fold some folders or narrow the search to see it. | {hidden} lines are not shown. Fold some folders or narrow the search to see them.",
-      "ungroupedRefusesDrop": "Mods can't be added to Not in a group. To take a mod out of its groups, use Remove from group."
+      "ungroupedRefusesDrop": "Mods can't be added to \"Ungrouped\". To take a mod out of its groups, use \"Remove from group…\"."
     },
     "groups": {
       "regionLabel": "Groups",
@@ -1699,7 +1698,7 @@
         "modeLegend": "How to copy",
         "mode": {
           "merge": "Merge into my groups",
-          "mergeHelp": "Groups with the same name path are combined and new groups are added. Where both profiles set a colour, yours stays.",
+          "mergeHelp": "Groups with the same name in the same place (for example Weapons / Melee) are combined and new groups are added. Where both profiles set a colour, yours stays.",
           "replace": "Replace my groups",
           "replaceHelp": "All your groups and colours are removed and that profile's take their place."
         },
@@ -1707,12 +1706,12 @@
         "nothingChanges": "Nothing would change. Everything in that profile is already here.",
         "line": {
           "groupsAdded": "{count} group added | {count} groups added",
-          "groupsMerged": "{count} group merged into the group with the same name path here | {count} groups merged into the groups with the same name path here",
+          "groupsMerged": "{count} group merged into the group here with the same name in the same place | {count} groups merged into the groups here with the same name in the same place",
           "membershipsAdded": "{count} group membership added | {count} group memberships added",
           "membershipsAlready": "{count} membership was already here | {count} memberships were already here",
           "modColorsAdded": "{count} mod colour added | {count} mod colours added",
           "modColorsKept": "{count} mod already has a different colour here, so yours is kept | {count} mods already have a different colour here, so yours are kept",
-          "groupColorsAdopted": "{count} group without a colour took the colour from the other profile | {count} groups without a colour took the colour from the other profile",
+          "groupColorsAdopted": "{count} group without a colour gets the colour from the other profile | {count} groups without a colour get the colour from the other profile",
           "notInstalled": "{count} mod in these groups isn't installed. It stays in its groups and comes back if you install it. | {count} mods in these groups aren't installed. They stay in their groups and come back if you install them."
         },
         "clashesHeading": "{count} group has a different colour here, so yours is kept: | {count} groups have a different colour here, so yours are kept:",
@@ -1753,9 +1752,9 @@
           "limit": {
             "tooDeep": "The result would nest groups deeper than Rimmerge allows. Nothing was changed.",
             "tooManyGroups": "The result would have more groups than Rimmerge allows. Nothing was changed.",
-            "tooManyMembers": "The result would put more mods in groups than Rimmerge allows, in one group or in total. Nothing was changed.",
+            "tooManyMembers": "The result would put more mods in one group, or in groups overall, than Rimmerge allows. Nothing was changed.",
             "tooManyColors": "The result would give colours to more mods than Rimmerge allows. Nothing was changed.",
-            "other": "The result would break a rule for groups. Nothing was changed."
+            "other": "The result would go over a limit for groups. Nothing was changed."
           }
         }
       },
@@ -1781,7 +1780,7 @@
         "idleMods": "Drop {count} mod on a group to add it | Drop {count} mods on a group to add them",
         "idleGroup": "Drop on a group to put this group inside it, or on All mods to make it top level.",
         "needsGroup": "Mods can only be added to a group",
-        "notUngrouped": "A group can't go into Ungrouped. Use All mods to make it top level.",
+        "notUngrouped": "A group can't go into \"Ungrouped\". Use \"All mods\" to make it top level.",
         "withHidden": "{text} ({hidden})",
         "alreadyThere": "The group is already there",
         "makeTopLevel": "Make {name} a top-level group",
@@ -1798,8 +1797,8 @@
         "placeholder": "Search or create a group",
         "noMatch": "No group matches your search.",
         "createOption": "Create group “{name}”",
-        "createHintBulk": "Creating it also adds the mods you chose, in one save.",
-        "createHintSingle": "Creating it also adds this mod, in one save.",
+        "createHintBulk": "Creating it also adds the mods you chose, and both are saved at once.",
+        "createHintSingle": "Creating it also adds this mod, and both are saved at once.",
         "parentLabel": "Create it inside"
       },
       "toast": {
@@ -2310,8 +2309,8 @@
       "heading": "Apply anyway?",
       "intro": "The {order} order has {count} problem to confirm before writing: | The {order} order has {count} problems to confirm before writing:",
       "outsideHeading": "The active mod list changed outside Rimmerge",
-      "outsideMembership": "Since Rimmerge last read it, the active mod list was edited elsewhere (+{added}, -{removed}). Applying writes the {order} order over those edits. A backup of the changed file is made first.",
-      "outsideReordered": "Since Rimmerge last read it, the active order was changed elsewhere. Applying writes the {order} order over it. A backup of the changed file is made first.",
+      "outsideMembership": "The active mod list was edited elsewhere after Rimmerge last read it (+{added}, -{removed}). Applying writes the {order} order over those edits. A backup of the changed file is made first.",
+      "outsideReordered": "The active order was changed elsewhere after Rimmerge last read it. Applying writes the {order} order over that change. A backup of the changed file is made first.",
       "acknowledgedHeading": "Already decided in Findings",
       "reviewInInbox": "Review in Findings",
       "goBackButton": "Go back",

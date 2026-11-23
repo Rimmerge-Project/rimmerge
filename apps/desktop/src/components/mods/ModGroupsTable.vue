@@ -259,7 +259,7 @@ watch(
 );
 
 function folderName(row: FolderTreeRow): string {
-  return row.entry.folder.kind === "group" ? row.entry.folder.name : t("mods.groupsView.ungrouped");
+  return row.entry.folder.kind === "group" ? row.entry.folder.name : t("mods.groups.ungrouped");
 }
 
 /** The header's spoken name: its name, how many mods and whether it is open. */

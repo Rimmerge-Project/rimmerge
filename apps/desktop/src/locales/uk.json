@@ -1566,7 +1566,6 @@
       "unavailable": "Для вигляду «Групи» потрібні ваші групи, але зараз їх не можна використати.",
       "collapseAll": "Згорнути всі",
       "expandAll": "Розгорнути всі",
-      "ungrouped": "Без групи",
       "modCount": "{count} мод | {count} моди | {count} модів",
       "folderActions": "Дії для теки {name}",
       "folderLabelExpanded": "{name}, {count} мод, розгорнуто | {name}, {count} моди, розгорнуто | {name}, {count} модів, розгорнуто",

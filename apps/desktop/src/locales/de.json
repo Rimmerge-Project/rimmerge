@@ -1566,7 +1566,6 @@
       "unavailable": "Die Gruppenansicht braucht deine Gruppen, die gerade nicht verwendet werden können.",
       "collapseAll": "Alle zuklappen",
       "expandAll": "Alle aufklappen",
-      "ungrouped": "Ohne Gruppe",
       "modCount": "{count} Mod | {count} Mods",
       "folderActions": "Aktionen für den Ordner {name}",
       "folderLabelExpanded": "{name}, {count} Mod, aufgeklappt | {name}, {count} Mods, aufgeklappt",

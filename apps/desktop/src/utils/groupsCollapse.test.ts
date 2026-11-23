@@ -72,7 +72,7 @@ describe("fold keys", () => {
     expect(keyToFold({ kind: "ungrouped" })).toBe("ungrouped");
   });
 
-  it("orders groups by id and puts Not in a group last, whatever the input order", () => {
+  it("orders groups by id and puts Ungrouped last, whatever the input order", () => {
     expect(sortedFolds(["ungrouped", 10, 2, 7])).toEqual([2, 7, 10, "ungrouped"]);
   });
 

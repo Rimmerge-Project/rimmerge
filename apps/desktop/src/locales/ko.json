@@ -1566,7 +1566,6 @@
       "unavailable": "'그룹' 보기에는 그룹이 필요하지만, 지금은 그룹을 사용할 수 없습니다.",
       "collapseAll": "모두 접기",
       "expandAll": "모두 펼치기",
-      "ungrouped": "그룹에 속하지 않음",
       "modCount": "모드 {count}개",
       "folderActions": "{name} 폴더 작업",
       "folderLabelExpanded": "{name}, 모드 {count}개, 펼침",

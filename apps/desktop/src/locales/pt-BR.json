@@ -1566,7 +1566,6 @@
       "unavailable": "A exibição Grupos precisa dos seus grupos, que não podem ser usados agora.",
       "collapseAll": "Recolher tudo",
       "expandAll": "Expandir tudo",
-      "ungrouped": "Sem grupo",
       "modCount": "{count} mod | {count} mods",
       "folderActions": "Ações da pasta {name}",
       "folderLabelExpanded": "{name}, {count} mod, aberta | {name}, {count} mods, aberta",

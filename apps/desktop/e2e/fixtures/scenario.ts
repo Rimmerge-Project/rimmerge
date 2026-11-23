@@ -5832,7 +5832,7 @@ export function installScenario(): void {
 
   /** `rim_session::MAX_GROUPED_ENTRIES`: the most entries a Groups view answers with. */
   const MAX_GROUPED_ENTRIES = 10_000;
-  /** `rim_session::MAX_COLLAPSED_FOLDERS`: every group (at most 1,000) plus "Not in a group". */
+  /** `rim_session::MAX_COLLAPSED_FOLDERS`: every group (at most 1,000) plus "Ungrouped". */
   const MAX_COLLAPSED_FOLDERS = 1_001;
 
   type FolderKeyMock = { kind: "group"; groupId: number } | { kind: "ungrouped" };
@@ -5854,7 +5854,7 @@ export function installScenario(): void {
    * over the rows `orderedModRows` builds, so the filter, the sort and the labels are the List
    * mock's own. Rules mirrored: the view needs organization (`organization_unavailable` even with
    * no group filter); placement by each row's direct labels; a folder's subfolders before its own
-   * mods, mods in the pane order; "Not in a group" last, only when it holds a mod, and absent
+   * mods, mods in the pane order; "Ungrouped" last, only when it holds a mod, and absent
    * under a group scope; a group scope walks only its subtree with depths rebased so it is level
    * 1; an `ungrouped` scope is the one folder; with no search, tag or source filter every folder
    * shows (empty ones at 0), under one a folder with no match is left out; `matched` counts

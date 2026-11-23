@@ -107,7 +107,7 @@ describe("useGroupsCollapse", () => {
     expect(collapse.activeKeys.value).toEqual([{ kind: "group", groupId: 4 }]);
   });
 
-  it("collapses every known group and Not in a group, and expands them all again", () => {
+  it("collapses every known group and Ungrouped, and expands them all again", () => {
     const { collapse } = setup();
 
     collapse.collapseAll("inactive", [5, 1]);
@@ -123,7 +123,7 @@ describe("useGroupsCollapse", () => {
     expect(stored(PROFILE)).toEqual({ active: [], inactive: [] });
   });
 
-  it("prunes folds of groups that no longer exist, in both panes, and keeps Not in a group", () => {
+  it("prunes folds of groups that no longer exist, in both panes, and keeps Ungrouped", () => {
     const { collapse } = setup();
     collapse.collapseAll("active", [1, 2, 3]);
     collapse.setCollapsed("inactive", { kind: "group", groupId: 2 }, true);

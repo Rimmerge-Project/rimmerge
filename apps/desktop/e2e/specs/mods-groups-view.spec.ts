@@ -16,7 +16,7 @@ import { loadScenario, modsPane } from "./support";
  *   Armor (4)               mod 003 | inactive 902
  *   Spare (5)               empty
  *
- * Folders list as Armor, Spare, Weapons (name order), then "Not in a group" last.
+ * Folders list as Armor, Spare, Weapons (name order), then "Ungrouped" last.
  */
 
 type Pane = "active" | "inactive";
@@ -173,14 +173,20 @@ test.describe("mods groups view", () => {
     await expect(active.locator('[data-entry-key^="m:"]:not([aria-selected])')).toHaveCount(0);
 
     // The header says what it holds; the count is distinct mods of its whole subtree.
-    await expect(folder(page, "active", 1)).toHaveAttribute("aria-label", "Weapons, 4 mods, open");
-    await expect(folder(page, "active", 5)).toHaveAttribute("aria-label", "Spare, 0 mods, open");
+    await expect(folder(page, "active", 1)).toHaveAttribute(
+      "aria-label",
+      "Weapons, 4 mods, expanded",
+    );
+    await expect(folder(page, "active", 5)).toHaveAttribute(
+      "aria-label",
+      "Spare, 0 mods, expanded",
+    );
     // D4b: a load-order number on every Active row.
     await expect(
       entry(page, "active", 4, "mod.003").getByTestId("mod-row-position-mod.003"),
     ).toBeVisible();
-    // "Not in a group" holds the active mods no group has.
-    await expect(folder(page, "active", "ungrouped")).toContainText("Not in a group");
+    // "Ungrouped" holds the active mods no group has.
+    await expect(folder(page, "active", "ungrouped")).toContainText("Ungrouped");
   });
 
   test("a mod in two groups shows under each with an also-in mark, and is one mod to select", async ({
@@ -365,7 +371,7 @@ test.describe("mods groups view", () => {
     page,
   }) => {
     await openGroupsView(page);
-    // Weapons folded keeps "Not in a group" near the top, where its first mod is on screen.
+    // Weapons folded keeps "Ungrouped" near the top, where its first mod is on screen.
     await folder(page, "active", 1).click();
     const before = await organizationRequests(page, "add_group_members");
 
@@ -376,7 +382,7 @@ test.describe("mods groups view", () => {
         (await organizationRequests(page, "add_group_members")).slice(before.length),
       )
       .toEqual([{ id: 5, modIds: ["mod.000"] }]);
-    // It now sits in Spare, and has left "Not in a group".
+    // It now sits in Spare, and has left "Ungrouped".
     await expect(entry(page, "active", 5, "mod.000")).toBeVisible();
     await expect(entry(page, "active", "ungrouped", "mod.000")).toHaveCount(0);
     expect(await positionCommands(page)).toEqual({ move: [], activate: [] });
@@ -464,9 +470,7 @@ test.describe("mods groups view", () => {
     expect(stored.flatMap((folds) => [...folds.active, ...folds.inactive])).not.toContain(5);
   });
 
-  test("Not in a group refuses a drop, with the reason on screen and no command", async ({
-    page,
-  }) => {
+  test("Ungrouped refuses a drop, with the reason on screen and no command", async ({ page }) => {
     await openGroupsView(page);
     await folder(page, "active", 1).click();
     const before = await organizationRequests(page, "add_group_members");
@@ -526,7 +530,7 @@ test.describe("mods groups view", () => {
     await expect(page.locator(".p-overlay-mask")).toHaveCount(0);
     expect((await positionCommands(page)).activate).toEqual([]);
 
-    // "Not in a group" offers only the selection.
+    // "Ungrouped" offers only the selection.
     await folder(page, "active", "ungrouped").getByTestId("folder-menu-button").click();
     await expect(page.getByTestId("folder-menu-select")).toBeVisible();
     await expect(page.getByTestId("folder-menu-activate")).toHaveCount(0);
@@ -603,7 +607,7 @@ test.describe("mods groups view", () => {
     await expect(folder(page, "active", 5)).toBeVisible();
   });
 
-  test("Not in a group is left out under a group scope, which holds only that group's mods", async ({
+  test("Ungrouped is left out under a group scope, which holds only that group's mods", async ({
     page,
   }) => {
     await openGroupsView(page, "inactive");

@@ -52,13 +52,13 @@ const UNGROUPED = {
 } satisfies GroupedEntryDto;
 
 /**
- * Weapons (a, b) holds Melee (b, c) and `b` is in both; "Not in a group" holds d.
+ * Weapons (a, b) holds Melee (b, c) and `b` is in both; "Ungrouped" holds d.
  *
  *   f:1  Weapons          level 1
  *     f:2  Melee          level 2
  *       m:2:b, m:2:c      level 3
  *     m:1:a, m:1:b        level 2
- *   f:u  Not in a group   level 1
+ *   f:u  Ungrouped        level 1
  *     m:u:d               level 2
  */
 function grouped(overrides: Partial<GroupedModListDto> = {}): GroupedModListDto {
@@ -189,7 +189,7 @@ describe("ModGroupsTable", () => {
       await flushPromises();
 
       expect(row(wrapper, "f:1").attributes("aria-label")).toBe("Weapons, 1 mod, collapsed");
-      expect(row(wrapper, "f:2").attributes("aria-label")).toBe("Armor, 12 mods, open");
+      expect(row(wrapper, "f:2").attributes("aria-label")).toBe("Armor, 12 mods, expanded");
     });
 
     it("gives every row its own entry key and test id, the two copies of a mod included", async () => {
@@ -608,7 +608,7 @@ describe("ModGroupsTable", () => {
       expect(wrapper.emitted("drop")).toBeUndefined();
     });
 
-    it("a drop on Not in a group reports nothing and refuses with a reason on screen", async () => {
+    it("a drop on Ungrouped reports nothing and refuses with a reason on screen", async () => {
       const wrapper = mountTable({ dropMode: "pane" });
       await flushPromises();
 
@@ -717,7 +717,7 @@ describe("ModGroupsTable", () => {
       ]);
     });
 
-    it("offers only the selection on Not in a group", async () => {
+    it("offers only the selection on Ungrouped", async () => {
       const wrapper = mountTable();
       await flushPromises();
 

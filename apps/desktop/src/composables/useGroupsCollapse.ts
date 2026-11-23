@@ -73,7 +73,7 @@ export function useGroupsCollapse(profileDir: MaybeRefOrGetter<string | null>) {
     change(kind, isCollapsedNow ? [...without, fold] : without);
   }
 
-  /** Folds every known group and "Not in a group". */
+  /** Folds every known group and "Ungrouped". */
   function collapseAll(kind: PaneKind, groupIds: Iterable<number>): void {
     change(kind, [...groupIds, "ungrouped"]);
   }

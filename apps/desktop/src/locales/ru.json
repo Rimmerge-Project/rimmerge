@@ -1566,7 +1566,6 @@
       "unavailable": "Для вида «Группы» нужны ваши группы, но сейчас их нельзя использовать.",
       "collapseAll": "Свернуть все",
       "expandAll": "Развернуть все",
-      "ungrouped": "Без группы",
       "modCount": "{count} мод | {count} мода | {count} модов",
       "folderActions": "Действия с папкой {name}",
       "folderLabelExpanded": "{name}, {count} мод, развёрнута | {name}, {count} мода, развёрнута | {name}, {count} модов, развёрнута",

@@ -1566,7 +1566,6 @@
       "unavailable": "Widok „Grupy” wymaga grup, z których nie można teraz korzystać.",
       "collapseAll": "Zwiń wszystkie",
       "expandAll": "Rozwiń wszystkie",
-      "ungrouped": "Bez grupy",
       "modCount": "{count} mod | {count} mody | {count} modów",
       "folderActions": "Działania dla folderu {name}",
       "folderLabelExpanded": "{name}, {count} mod, rozwinięty | {name}, {count} mody, rozwinięty | {name}, {count} modów, rozwinięty",

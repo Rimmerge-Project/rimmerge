@@ -1,7 +1,7 @@
 import type { FolderKeyDto } from "@/types/generated/FolderKeyDto";
 import type { GroupedEntryDto } from "@/types/generated/GroupedEntryDto";
 
-/** The short token a folder carries in keys and test ids: its group id, or `u` for "Not in a group". */
+/** The short token a folder carries in keys and test ids: its group id, or `u` for "Ungrouped". */
 export function folderToken(folder: FolderKeyDto): string {
   return folder.kind === "group" ? String(folder.groupId) : "u";
 }

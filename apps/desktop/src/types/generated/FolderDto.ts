@@ -2,7 +2,7 @@
 import type { ColorTokenDto } from "./ColorTokenDto";
 
 /**
- * A folder header. Mirrors [`Folder`]: "Not in a group" has no name or
+ * A folder header. Mirrors [`Folder`]: "Ungrouped" has no name or
  * colour.
  */
 export type FolderDto = { "kind": "group", 

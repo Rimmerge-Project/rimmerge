@@ -24,11 +24,11 @@ use crate::organization::{
 pub const MAX_GROUPED_ENTRIES: usize = 10_000;
 
 /// The most collapsed-folder keys a query may carry: every group plus the
-/// "Not in a group" folder.
+/// "Ungrouped" folder.
 pub const MAX_COLLAPSED_FOLDERS: usize = OrganizationLimits::MAX_GROUPS + 1;
 
 /// Which folder of the Groups view an entry or a fold refers to. Ordered
-/// groups by id, then "Not in a group".
+/// groups by id, then "Ungrouped".
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum FolderKey {
     /// A group's folder.
@@ -37,7 +37,7 @@ pub enum FolderKey {
     Ungrouped,
 }
 
-/// A folder header. Closed: "Not in a group" has no name or colour.
+/// A folder header. Closed: "Ungrouped" has no name or colour.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Folder {
     /// A group.

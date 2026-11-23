@@ -1566,7 +1566,6 @@
       "unavailable": "Gruplar görünümü için grupların gerekiyor, ancak şu anda kullanılamıyorlar.",
       "collapseAll": "Tümünü daralt",
       "expandAll": "Tümünü genişlet",
-      "ungrouped": "Grupta olmayanlar",
       "modCount": "{count} mod | {count} mod",
       "folderActions": "{name} klasörü için işlemler",
       "folderLabelExpanded": "{name}, {count} mod, açık | {name}, {count} mod, açık",

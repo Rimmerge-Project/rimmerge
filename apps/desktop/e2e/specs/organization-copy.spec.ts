@@ -82,7 +82,9 @@ test.describe("copy groups from another profile", () => {
 
     const preview = page.getByTestId("copy-preview");
     await expect(preview).toContainText("2 groups added");
-    await expect(preview).toContainText("1 group merged into the group with the same name path");
+    await expect(preview).toContainText(
+      "1 group merged into the group here with the same name in the same place",
+    );
     await expect(preview).toContainText("1 mod in these groups isn't installed");
     await page.getByTestId("copy-submit").click();
     await expect(page.getByTestId("copy-result")).toContainText("Merged the other profile's");

@@ -658,8 +658,8 @@ selection and lists the groups:
   groups. When no group has the name you typed (not case sensitive), the
   dialog offers **Create group** with that name and an optional parent group
   (the top level by default). One click creates the group and puts the mods in
-  it, in one save, and says how many mods it took in. If the name is already
-  used at that level, or a limit is reached, nothing is created.
+  it, saving both at once, and says how many mods it took in. If the name is
+  already used at that level, or a limit is reached, nothing is created.
 - **The open row.** The mod whose info panel is open is marked on its row with
   a ring and a tint, and the row says so to screen readers. Selecting rows with
   the checkboxes only draws the ring, so a selected row and the open row can be
@@ -719,7 +719,7 @@ selection and lists the groups:
   buttons. **Groups** shows the same mods as folders: your group tree, each
   folder with its colour icon, its name and how many mods it holds (counting its
   subfolders, each mod once). Inside a folder its subfolders come first, then its
-  own mods in the list's sort order, and **Not in a group** comes last (only
+  own mods in the list's sort order, and **Ungrouped** comes last (only
   when it holds mods). A mod in two groups appears under each, with an "also in
   1" mark whose tooltip names the other groups. Selection is per mod: ticking
   either copy ticks both. Rows keep their load-order number on the Active list.
@@ -728,7 +728,7 @@ selection and lists the groups:
   the switch says so and shows List (the remembered choice comes back once the
   file can be used).
 
-  ![The Active list in Groups view: Armor and Weapons folders with colour icons, their mods with load-order numbers and colour stripes, and Not in a group at the end](screenshots/mods-page/groups-view.png)
+  ![The Active list in Groups view: Armor and Weapons folders with colour icons, their mods with load-order numbers and colour stripes, and Ungrouped at the end](screenshots/mods-page/groups-view.png)
 
   - **Folding.** Click a folder, or use the keys, to fold it (its mods leave
     the screen, its count stays). **Collapse all** and **Expand all** sit beside
@@ -747,12 +747,12 @@ selection and lists the groups:
   - **Folder menu** (the ⋮ button on a folder): **Select all in folder** (every
     mod in it and its subfolders that the list's search, tag and source filters
     match, folded or not), **Activate all…** and **Deactivate all…** (the same
-    dialogs as the group menu in the Groups panel). **Not in a group** offers
+    dialogs as the group menu in the Groups panel). **Ungrouped** offers
     only the selection.
   - **Dragging onto a folder.** Drop rows on a folder's header to add them to
     that group. A drop only adds: it never activates, deactivates or moves a mod,
     even for an Inactive mod dropped on a folder in the Active list. Dropping on
-    **Not in a group** is refused, with the reason on screen. A folded folder
+    **Ungrouped** is refused, with the reason on screen. A folded folder
     opens after a drag has hovered it for a moment.
   - **Moving is off.** The Active list cannot be reordered in Groups view (a
     note says so, the row menu's Move entries are disabled and Alt+Arrow does

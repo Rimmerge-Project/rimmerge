@@ -93,7 +93,7 @@ impl TryFrom<GroupedListQueryDto> for GroupedListQuery {
     }
 }
 
-/// A folder header. Mirrors [`Folder`]: "Not in a group" has no name or
+/// A folder header. Mirrors [`Folder`]: "Ungrouped" has no name or
 /// colour.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(tag = "kind", rename_all = "camelCase")]

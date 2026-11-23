@@ -1566,7 +1566,6 @@
       "unavailable": "La vue Groupes nécessite vos groupes, qui ne peuvent pas être utilisés pour le moment.",
       "collapseAll": "Tout replier",
       "expandAll": "Tout déplier",
-      "ungrouped": "Dans aucun groupe",
       "modCount": "{count} mod | {count} mods",
       "folderActions": "Actions pour le dossier {name}",
       "folderLabelExpanded": "{name}, {count} mod, déplié | {name}, {count} mods, déplié",

@@ -19,7 +19,7 @@ const emit = defineEmits<{ openMenu: [event: MouseEvent] }>();
 const { t } = useI18n();
 
 const name = computed(() =>
-  row.entry.folder.kind === "group" ? row.entry.folder.name : t("mods.groupsView.ungrouped"),
+  row.entry.folder.kind === "group" ? row.entry.folder.name : t("mods.groups.ungrouped"),
 );
 const color = computed(() => (row.entry.folder.kind === "group" ? row.entry.folder.color : null));
 const menuLabel = computed(() => t("mods.groupsView.folderActions", { name: name.value }));

@@ -3,7 +3,7 @@ import type { FolderKeyDto } from "@/types/generated/FolderKeyDto";
 /** The two Mods panes; each remembers its own folded folders. */
 export type PaneKind = "active" | "inactive";
 
-/** A folded folder as stored: a group id, or `ungrouped` for "Not in a group". */
+/** A folded folder as stored: a group id, or `ungrouped` for "Ungrouped". */
 export type StoredFold = number | "ungrouped";
 
 /** The folded folders of both panes of one profile. */
@@ -12,7 +12,7 @@ export interface StoredFolds {
   readonly inactive: readonly StoredFold[];
 }
 
-/** Every group (at most 1,000) plus "Not in a group": the backend's bound on one request. */
+/** Every group (at most 1,000) plus "Ungrouped": the backend's bound on one request. */
 export const MAX_FOLDS_PER_PANE = 1_001;
 
 /** A stored value larger than this is not parsed at all: it can only be damaged or foreign. */
@@ -85,7 +85,7 @@ export function keyToFold(key: FolderKeyDto): StoredFold {
 }
 
 /**
- * The folds in a stable order (groups by id, "Not in a group" last), so the same set always makes
+ * The folds in a stable order (groups by id, "Ungrouped" last), so the same set always makes
  * the same query and the same cache entry.
  */
 export function sortedFolds(folds: Iterable<StoredFold>): StoredFold[] {

@@ -1566,7 +1566,6 @@
       "unavailable": "分组视图需要用到你的分组，但它们目前无法使用。",
       "collapseAll": "全部折叠",
       "expandAll": "全部展开",
-      "ungrouped": "不在任何分组中",
       "modCount": "{count} 个 Mod",
       "folderActions": "文件夹 {name} 的操作",
       "folderLabelExpanded": "{name}，{count} 个 Mod，已展开",

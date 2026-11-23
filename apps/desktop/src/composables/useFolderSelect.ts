@@ -39,7 +39,7 @@ export function useFolderSelect({
   /** The folder's name for the spoken result; a group the organization lacks is an error toast. */
   function folderName(folder: FolderKeyDto): string {
     if (folder.kind === "ungrouped") {
-      return t("mods.groupsView.ungrouped");
+      return t("mods.groups.ungrouped");
     }
     const node = findNode(toValue(nodes), folder.groupId);
     if (node === undefined) {
