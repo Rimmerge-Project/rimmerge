@@ -414,7 +414,7 @@ pub(crate) fn reload_persisted_state(session: &mut Session, adapters: &Adapters)
 /// rule load warnings (they may differ from what the scan read, see below).
 ///
 /// The new session is brought level with the files on disk **under the
-/// write lock, just before the swap** ([`reload_persisted_state`]).
+/// write lock, just before the swap** (`reload_persisted_state`).
 ///
 /// # Errors
 ///

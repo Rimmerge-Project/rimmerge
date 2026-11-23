@@ -81,7 +81,7 @@ pub(crate) async fn import_game_log_inner(
 ///
 /// # Errors
 ///
-/// See [`import_game_log_inner`].
+/// See `import_game_log_inner`.
 #[tauri::command]
 pub async fn import_game_log(
     state: tauri::State<'_, AppState>,

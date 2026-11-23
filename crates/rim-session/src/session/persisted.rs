@@ -61,7 +61,7 @@ impl Session {
     /// earlier is on disk by now.
     ///
     /// The sort and the ledger are recomputed once, and only when the rules
-    /// or the decisions changed (that is [`Session::recompute_sort`], which
+    /// or the decisions changed (that is `Session::recompute_sort`, which
     /// also clears every selected-order cache). A patch that was added,
     /// removed or whose content changed drops its own scoped ledger and
     /// previews, and an unchanged patch keeps its caches; a changed
