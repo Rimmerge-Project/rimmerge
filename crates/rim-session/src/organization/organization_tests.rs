@@ -1333,6 +1333,11 @@ mod properties {
             name: u8,
             parent: Option<usize>,
         },
+        CreateWith {
+            name: u8,
+            parent: Option<usize>,
+            mods: Vec<u8>,
+        },
         Rename {
             group: usize,
             name: u8,
@@ -1370,6 +1375,8 @@ mod properties {
         prop_oneof![
             (0..5_u8, proptest::option::of(index.clone()))
                 .prop_map(|(name, parent)| Op::Create { name, parent }),
+            (0..5_u8, proptest::option::of(index.clone()), mods.clone())
+                .prop_map(|(name, parent, mods)| Op::CreateWith { name, parent, mods }),
             (index.clone(), 0..5_u8).prop_map(|(group, name)| Op::Rename { group, name }),
             (index.clone(), proptest::option::of(index.clone()))
                 .prop_map(|(group, parent)| Op::Reparent { group, parent }),
@@ -1405,6 +1412,16 @@ mod properties {
                 let target = parent.map(|p| nth_group(organization, p));
                 organization
                     .create_group(name(&format!("g{n}")), target)
+                    .map(|_| ())
+            }
+            Op::CreateWith {
+                name: n,
+                parent,
+                mods,
+            } => {
+                let target = parent.map(|p| nth_group(organization, p));
+                organization
+                    .create_group_with_members(name(&format!("g{n}")), target, &mod_set(&mods))
                     .map(|_| ())
             }
             Op::Rename { group, name: n } => {
@@ -1510,4 +1527,105 @@ mod properties {
             }
         }
     }
+}
+
+#[test]
+fn creating_a_group_with_members_adds_them_in_the_same_step() {
+    let mut organization = ModOrganization::new();
+    let parent = root(&mut organization, "Parent");
+
+    let id = organization
+        .create_group_with_members(name("New"), Some(parent), &mods(&["a", "b"]))
+        .expect("create with members");
+
+    let group = organization.group(id).expect("created");
+    assert_eq!(group.members(), &mods(&["a", "b"]));
+    assert_eq!(group.parent(), Some(parent));
+}
+
+#[test]
+fn creating_a_group_with_members_refuses_a_sibling_name_clash_and_changes_nothing() {
+    let mut organization = ModOrganization::new();
+    root(&mut organization, "Weapons");
+    let before = organization.clone();
+
+    let clash = organization.create_group_with_members(name("WEAPONS"), None, &mods(&["a"]));
+
+    assert!(matches!(clash, Err(OrganizationError::NameTaken { .. })));
+    assert_eq!(organization, before);
+}
+
+#[test]
+fn creating_a_group_with_members_refuses_too_many_members_and_changes_nothing() {
+    let mut organization = ModOrganization::new();
+    let too_many: BTreeSet<OrganizedModId> = (0..=OrganizationLimits::MAX_MEMBERS_PER_GROUP)
+        .map(|index| organized(&format!("mod{index}")))
+        .collect();
+    let before = organization.clone();
+
+    let refused = organization.create_group_with_members(name("Big"), None, &too_many);
+
+    assert!(matches!(
+        refused,
+        Err(OrganizationError::TooManyMembers { .. })
+    ));
+    assert_eq!(organization, before);
+}
+
+#[test]
+fn creating_a_group_with_members_refuses_an_unknown_parent_and_changes_nothing() {
+    let mut organization = ModOrganization::new();
+    let unknown = GroupId::new(99).expect("non-zero");
+    let before = organization.clone();
+
+    let refused = organization.create_group_with_members(name("New"), Some(unknown), &mods(&["a"]));
+
+    assert_eq!(refused, Err(OrganizationError::GroupNotFound(unknown)));
+    assert_eq!(organization, before);
+}
+
+#[test]
+fn creating_a_group_with_exactly_the_most_members_is_accepted() {
+    let mut organization = ModOrganization::new();
+    let full: BTreeSet<OrganizedModId> = (0..OrganizationLimits::MAX_MEMBERS_PER_GROUP)
+        .map(|index| organized(&format!("mod{index}")))
+        .collect();
+
+    let id = organization
+        .create_group_with_members(name("Full"), None, &full)
+        .expect("exactly the limit fits");
+
+    let group = organization.group(id).expect("created");
+    assert_eq!(
+        group.members().len(),
+        OrganizationLimits::MAX_MEMBERS_PER_GROUP
+    );
+}
+
+#[test]
+fn creating_a_group_with_members_refuses_past_the_most_total_memberships_and_changes_nothing() {
+    let full_groups =
+        OrganizationLimits::MAX_TOTAL_MEMBERSHIPS / OrganizationLimits::MAX_MEMBERS_PER_GROUP;
+    let spread: Vec<GroupParts> = (1..=u32::try_from(full_groups).expect("small"))
+        .map(|id| {
+            let mut group = part(id, &format!("g{id}"), None);
+            group.members = (0..OrganizationLimits::MAX_MEMBERS_PER_GROUP)
+                .map(|index| organized(&format!("m{id}.{index}")))
+                .collect();
+            group
+        })
+        .collect();
+    let mut organization =
+        ModOrganization::from_parts(spread, BTreeMap::new(), FAR_NEXT_ID).expect("exactly full");
+    let before = organization.clone();
+
+    let refused = organization.create_group_with_members(name("One more"), None, &mods(&["extra"]));
+
+    assert_eq!(
+        refused,
+        Err(OrganizationError::TooManyMembers {
+            limit: OrganizationLimits::MAX_TOTAL_MEMBERSHIPS
+        })
+    );
+    assert_eq!(organization, before);
 }

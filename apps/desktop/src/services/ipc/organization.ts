@@ -2,6 +2,8 @@
 // Organization is a separate store the sort path never reads, so none of these
 // touches the load order, the working set or `ModsConfig.xml`.
 
+import type { CopyAnswerDto } from "@/types/generated/CopyAnswerDto";
+import type { CopyOrganizationRequestDto } from "@/types/generated/CopyOrganizationRequestDto";
 import type { CreateGroupRequestDto } from "@/types/generated/CreateGroupRequestDto";
 import type { DeleteGroupRequestDto } from "@/types/generated/DeleteGroupRequestDto";
 import type { GroupMembershipCountDto } from "@/types/generated/GroupMembershipCountDto";
@@ -104,4 +106,20 @@ export function groupMembershipCounts(
 /** "Start over" after an unusable `organization.json`: keeps a copy, then saves an empty one. */
 export function resetOrganization(): Promise<OrganizationDto> {
   return call("reset_organization");
+}
+
+/**
+ * What copying another profile's groups and colours would do, read from the folder the user
+ * picked. A refusal (no file, an unusable file, this profile's own folder, a limit) is an answer,
+ * not an error. Changes nothing.
+ */
+export function previewCopyOrganization(
+  request: CopyOrganizationRequestDto,
+): Promise<CopyAnswerDto> {
+  return call("preview_copy_organization", { request });
+}
+
+/** Copies another profile's groups and colours into this one, planned afresh from the folder. */
+export function copyOrganization(request: CopyOrganizationRequestDto): Promise<CopyAnswerDto> {
+  return call("copy_organization", { request });
 }

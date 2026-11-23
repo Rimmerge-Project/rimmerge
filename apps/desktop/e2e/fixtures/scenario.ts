@@ -26,6 +26,7 @@ import type { CopyAssignmentRowFromRequestDto } from "../../src/types/generated/
 import type { CorePlacementDto } from "../../src/types/generated/CorePlacementDto";
 import type { CreateAssignmentRequestDto } from "../../src/types/generated/CreateAssignmentRequestDto";
 import type { CreatePatchRequestDto } from "../../src/types/generated/CreatePatchRequestDto";
+import type { DeactivateModsResultDto } from "../../src/types/generated/DeactivateModsResultDto";
 import type { DeactivateRequestDto } from "../../src/types/generated/DeactivateRequestDto";
 import type { DecidePatchRequestDto } from "../../src/types/generated/DecidePatchRequestDto";
 import type { DecideRequestDto } from "../../src/types/generated/DecideRequestDto";
@@ -128,6 +129,30 @@ type RecordedModListQuery = {
   sort: { key: string; direction: string } | null;
 };
 
+/** A `list_*_mods_grouped` query as the mock records it: the pane query plus the folded folders. */
+type RecordedGroupedListQuery = {
+  list: RecordedModListQuery;
+  collapsed: ({ kind: "group"; groupId: number } | { kind: "ungrouped" })[];
+};
+
+/** What another profile's folder holds, as the copy commands' mock reads it. */
+type CopyProfileSourceMock =
+  | { kind: "missing" }
+  | { kind: "unusable"; issue: { kind: string; [key: string]: unknown } }
+  | {
+      kind: "organization";
+      /** The file's `next_group_id`; left out, it agrees with this profile's. */
+      nextGroupId?: number;
+      groups: {
+        id: number;
+        name: string;
+        parent: number | null;
+        color: string | null;
+        members: string[];
+      }[];
+      modColors: Record<string, string>;
+    };
+
 declare global {
   interface Window {
     /** Tauri's in-page IPC bridge (installed by `mockIPC`) — used to emit mocked events from a fixture. */
@@ -218,8 +243,8 @@ declare global {
      * What the mock's on-disk active mod list is, as an outside editor leaves it: a valid list
      * (`ok`, in file order) or a file the next baseline refresh cannot read. Unset means the file
      * is whatever the session last loaded or wrote. Never reset by the scenario, so a spec can set
-     * it before load; the mock reads it only when `refresh_mods_config_baseline`, a rescan or an
-     * import runs, like the real refresh reads the file.
+     * it before load; the mock reads it only when `refresh_mods_config_baseline`, `get_apply_preflight`,
+     * a rescan or an import runs, like the real refresh reads the file.
      */
     __MODS_CONFIG_FILE__?:
       | { status: "ok"; activeMods: string[] }
@@ -238,12 +263,27 @@ declare global {
     __LIST_WORKING_MODS_CALLS__?: RecordedModListQuery[];
     /** Every `list_inactive_mods` query the mock received, in order — for the mods sort spec. */
     __LIST_INACTIVE_MODS_CALLS__?: RecordedModListQuery[];
+    /** Every `list_working_mods_grouped` query the mock received, in order. */
+    __LIST_WORKING_MODS_GROUPED_CALLS__?: RecordedGroupedListQuery[];
+    /** Every `list_inactive_mods_grouped` query the mock received, in order. */
+    __LIST_INACTIVE_MODS_GROUPED_CALLS__?: RecordedGroupedListQuery[];
+    /**
+     * Set before the Groups view is shown: a smaller entry cap than `MAX_GROUPED_ENTRIES`, so the
+     * mock's own slicing cuts the answer (`entries` shortened, `totalEntries` still counting every
+     * line) without a fixture of ten thousand rows.
+     */
+    __GROUPED_ENTRY_CAP__?: number;
     /**
      * Set before the scenario installs: whether the mock session can use organization
      * (`loaded`, the default), was built without a store (`notLoaded`) or found an unusable
      * `organization.json` (`recovered`, read-only until `reset_organization`).
      */
     __ORGANIZATION_STATE__?: "loaded" | "notLoaded" | "recovered";
+    /**
+     * The other profiles' folders the copy commands can read, by path. A path not listed here (and
+     * not the profile's own folder, `C:/Profile/rimmerge`) is "not a folder".
+     */
+    __COPY_PROFILE_SOURCES__?: Record<string, CopyProfileSourceMock>;
     /** Every organization command the mock received, in order — for the organization specs. */
     __ORGANIZATION_CALLS__?: { command: string; request: unknown }[];
     /** How many `rescan_project` calls the mock received — for the active-set spec. */
@@ -253,6 +293,12 @@ declare global {
      * pool gets on top of its ten, so a spec can exercise a list well past the old 200-row page.
      */
     __EXTRA_INACTIVE_MODS__?: number;
+    /**
+     * Set before the scenario installs: display names that replace the generated "Inactive Mod <n>"
+     * of the named inactive mods (`mod.9xx` ids), for a spec that needs a name of its own (a Greek
+     * one, to search through the filter's fold).
+     */
+    __INACTIVE_MOD_NAMES__?: Record<string, string>;
     /**
      * Set before the scenario installs: ids that `ModsConfig.xml` lists but no folder on disk
      * backs, appended to the working, scanned and file sets (the backend's `missing_mods`).
@@ -395,6 +441,8 @@ declare global {
     __LIST_SAVES_CALLS__?: number;
     /** Every options object `plugin:dialog|open` received for a file picker, in order. */
     __OPEN_DIALOG_OPTIONS__?: unknown[];
+    /** Every options object `plugin:dialog|open` received for a folder picker, in order. */
+    __PICK_FOLDER_OPTIONS__?: unknown[];
     /**
      * The files `preview_order_import_file` can read, by path. A path not listed here fails
      * with `mod_list_io_failed`, like a file that is not there.
@@ -2019,24 +2067,36 @@ export function installScenario(): void {
   }));
 
   /**
-   * The Mods page's own Inactive-tab pool — ~10 discovered-but-inactive
-   * mods, neutral ids
-   * (`mod.9xx`), never part of the generic `mods`/`ASSIGNMENT_FIXTURE_MODS`
-   * pools. `mod.905` declares `mod.906` as a `modDependencies` entry —
-   * the one declared dependency chain `activateMods`'s own
-   * "also activate dependencies" checkbox exercises.
+   * Declared dependencies of the inactive pool, by index: `mod.905` needs `mod.906`; `mod.907`
+   * needs `mod.908`, which needs `mod.909` (a two-level chain); `mod.910` needs a mod that is
+   * installed nowhere (an unresolvable dependency).
+   */
+  const INACTIVE_DEPENDENCIES: Record<number, string[]> = {
+    4: ["mod.906"],
+    6: ["mod.908"],
+    7: ["mod.909"],
+    9: ["missing.dependency"],
+  };
+
+  /**
+   * The Mods page's own Inactive-tab pool: ~10 discovered-but-inactive mods with neutral ids
+   * (`mod.9xx`), never part of the generic `mods`/`ASSIGNMENT_FIXTURE_MODS` pools. Their declared
+   * dependencies are `INACTIVE_DEPENDENCIES` above.
    */
   const inactiveMods: {
     modId: string;
     name: string;
     source: "local" | "workshop";
     dependsOn: string[];
-  }[] = Array.from({ length: 10 + (window.__EXTRA_INACTIVE_MODS__ ?? 0) }, (_, index) => ({
-    modId: `mod.9${(index + 1).toString().padStart(2, "0")}`,
-    name: `Inactive Mod ${index + 1}`,
-    source: index % 2 === 0 ? "local" : ("workshop" as const),
-    dependsOn: index === 4 ? ["mod.906"] : [],
-  }));
+  }[] = Array.from({ length: 10 + (window.__EXTRA_INACTIVE_MODS__ ?? 0) }, (_, index) => {
+    const modId = `mod.9${(index + 1).toString().padStart(2, "0")}`;
+    return {
+      modId,
+      name: window.__INACTIVE_MOD_NAMES__?.[modId] ?? `Inactive Mod ${index + 1}`,
+      source: index % 2 === 0 ? "local" : ("workshop" as const),
+      dependsOn: INACTIVE_DEPENDENCIES[index] ?? [],
+    };
+  });
 
   /**
    * The patch maker's own fixture universe — mirrors `crates/rim-io/tests/fixtures/assign_game`:
@@ -2642,8 +2702,8 @@ export function installScenario(): void {
   // The structural guard, matching
   // the `GuardedGadget` `mergeFixtures` entry above: mirrors
   // `redecide_for_clean_merge`'s own guarded rationale text (`rim-resolve`'s
-  // "{field} differs between owners — field-level merging is unsafe;
-  // confirm the load-order winner") and drops `Merge` from the
+  // "{field} differs between owners, so field-level merging is unsafe.
+  // Confirm the load-order winner") and drops `Merge` from the
   // alternatives entirely, the same way the real ledger does once the
   // guard fires — `mergeState: null` (lazy, like `BionicHeart`'s own
   // entry above) rather than baking a result this mock never computes
@@ -2669,11 +2729,11 @@ export function installScenario(): void {
           winner: "guard.gadget.mod",
         },
         rationale:
-          "thingClass differs between owners — field-level merging is unsafe; confirm the load-order winner",
+          "thingClass differs between owners, so field-level merging is unsafe. Confirm the load-order winner",
       },
     ],
     rationale:
-      "thingClass differs between owners — field-level merging is unsafe; confirm the load-order winner",
+      "thingClass differs between owners, so field-level merging is unsafe. Confirm the load-order winner",
     hasDecision: false,
     note: null,
     modIds: ["core.gadget.mod", "guard.gadget.mod"],
@@ -2925,7 +2985,7 @@ export function installScenario(): void {
     suggestionAction: { kind: "accept" },
     alternatives: [],
     rationale:
-      "This .dds file won't decode — the base game shows the bad-texture placeholder in its place.",
+      "This .dds file won't decode. The base game shows the bad-texture placeholder in its place.",
     hasDecision: false,
     note: null,
     modIds: ["example.giants.mod"],
@@ -2953,7 +3013,7 @@ export function installScenario(): void {
     suggestionAction: { kind: "accept" },
     alternatives: [],
     rationale:
-      "This `ParentName` reference doesn't resolve the way the child's own element type expects — the def loads with content missing or wrong. Report this to the referencing mod's author.",
+      "This `ParentName` reference doesn't resolve the way the child's own element type expects. The def loads with content missing or wrong. Report this to the referencing mod's author.",
     hasDecision: false,
     note: null,
     modIds: ["colony.additions.mod"],
@@ -2978,7 +3038,7 @@ export function installScenario(): void {
     suggestionAction: { kind: "accept" },
     alternatives: [],
     rationale:
-      "This MayRequire id 'Example.CraftingFrameworkk' resolves to no active or installed mod, but closely resembles the active mod 'Example Crafting Framework' — possibly a typo. Report this to the referencing mod's author.",
+      "This MayRequire id 'Example.CraftingFrameworkk' resolves to no active or installed mod, but closely resembles the active mod 'Example Crafting Framework'. It may be a typo. Report this to the referencing mod's author.",
     hasDecision: false,
     note: null,
     modIds: ["drift.compat.mod"],
@@ -3041,7 +3101,7 @@ export function installScenario(): void {
     suggestionAction: { kind: "accept" },
     alternatives: [],
     rationale:
-      "This name resolves to no active def of any type — it's defined only in example.techtree.mod's own '1.6NotOdyssey' folder, which this install doesn't load. Cross-references resolve after every mod's defs and patches have loaded, so this never depends on load order.",
+      "This name resolves to no active def of any type: it's defined only in example.techtree.mod's own '1.6NotOdyssey' folder, which this install doesn't load. Cross-references resolve after every mod's defs and patches have loaded, so this never depends on load order.",
     hasDecision: false,
     note: null,
     modIds: ["example.techtree.mod"],
@@ -3248,13 +3308,12 @@ export function installScenario(): void {
   // current order and becomes whichever order a successful
   // `apply { writeModsConfig: true }` wrote.
   let fileOrder = [...currentOrder];
-  // The live file baseline (`Session::file_watch`): the base ids the session itself last loaded or
-  // wrote (to tell an outside change from its own), and why the latest read of the file failed.
-  // `fileActiveIds`/`fileOrder` above are the baseline's list, the last one that read fine.
-  let acknowledgedFileBases = new Set([...fileActiveIds].map((id) => baseOf(id)));
-  let acknowledgedFileSequence = [...fileActiveIds].map((id) => baseOf(id));
-  // The same acknowledged list by exact id: "your own unsaved work" (`pendingActiveChanges`) is
-  // measured against it, never against the live `fileActiveIds`/`fileOrder`.
+  // The live file baseline (`Session::file_watch`): the exact ids the session itself last loaded or
+  // wrote (to tell an outside change from its own, `external_change` in `file_baseline.rs`, which
+  // compares exact ids so a swap between two copies of a mod counts), and why the latest read of the
+  // file failed. `fileActiveIds`/`fileOrder` above are the baseline's list, the last one that read
+  // fine. "Your own unsaved work" (`pendingActiveChanges`) is measured against the same list, never
+  // against the live `fileActiveIds`/`fileOrder`.
   let acknowledgedFileIds = new Set(fileActiveIds);
   let acknowledgedFileOrder = [...fileOrder];
   let baselineIssue: "missing" | "unreadable" | "malformed" | null = null;
@@ -3687,6 +3746,11 @@ export function installScenario(): void {
     }
   }
 
+  /** `Session::file_holds_exactly`: the same ids in the same sequence, nothing ignored. */
+  function sameOrderExactly(a: string[], b: string[]): boolean {
+    return a.length === b.length && a.every((id, index) => id === b[index]);
+  }
+
   function sameOrderIgnoringMergeMod(a: string[], b: string[]): boolean {
     const strip = (ids: string[]): string[] => ids.filter((id) => id !== MERGE_MOD_PACKAGE_ID);
     const left = strip(a);
@@ -4116,7 +4180,10 @@ export function installScenario(): void {
   }
 
   /** Mirrors `plan_import` over the mock inventory, diffing against the working list. */
-  function planOrderImport(parsed: Extract<ParsedOrderList, { kind: "parsed" }>) {
+  function planOrderImport(
+    parsed: Extract<ParsedOrderList, { kind: "parsed" }>,
+    isGamesOwnList = false,
+  ) {
     // `ImportTarget::from_session`: the diff is against the working list (pending edits included), the
     // mock's own fixture-only owners left out like `currentOrder` leaves them out.
     const activeList = [...workingActiveIds].filter((id) => !omittedFromCurrentOrder.includes(id));
@@ -4148,6 +4215,17 @@ export function installScenario(): void {
           name: listed.name,
           missing: missingKindFor(listed),
         });
+        continue;
+      }
+      // `IdSpelling::Exact`: the game's own file names the exact copy it loads, so an installed listed
+      // copy is taken as written (an outside swap between two copies is kept).
+      if (isGamesOwnList && present.has(listed.id)) {
+        order.push(listed.id);
+        entries.push(
+          fileSet.has(listed.id)
+            ? { kind: "alreadyActive", id: listed.id, name: nameOf(listed.id) }
+            : { kind: "activated", id: listed.id, name: nameOf(listed.id) },
+        );
         continue;
       }
       // An already-active copy is kept before any exact-then-base lookup, so re-importing your own export is an empty diff.
@@ -4255,10 +4333,10 @@ export function installScenario(): void {
     if (inActive !== undefined) order.push(inActive);
   }
 
-  function previewOrderDocument(text: string): OrderImportOutcomeDto {
+  function previewOrderDocument(text: string, isGamesOwnList = false): OrderImportOutcomeDto {
     const parsed = parseOrderDocument(text);
     if (parsed.kind === "rejected") return parsed;
-    return { kind: "ready", preview: planOrderImport(parsed) };
+    return { kind: "ready", preview: planOrderImport(parsed, isGamesOwnList) };
   }
 
   /** The names of every listed active mod, in the file's order — what an export holds. */
@@ -4827,6 +4905,7 @@ export function installScenario(): void {
   const ORGANIZATION_MAX_MEMBERS_PER_GROUP = 5_000;
   const ORGANIZATION_MAX_TOTAL_MEMBERSHIPS = 50_000;
   const ORGANIZATION_MAX_MOD_COLORS = 20_000;
+  const ORGANIZATION_MAX_GROUP_ID = 1_000_000;
 
   type OrganizationGroupMock = {
     name: string;
@@ -4921,6 +5000,22 @@ export function installScenario(): void {
     }
   }
 
+  /** `ModOrganization::ensure_room_for_new_group`: a group not created yet could hold `extra`. */
+  function ensureOrganizationRoomForNewGroup(extra: number): void {
+    if (extra > ORGANIZATION_MAX_MEMBERS_PER_GROUP) {
+      organizationError(
+        "organization_limit",
+        `too many mods in groups (limit ${ORGANIZATION_MAX_MEMBERS_PER_GROUP})`,
+      );
+    }
+    if (organizationMembershipCount() + extra > ORGANIZATION_MAX_TOTAL_MEMBERSHIPS) {
+      organizationError(
+        "organization_limit",
+        `too many mods in groups (limit ${ORGANIZATION_MAX_TOTAL_MEMBERSHIPS})`,
+      );
+    }
+  }
+
   function groupDepth(id: number): number {
     let depth = 1;
     let parent = organizationGroups.get(id)?.parent ?? null;
@@ -4980,6 +5075,22 @@ export function installScenario(): void {
       for (const member of organizationGroups.get(key)?.members ?? []) mods.add(member);
     }
     return mods;
+  }
+
+  /** The group ids in `ModOrganization::tree` order: depth first, siblings by name. */
+  function organizationTreeIds(): number[] {
+    const ids: number[] = [];
+    const walk = (parent: number | null): void => {
+      const siblings = [...organizationGroups]
+        .filter(([, group]) => group.parent === parent)
+        .toSorted(compareGroupNames);
+      for (const [id] of siblings) {
+        ids.push(id);
+        walk(id);
+      }
+    };
+    walk(null);
+    return ids;
   }
 
   /** `ModOrganization::tree`: depth first, siblings by name, with direct and scope counts. */
@@ -5081,6 +5192,395 @@ export function installScenario(): void {
     };
   }
 
+  // ---- Copy groups and colours from another profile (`rim_session::organization::plan_copy`) ----
+  //
+  // Mirrors `plan_copy` and `CopyOrganization`: Merge matches a source group to a group here by
+  // its path (names compared ignoring case, siblings of the same parent), adds the members, keeps
+  // this profile's colours (a differing group colour is a listed clash, an unset one is filled
+  // in), and creates the rest under the parent its own parent matched or created; the same name at
+  // another depth is another group. Replace starts from nothing but this profile's next group id.
+  // Any limit refuses the whole copy and changes nothing. A refusal is an answer, not an error.
+
+  const COPY_PROFILE_DIR = "C:/Profile/rimmerge";
+
+  function copyNormalizedPath(path: string): string {
+    return path.replaceAll("\\", "/").replace(/\/+$/, "").toLowerCase();
+  }
+
+  /**
+   * Whether one path component is a legacy DOS device name (`rim_session::user_path::
+   * is_reserved_device_name`): `CON`, `PRN`, `AUX`, `NUL`, `COM1`-`COM9`, `LPT1`-`LPT9` (also with
+   * the superscript digits), `CONIN$` and `CONOUT$`, whatever the case, the extension or the
+   * spaces before it.
+   */
+  function isReservedDeviceName(component: string): boolean {
+    const stem = (component.split(/[.:]/)[0] ?? "").replace(/ +$/, "").toUpperCase();
+    if (["CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$"].includes(stem)) return true;
+    return /^(COM|LPT)[1-9\u00b9\u00b2\u00b3]$/.test(stem);
+  }
+
+  /**
+   * `parse_user_path` (`rim_session::user_path::UserPath::parse`, surrounding whitespace trimmed
+   * first): the one rule for every path the webview sends. Text starting with two separators is
+   * classified by the backend's own rule, not by `std`: a `?` or `.` after them, then a separator
+   * or the end, is a device or verbatim namespace in any spelling of the separators, and only the
+   * exact `\\?\<letter>:\` is a drive path. Only a drive-letter path is accepted (`C:\x`, `C:/x`,
+   * `\\?\C:\x`; a mapped drive is just a letter). A network share is `network_path_refused`:
+   * `\\server\share`, `//server/share`, a `UNC` namespace name in any case and spelling
+   * (`\\?\UNC\...`, `//?/unc/...`), and a WebDAV `\\server@SSL\x`. A device path (`\\.\pipe\x`,
+   * `\\?\GLOBALROOT\x`, the bare volume `\\?\C:`, `\\?\C:/x`, `//?/C:/x`), a legacy device
+   * name as any component (`C:\x\NUL`, `C:\x\COM1.rml`), a relative or drive-relative path
+   * (`\\server` with no share and `\\\server\share` have no prefix), an empty one and one holding
+   * NUL are `invalid_input`. Works on the text alone, like the backend, and so never contacts a
+   * host. Returns the trimmed text.
+   */
+  function parseUserPath(raw: string, what: string): string {
+    const text = raw.trim();
+    if (text.length === 0) organizationError("invalid_input", `${what}: the path is empty`);
+    if (text.includes("\u0000")) {
+      organizationError("invalid_input", `${what}: the path holds a character a path cannot`);
+    }
+    const refuse = (reason: "network" | "device" | "relative"): never => {
+      if (reason === "network") {
+        return organizationError(
+          "network_path_refused",
+          `${what} is on a network share; use a folder on a drive letter`,
+        );
+      }
+      return organizationError(
+        "invalid_input",
+        reason === "device"
+          ? `${what}: the path is a device path`
+          : `${what}: the path must be absolute`,
+      );
+    };
+    let afterPrefix: string;
+    if (/^[\\/]{2}/.test(text)) {
+      if (/^[\\/]{2}[?.](?:[\\/]|$)/.test(text)) {
+        // A device or verbatim namespace, in any spelling of the separators. Only the exact
+        // `\\?\<letter>:\` is a drive path (and then no `/` and no `.` or `..` component, which
+        // could climb out of the drive); a `UNC` name is a share; the rest is a device.
+        if (/^\\\\\?\\[A-Za-z]:\\/.test(text)) {
+          afterPrefix = text.slice(6);
+          if (
+            text.includes("/") ||
+            afterPrefix.split("\\").some((part) => part === "." || part === "..")
+          ) {
+            return refuse("device");
+          }
+        } else {
+          const name = text.slice(4).split(/[\\/]/)[0] ?? "";
+          return refuse(name.toLowerCase() === "unc" ? "network" : "device");
+        }
+      } else {
+        const [server = "", share = ""] = text.slice(2).split(/[\\/]/);
+        return refuse(server !== "" && share !== "" ? "network" : "relative");
+      }
+    } else if (/^[A-Za-z]:[\\/]/.test(text)) {
+      afterPrefix = text.slice(2);
+    } else {
+      return refuse("relative");
+    }
+    if (afterPrefix.split(/[\\/]/).some(isReservedDeviceName)) return refuse("device");
+    return text;
+  }
+
+  /** `parse_source_dir`: the copy source folder, parsed once. */
+  function parseCopySourceDir(raw: string): string {
+    return parseUserPath(raw, "the profile folder");
+  }
+
+  function copySourceFor(path: string): CopyProfileSourceMock | null {
+    const sources = window.__COPY_PROFILE_SOURCES__ ?? {};
+    const wanted = copyNormalizedPath(path);
+    const key = Object.keys(sources).find((known) => copyNormalizedPath(known) === wanted);
+    return key === undefined ? null : (sources[key] ?? null);
+  }
+
+  /** `refuse_folder`: not a folder, or this profile's own. */
+  function copyFolderRefusal(path: string): { kind: string } | null {
+    const isOwn = copyNormalizedPath(path) === copyNormalizedPath(COPY_PROFILE_DIR);
+    if (!isOwn && copySourceFor(path) === null) return { kind: "sourceNotAFolder" };
+    return isOwn ? { kind: "sameProfile" } : null;
+  }
+
+  function copyTreeOrder(groups: Map<number, OrganizationGroupMock>): number[] {
+    const ids: number[] = [];
+    const walk = (parent: number | null): void => {
+      const siblings = [...groups]
+        .filter(([, group]) => group.parent === parent)
+        .toSorted(compareGroupNames);
+      for (const [id] of siblings) {
+        ids.push(id);
+        walk(id);
+      }
+    };
+    walk(null);
+    return ids;
+  }
+
+  function copyPathOf(groups: Map<number, OrganizationGroupMock>, id: number): string[] {
+    const path: string[] = [];
+    for (let at: number | null = id; at !== null; at = groups.get(at)?.parent ?? null) {
+      path.unshift(groups.get(at)?.name ?? "");
+    }
+    return path;
+  }
+
+  /**
+   * What `JsonOrganizationStore::load` (through `ModOrganization::from_parts`) refuses in a source
+   * file that parsed: the rule it breaks, or `null`. Checked in `from_parts`' own order (counts,
+   * ids, dangling parents, chains, sibling names, member limits) so a source breaking several rules
+   * names the same one as the backend. A source over a limit on its own is unusable, whatever this
+   * profile holds; only the result of combining it with this profile is a `limit` refusal.
+   * Fixtures must be otherwise well-formed: the rim-io reader's own `malformed` checks (names,
+   * member ids, colour tokens) are not modelled.
+   */
+  function copySourceRule(
+    source: Extract<CopyProfileSourceMock, { kind: "organization" }>,
+  ): string | null {
+    if (source.groups.length > ORGANIZATION_MAX_GROUPS) return "tooManyGroups";
+    if (Object.keys(source.modColors).length > ORGANIZATION_MAX_MOD_COLORS) return "tooManyColors";
+    const byId = new Map<number, (typeof source.groups)[number]>();
+    for (const group of source.groups) {
+      if (group.id > ORGANIZATION_MAX_GROUP_ID) return "groupIdOutOfRange";
+      if (byId.has(group.id)) return "duplicateGroupId";
+      byId.set(group.id, group);
+    }
+    if (source.nextGroupId !== undefined) {
+      // `from_parts` checks the next id after the ids and before the forest.
+      if (source.nextGroupId > ORGANIZATION_MAX_GROUP_ID + 1) return "groupIdOutOfRange";
+      const minimum = Math.max(0, ...byId.keys()) + 1;
+      if (source.nextGroupId < minimum) return "nextIdBehind";
+    }
+    const ids = [...byId.keys()].toSorted((left, right) => left - right);
+    for (const id of ids) {
+      const parent = byId.get(id)?.parent ?? null;
+      if (parent !== null && !byId.has(parent)) return "danglingParent";
+    }
+    for (const id of ids) {
+      const visited = new Set([id]);
+      for (let at = byId.get(id)?.parent ?? null; at !== null; at = byId.get(at)?.parent ?? null) {
+        if (visited.has(at)) return "wouldCreateCycle";
+        visited.add(at);
+        if (visited.size > ORGANIZATION_MAX_DEPTH) return "tooDeep";
+      }
+    }
+    const names = new Set<string>();
+    for (const id of ids) {
+      const group = byId.get(id);
+      if (group === undefined) continue;
+      const key = `${group.parent}|${group.name.toLowerCase()}`;
+      if (names.has(key)) return "nameTaken";
+      names.add(key);
+    }
+    const sizes = source.groups.map((group) => new Set(group.members.map(organizedId)).size);
+    if (sizes.some((size) => size > ORGANIZATION_MAX_MEMBERS_PER_GROUP)) return "tooManyMembers";
+    if (sizes.reduce((sum, size) => sum + size, 0) > ORGANIZATION_MAX_TOTAL_MEMBERSHIPS) {
+      return "tooManyMembers";
+    }
+    return null;
+  }
+
+  /**
+   * `*target == source` in `CopyOrganization::plan`: the source is exactly this organization (an
+   * alias of this profile's own folder, or an identical copy), so there is nothing to copy. A
+   * source that names no `nextGroupId` is taken to agree with this profile's.
+   */
+  function copySourceIsThisOrganization(
+    source: Extract<CopyProfileSourceMock, { kind: "organization" }>,
+  ): boolean {
+    if (source.nextGroupId !== undefined && source.nextGroupId !== nextOrganizationGroupId) {
+      return false;
+    }
+    if (source.groups.length !== organizationGroups.size) return false;
+    const sameGroups = source.groups.every((group) => {
+      const here = organizationGroups.get(group.id);
+      const members = new Set(group.members.map(organizedId));
+      return (
+        here !== undefined &&
+        here.name === group.name &&
+        here.parent === group.parent &&
+        here.color === group.color &&
+        here.members.size === members.size &&
+        [...members].every((member) => here.members.has(member))
+      );
+    });
+    const colors = Object.entries(source.modColors);
+    return (
+      sameGroups &&
+      colors.length === organizationModColors.size &&
+      colors.every(([id, color]) => organizationModColors.get(organizedId(id)) === color)
+    );
+  }
+
+  class CopyLimit extends Error {
+    readonly rule: string;
+    constructor(rule: string) {
+      super(rule);
+      this.rule = rule;
+    }
+  }
+
+  /** The plan of one copy: the resulting model and the report, or the limit it would break. */
+  function planCopyOrganization(
+    source: Extract<CopyProfileSourceMock, { kind: "organization" }>,
+    mode: "merge" | "replace",
+  ) {
+    const isMerge = mode === "merge";
+    const groups = new Map<number, OrganizationGroupMock>();
+    if (isMerge) {
+      for (const [id, group] of organizationGroups) {
+        groups.set(id, { ...group, members: new Set(group.members) });
+      }
+    }
+    const colors = new Map(isMerge ? organizationModColors : []);
+    let nextId = nextOrganizationGroupId;
+    const report = {
+      mode,
+      groupsAdded: 0,
+      groupsMerged: 0,
+      membershipsAdded: 0,
+      membershipsAlready: 0,
+      modColorsAdded: 0,
+      modColorsKept: 0,
+      groupColorsAdopted: 0,
+      clashes: [] as { path: string[]; kept: string; offered: string }[],
+      discardedGroups: isMerge ? 0 : organizationGroups.size,
+      discardedMemberships: isMerge ? 0 : organizationMembershipCount(),
+      discardedModColors: isMerge ? 0 : organizationModColors.size,
+      notInstalledMods: 0,
+    };
+    const total = () => [...groups.values()].reduce((sum, group) => sum + group.members.size, 0);
+    const sourceGroups = new Map<number, OrganizationGroupMock>(
+      source.groups.map((group) => [
+        group.id,
+        {
+          name: group.name,
+          parent: group.parent,
+          color: group.color,
+          members: new Set(group.members.map(organizedId)),
+        },
+      ]),
+    );
+    const placed = new Map<number, number>();
+    for (const sourceId of copyTreeOrder(sourceGroups)) {
+      const group = sourceGroups.get(sourceId);
+      if (group === undefined) continue;
+      const parent = group.parent === null ? null : (placed.get(group.parent) ?? null);
+      const existing = [...groups].find(
+        ([, candidate]) =>
+          candidate.parent === parent && candidate.name.toLowerCase() === group.name.toLowerCase(),
+      );
+      if (existing !== undefined) {
+        const [id, here] = existing;
+        const added = [...group.members].filter((member) => !here.members.has(member)).length;
+        if (here.members.size + added > ORGANIZATION_MAX_MEMBERS_PER_GROUP) {
+          throw new CopyLimit("tooManyMembers");
+        }
+        if (total() + added > ORGANIZATION_MAX_TOTAL_MEMBERSHIPS) {
+          throw new CopyLimit("tooManyMembers");
+        }
+        for (const member of group.members) here.members.add(member);
+        report.groupsMerged += 1;
+        report.membershipsAdded += added;
+        report.membershipsAlready += group.members.size - added;
+        if (here.color === null && group.color !== null) {
+          here.color = group.color;
+          report.groupColorsAdopted += 1;
+        } else if (here.color !== null && group.color !== null && here.color !== group.color) {
+          report.clashes.push({
+            path: copyPathOf(groups, id),
+            kept: here.color,
+            offered: group.color,
+          });
+        }
+        placed.set(sourceId, id);
+        continue;
+      }
+      if (group.members.size > ORGANIZATION_MAX_MEMBERS_PER_GROUP) {
+        throw new CopyLimit("tooManyMembers");
+      }
+      if (total() + group.members.size > ORGANIZATION_MAX_TOTAL_MEMBERSHIPS) {
+        throw new CopyLimit("tooManyMembers");
+      }
+      if (groups.size >= ORGANIZATION_MAX_GROUPS) throw new CopyLimit("tooManyGroups");
+      if (nextId > ORGANIZATION_MAX_GROUP_ID) throw new CopyLimit("tooManyGroups");
+      const id = nextId;
+      nextId += 1;
+      groups.set(id, {
+        name: group.name,
+        parent,
+        color: group.color,
+        members: new Set(group.members),
+      });
+      report.groupsAdded += 1;
+      report.membershipsAdded += group.members.size;
+      placed.set(sourceId, id);
+    }
+    for (const [rawId, color] of Object.entries(source.modColors)) {
+      const id = organizedId(rawId);
+      const kept = colors.get(id);
+      if (kept === undefined) {
+        if (colors.size + 1 > ORGANIZATION_MAX_MOD_COLORS) throw new CopyLimit("tooManyColors");
+        colors.set(id, color);
+        report.modColorsAdded += 1;
+      } else if (kept !== color) {
+        report.modColorsKept += 1;
+      }
+    }
+    const members = new Set(source.groups.flatMap((group) => group.members.map(organizedId)));
+    const activeBases = new Set([...workingActiveIds].map(baseOf));
+    const installedBases = new Set(installedInventory().map((entry) => baseOf(entry.modId)));
+    report.notInstalledMods = [...members].filter(
+      (member) => !activeBases.has(member) && !installedBases.has(member),
+    ).length;
+    return { groups, colors, nextId, report };
+  }
+
+  /** `CopyOrganization::plan`: this organization usable, then the source read, then the plan. */
+  function copyAnswer(path: string, mode: "merge" | "replace", isCommit: boolean) {
+    const refusal = copyFolderRefusal(path);
+    if (refusal !== null) return { kind: "refused", reason: refusal };
+    requireLoadedOrganization();
+    const source = copySourceFor(path);
+    if (source === null || source.kind === "missing") {
+      return { kind: "refused", reason: { kind: "sourceMissing" } };
+    }
+    if (source.kind === "unusable") {
+      return { kind: "refused", reason: { kind: "sourceUnusable", issue: source.issue } };
+    }
+    const unusableRule = copySourceRule(source);
+    if (unusableRule !== null) {
+      return {
+        kind: "refused",
+        reason: { kind: "sourceUnusable", issue: { kind: "invalid", rule: unusableRule } },
+      };
+    }
+    if (source.groups.length === 0 && Object.keys(source.modColors).length === 0) {
+      return { kind: "refused", reason: { kind: "sourceEmpty" } };
+    }
+    if (copySourceIsThisOrganization(source)) {
+      return { kind: "refused", reason: { kind: "nothingToCopy" } };
+    }
+    try {
+      const plan = planCopyOrganization(source, mode);
+      if (isCommit) {
+        organizationGroups.clear();
+        for (const [id, group] of plan.groups) organizationGroups.set(id, group);
+        organizationModColors.clear();
+        for (const [id, color] of plan.colors) organizationModColors.set(id, color);
+        nextOrganizationGroupId = plan.nextId;
+      }
+      return { kind: "report", report: plan.report };
+    } catch (error) {
+      if (error instanceof CopyLimit) {
+        return { kind: "refused", reason: { kind: "limit", rule: error.rule } };
+      }
+      throw error;
+    }
+  }
+
   /** Joins organization onto list rows (labels by base id, the mod's own colour) and applies the group filter. */
   function joinOrganization<Row extends { modId: string; groups: unknown[]; color: string | null }>(
     rows: Row[],
@@ -5093,7 +5593,10 @@ export function installScenario(): void {
     }
     if (filter?.kind === "inScope") requireGroup(filter.groupId);
     const scope = filter?.kind === "inScope" ? groupScopeMods(filter.groupId) : null;
-    const labelled = [...organizationGroups].toSorted(compareGroupNames);
+    // Labels come in group-tree order (`ModOrganization::tree`): depth first, siblings by name.
+    const labelled = organizationTreeIds().map(
+      (id) => [id, organizationGroups.get(id)] as [number, OrganizationGroupMock],
+    );
     return rows
       .map((row) => {
         const base = baseOf(row.modId);
@@ -5131,11 +5634,16 @@ export function installScenario(): void {
     workshopId: number | null;
     updated: UpdateTimeMock;
     membership: MembershipMock;
-    /** The groups the mod is a direct member of (joined from organization), by name. */
+    /** The groups the mod is a direct member of (joined from organization), in group-tree order. */
     groups: unknown[];
     /** The mod's own colour; never inherited from a group. */
     color: string | null;
+    /** `ModListRowDto.search`: present only when a search matched the name or the id. */
+    search?: { name: TextRangeMock[]; id: TextRangeMock[] };
   };
+
+  /** A matched part of a text, in UTF-16 code units; `end` exclusive. */
+  type TextRangeMock = { start: number; end: number };
 
   type MembershipMock = "none" | "added" | "removed";
 
@@ -5144,6 +5652,73 @@ export function installScenario(): void {
     const isInFile = [...fileActiveIds].some((fileId) => baseOf(fileId) === baseOf(id));
     if (isActiveRow) return isInFile ? "none" : "added";
     return isInFile ? "removed" : "none";
+  }
+
+  /**
+   * `rim_session::search_fold::search_fold`, the fold of every search box: each character
+   * lowercased on its own, with `ς` written as `σ`. A whole-string `toLowerCase` applies the
+   * final-sigma rule (a word-final `Σ` becomes `ς`), so `ΑΣ` would not find `ΑΣΑ`; a one-character
+   * string has no preceding letter, so `Σ` always becomes `σ`, and the `ς` mapping lets a typed
+   * word-final `ς` find a capital `Σ`.
+   */
+  function foldChar(character: string): string {
+    return character.toLowerCase().replace("ς", "σ");
+  }
+
+  function foldSearch(text: string): string {
+    return Array.from(text, foldChar).join("");
+  }
+
+  /**
+   * `rim_session::mod_lists::search::match_ranges`, in UTF-16 code units (the backend converts its
+   * byte ranges at the DTO boundary): every non-overlapping occurrence of the folded `needle`
+   * in the folded text, widened to the whole original characters it touches (a length-changing
+   * fold such as `İ` -> `i` + a combining dot marks the one character), overlapping hits merged,
+   * touching ones kept apart. An empty needle marks nothing.
+   */
+  function matchRanges(text: string, needle: string): TextRangeMock[] {
+    if (needle === "") return [];
+    const folded = foldSearch(text);
+    if (!folded.includes(needle)) return [];
+    const spans: { start: number; end: number; foldedStart: number; foldedEnd: number }[] = [];
+    let unit = 0;
+    let foldedUnit = 0;
+    for (const character of text) {
+      const foldedLength = foldChar(character).length;
+      spans.push({
+        start: unit,
+        end: unit + character.length,
+        foldedStart: foldedUnit,
+        foldedEnd: foldedUnit + foldedLength,
+      });
+      unit += character.length;
+      foldedUnit += foldedLength;
+    }
+    const ranges: TextRangeMock[] = [];
+    for (
+      let at = folded.indexOf(needle);
+      at !== -1;
+      at = folded.indexOf(needle, at + needle.length)
+    ) {
+      const hitEnd = at + needle.length;
+      const head = spans.find((span) => span.foldedEnd > at);
+      const tail = spans.findLast((span) => span.foldedStart < hitEnd);
+      if (head === undefined || tail === undefined) continue;
+      const previous = ranges.at(-1);
+      if (previous !== undefined && head.start < previous.end) {
+        previous.end = Math.max(previous.end, tail.end);
+      } else {
+        ranges.push({ start: head.start, end: tail.end });
+      }
+    }
+    return ranges;
+  }
+
+  /** The row with its `search` marks for the folded `needle`, when either text matched. */
+  function withSearchMarks(row: ModListRowMock, needle: string): ModListRowMock {
+    const name = matchRanges(row.name, needle);
+    const id = matchRanges(row.modId, needle);
+    return name.length === 0 && id.length === 0 ? row : { ...row, search: { name, id } };
   }
 
   /** A pool row (`mods`, fixture owners, `inactiveModRow`) shaped as a `ModListRowDto`. */
@@ -5184,6 +5759,17 @@ export function installScenario(): void {
    * `MAX_MOD_LIST_ROWS` with `total` reported before the cut.
    */
   function modListFor(which: "working" | "inactive", query: ModListQueryMock) {
+    const { ordered, isLoadOrder } = orderedModRows(which, query);
+    return {
+      total: ordered.length,
+      items: ordered.slice(0, MAX_MOD_LIST_ROWS),
+      // `ModList::reorderable`: the Active list in its own load order; a filter keeps it on.
+      reorderable: which === "working" && isLoadOrder,
+    };
+  }
+
+  /** Every row `modListFor` answers with, filtered and sorted, before the `MAX_MOD_LIST_ROWS` cut. */
+  function orderedModRows(which: "working" | "inactive", query: ModListQueryMock) {
     const pool = [...mods, ...extraModsFromFixtures()];
     const poolById = new Map(pool.map((row) => [row.modId, row]));
     const unscannedById = new Map(
@@ -5224,12 +5810,12 @@ export function installScenario(): void {
       rows = [...deactivated, ...unscanned];
     }
     rows = joinOrganization(rows, query.group);
-    const needle = query.search?.toLowerCase() ?? null;
+    const needle = query.search == null ? null : foldSearch(query.search);
     const matching = rows
       .filter((row) =>
         needle === null
           ? true
-          : row.modId.toLowerCase().includes(needle) || row.name.toLowerCase().includes(needle),
+          : foldSearch(row.modId).includes(needle) || foldSearch(row.name).includes(needle),
       )
       .filter((row) => query.source === null || row.source === query.source)
       .filter((row) => {
@@ -5248,12 +5834,168 @@ export function installScenario(): void {
           ? { key: "name", direction: "ascending" }
           : requested;
     const isLoadOrder = sort.key === "loadOrder" && sort.direction === "ascending";
-    const ordered = isLoadOrder ? matching : sortModListRows(matching, sort);
+    const marked = needle === null ? matching : matching.map((row) => withSearchMarks(row, needle));
+    const ordered = isLoadOrder ? marked : sortModListRows(marked, sort);
+    return { ordered, isLoadOrder };
+  }
+
+  /** `rim_session::MAX_GROUPED_ENTRIES`: the most entries a Groups view answers with. */
+  const MAX_GROUPED_ENTRIES = 10_000;
+  /** `rim_session::MAX_COLLAPSED_FOLDERS`: every group (at most 1,000) plus "Ungrouped". */
+  const MAX_COLLAPSED_FOLDERS = 1_001;
+
+  type FolderKeyMock = { kind: "group"; groupId: number } | { kind: "ungrouped" };
+  type GroupedListQueryMock = { list: ModListQueryMock; collapsed: FolderKeyMock[] };
+  type GroupedEntryMock =
+    | {
+        kind: "folder";
+        folder:
+          | { kind: "group"; id: number; name: string; color: string | null }
+          | { kind: "ungrouped" };
+        depth: number;
+        matched: number;
+        isCollapsed: boolean;
+      }
+    | { kind: "mod"; modId: string; folder: FolderKeyMock; depth: number; alsoIn: number };
+
+  /**
+   * `Session::working_mod_groups` / `inactive_mod_groups` (`rim_session::mod_lists::grouped`),
+   * over the rows `orderedModRows` builds, so the filter, the sort and the labels are the List
+   * mock's own. Rules mirrored: the view needs organization (`organization_unavailable` even with
+   * no group filter); placement by each row's direct labels; a folder's subfolders before its own
+   * mods, mods in the pane order; "Ungrouped" last, only when it holds a mod, and absent
+   * under a group scope; a group scope walks only its subtree with depths rebased so it is level
+   * 1; an `ungrouped` scope is the one folder; with no search, tag or source filter every folder
+   * shows (empty ones at 0), under one a folder with no match is left out; `matched` counts
+   * distinct mods in the folder and its subfolders and ignores folds; a folded folder keeps its
+   * header and omits everything below; a fold naming no folder is ignored; at most
+   * `MAX_COLLAPSED_FOLDERS` fold keys, counted before duplicates collapse (`invalid_input`); `reorderable` is always false;
+   * `totalEntries` counts past `MAX_GROUPED_ENTRIES`. A row past `MAX_MOD_LIST_ROWS` is counted,
+   * never emitted. The entry cut is reachable with `window.__GROUPED_ENTRY_CAP__` (a smaller cap
+   * for the slicing below); its real size is pinned in Rust.
+   */
+  function groupedModListFor(which: "working" | "inactive", query: GroupedListQueryMock) {
+    // The raw array is bounded before it is read, as the command's DTO conversion does.
+    if (query.collapsed.length > MAX_COLLAPSED_FOLDERS) {
+      organizationError(
+        "invalid_input",
+        `${query.collapsed.length} collapsed folders, at most ${MAX_COLLAPSED_FOLDERS} allowed`,
+      );
+    }
+    const foldedKeys = new Set<string>();
+    for (const key of query.collapsed) {
+      if (key.kind === "group" && key.groupId === 0) {
+        organizationError("invalid_input", "a group id is never 0");
+      }
+      foldedKeys.add(key.kind === "group" ? `g${key.groupId}` : "u");
+    }
+    if (query.list.group?.kind === "inScope" && query.list.group.groupId === 0) {
+      organizationError("invalid_input", "a group id is never 0");
+    }
+    if (foldedKeys.size > MAX_COLLAPSED_FOLDERS) {
+      organizationError(
+        "invalid_input",
+        `${foldedKeys.size} collapsed folders, at most ${MAX_COLLAPSED_FOLDERS} allowed`,
+      );
+    }
+    requireLoadedOrganization();
+    const { ordered } = orderedModRows(which, query.list);
+    const hasRowFilter =
+      (query.list.search ?? "") !== "" || query.list.tag !== null || query.list.source !== null;
+    const scope = query.list.group ?? null;
+
+    // Row indices per direct group, ascending (the pane order), and the ungrouped ones.
+    const direct = new Map<number, number[]>();
+    const ungrouped: number[] = [];
+    ordered.forEach((row, index) => {
+      const labels = row.groups as { id: number }[];
+      if (labels.length === 0) ungrouped.push(index);
+      for (const label of labels) direct.set(label.id, [...(direct.get(label.id) ?? []), index]);
+    });
+    const matchedIn = (id: number): number => {
+      const indices = new Set<number>();
+      for (const member of groupSubtree(id)) {
+        for (const index of direct.get(member) ?? []) indices.add(index);
+      }
+      return indices.size;
+    };
+    const childrenOf = (parent: number | null): number[] =>
+      organizationTreeIds().filter((id) => organizationGroups.get(id)?.parent === parent);
+    const depthOf = (id: number): number => {
+      const parent = organizationGroups.get(id)?.parent ?? null;
+      return parent === null ? 1 : depthOf(parent) + 1;
+    };
+
+    const entries: GroupedEntryMock[] = [];
+    const entryCap = window.__GROUPED_ENTRY_CAP__ ?? MAX_GROUPED_ENTRIES;
+    let totalEntries = 0;
+    const push = (entry: GroupedEntryMock): void => {
+      totalEntries += 1;
+      if (entries.length < entryCap) entries.push(entry);
+    };
+    const pushMod = (index: number, folder: FolderKeyMock, depth: number): void => {
+      if (index >= MAX_MOD_LIST_ROWS) {
+        totalEntries += 1;
+        return;
+      }
+      const row = ordered[index];
+      if (row === undefined) return;
+      push({
+        kind: "mod",
+        modId: row.modId,
+        folder,
+        depth,
+        alsoIn: Math.max(0, row.groups.length - 1),
+      });
+    };
+    const emitGroup = (id: number, baseDepth: number): void => {
+      const matched = matchedIn(id);
+      if (hasRowFilter && matched === 0) return;
+      const group = organizationGroups.get(id);
+      if (group === undefined) return;
+      const depth = depthOf(id) + 1 - baseDepth;
+      const isCollapsed = foldedKeys.has(`g${id}`);
+      push({
+        kind: "folder",
+        folder: { kind: "group", id, name: group.name, color: group.color },
+        depth,
+        matched,
+        isCollapsed,
+      });
+      if (isCollapsed) return;
+      for (const child of childrenOf(id)) emitGroup(child, baseDepth);
+      for (const index of direct.get(id) ?? []) {
+        pushMod(index, { kind: "group", groupId: id }, depth + 1);
+      }
+    };
+    const emitUngrouped = (): void => {
+      if (ungrouped.length === 0) return;
+      const isCollapsed = foldedKeys.has("u");
+      push({
+        kind: "folder",
+        folder: { kind: "ungrouped" },
+        depth: 1,
+        matched: ungrouped.length,
+        isCollapsed,
+      });
+      if (isCollapsed) return;
+      for (const index of ungrouped) pushMod(index, { kind: "ungrouped" }, 2);
+    };
+
+    if (scope?.kind === "ungrouped") {
+      emitUngrouped();
+    } else if (scope?.kind === "inScope") {
+      emitGroup(scope.groupId, depthOf(scope.groupId));
+    } else {
+      for (const root of childrenOf(null)) emitGroup(root, 1);
+      emitUngrouped();
+    }
     return {
       total: ordered.length,
       items: ordered.slice(0, MAX_MOD_LIST_ROWS),
-      // `ModList::reorderable`: the Active list in its own load order; a filter keeps it on.
-      reorderable: which === "working" && isLoadOrder,
+      reorderable: false,
+      entries,
+      totalEntries,
     };
   }
 
@@ -5280,35 +6022,37 @@ export function installScenario(): void {
 
   /** Rimmerge itself loaded or wrote the file: its mods and their order are what an outside change is measured from. */
   function acknowledgeFile(): void {
-    acknowledgedFileBases = new Set([...fileActiveIds].map((id) => baseOf(id)));
-    acknowledgedFileSequence = [...fileActiveIds].map((id) => baseOf(id));
     acknowledgedFileIds = new Set(fileActiveIds);
     acknowledgedFileOrder = [...fileOrder];
   }
 
   /** `ExternalFileChangeDto`: a membership change first, else the same mods in another order, else none. */
-  function externalChange(added: number, removed: number, fileSequence: string[]) {
+  function externalChange(added: number, removed: number) {
     if (added > 0 || removed > 0) {
       return { kind: "membership" as const, added, removed };
     }
-    if (fileSequence.join(",") !== acknowledgedFileSequence.join(",")) {
+    if (!sameOrderExactly(fileOrder, acknowledgedFileOrder)) {
       return { kind: "reordered" as const };
     }
     return { kind: "none" as const };
   }
 
-  /** `FileBaselineDto`: the baseline's status and what someone else changed in the file's membership. */
+  /**
+   * `FileBaselineDto`: the baseline's status, what someone else changed in the file (by exact id)
+   * and whether the file already holds the selected order (`Session::file_matches_selected`).
+   */
   function fileBaselineDto() {
-    const fileBases = new Set([...fileActiveIds].map((id) => baseOf(id)));
-    const added = [...fileBases].filter((id) => !acknowledgedFileBases.has(id)).length;
-    const removed = [...acknowledgedFileBases].filter((id) => !fileBases.has(id)).length;
-    const fileSequence = [...fileActiveIds].map((id) => baseOf(id));
+    const added = [...fileActiveIds].filter((id) => !acknowledgedFileIds.has(id)).length;
+    const removed = [...acknowledgedFileIds].filter((id) => !fileActiveIds.has(id)).length;
     return {
       state:
         baselineIssue === null
           ? { kind: "fresh" as const }
           : { kind: "stale" as const, reason: baselineIssue },
-      externalChange: externalChange(added, removed, fileSequence),
+      externalChange: externalChange(added, removed),
+      // `Session::file_holds_exactly`: the ids and sequence, the generated merge mod included.
+      fileMatchesSelected: sameOrderExactly(orderFor(selected), fileOrder),
+      fileHoldsCurrentExactly: sameOrderExactly(currentOrder, fileOrder),
     };
   }
 
@@ -5334,7 +6078,10 @@ export function installScenario(): void {
     baselineIssue = null;
     const isListChanged = file.activeMods.join(",") !== [...fileActiveIds].join(",");
     fileActiveIds = new Set(file.activeMods);
-    fileOrder = [...file.activeMods];
+    // Like `currentOrder`, the order leaves out the ids the mock keeps out of it (see
+    // `omittedFromCurrentOrder`), so a file that reproduces the loaded list reads as unchanged.
+    // Mock convention: an outside edit that only moves an omitted id reads as none, but reordered in the backend.
+    fileOrder = file.activeMods.filter((id) => !omittedFromCurrentOrder.includes(id));
     return isListChanged || wasStale;
   }
 
@@ -5376,51 +6123,89 @@ export function installScenario(): void {
       .map((mod) => mod.modId);
   }
 
+  /**
+   * `plan_activate`: the requested ids in order, each preceded by its not-yet-active dependency
+   * closure. Everything compares by base id, as `ActiveSet::contains_base` and
+   * `visit_dependency_closure` do, so a `_steam` copy of an active mod is "already active".
+   */
   function planActivateMods(ids: string[], withDependencies: boolean) {
     const toAdd: string[] = [];
     const alreadyActive: string[] = [];
     const unresolvableDependencies: Record<string, string[]> = {};
+    const activeBases = new Set([...workingActiveIds].map(baseOf));
     const scheduled = new Set<string>();
+    const installed = installedInventory().map((mod) => mod.modId);
+
+    /** `ModInventory::find_by_base`: the base id itself, else the smallest id sharing it. */
+    function findByBase(base: string): string | undefined {
+      if (installed.includes(base)) return base;
+      return installed.filter((id) => baseOf(id) === base).sort()[0];
+    }
+
+    function visitClosure(id: string): void {
+      const missing: string[] = [];
+      for (const dependency of inactiveMods.find((mod) => mod.modId === id)?.dependsOn ?? []) {
+        const base = baseOf(dependency);
+        if (activeBases.has(base) || scheduled.has(base)) continue;
+        const resolved = findByBase(base);
+        if (resolved === undefined) {
+          missing.push(dependency);
+          continue;
+        }
+        scheduled.add(baseOf(resolved));
+        visitClosure(resolved);
+        toAdd.push(resolved);
+      }
+      if (missing.length > 0) {
+        unresolvableDependencies[id] = [...(unresolvableDependencies[id] ?? []), ...missing];
+      }
+    }
+
     for (const id of ids) {
-      if (workingActiveIds.has(id) || scheduled.has(id)) {
+      const base = baseOf(id);
+      if (activeBases.has(base) || scheduled.has(base)) {
         alreadyActive.push(id);
         continue;
       }
-      if (withDependencies) {
-        for (const dep of inactiveMods.find((mod) => mod.modId === id)?.dependsOn ?? []) {
-          if (workingActiveIds.has(dep) || scheduled.has(dep)) continue;
-          if (!inactiveMods.some((mod) => mod.modId === dep)) {
-            unresolvableDependencies[id] = [...(unresolvableDependencies[id] ?? []), dep];
-            continue;
-          }
-          scheduled.add(dep);
-          toAdd.push(dep);
-        }
+      if (withDependencies) visitClosure(id);
+      if (!scheduled.has(base)) {
+        scheduled.add(base);
+        toAdd.push(id);
       }
-      scheduled.add(id);
-      toAdd.push(id);
     }
     return { toAdd, unresolvableDependencies, alreadyActive };
   }
 
-  function planDeactivateMods(ids: string[]) {
+  /**
+   * `plan_deactivate`: `notActive` is the requested non-Core ids that are not active, which the
+   * plan DTO does not carry but the commit's result does.
+   */
+  function deactivationOutcome(ids: string[]) {
     const toRemove: string[] = [];
     const refused: string[] = [];
+    const notActive: string[] = [];
     const dependentsStillActive: Record<string, string[]> = {};
     for (const id of ids) {
-      // `ActiveSet::deactivate`'s own rule: Core is never removable.
-      if (id === "ludeon.rimworld") {
+      // `ActiveSet::deactivate`'s own rule: Core (by base id) is never removable.
+      if (baseOf(id) === "ludeon.rimworld") {
         refused.push(id);
         continue;
       }
-      if (!workingActiveIds.has(id)) continue;
+      if (!workingActiveIds.has(id)) {
+        notActive.push(id);
+        continue;
+      }
       toRemove.push(id);
     }
     for (const id of toRemove) {
       const dependents = dependentsOf(id);
       if (dependents.length > 0) dependentsStillActive[id] = dependents;
     }
-    return { toRemove, dependentsStillActive, refused };
+    return { plan: { toRemove, dependentsStillActive, refused }, notActive };
+  }
+
+  function planDeactivateMods(ids: string[]) {
+    return deactivationOutcome(ids).plan;
   }
 
   /** Every mod named as a source of the generated mod's content — every non-base owner of every decided entry. */
@@ -5466,7 +6251,7 @@ export function installScenario(): void {
       `  <packageId>${MERGE_MOD_PACKAGE_ID}</packageId>`,
       "  <name>Rimmerge merge patch</name>",
       "  <author>Rimmerge</author>",
-      "  <description>Generated by Rimmerge from your merge decisions. Regenerated on every apply — do not edit by hand.</description>",
+      "  <description>Generated by Rimmerge from your merge decisions. Regenerated on every apply. Do not edit by hand.</description>",
       "  <supportedVersions><li>1.6</li></supportedVersions>",
       "  <modDependencies>",
       dependencyLines,
@@ -6999,6 +7784,8 @@ export function installScenario(): void {
   window.__ACTIVATE_CALLS__ = [];
   window.__LIST_WORKING_MODS_CALLS__ = [];
   window.__LIST_INACTIVE_MODS_CALLS__ = [];
+  window.__LIST_WORKING_MODS_GROUPED_CALLS__ = [];
+  window.__LIST_INACTIVE_MODS_GROUPED_CALLS__ = [];
   window.__DEACTIVATE_CALLS__ = [];
   window.__MOVE_MODS_CALLS__ = [];
   window.__ORGANIZATION_CALLS__ = [];
@@ -7035,6 +7822,7 @@ export function installScenario(): void {
   window.__OPEN_WORKSHOP_PAGE_CALLS__ = [];
   window.__SAVE_DIALOG_OPTIONS__ = [];
   window.__OPEN_DIALOG_OPTIONS__ = [];
+  window.__PICK_FOLDER_OPTIONS__ = [];
   window.__LIST_SAVES_CALLS__ = 0;
   window.__GAME_LAUNCH_STATUS_CALLS__ = 0;
   window.__GET_RECOMMENDED_RULES_CALLS__ = 0;
@@ -7257,11 +8045,31 @@ export function installScenario(): void {
 
   const fixtures: IpcFixtures = {
     // Mirrors the rung-1 rule: a requested game folder is what the backend
-    // answers with; every other path keeps its detected default.
+    // answers with; every other path keeps its detected default. A requested
+    // text that is not a drive-letter path is no answer (the backend never
+    // stats it) and is reported as a `pathRefused` warning instead.
     get_default_paths: (payload: unknown) => {
       const { request } = payload as { request?: DefaultPathsRequestDto | null };
       window.__GET_DEFAULT_PATHS_CALLS__?.push(request ?? { gameDir: null });
-      const gameDir = request?.gameDir ?? "C:/RimWorld";
+      let requested = (request?.gameDir ?? "").trim() === "" ? null : (request?.gameDir ?? null);
+      let warningCode: Record<string, string> | null = null;
+      if (requested !== null) {
+        try {
+          requested = parseUserPath(requested, "the game folder");
+        } catch (error) {
+          requested = null;
+          warningCode = {
+            kind: "pathRefused",
+            field: "gameDir",
+            reason:
+              (error as { code: string }).code === "network_path_refused"
+                ? "networkShare"
+                : "invalid",
+            source: "typed",
+          };
+        }
+      }
+      const gameDir = requested ?? "C:/RimWorld";
       // Mirrors `default_workshop_dir`: the game folder's grandparent plus
       // `workshop/content/294100` (`<library>/steamapps/common/<x>` lands in
       // `<library>/steamapps/workshop/...`); without two parents it is
@@ -7276,12 +8084,23 @@ export function installScenario(): void {
         workshopDir,
         modsConfig: MODS_CONFIG_PATH,
         profileDir: "C:/Profile/rimmerge",
-        warningCode: null,
+        warningCode,
         errorCode: null,
       };
     },
+    // Mirrors `save_app_config_at`: every non-blank path is parsed before anything is saved, so
+    // one refusal leaves the stored config as it was (and records no call).
     save_app_config: (payload: unknown) => {
-      window.__SAVE_APP_CONFIG_CALLS__?.push((payload as { config: AppConfigDto }).config);
+      const config = (payload as { config: AppConfigDto }).config;
+      const fields = [
+        [config.gameDir, "the game folder"],
+        [config.workshopDir, "the workshop folder"],
+        [config.modsConfig, "the ModsConfig.xml path"],
+      ] as const;
+      for (const [value, what] of fields) {
+        if ((value ?? "").trim() !== "") parseUserPath(value ?? "", what);
+      }
+      window.__SAVE_APP_CONFIG_CALLS__?.push(config);
       return null;
     },
     get_default_rimsort_paths: {
@@ -7289,7 +8108,15 @@ export function installScenario(): void {
       communityRules: "C:/RimSort/dbs/Community-Rules-Database/communityRules.json",
       steamDb: "C:/RimSort/dbs/Steam-Workshop-Database/steamDB.json",
     },
-    load_project: async () => {
+    load_project: async (payload: unknown) => {
+      // `ProjectPathsDto::try_from`: every path is parsed before anything is read.
+      const paths = (payload as { paths?: Record<string, string> } | undefined)?.paths;
+      if (paths !== undefined) {
+        parseUserPath(paths.gameDir ?? "", "the game folder");
+        parseUserPath(paths.workshopDir ?? "", "the workshop folder");
+        parseUserPath(paths.modsConfig ?? "", "the ModsConfig.xml path");
+        parseUserPath(paths.profileDir ?? "", "the profile folder");
+      }
       const progress = window.__LOAD_PROJECT_PROGRESS__;
       if (progress) {
         for (const payload of progress) {
@@ -7390,13 +8217,30 @@ export function installScenario(): void {
       selected = (payload as { source: OrderSourceDto }).source;
       return stats();
     },
-    get_apply_preflight: (payload: unknown): ApplyPreflightDto => {
+    get_apply_preflight: async (payload: unknown): Promise<ApplyPreflightDto> => {
       const source = (payload as { source: OrderSourceDto }).source;
+      // The real command reads the file fresh (the refresh path) and announces the baseline's
+      // one-shot change like the poll does; it reports an outside change only when writing this
+      // order would overwrite it.
+      if (observeModsConfigFile()) {
+        // Before the answer goes out, as the real command emits before it returns: the webview
+        // sees the event first, so the click's own call must not depend on its query entry.
+        window.__BASELINE_CHANGED_EMITS__ = (window.__BASELINE_CHANGED_EMITS__ ?? 0) + 1;
+        void window.__TAURI_INTERNALS__.invoke("plugin:event|emit", {
+          event: "session://changed",
+          payload: { reason: "fileBaselineChanged" },
+        });
+      }
       const items = hardProblemsFor(source);
+      const outsideChange = sameOrderExactly(orderFor(source), fileOrder)
+        ? ({ kind: "none" } as const)
+        : fileBaselineDto().externalChange;
       return {
         source,
         items,
-        requiresConfirmation: items.some((item) => !item.acknowledged),
+        outsideChange,
+        requiresConfirmation:
+          outsideChange.kind !== "none" || items.some((item) => !item.acknowledged),
       };
     },
     list_order: (payload: unknown) => {
@@ -7419,7 +8263,14 @@ export function installScenario(): void {
       });
     },
     explain_placement: (payload: unknown) => {
-      const id = (payload as { modId: string }).modId;
+      const requested = (payload as { modId: string }).modId;
+      // Mirrors `find_placement`: the exact id first, then the first mod
+      // sharing its base id; a miss is `mod_not_found`, never a position-0
+      // answer. The answer carries the resolved id.
+      const id =
+        suggestedOrder.find((candidate) => candidate === requested) ??
+        suggestedOrder.find((candidate) => baseOf(candidate) === baseOf(requested));
+      if (id === undefined) throw { code: "mod_not_found", message: `${requested} is not active` };
       const position = suggestedOrder.indexOf(id);
       const previousIndex = currentOrder.indexOf(id);
       const otherId = suggestedOrder[(position + 1) % suggestedOrder.length] ?? modId(0);
@@ -7505,7 +8356,9 @@ export function installScenario(): void {
       if (filter.modId)
         matching = matching.filter((entry) => entry.modIds.includes(filter.modId as string));
       if (filter.search)
-        matching = matching.filter((entry) => entry.key.includes(filter.search as string));
+        matching = matching.filter((entry) =>
+          foldSearch(entry.key).includes(foldSearch(filter.search as string)),
+        );
       matching.sort((a, b) => a.confidence - b.confidence || a.key.localeCompare(b.key));
       const total = matching.length;
       const limit = Math.min(filter.limit, 200);
@@ -7589,8 +8442,8 @@ export function installScenario(): void {
       let matching = allFields;
       if (request.filter.onlyConflicts) matching = matching.filter((f) => f.class === "conflict");
       if (request.filter.search) {
-        const needle = request.filter.search.toLowerCase();
-        matching = matching.filter((f) => f.path.toLowerCase().includes(needle));
+        const needle = foldSearch(request.filter.search);
+        matching = matching.filter((f) => foldSearch(f.path).includes(needle));
       }
       const total = matching.length;
       const limit = Math.min(request.filter.limit, 200);
@@ -7791,7 +8644,16 @@ export function installScenario(): void {
       return withPromotionFields(rules);
     },
     import_rimsort: (payload: unknown) => {
-      window.__IMPORT_RIMSORT_CALLS__?.push((payload as { paths: RimSortPathsDto }).paths);
+      const paths = (payload as { paths: RimSortPathsDto }).paths;
+      // `RimSortPaths::try_from`: each present path is parsed before the session is touched.
+      for (const [value, what] of [
+        [paths.userRules, "the user rules file"],
+        [paths.communityRules, "the community rules file"],
+        [paths.steamDb, "the Steam database file"],
+      ] as const) {
+        if (value !== null && value !== undefined) parseUserPath(value, what);
+      }
+      window.__IMPORT_RIMSORT_CALLS__?.push(paths);
       return {
         userRules: 2,
         communityRules: 1,
@@ -8038,10 +8900,9 @@ export function installScenario(): void {
       }));
       let matching = [...scannedRows, ...missingRows];
       if (filter.search) {
-        const needle = filter.search.toLowerCase();
+        const needle = foldSearch(filter.search);
         matching = matching.filter(
-          (mod) =>
-            mod.modId.toLowerCase().includes(needle) || mod.name.toLowerCase().includes(needle),
+          (mod) => foldSearch(mod.modId).includes(needle) || foldSearch(mod.name).includes(needle),
         );
       }
       if (filter.tag) matching = matching.filter((mod) => mod.tags.includes(filter.tag as string));
@@ -8064,12 +8925,31 @@ export function installScenario(): void {
       window.__LIST_INACTIVE_MODS_CALLS__?.push(query);
       return modListFor("inactive", query);
     },
+    // The Groups view of each pane (`rim_session::mod_lists::grouped`).
+    list_working_mods_grouped: (payload: unknown) => {
+      const query = (payload as { query: GroupedListQueryMock }).query;
+      window.__LIST_WORKING_MODS_GROUPED_CALLS__?.push(query);
+      return groupedModListFor("working", query);
+    },
+    list_inactive_mods_grouped: (payload: unknown) => {
+      const query = (payload as { query: GroupedListQueryMock }).query;
+      window.__LIST_INACTIVE_MODS_GROUPED_CALLS__?.push(query);
+      return groupedModListFor("inactive", query);
+    },
     // The library organization (`rim_session::organization`); the model and its rules are above.
     get_organization: () => organizationDto(),
     create_group: (payload: unknown) => {
-      const request = (payload as { request: { name: string; parent: number | null } }).request;
+      const request = (
+        payload as {
+          request: { name: string; parent: number | null; modIds?: string[] | null };
+        }
+      ).request;
       const name = parseGroupName(request.name);
+      const mods = organizedIds(request.modIds ?? []);
       return editOrganization("create_group", request, () => {
+        // The room for the members is checked before the group exists, as the backend does, so a
+        // refusal leaves nothing behind.
+        ensureOrganizationRoomForNewGroup(mods.size);
         if (organizationGroups.size >= ORGANIZATION_MAX_GROUPS) {
           organizationError("organization_limit", "there can be at most 1,000 groups");
         }
@@ -8088,9 +8968,9 @@ export function installScenario(): void {
           name,
           parent: request.parent,
           color: null,
-          members: new Set(),
+          members: new Set(mods),
         });
-        return { kind: "created", id };
+        return { kind: "created", id, members: mods.size };
       });
     },
     rename_group: (payload: unknown) => {
@@ -8265,6 +9145,20 @@ export function installScenario(): void {
       await emitOrganizationChanged();
       return organizationDto();
     },
+    preview_copy_organization: (payload: unknown) => {
+      const request = (payload as { request: { sourceDir: string; mode: "merge" | "replace" } })
+        .request;
+      recordOrganizationCall("preview_copy_organization", request);
+      return copyAnswer(parseCopySourceDir(request.sourceDir), request.mode, false);
+    },
+    copy_organization: async (payload: unknown) => {
+      const request = (payload as { request: { sourceDir: string; mode: "merge" | "replace" } })
+        .request;
+      recordOrganizationCall("copy_organization", request);
+      const answer = copyAnswer(parseCopySourceDir(request.sourceDir), request.mode, true);
+      if (answer.kind === "report") await emitOrganizationChanged();
+      return answer;
+    },
     plan_activate_mods: (payload: unknown) => {
       const request = (payload as { request: ActivateRequestDto }).request;
       // A stale anchor is refused at plan time too, as the real command does.
@@ -8281,7 +9175,14 @@ export function installScenario(): void {
       const didSwitchToCurrent =
         request.anchor !== null && plan.toAdd.length > 0 && selected === "suggested";
       if (didSwitchToCurrent) selected = "current";
-      return { pending: pendingActiveChanges(), selected, didSwitchToCurrent };
+      // `activated` and `alreadyActive` are what the commit re-planned, whatever the dialog showed.
+      return {
+        pending: pendingActiveChanges(),
+        activated: plan.toAdd,
+        alreadyActive: plan.alreadyActive,
+        selected,
+        didSwitchToCurrent,
+      };
     },
     move_mods: (payload: unknown): MoveModsResultDto => {
       const request = (payload as { request: MoveRequestDto }).request;
@@ -8357,15 +9258,16 @@ export function installScenario(): void {
       const request = (payload as { request: DeactivateRequestDto }).request;
       return planDeactivateMods(request.ids);
     },
-    deactivate_mods: (payload: unknown) => {
+    deactivate_mods: (payload: unknown): DeactivateModsResultDto => {
       const request = (payload as { request: DeactivateRequestDto }).request;
       window.__DEACTIVATE_CALLS__?.push(request);
-      const plan = planDeactivateMods(request.ids);
+      const { plan, notActive } = deactivationOutcome(request.ids);
       for (const id of plan.toRemove) {
         workingActiveIds.delete(id);
       }
       settleCurrentOntoWorking();
-      return pendingActiveChanges();
+      // `removed` and `notActive` are what the commit re-planned (a refused Core is in neither).
+      return { pending: pendingActiveChanges(), removed: plan.toRemove, notActive };
     },
     get_pending_active_changes: () => pendingActiveChanges(),
     get_mods_config_baseline: () => fileBaselineDto(),
@@ -8389,6 +9291,7 @@ export function installScenario(): void {
     export_order_file: (payload: unknown): ExportResultDto => {
       const request = (payload as { request: ExportOrderFileRequestDto }).request;
       window.__EXPORT_ORDER_FILE_CALLS__?.push(request);
+      parseUserPath(request.path, "the file path");
       if (!isExportablePath(request.path)) {
         throw { code: "invalid_input", message: "a mod list is saved as a .rml file" };
       }
@@ -8435,6 +9338,7 @@ export function installScenario(): void {
     preview_order_import_file: (payload: unknown): OrderImportOutcomeDto => {
       const request = (payload as { request: PreviewOrderImportFileRequestDto }).request;
       window.__PREVIEW_ORDER_IMPORT_FILE_CALLS__?.push(request);
+      parseUserPath(request.path, "the file path");
       // The session's own ModsConfig.xml reads as the file's current list (what the real backend
       // would parse), one package id per line, so "Use the list from the file" previews it.
       const content =
@@ -8443,7 +9347,7 @@ export function installScenario(): void {
       if (content === undefined) {
         throw { code: "mod_list_io_failed", message: `${request.path}: the file was not found` };
       }
-      return previewOrderDocument(content);
+      return previewOrderDocument(content, request.path === MODS_CONFIG_PATH);
     },
     preview_order_import_text: (payload: unknown): OrderImportOutcomeDto => {
       const request = (payload as { request: PreviewOrderImportTextRequestDto }).request;
@@ -8489,10 +9393,15 @@ export function installScenario(): void {
       // `example.bionicsfork`, ...) is a real, clickable `list_mods` row, so
       // its own detail page must resolve too (the def inspector's own
       // spec navigates through exactly this path).
-      const mod = [...mods, ...extraModsFromFixtures()].find((m) => m.modId === id);
+      // Mirrors `find_active`: the exact id first, then the first mod
+      // sharing its base id.
+      const detailPool = [...mods, ...extraModsFromFixtures()];
+      const mod =
+        detailPool.find((m) => m.modId === id) ??
+        detailPool.find((m) => baseOf(m.modId) === baseOf(id));
       if (!mod) throw { code: "mod_not_found", message: `${id} is not active` };
       const findingKeys = [...findings.values()]
-        .filter((entry) => entry.modIds.includes(id))
+        .filter((entry) => entry.modIds.some((owner) => baseOf(owner) === baseOf(mod.modId)))
         .map((entry) => entry.key);
       return {
         modId: mod.modId,
@@ -8644,8 +9553,8 @@ export function installScenario(): void {
       };
       let rows = defChangesFor(request.modId);
       if (request.filter.search) {
-        const needle = request.filter.search.toLowerCase();
-        rows = rows.filter((row) => row.defRef.toLowerCase().includes(needle));
+        const needle = foldSearch(request.filter.search);
+        rows = rows.filter((row) => foldSearch(row.defRef).includes(needle));
       }
       const kindCounts = {
         ownsDef: rows.filter((r) => r.kind === "ownsDef").length,
@@ -8732,13 +9641,13 @@ export function installScenario(): void {
     },
     search_defs: (payload: unknown) => {
       const request = payload as { query: string; limit: number };
-      const needle = request.query.toLowerCase();
+      const needle = foldSearch(request.query);
       if (needle.length === 0) return [];
       return [...mergeFixtures.values()]
         .filter(
           (fixture) =>
-            fixture.defKey.defName.toLowerCase().includes(needle) ||
-            fixture.defKey.defType.toLowerCase().includes(needle),
+            foldSearch(fixture.defKey.defName).includes(needle) ||
+            foldSearch(fixture.defKey.defType).includes(needle),
         )
         .map((fixture) => ({
           defRef: defRefOf(fixture),
@@ -9063,7 +9972,9 @@ export function installScenario(): void {
         matching = matching.filter(({ entry }) => entry.modIds.includes(filter.modId as string));
       }
       if (filter.search) {
-        matching = matching.filter(({ entry }) => entry.key.includes(filter.search as string));
+        matching = matching.filter(({ entry }) =>
+          foldSearch(entry.key).includes(foldSearch(filter.search as string)),
+        );
       }
       matching.sort(
         (a, b) => a.entry.confidence - b.entry.confidence || a.entry.key.localeCompare(b.entry.key),
@@ -9174,6 +10085,7 @@ export function installScenario(): void {
     export_patch: (payload: unknown) => {
       const request = (payload as { request: ExportPatchRequestDto }).request;
       window.__EXPORT_PATCH_CALLS__?.push(request);
+      parseUserPath(request.outDir, "the output folder");
       const patch = requirePatch(request.patchId);
       patch.exportDir = request.outDir;
       patch.updatedAt = new Date().toISOString();
@@ -9502,6 +10414,7 @@ export function installScenario(): void {
     export_assignment: (payload: unknown) => {
       const request = (payload as { request: ExportAssignmentRequestDto }).request;
       window.__EXPORT_ASSIGNMENT_CALLS__?.push(request);
+      parseUserPath(request.outDir, "the output folder");
       const assignment = requireAssignment(request.assignmentId);
       assignment.exportDir = request.outDir;
       assignment.updatedAt = new Date().toISOString();
@@ -9557,7 +10470,9 @@ export function installScenario(): void {
     // a file picker never does.
     "plugin:dialog|open": (payload: unknown) => {
       const options = (payload as { options?: { directory?: boolean } } | undefined)?.options;
-      if (!options?.directory) {
+      if (options?.directory) {
+        window.__PICK_FOLDER_OPTIONS__?.push(options);
+      } else {
         window.__OPEN_DIALOG_OPTIONS__?.push(options);
       }
       return options?.directory
@@ -9574,11 +10489,15 @@ export function installScenario(): void {
     get_startup_costs: () => window.__STARTUP_COSTS_OVERRIDE__ ?? startupCosts,
     // Reads and attributes a `Player.log` — the
     // fixed default unless a spec overrides `window.__IMPORT_GAME_LOG_RESULT__`.
-    import_game_log: () =>
-      window.__IMPORT_GAME_LOG_RESULT__ ?? {
-        ...IMPORT_GAME_LOG_DEFAULT,
-        ...window.__IMPORT_GAME_LOG_OVERRIDES__,
-      },
+    import_game_log: (payload: unknown) => {
+      parseUserPath((payload as { request: { path: string } }).request.path, "the log file");
+      return (
+        window.__IMPORT_GAME_LOG_RESULT__ ?? {
+          ...IMPORT_GAME_LOG_DEFAULT,
+          ...window.__IMPORT_GAME_LOG_OVERRIDES__,
+        }
+      );
+    },
     // The apply dialog's own def-cache note.
     get_def_cache_carrier: () => ({ carrierModId: window.__DEF_CACHE_CARRIER_MOD_ID__ ?? null }),
     list_notifications: () => computeNotifications(),

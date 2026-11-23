@@ -16,8 +16,8 @@ mod values;
 
 pub use export::{ExportListError, ExportedModList};
 pub use plan::{
-    Activation, CorePlacement, ImportContext, ImportPlan, ImportedEntry, MissingKind, VersionCheck,
-    plan_import,
+    Activation, CorePlacement, IdSpelling, ImportContext, ImportPlan, ImportedEntry, MissingKind,
+    VersionCheck, plan_import,
 };
 pub use text::{parse_text, render_text};
 pub use values::{

@@ -5,7 +5,7 @@ expression: text
 ---
 <?xml version="1.0" encoding="utf-8"?>
 <Patch>
-  <!-- HediffDef/BionicHeart — owners: example.bionicsfork,ludeon.rimworld -->
+  <!-- HediffDef/BionicHeart - owners: example.bionicsfork,ludeon.rimworld -->
   <Operation Class="PatchOperationSequence">
     <operations>
       <li Class="PatchOperationReplace" MayRequire="example.bionicsfork">

@@ -12,6 +12,7 @@ mod check_for_update;
 mod clear_assignment_row;
 mod contributes_nothing;
 mod copy_from;
+mod copy_organization;
 mod create_assignment;
 mod create_patch;
 mod deactivate_mods;
@@ -91,6 +92,7 @@ pub use contributes_nothing::{
     ContributesNothing, ContributesNothingError, ContributesNothingReport,
 };
 pub use copy_from::{CopyFrom, CopyFromError, CopyFromOutcome, DroppedItemSlotValue};
+pub use copy_organization::{CopyOrganization, CopyOrganizationError, CopyRefusal};
 pub use create_assignment::{
     AssignmentCandidate, CandidateSummary, CreateAssignment, CreateAssignmentError,
     CreateAssignmentInput, ExcludedTarget, ProposeAssignmentError,
@@ -129,7 +131,7 @@ pub use get_recommended_rules::{
 pub use import_game_log::{
     AttributedClass, DdsFailureSummary, DependencyWarningSummary, EnclosingOp, FamilyAttribution,
     GameLogSummary, ImportGameLog, ImportGameLogError, LoadEvent, LogAttribution,
-    PatchFailureSummary, StackTraceDetail, TimerSummary, UnpairedStackTrace,
+    PatchFailureSummary, StackTraceDetail, TimerSummary, UnpairedStackTrace, attribute_game_log,
 };
 pub use import_order::{ImportBlocker, ImportLoss, ImportOrder, ImportOrderError, ValidatedImport};
 pub use import_profile_decisions::{

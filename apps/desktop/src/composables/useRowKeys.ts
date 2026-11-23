@@ -1,8 +1,9 @@
-import { computed, nextTick, type Ref } from "vue";
-
-import type { RowMenu } from "@/components/mods/ModTable.vue";
+import { computed, type Ref } from "vue";
+import { handleSelectionKey } from "@/composables/selectionKeys";
 import { isInert } from "@/composables/shortcutTargets";
+import { useFocusRequests } from "@/composables/useFocusRequests";
 import type { ModListRowDto } from "@/types/generated/ModListRowDto";
+import type { RowMenu } from "@/utils/modRowMenu";
 
 /** What a row key asks the table to do; the table owns the rows' events and menus. */
 export interface RowKeyActions {
@@ -37,7 +38,7 @@ export interface RowKeysOptions {
   /** Whether anything is selected; Escape only means "clear" then, so it still closes the panel otherwise. */
   hasSelection: () => boolean;
   rowMenu: () => RowMenu;
-  /** Whether rows have a menu at all (position entries, or the mod own organization entries). */
+  /** Whether rows have a menu at all (position entries, or the mod's own organization entries). */
   hasRowMenu: () => boolean;
   /** Scrolls the virtualized list so the row at `index` is rendered. */
   scrollToIndex: (index: number) => void;
@@ -86,6 +87,8 @@ export function useRowKeys({
     focusedId.value = modId;
   }
 
+  const focusRequests = useFocusRequests();
+
   /** Moves roving focus by `delta` rows (±1), or to the very first/last row when `toEnd` is given. */
   async function moveFocus(delta: number, toEnd?: "start" | "end"): Promise<string | null> {
     const rows = mods();
@@ -125,48 +128,25 @@ export function useRowKeys({
   }
 
   /**
-   * Ctrl/Cmd+A selects every shown row and Escape clears a non-empty selection (stopping the
-   * event so the same press does not also close the info panel). Both defer to text entry and
-   * dialogs. Returns whether the key was consumed.
-   */
-  function onSelectionKey(event: KeyboardEvent): boolean {
-    // A focused row checkbox is a native input but not text entry: the keys still mean the list.
-    const isRowCheckbox =
-      event.target instanceof HTMLInputElement && event.target.type === "checkbox";
-    if (!isSelectable() || (!isRowCheckbox && isInert(event.target))) {
-      return false;
-    }
-    const isSelectAll = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "a";
-    if (isSelectAll) {
-      event.preventDefault();
-      actions.selectAll();
-      return true;
-    }
-    if (event.key === "Escape" && hasSelection()) {
-      event.stopPropagation();
-      actions.clearSelection();
-      return true;
-    }
-    return false;
-  }
-
-  /**
    * Scrolls the row for `modId` into view and focuses it, whether or not it is rendered yet.
    * A row that is not in the list is ignored.
    */
-  async function focusRow(modId: string): Promise<void> {
+  function focusRow(modId: string): Promise<void> {
+    // Counted before the early return: a call for a mod that is gone still supersedes an older
+    // call that is waiting for its row.
+    const request = focusRequests.claim();
     const index = mods().findIndex((mod) => mod.modId === modId);
     if (index === -1) {
-      return;
+      return Promise.resolve();
     }
     scrollToIndex(index);
     focusedId.value = modId;
-    // The target row may not exist in the DOM yet (virtualization) until
-    // the scroll above re-renders `visibleRows` — wait for Vue to flush
-    // that render before focusing it.
-    await nextTick();
-    const element = getScroller()?.querySelector<HTMLElement>(`[data-testid="mod-row-${modId}"]`);
-    element?.focus();
+    // The target row may not exist in the DOM yet (virtualization); a newer call supersedes this one.
+    // Returned, not awaited in this function: the extra async layer would delay the caller's
+    // continuation by a few microtasks, which a keydown test observes.
+    return focusRequests.focusWhenRendered(request, () =>
+      getScroller()?.querySelector<HTMLElement>(`[data-testid="mod-row-${modId}"]`),
+    );
   }
 
   /**
@@ -204,7 +184,11 @@ export function useRowKeys({
   }
 
   function onRowKeydown(event: KeyboardEvent, modId: string): void {
-    if (onMoveKey(event, modId) || onMenuKey(event, modId) || onSelectionKey(event)) {
+    if (
+      onMoveKey(event, modId) ||
+      onMenuKey(event, modId) ||
+      handleSelectionKey(event, { isSelectable, hasSelection, actions })
+    ) {
       return;
     }
     switch (event.key) {

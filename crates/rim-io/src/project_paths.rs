@@ -25,6 +25,7 @@ use std::path::PathBuf;
 
 use rim_analyzer::infra::paths;
 use rim_session::ProjectPaths;
+use rim_session::user_path::UserPath;
 
 use crate::app_config::AppConfig;
 
@@ -34,6 +35,56 @@ use crate::app_config::AppConfig;
 /// on this crate (it depends on *them*), so the one definition has to sit
 /// upstream or the literal ends up copied three times.
 pub use rim_analyzer::infra::paths::{GAME_DIR_VAR, MODS_CONFIG_VAR, WORKSHOP_DIR_VAR};
+
+/// Which values rungs 2 and 3 (the environment variables and `config.json`)
+/// may answer with.
+///
+/// Those rungs are the local user's own authority, so the CLI trusts them as
+/// they are. A webview-driven interface must not: the ladder checks the game
+/// folder (`is_game_dir`) and hashes the `ModsConfig.xml` path
+/// ([`crate::profile_dir`] canonicalizes it), both file-system calls, and a
+/// network path stored in `config.json` (written by `rimmerge config set`,
+/// say) would make every visit to the Setup page contact its host. Under
+/// [`PathPolicy::DriveLettersOnly`] such a value is dropped before anything
+/// touches it and reported in [`PartialPaths::refused`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum PathPolicy {
+    /// Every stored value is used as it is (the CLI).
+    #[default]
+    TrustLocalUser,
+    /// A stored value that [`rim_session::user_path::UserPath`] refuses
+    /// (a network share, a relative or device path) is dropped.
+    DriveLettersOnly,
+}
+
+impl PathPolicy {
+    fn admits(self, path: &std::path::Path) -> bool {
+        match self {
+            Self::TrustLocalUser => true,
+            Self::DriveLettersOnly => UserPath::parse(&path.to_string_lossy()).is_ok(),
+        }
+    }
+}
+
+/// The ladder's three paths that rungs 2 and 3 can answer.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PathField {
+    /// The install directory.
+    GameDir,
+    /// The workshop content folder.
+    WorkshopDir,
+    /// `ModsConfig.xml`.
+    ModsConfig,
+}
+
+/// A stored value the [`PathPolicy`] dropped.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RefusedPath {
+    /// Which path the value was for.
+    pub field: PathField,
+    /// The value, as stored. Never opened: it was refused from its text.
+    pub path: PathBuf,
+}
 
 /// Rung 1: whatever the caller was told explicitly, plus the `base`
 /// directory `config.json` and `profiles/` live under.
@@ -52,6 +103,8 @@ pub struct PathOverrides {
     /// An explicit profile directory; otherwise derived from the resolved
     /// `mods_config`.
     pub profile_dir: Option<PathBuf>,
+    /// What rungs 2 and 3 may answer with; see [`PathPolicy`].
+    pub policy: PathPolicy,
 }
 
 impl PathOverrides {
@@ -65,6 +118,7 @@ impl PathOverrides {
             workshop_dir: None,
             mods_config: None,
             profile_dir: None,
+            policy: PathPolicy::TrustLocalUser,
         }
     }
 }
@@ -222,6 +276,10 @@ pub struct PartialPaths {
     pub profile_dir: Option<PathBuf>,
     /// See [`ResolvedPaths::warning`].
     pub warning: Option<String>,
+    /// The first stored value (environment or `config.json`) the
+    /// [`PathPolicy`] dropped, game folder first; `None` under
+    /// [`PathPolicy::TrustLocalUser`].
+    pub refused: Option<RefusedPath>,
 }
 
 /// Applies the ladder in this module's doc comment to each path on its own;
@@ -233,14 +291,32 @@ pub fn resolve_each_path(overrides: &PathOverrides) -> PartialPaths {
 
 fn resolve_each_with(overrides: &PathOverrides, environment: &dyn Environment) -> PartialPaths {
     let config = AppConfig::load(&overrides.base);
+    let mut refused: Vec<RefusedPath> = Vec::new();
+    // Rungs 2 and 3, each checked against the policy before anyone touches it.
+    let mut stored = |field: PathField, value: Option<PathBuf>| match value {
+        Some(path) if !overrides.policy.admits(&path) => {
+            refused.push(RefusedPath { field, path });
+            None
+        }
+        other => other,
+    };
+    let game_dir_from_env = stored(PathField::GameDir, environment.path_var(GAME_DIR_VAR));
+    let game_dir_from_config = stored(PathField::GameDir, config.game_dir.clone());
+    let workshop_from_env = stored(
+        PathField::WorkshopDir,
+        environment.path_var(WORKSHOP_DIR_VAR),
+    );
+    let workshop_from_config = stored(PathField::WorkshopDir, config.workshop_dir.clone());
+    let mods_config_from_env = stored(PathField::ModsConfig, environment.path_var(MODS_CONFIG_VAR));
+    let mods_config_from_config = stored(PathField::ModsConfig, config.mods_config.clone());
 
     // Rungs 1-3 are answers someone *gave*; rung 4 is one this code
     // found. Only the former can be wrong in a way worth warning about,
     // which is why detection is kept out of `given` entirely.
     let given = first_of(
         overrides.game_dir.clone(),
-        environment.path_var(GAME_DIR_VAR),
-        config.game_dir.clone(),
+        game_dir_from_env,
+        game_dir_from_config,
     );
     let warning = given
         .as_deref()
@@ -254,8 +330,8 @@ fn resolve_each_with(overrides: &PathOverrides, environment: &dyn Environment) -
 
     let workshop_dir = first_of(
         overrides.workshop_dir.clone(),
-        environment.path_var(WORKSHOP_DIR_VAR),
-        config.workshop_dir.clone(),
+        workshop_from_env,
+        workshop_from_config,
     )
     .or_else(|| {
         game_dir
@@ -266,8 +342,8 @@ fn resolve_each_with(overrides: &PathOverrides, environment: &dyn Environment) -
 
     let mods_config = match first_of(
         overrides.mods_config.clone(),
-        environment.path_var(MODS_CONFIG_VAR),
-        config.mods_config.clone(),
+        mods_config_from_env,
+        mods_config_from_config,
     ) {
         Some(path) => Ok(path),
         None => environment
@@ -288,6 +364,7 @@ fn resolve_each_with(overrides: &PathOverrides, environment: &dyn Environment) -
         mods_config,
         profile_dir,
         warning,
+        refused: refused.into_iter().next(),
     }
 }
 
@@ -352,6 +429,9 @@ mod tests {
         /// Empty means "none" — so the default fake exercises the
         /// warning path, and a test that cares says so explicitly.
         installs: Vec<PathBuf>,
+        /// Every directory the ladder asked `is_game_dir` about, i.e. every
+        /// one it would have stat'ed.
+        probed: std::cell::RefCell<Vec<PathBuf>>,
     }
 
     impl FakeEnvironment {
@@ -402,6 +482,7 @@ mod tests {
         }
 
         fn is_game_dir(&self, path: &Path) -> bool {
+            self.probed.borrow_mut().push(path.to_path_buf());
             self.installs.iter().any(|install| install == path)
         }
     }
@@ -751,5 +832,133 @@ mod tests {
             resolve_with(&overrides_at(base.path()), &environment).expect_err("nothing resolves");
 
         assert!(matches!(error, PathResolutionError::GameDirNotFound { .. }));
+    }
+
+    #[cfg(windows)]
+    mod drive_letters_only {
+        use super::*;
+
+        fn restricted(base: &Path) -> PathOverrides {
+            PathOverrides {
+                policy: PathPolicy::DriveLettersOnly,
+                ..overrides_at(base)
+            }
+        }
+
+        #[test]
+        fn a_network_game_dir_from_the_environment_is_dropped_and_never_probed() {
+            let base = tempdir().expect("tempdir");
+            let environment = FakeEnvironment::default()
+                .with_var(GAME_DIR_VAR, r"\\server\share\RimWorld")
+                .detecting(r"C:\detected");
+
+            let partial = resolve_each_with(&restricted(base.path()), &environment);
+
+            assert_eq!(partial.game_dir, Ok(PathBuf::from(r"C:\detected")));
+            assert_eq!(
+                partial.refused,
+                Some(RefusedPath {
+                    field: PathField::GameDir,
+                    path: PathBuf::from(r"\\server\share\RimWorld"),
+                })
+            );
+            assert_eq!(
+                partial.warning, None,
+                "nothing given survived to warn about"
+            );
+            assert!(
+                !environment
+                    .probed
+                    .borrow()
+                    .contains(&PathBuf::from(r"\\server\share\RimWorld")),
+                "a refused value is never stat'ed"
+            );
+        }
+
+        #[test]
+        fn a_network_game_dir_from_config_json_is_dropped_and_never_probed() {
+            let base = base_with_config(&AppConfig {
+                game_dir: Some(PathBuf::from(r"\\?\UNC\server\share\RimWorld")),
+                ..AppConfig::default()
+            });
+            let environment = FakeEnvironment::default().with_install_at(r"C:\game");
+
+            let partial = resolve_each_with(&restricted(base.path()), &environment);
+
+            assert!(matches!(
+                partial.game_dir,
+                Err(PathResolutionError::GameDirNotFound { .. })
+            ));
+            assert_eq!(partial.warning, None);
+            assert!(environment.probed.borrow().is_empty());
+            assert_eq!(
+                partial.refused.map(|refused| refused.field),
+                Some(PathField::GameDir)
+            );
+        }
+
+        #[test]
+        fn a_drive_letter_value_from_config_json_is_used_and_nothing_is_refused() {
+            let base = base_with_config(&AppConfig {
+                game_dir: Some(PathBuf::from(r"Z:\RimWorld")),
+                ..AppConfig::default()
+            });
+            let environment = FakeEnvironment::default().with_install_at(r"Z:\RimWorld");
+
+            let partial = resolve_each_with(&restricted(base.path()), &environment);
+
+            assert_eq!(partial.game_dir, Ok(PathBuf::from(r"Z:\RimWorld")));
+            assert_eq!(partial.refused, None);
+        }
+
+        #[test]
+        fn a_network_mods_config_is_dropped_so_its_profile_hash_never_stats_it() {
+            let base = tempdir().expect("tempdir");
+            let environment = FakeEnvironment::default()
+                .with_var(MODS_CONFIG_VAR, r"\\server\share\ModsConfig.xml")
+                .with_default_mods_config(r"C:\default\ModsConfig.xml");
+
+            let partial = resolve_each_with(&restricted(base.path()), &environment);
+
+            assert_eq!(
+                partial.mods_config,
+                Ok(PathBuf::from(r"C:\default\ModsConfig.xml"))
+            );
+            assert_eq!(
+                partial.refused.map(|refused| refused.field),
+                Some(PathField::ModsConfig)
+            );
+        }
+
+        #[test]
+        fn the_game_folder_is_reported_before_the_other_fields() {
+            let base = tempdir().expect("tempdir");
+            let environment = FakeEnvironment::default()
+                .with_var(MODS_CONFIG_VAR, r"\\s\x\ModsConfig.xml")
+                .with_var(WORKSHOP_DIR_VAR, r"\\s\x\workshop")
+                .with_var(GAME_DIR_VAR, r"\\s\x\game");
+
+            let partial = resolve_each_with(&restricted(base.path()), &environment);
+
+            assert_eq!(
+                partial.refused.map(|refused| refused.field),
+                Some(PathField::GameDir)
+            );
+        }
+
+        #[test]
+        fn the_default_policy_trusts_the_local_user_as_the_cli_always_did() {
+            let base = tempdir().expect("tempdir");
+            let environment =
+                FakeEnvironment::default().with_var(GAME_DIR_VAR, r"\\server\share\RimWorld");
+
+            let partial = resolve_each_with(&overrides_at(base.path()), &environment);
+
+            assert_eq!(
+                partial.game_dir,
+                Ok(PathBuf::from(r"\\server\share\RimWorld"))
+            );
+            assert_eq!(partial.refused, None);
+        }
     }
 }

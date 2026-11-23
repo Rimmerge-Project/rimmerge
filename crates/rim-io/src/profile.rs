@@ -61,15 +61,51 @@ pub fn databases_dir(base: &Path) -> PathBuf {
     base.join("databases")
 }
 
+/// What `\\?\UNC\` stands for in the extended-length spelling of a network
+/// path: the prefix is replaced by `\\`, not stripped, because the part after
+/// it (`server\share\...`) is not a path by itself.
+const EXTENDED_UNC_PREFIX: &str = r"\\?\UNC\";
+
 /// Strips [`EXTENDED_PREFIX`] from `path` if present, leaving every other
 /// component untouched (unlike [`normalize`], this never lowercases or
 /// changes slash direction — the result is a real path callers go on to
-/// use, not a hash key).
+/// use, not a hash key). The extended spelling of a network path
+/// (`\\?\UNC\server\share\x`) becomes `\\server\share\x`; stripping only
+/// `\\?\` would leave the relative path `UNC\server\share\x`.
 fn strip_extended_prefix(path: &Path) -> PathBuf {
-    match path.to_string_lossy().strip_prefix(EXTENDED_PREFIX) {
+    let text = path.to_string_lossy();
+    let is_extended_unc = text
+        .get(..EXTENDED_UNC_PREFIX.len())
+        .is_some_and(|head| head.eq_ignore_ascii_case(EXTENDED_UNC_PREFIX));
+    if is_extended_unc {
+        return PathBuf::from(format!(r"\\{}", &text[EXTENDED_UNC_PREFIX.len()..]));
+    }
+    match text.strip_prefix(EXTENDED_PREFIX) {
         Some(stripped) => PathBuf::from(stripped),
         None => path.to_path_buf(),
     }
+}
+
+/// Whether `path` is a network path (`\\server\share\...`) rather than a
+/// drive-letter one.
+fn is_network_spelling(path: &Path) -> bool {
+    path.to_string_lossy().starts_with(r"\\")
+}
+
+/// The path a writer should use for `absolute` once it was canonicalized to
+/// `canonical`. Normally the canonical path without its `\\?\` prefix. But
+/// canonicalizing a folder on a mapped network drive (`Z:\exports`) answers
+/// with the share it maps to (`\\?\UNC\server\share\exports`); a caller that
+/// asked about a drive letter keeps it, so the answer stays a path on a drive
+/// letter (what the desktop's path policy accepts, and what a later
+/// `config.json` holds) and never names the host. The cost is that a
+/// symbolic link inside a mapped folder is not resolved here.
+fn settled_dir(absolute: &Path, canonical: &Path) -> PathBuf {
+    let stripped = strip_extended_prefix(canonical);
+    if is_network_spelling(&stripped) && !is_network_spelling(absolute) {
+        return absolute.to_path_buf();
+    }
+    stripped
 }
 
 /// Resolves a user-supplied directory (a CLI `--out` flag, a Tauri
@@ -81,7 +117,8 @@ fn strip_extended_prefix(path: &Path) -> PathBuf {
 /// canonicalized to resolve `.`/`..` segments, symlinks, and junctions,
 /// with Windows' extended-length `\\?\` prefix stripped back off (the
 /// same normalization [`profile_dir`]'s own [`normalize`] applies before
-/// hashing). A folder that doesn't exist yet is returned merely
+/// hashing). A folder on a mapped network drive keeps its drive-letter
+/// spelling (see `settled_dir`). A folder that doesn't exist yet is returned merely
 /// absolutized — there is nothing on disk yet to canonicalize, and the
 /// caller (an exporter) is the one about to create it.
 ///
@@ -103,7 +140,7 @@ pub fn resolve_user_dir(path: &Path) -> io::Result<PathBuf> {
         return Ok(absolute);
     }
     let canonical = absolute.canonicalize()?;
-    Ok(strip_extended_prefix(&canonical))
+    Ok(settled_dir(&absolute, &canonical))
 }
 
 #[cfg(test)]
@@ -245,6 +282,65 @@ mod tests {
             !resolved.to_string_lossy().contains(".."),
             "the `..` segment must be resolved away: {resolved:?}"
         );
+    }
+
+    // -- network spellings -----------------------------------------------
+
+    #[test]
+    fn an_extended_unc_path_becomes_a_plain_unc_path() {
+        for (given, expected) in [
+            (r"\\?\UNC\server\share\exports", r"\\server\share\exports"),
+            (r"\\?\unc\server\share", r"\\server\share"),
+        ] {
+            assert_eq!(
+                strip_extended_prefix(Path::new(given)),
+                PathBuf::from(expected),
+                "{given}"
+            );
+        }
+    }
+
+    #[test]
+    fn an_extended_drive_path_loses_only_the_prefix_and_a_plain_path_is_unchanged() {
+        assert_eq!(
+            strip_extended_prefix(Path::new(r"\\?\C:\x\y")),
+            PathBuf::from(r"C:\x\y")
+        );
+        assert_eq!(
+            strip_extended_prefix(Path::new(r"C:\x\y")),
+            PathBuf::from(r"C:\x\y")
+        );
+        assert_eq!(
+            strip_extended_prefix(Path::new(r"\\server\share")),
+            PathBuf::from(r"\\server\share")
+        );
+    }
+
+    #[test]
+    fn a_mapped_drive_keeps_its_drive_letter_when_canonicalizing_names_the_share() {
+        let settled = settled_dir(
+            Path::new(r"Z:\exports"),
+            Path::new(r"\\?\UNC\server\share\exports"),
+        );
+
+        assert_eq!(settled, PathBuf::from(r"Z:\exports"));
+    }
+
+    #[test]
+    fn a_local_drive_takes_the_canonical_path_without_the_prefix() {
+        let settled = settled_dir(Path::new(r"C:\a\..\b"), Path::new(r"\\?\C:\b"));
+
+        assert_eq!(settled, PathBuf::from(r"C:\b"));
+    }
+
+    #[test]
+    fn a_folder_asked_for_as_a_share_stays_a_share() {
+        let settled = settled_dir(
+            Path::new(r"\\server\share\x"),
+            Path::new(r"\\?\UNC\server\share\x"),
+        );
+
+        assert_eq!(settled, PathBuf::from(r"\\server\share\x"));
     }
 
     #[test]

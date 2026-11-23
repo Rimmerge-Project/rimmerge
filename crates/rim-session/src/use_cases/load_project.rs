@@ -246,9 +246,8 @@ where
             patches,
             assignments,
         );
-        let mut warnings = loaded_rules.warnings;
-        warnings.extend(loaded_knowledge.warnings);
-        session.set_rule_load_warnings(warnings);
+        session.set_rule_load_warnings(loaded_rules.warnings);
+        session.set_knowledge_warnings(loaded_knowledge.warnings);
         session.set_mod_knowledge(loaded_knowledge.knowledge);
         if let Some(reader) = &self.timestamp_reader {
             let subjects = ModTimeSubject::all_in(session.report());
@@ -530,8 +529,8 @@ mod tests {
             .expect("load must succeed");
 
         assert_eq!(
-            session.rule_load_warnings(),
-            &[crate::ports::RulesLoadWarning::DroppedClusterRules {
+            session.rule_load_warnings().collect::<Vec<_>>(),
+            [&crate::ports::RulesLoadWarning::DroppedClusterRules {
                 rule_ids: vec!["framework".to_string()],
             }],
             "RuleStore::load's warnings must reach the session"
@@ -789,12 +788,13 @@ mod tests {
                 .execute(paths(), &mut |_| {})
                 .expect("load must succeed");
             let edit = EditOrganization::new(&*store);
-            let EditOutcome::Created(group) = edit
+            let EditOutcome::Created { id: group, .. } = edit
                 .execute(
                     &mut session,
                     OrganizationEdit::CreateGroup {
                         name: name("Weapons"),
                         parent: None,
+                        mods: BTreeSet::new(),
                     },
                 )
                 .expect("create")

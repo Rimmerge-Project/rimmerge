@@ -414,6 +414,22 @@ test.describe("sharing a load order", () => {
     await expect(page.getByTestId("import-preview-dialog")).toHaveCount(0);
   });
 
+  test("a file on a network share is refused by name, in a toast, and never previewed", async ({
+    page,
+  }) => {
+    await openOrderPage(page);
+    await page.evaluate(() => {
+      window.__PICK_FILE_RESULT__ = "\\\\server\\share\\lists\\shared.rml";
+      window.__ORDER_FILES__ = { "\\\\server\\share\\lists\\shared.rml": "mod.000" };
+    });
+
+    await page.getByTestId("order-import-button").click();
+    await page.getByTestId("order-import-file").click();
+
+    await expect(page.getByText("Network folders aren't supported")).toBeVisible();
+    await expect(page.getByTestId("import-preview-dialog")).toHaveCount(0);
+  });
+
   test("Preview stays disabled until something is pasted, and a cancelled paste starts empty next time", async ({
     page,
   }) => {

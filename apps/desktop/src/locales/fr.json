@@ -95,6 +95,10 @@
   "shell": {
     "brand": "Rimmerge",
     "mainNavigation": "Navigation principale",
+    "outsideChange": {
+      "text": "Votre liste des mods actifs a été modifiée hors de Rimmerge. Appliquer écraserait ces modifications.",
+      "link": "Examiner sur la page Mods"
+    },
     "nav": {
       "dashboard": "Tableau de bord",
       "inbox": "Constats",
@@ -245,6 +249,12 @@
     "modKnowledgeCacheUnreadableHeadline": "Impossible de lire les règles Rimmerge en cache ; utilisation de l’instantané intégré",
     "rowsOverRoleLimit": "{count} ligne au-delà de la limite par rôle ignorée pour le rôle {role} des règles {section} | {count} lignes au-delà de la limite par rôle ignorées pour le rôle {role} des règles {section}",
     "precedenceRuleMissingFramework": "Règle de priorité ignorée pour {defType} : elle ne nomme aucun framework",
+    "reloadFailed": {
+      "decisions": "Impossible de relire vos décisions enregistrées après l’analyse : une décision prise pendant son déroulement peut manquer",
+      "rules": "Impossible de relire vos règles enregistrées après l’analyse : une règle modifiée pendant son déroulement peut manquer",
+      "patches": "Impossible de relire vos patchs de compatibilité enregistrés après l’analyse : une modification faite pendant son déroulement peut manquer",
+      "assignments": "Impossible de relire vos projets du créateur de patchs enregistrés après l’analyse : une modification faite pendant son déroulement peut manquer"
+    },
     "what": {
       "precedenceRule": "règle de priorité",
       "behaviour": "comportement",
@@ -371,7 +381,7 @@
       },
       "apply": {
         "title": "Appliquer",
-        "pending": "Consultez ce qui sera écrit dans la liste des mods actifs. Une sauvegarde est créée au préalable.",
+        "pending": "Consultez ce qui sera écrit dans la liste des mods actifs. Une copie de sauvegarde est créée au préalable.",
         "button": "Appliquer…",
         "staleBlocked": "Vos mods actifs ont changé depuis la dernière analyse. Réanalysez avant d’appliquer.",
         "rescanButton": "Réanalyser"
@@ -611,11 +621,24 @@
       "organization_limit": {
         "title": "Une limite liée aux groupes a été atteinte",
         "detail": "Vous avez atteint une limite des groupes et couleurs : nombre de groupes, profondeur d’imbrication, nombre de mods dans des groupes ou colorés, ou taille du fichier des groupes (organization.json). Rien n’a été modifié. Supprimez les groupes dont vous n’avez plus besoin, retirez des mods de groupes ou retirez des couleurs, puis réessayez."
+      },
+      "network_path_refused": {
+        "title": "Les dossiers réseau ne sont pas pris en charge",
+        "detail": "Rimmerge n’utilise que des fichiers et dossiers sur un lecteur désigné par une lettre, comme C:\\ ou un lecteur réseau que vous avez associé à une lettre. Un chemin réseau comme \\\\server\\share est refusé, et aucune connexion n’a été établie. Dans Windows, associez le partage à une lettre de lecteur (Connecter un lecteur réseau) ou copiez le fichier dans un dossier local, puis réessayez."
+      },
+      "project_changed": {
+        "title": "Le projet a changé",
+        "detail": "Un autre projet a été chargé pendant que Rimmerge lisait le fichier, si bien que le résultat n’a pas été utilisé et que rien n’a été modifié. Réessayez pour utiliser le fichier avec le projet actuellement ouvert."
       }
     }
   },
   "defaultPathsWarning": {
-    "notAnInstall": "{gameDir} ne ressemble pas à une installation de RimWorld (Version.txt ou Data/Core/ est absent)."
+    "notAnInstall": "{gameDir} ne ressemble pas à une installation de RimWorld (Version.txt ou Data/Core/ est absent).",
+    "typedNetworkShare": "Ce dossier du jeu se trouve sur un partage réseau, si bien que Rimmerge ne l’a pas utilisé. Rimmerge n’utilise que des dossiers sur un lecteur désigné par une lettre : dans Windows, associez le partage à une lettre de lecteur (Connecter un lecteur réseau) ou choisissez un dossier local.",
+    "typedInvalid": "Ce n’est pas le chemin complet d’un dossier sur un lecteur désigné par une lettre (par exemple C:\\Games\\RimWorld), si bien que Rimmerge ne l’a pas utilisé.",
+    "configuredGameDir": "Le dossier du jeu indiqué dans vos valeurs par défaut enregistrées n’est pas sur un lecteur désigné par une lettre (il s’agit peut-être d’un partage réseau), si bien que Rimmerge l’a ignoré. Choisissez un dossier sur un lecteur désigné par une lettre, puis cliquez de nouveau sur « Enregistrer comme valeurs par défaut ».",
+    "configuredWorkshopDir": "Le dossier du Steam Workshop indiqué dans vos valeurs par défaut enregistrées n’est pas sur un lecteur désigné par une lettre (il s’agit peut-être d’un partage réseau), si bien que Rimmerge l’a ignoré. Choisissez un dossier sur un lecteur désigné par une lettre, puis cliquez de nouveau sur « Enregistrer comme valeurs par défaut ».",
+    "configuredModsConfig": "Le chemin de ModsConfig.xml indiqué dans vos valeurs par défaut enregistrées n’est pas sur un lecteur désigné par une lettre (il s’agit peut-être d’un partage réseau), si bien que Rimmerge l’a ignoré. Choisissez un fichier sur un lecteur désigné par une lettre, puis cliquez de nouveau sur « Enregistrer comme valeurs par défaut »."
   },
   "defaultPathsError": {
     "noProfileBase": "Ni RIMMERGE_PROFILE_DIR ni LOCALAPPDATA n’est défini : Rimmerge n’a nulle part où conserver ses propres fichiers.",
@@ -1335,6 +1358,10 @@
       "reordered": "L’ordre de vos mods actifs a été modifié hors de Rimmerge. Vos modifications en attente sont conservées. Appliquer écraserait cet ordre.",
       "outsideNoPending": "Votre liste des mods actifs a été modifiée hors de Rimmerge (+{added}, -{removed}). Appliquer écraserait ces modifications extérieures.",
       "reorderedNoPending": "L’ordre de vos mods actifs a été modifié hors de Rimmerge. Appliquer écraserait cet ordre.",
+      "outsideMatches": "Votre liste des mods actifs a été modifiée hors de Rimmerge (+{added}, -{removed}). Vos modifications en attente sont conservées. La liste des mods actifs correspond déjà à l’ordre que vous avez sélectionné.",
+      "reorderedMatches": "L’ordre de vos mods actifs a été modifié hors de Rimmerge. Vos modifications en attente sont conservées. La liste des mods actifs correspond déjà à l’ordre que vous avez sélectionné.",
+      "outsideMatchesNoPending": "Votre liste des mods actifs a été modifiée hors de Rimmerge (+{added}, -{removed}). Elle correspond déjà à l’ordre que vous avez sélectionné.",
+      "reorderedMatchesNoPending": "L’ordre de vos mods actifs a été modifié hors de Rimmerge. La liste des mods actifs correspond déjà à l’ordre que vous avez sélectionné.",
       "useFile": "Utiliser la liste du fichier",
       "useFileTitle": "Ouvre d’abord un aperçu. Rien ne change tant que vous n’avez pas confirmé.",
       "stale": {
@@ -1399,7 +1426,8 @@
       "deactivateButton": "Désactiver",
       "rescanButton": "Réanalyser les mods",
       "searchActiveLabel": "Rechercher dans les mods actifs",
-      "searchInactiveLabel": "Rechercher dans les mods inactifs"
+      "searchInactiveLabel": "Rechercher dans les mods inactifs",
+      "tagFilterLabel": "Filtrer les mods par tag"
     },
     "defSearch": {
       "ariaLabel": "Aller à une def",
@@ -1502,7 +1530,8 @@
       "suggestedNote": "Appliquer écrira l’ordre suggéré. Déplacer un mod fait passer à votre propre ordre.",
       "coreStaysActive": "Core ne peut pas être désactivé.",
       "inactiveNotOrdered": "Cette liste n’a pas d’ordre propre. Faites glisser des mods vers la liste des mods actifs pour les activer.",
-      "activateAtItem": "Activer à une position…"
+      "activateAtItem": "Activer à une position…",
+      "groupsViewOff": "Le déplacement est désactivé en vue Groupes. Passez cette liste en vue Liste pour réordonner les mods."
     },
     "colors": {
       "names": {
@@ -1520,6 +1549,10 @@
         "slate": "Ardoise"
       },
       "rowColor": "Couleur : {name}",
+      "rowColorFromGroup": "Couleur du groupe {group} : {name}",
+      "swatchesLabel": "Définir la couleur du mod",
+      "swatch": "Couleur : {name}",
+      "swatchNone": "Aucune couleur",
       "groupTitle": "Couleur du groupe",
       "modTitle": "Couleur du mod",
       "groupHelp": "Une couleur signale le groupe dans l’arborescence et sur les lignes des mods. Elle ne change rien d’autre.",
@@ -1534,6 +1567,40 @@
         "modChanged": "Couleur de {name} modifiée",
         "modCleared": "Couleur retirée de {name}"
       }
+    },
+    "showInLoadOrder": {
+      "action": "Voir dans l’ordre de chargement",
+      "announce": "Affichage de {name} dans l’ordre de chargement.",
+      "filterCleared": "{name} était masqué par le filtre, qui a donc été effacé."
+    },
+    "groupsView": {
+      "regionLabel": "Mods par groupe",
+      "rovingHint": "Utilisez les flèches pour vous déplacer, Droite et Gauche pour ouvrir et fermer les dossiers, Entrée pour ouvrir un mod, Espace pour sélectionner",
+      "switchHeading": "Vue",
+      "switchLabel": "Mode d’affichage de cette liste",
+      "viewList": "Liste",
+      "viewGroups": "Groupes",
+      "unavailable": "La vue Groupes nécessite vos groupes, qui ne peuvent pas être utilisés pour le moment.",
+      "collapseAll": "Tout replier",
+      "expandAll": "Tout déplier",
+      "modCount": "{count} mod | {count} mods",
+      "folderActions": "Actions pour le dossier {name}",
+      "folderLabelExpanded": "{name}, {count} mod, déplié | {name}, {count} mods, déplié",
+      "folderLabelCollapsed": "{name}, {count} mod, replié | {name}, {count} mods, replié",
+      "alsoInShort": "aussi dans {count}",
+      "alsoInLong": "Également dans {count} autre groupe : {groups} | Également dans {count} autres groupes : {groups}",
+      "alsoInTitle": "Aussi dans : {groups}",
+      "menu": {
+        "select": "Tout sélectionner dans le dossier",
+        "activate": "Tout activer…",
+        "deactivate": "Tout désactiver…"
+      },
+      "folderSelected": "{count} mod sélectionné dans {name}. | {count} mods sélectionnés dans {name}.",
+      "folderSelectedNone": "Aucun mod à sélectionner dans {name}.",
+      "empty": "Aucun mod à afficher ici.",
+      "emptyFiltered": "Aucun mod ne correspond à la recherche, au tag, à la source ou au groupe actuels.",
+      "cutNote": "{hidden} ligne n’est pas affichée. Repliez des dossiers ou affinez la recherche pour la voir. | {hidden} lignes ne sont pas affichées. Repliez des dossiers ou affinez la recherche pour les voir.",
+      "ungroupedRefusesDrop": "Impossible d’ajouter des mods à « Sans groupe ». Pour retirer un mod de ses groupes, utilisez « Retirer du groupe… »."
     },
     "groups": {
       "regionLabel": "Groupes",
@@ -1553,8 +1620,10 @@
       "noMatches": "Aucun groupe ne correspond.",
       "nodeModCount": "{count} mod, sous-groupes compris | {count} mods, sous-groupes compris",
       "nodeSubgroupCount": "{count} sous-groupe | {count} sous-groupes",
-      "chipWithColor": "{name} ({color})",
+      "chipScope": "Afficher uniquement les mods du groupe {name}.",
+      "chipScopeWithColor": "Afficher uniquement les mods du groupe {name} ({color}).",
       "allGroups": "Groupes : {groups}",
+      "openModIsMember": "Le mod ouvert fait partie de ce groupe",
       "rowMenu": {
         "groups": "Groupes…",
         "color": "Couleur…",
@@ -1604,7 +1673,7 @@
         "moveButton": "Déplacer",
         "modGroupsTitle": "Groupes de {name}",
         "modGroupsHelp": "Cochez un groupe pour y ajouter ce mod. Décochez-le pour en retirer le mod. Chaque modification est enregistrée immédiatement.",
-        "modGroupsEmpty": "Il n’y a encore aucun groupe. Créez-en un depuis le panneau Groupes.",
+        "modGroupsEmpty": "Aucun groupe pour l’instant. Saisissez un nom ci-dessus pour en créer un.",
         "modGroupsList": "Groupes",
         "done": "Terminé",
         "removeUninstalledTitle": "Retirer les mods non installés",
@@ -1618,6 +1687,76 @@
         "title": "Repartir de zéro, sans aucun groupe",
         "body": "Rimmerge conserve une copie du fichier illisible à côté de celui-ci, puis repart sans aucun groupe ni aucune couleur. Vos mods et votre ordre de chargement ne sont pas modifiés.",
         "confirm": "Repartir de zéro"
+      },
+      "copy": {
+        "button": "Copier depuis un autre profil…",
+        "title": "Copier les groupes d’un autre profil",
+        "intro": "Choisissez le dossier d’un autre profil pour en copier les groupes et les couleurs. Vos mods, votre ordre de chargement et vos règles ne sont pas modifiés, et rien n’est écrit dans ce dossier.",
+        "choose": "Choisir le dossier du profil…",
+        "chooseAnother": "Choisir un autre dossier…",
+        "folder": "Copie depuis {path}",
+        "modeLegend": "Mode de copie",
+        "mode": {
+          "merge": "Fusionner avec mes groupes",
+          "mergeHelp": "Les groupes qui ont le même nom au même emplacement (par exemple Armes / Mêlée) sont combinés et les nouveaux groupes sont ajoutés. Quand les deux profils définissent une couleur, la vôtre est conservée.",
+          "replace": "Remplacer mes groupes",
+          "replaceHelp": "Tous vos groupes et couleurs sont supprimés et remplacés par ceux de l’autre profil."
+        },
+        "previewHeading": "La copie entraînera ces modifications :",
+        "nothingChanges": "Rien ne changerait. Tout le contenu de ce profil est déjà présent ici.",
+        "line": {
+          "groupsAdded": "{count} groupe ajouté | {count} groupes ajoutés",
+          "groupsMerged": "{count} groupe fusionné avec le groupe existant de même nom au même emplacement | {count} groupes fusionnés avec les groupes existants de même nom au même emplacement",
+          "membershipsAdded": "{count} appartenance à un groupe ajoutée | {count} appartenances à des groupes ajoutées",
+          "membershipsAlready": "{count} appartenance était déjà présente | {count} appartenances étaient déjà présentes",
+          "modColorsAdded": "{count} couleur de mod ajoutée | {count} couleurs de mod ajoutées",
+          "modColorsKept": "{count} mod a déjà une autre couleur ici, la vôtre est donc conservée | {count} mods ont déjà une autre couleur ici, les vôtres sont donc conservées",
+          "groupColorsAdopted": "{count} groupe sans couleur prend la couleur de l’autre profil | {count} groupes sans couleur prennent la couleur de l’autre profil",
+          "notInstalled": "{count} mod de ces groupes n’est pas installé. Il reste dans ses groupes et réapparaîtra si vous l’installez. | {count} mods de ces groupes ne sont pas installés. Ils restent dans leurs groupes et réapparaîtront si vous les installez."
+        },
+        "clashesHeading": "{count} groupe a une autre couleur ici, la vôtre est donc conservée : | {count} groupes ont une autre couleur ici, les vôtres sont donc conservées :",
+        "clash": "{path} : la vôtre est {kept}, celle de l’autre profil est {offered}",
+        "discard": {
+          "heading": "Ceci supprime ce qui est présent actuellement :",
+          "groups": "{count} groupe | {count} groupes",
+          "memberships": "{count} appartenance à un groupe | {count} appartenances à des groupes",
+          "modColors": "{count} couleur de mod | {count} couleurs de mod"
+        },
+        "mergeButton": "Fusionner",
+        "replaceButton": "Remplacer…",
+        "close": "Fermer",
+        "confirm": {
+          "title": "Remplacer tous vos groupes ?",
+          "body": "Le remplacement supprime tout ce qui est listé ci-dessous et le remplace par les groupes et couleurs de l’autre profil. Vos mods, votre ordre de chargement et vos règles ne sont pas modifiés. Cette action est irréversible.",
+          "button": "Tout remplacer"
+        },
+        "done": {
+          "title": "Groupes copiés",
+          "merged": "Les groupes et couleurs de l’autre profil ont été fusionnés avec les vôtres.",
+          "replaced": "Vos groupes et couleurs ont été remplacés par ceux de l’autre profil."
+        },
+        "refused": {
+          "sameProfile": "Il s’agit du dossier du profil actuel. Choisissez le dossier d’un autre profil. Rien n’a été modifié.",
+          "notAFolder": "Ce n’est pas un dossier. Choisissez le dossier d’un profil. Rien n’a été modifié.",
+          "missing": "Ce dossier ne contient aucun fichier de groupes et couleurs. Choisissez le dossier d’un profil qui a des groupes. Rien n’a été modifié.",
+          "empty": "Ce profil n’a ni groupe ni couleur, il n’y a donc rien à copier. Rien n’a été modifié.",
+          "nothingToCopy": "Les groupes et couleurs de ce profil sont déjà exactement les vôtres, il n’y a donc rien à copier. Rien n’a été modifié.",
+          "tooLargeToSave": "Le résultat ferait {bytes}, soit plus que les {limit} que peut contenir votre fichier de groupes et couleurs. Rien n’a été modifié.",
+          "unusable": {
+            "unreadable": "Le fichier de groupes et couleurs de ce dossier n’a pas pu être lu. Rien n’a été modifié.",
+            "tooLarge": "Le fichier de groupes et couleurs de ce dossier est trop volumineux pour être lu. Rien n’a été modifié.",
+            "malformed": "Le fichier de groupes et couleurs de ce dossier est endommagé ou n’est pas un fichier de groupes. Rien n’a été modifié.",
+            "newerVersion": "Le fichier de groupes et couleurs de ce dossier a été enregistré par une version plus récente de Rimmerge. Rien n’a été modifié.",
+            "invalid": "Le fichier de groupes et couleurs de ce dossier contient des groupes incompatibles entre eux, par exemple une boucle ou des noms en double. Rien n’a été modifié."
+          },
+          "limit": {
+            "tooDeep": "Le résultat imbriquerait les groupes plus profondément que Rimmerge ne le permet. Rien n’a été modifié.",
+            "tooManyGroups": "Le résultat comporterait plus de groupes que Rimmerge ne le permet. Rien n’a été modifié.",
+            "tooManyMembers": "Le résultat placerait plus de mods dans un seul groupe, ou dans l’ensemble des groupes, que Rimmerge ne le permet. Rien n’a été modifié.",
+            "tooManyColors": "Le résultat attribuerait une couleur à plus de mods que Rimmerge ne le permet. Rien n’a été modifié.",
+            "other": "Le résultat dépasserait une limite liée aux groupes. Rien n’a été modifié."
+          }
+        }
       },
       "notice": {
         "notLoaded": "Les groupes et couleurs ne sont pas disponibles pendant cette session.",
@@ -1641,7 +1780,7 @@
         "idleMods": "Déposez {count} mod sur un groupe pour l’y ajouter | Déposez {count} mods sur un groupe pour les y ajouter",
         "idleGroup": "Déposez ce groupe sur un autre groupe pour l’y placer, ou sur Tous les mods pour le mettre au premier niveau.",
         "needsGroup": "Les mods ne peuvent être ajoutés qu’à un groupe",
-        "notUngrouped": "Un groupe ne peut pas être placé dans Sans groupe. Utilisez Tous les mods pour le mettre au premier niveau.",
+        "notUngrouped": "Un groupe ne peut pas être placé dans « Sans groupe ». Utilisez « Tous les mods » pour le mettre au premier niveau.",
         "withHidden": "{text} ({hidden})",
         "alreadyThere": "Le groupe s’y trouve déjà",
         "makeTopLevel": "Placer {name} au premier niveau",
@@ -1653,8 +1792,18 @@
         "movedTop": "{name} est maintenant au premier niveau",
         "movedInside": "{name} déplacé dans {parent}"
       },
+      "search": {
+        "label": "Rechercher dans les groupes, ou saisir un nom pour en créer un nouveau",
+        "placeholder": "Rechercher ou créer un groupe",
+        "noMatch": "Aucun groupe ne correspond à votre recherche.",
+        "createOption": "Créer le groupe « {name} »",
+        "createHintBulk": "La création ajoute aussi les mods choisis, et le tout est enregistré en une fois.",
+        "createHintSingle": "La création ajoute aussi ce mod, et le tout est enregistré en une fois.",
+        "parentLabel": "Le créer dans"
+      },
       "toast": {
         "created": "Groupe créé",
+        "createdAndAdded": "Groupe {name} créé, {count} mod ajouté | Groupe {name} créé, {count} mods ajoutés",
         "renamed": "Groupe renommé",
         "moved": "Groupe déplacé",
         "deleted": "Groupe supprimé",
@@ -2146,12 +2295,12 @@
       "forceWarning": "RimWorldWin64.exe semble être en cours d’exécution. Le jeu écrase la liste des mods actifs en quittant : ce que vous écrivez maintenant risque donc d’être perdu. Écrire malgré tout ?",
       "mergeModPath": "Mod de fusion : {path}",
       "mergeModRemoved": "Mod de fusion : supprimé (il ne reste aucune décision de fusion ou de ressource)",
-      "mergeModBackupPath": "Sauvegarde du mod de fusion : {path}",
+      "mergeModBackupPath": "Copie de sauvegarde du mod de fusion : {path}",
       "skippedHeading": "Ignorées. Le mod de fusion a été écrit sans elles :",
       "toastAppliedSummary": "Appliqué",
       "toastSavedSummary": "Enregistré",
       "toastModsConfigPath": "Liste des mods actifs : {path}",
-      "toastBackupPath": "Sauvegarde : {path}",
+      "toastBackupPath": "Copie de sauvegarde : {path}",
       "toastDecisionsPath": "Décisions : {path}",
       "toastRulesPath": "Règles : {path}",
       "toastSkippedStillNeedsInput": "Ignorées (décision encore requise) : {list}"
@@ -2159,6 +2308,9 @@
     "confirm": {
       "heading": "Appliquer malgré tout ?",
       "intro": "L’ordre {order} a {count} problème à confirmer avant l’écriture : | L’ordre {order} a {count} problèmes à confirmer avant l’écriture :",
+      "outsideHeading": "La liste des mods actifs a été modifiée hors de Rimmerge",
+      "outsideMembership": "La liste des mods actifs a été modifiée ailleurs après la dernière lecture par Rimmerge (+{added}, -{removed}). Appliquer écrit l’ordre {order} par-dessus ces modifications. Une copie de sauvegarde du fichier modifié est créée au préalable.",
+      "outsideReordered": "L’ordre des mods actifs a été modifié ailleurs après la dernière lecture par Rimmerge. Appliquer écrit l’ordre {order} par-dessus cette modification. Une copie de sauvegarde du fichier modifié est créée au préalable.",
       "acknowledgedHeading": "Déjà décidés dans les constats",
       "reviewInInbox": "Examiner dans les constats",
       "goBackButton": "Revenir",

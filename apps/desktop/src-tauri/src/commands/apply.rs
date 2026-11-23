@@ -4,7 +4,11 @@
 
 use std::sync::Arc;
 
+use rim_session::BaselineChange;
+use rim_session::ports::ModsConfigStore;
+
 use crate::commands::emit_session_changed;
+use crate::commands::file_baseline::refresh_mods_config_baseline_inner;
 use crate::dto::common::OrderSourceDto;
 use crate::dto::preflight::ApplyPreflightDto;
 use crate::dto::project::SessionChangeReasonDto;
@@ -88,26 +92,46 @@ pub async fn apply(
     result
 }
 
-/// Lists the hard problems in `source`'s order — what
-/// [`apply_inner`] would write — so the dialog can confirm them first.
-/// Read-only.
+/// Lists the hard problems in `source`'s order and the outside change of
+/// `ModsConfig.xml` that writing it would overwrite, so the dialog can
+/// confirm them first. The file is read **fresh** here (the 5 s poll may be
+/// that old): the baseline is refreshed through
+/// [`refresh_mods_config_baseline_inner`] (probe under the lock, read in a
+/// bare `spawn_blocking`, commit under the lock; the lock is never held
+/// across the read) and the preflight is computed from the committed
+/// result. It only reads. Committing the new list is the baseline's one-shot
+/// change notice (the next poll reads the same list and reports nothing), so
+/// the [`BaselineChange`] is returned for the command to announce; the
+/// refetch that announcement causes reads the same file, finds it
+/// unchanged and emits nothing, so it cannot loop. A failed read keeps the
+/// last baseline, as the poll does.
 ///
 /// # Errors
 ///
-/// Returns [`CommandError::no_project_loaded`] when no project is loaded.
-pub(crate) async fn get_apply_preflight_inner(
+/// Returns [`CommandError::no_project_loaded`] when no project is loaded,
+/// or [`CommandError::internal`] when the blocking read panics.
+pub(crate) async fn get_apply_preflight_inner<S>(
     state: &AppState,
     source: OrderSourceDto,
-) -> Result<ApplyPreflightDto, CommandError> {
-    with_session(state, move |session| {
+    store: S,
+) -> Result<(ApplyPreflightDto, BaselineChange), CommandError>
+where
+    S: ModsConfigStore + Send + 'static,
+{
+    let (_, change) = refresh_mods_config_baseline_inner(state, store).await?;
+    let preflight = with_session(state, move |session| {
         Ok(rim_session::use_cases::PreflightApply::new()
             .execute(session, source.into())
             .into())
     })
-    .await
+    .await?;
+    Ok((preflight, change))
 }
 
-/// See `get_apply_preflight_inner`.
+/// See `get_apply_preflight_inner`; also emits `session://changed` with
+/// [`SessionChangeReasonDto::FileBaselineChanged`] when the fresh read found
+/// the list or the status different, as the poll's refresh does, so the
+/// Mods marks, the hint and the launch status follow.
 ///
 /// # Errors
 ///
@@ -115,14 +139,24 @@ pub(crate) async fn get_apply_preflight_inner(
 #[tauri::command]
 pub async fn get_apply_preflight(
     state: tauri::State<'_, AppState>,
+    app: tauri::AppHandle,
     source: OrderSourceDto,
 ) -> Result<ApplyPreflightDto, CommandError> {
-    get_apply_preflight_inner(&state, source).await
+    let store = state.adapters.config_store;
+    let (preflight, change) = get_apply_preflight_inner(&state, source, store).await?;
+    if change == BaselineChange::Changed {
+        emit_session_changed(&app, SessionChangeReasonDto::FileBaselineChanged);
+    }
+    Ok(preflight)
 }
 
 #[cfg(test)]
 mod tests {
-    use rim_session::test_support::session_fixture;
+    use rim_analyzer::domain::ModId;
+    use rim_session::ports::ModsConfigFile;
+    use rim_session::test_support::{
+        InMemoryModsConfigStore, session_fixture, session_fixture_with_inactive,
+    };
 
     use super::*;
     use crate::state::GameProcessProbe;
@@ -133,6 +167,14 @@ mod tests {
     impl GameProcessProbe for FixedProbe {
         fn is_running(&self) -> bool {
             self.0
+        }
+    }
+
+    fn mods_config_file(active: &[&str]) -> ModsConfigFile {
+        ModsConfigFile {
+            version: "1.6".to_string(),
+            active_mods: active.iter().map(|id| ModId::new(*id)).collect(),
+            known_expansions: Vec::new(),
         }
     }
 
@@ -329,8 +371,12 @@ mod tests {
     async fn preflight_without_a_project_is_no_project_loaded() {
         let state = AppState::default();
 
-        let result =
-            get_apply_preflight_inner(&state, crate::dto::common::OrderSourceDto::Suggested).await;
+        let result = get_apply_preflight_inner(
+            &state,
+            crate::dto::common::OrderSourceDto::Suggested,
+            InMemoryModsConfigStore::new(mods_config_file(&["a"])),
+        )
+        .await;
 
         assert_eq!(
             result.unwrap_err().code,
@@ -354,10 +400,14 @@ mod tests {
         let state = AppState::default();
         *state.session.write().expect("lock") = Some(session);
 
-        let preflight =
-            get_apply_preflight_inner(&state, crate::dto::common::OrderSourceDto::Suggested)
-                .await
-                .expect("preflight");
+        let preflight = get_apply_preflight_inner(
+            &state,
+            crate::dto::common::OrderSourceDto::Suggested,
+            InMemoryModsConfigStore::new(mods_config_file(&["a"])),
+        )
+        .await
+        .expect("preflight")
+        .0;
 
         assert!(preflight.requires_confirmation);
         let [item] = preflight.items.as_slice() else {
@@ -370,5 +420,133 @@ mod tests {
                 if missing.mod_id == "gone"
                     && missing.outcome == MissingModOutcomeDto::RemovedFromActiveList
         ));
+    }
+
+    #[tokio::test]
+    async fn preflight_reads_the_file_fresh_and_reports_an_outside_change() {
+        use crate::dto::file_baseline::ExternalFileChangeDto;
+
+        let state = AppState::default();
+        *state.session.write().expect("lock") =
+            Some(session_fixture_with_inactive(&["a", "b"], &["x"]));
+        // The session's baseline still says a, b: only a read of the file
+        // can see the outside edit (no poll ran).
+        let store = InMemoryModsConfigStore::new(mods_config_file(&["a", "b", "x"]));
+
+        let preflight = get_apply_preflight_inner(&state, OrderSourceDto::Current, store)
+            .await
+            .expect("preflight")
+            .0;
+
+        assert_eq!(
+            preflight.outside_change,
+            ExternalFileChangeDto::Membership {
+                added: 1,
+                removed: 0
+            }
+        );
+        assert!(preflight.items.is_empty());
+        assert!(preflight.requires_confirmation);
+    }
+
+    /// The commit is the baseline's one-shot notice: the command must announce it
+    /// from the first preflight, because no later read will report a change.
+    #[tokio::test]
+    async fn preflight_reports_the_baseline_change_once() {
+        let state = AppState::default();
+        *state.session.write().expect("lock") =
+            Some(session_fixture_with_inactive(&["a", "b"], &["x"]));
+        let outside = || InMemoryModsConfigStore::new(mods_config_file(&["a", "b", "x"]));
+
+        let (_, first) = get_apply_preflight_inner(&state, OrderSourceDto::Current, outside())
+            .await
+            .expect("first preflight");
+        let (second_preflight, second) =
+            get_apply_preflight_inner(&state, OrderSourceDto::Current, outside())
+                .await
+                .expect("second preflight");
+
+        assert_eq!(first, BaselineChange::Changed);
+        assert_eq!(second, BaselineChange::Unchanged);
+        assert!(
+            second_preflight.requires_confirmation,
+            "the outside change is still reported after the notice was spent"
+        );
+    }
+
+    #[tokio::test]
+    async fn preflight_of_an_untouched_file_asks_nothing() {
+        use crate::dto::file_baseline::ExternalFileChangeDto;
+
+        let state = AppState::default();
+        *state.session.write().expect("lock") = Some(session_fixture(&["a", "b"]));
+        let store = InMemoryModsConfigStore::new(mods_config_file(&["a", "b"]));
+
+        let preflight = get_apply_preflight_inner(&state, OrderSourceDto::Current, store)
+            .await
+            .expect("preflight")
+            .0;
+
+        assert_eq!(preflight.outside_change, ExternalFileChangeDto::None);
+        assert!(!preflight.requires_confirmation);
+    }
+
+    /// An outside edit on a real file: the preflight sees it, "Apply
+    /// anyway" still writes with a backup that holds the outside content,
+    /// and the next preflight is quiet.
+    #[tokio::test]
+    async fn applying_over_an_outside_change_keeps_a_backup_of_the_outside_file() {
+        use crate::dto::file_baseline::ExternalFileChangeDto;
+
+        let (temp_dir, session) = session_fixture_with_temp_paths(&["a", "b"]);
+        let state = AppState {
+            game_process_probe: Arc::new(FixedProbe(false)),
+            ..AppState::default()
+        };
+        *state.session.write().expect("lock") = Some(session);
+        let mods_config = temp_dir.path().join("ModsConfig.xml");
+        std::fs::write(
+            &mods_config,
+            "<ModsConfigData><version>1.6.0</version><activeMods><li>a</li><li>b</li><li>outsider</li></activeMods></ModsConfigData>",
+        )
+        .expect("simulate an outside edit");
+
+        let preflight =
+            get_apply_preflight_inner(&state, OrderSourceDto::Current, state.adapters.config_store)
+                .await
+                .expect("preflight")
+                .0;
+        assert!(preflight.requires_confirmation);
+        assert_eq!(
+            preflight.outside_change,
+            ExternalFileChangeDto::Membership {
+                added: 1,
+                removed: 0
+            }
+        );
+
+        let report = apply_inner(
+            &state,
+            ApplyRequestDto {
+                source: OrderSourceDto::Current,
+                write_mods_config: true,
+                write_merge_mod: false,
+                force: false,
+            },
+        )
+        .await
+        .expect("apply anyway");
+
+        let backup = report.backup_path.expect("a backup is always made");
+        let backed_up = std::fs::read_to_string(&backup).expect("read backup");
+        assert!(backed_up.contains("<li>outsider</li>"), "{backed_up}");
+        let written = std::fs::read_to_string(&mods_config).expect("read written file");
+        assert!(!written.contains("outsider"), "{written}");
+        let after =
+            get_apply_preflight_inner(&state, OrderSourceDto::Current, state.adapters.config_store)
+                .await
+                .expect("preflight after apply")
+                .0;
+        assert!(!after.requires_confirmation);
     }
 }

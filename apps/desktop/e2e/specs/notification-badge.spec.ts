@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 // Type-only: pulls in `Window.__E2E_MOCK_IPC__`'s ambient declaration.
 import type {} from "../../src/e2e-mock-bootstrap";
 import { installScenario } from "../fixtures/scenario";
+import { failOnSameOriginRequestFailure } from "./support";
 
 /** When set, each case also writes its screenshot here (for a human to look at). */
 const SHOT_DIR = process.env["BADGE_SHOT_DIR"];
@@ -33,6 +34,7 @@ async function seedNotifications(page: Page, count: number): Promise<void> {
         },
       }));
   }, count);
+  failOnSameOriginRequestFailure(page);
   await page.goto("/");
   await page.getByTestId("load-project-button").click();
   await page.waitForURL(/\/$/);

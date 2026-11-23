@@ -445,7 +445,7 @@ fn activate_dry_run_writes_nothing_and_creates_no_backup() {
         .cmd(&["activate", "aaa.mod", "--dry-run"])
         .assert()
         .success()
-        .stdout(predicates::str::contains("dry run — nothing written"));
+        .stdout(predicates::str::contains("dry run, nothing written"));
 
     assert_eq!(scratch.read_mods_config(), before, "dry run must not write");
     assert!(
@@ -491,7 +491,7 @@ fn deactivate_the_only_active_mod_empties_the_active_list() {
 
 /// Also pins the *exact* refusal wording, not just failure + bytes — a
 /// mutant that printed the
-/// `--dry-run` message ("(dry run — nothing written)") for this genuine,
+/// `--dry-run` message ("(dry run, nothing written)") for this genuine,
 /// non-dry-run refusal instead of `WriteOutcome::RefusedCore`'s own text
 /// would otherwise still pass.
 #[test]
@@ -503,7 +503,7 @@ fn deactivate_core_is_refused_and_writes_nothing() {
         .cmd(&["deactivate", "ludeon.rimworld"])
         .assert()
         .failure()
-        .stdout(predicates::str::contains("(refused — nothing written)"));
+        .stdout(predicates::str::contains("(refused, nothing written)"));
 
     assert_eq!(scratch.read_mods_config(), before);
     assert!(scratch.backup_files().is_empty());
@@ -527,7 +527,7 @@ fn deactivate_requires_yes_when_a_declared_dependent_is_still_active() {
 
     // Without --yes: refused, nothing written. Both the dependents block
     // and the outcome-specific trailing message are pinned — a
-    // mutant printing "(dry run — nothing written)" here instead of the
+    // mutant printing "(dry run, nothing written)" here instead of the
     // blocked-by-dependents message would otherwise still pass.
     scratch
         .cmd(&["deactivate", "aaa.mod"])

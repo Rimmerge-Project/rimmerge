@@ -51,9 +51,10 @@ use self::attribution::{Attributor, NameResolver, PathIndex, attribute_classes};
 use crate::Session;
 use crate::ports::{
     ClassTally, EngineInfoKind, EntryClass, Family, FamilyKey, GameLogError, GameLogReader,
-    KindChoice, LoadEventKind, LogCoverage, LogKind, LogReadStats, LogTotals, LoggingGap,
-    RawCrossReference, RawDdsFailure, RawDependencyWarning, RawPatchFailure, RawTimer,
-    SentinelReport, StackTraceBlock, StackTraceOp, Tally, leading_bracket_tag, totals_of,
+    KindChoice, LoadEventKind, LogCoverage, LogFormats, LogKind, LogReadStats, LogTotals,
+    LoggingGap, ParsedGameLog, RawCrossReference, RawDdsFailure, RawDependencyWarning,
+    RawPatchFailure, RawTimer, SentinelReport, StackTraceBlock, StackTraceOp, Tally,
+    leading_bracket_tag, totals_of,
 };
 
 mod attribution;
@@ -430,69 +431,92 @@ impl<Reader: GameLogReader> ImportGameLog<Reader> {
         path: &Path,
         kind: KindChoice,
     ) -> Result<GameLogSummary, ImportGameLogError> {
-        let parsed = self
-            .reader
-            .read(path, &session.mod_knowledge().log_formats(), kind)?;
-        let mods = &session.report().mods;
-        let name_resolver = NameResolver::new(mods, super::verify_order::build_gate_name_map(mods));
-        let path_index = PathIndex::new(mods);
-        let attributor = Attributor {
-            paths: &path_index,
-            names: &name_resolver,
-            sources: session.sources(),
-        };
+        let parsed = self.read(path, &session.mod_knowledge().log_formats(), kind)?;
+        Ok(attribute_game_log(session, parsed))
+    }
 
-        let patch_failures = parsed
-            .patch_failures
-            .into_iter()
-            .map(|failure| patch_failure_summary(failure, &attributor))
-            .collect();
-        let extra_stack_traces = parsed
-            .extra_stack_traces
-            .into_iter()
-            .map(|block| unpaired_stack_trace(block, &attributor))
-            .collect();
-        let dds_failures = parsed
-            .dds_failures
-            .into_iter()
-            .map(|dds| dds_failure_summary(dds, &attributor))
-            .collect();
-        let dependency_warnings = parsed
-            .dependency_warnings
-            .into_iter()
-            .map(|warning| dependency_warning_summary(warning, &attributor))
-            .collect();
-        let timers = parsed
-            .timers
-            .into_iter()
-            .map(|timer| timer_summary(timer, &attributor))
-            .collect();
-        let load_events = parsed
-            .load_events
-            .into_iter()
-            .map(|event| LoadEvent {
-                line: event.line,
-                kind: event.kind,
-                mods: event.mods.into_iter().map(ModId::new).collect(),
-            })
-            .collect();
+    /// Reads and parses `path` with the log shapes `formats`, touching no
+    /// session: an interface calls it outside the session lock, then hands
+    /// the result to [`attribute_game_log`] under it.
+    ///
+    /// # Errors
+    ///
+    /// As [`Self::execute`].
+    pub fn read(
+        &self,
+        path: &Path,
+        formats: &LogFormats<'_>,
+        kind: KindChoice,
+    ) -> Result<ParsedGameLog, ImportGameLogError> {
+        Ok(self.reader.read(path, formats, kind)?)
+    }
+}
 
-        Ok(GameLogSummary {
-            patch_failures,
-            extra_stack_traces,
-            cross_references: parsed.cross_references,
-            dds_failures,
-            dependency_warnings,
-            timers,
-            def_cache_lines: parsed.def_cache_lines,
-            load_events,
-            read_stats: parsed.read_stats,
-            classes: attribute_classes(parsed.classes, &attributor),
-            blank_separator_lines: parsed.blank_separator_lines,
-            sentinels: parsed.sentinels,
-            coverage: parsed.coverage,
-            logging_gaps: parsed.logging_gaps,
+/// Attributes a parsed log against `session`'s own active-mod list. Pure: no
+/// file is read, so it is the cheap half to run under the session lock, after
+/// [`ImportGameLog::read`] ran outside it. Not a method of the generic
+/// [`ImportGameLog`]: it needs no reader.
+#[must_use]
+pub fn attribute_game_log(session: &Session, parsed: ParsedGameLog) -> GameLogSummary {
+    let mods = &session.report().mods;
+    let name_resolver = NameResolver::new(mods, super::verify_order::build_gate_name_map(mods));
+    let path_index = PathIndex::new(mods);
+    let attributor = Attributor {
+        paths: &path_index,
+        names: &name_resolver,
+        sources: session.sources(),
+    };
+
+    let patch_failures = parsed
+        .patch_failures
+        .into_iter()
+        .map(|failure| patch_failure_summary(failure, &attributor))
+        .collect();
+    let extra_stack_traces = parsed
+        .extra_stack_traces
+        .into_iter()
+        .map(|block| unpaired_stack_trace(block, &attributor))
+        .collect();
+    let dds_failures = parsed
+        .dds_failures
+        .into_iter()
+        .map(|dds| dds_failure_summary(dds, &attributor))
+        .collect();
+    let dependency_warnings = parsed
+        .dependency_warnings
+        .into_iter()
+        .map(|warning| dependency_warning_summary(warning, &attributor))
+        .collect();
+    let timers = parsed
+        .timers
+        .into_iter()
+        .map(|timer| timer_summary(timer, &attributor))
+        .collect();
+    let load_events = parsed
+        .load_events
+        .into_iter()
+        .map(|event| LoadEvent {
+            line: event.line,
+            kind: event.kind,
+            mods: event.mods.into_iter().map(ModId::new).collect(),
         })
+        .collect();
+
+    GameLogSummary {
+        patch_failures,
+        extra_stack_traces,
+        cross_references: parsed.cross_references,
+        dds_failures,
+        dependency_warnings,
+        timers,
+        def_cache_lines: parsed.def_cache_lines,
+        load_events,
+        read_stats: parsed.read_stats,
+        classes: attribute_classes(parsed.classes, &attributor),
+        blank_separator_lines: parsed.blank_separator_lines,
+        sentinels: parsed.sentinels,
+        coverage: parsed.coverage,
+        logging_gaps: parsed.logging_gaps,
     }
 }
 

@@ -51,11 +51,19 @@ impl Session {
     /// every one of its methods needs the whole borrow to itself.
     fn active_mod_info(&mut self, mod_entry: Mod, source: OrderSource) -> ActiveModInfo {
         let target = mod_entry.id.base();
+        // The exact id first: with a plain and a `_steam` copy both active,
+        // each has its own cost row and the base pass must not pick the other's.
         let cost = self
             .report
             .mod_costs
             .iter()
-            .find(|c| c.mod_id.base() == target)
+            .find(|c| c.mod_id == mod_entry.id)
+            .or_else(|| {
+                self.report
+                    .mod_costs
+                    .iter()
+                    .find(|c| c.mod_id.base() == target)
+            })
             .cloned();
         let game_version = self.report.metadata.game_version.clone();
         let order = self.orders.get(source).clone();

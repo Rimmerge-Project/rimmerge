@@ -22,7 +22,7 @@ $paths = @(
     'apps/desktop/e2e', 'scripts', '.github', 'docs', 'README.md', 'CLAUDE.md',
     'CONTRIBUTING.md', 'SECURITY.md', 'LICENSE-MIT', 'LICENSE-APACHE', 'Cargo.toml',
     'deny.toml', 'clippy.toml', 'rust-toolchain.toml', '.gitignore', '.gitattributes',
-    '.editorconfig',
+    '.editorconfig', '.config',
     'apps/desktop/CLAUDE.md',
     # apps/desktop's own root-level, hand-edited files — every one of
     # these is a config/manifest a contributor edits directly (not

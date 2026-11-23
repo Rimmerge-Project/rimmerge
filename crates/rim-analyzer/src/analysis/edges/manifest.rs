@@ -360,7 +360,7 @@ fn ambiguous_manifest_warning(mod_id: &ModId, raw: &str, candidates: &[ModId]) -
     Warning::new(
         Some(mod_id.clone()),
         format!(
-            "Manifest.xml names '{raw}', which matches more than one active mod ({named}) — left unresolved rather than guessing"
+            "Manifest.xml names '{raw}', which matches more than one active mod ({named}); left unresolved rather than guessing"
         ),
     )
 }

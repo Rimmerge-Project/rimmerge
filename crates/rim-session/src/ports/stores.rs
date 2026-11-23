@@ -252,6 +252,44 @@ pub enum RulesLoadWarning {
     /// or parsed; the bundled snapshot was used instead.
     #[error("could not read the cached rimmerge rules ({0}); using the bundled snapshot")]
     ModKnowledgeCacheUnreadable(String),
+    /// Re-reading a persisted file just before a freshly scanned session
+    /// replaced the live one failed (`Session::reload_persisted`). The
+    /// session keeps what the scan read, which may lack an edit made while
+    /// the scan ran.
+    #[error(
+        "could not re-read the saved {kind} after the scan ({reason}); kept the copy read before it"
+    )]
+    PersistedReloadFailed {
+        /// Which persisted file could not be re-read.
+        kind: PersistedKind,
+        /// The store's own error text.
+        reason: String,
+    },
+}
+
+/// One of the files a project loads next to the scan: what
+/// `Session::reload_persisted` re-reads and what a failed re-read names.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PersistedKind {
+    /// The decisions file.
+    Decisions,
+    /// The rules file.
+    Rules,
+    /// The compat patch projects.
+    Patches,
+    /// The assignment (patch maker) projects.
+    Assignments,
+}
+
+impl std::fmt::Display for PersistedKind {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(match self {
+            Self::Decisions => "decisions",
+            Self::Rules => "rules",
+            Self::Patches => "patches",
+            Self::Assignments => "assignments",
+        })
+    }
 }
 
 /// What kind of value of a mod-knowledge row a binary did not understand

@@ -22,10 +22,11 @@ function mountPanel(
   exportAssignment?: (payload: unknown) => unknown,
   pendingActiveChanges?: PendingActiveChangesDto,
   externalChange: ExternalFileChangeDto = { kind: "none" },
+  fileHoldsCurrentExactly = false,
 ) {
   const calls: ExportAssignmentRequestDto[] = [];
   installMockIpc({
-    get_mods_config_baseline: { state: { kind: "fresh" }, externalChange },
+    get_mods_config_baseline: { state: { kind: "fresh" }, externalChange, fileHoldsCurrentExactly },
     get_pending_active_changes: pendingActiveChanges ?? {
       unscanned: { added: [], removed: [] },
       unapplied: { added: [], removed: [] },
@@ -120,6 +121,20 @@ describe("AssignmentExportPanel", () => {
 
     expect(wrapper.get('[data-testid="assignment-export-outside-change-note"]').text()).toBe(
       "Your active mod list was changed outside Rimmerge. Installing writes your Current order over those changes.",
+    );
+  });
+
+  it("shows no outside-change note when the file already holds Current, whatever changed outside", async () => {
+    const { wrapper } = mountPanel(undefined, undefined, { kind: "reordered" }, true);
+    await flushPromises();
+
+    await wrapper
+      .get('[data-testid="assignment-export-install-checkbox"]')
+      .find("input")
+      .setValue(true);
+
+    expect(wrapper.find('[data-testid="assignment-export-outside-change-note"]').exists()).toBe(
+      false,
     );
   });
 

@@ -167,6 +167,54 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn the_baseline_says_whether_the_file_already_holds_the_selected_order() {
+        let state = state_with_session();
+        let untouched = get_mods_config_baseline_inner(&state).await.expect("read");
+
+        let (edited, _) = refresh_mods_config_baseline_inner(
+            &state,
+            InMemoryModsConfigStore::new(file(&["a", "b", "x"])),
+        )
+        .await
+        .expect("refresh");
+        let (restored, _) = refresh_mods_config_baseline_inner(
+            &state,
+            InMemoryModsConfigStore::new(file(&["a", "b"])),
+        )
+        .await
+        .expect("refresh");
+
+        assert!(untouched.file_matches_selected);
+        assert!(!edited.file_matches_selected);
+        assert!(restored.file_matches_selected);
+        assert!(untouched.file_holds_current_exactly);
+        assert!(!edited.file_holds_current_exactly);
+        assert!(restored.file_holds_current_exactly);
+    }
+
+    #[tokio::test]
+    async fn an_outside_swap_between_two_copies_is_reported_as_one_added_and_one_removed() {
+        let state = state_with_session();
+
+        let (baseline, change) = refresh_mods_config_baseline_inner(
+            &state,
+            InMemoryModsConfigStore::new(file(&["a", "b_steam"])),
+        )
+        .await
+        .expect("refresh");
+
+        assert_eq!(change, BaselineChange::Changed);
+        assert_eq!(
+            baseline.external_change,
+            ExternalFileChangeDto::Membership {
+                added: 1,
+                removed: 1
+            }
+        );
+        assert!(!baseline.file_matches_selected);
+    }
+
+    #[tokio::test]
     async fn an_outside_change_is_not_pending_work_of_our_own() {
         let state = state_with_session();
         let store = InMemoryModsConfigStore::new(file(&["a", "b", "x"]));

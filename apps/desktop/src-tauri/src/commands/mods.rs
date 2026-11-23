@@ -1,17 +1,17 @@
 //! `list_mods`/`get_mod`/`list_mod_names`/`get_mod_info`/`read_mod_preview`:
 //! the mods page's commands.
 
-use std::collections::BTreeMap;
-
 use rim_analyzer::domain::ModId;
+use rim_session::ModNotActive;
 use rim_session::use_cases::{ReadModAbout, ReadModPreview};
-use rim_session::{FindingFilter, MAX_PAGE_SIZE};
+// Only the tests below still page against the bound themselves.
+#[cfg(test)]
+use rim_session::MAX_PAGE_SIZE;
 
+use crate::dto::grouped_mod_lists::{GroupedListQueryDto, GroupedModListDto};
 use crate::dto::mod_info::{ModInfoDto, ModPreviewDto, mod_info_dto};
 use crate::dto::mod_lists::{ModListDto, ModListQueryDto};
-use crate::dto::mods::{
-    ModDetailDto, ModEdgeDto, ModFilterDto, ModNamesDto, ModPageDto, mod_page_dto,
-};
+use crate::dto::mods::{ModDetailDto, ModFilterDto, ModNamesDto, ModPageDto, mod_page_dto};
 use crate::error::CommandError;
 use crate::state::{AppState, with_session};
 
@@ -83,13 +83,46 @@ pub async fn list_working_mods(
     list_working_mods_inner(&state, query).await
 }
 
-/// One mod's full detail: declared order, edges grouped by direction and
-/// evaluated against the selected order, tags, and live finding keys.
-/// Resolves `mod_id` by [`ModId::base`] on both sides, so an active
-/// `_steam` variant is found by its base id and vice versa; every
-/// subsequent per-mod lookup (edges, tags, findings) then uses the
-/// resolved canonical id rather than the raw request, so those can't miss
-/// the same way.
+/// The Active pane in Groups view: the rows of [`list_working_mods_inner`]
+/// laid out as folders by [`rim_session::Session::working_mod_groups`]; this
+/// only maps the DTO in and out.
+///
+/// # Errors
+///
+/// Returns [`CommandError::no_project_loaded`] when no project is loaded,
+/// [`CommandError::invalid_input`] for a bad tag, a zero group id or too
+/// many collapsed folders, or the `group_not_found`/
+/// `organization_unavailable` code (the view needs groups loaded, even with
+/// no group filter).
+pub(crate) async fn list_working_mods_grouped_inner(
+    state: &AppState,
+    query: GroupedListQueryDto,
+) -> Result<GroupedModListDto, CommandError> {
+    with_session(state, move |session| {
+        let query: rim_session::GroupedListQuery = query.try_into()?;
+        Ok(session.working_mod_groups(&query)?.into())
+    })
+    .await
+}
+
+/// See `list_working_mods_grouped_inner`.
+///
+/// # Errors
+///
+/// See `list_working_mods_grouped_inner`.
+#[tauri::command]
+pub async fn list_working_mods_grouped(
+    state: tauri::State<'_, AppState>,
+    query: GroupedListQueryDto,
+) -> Result<GroupedModListDto, CommandError> {
+    list_working_mods_grouped_inner(&state, query).await
+}
+
+/// One mod's full detail for the selected order: declared order, edges
+/// grouped by direction, tags, and live finding keys. Resolution and the
+/// join live in [`rim_session::Session::mod_detail`] (the exact id first,
+/// then [`ModId::base`], so an active `_steam` variant is found by its base id);
+/// this only maps the DTO in and out.
 ///
 /// # Errors
 ///
@@ -100,72 +133,13 @@ pub(crate) async fn get_mod_inner(
     mod_id: String,
 ) -> Result<ModDetailDto, CommandError> {
     with_session(state, move |session| {
-        let target = ModId::new(&mod_id).base();
         let source = session.selected();
-        let order = session.orders().get(source).clone();
-
-        let mod_entry = session
-            .report()
-            .mods
-            .iter()
-            .find(|m| m.id.base() == target)
-            .cloned()
-            .ok_or_else(|| CommandError::mod_not_found(&mod_id))?;
-        // The resolved, canonical id — used for every lookup below
-        // instead of the raw request, so a `_steam`-suffixed active id
-        // reached via its base (or vice versa) doesn't then miss again.
-        let id = mod_entry.id.clone();
-
-        let (edges_in, edges_out) = {
-            let report = session.report();
-            let mut edges_in = Vec::new();
-            let mut edges_out = Vec::new();
-            for report_edge in &report.edges {
-                let status = rim_resolve::evaluate::edge_status(&report_edge.edge, &order);
-                if report_edge.edge.after == id {
-                    edges_in.push(ModEdgeDto::incoming(&report_edge.edge, status));
-                } else if report_edge.edge.before == id {
-                    edges_out.push(ModEdgeDto::outgoing(&report_edge.edge, status));
-                }
-            }
-            (edges_in, edges_out)
-        };
-
-        let finding_page = session.findings(
-            source,
-            &FindingFilter {
-                mod_id: Some(id.clone()),
-                offset: 0,
-                limit: MAX_PAGE_SIZE,
-                ..FindingFilter::default()
-            },
-        );
-        let finding_keys_total = finding_page.total;
-        let finding_keys = finding_page.items.iter().map(ToString::to_string).collect();
-
-        Ok(ModDetailDto {
-            mod_id: mod_entry.id.as_str().to_string(),
-            name: mod_entry.name.clone(),
-            authors: mod_entry.authors.clone(),
-            url: mod_entry.url.clone(),
-            source: mod_entry.source.into(),
-            supported_versions: mod_entry.supported_versions.clone(),
-            declared: (&mod_entry.declared).into(),
-            tags: session
-                .tagging()
-                .tags_of(&id)
-                .iter()
-                .map(ToString::to_string)
-                .collect(),
-            hard_dependents: mod_entry.hard_dependents,
-            is_framework_candidate: mod_entry.is_framework_candidate,
-            generated: mod_entry.generated.as_ref().map(Into::into),
-            workshop_id: mod_entry.workshop_id,
-            edges_in,
-            edges_out,
-            finding_keys,
-            finding_keys_total,
-        })
+        let detail = session
+            .mod_detail(&ModId::new(&mod_id), source)
+            // The raw request text: the parsed id is trimmed and lowercased,
+            // and the message has always named what the caller sent.
+            .map_err(|ModNotActive(_)| CommandError::mod_not_found(&mod_id))?;
+        Ok(detail.into())
     })
     .await
 }
@@ -185,36 +159,22 @@ pub async fn get_mod(
 
 /// Every active **or inactive** mod's id mapped to its display name, so a
 /// render site can show names instead of ids without a per-render lookup
-/// command — an inactive
-/// mod (the Mods page's own Inactive tab, or a `plan_activate_mods`/
-/// `plan_deactivate_mods` dialog) needs this too, not only an active one.
-/// A `_steam`-suffixed active id also gets its base id entered as a
-/// second key (never overwriting an already-active base id's own entry),
-/// so a caller holding either form's text resolves the same name.
+/// command. The map is built by [`rim_session::Session::mod_names`] (a
+/// `_steam`-suffixed active id also answers to its base id); this only maps
+/// the DTO out.
 ///
 /// # Errors
 ///
 /// Returns [`CommandError::no_project_loaded`] when no project is loaded.
 pub(crate) async fn list_mod_names_inner(state: &AppState) -> Result<ModNamesDto, CommandError> {
     with_session(state, |session| {
-        let mut names: BTreeMap<String, String> = BTreeMap::new();
-        for mod_entry in &session.report().mods {
-            names.insert(mod_entry.id.as_str().to_string(), mod_entry.name.clone());
-        }
-        for mod_entry in &session.report().mods {
-            let base = ModId::base(&mod_entry.id);
-            if base != mod_entry.id {
-                names
-                    .entry(base.as_str().to_string())
-                    .or_insert_with(|| mod_entry.name.clone());
-            }
-        }
-        for mod_entry in &session.report().inactive_mods {
-            names
-                .entry(mod_entry.id.as_str().to_string())
-                .or_insert_with(|| mod_entry.name.clone());
-        }
-        Ok(ModNamesDto(names))
+        Ok(ModNamesDto(
+            session
+                .mod_names()
+                .into_iter()
+                .map(|(id, name)| (id.as_str().to_string(), name))
+                .collect(),
+        ))
     })
     .await
 }
@@ -413,6 +373,32 @@ mod tests {
             .expect("x_steam must be found by its base id");
 
         assert_eq!(detail.mod_id, "x_steam");
+    }
+
+    #[tokio::test]
+    async fn get_mod_returns_the_requested_copy_when_both_copies_are_active() {
+        let state = AppState::default();
+        *state.session.write().expect("lock") = Some(session_fixture(&["x", "x_steam"]));
+
+        let plain = get_mod_inner(&state, "x".to_string()).await.expect("x");
+        let steam = get_mod_inner(&state, "x_steam".to_string())
+            .await
+            .expect("x_steam");
+
+        assert_eq!(plain.mod_id, "x");
+        assert_eq!(steam.mod_id, "x_steam");
+    }
+
+    #[tokio::test]
+    async fn get_mod_falls_back_to_the_base_id_for_a_missing_steam_copy() {
+        let state = AppState::default();
+        *state.session.write().expect("lock") = Some(session_fixture(&["x", "y"]));
+
+        let detail = get_mod_inner(&state, "x_steam".to_string())
+            .await
+            .expect("x is found by the base id of x_steam");
+
+        assert_eq!(detail.mod_id, "x");
     }
 
     #[tokio::test]

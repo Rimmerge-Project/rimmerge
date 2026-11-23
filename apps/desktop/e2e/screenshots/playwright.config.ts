@@ -9,7 +9,8 @@ import { defineConfig } from "@playwright/test";
 // screenshots under `docs/screenshots/` and runs only with
 // `RIMMERGE_DOCS_SCREENSHOTS=1`; each spec skips without its own variable.
 // Same mock-IPC tier and same dedicated port (5183, `--strictPort`) as
-// `e2e/playwright.config.ts`, so never run the two at once.
+// `e2e/playwright.config.ts`, so never run the two at once, and the same
+// HTTPS/HTTP2 server (`RIMMERGE_E2E_HTTPS=1`, see `vite.config.ts`).
 // The launch flags keep Chromium's rasterizer from varying between runs:
 // without them a few rounded-border pixels of the docs images flipped by one
 // colour level from run to run, so two runs did not write identical files.
@@ -22,13 +23,16 @@ export default defineConfig({
   reporter: "list",
   timeout: 180_000,
   use: {
-    baseURL: "http://localhost:5183",
+    baseURL: "https://localhost:5183",
+    ignoreHTTPSErrors: true,
     locale: "en-US",
     viewport: { width: 1280, height: 800 },
   },
   webServer: {
     command: "bun run dev -- --port 5183 --strictPort",
-    url: "http://localhost:5183",
+    env: { RIMMERGE_E2E_HTTPS: "1" },
+    url: "https://localhost:5183",
+    ignoreHTTPSErrors: true,
     reuseExistingServer: false,
     cwd: "../..",
   },

@@ -1,6 +1,6 @@
 [package]
 name = "rimmerge-desktop"
-version = "1.2.6"
+version = "1.2.7"
 description = "Rimmerge desktop app"
 authors = ["rimmerge"]
 license = "MIT OR Apache-2.0"
@@ -46,7 +46,7 @@ tauri-plugin-opener = "2.5.5"
 rim-session = { workspace = true, features = ["test-support"] }
 tempfile = { workspace = true }
 serde_json = { workspace = true }
-tokio = { workspace = true, features = ["macros", "rt"] }
+tokio = { workspace = true, features = ["macros", "rt", "time"] }
 
 [lints]
 workspace = true

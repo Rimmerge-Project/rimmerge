@@ -2075,7 +2075,7 @@ fn a_guarded_preview_never_promotes_and_no_longer_offers_merge() {
     );
     assert_eq!(
         resolution.suggestion.rationale.to_string(),
-        "ParentName differs between owners — field-level merging is unsafe; confirm the \
+        "ParentName differs between owners, so field-level merging is unsafe. Confirm the \
              load-order winner",
         "the rationale must name the guard, not a field count"
     );
@@ -2324,6 +2324,46 @@ fn order_on_disk_follows_the_selected_order_not_suggested() {
         session.order_on_disk(),
         OrderOnDisk::NotApplied(UnappliedReason::OrderDiffers)
     );
+}
+
+#[test]
+fn file_holds_selected_exactly_follows_the_selected_order_in_both_directions() {
+    let mut session = session(&["a", "b"]);
+    reorder_a_after_b(&mut session);
+    assert!(
+        !session.file_matches(OrderSource::Suggested),
+        "sanity: the file holds the current order, not the suggested one"
+    );
+
+    assert!(session.file_holds_selected_exactly(), "Current is selected");
+    session.select(OrderSource::Suggested);
+    assert!(
+        !session.file_holds_selected_exactly(),
+        "Suggested is selected and the file holds Current"
+    );
+
+    session.set_file_active_mods(session.orders().suggested.as_slice().to_vec());
+    assert!(
+        session.file_holds_selected_exactly(),
+        "the file now holds Suggested"
+    );
+    session.select(OrderSource::Current);
+    assert!(
+        !session.file_holds_selected_exactly(),
+        "Current is selected again and the file holds Suggested"
+    );
+}
+
+#[test]
+fn file_holds_exactly_counts_the_generated_merge_mod_where_file_matches_does_not() {
+    let mut session = session(&["a", "b"]);
+    let merge_mod =
+        rim_resolve::domain::GeneratedModIdentity::for_profile(session.paths().profile_hash())
+            .package_id;
+    session.set_file_active_mods(vec![ModId::new("a"), ModId::new("b"), merge_mod]);
+
+    assert!(session.file_matches(OrderSource::Current));
+    assert!(!session.file_holds_exactly(OrderSource::Current));
 }
 
 #[test]

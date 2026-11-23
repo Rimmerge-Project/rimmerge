@@ -18,6 +18,22 @@ field you changed yourself is never overwritten. A folder that is not a
 RimWorld install is flagged but does not block Load; choose **Save as
 defaults** to keep your choice.
 
+Every folder or file the app asks you for, here and elsewhere (the other
+profile when copying groups, a mod list or save to import or export, a game
+log, RimSort's database files, an export folder), must be on a drive letter:
+`C:\...`, or a network drive you mapped to a letter such as `Z:\...`. A raw
+network path (`\\server\share\...`, including `\\server@SSL\...` WebDAV paths)
+is refused with "Network folders aren't supported" before anything is read, so
+the app never contacts that host and never sends your Windows sign-in to it;
+map the share to a drive letter, or copy the files to a local folder. A
+relative path, an empty one, a device path and a path with a device name such
+as `NUL` or `COM1` in it are refused as invalid input. The command line
+([cli.md](cli.md)) has no such rule. A folder you type that is refused is
+named in a note on the Setup page instead of being dropped quietly. The
+`RIMMERGE_*` variables and `config.json` are checked when the page reads them:
+a network path saved there is ignored, never opened, and named in the same
+way.
+
 ## Dashboard
 
 The landing page once a profile is open: a getting-started strip, then a
@@ -110,6 +126,22 @@ Apply while any is still undecided replaces the buttons with an "Apply
 anyway?" panel: the undecided problems, the ones already decided in the
 Inbox (listed apart), a link to the Inbox, and **Go back** (focused) and
 **Apply anyway**. If every problem was already decided, nothing is asked.
+Pressing Apply also reads `ModsConfig.xml` again, right then (not the
+5-second check described under the Mods page). The Mods page marks and the
+note on other pages then go by what that read found, even if you go back. If the list was changed
+outside Rimmerge since it last read or wrote it, and the order you are
+applying would overwrite that change, the same panel names it first: how
+many mods were added and removed, or that the order was changed. A mod
+swapped for its other copy (a plain one for its Steam Workshop twin) counts as
+one added and one removed. The outside change and any undecided problems share one panel, so **Go back**
+stays the focused button. Nothing is asked when the file already holds the
+order you are applying. **Apply anyway** still saves a timestamped backup of
+the changed file before writing, and the success message names it. If the
+file changes again after that check, while you are deciding, the backup still
+keeps whatever it held when Apply wrote.
+
+![The Apply dialog's Apply anyway panel, naming the outside change to the active mod list first: one mod added, none removed](screenshots/mods-page/apply-outside-change-confirm.png)
+
 With "Write your active mod list" unchecked, `ModsConfig.xml` is not written, so it skips the question.
 If RimWorld looks like it is running, a separate "Write anyway" prompt
 comes after this one; the two are never one button.
@@ -256,8 +288,24 @@ scanned yet" until you Rescan (its tags and dependents are scan results);
 a mod you just deactivated is in Inactive at once. An active mod that is
 not installed is in Active with a "missing" mark.
 
+**Searching the lists.** A list's search keeps the mods whose name or package
+id contains the text, ignoring capitals, and marks every match in the mod's shown
+label: a highlighted background with an underline, so the mark does not rely on colour. It
+works the same in the List and the Groups view and in both lists. The list shows
+either names or package ids (the toggle in the sidebar), and a mod can match in
+one and not the other: a mod found by its id shows no mark while the list shows
+names, and switching to package ids marks the match without searching again.
+The marks come from the same matching that filters the list, so they never
+disagree with it. The marked text is ordinary text, not a "mark" element, so a
+screen reader reads the label as one piece and announces nothing extra per row.
+
+![The Active list in Groups view after searching "d 1": the matching text in each mod's name is highlighted](screenshots/mods-page/search-highlight.png)
+
 **Sorting the lists.** Above each list, one button per criterion sorts what
-the list shows: Load order (Active only), Name, Package ID and Last updated.
+the list shows (when the buttons do not fit the list's width, because the
+window is narrow or the language has longer words, they collapse into one
+dropdown of the same criteria plus a button for the direction, so the bar never
+wraps onto a second line): Load order (Active only), Name, Package ID and Last updated.
 Clicking a button sorts by it in its first direction (A to Z, oldest first,
 or first to last); clicking the active one again flips the direction. The
 active button has a stronger border and an arrow for the direction, and its tooltip and accessible name say both the
@@ -268,13 +316,21 @@ package ids compare lowercased first, then as written, then by package id, so
 the order never depends on your system language; any tie falls back to the
 package id, A first, in both directions. A sort works together with the
 search, tag and source filters, and it only changes what you see: it never
-changes the load order, a pending edit or `ModsConfig.xml`, and it is not
-saved (it is kept while the page stays open and starts over when another
-project is loaded). While the sort is Last updated, each row also shows its
+changes the load order, a pending edit or `ModsConfig.xml`. Each list
+remembers its sort across restarts and project switches (more on that below,
+after the sort buttons' screenshot). While the sort is Last updated, each row also shows its
 date (shortened when a narrow list runs out of room; hover it for the full
-date). While Active is sorted by anything other than Load order, each of its
-rows also shows its load-order position (`#12`), so the sort cannot be
-mistaken for the order.
+date). Each Active row always shows its load-order position (`#12`), whatever
+the list is sorted by, so a sort cannot be mistaken for the order; the Inactive
+list has no positions.
+
+**Narrow windows.** At the narrowest width where the two lists sit side by side
+(1,024 pixels), the controls stay readable in every language: the search box
+takes its own line above the tag and source filters, a placeholder that is still
+too long for its box is cut with an ellipsis and shows in full as a tooltip, the
+sort bar collapses as described above, the date next to a row never shrinks below
+a readable minimum, the Added and Removed marks show only their icon, and the buttons above a selection wrap onto more lines (a long
+label is cut with a tooltip) instead of running past the list.
 
 **What "Last updated" means.** It depends on where the mod comes from. A
 Steam Workshop mod uses when the installed version was published on the
@@ -295,6 +351,10 @@ removes those too. A selection is never saved and changes nothing by
 itself: Activate selected and Deactivate selected still open their plan
 and confirmation first, and if the plan cannot be made the dialog opens
 with the reason and no way to confirm.
+After an activation or a deactivation, the mods that moved (and any that
+were already where you sent them) leave the selection, including a
+dependency the filter was hiding; Core, which is never deactivated, stays
+selected.
 
 **Moving mods.** Three ways move a mod, and all of them end in the same
 thing: the mod is placed next to a neighbour mod, named by its package id,
@@ -369,9 +429,10 @@ outside Rimmerge (the outside-change note's own action covers that case). See
 **Added and Removed marks.** A row that differs from the active mod list saved
 on your computer carries a small mark. An Active row the saved list does not
 have is **Added** (Apply will add it), and an Inactive row the saved list still
-has is **Removed** (Apply will remove it). The mark has an icon and a word, and
-its tooltip says what Apply does, so it is never colour alone; it sits after
-the mod name. A mod counts as the same mod with or without its `_steam`
+has is **Removed** (Apply will remove it). The mark has an icon and a word (in a list narrower than about 512 pixels the
+word gives way to the icon; with the two lists side by side and no groups or
+info column beside them, that is a window narrower than about 1,300 pixels), and its tooltip says what Apply does, so it is never colour alone; it
+sits after the mod name. A mod counts as the same mod with or without its `_steam`
 suffix, and a reorder alone never makes a mark. "Removed" means a mod that is
 installed and still in the saved list: it stays easy to find in Inactive until
 you Apply or activate it again. A mod that is in the saved list but not
@@ -387,20 +448,37 @@ never touches your pending changes or your order. When nothing changed it does
 nothing visible. If the list was changed outside Rimmerge, a note above the
 lists says so: "Your active mod list was changed outside Rimmerge (+2, -1).
 Applying would overwrite those outside changes." (When you have pending
-changes of your own, it adds "Your pending changes are kept.") An outside edit
+changes of your own, it adds "Your pending changes are kept.") A mod swapped
+for its other copy counts as one added and one removed here too. When the file
+matches the order you have selected exactly, Applying would overwrite nothing, so
+the note drops that sentence and says "Your active mod list already matches the
+order you have selected." instead. "Exactly" counts the generated merge mod: an
+outside edit that only turned it on or off still says Applying would overwrite,
+because Apply would put it back. An outside edit
 is explained by this note alone. It is never counted as your own unsaved work:
 the warning when you close the window or switch project, the pending-changes
 banner, the "This isn't your active order yet." note and the import
 preview's "replaces your Current order" warning only look at what you changed
 since Rimmerge last loaded or wrote the list. Its **Use the list from the file** button opens the same import
-preview as the Load order page's Import menu, with the file's list; nothing is
+preview as the Load order page's Import menu, with the file's list (the copy the
+file names is kept, so a swap between two copies is not undone); nothing is
 replaced until you confirm there. A change that only reorders the file's mods
 raises its own note without a count: "Your active order was changed outside
 Rimmerge. Applying would overwrite that order." (with the same "Your pending
 changes are kept." sentence when you have some). If the file is missing, cannot be read, or is only
 partly written, a note says which, and the marks keep using the last list that
 could be read; the next good read clears the note. Rescan and an import read the file fresh as well, and after an Apply the
-saved list is what Rimmerge wrote.
+saved list is what Rimmerge wrote. On every other page, a short note under the
+pending-changes banner says the list was changed outside Rimmerge and links
+here; it goes away after a rescan, an import or an Apply. It is not shown while
+your active mod list matches the order you have selected, since an Apply would
+overwrite nothing; the note on this page still says so. The banners (pending
+changes, the outside change and an unreadable file) are quiet notes for a screen
+reader; one polite status region that is always present in the window reads
+their text when a banner appears or its text changes, and not again when a page
+change shows the same banner.
+
+![The note on other pages: Your active mod list was changed outside Rimmerge, with a link to the Mods page](screenshots/mods-page/outside-change-hint.png)
 
 **Rescan mods** (top right of the page, always available) re-scans the
 mods in the active list in their current order, exactly as the pending
@@ -463,6 +541,27 @@ own order (with View suggested):
 One button per criterion sorts a list; the active one shows its direction:
 
 ![The sort buttons above the Active list, Name sorted A to Z](screenshots/mods-page/sort-toggle.png)
+
+Each list remembers its own sort and its own view (List or Groups) on this
+computer, so they are back after a restart and stay when you load another
+project (like the choice between mod names and ids, it is one setting for the
+whole app). A remembered choice the app no longer knows (a sort that was
+removed, a damaged value) falls back to that list's default: the Active list
+in load order, the Inactive list by name, both as a list. A remembered sort
+changes nothing about the load order: the Active list restored on a name sort
+still says moving is off and still shows each mod's load-order number.
+
+**Show in load order** (the Active row's ⋮ menu, and the mod info panel for an
+active mod) takes the Active list back to List view in load order, scrolls to
+that mod and puts keyboard focus on its row. The Inactive list keeps its own
+sort and view, and the Active list's new view and sort are remembered like any
+other choice. The filter stays
+when the mod is still shown under it. When the filter hides the mod, the
+search, the tag, the source and the group scope are all cleared (the group
+scope belongs to both lists, so the Inactive list is no longer narrowed by it;
+the Inactive list's own search, tag and source stay) and a note above the list
+says so. The action is not offered while the list already shows load order,
+and an inactive mod has none (it is not in the load order).
 
 Rows that differ from the saved active mod list carry an Added or Removed mark
 after their name (each list is narrowed to its marked row here):
@@ -538,14 +637,39 @@ selection and lists the groups:
   is deleted or uninstalled. Names are unique among groups at the same level,
   not case sensitive; groups nest at most 8 levels.
 - **On a row**, a group shows as a chip with its name (the first two, then
-  "+N" with every name in its tooltip), and a mod's own colour as a stripe on
-  the row's edge, also named in text for screen readers. A colour is never
-  the only cue: the info panel names the mod's colour and lists its groups
-  too, and a narrow row, which hides the chips, keeps the group names as
-  screen-reader text. A mod does not inherit its group's colour. The row's ⋮
-  menu has **Groups…** (check a group to add the mod to it, clear it to remove
-  it; each click is saved at once) and **Colour…** (twelve named colours, or
-  none).
+  "+N" with every name in its tooltip). On a narrow row the chips become
+  small dots instead (up to four, then "+N"): a coloured group is a filled dot
+  in its colour, a group with no colour an outlined dot, and the tooltip of each
+  has the group's name. Clicking a chip or a dot narrows both lists to that
+  group, the same as choosing it in the Groups panel (with the mouse only: the
+  keyboard way is the panel). A mod's own colour is a stripe on the row's
+  edge. A mod with no colour of its own shows the stripe in the colour of its
+  first coloured group, in the order of the group tree, but fainter, so you can
+  tell an inherited colour from one you set. A colour is never the only cue:
+  the row names the colour and the group in text for screen readers, the info
+  panel names the mod's colour and lists its groups, and a narrow row keeps the
+  group names as screen-reader text. The row's ⋮ menu starts with the twelve
+  colours as small swatches and one more to clear the colour (one click sets
+  it and closes the menu; they are for the mouse, and the **Colour…** entry
+  does the same from the keyboard). It also has **Groups…** (check a group to
+  add the mod to it, clear it to remove it; each click is saved at once).
+- **Creating a group from the dialog.** The Add to group dialogs (the bulk one
+  and a single mod's **Groups…**) have a search box that filters the list of
+  groups. When no group has the name you typed (not case sensitive), the
+  dialog offers **Create group** with that name and an optional parent group
+  (the top level by default). One click creates the group and puts the mods in
+  it, saving both at once, and says how many mods it took in. If the name is
+  already used at that level, or a limit is reached, nothing is created.
+- **The open row.** The mod whose info panel is open is marked on its row with
+  a ring and a tint, and the row says so to screen readers. Selecting rows with
+  the checkboxes only draws the ring, so a selected row and the open row can be
+  told apart. In the Groups panel the groups the open mod belongs to have a
+  small dot before their name, and each group has a folder icon that is filled
+  with the group's colour (outlined when it has none).
+- **Double click.** A double click on a row (not on its checkbox, its ⋮ button
+  or a chip) opens the same Activate or Deactivate dialog as the buttons, for
+  that one mod, and nothing changes until you confirm. Ctrl or Shift with a
+  double click is for selecting rows, so it does nothing else.
 - **Tags** you added by hand now show on every row, Inactive included, and the
   tag filter works on both lists.
 - **Bulk actions** appear above a list while it has a selection (each list
@@ -591,6 +715,84 @@ selection and lists the groups:
   or makes it top level, a row's ⋮ menu **Groups…** adds that one mod to
   groups, and to add a whole selection, select the rows and use the bulk
   actions' **Add to group…**.
+- **Groups view.** Each list has a **List | Groups** switch under its sort
+  buttons. **Groups** shows the same mods as folders: your group tree, each
+  folder with its colour icon, its name and how many mods it holds (counting its
+  subfolders, each mod once). Inside a folder its subfolders come first, then its
+  own mods in the list's sort order, and **Ungrouped** comes last (only
+  when it holds mods). A mod in two groups appears under each, with an "also in
+  1" mark whose tooltip names the other groups. Selection is per mod: ticking
+  either copy ticks both. Rows keep their load-order number on the Active list.
+  The two lists switch separately, and each remembers its choice across restarts
+  and project switches. Groups view needs a usable groups file; while it is not,
+  the switch says so and shows List (the remembered choice comes back once the
+  file can be used).
+
+  ![The Active list in Groups view: Armor and Weapons folders with colour icons, their mods with load-order numbers and colour stripes, and Ungrouped at the end](screenshots/mods-page/groups-view.png)
+
+  - **Folding.** Click a folder, or use the keys, to fold it (its mods leave
+    the screen, its count stays). **Collapse all** and **Expand all** sit beside
+    the switch. Each list remembers its own folded folders per profile on this
+    computer, and a folder you delete drops out of the memory.
+  - **Keys.** The list is one tab stop. Up, Down, Home and End move across
+    headers and mods. On a folder, Right opens a folded one or enters an open
+    one, Left folds an open one or goes to the folder above, and Enter or Space
+    toggles it. On a mod, Left goes to its folder, Enter opens the info panel and
+    Space selects it. Shift with Up or Down, or Space, selects a range over the
+    rows you can see (a folder header adds nothing, and a mod seen twice counts
+    once). Ctrl+A selects every mod the filter matches, including mods inside
+    folded folders. The menu key (or Shift+F10) opens a folder's menu. For
+    screen readers the list is a tree grid: every row has a level, and folders
+    say whether they are open.
+  - **Folder menu** (the ⋮ button on a folder): **Select all in folder** (every
+    mod in it and its subfolders that the list's search, tag and source filters
+    match, folded or not), **Activate all…** and **Deactivate all…** (the same
+    dialogs as the group menu in the Groups panel). **Ungrouped** offers
+    only the selection.
+  - **Dragging onto a folder.** Drop rows on a folder's header to add them to
+    that group. A drop only adds: it never activates, deactivates or moves a mod,
+    even for an Inactive mod dropped on a folder in the Active list. Dropping on
+    **Ungrouped** is refused, with the reason on screen. A folded folder
+    opens after a drag has hovered it for a moment.
+  - **Moving is off.** The Active list cannot be reordered in Groups view (a
+    note says so, the row menu's Move entries are disabled and Alt+Arrow does
+    nothing); switch to List to move mods. Dragging an Inactive mod to the
+    Active list outside a folder header still activates it at the end.
+  - **Empty folders** show with 0 while the list has no search, tag or source
+    filter, and are left out when it has one. When nothing matches, the list says
+    so. A very large library is cut at 10,000 lines; a note says how many lines
+    are not shown, and folding folders or searching brings the rest back.
+- **Copy from another profile…** (the groups panel) copies another
+  profile's groups and colours into this one. Each profile keeps its own
+  `organization.json`; pick the other profile's folder (the one holding that
+  file). Profile folders sit side by side, one per `ModsConfig.xml`, in the
+  `profiles` folder under `%LOCALAPPDATA%\rimmerge` and named by a short code
+  (the picker opens there, beside this profile's own folder). The dialog
+  previews the result, then you choose a mode:
+  - **Merge** matches a source group to one here by its path: the same names
+    from the top level, ignoring capitals. A match takes the source's members
+    and keeps its own name and id; groups with no match are created under the
+    parent their own parent matched or created, so the same name at another
+    depth is another group. Your colours win: a group or mod colour you have
+    set stays (a differing group colour is listed as a clash, a differing mod
+    colour is counted), and only a colour you have not set is filled in.
+  - **Replace** removes everything here and puts the other profile's groups
+    and colours in its place (new group numbers, never one this profile used
+    before). It asks for a confirmation with **Cancel** focused.
+  - Every copy is checked against the same limits as an edit (groups, nesting,
+    mods per group and in total, coloured mods, the size of the file) as a
+    whole: one over the limit is refused with the reason and nothing is
+    copied, in either mode. A folder that is not a folder, is this profile's own
+    folder, holds exactly what this profile already has, has no
+    `organization.json`, has an empty one, or has one that cannot
+    be read (too large, damaged, from a newer version, groups that do not fit
+    together) is refused the same way. The other profile's folder is only read,
+    and only its `organization.json`. A mod that is not installed keeps its
+    place in a group, as everywhere else. The copy is one save, and never
+    changes the load order, the active mods or the rules.
+
+  ![The Copy groups from another profile dialog: Merge selected, with a preview listing two groups added, one merged, four memberships added and one colour](screenshots/mods-page/copy-groups-preview.png)
+
 - If `organization.json` cannot be read, a notice says so and groups are
   read-only. If another program only has the file open, **Rescan and try
   again** reads it again (it is a full rescan of your mods, the only thing that
@@ -898,7 +1100,7 @@ Apply. An install export writes your current order, so an order you have not
 applied yet (a move, an import) goes into the file with it; the export panel
 warns when that is the case, and warns too when the active mod list was
 changed outside Rimmerge, since the install writes your order over those
-changes. Every
+changes (not when the file already holds your current order exactly). Every
 write takes a timestamped backup first, and each refuses to write while
 RimWorld looks like it is running unless you confirm the override.
 

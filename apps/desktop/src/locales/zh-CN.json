@@ -95,6 +95,10 @@
   "shell": {
     "brand": "Rimmerge",
     "mainNavigation": "主导航",
+    "outsideChange": {
+      "text": "你的已启用 Mod 列表已在 Rimmerge 之外被更改。应用会覆盖这些更改。",
+      "link": "在 Mod 页面查看"
+    },
     "nav": {
       "dashboard": "概览",
       "inbox": "检查结果",
@@ -245,6 +249,12 @@
     "modKnowledgeCacheUnreadableHeadline": "无法读取缓存的 Rimmerge 规则；改用内置快照",
     "rowsOverRoleLimit": "已忽略 {section} 规则中 {role} 角色超出单角色上限的 {count} 行",
     "precedenceRuleMissingFramework": "已忽略 {defType} 的优先规则：它没有指明任何框架",
+    "reloadFailed": {
+      "decisions": "扫描后无法重新读取你已保存的决定，因此扫描期间做出的决定可能缺失",
+      "rules": "扫描后无法重新读取你已保存的规则，因此扫描期间更改的规则可能缺失",
+      "patches": "扫描后无法重新读取你已保存的兼容补丁，因此扫描期间所做的更改可能缺失",
+      "assignments": "扫描后无法重新读取你已保存的补丁制作器项目，因此扫描期间所做的更改可能缺失"
+    },
     "what": {
       "precedenceRule": "优先规则",
       "behaviour": "行为",
@@ -611,11 +621,24 @@
       "organization_limit": {
         "title": "已达到分组的某项上限",
         "detail": "已达到分组和颜色的某项上限：分组数量、嵌套深度、分组中或带颜色的 Mod 数量，或分组文件（organization.json）的大小。未做任何更改。请移除不再需要的分组、分组中的 Mod 或颜色，然后重试。"
+      },
+      "network_path_refused": {
+        "title": "不支持网络文件夹",
+        "detail": "Rimmerge 只使用有驱动器号的磁盘上的文件和文件夹，例如 C:\\ 或你已映射到某个驱动器号的网络驱动器。像 \\\\server\\share 这样的网络路径会被拒绝，且未进行任何网络连接。请在 Windows 中将该共享映射为网络驱动器，或将文件复制到本地文件夹，然后重试。"
+      },
+      "project_changed": {
+        "title": "已切换项目",
+        "detail": "Rimmerge 读取文件期间载入了另一个项目，因此未使用读取结果，也未做任何更改。请重试，以便将该文件用于当前打开的项目。"
       }
     }
   },
   "defaultPathsWarning": {
-    "notAnInstall": "{gameDir} 看起来不像 RimWorld 安装目录（缺少 Version.txt 或 Data/Core/）。"
+    "notAnInstall": "{gameDir} 看起来不像 RimWorld 安装目录（缺少 Version.txt 或 Data/Core/）。",
+    "typedNetworkShare": "该游戏文件夹位于网络共享上，因此 Rimmerge 未使用它。Rimmerge 只使用有驱动器号的磁盘上的文件夹：请在 Windows 中将该共享映射为网络驱动器，或选择本地文件夹。",
+    "typedInvalid": "这不是有驱动器号的磁盘上某个文件夹的完整路径（例如 C:\\Games\\RimWorld），因此 Rimmerge 未使用它。",
+    "configuredGameDir": "你已保存的默认值中的游戏文件夹不在有驱动器号的磁盘上（可能是网络共享），因此 Rimmerge 忽略了它。请选择有驱动器号的磁盘上的文件夹，然后再次点击“保存为默认值”。",
+    "configuredWorkshopDir": "你已保存的默认值中的 Steam 创意工坊文件夹不在有驱动器号的磁盘上（可能是网络共享），因此 Rimmerge 忽略了它。请选择有驱动器号的磁盘上的文件夹，然后再次点击“保存为默认值”。",
+    "configuredModsConfig": "你已保存的默认值中的 ModsConfig.xml 路径不在有驱动器号的磁盘上（可能是网络共享），因此 Rimmerge 忽略了它。请选择有驱动器号的磁盘上的文件，然后再次点击“保存为默认值”。"
   },
   "defaultPathsError": {
     "noProfileBase": "RIMMERGE_PROFILE_DIR 和 LOCALAPPDATA 均未设置，因此 Rimmerge 没有地方保存它自己的文件。",
@@ -1335,6 +1358,10 @@
       "reordered": "你的已启用的加载顺序已在 Rimmerge 之外被更改。你的待定更改已保留。应用会覆盖该顺序。",
       "outsideNoPending": "你的已启用 Mod 列表已在 Rimmerge 之外被更改（+{added}，-{removed}）。应用会覆盖这些外部更改。",
       "reorderedNoPending": "你的已启用的加载顺序已在 Rimmerge 之外被更改。应用会覆盖该顺序。",
+      "outsideMatches": "你的已启用 Mod 列表已在 Rimmerge 之外被更改（+{added}，-{removed}）。你的待定更改已保留。该列表已与你所选的顺序一致。",
+      "reorderedMatches": "你的已启用的加载顺序已在 Rimmerge 之外被更改。你的待定更改已保留。该顺序已与你所选的顺序一致。",
+      "outsideMatchesNoPending": "你的已启用 Mod 列表已在 Rimmerge 之外被更改（+{added}，-{removed}）。该列表已与你所选的顺序一致。",
+      "reorderedMatchesNoPending": "你的已启用的加载顺序已在 Rimmerge 之外被更改。该顺序已与你所选的顺序一致。",
       "useFile": "使用文件中的列表",
       "useFileTitle": "会先打开预览。在你确认之前不会有任何更改。",
       "stale": {
@@ -1399,7 +1426,8 @@
       "deactivateButton": "禁用",
       "rescanButton": "重新扫描 Mod",
       "searchActiveLabel": "搜索已启用的 Mod",
-      "searchInactiveLabel": "搜索未启用的 Mod"
+      "searchInactiveLabel": "搜索未启用的 Mod",
+      "tagFilterLabel": "按标签筛选 Mod"
     },
     "defSearch": {
       "ariaLabel": "跳转到 Def",
@@ -1502,7 +1530,8 @@
       "suggestedNote": "点击应用将写入建议顺序。移动任意 Mod 即会切换到你自己的顺序。",
       "coreStaysActive": "Core 无法禁用。",
       "inactiveNotOrdered": "此列表没有自己的顺序。将 Mod 拖到已启用列表即可启用它们。",
-      "activateAtItem": "在指定位置启用…"
+      "activateAtItem": "在指定位置启用…",
+      "groupsViewOff": "分组视图中无法移动 Mod。将此列表切换到列表视图即可调整 Mod 顺序。"
     },
     "colors": {
       "names": {
@@ -1520,6 +1549,10 @@
         "slate": "石板灰"
       },
       "rowColor": "颜色：{name}",
+      "rowColorFromGroup": "来自分组 {group} 的颜色：{name}",
+      "swatchesLabel": "设置此 Mod 的颜色",
+      "swatch": "设为{name}",
+      "swatchNone": "无颜色",
       "groupTitle": "分组颜色",
       "modTitle": "Mod 颜色",
       "groupHelp": "颜色会在分组树和 Mod 行上标记该分组，不会改变其他任何内容。",
@@ -1534,6 +1567,40 @@
         "modChanged": "已更改 {name} 的颜色",
         "modCleared": "已移除 {name} 的颜色"
       }
+    },
+    "showInLoadOrder": {
+      "action": "在加载顺序中显示",
+      "announce": "已在加载顺序中显示 {name}。",
+      "filterCleared": "{name} 被筛选隐藏，因此已清除筛选。"
+    },
+    "groupsView": {
+      "regionLabel": "按分组显示的 Mod",
+      "rovingHint": "用方向键移动，用右方向键和左方向键展开和折叠文件夹，按 Enter 打开 Mod，按空格键选择",
+      "switchHeading": "视图",
+      "switchLabel": "此列表的显示方式",
+      "viewList": "列表",
+      "viewGroups": "分组",
+      "unavailable": "分组视图需要用到你的分组，但它们目前无法使用。",
+      "collapseAll": "全部折叠",
+      "expandAll": "全部展开",
+      "modCount": "{count} 个 Mod",
+      "folderActions": "文件夹 {name} 的操作",
+      "folderLabelExpanded": "{name}，{count} 个 Mod，已展开",
+      "folderLabelCollapsed": "{name}，{count} 个 Mod，已折叠",
+      "alsoInShort": "另属 {count} 个分组",
+      "alsoInLong": "同时属于另外 {count} 个分组：{groups}",
+      "alsoInTitle": "同时属于：{groups}",
+      "menu": {
+        "select": "选择此文件夹中的全部 Mod",
+        "activate": "全部启用…",
+        "deactivate": "全部禁用…"
+      },
+      "folderSelected": "已选择 {name} 中的 {count} 个 Mod。",
+      "folderSelectedNone": "{name} 中没有可选择的 Mod。",
+      "empty": "这里没有可显示的 Mod。",
+      "emptyFiltered": "没有与当前搜索、标签、来源或分组匹配的 Mod。",
+      "cutNote": "有 {hidden} 行未显示。折叠一些文件夹或缩小搜索范围即可查看。",
+      "ungroupedRefusesDrop": "无法将 Mod 加入“未分组”。要将 Mod 从其分组中移出，请使用“移出分组…”。"
     },
     "groups": {
       "regionLabel": "分组",
@@ -1553,8 +1620,10 @@
       "noMatches": "没有匹配的分组。",
       "nodeModCount": "{count} 个 Mod（含子分组）",
       "nodeSubgroupCount": "{count} 个子分组",
-      "chipWithColor": "{name}（{color}）",
+      "chipScope": "仅显示分组 {name} 中的 Mod。",
+      "chipScopeWithColor": "仅显示分组 {name}（{color}）中的 Mod。",
       "allGroups": "所在分组：{groups}",
+      "openModIsMember": "当前打开的 Mod 在此分组中",
       "rowMenu": {
         "groups": "分组…",
         "color": "颜色…",
@@ -1604,7 +1673,7 @@
         "moveButton": "移动",
         "modGroupsTitle": "{name} 的分组",
         "modGroupsHelp": "勾选一个分组即可将此 Mod 加入其中；取消勾选即可将其移出。每项更改都会立即保存。",
-        "modGroupsEmpty": "还没有分组。请在分组面板中创建。",
+        "modGroupsEmpty": "还没有分组。在上方输入名称即可创建。",
         "modGroupsList": "分组",
         "done": "完成",
         "removeUninstalledTitle": "移除未安装的 Mod",
@@ -1618,6 +1687,76 @@
         "title": "重新开始，不保留分组",
         "body": "Rimmerge 会在无法读取的文件旁保留一份副本，然后以没有分组和颜色的状态重新开始。你的 Mod 和加载顺序不受影响。",
         "confirm": "重新开始"
+      },
+      "copy": {
+        "button": "从其他配置档案复制…",
+        "title": "从其他配置档案复制分组",
+        "intro": "选择另一个配置档案的文件夹，从中复制其分组和颜色。你的 Mod、加载顺序和规则不受影响，也不会向该文件夹写入任何内容。",
+        "choose": "选择配置档案文件夹…",
+        "chooseAnother": "选择其他文件夹…",
+        "folder": "复制来源：{path}",
+        "modeLegend": "复制方式",
+        "mode": {
+          "merge": "合并到我的分组",
+          "mergeHelp": "位于同一位置且名称相同的分组（例如“武器 / 近战”）会被合并，新的分组会被添加。如果两个配置档案都为同一项设置了颜色，则保留你的颜色。",
+          "replace": "替换我的分组",
+          "replaceHelp": "你的所有分组和颜色都会被移除，由该配置档案的分组和颜色取而代之。"
+        },
+        "previewHeading": "复制将进行以下更改：",
+        "nothingChanges": "不会有任何更改。该配置档案中的所有内容这里都已存在。",
+        "line": {
+          "groupsAdded": "添加 {count} 个分组",
+          "groupsMerged": "{count} 个分组并入此处位于同一位置且名称相同的分组",
+          "membershipsAdded": "添加 {count} 项分组归属",
+          "membershipsAlready": "{count} 项分组归属此处已存在",
+          "modColorsAdded": "添加 {count} 个 Mod 颜色",
+          "modColorsKept": "{count} 个 Mod 在此处已有不同的颜色，因此保留你的颜色",
+          "groupColorsAdopted": "{count} 个没有颜色的分组采用另一个配置档案中的颜色",
+          "notInstalled": "这些分组中有 {count} 个 Mod 未安装。它们仍保留在各自的分组中，安装后会重新出现。"
+        },
+        "clashesHeading": "{count} 个分组在此处的颜色不同，因此保留你的颜色：",
+        "clash": "{path}：你的是{kept}，对方的是{offered}",
+        "discard": {
+          "heading": "这会移除此处现有的以下内容：",
+          "groups": "{count} 个分组",
+          "memberships": "{count} 项分组归属",
+          "modColors": "{count} 个 Mod 颜色"
+        },
+        "mergeButton": "合并",
+        "replaceButton": "替换…",
+        "close": "关闭",
+        "confirm": {
+          "title": "替换你的所有分组？",
+          "body": "替换会移除下方列出的所有内容，并以另一个配置档案的分组和颜色取而代之。你的 Mod、加载顺序和规则不受影响。此操作无法撤销。",
+          "button": "全部替换"
+        },
+        "done": {
+          "title": "已复制分组",
+          "merged": "已将另一个配置档案的分组和颜色合并到你的分组和颜色中。",
+          "replaced": "已用另一个配置档案的分组和颜色替换你的分组和颜色。"
+        },
+        "refused": {
+          "sameProfile": "这是此配置档案自己的文件夹。请选择其他配置档案的文件夹。未做任何更改。",
+          "notAFolder": "这不是文件夹。请选择一个配置档案的文件夹。未做任何更改。",
+          "missing": "该文件夹中没有分组和颜色文件。请选择一个有分组的配置档案的文件夹。未做任何更改。",
+          "empty": "该配置档案没有分组，也没有颜色，因此没有可复制的内容。未做任何更改。",
+          "nothingToCopy": "该配置档案的分组和颜色与你的完全相同，因此没有可复制的内容。未做任何更改。",
+          "tooLargeToSave": "结果将为 {bytes}，超出你的分组和颜色文件可容纳的 {limit}。未做任何更改。",
+          "unusable": {
+            "unreadable": "无法读取该文件夹中的分组和颜色文件。未做任何更改。",
+            "tooLarge": "该文件夹中的分组和颜色文件过大，无法读取。未做任何更改。",
+            "malformed": "该文件夹中的分组和颜色文件已损坏，或者不是分组文件。未做任何更改。",
+            "newerVersion": "该文件夹中的分组和颜色文件由更新版本的 Rimmerge 保存。未做任何更改。",
+            "invalid": "该文件夹中的分组和颜色文件包含相互冲突的分组，例如循环嵌套或名称重复。未做任何更改。"
+          },
+          "limit": {
+            "tooDeep": "结果中分组的嵌套层数将超出 Rimmerge 允许的上限。未做任何更改。",
+            "tooManyGroups": "结果中的分组数量将超出 Rimmerge 允许的上限。未做任何更改。",
+            "tooManyMembers": "结果将使单个分组中或全部分组中的 Mod 数量超出 Rimmerge 允许的上限。未做任何更改。",
+            "tooManyColors": "结果中带颜色的 Mod 数量将超出 Rimmerge 允许的上限。未做任何更改。",
+            "other": "结果将超出分组的某项上限。未做任何更改。"
+          }
+        }
       },
       "notice": {
         "notLoaded": "本次会话中无法使用分组和颜色。",
@@ -1653,8 +1792,18 @@
         "movedTop": "{name} 现在是顶层分组",
         "movedInside": "已将 {name} 移入 {parent}"
       },
+      "search": {
+        "label": "搜索分组，或输入名称以新建分组",
+        "placeholder": "搜索或新建分组",
+        "noMatch": "没有与搜索匹配的分组。",
+        "createOption": "新建分组“{name}”",
+        "createHintBulk": "新建时会同时加入你所选的 Mod，两项更改会一并保存。",
+        "createHintSingle": "新建时会同时加入此 Mod，两项更改会一并保存。",
+        "parentLabel": "新建于"
+      },
       "toast": {
         "created": "已创建分组",
+        "createdAndAdded": "已创建 {name}，并向其中加入 {count} 个 Mod",
         "renamed": "已重命名分组",
         "moved": "已移动分组",
         "deleted": "已删除分组",
@@ -2159,6 +2308,9 @@
     "confirm": {
       "heading": "仍要应用？",
       "intro": "{order}顺序有 {count} 个问题需要在写入前确认：",
+      "outsideHeading": "已启用 Mod 列表已在 Rimmerge 之外被更改",
+      "outsideMembership": "已启用 Mod 列表在 Rimmerge 上次读取后已在别处被编辑（+{added}，-{removed}）。应用会将{order}顺序写入并覆盖这些编辑。写入前会先备份被更改的文件。",
+      "outsideReordered": "已启用的加载顺序在 Rimmerge 上次读取后已在别处被更改。应用会将{order}顺序写入并覆盖该更改。写入前会先备份被更改的文件。",
       "acknowledgedHeading": "已在检查结果页中决定",
       "reviewInInbox": "在检查结果页中查看",
       "goBackButton": "返回",

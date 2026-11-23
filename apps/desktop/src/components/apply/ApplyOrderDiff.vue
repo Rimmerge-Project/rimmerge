@@ -154,6 +154,7 @@ function groupedLineText(group: (typeof groupedByModOperations.value)[number]): 
           class="text-xs"
         >
           <i18n-t
+            scope="global"
             keypath="apply.diff.modPossessive"
             tag="span"
           >
@@ -180,6 +181,7 @@ function groupedLineText(group: (typeof groupedByModOperations.value)[number]): 
                 {{ t("apply.diff.cosmeticText") }}
                 <i18n-t
                   v-if="def.reorderKind.existingMergeKey"
+                  scope="global"
                   keypath="apply.diff.mergeInstead"
                   tag="span"
                 >
@@ -255,6 +257,7 @@ function groupedLineText(group: (typeof groupedByModOperations.value)[number]): 
             class="text-xs"
           >
             <i18n-t
+              scope="global"
               keypath="apply.diff.modPossessive"
               tag="span"
             >

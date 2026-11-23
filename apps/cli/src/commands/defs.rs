@@ -167,7 +167,7 @@ fn finding_keys_text(keys: &[FindingKey]) -> String {
 
 fn print_changes_table(mod_id: &ModId, page: &ChangePage) {
     println!(
-        "changes for {} — {} total",
+        "changes for {} - {} total",
         TerminalSafe::line(mod_id),
         page.total
     );
@@ -321,8 +321,8 @@ fn format_stopper(stopper: &Stopper) -> String {
             mod_id,
             op_index,
             error,
-        } => format!("{mod_id}'s operation #{op_index} — {error}"),
-        Stopper::Inherit(error) => format!("inheritance — {error}"),
+        } => format!("{mod_id}'s operation #{op_index}: {error}"),
+        Stopper::Inherit(error) => format!("inheritance: {error}"),
     }
 }
 
@@ -356,7 +356,7 @@ fn print_inspection_text(inspection: &DefInspection) {
     println!("source: {}", format_source(inspection.source));
     if inspection.template_ambiguity.is_some() {
         println!(
-            "winner: {}  (representative only — no single answer exists, see \"ambiguous template\" below)",
+            "winner: {}  (representative only: no single answer exists; see \"ambiguous template\" below)",
             TerminalSafe::line(&inspection.winner)
         );
     } else {
@@ -390,7 +390,7 @@ fn print_inspection_text(inspection: &DefInspection) {
         println!(
             "ambiguous template: this Name has {} registrations. RimWorld resolves \
              each child independently to whichever registration loads nearest at or \
-             before it — never a single winner. \"winner\"/\"(last-loaded \
+             before it; never a single winner. \"winner\"/\"(last-loaded \
              representative)\" above is only this crate's own disclosed stand-in for \
              when no specific child is being asked, not an answer.",
             ambiguity.registrants.len()
@@ -406,7 +406,7 @@ fn print_inspection_text(inspection: &DefInspection) {
             let empty = Vec::new();
             let children = by_resolution.get(registrant).unwrap_or(&empty);
             println!(
-                "  {} — {} known child(ren) resolve here:",
+                "  {} - {} known child(ren) resolve here:",
                 TerminalSafe::line(registrant),
                 children.len()
             );
@@ -435,10 +435,10 @@ fn print_inspection_text(inspection: &DefInspection) {
                 (Ok(()), false) => {
                     "replay: not reached (an earlier mod's op stopped the fold)".to_string()
                 }
-                (Err(reason), _) => format!("replay: FAILED — {reason}"),
+                (Err(reason), _) => format!("replay: FAILED - {reason}"),
             };
             println!(
-                "  [{:>3}] {}{generated} — {}",
+                "  [{:>3}] {}{generated} - {}",
                 patcher.position,
                 TerminalSafe::line(&patcher.mod_id),
                 TerminalSafe::line(replay)
@@ -514,7 +514,7 @@ fn print_inspection_text(inspection: &DefInspection) {
         Completeness::Complete => println!("completeness: complete"),
         Completeness::Partial { stopped_at } => {
             println!(
-                "completeness: PARTIAL — stopped at {}",
+                "completeness: PARTIAL, stopped at {}",
                 TerminalSafe::line(format_stopper(stopped_at))
             );
         }
@@ -771,7 +771,7 @@ pub struct SearchArgs {
     /// (case-insensitive substring, active mods only).
     query: String,
     /// How many hits to print, capped at `MAX_PAGE_SIZE` (also this
-    /// flag's own default — the CLI's own default, larger than the
+    /// flag's own default; the CLI's own default, larger than the
     /// desktop's own smaller 10-hit page).
     #[arg(long, default_value_t = MAX_PAGE_SIZE)]
     limit: usize,

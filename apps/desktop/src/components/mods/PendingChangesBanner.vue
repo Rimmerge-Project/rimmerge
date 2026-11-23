@@ -4,6 +4,7 @@ import Message from "primevue/message";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 
+import { useBannerAnnouncement } from "@/composables/useBannerAnnouncement";
 import { useTranslateMessage } from "@/composables/useTranslateMessage";
 import {
   useDiscardPendingChangesMutation,
@@ -11,6 +12,7 @@ import {
   useRescanMutation,
 } from "@/queries/activeSet";
 import { type CommandErrorDescriptor, describeCommandError } from "@/utils/errors";
+import { QUIET_MESSAGE_PT } from "@/utils/quietMessage";
 
 const { t } = useI18n();
 const tm = useTranslateMessage();
@@ -26,6 +28,12 @@ const unappliedCount = computed(() => {
   const diff = pending.value?.unapplied;
   return diff ? diff.added.length + diff.removed.length : 0;
 });
+
+useBannerAnnouncement("pendingChanges", () =>
+  unscannedCount.value > 0
+    ? t("mods.pendingChanges.unscanned", { count: unscannedCount.value }, unscannedCount.value)
+    : null,
+);
 
 const errorMessage = ref<CommandErrorDescriptor | null>(null);
 
@@ -57,6 +65,7 @@ async function rescanNow(): Promise<void> {
     <Message
       severity="warn"
       :closable="false"
+      :pt="QUIET_MESSAGE_PT"
     >
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="flex flex-col">

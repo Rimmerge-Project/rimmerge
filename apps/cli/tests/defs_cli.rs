@@ -654,11 +654,11 @@ fn defs_inspect_an_ambiguous_template_shows_per_child_resolution_not_a_single_wi
             "ambiguous template: this Name has 2 registrations",
         ))
         .stdout(predicates::str::contains(
-            "fixture.modx — 1 known child(ren) resolve here",
+            "fixture.modx - 1 known child(ren) resolve here",
         ))
         .stdout(predicates::str::contains("fixture.modchilda"))
         .stdout(predicates::str::contains(
-            "fixture.mody — 1 known child(ren) resolve here",
+            "fixture.mody - 1 known child(ren) resolve here",
         ))
         .stdout(predicates::str::contains("fixture.modchildb"));
 

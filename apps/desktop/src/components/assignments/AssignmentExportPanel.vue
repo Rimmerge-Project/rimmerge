@@ -74,10 +74,14 @@ const hasUnscannedActiveChanges = computed(() => {
 // Install writes `orders.current`, the order the user is looking at, not the file's own list:
 // a move or an import that no Apply has written yet reaches `ModsConfig.xml` with the install.
 const isCurrentOrderUnapplied = computed(() => pendingActiveChanges.value?.orderUnapplied === true);
-// Install writes Current over the file, so an edit made outside Rimmerge is overwritten too.
+// Install writes Current over the file, so an edit made outside Rimmerge is overwritten too,
+// unless the file already holds exactly Current (`fileHoldsCurrentExactly`): then nothing is lost.
 const { data: fileBaseline } = useFileBaselineQuery();
 const hasOutsideChange = computed(
-  () => fileBaseline.value !== undefined && fileBaseline.value.externalChange.kind !== "none",
+  () =>
+    fileBaseline.value !== undefined &&
+    fileBaseline.value.externalChange.kind !== "none" &&
+    !fileBaseline.value.fileHoldsCurrentExactly,
 );
 
 async function choose(): Promise<void> {

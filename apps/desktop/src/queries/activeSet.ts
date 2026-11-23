@@ -11,7 +11,9 @@ import {
   discardPendingChanges,
   getPendingActiveChanges,
   listInactiveMods,
+  listInactiveModsGrouped,
   listWorkingMods,
+  listWorkingModsGrouped,
   moveMods,
   planActivateMods,
   planDeactivateMods,
@@ -21,6 +23,7 @@ import {
 import { useSessionStore } from "@/stores/session";
 import type { ActivateRequestDto } from "@/types/generated/ActivateRequestDto";
 import type { DeactivateRequestDto } from "@/types/generated/DeactivateRequestDto";
+import type { GroupedListQueryDto } from "@/types/generated/GroupedListQueryDto";
 import type { ModListQueryDto } from "@/types/generated/ModListQueryDto";
 import type { MoveRequestDto } from "@/types/generated/MoveRequestDto";
 import { ruleWarningsDetail } from "@/utils/ruleWarning";
@@ -57,6 +60,38 @@ export function useWorkingModsQuery(
 }
 
 /**
+ * The Inactive pane in Groups view. Its key sits under the Inactive list prefix, so every
+ * invalidation that reaches the List view's query reaches this one. `enabled` runs it only while
+ * the pane shows Groups, so a pane never fetches both shapes. A key change (a fold, a search
+ * keystroke) keeps the previous answer on screen while the new one loads (`placeholderData`: Colada
+ * reads it as `success` with `isPlaceholderData`), so the list does not blank and lose its scroll.
+ */
+export function useInactiveModsGroupedQuery(
+  query: MaybeRefOrGetter<GroupedListQueryDto>,
+  enabled: MaybeRefOrGetter<boolean> = true,
+) {
+  return useQuery({
+    key: () => queryKeys.inactiveModsGrouped(toValue(query)),
+    query: () => listInactiveModsGrouped(toValue(query)),
+    enabled: () => toValue(enabled),
+    placeholderData: (previousData) => previousData,
+  });
+}
+
+/** The Active pane in Groups view; see {@link useInactiveModsGroupedQuery}. */
+export function useWorkingModsGroupedQuery(
+  query: MaybeRefOrGetter<GroupedListQueryDto>,
+  enabled: MaybeRefOrGetter<boolean> = true,
+) {
+  return useQuery({
+    key: () => queryKeys.workingModsGrouped(toValue(query)),
+    query: () => listWorkingModsGrouped(toValue(query)),
+    enabled: () => toValue(enabled),
+    placeholderData: (previousData) => previousData,
+  });
+}
+
+/**
  * The working active-mod set's own pending-change summary: `unscanned`
  * (what a Rescan would pick up — the banner's own count) and `unapplied`
  * (what an Apply would write — the apply dialog's own warning).
@@ -87,7 +122,9 @@ export function usePlanActivateModsMutation() {
  * trip — the same reasoning `useApplyMutation` already documents. An
  * anchored activation (a drop position) can switch the selected order from
  * Suggested to Current; the store adopts the backend's answer here, and the
- * result's `didSwitchToCurrent` lets the caller say so.
+ * result's `didSwitchToCurrent` lets the caller say so. `activated` is what the commit really
+ * added and `alreadyActive` the requested mods its own plan found active (the backend re-plans, so
+ * both can differ from the plan the dialog showed); the caller drops both from its selection.
  */
 export function useActivateModsMutation() {
   const queryCache = useQueryCache();
@@ -143,7 +180,11 @@ export function usePlanDeactivateModsMutation() {
   });
 }
 
-/** Commits a deactivation onto the working set. See {@link useActivateModsMutation}. */
+/**
+ * Commits a deactivation onto the working set. See {@link useActivateModsMutation}; the result's
+ * `removed` is what the commit really removed and `notActive` the requested mods that were no
+ * longer active, which the caller drops from its selection (a refused Core is in neither).
+ */
 export function useDeactivateModsMutation() {
   const queryCache = useQueryCache();
   return useMutation({

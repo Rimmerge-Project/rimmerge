@@ -24,7 +24,7 @@ fn main() {
     println!("cargo:rerun-if-changed={}", bundle_path.display());
 
     if !bundle_path.is_file() {
-        panic!("rules/rimmerge-rules.json not found — run: git submodule update --init");
+        panic!("rules/rimmerge-rules.json not found. Run: git submodule update --init");
     }
 
     let bytes = std::fs::read(&bundle_path).unwrap_or_else(|error| {

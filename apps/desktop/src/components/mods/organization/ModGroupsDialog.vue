@@ -1,20 +1,23 @@
 <script setup lang="ts">
 import Button from "primevue/button";
 import Dialog from "primevue/dialog";
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
+import GroupSearchCreate from "@/components/mods/organization/GroupSearchCreate.vue";
 import OrganizationError from "@/components/mods/organization/OrganizationError.vue";
 import type { GroupNodeDto } from "@/types/generated/GroupNodeDto";
 import type { CommandErrorDescriptor } from "@/utils/errors";
-import { COLOR_NAME_KEY, COLOR_SWATCH_CLASS } from "@/utils/organization";
+import { COLOR_NAME_KEY, COLOR_SWATCH_CLASS, filterGroupsByName } from "@/utils/organization";
 
 /**
  * One mod groups: every group as a checkbox, checked while the mod is a direct member. A click
  * saves at once (one backend call, one save), and the checkbox follows what was saved, so a
  * refusal leaves it as it was and shows the error. Adding never removes the mod from another
  * group. While a save runs the boxes are `aria-disabled` rather than `disabled`: a disabled
- * element drops keyboard focus, and the user would lose their place in the list.
+ * element drops keyboard focus, and the user would lose their place in the list. The search field
+ * filters the list and, for a name no group has, offers "Create group": one backend call creates
+ * it and adds the mod (`createAndAdd`), and the new group then shows checked.
  */
 const { modName, nodes, memberOf, error, isBusy } = defineProps<{
   /** The mod as the lists label it. */
@@ -26,11 +29,24 @@ const { modName, nodes, memberOf, error, isBusy } = defineProps<{
   error: CommandErrorDescriptor | null;
   isBusy: boolean;
 }>();
-const emit = defineEmits<{ toggle: [groupId: number, isMember: boolean] }>();
+const emit = defineEmits<{
+  toggle: [groupId: number, isMember: boolean];
+  /** Create a group (inside `parent`, `null` for top level) with this mod in it. */
+  createAndAdd: [name: string, parent: number | null];
+}>();
 const visible = defineModel<boolean>("visible", { required: true });
 
 const { t } = useI18n();
 const members = computed(() => new Set(memberOf));
+const query = ref("");
+const matchingNodes = computed(() => filterGroupsByName(nodes, query.value));
+
+// A reopened dialog starts with an empty search.
+watch(visible, (isOpen) => {
+  if (isOpen) {
+    query.value = "";
+  }
+});
 
 /** The click is the request; the box only changes once the new membership is saved. */
 function onClick(event: MouseEvent, node: GroupNodeDto): void {
@@ -54,11 +70,25 @@ function onClick(event: MouseEvent, node: GroupNodeDto): void {
       <p class="text-text-muted">
         {{ t("mods.groups.dialog.modGroupsHelp") }}
       </p>
+      <GroupSearchCreate
+        v-model:query="query"
+        :nodes="nodes"
+        :is-busy="isBusy"
+        target="single"
+        @create="(name, parent) => emit('createAndAdd', name, parent)"
+      />
       <p
         v-if="nodes.length === 0"
         data-testid="mod-groups-empty"
       >
         {{ t("mods.groups.dialog.modGroupsEmpty") }}
+      </p>
+      <p
+        v-else-if="matchingNodes.length === 0"
+        class="text-text-muted"
+        data-testid="mod-groups-no-match"
+      >
+        {{ t("mods.groups.search.noMatch") }}
       </p>
       <ul
         v-else
@@ -66,7 +96,7 @@ function onClick(event: MouseEvent, node: GroupNodeDto): void {
         :aria-label="t('mods.groups.dialog.modGroupsList')"
       >
         <li
-          v-for="node in nodes"
+          v-for="node in matchingNodes"
           :key="node.id"
         >
           <label

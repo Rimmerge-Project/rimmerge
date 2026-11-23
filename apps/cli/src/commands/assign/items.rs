@@ -90,7 +90,7 @@ pub(super) fn run_items(args: &ItemsArgs) -> anyhow::Result<()> {
     }
 
     println!(
-        "{} item(s) of type {} — {} total",
+        "{} item(s) of type {} - {} total",
         page.items.len(),
         TerminalSafe::line(&args.def_type),
         page.total

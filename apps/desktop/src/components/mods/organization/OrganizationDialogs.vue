@@ -7,6 +7,7 @@ import { useI18n } from "vue-i18n";
 
 import BulkGroupsDialog from "@/components/mods/organization/BulkGroupsDialog.vue";
 import ColorPickerDialog from "@/components/mods/organization/ColorPickerDialog.vue";
+import CopyProfileDialog from "@/components/mods/organization/CopyProfileDialog.vue";
 import GroupDeleteDialog from "@/components/mods/organization/GroupDeleteDialog.vue";
 import GroupMoveDialog from "@/components/mods/organization/GroupMoveDialog.vue";
 import GroupNameDialog from "@/components/mods/organization/GroupNameDialog.vue";
@@ -70,6 +71,14 @@ async function run(edit: () => Promise<void>, options: { keepOpen?: boolean } = 
   }
 }
 
+/** The group a create edit made; any other outcome is a broken contract and shows as the error. */
+function createdGroup(outcome: OrganizationEditOutcomeDto): { id: number; members: number } {
+  if (outcome.kind !== "created") {
+    throw new Error(`create_group answered "${outcome.kind}", expected "created"`);
+  }
+  return { id: outcome.id, members: outcome.members };
+}
+
 function say(summary: string, detail?: string): void {
   toast.add({
     severity: "success",
@@ -100,6 +109,7 @@ const isRemoveUninstalledOpen = isOpen("removeUninstalled");
 const isModColorOpen = isOpen("modColor");
 const isModGroupsOpen = isOpen("modGroups");
 const isStartOverOpen = isOpen("startOver");
+const isCopyProfileOpen = isOpen("copyProfile");
 const isBulkGroupsOpen = isOpen("bulkGroups");
 const isBulkColorOpen = isOpen("bulkColor");
 
@@ -120,6 +130,7 @@ const groupId = computed(() => {
     case "modColor":
     case "modGroups":
     case "startOver":
+    case "copyProfile":
     case "bulkGroups":
     case "bulkColor":
       return null;
@@ -286,6 +297,44 @@ function toggleMembership(id: number, isMember: boolean): Promise<void> {
     },
     { keepOpen: true },
   );
+}
+
+/** One call creates the group and adds the mod; the new group then shows checked in the dialog. */
+function createGroupWithMod(name: string, parent: number | null): Promise<void> {
+  const current = dialog.value;
+  if (current?.kind !== "modGroups") {
+    return Promise.resolve();
+  }
+  return run(
+    async () => {
+      const created = createdGroup(
+        await edits.createGroup.mutateAsync({ name, parent, modIds: [current.modId] }),
+      );
+      say(
+        t("mods.groups.toast.createdAndAdded", { name, count: created.members }, created.members),
+      );
+      // The dialog may have closed meanwhile.
+      const latest = dialog.value;
+      if (latest?.kind === "modGroups") {
+        dialog.value = { ...latest, groupIds: [...latest.groupIds, created.id] };
+      }
+    },
+    { keepOpen: true },
+  );
+}
+
+/** One call creates the group and adds every selected mod to it. */
+function bulkCreateAndAdd(name: string, parent: number | null): Promise<void> {
+  const current = dialog.value;
+  if (current?.kind !== "bulkGroups" || current.mode !== "add") {
+    return Promise.resolve();
+  }
+  return run(async () => {
+    const created = createdGroup(
+      await edits.createGroup.mutateAsync({ name, parent, modIds: [...current.modIds] }),
+    );
+    say(t("mods.groups.toast.createdAndAdded", { name, count: created.members }, created.members));
+  });
 }
 
 function removedCounts(outcome: OrganizationEditOutcomeDto): { removed: number; absent: number } {
@@ -501,6 +550,7 @@ function startOver(): Promise<void> {
     :error="error"
     :is-busy="isBusy"
     @toggle="toggleMembership"
+    @create-and-add="createGroupWithMod"
   />
   <BulkGroupsDialog
     v-model:visible="isBulkGroupsOpen"
@@ -513,6 +563,7 @@ function startOver(): Promise<void> {
     :is-submitting="isBusy"
     @choose="bulkChoose"
     @move="bulkMove"
+    @create-and-add="bulkCreateAndAdd"
     @after-hide="onBulkDialogGone"
   />
   <ColorPickerDialog
@@ -525,6 +576,7 @@ function startOver(): Promise<void> {
     @choose="bulkColor"
     @after-hide="onBulkDialogGone"
   />
+  <CopyProfileDialog v-model:visible="isCopyProfileOpen" />
   <StartOverDialog
     v-model:visible="isStartOverOpen"
     :error="error"
@@ -563,6 +615,7 @@ function startOver(): Promise<void> {
       <template v-else-if="group">
         <p>
           <i18n-t
+            scope="global"
             keypath="mods.groups.dialog.removeUninstalledBody"
             tag="span"
             :plural="scopePlan.notInstalled"

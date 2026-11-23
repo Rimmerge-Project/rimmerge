@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 // Type-only: pulls in `Window.__E2E_MOCK_IPC__`'s ambient declaration.
 import type {} from "../../src/e2e-mock-bootstrap";
 import { installScenario } from "../fixtures/scenario";
+import { failOnSameOriginRequestFailure } from "./support";
 
 test.describe("scan progress", () => {
   // The mock holds `load_project` open after emitting each stage's
@@ -11,6 +12,7 @@ test.describe("scan progress", () => {
     page,
   }) => {
     await page.addInitScript(installScenario);
+    failOnSameOriginRequestFailure(page);
     await page.goto("/");
     await page.evaluate(() => {
       window.__LOAD_PROJECT_PROGRESS__ = [
@@ -29,6 +31,7 @@ test.describe("scan progress", () => {
 
   test("a later stage replaces the earlier stage's caption", async ({ page }) => {
     await page.addInitScript(installScenario);
+    failOnSameOriginRequestFailure(page);
     await page.goto("/");
     await page.evaluate(() => {
       window.__LOAD_PROJECT_PROGRESS__ = [

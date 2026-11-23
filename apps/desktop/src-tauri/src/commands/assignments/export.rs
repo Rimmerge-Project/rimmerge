@@ -1,10 +1,9 @@
 //! Exporting a project, optionally installing it.
 
-use std::path::Path;
-
 use rim_session::use_cases::{AssignmentExportOptions, ExportAssignment};
 
 use super::projects::parse_assignment_id;
+use crate::commands::patch::resolve_export_dir;
 use crate::dto::assignment::{ExportAssignmentReportDto, ExportAssignmentRequestDto};
 use crate::error::CommandError;
 use crate::state::{AppState, with_session};
@@ -29,6 +28,9 @@ pub(crate) async fn export_assignment_inner(
     state: &AppState,
     request: ExportAssignmentRequestDto,
 ) -> Result<ExportAssignmentReportDto, CommandError> {
+    // Parsed and resolved before the session lock is taken, as
+    // `export_patch_inner` does: see `resolve_export_dir`.
+    let out_dir = resolve_export_dir(&request.out_dir).await?;
     let adapters = state.adapters.clone();
     let probe = std::sync::Arc::clone(&state.game_process_probe);
     with_session(state, move |session| {
@@ -36,12 +38,6 @@ pub(crate) async fn export_assignment_inner(
         if request.install && !request.force && probe.is_running() {
             return Err(CommandError::rimworld_running());
         }
-
-        // Absolutized/canonicalized the same way `export_patch_inner`
-        // does — see that command's own doc comment for why.
-        let out_dir = rim_io::resolve_user_dir(Path::new(&request.out_dir)).map_err(|error| {
-            CommandError::invalid_input(format!("resolving out_dir {}: {error}", request.out_dir))
-        })?;
 
         let use_case = ExportAssignment::new(
             adapters.merge_mod_writer,

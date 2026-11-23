@@ -32,47 +32,57 @@ const { t } = useI18n();
     <template v-if="hasOrganizationActions">
       <Button
         :label="t('mods.bulk.addToGroup')"
+        :title="t('mods.bulk.addToGroup')"
         icon="pi pi-folder-plus"
         severity="secondary"
         outlined
         size="small"
+        class="max-w-full [&>.p-button-label]:truncate"
         :data-testid="`bulk-add-to-group-${kind}`"
         @click="emit('action', 'addToGroup')"
       />
       <Button
         :label="t('mods.bulk.removeFromGroup')"
+        :title="t('mods.bulk.removeFromGroup')"
         icon="pi pi-minus"
         severity="secondary"
         outlined
         size="small"
+        class="max-w-full [&>.p-button-label]:truncate"
         :data-testid="`bulk-remove-from-group-${kind}`"
         @click="emit('action', 'removeFromGroup')"
       />
       <Button
         :label="t('mods.bulk.moveToGroup')"
+        :title="t('mods.bulk.moveToGroup')"
         icon="pi pi-arrow-right-arrow-left"
         severity="secondary"
         outlined
         size="small"
+        class="max-w-full [&>.p-button-label]:truncate"
         :data-testid="`bulk-move-to-group-${kind}`"
         @click="emit('action', 'moveToGroup')"
       />
       <Button
         :label="t('mods.bulk.color')"
+        :title="t('mods.bulk.color')"
         icon="pi pi-palette"
         severity="secondary"
         outlined
         size="small"
+        class="max-w-full [&>.p-button-label]:truncate"
         :data-testid="`bulk-color-${kind}`"
         @click="emit('action', 'color')"
       />
     </template>
     <Button
       :label="t('mods.bulk.tagsButton')"
+      :title="t('mods.bulk.tagsButton')"
       icon="pi pi-tags"
       severity="secondary"
       outlined
       size="small"
+      class="max-w-full [&>.p-button-label]:truncate"
       :data-testid="`bulk-tags-${kind}`"
       @click="emit('action', 'tags')"
     />

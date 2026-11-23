@@ -13,6 +13,7 @@ use rim_resolve::sort::{
     AdvisoryEdge, DroppedEdge, EdgeProvenance, Layer, OrderingEdge, PlacementExplanation,
     TierReason,
 };
+use rim_session::OrderRow;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
@@ -366,4 +367,19 @@ pub struct OrderRowDto {
     pub hard_dependents: usize,
     /// How many live findings naming this mod still need input.
     pub needs_input_count: usize,
+}
+
+impl From<OrderRow> for OrderRowDto {
+    fn from(row: OrderRow) -> Self {
+        Self {
+            mod_id: row.mod_id.as_str().to_string(),
+            name: row.name,
+            position: row.position,
+            previous_position: row.previous_position,
+            tier: row.tier.into(),
+            tags: row.tags.iter().map(ToString::to_string).collect(),
+            hard_dependents: row.hard_dependents,
+            needs_input_count: row.needs_input_count,
+        }
+    }
 }

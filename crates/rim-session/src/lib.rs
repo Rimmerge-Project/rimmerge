@@ -18,17 +18,22 @@ mod finding_index;
 mod game_launch;
 mod import_sources;
 mod merge_workspace;
+mod mod_detail;
 mod mod_index;
 pub mod mod_info;
 mod mod_inventory;
 mod mod_knowledge;
 pub mod mod_list;
 mod mod_lists;
+mod mod_names;
 mod mod_times;
+mod order_rows;
 pub mod organization;
 mod paths;
+mod placement;
 mod recommended_rules;
 mod replay_pool;
+mod search_fold;
 mod session;
 mod settings;
 
@@ -37,6 +42,7 @@ pub mod effective_fields;
 pub mod notifications;
 pub mod ports;
 pub mod use_cases;
+pub mod user_path;
 
 pub use active_set::{
     ActivatePlan, ActiveSet, ActiveSetDiff, ActiveSetError, Anchor, DeactivatePlan, MoveError,
@@ -62,21 +68,26 @@ pub use import_sources::{resolve_from_cache, resolve_from_rimsort_dir, should_im
 pub use merge_workspace::{
     MergeFieldFilter, MergeFieldPage, MergeFieldTotals, MergePreview, PreviewSlot,
 };
+pub use mod_detail::{ModDetail, ModEdge, ModNotActive};
 pub use mod_index::{ModFilter, ModPage, ModSummary};
 pub use mod_inventory::{InventoryEntry, ModInventory};
 pub use mod_knowledge::ModKnowledge;
 pub use mod_lists::{
-    GroupFilter, GroupLabel, ListSort, ListSortKey, MAX_MOD_LIST_ROWS, ModList, ModListError,
-    ModListQuery, ModListRow, RowState, SortDirection,
+    Folder, FolderKey, GroupFilter, GroupLabel, GroupedEntry, GroupedListQuery, GroupedModList,
+    ListSort, ListSortKey, MAX_COLLAPSED_FOLDERS, MAX_GROUPED_ENTRIES, MAX_MOD_LIST_ROWS, ModList,
+    ModListError, ModListQuery, ModListRow, RowState, SearchHighlight, SortDirection,
+    TooManyCollapsedFolders,
 };
 pub use mod_times::{ModTimeSubject, ModUpdateTimes, UnixSeconds, UpdateTime, UpdateUnavailable};
+pub use order_rows::OrderRow;
 pub use paths::ProjectPaths;
 pub use recommended_rules::{
     FirstRun, RecommendedRulesFacts, RecommendedRulesStep, SourceNeed, StepSkip, Unavailable,
     recommended_rules_step,
 };
 pub use session::{
-    ManualTagsChange, PatchDecideError, RuleKey, Session, UnknownAssignment, UnknownPatch,
+    ManualTagsChange, PatchDecideError, PersistedStores, RuleKey, Session, UnknownAssignment,
+    UnknownPatch,
 };
 pub use settings::{Settings, SortProvenance, filter_imported_rules};
 

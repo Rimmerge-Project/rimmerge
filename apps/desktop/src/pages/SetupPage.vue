@@ -25,6 +25,7 @@ import {
   checkedLocations,
   describeDefaultPathsError,
   describeDefaultPathsWarning,
+  warningConcernsTheField,
 } from "@/utils/defaultPaths";
 import { type CommandErrorDescriptor, describeCommandError } from "@/utils/errors";
 import { ruleWarningsDetail } from "@/utils/ruleWarning";
@@ -120,8 +121,19 @@ const detectionLocations = computed(() =>
  */
 const resolvedWarningDescriptor = computed<MessageDescriptor | null>(() => {
   const warning = defaults.value?.warningCode ?? null;
-  if (warning === null || gameDir.value.trim() !== defaults.value?.gameDir) {
+  if (warning === null) {
     return null;
+  }
+  // A note about the field's own text is the backend's answer for the committed folder: it
+  // hides while the field holds an uncommitted edit. A refused typed text has no resolved
+  // folder to compare with, so it is tied to the committed text instead. A note about a stored
+  // value (`config.json`, an environment variable) stays whatever is typed.
+  if (warningConcernsTheField(warning)) {
+    const answeredFor =
+      warning.kind === "notAnInstall" ? defaults.value?.gameDir : committedGameDir.value;
+    if (gameDir.value.trim() !== answeredFor) {
+      return null;
+    }
   }
   return describeDefaultPathsWarning(warning);
 });

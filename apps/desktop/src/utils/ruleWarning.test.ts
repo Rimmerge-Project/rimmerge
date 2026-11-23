@@ -89,6 +89,19 @@ describe("describeRuleWarning", () => {
     expect(message.params).toBeUndefined();
     expect(ruleWarningTechnicalDetail(warning)).toBe("bad json");
   });
+
+  it("words a failed re-read per file and keeps its reason for the details line", () => {
+    const warning: RuleWarningDto = {
+      kind: "persistedReloadFailed",
+      file: "rules",
+      reason: "disk gone",
+    };
+    const message = describeRuleWarning(warning, "en");
+
+    expect(message.key).toBe("ruleWarning.reloadFailed.rules");
+    expect(message.params).toBeUndefined();
+    expect(ruleWarningTechnicalDetail(warning)).toBe("disk gone");
+  });
 });
 
 describe("ruleWarningsDetail", () => {

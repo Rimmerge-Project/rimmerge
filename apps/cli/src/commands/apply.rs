@@ -248,7 +248,7 @@ fn print_dry_run_diff(
         );
     }
     println!(
-        "{changed} of {} mod(s) would change position (nothing written — this is a dry run)",
+        "{changed} of {} mod(s) would change position (nothing written: this is a dry run)",
         new_order.as_slice().len()
     );
     Ok(())
@@ -415,6 +415,7 @@ mod tests {
         let preflight = ApplyPreflight {
             source: OrderSource::Suggested,
             items: Vec::new(),
+            outside_change: rim_session::ExternalFileChange::None,
         };
 
         assert!(format_preflight(&preflight).is_empty());
@@ -443,6 +444,7 @@ mod tests {
                     true,
                 ),
             ],
+            outside_change: rim_session::ExternalFileChange::None,
         };
 
         assert_eq!(
@@ -482,6 +484,7 @@ mod tests {
         let preflight = ApplyPreflight {
             source: OrderSource::Suggested,
             items: problems.into_iter().map(|p| item(p, false)).collect(),
+            outside_change: rim_session::ExternalFileChange::None,
         };
 
         let lines = format_preflight(&preflight);

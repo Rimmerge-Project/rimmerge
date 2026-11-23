@@ -202,6 +202,14 @@ const ERROR_CODE_KEYS = {
     title: "error.code.organization_limit.title",
     detail: "error.code.organization_limit.detail",
   },
+  network_path_refused: {
+    title: "error.code.network_path_refused.title",
+    detail: "error.code.network_path_refused.detail",
+  },
+  project_changed: {
+    title: "error.code.project_changed.title",
+    detail: "error.code.project_changed.detail",
+  },
 } satisfies Record<CommandErrorCode, { title: string; detail: string }>;
 
 /**

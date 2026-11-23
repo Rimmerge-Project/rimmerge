@@ -1,6 +1,8 @@
 import type { ColorTokenDto } from "@/types/generated/ColorTokenDto";
 import type { GroupFilterDto } from "@/types/generated/GroupFilterDto";
+import type { GroupLabelDto } from "@/types/generated/GroupLabelDto";
 import type { GroupNodeDto } from "@/types/generated/GroupNodeDto";
+import { searchFold } from "@/utils/searchFold";
 
 /** The twelve palette colours, in the order the picker lists them. */
 export const COLOR_TOKENS: readonly ColorTokenDto[] = [
@@ -35,6 +37,22 @@ export const COLOR_SWATCH_CLASS = {
   violet: "bg-mark-violet",
   pink: "bg-mark-pink",
   slate: "bg-mark-slate",
+} as const satisfies Record<ColorTokenDto, string>;
+
+/** Each colour's text utility, for an icon drawn in `currentColor` (the folder in the groups panel). */
+export const COLOR_TEXT_CLASS = {
+  red: "text-mark-red",
+  orange: "text-mark-orange",
+  amber: "text-mark-amber",
+  lime: "text-mark-lime",
+  green: "text-mark-green",
+  teal: "text-mark-teal",
+  cyan: "text-mark-cyan",
+  blue: "text-mark-blue",
+  indigo: "text-mark-indigo",
+  violet: "text-mark-violet",
+  pink: "text-mark-pink",
+  slate: "text-mark-slate",
 } as const satisfies Record<ColorTokenDto, string>;
 
 /** Each colour's name key: a colour is never the only cue, so every swatch has its word. */
@@ -146,16 +164,16 @@ export interface TreeSearchResult {
   readonly shown: ReadonlySet<number>;
 }
 
-/** Case-insensitive name search over the tree; `null` for an empty query (no search). */
+/** Case-insensitive (see `searchFold`) name search over the tree; `null` for an empty query (no search). */
 export function searchTree(nodes: readonly GroupNodeDto[], query: string): TreeSearchResult | null {
-  const needle = query.trim().toLowerCase();
+  const needle = searchFold(query.trim());
   if (needle === "") {
     return null;
   }
   const matches = new Set<number>();
   const shown = new Set<number>();
   for (const node of nodes) {
-    if (node.name.toLowerCase().includes(needle)) {
+    if (searchFold(node.name).includes(needle)) {
       matches.add(node.id);
       for (const ancestor of pathTo(nodes, node.id)) {
         shown.add(ancestor.id);
@@ -163,6 +181,47 @@ export function searchTree(nodes: readonly GroupNodeDto[], query: string): TreeS
     }
   }
   return { matches, shown };
+}
+
+/**
+ * The first coloured group of a row's groups. The backend sends them in group-tree order, so
+ * "first" is the tree's first; a row with no coloured group has none.
+ */
+export function firstColoredGroup(
+  groups: readonly GroupLabelDto[],
+): (GroupLabelDto & { readonly color: ColorTokenDto }) | null {
+  for (const group of groups) {
+    if (group.color !== null) {
+      return { ...group, color: group.color };
+    }
+  }
+  return null;
+}
+
+/** The groups whose name contains `query` (trimmed, folded by `searchFold`), in tree order; all for an empty one. */
+export function filterGroupsByName(
+  nodes: readonly GroupNodeDto[],
+  query: string,
+): readonly GroupNodeDto[] {
+  const needle = searchFold(query.trim());
+  if (needle === "") {
+    return nodes;
+  }
+  return nodes.filter((node) => searchFold(node.name).includes(needle));
+}
+
+/**
+ * The name "Create group" would offer: the trimmed query, or `null` when there is nothing to
+ * create. A group already has this name (compared the way the backend compares sibling names:
+ * case-insensitively) means the list below already shows it, so no create option is offered.
+ */
+export function newGroupNameFor(nodes: readonly GroupNodeDto[], query: string): string | null {
+  const name = query.trim();
+  if (name === "") {
+    return null;
+  }
+  const key = name.toLowerCase();
+  return nodes.some((node) => node.name.toLowerCase() === key) ? null : name;
 }
 
 /** Which organization dialog is open; `null` is none. Each variant carries only what its dialog needs. */
@@ -176,6 +235,7 @@ export type OrganizationDialog =
   | { readonly kind: "modColor"; readonly modId: string; readonly current: ColorTokenDto | null }
   | { readonly kind: "modGroups"; readonly modId: string; readonly groupIds: readonly number[] }
   | { readonly kind: "startOver" }
+  | { readonly kind: "copyProfile" }
   | {
       readonly kind: "bulkGroups";
       readonly mode: BulkGroupMode;

@@ -27,9 +27,12 @@ use rim_analyzer::domain::ModId;
 use rim_session::Session;
 use rim_session::mod_info::workshop_url;
 use rim_session::mod_list::WorkshopId;
+use rim_session::ports::{ModListFileStore, ModsConfigStore};
 use rim_session::use_cases::{
     ExportOrder, ExportSource, ImportPreview, ImportTarget, PreviewOrderImport,
 };
+use rim_session::user_path::UserPath;
+use tauri::async_runtime::spawn_blocking;
 
 use crate::commands::active_set::{ScanRequest, rescan_with};
 use crate::commands::{EVENT_PROJECT_PROGRESS, emit_session_changed};
@@ -39,7 +42,7 @@ use crate::dto::order_share::{
     PreviewOrderImportTextRequestDto, SaveListingDto,
 };
 use crate::dto::project::{ProgressEventDto, ProjectSummaryDto, SessionChangeReasonDto};
-use crate::error::{CommandError, CommandErrorCode};
+use crate::error::{CommandError, CommandErrorCode, parse_user_path};
 use crate::state::{AppState, with_session};
 
 /// The file name the save dialog is offered inside RimWorld's own
@@ -66,11 +69,10 @@ fn user_data_folder(session: &Session, name: &str) -> Option<PathBuf> {
         .filter(|folder| folder.is_dir())
 }
 
-fn parse_path(raw: &str) -> Result<PathBuf, CommandError> {
-    if raw.trim().is_empty() {
-        return Err(CommandError::invalid_input("the file path is empty"));
-    }
-    Ok(PathBuf::from(raw))
+/// The file the user picked or named: a drive-letter path, never a network
+/// share (see [`parse_user_path`]).
+fn parse_path(raw: &str) -> Result<UserPath, CommandError> {
+    parse_user_path(raw, "the file path")
 }
 
 /// The one extension an export may write: RimWorld's own mod-list files.
@@ -99,8 +101,10 @@ fn require_rml_extension(path: &Path) -> Result<(), CommandError> {
     ))
 }
 
-/// Refuses a path that is not a regular file, so a named pipe or device
-/// can never block the session lock while it is opened.
+/// Refuses a path that is not a regular file, so a named pipe or device is
+/// never opened: reading one can block for good. The read runs on a bare
+/// `spawn_blocking` with the session lock released, so such a path would
+/// strand a blocking-pool thread, never another session command.
 fn require_regular_file(path: &Path) -> Result<(), CommandError> {
     let metadata = std::fs::metadata(path).map_err(|error| {
         CommandError::new(
@@ -133,10 +137,18 @@ fn is_same_file(candidate: &Path, protected: &Path) -> bool {
 /// Writes the order in `ModsConfig.xml`, re-read now, to `request.path` as
 /// a RimWorld mod list (`.rml`), replacing a file there.
 ///
+/// The session lock is held only to copy what the export reads from the
+/// session (`ExportSource`); the extension and same-file checks, the
+/// `ModsConfig.xml` read and the write run on a bare `spawn_blocking`, so a
+/// slow target drive never makes another session command wait. The export
+/// changes nothing in the session, so there is no second lock: it writes what
+/// the project looked like at the first one.
+///
 /// # Errors
 ///
 /// Returns [`CommandError::no_project_loaded`] when no project is loaded;
-/// [`CommandError::invalid_input`] for an empty path, a target that is not a
+/// `network_path_refused` for a network share; [`CommandError::invalid_input`]
+/// for an empty, relative or device path, a target that is not a
 /// `.rml` file, or the project's own `ModsConfig.xml` (an export must never
 /// overwrite it); `mods_config_io_failed`
 /// when `ModsConfig.xml` can't be read; `nothing_to_export` when no active
@@ -145,21 +157,50 @@ pub(crate) async fn export_order_file_inner(
     state: &AppState,
     request: ExportOrderFileRequestDto,
 ) -> Result<ExportResultDto, CommandError> {
-    let path = parse_path(&request.path)?;
     let adapters = state.adapters.clone();
-    with_session(state, move |session| {
-        require_rml_extension(&path)?;
-        if is_same_file(&path, &session.paths().mods_config) {
+    export_order_file_with(
+        state,
+        request,
+        adapters.config_store,
+        adapters.mod_list_store,
+    )
+    .await
+}
+
+/// [`export_order_file_inner`] over explicit stores (generic so a test can
+/// slow the write down).
+///
+/// # Errors
+///
+/// See `export_order_file_inner`.
+pub(crate) async fn export_order_file_with<C, M>(
+    state: &AppState,
+    request: ExportOrderFileRequestDto,
+    config_store: C,
+    mod_list_store: M,
+) -> Result<ExportResultDto, CommandError>
+where
+    C: ModsConfigStore + Send + 'static,
+    M: ModListFileStore + Send + 'static,
+{
+    let path = parse_path(&request.path)?;
+    let source = with_session(state, |session| Ok(ExportSource::from_session(session))).await?;
+    spawn_blocking(move || {
+        require_rml_extension(path.as_path())?;
+        if is_same_file(path.as_path(), &source.mods_config) {
             return Err(CommandError::invalid_input(
                 "a mod list cannot be written over ModsConfig.xml",
             ));
         }
-        let source = ExportSource::from_session(session);
-        let exported = ExportOrder::new(adapters.config_store, adapters.mod_list_store)
-            .write_file(&source, &path)?;
+        let exported =
+            ExportOrder::new(config_store, mod_list_store).write_file(&source, path.as_path())?;
         Ok((&exported).into())
     })
     .await
+    .unwrap_or_else(|join_error| {
+        tracing::warn!(error = %join_error, "export task panicked");
+        Err(CommandError::internal("background task panicked"))
+    })
 }
 
 /// See `export_order_file_inner`.
@@ -282,24 +323,65 @@ fn outcome(preview: &ImportPreview, target: &ImportTarget) -> OrderImportOutcome
 /// A document that isn't an importable list is a `rejected` outcome, not an
 /// error.
 ///
+/// The session lock is held only to snapshot the diff target
+/// (`ImportTarget`, the working list and inventory) and the session's own
+/// `ModsConfig.xml` path; the file checks, the read and the diff run on a
+/// bare `spawn_blocking`. There is no second lock, because a preview commits
+/// nothing: it is the diff against the working list as it was at the
+/// snapshot, and `import_order` re-validates against the live inventory when
+/// the user confirms (a stale preview is refused there as `invalid_input`).
+///
 /// # Errors
 ///
 /// Returns [`CommandError::no_project_loaded`] when no project is loaded,
-/// [`CommandError::invalid_input`] for an empty path, or `mod_list_io_failed`
-/// when the path is not a regular file or can't be read.
+/// `network_path_refused` for a network share,
+/// [`CommandError::invalid_input`] for an empty, relative or device path, or
+/// `mod_list_io_failed` when the path is not a regular file or can't be read.
 pub(crate) async fn preview_order_import_file_inner(
     state: &AppState,
     request: PreviewOrderImportFileRequestDto,
 ) -> Result<OrderImportOutcomeDto, CommandError> {
+    let store = state.adapters.mod_list_store;
+    preview_order_import_file_with(state, request, store).await
+}
+
+/// [`preview_order_import_file_inner`] over an explicit store (generic so a
+/// test can slow the read down).
+///
+/// # Errors
+///
+/// See `preview_order_import_file_inner`.
+pub(crate) async fn preview_order_import_file_with<M>(
+    state: &AppState,
+    request: PreviewOrderImportFileRequestDto,
+    store: M,
+) -> Result<OrderImportOutcomeDto, CommandError>
+where
+    M: ModListFileStore + Send + 'static,
+{
     let path = parse_path(&request.path)?;
-    let adapters = state.adapters.clone();
-    with_session(state, move |session| {
-        require_regular_file(&path)?;
-        let target = ImportTarget::from_session(session);
-        let preview = PreviewOrderImport::new(adapters.mod_list_store).from_file(&path, &target)?;
+    let (mut target, mods_config) = with_session(state, |session| {
+        Ok((
+            ImportTarget::from_session(session),
+            session.paths().mods_config.clone(),
+        ))
+    })
+    .await?;
+    spawn_blocking(move || {
+        require_regular_file(path.as_path())?;
+        // The note's "Use the list from the file" reads the session's own file,
+        // whose ids are exact: an outside swap between two copies is kept.
+        if is_same_file(path.as_path(), &mods_config) {
+            target = target.for_the_games_own_list();
+        }
+        let preview = PreviewOrderImport::new(store).from_file(path.as_path(), &target)?;
         Ok(outcome(&preview, &target))
     })
     .await
+    .unwrap_or_else(|join_error| {
+        tracing::warn!(error = %join_error, "order preview task panicked");
+        Err(CommandError::internal("background task panicked"))
+    })
 }
 
 /// See `preview_order_import_file_inner`.
@@ -759,6 +841,154 @@ mod tests {
         assert_eq!(error.code, CommandErrorCode::InvalidInput);
     }
 
+    /// A network share is refused from the text alone: with no project
+    /// loaded the answer is still the path refusal (not `no_project_loaded`),
+    /// which proves the session and the file system are never consulted.
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn a_network_share_is_refused_before_the_session_or_the_file_system_is_consulted() {
+        let state = AppState::default();
+
+        for raw in [
+            r"\\server\share\list.rml",
+            r"\\?\UNC\server\share\list.rml",
+            r"\\server@SSL\DavWWWRoot\list.rml",
+        ] {
+            let exported = export_order_file_inner(
+                &state,
+                ExportOrderFileRequestDto {
+                    path: raw.to_string(),
+                },
+            )
+            .await;
+            let previewed = preview_order_import_file_inner(
+                &state,
+                PreviewOrderImportFileRequestDto {
+                    path: raw.to_string(),
+                },
+            )
+            .await;
+
+            for result in [exported.map(|_| ()), previewed.map(|_| ())] {
+                assert_eq!(
+                    result.expect_err("refused").code,
+                    CommandErrorCode::NetworkPathRefused,
+                    "{raw}"
+                );
+            }
+        }
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn a_relative_or_device_path_is_invalid_input_for_both_commands() {
+        let state = AppState::default();
+
+        for raw in [r"list.rml", r"\\.\pipe\list.rml", r"\\?\GLOBALROOT\x.rml"] {
+            let exported = export_order_file_inner(
+                &state,
+                ExportOrderFileRequestDto {
+                    path: raw.to_string(),
+                },
+            )
+            .await;
+            let previewed = preview_order_import_file_inner(
+                &state,
+                PreviewOrderImportFileRequestDto {
+                    path: raw.to_string(),
+                },
+            )
+            .await;
+
+            for result in [exported.map(|_| ()), previewed.map(|_| ())] {
+                assert_eq!(
+                    result.expect_err("refused").code,
+                    CommandErrorCode::InvalidInput,
+                    "{raw}"
+                );
+            }
+        }
+    }
+
+    /// The real store, whose `read` and `write` wait at a gate.
+    #[derive(Clone)]
+    struct GatedListStore(std::sync::Arc<crate::test_support::Gate>);
+
+    impl ModListFileStore for GatedListStore {
+        fn read(
+            &self,
+            path: &Path,
+        ) -> Result<rim_session::ports::ModListRead, rim_session::ports::ModListFileError> {
+            self.0.block();
+            rim_io::RmlFileStore.read(path)
+        }
+
+        fn write(
+            &self,
+            path: &Path,
+            list: &rim_session::mod_list::SharedModList,
+        ) -> Result<(), rim_session::ports::ModListFileError> {
+            self.0.block();
+            rim_io::RmlFileStore.write(path, list)
+        }
+    }
+
+    /// While the file is read another session command must run; were the
+    /// lock held across the read, the read would give up on its own timeout.
+    #[tokio::test]
+    async fn the_session_lock_is_free_while_a_list_file_is_previewed() {
+        let (scratch, state, _paths) = loaded_game().await;
+        let list = scratch.path().join("shared.rml");
+        std::fs::write(&list, "ludeon.rimworld\nsample.mod\n").expect("write the list");
+        let gate = crate::test_support::Gate::new();
+
+        let preview = preview_order_import_file_with(
+            &state,
+            file_request(&list),
+            GatedListStore(std::sync::Arc::clone(&gate)),
+        );
+        let other_command = async {
+            gate.wait_until_blocked().await;
+            let meanwhile = with_session(&state, |session| Ok(session.working().ids().len())).await;
+            gate.release();
+            meanwhile
+        };
+        let (previewed, meanwhile) = tokio::join!(preview, other_command);
+
+        assert_eq!(meanwhile.expect("a second command ran"), 2);
+        assert!(gate.was_released(), "the lock blocked the read");
+        assert!(previewed.is_ok());
+    }
+
+    /// The same for an export: its write runs with the lock released.
+    #[tokio::test]
+    async fn the_session_lock_is_free_while_a_list_file_is_written() {
+        let (scratch, state, _paths) = loaded_game().await;
+        let target = scratch.path().join("exported.rml");
+        let gate = crate::test_support::Gate::new();
+
+        let export = export_order_file_with(
+            &state,
+            ExportOrderFileRequestDto {
+                path: target.display().to_string(),
+            },
+            rim_io::ModsConfigFileStore,
+            GatedListStore(std::sync::Arc::clone(&gate)),
+        );
+        let other_command = async {
+            gate.wait_until_blocked().await;
+            let meanwhile = with_session(&state, |session| Ok(session.working().ids().len())).await;
+            gate.release();
+            meanwhile
+        };
+        let (exported, meanwhile) = tokio::join!(export, other_command);
+
+        assert_eq!(meanwhile.expect("a second command ran"), 2);
+        assert!(gate.was_released(), "the lock blocked the write");
+        assert!(exported.is_ok());
+        assert!(target.is_file());
+    }
+
     #[tokio::test]
     async fn export_order_file_reports_a_failed_write_as_mod_list_io_failed() {
         let (scratch, state, _paths) = loaded_game().await;
@@ -909,6 +1139,67 @@ mod tests {
         );
 
         assert_eq!(preview.format, ListFormatDto::SaveHeader);
+    }
+
+    /// The session's own file after an outside swap of `b` for its Steam copy.
+    fn state_with_outside_swapped_file() -> (tempfile::TempDir, AppState, PathBuf) {
+        let report = rim_session::test_support::report_fixture_with_inactive(
+            &["example.a", "example.b"],
+            &["example.b_steam"],
+        );
+        let (temp_dir, session) = crate::test_support::session_with_temp_paths(
+            report,
+            rim_analyzer::analysis::SourceIndex::default(),
+            &["example.a", "example.b"],
+        );
+        let mods_config = session.paths().mods_config.clone();
+        std::fs::write(
+            &mods_config,
+            "<ModsConfigData><version>1.6.0</version><activeMods>\
+             <li>example.a</li><li>example.b_steam</li></activeMods></ModsConfigData>",
+        )
+        .expect("simulate the outside swap");
+        let state = AppState::default();
+        *state.session.write().expect("lock") = Some(session);
+        (temp_dir, state, mods_config)
+    }
+
+    #[tokio::test]
+    async fn previewing_the_sessions_own_file_keeps_an_outside_swap_between_copies() {
+        let (_temp_dir, state, mods_config) = state_with_outside_swapped_file();
+
+        let preview = ready(
+            preview_order_import_file_inner(
+                &state,
+                PreviewOrderImportFileRequestDto {
+                    path: mods_config.display().to_string(),
+                },
+            )
+            .await
+            .expect("previews"),
+        );
+
+        assert_eq!(preview.order, mod_ids(&["example.a", "example.b_steam"]));
+    }
+
+    #[tokio::test]
+    async fn previewing_a_copy_of_that_file_elsewhere_keeps_the_active_copy() {
+        let (temp_dir, state, mods_config) = state_with_outside_swapped_file();
+        let elsewhere = temp_dir.path().join("copy.xml");
+        std::fs::copy(&mods_config, &elsewhere).expect("copy the file");
+
+        let preview = ready(
+            preview_order_import_file_inner(
+                &state,
+                PreviewOrderImportFileRequestDto {
+                    path: elsewhere.display().to_string(),
+                },
+            )
+            .await
+            .expect("previews"),
+        );
+
+        assert_eq!(preview.order, mod_ids(&["example.a", "example.b"]));
     }
 
     #[tokio::test]
@@ -1561,8 +1852,9 @@ mod tests {
     #[tokio::test]
     async fn every_session_command_reports_no_project_loaded() {
         let state = AppState::default();
+        let list = std::env::temp_dir().join("a.rml");
         let export = ExportOrderFileRequestDto {
-            path: "a.rml".to_string(),
+            path: list.display().to_string(),
         };
 
         let codes = [
@@ -1575,7 +1867,7 @@ mod tests {
                 .await
                 .unwrap_err()
                 .code,
-            preview_order_import_file_inner(&state, file_request(Path::new("a.rml")))
+            preview_order_import_file_inner(&state, file_request(&list))
                 .await
                 .unwrap_err()
                 .code,

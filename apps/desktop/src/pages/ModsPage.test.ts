@@ -69,6 +69,8 @@ function mountModsPage(fixtureOverrides: Record<string, unknown> = {}, attachTo?
           unapplied: { added: [], removed: [] },
           orderUnapplied: false,
         },
+        activated: ["inactive.mod"],
+        alreadyActive: [],
         selected: "current",
         didSwitchToCurrent: false,
       };
@@ -81,9 +83,13 @@ function mountModsPage(fixtureOverrides: Record<string, unknown> = {}, attachTo?
     deactivate_mods: (payload: unknown) => {
       deactivateCalls.push((payload as { request: DeactivateRequestDto }).request);
       return {
-        unscanned: { added: [], removed: ["active.mod"] },
-        unapplied: { added: [], removed: [] },
-        orderUnapplied: false,
+        pending: {
+          unscanned: { added: [], removed: ["active.mod"] },
+          unapplied: { added: [], removed: [] },
+          orderUnapplied: false,
+        },
+        removed: ["active.mod"],
+        notActive: [],
       };
     },
     ...fixtureOverrides,
@@ -147,6 +153,8 @@ function pane(wrapper: Awaited<ReturnType<typeof mountAndNavigate>>, kind: "acti
 
 describe("ModsPage", () => {
   beforeEach(() => {
+    // A sort or view remembered by an earlier test would otherwise carry into this one.
+    localStorage.clear();
     // `@tanstack/vue-virtual` (via `ModTable`) — see `ModTable.test.ts`'s
     // identical comment.
     Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
@@ -442,15 +450,13 @@ describe("ModsPage", () => {
     });
   });
 
-  it("shows a row's load-order position only when the backend says the Active list is not reorderable", async () => {
+  it("shows a row's load-order position in the Active list whether or not it is reorderable", async () => {
     const row = modRow({ modId: "active.mod", position: 4 });
     const reorderableWrapper = await mountAndNavigate({
       list_working_mods: () => modList([row], true),
     });
 
-    expect(reorderableWrapper.find('[data-testid="mod-row-position-active.mod"]').exists()).toBe(
-      false,
-    );
+    expect(reorderableWrapper.get('[data-testid="mod-row-position-active.mod"]').text()).toBe("#5");
     reorderableWrapper.unmount();
 
     const sortedWrapper = await mountAndNavigate({
@@ -458,6 +464,14 @@ describe("ModsPage", () => {
     });
 
     expect(sortedWrapper.get('[data-testid="mod-row-position-active.mod"]').text()).toBe("#5");
+  });
+
+  it("shows no position in the Inactive list, which has none", async () => {
+    const wrapper = await mountAndNavigate();
+
+    expect(pane(wrapper, "inactive").find('[data-testid^="mod-row-position-"]').exists()).toBe(
+      false,
+    );
   });
 
   it("offers Apply for an order that is not your active order yet, such as after a move", async () => {
@@ -1672,6 +1686,8 @@ describe("ModsPage", () => {
                 unapplied: { added: [], removed: [] },
                 orderUnapplied: false,
               },
+              activated: ["x"],
+              alreadyActive: [],
               selected: "current",
               didSwitchToCurrent: true,
             };

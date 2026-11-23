@@ -17,6 +17,8 @@ import type { PendingActiveChangesDto } from "@/types/generated/PendingActiveCha
 const QUIET: FileBaselineDto = {
   state: { kind: "fresh" },
   externalChange: { kind: "none" },
+  fileMatchesSelected: false,
+  fileHoldsCurrentExactly: false,
 };
 
 const NO_PENDING: PendingActiveChangesDto = {
@@ -107,6 +109,82 @@ describe("FileChangeNote", () => {
       "Your active order was changed outside Rimmerge. Applying would overwrite that order.",
     );
   });
+
+  it.each([
+    [
+      "a membership change with pending changes",
+      { kind: "membership", added: 2, removed: 1 },
+      OWN_MOVE,
+      "Your active mod list was changed outside Rimmerge (+2, -1). Your pending changes are kept. It already matches the order you have selected.",
+    ],
+    [
+      "a membership change without pending changes",
+      { kind: "membership", added: 2, removed: 1 },
+      NO_PENDING,
+      "Your active mod list was changed outside Rimmerge (+2, -1). It already matches the order you have selected.",
+    ],
+    [
+      "a reorder with pending changes",
+      { kind: "reordered" },
+      OWN_MOVE,
+      "Your active order was changed outside Rimmerge. Your pending changes are kept. It already matches the order you have selected.",
+    ],
+    [
+      "a reorder without pending changes",
+      { kind: "reordered" },
+      NO_PENDING,
+      "Your active order was changed outside Rimmerge. It already matches the order you have selected.",
+    ],
+  ] as const)(
+    "does not claim an overwrite when the file already holds the selected order: %s",
+    async (_name, externalChange, pending, expected) => {
+      const { wrapper } = mountNote(
+        { ...QUIET, externalChange, fileMatchesSelected: true },
+        {},
+        pending,
+      );
+      await flush();
+
+      const text = wrapper.get('[data-testid="file-changed-outside-text"]').text();
+      expect(text).toBe(expected);
+      expect(text).not.toContain("overwrite");
+    },
+  );
+
+  it("keeps the action to use the file's list even when the file holds the selected order", async () => {
+    const { wrapper } = mountNote({
+      ...QUIET,
+      externalChange: { kind: "reordered" },
+      fileMatchesSelected: true,
+    });
+    await flush();
+
+    expect(wrapper.find('[data-testid="file-changed-outside-use"]').exists()).toBe(true);
+  });
+
+  it.each([
+    ["the outside change", { kind: "reordered" }, "file-changed-outside"],
+    ["the stale baseline", { kind: "none" }, "file-baseline-stale"],
+  ] as const)(
+    "renders %s as a quiet note, not an assertive alert",
+    async (_name, externalChange, testId) => {
+      const { wrapper } = mountNote({
+        state:
+          testId === "file-baseline-stale"
+            ? { kind: "stale", reason: "missing" }
+            : { kind: "fresh" },
+        externalChange,
+        fileMatchesSelected: false,
+        fileHoldsCurrentExactly: false,
+      });
+      await flush();
+
+      // The test transition stub carries the test id; the live region is the message inside it.
+      const banner = wrapper.get(`[data-testid="${testId}"] .p-message`);
+      expect(banner.attributes("role")).toBe("note");
+      expect(banner.attributes("aria-live")).toBe("off");
+    },
+  );
 
   it.each([
     ["missing", "ModsConfig.xml is missing."],

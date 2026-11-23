@@ -40,18 +40,21 @@ let wrappers: ReturnType<typeof mount>[] = [];
 
 function mountTree(
   options: {
+    nodes?: GroupNodeDto[];
     expanded?: number[];
     shown?: Set<number> | null;
     scope?: GroupScopeChoice;
     rowDrag?: { count: number; hiddenCount?: number } | null;
+    openModGroupIds?: Set<number>;
   } = {},
 ) {
   const scope = ref<GroupScopeChoice>(options.scope ?? ALL_MODS);
   const expanded = ref<ReadonlySet<number>>(new Set(options.expanded ?? []));
   const wrapper = mount(GroupTree, {
     props: {
-      nodes: TREE,
+      nodes: options.nodes ?? TREE,
       shown: options.shown ?? null,
+      openModGroupIds: options.openModGroupIds ?? new Set<number>(),
       rowDrag:
         options.rowDrag === undefined || options.rowDrag === null
           ? null
@@ -189,6 +192,15 @@ describe("GroupTree", () => {
     expect(document.activeElement?.getAttribute("data-key")).toBe("group-4");
   });
 
+  it("finds a Greek group by a typed final sigma, which only the sigma fold matches", async () => {
+    // "ΣΑ" lowercases to "σα" on its own, so a plain toLowerCase of the typed "ς" would not prefix it.
+    const { wrapper } = mountTree({ nodes: [...TREE, node(6, "ΣΑ", null, 1)] });
+
+    await item(wrapper, "all").trigger("keydown", { key: "ς" });
+
+    expect(document.activeElement?.getAttribute("data-key")).toBe("group-6");
+  });
+
   it("lets a space continue a name being typed, and scopes on a space only when none is", async () => {
     const { wrapper, scope } = mountTree({ expanded: [1] });
 
@@ -293,7 +305,24 @@ function dragGroup(target: { element: Element }, type: string): boolean {
   return drag(target, type, [GROUP_DRAG_TYPE]);
 }
 
+/** The `dropEffect` the tree set on a dragover carrying `types`. */
+function dropEffectOf(target: { element: Element }, types: string[]): string | undefined {
+  const dataTransfer = { types, dropEffect: undefined as string | undefined };
+  const event = new Event("dragover", { bubbles: true, cancelable: true });
+  Object.defineProperty(event, "dataTransfer", { value: dataTransfer });
+  target.element.dispatchEvent(event);
+  return dataTransfer.dropEffect;
+}
+
 describe("GroupTree drops", () => {
+  it("shows the copy cursor for mods (an add) and the move cursor for a group (a reparent)", () => {
+    const { wrapper } = mountTree({ rowDrag: { count: 2 }, expanded: [1] });
+
+    expect(dropEffectOf(item(wrapper, "group-5"), [ROW_DRAG_TYPE])).toBe("copy");
+    drag(item(wrapper, "group-4"), "dragstart");
+    expect(dropEffectOf(item(wrapper, "all"), [GROUP_DRAG_TYPE])).toBe("move");
+  });
+
   it("accepts mods dragged onto a group, says what it would do, and emits the drop", async () => {
     const { wrapper } = mountTree({ rowDrag: { count: 12 } });
 
@@ -473,5 +502,40 @@ describe("GroupTree drops", () => {
     dragGroup(item(wrapper, "group-5"), "dragstart");
 
     expect(dragGroup(item(wrapper, "group-4"), "dragover")).toBe(true);
+  });
+  describe("folder icons and the open mod's groups", () => {
+    it("draws a filled folder in the group's colour and an outlined one when it has none", () => {
+      const { wrapper } = mountTree();
+
+      const coloured = wrapper.get(
+        '[data-testid="group-node-5"] [data-testid="group-folder-icon"]',
+      );
+      expect(coloured.attributes("fill")).toBe("currentColor");
+      expect(coloured.classes()).toContain("text-mark-teal");
+      expect(coloured.attributes("data-color")).toBe("teal");
+      const plain = wrapper.get('[data-testid="group-node-1"] [data-testid="group-folder-icon"]');
+      expect(plain.attributes("fill")).toBe("none");
+      expect(plain.attributes("data-color")).toBeUndefined();
+    });
+
+    it("highlights the groups the open mod is in, with a screen-reader cue, and no others", () => {
+      const { wrapper } = mountTree({ openModGroupIds: new Set([5]) });
+
+      const member = wrapper.get('[data-testid="group-node-5"]');
+      expect(member.find('[data-testid="group-node-open-dot"]').exists()).toBe(true);
+      expect(member.classes()).not.toContain("bg-accent-soft");
+      expect(member.get('[data-testid="group-node-open-mod"]').text()).toBe(
+        "The open mod is in this group",
+      );
+      const other = wrapper.get('[data-testid="group-node-1"]');
+      expect(other.find('[data-testid="group-node-open-dot"]').exists()).toBe(false);
+      expect(other.find('[data-testid="group-node-open-mod"]').exists()).toBe(false);
+    });
+
+    it("highlights nothing while no mod is open", () => {
+      const { wrapper } = mountTree();
+
+      expect(wrapper.find('[data-testid="group-node-open-mod"]').exists()).toBe(false);
+    });
   });
 });

@@ -47,6 +47,7 @@ const notInstalled = computed(() => plan.value?.notInstalled ?? 0);
     <template v-else-if="group">
       <span data-testid="group-scope-text">
         <i18n-t
+          scope="global"
           keypath="mods.groups.scope.group"
           tag="span"
           :plural="group.scopeCount"

@@ -2,6 +2,7 @@
 import { useDebounceFn, useMediaQuery } from "@vueuse/core";
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
+import { useToast } from "primevue/usetoast";
 import { type ComponentPublicInstance, computed, nextTick, ref, useTemplateRef, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
@@ -18,7 +19,7 @@ import ModListPane from "@/components/mods/ModListPane.vue";
 import ModPositionDialog from "@/components/mods/ModPositionDialog.vue";
 import ModSortBar from "@/components/mods/ModSortBar.vue";
 import ModsRescanButton from "@/components/mods/ModsRescanButton.vue";
-import type { MenuAction } from "@/components/mods/ModTable.vue";
+import ModViewSwitch from "@/components/mods/ModViewSwitch.vue";
 import OrderSwitchedNote from "@/components/mods/OrderSwitchedNote.vue";
 import BulkTagsDialog from "@/components/mods/organization/BulkTagsDialog.vue";
 import OrganizationDialogs from "@/components/mods/organization/OrganizationDialogs.vue";
@@ -27,22 +28,29 @@ import OrderNotInFileNote from "@/components/order/OrderNotInFileNote.vue";
 import { useGroupDrop } from "@/composables/useGroupDrop";
 import { useGroupScope } from "@/composables/useGroupScope";
 import { useGroupScopeActions } from "@/composables/useGroupScopeActions";
+import { useGroupsView } from "@/composables/useGroupsView";
 import { useModActivation } from "@/composables/useModActivation";
 import { useModDeactivation } from "@/composables/useModDeactivation";
+import { useModLabel } from "@/composables/useModLabel";
 import { useModListFilters } from "@/composables/useModListFilters";
 import { useModListSort } from "@/composables/useModListSort";
 import { type ListKind, useModReorder } from "@/composables/useModReorder";
 import { useOrderSource } from "@/composables/useOrderSource";
-import { useInactiveModsQuery, useWorkingModsQuery } from "@/queries/activeSet";
+import { useShowInLoadOrder } from "@/composables/useShowInLoadOrder";
+import { useOrganizationMutations } from "@/queries/organization";
+import type { ColorTokenDto } from "@/types/generated/ColorTokenDto";
+import type { FolderKeyDto } from "@/types/generated/FolderKeyDto";
 import type { ModListDto } from "@/types/generated/ModListDto";
 import { assertNever } from "@/utils/assertNever";
 import { ACTIVE_SORT_KEYS, INACTIVE_SORT_KEYS } from "@/utils/modListSort";
+import type { FolderAction, MenuAction } from "@/utils/modRowMenu";
 import { ALL_MODS, type BulkAction, type OrganizationDialog } from "@/utils/organization";
 import { selectionSummary } from "@/utils/selectionText";
 
 const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
+const modLabel = useModLabel();
 
 const selectedModId = computed(() => {
   const param = route.params["modId"];
@@ -70,8 +78,8 @@ async function closePanel(): Promise<void> {
  */
 const hasPanelColumn = useMediaQuery("(min-width: 1800px)");
 
-// The display sort is page-local state and only shapes the list queries; it never
-// touches the load order or a pending change. Whether the Active list may be
+// The display sort is a remembered preference (it survives a restart and a project switch) and only
+// shapes the list queries; it never touches the load order or a pending change. Whether the Active list may be
 // reordered is the backend's answer (`reorderable` on the list), never restated here.
 const { activeSort, inactiveSort } = useModListSort();
 
@@ -80,17 +88,33 @@ const groups = useGroupScope();
 const activeFilters = useModListFilters({ sort: activeSort, group: groups.scope });
 const inactiveFilters = useModListFilters({ sort: inactiveSort, group: groups.scope });
 
+const selectedActiveIds = ref<string[]>([]);
+const selectedInactiveIds = ref<string[]>([]);
+
+// Each pane is a flat list or the Groups view; a view's own query is the only one that runs. The
+// callbacks reach composables set up further down (read only when a menu choice is made).
+const groupsView = useGroupsView({
+  groups,
+  queries: { active: activeFilters.query, inactive: inactiveFilters.query },
+  selections: { active: selectedActiveIds, inactive: selectedInactiveIds },
+  announce: (text) => reorder.announce(text),
+  activateGroup: (groupId) => groupActions.activateGroup(groupId),
+  deactivateGroup: (groupId) => groupActions.deactivateGroup(groupId),
+});
 const {
   data: activeData,
+  grouped: activeGrouped,
   isPending: activePending,
+  isPlaceholder: activePlaceholder,
   error: activeError,
-} = useWorkingModsQuery(activeFilters.query);
-
+} = groupsView.active;
 const {
   data: inactiveData,
+  grouped: inactiveGrouped,
   isPending: inactivePending,
+  isPlaceholder: inactivePlaceholder,
   error: inactiveError,
-} = useInactiveModsQuery(inactiveFilters.query);
+} = groupsView.inactive;
 
 // A list that fails because its group scope is gone drops the scope instead of showing an error.
 watch(activeError, (failure) => groups.dropScopeIfStale(failure));
@@ -147,7 +171,45 @@ const selectedRow = computed(() => {
     : (rowIn(activeData.value, modId) ?? rowIn(inactiveData.value, modId));
 });
 
+/** The groups the open mod is a direct member of, for the groups panel to highlight. */
+const openModGroupIds = computed<ReadonlySet<number>>(
+  () => new Set(selectedRow.value?.groups.map((group) => group.id) ?? []),
+);
+
+/** A group chip or dot on a row: the same scope the groups panel sets. */
+function scopeToGroup(groupId: number): void {
+  groups.scope.value = { kind: "group", id: groupId };
+}
+
+const toast = useToast();
+const organizationEdits = useOrganizationMutations();
+
+/**
+ * A swatch in a row menu: one click sets (or clears) the mod's own colour through the same
+ * command as the "Colour..." dialog. A failure is already toasted by the app-wide mutation handler.
+ */
+async function setRowColor(modId: string, color: ColorTokenDto | null): Promise<void> {
+  try {
+    await organizationEdits.setModColors.mutateAsync({ modIds: [modId], color });
+  } catch {
+    return;
+  }
+  const name = modLabel.label(modId);
+  toast.add({
+    severity: "success",
+    summary:
+      color === null
+        ? t("mods.colors.toast.modCleared", { name })
+        : t("mods.colors.toast.modChanged", { name }),
+    life: 4000,
+  });
+}
+
 function onMenuAction(modId: string, action: MenuAction, from: ListKind): void {
+  if (action === "showInLoadOrder") {
+    void showInLoadOrder.show(modId);
+    return;
+  }
   if (action !== "groups" && action !== "color") {
     reorder.menuAction(modId, action);
     return;
@@ -162,8 +224,6 @@ function onMenuAction(modId: string, action: MenuAction, from: ListKind): void {
       : { kind: "modColor", modId, current: row.color };
 }
 
-const selectedActiveIds = ref<string[]>([]);
-const selectedInactiveIds = ref<string[]>([]);
 const withDependencies = ref(false);
 const { selected: selectedOrder } = useOrderSource();
 const isSwitchNoteShown = ref(false);
@@ -270,6 +330,7 @@ const reorder = useModReorder({
   activeList: activeData,
   inactiveList: inactiveData,
   isActiveFiltered: activeFilters.isFiltered,
+  isActiveGrouped: () => groupsView.isActiveGrouped.value,
   selectedActiveIds,
   selectedInactiveIds,
   activation: { activateAt },
@@ -283,6 +344,54 @@ const reorder = useModReorder({
   },
 });
 
+// "Show in load order" acts on the Active pane only: an inactive mod has no load-order position.
+const showInLoadOrder = useShowInLoadOrder({
+  list: activeData,
+  refresh: groupsView.active.refreshList,
+  filterSignature: computed(() =>
+    JSON.stringify([
+      activeFilters.search.value,
+      activeFilters.tag.value,
+      activeFilters.source.value,
+      groups.scope.value,
+    ]),
+  ),
+  view: groupsView.activeView,
+  sort: activeSort,
+  isFiltered: activeFilters.isFiltered,
+  setView: groupsView.setActiveView,
+  setSort: (sort) => {
+    activeSort.value = sort;
+  },
+  clearFilters: () => {
+    activeFilters.clear();
+    groups.scope.value = ALL_MODS;
+  },
+  clearedNote: (modId) => t("mods.showInLoadOrder.filterCleared", { name: modLabel.label(modId) }),
+  announcement: (modId) => t("mods.showInLoadOrder.announce", { name: modLabel.label(modId) }),
+  focusRow: async (modId) => {
+    await activePane.value?.focusRow(modId);
+  },
+  announce: (text) => reorder.announce(text),
+});
+
+/** The panel's button, for an active mod: not offered when the Active pane already shows it in load order. */
+const canShowOpenModInLoadOrder = computed(
+  () =>
+    selectedModId.value !== null &&
+    !(showInLoadOrder.isLoadOrderShown.value && showInLoadOrder.isRowShown(selectedModId.value)),
+);
+
+/** The panel's button. A drawer would cover the Active list, so it closes first. */
+async function showOpenModInLoadOrder(modId: string): Promise<void> {
+  if (!hasPanelColumn.value) {
+    drawerOrigin = null;
+    await router.push({ name: "mods" });
+    await nextTick();
+  }
+  void showInLoadOrder.show(modId);
+}
+
 // Mods dropped on a group join it and a group dropped on a group nests; both are organization
 // edits only (D14: a drop never replaces a membership).
 const groupDrop = useGroupDrop({
@@ -291,6 +400,15 @@ const groupDrop = useGroupDrop({
   endDrag: reorder.endDrag,
   announce: reorder.announce,
 });
+
+/**
+ * Mods dropped on a group, on its rail entry or on a Groups view header. Not awaited on purpose:
+ * `dropMods` never rejects (a failed edit is toasted by the app-wide mutation handler, the result
+ * is announced) and nothing here waits for it.
+ */
+function dropMods(groupId: number): void {
+  void groupDrop.dropMods(groupId);
+}
 
 /** The tree's view of a drag from a list: how many mods it carries, `null` when none. */
 const rowDrag = computed(() =>
@@ -350,15 +468,17 @@ const followFocus = useDebounceFn((modId: string) => {
       :nodes="groups.nodes.value"
       :is-overlay="!hasGroupColumn"
       :row-drag="rowDrag"
+      :open-mod-group-ids="openModGroupIds"
       @create-group="(parent: number | null) => (organizationDialog = { kind: 'createGroup', parent })"
       @rename-group="(id: number) => (organizationDialog = { kind: 'renameGroup', id })"
       @change-color="(id: number) => (organizationDialog = { kind: 'groupColor', id })"
       @move-group="(id: number) => (organizationDialog = { kind: 'moveGroup', id })"
       @delete-group="(id: number) => (organizationDialog = { kind: 'deleteGroup', id })"
       @remove-uninstalled="(id: number) => (organizationDialog = { kind: 'removeUninstalled', id })"
+      @copy-from-profile="organizationDialog = { kind: 'copyProfile' }"
       @activate-group="(id: number) => void groupActions.activateGroup(id)"
       @deactivate-group="(id: number) => void groupActions.deactivateGroup(id)"
-      @drop-mods="(id: number) => void groupDrop.dropMods(id)"
+      @drop-mods="dropMods"
       @drop-group="(id: number, parent: number | null) => void groupDrop.dropGroup(id, parent)"
       @close="() => void closeGroupDrawer()"
     />
@@ -411,11 +531,14 @@ const followFocus = useDebounceFn((modId: string) => {
           v-model:selected-ids="selectedInactiveIds"
           kind="inactive"
           :mod-list="inactiveData"
+          :grouped="inactiveGrouped"
           :is-pending="inactivePending"
+          :is-placeholder="inactivePlaceholder"
           :error="inactiveError"
           :is-filtered="inactiveFilters.isFiltered.value"
           :sort-key="inactiveSort.key"
           :show-active-columns="false"
+          :open-mod-id="selectedModId"
           draggable
           :dragging-ids="reorder.drag.value?.ids ?? []"
           :drop-mode="reorder.dropModeFor('inactive')"
@@ -428,7 +551,13 @@ const followFocus = useDebounceFn((modId: string) => {
           @drag-end="reorder.endDrag"
           @drop="(slot: number) => reorder.drop('inactive', slot)"
           @menu-action="(modId: string, action: MenuAction) => onMenuAction(modId, action, 'inactive')"
+          @toggle-active="(modId: string) => openActivateFor([modId])"
+          @set-color="setRowColor"
+          @scope-group="scopeToGroup"
           @bulk-action="(action: BulkAction) => onBulkAction('inactive', action)"
+          @set-folded="(folder: FolderKeyDto, isCollapsed: boolean) => groupsView.setFolded('inactive', folder, isCollapsed)"
+          @drop-on-folder="dropMods"
+          @folder-action="(folder: FolderKeyDto, action: FolderAction) => groupsView.onFolderAction('inactive', folder, action)"
         >
           <template #toolbar>
             <ModFilterBar
@@ -440,6 +569,13 @@ const followFocus = useDebounceFn((modId: string) => {
             <ModSortBar
               v-model:sort="inactiveSort"
               :keys="INACTIVE_SORT_KEYS"
+            />
+            <ModViewSwitch
+              :view="groupsView.inactiveView.value"
+              :is-groups-available="!groups.isKnownUnusable.value"
+              @update:view="groupsView.setInactiveView"
+              @collapse-all="groupsView.collapseAll('inactive')"
+              @expand-all="groupsView.expandAll('inactive')"
             />
           </template>
           <template #actions>
@@ -467,11 +603,14 @@ const followFocus = useDebounceFn((modId: string) => {
           v-model:selected-ids="selectedActiveIds"
           kind="active"
           :mod-list="activeData"
+          :grouped="activeGrouped"
           :is-pending="activePending"
+          :is-placeholder="activePlaceholder"
           :error="activeError"
           :is-filtered="activeFilters.isFiltered.value"
           :sort-key="activeSort.key"
-          :show-position="activeData?.reorderable === false"
+          show-position
+          :open-mod-id="selectedModId"
           draggable
           :dragging-ids="reorder.drag.value?.ids ?? []"
           :drop-mode="reorder.dropModeFor('active')"
@@ -479,6 +618,7 @@ const followFocus = useDebounceFn((modId: string) => {
           row-menu="move"
           :has-organization-actions="groups.isUsable.value"
           :reorder-blocked-reason="reorder.reorderBlockedReason.value"
+          :can-show-in-load-order="!showInLoadOrder.isLoadOrderShown.value"
           @select-mod="(modId: string) => openMod(modId, 'active')"
           @focus-mod="followFocus"
           @drag-start="(modId: string) => reorder.startDrag('active', modId)"
@@ -486,7 +626,13 @@ const followFocus = useDebounceFn((modId: string) => {
           @drop="(slot: number) => reorder.drop('active', slot)"
           @move-step="reorder.step"
           @menu-action="(modId: string, action: MenuAction) => onMenuAction(modId, action, 'active')"
+          @toggle-active="(modId: string) => openDeactivateFor([modId])"
+          @set-color="setRowColor"
+          @scope-group="scopeToGroup"
           @bulk-action="(action: BulkAction) => onBulkAction('active', action)"
+          @set-folded="(folder: FolderKeyDto, isCollapsed: boolean) => groupsView.setFolded('active', folder, isCollapsed)"
+          @drop-on-folder="dropMods"
+          @folder-action="(folder: FolderKeyDto, action: FolderAction) => groupsView.onFolderAction('active', folder, action)"
         >
           <template #toolbar>
             <ModFilterBar
@@ -499,8 +645,22 @@ const followFocus = useDebounceFn((modId: string) => {
               v-model:sort="activeSort"
               :keys="ACTIVE_SORT_KEYS"
             />
+            <ModViewSwitch
+              :view="groupsView.activeView.value"
+              :is-groups-available="!groups.isKnownUnusable.value"
+              @update:view="groupsView.setActiveView"
+              @collapse-all="groupsView.collapseAll('active')"
+              @expand-all="groupsView.expandAll('active')"
+            />
           </template>
           <template #notes>
+            <p
+              v-if="showInLoadOrder.note.value !== null"
+              class="text-text-muted shrink-0 text-xs"
+              data-testid="mods-show-in-load-order-note"
+            >
+              {{ showInLoadOrder.note.value }}
+            </p>
             <p
               v-if="reorder.reorderBlockedReason.value !== null"
               class="text-text-muted shrink-0 text-xs"
@@ -537,7 +697,9 @@ const followFocus = useDebounceFn((modId: string) => {
       :color="selectedRow?.color ?? null"
       :groups="selectedRow?.groups ?? []"
       :is-overlay="!hasPanelColumn"
+      :can-show-in-load-order="canShowOpenModInLoadOrder"
       @close="() => void closePanel()"
+      @show-in-load-order="(modId: string) => void showOpenModInLoadOrder(modId)"
     />
 
     <ActivateDialog

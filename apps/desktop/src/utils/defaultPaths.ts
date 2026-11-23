@@ -4,18 +4,70 @@ import type { DefaultPathsWarningDto } from "@/types/generated/DefaultPathsWarni
 import { assertNever } from "@/utils/assertNever";
 
 /**
- * Localizes `get_default_paths`'s structured, `kind`-tagged
- * `warningCode` — the Setup page's own resolved-but-suspicious-install
- * notice. The directory crosses as a path parameter; the sentence is
- * worded here, never sent by the backend.
+ * Localizes `get_default_paths`'s structured, `kind`-tagged `warningCode`: a
+ * resolved-but-suspicious install, or a path the backend refused to use. Paths
+ * cross as parameters and every sentence is worded here, never sent by the backend.
  */
 export function describeDefaultPathsWarning(warning: DefaultPathsWarningDto): MessageDescriptor {
-  // Exactly one variant today, so ts-rs emits `DefaultPathsWarningDto`
-  // as a single object type, not a union — an `assertNever`-terminated
-  // `switch` needs a real discriminated union to narrow against, so
-  // this returns directly instead. Revisit as a switch once a second
-  // variant lands (see this type's own Rust doc comment).
-  return descriptor("defaultPathsWarning.notAnInstall", { gameDir: warning.gameDir });
+  switch (warning.kind) {
+    case "notAnInstall":
+      return descriptor("defaultPathsWarning.notAnInstall", { gameDir: warning.gameDir });
+    case "pathRefused":
+      return describePathRefused(warning);
+    default:
+      return assertNever(warning);
+  }
+}
+
+type PathRefused = Extract<DefaultPathsWarningDto, { kind: "pathRefused" }>;
+
+/**
+ * A typed text is only ever the game folder, so its two sentences name no field and carry
+ * the advice a user can act on (map the share to a drive letter). A stored value (an
+ * environment variable or `config.json`) is not on screen, so its sentence only says it was
+ * ignored and names the field.
+ */
+function describePathRefused(warning: PathRefused): MessageDescriptor {
+  switch (warning.source) {
+    case "typed":
+      return descriptor(
+        warning.reason === "networkShare"
+          ? "defaultPathsWarning.typedNetworkShare"
+          : "defaultPathsWarning.typedInvalid",
+      );
+    case "configured":
+      return descriptor(configuredKey(warning.field));
+    default:
+      return assertNever(warning.source);
+  }
+}
+
+function configuredKey(field: PathRefused["field"]): string {
+  switch (field) {
+    case "gameDir":
+      return "defaultPathsWarning.configuredGameDir";
+    case "workshopDir":
+      return "defaultPathsWarning.configuredWorkshopDir";
+    case "modsConfig":
+      return "defaultPathsWarning.configuredModsConfig";
+    default:
+      return assertNever(field);
+  }
+}
+
+/**
+ * Whether the warning answers for the game folder field's own text (so it is hidden while
+ * the user edits the field), as opposed to a stored value that stays true whatever is typed.
+ */
+export function warningConcernsTheField(warning: DefaultPathsWarningDto): boolean {
+  switch (warning.kind) {
+    case "notAnInstall":
+      return true;
+    case "pathRefused":
+      return warning.source === "typed";
+    default:
+      return assertNever(warning);
+  }
 }
 
 /** Localizes `get_default_paths`'s structured, `kind`-tagged `errorCode` — see {@link describeDefaultPathsWarning}. */

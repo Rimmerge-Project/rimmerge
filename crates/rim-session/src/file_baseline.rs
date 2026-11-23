@@ -69,16 +69,12 @@ pub enum MembershipMark {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct FileMembership {
     bases: BTreeSet<ModId>,
-    /// The base ids in file order, for telling an outside reorder.
-    sequence: Vec<ModId>,
 }
 
 impl FileMembership {
     pub(crate) fn of(file_ids: &[ModId]) -> Self {
-        let sequence: Vec<ModId> = file_ids.iter().map(ModId::base).collect();
         Self {
-            bases: sequence.iter().cloned().collect(),
-            sequence,
+            bases: file_ids.iter().map(ModId::base).collect(),
         }
     }
 
@@ -99,19 +95,24 @@ impl FileMembership {
             MembershipMark::None
         }
     }
+}
 
-    /// How the file's membership differs from `known`'s.
-    pub(crate) fn change_from(&self, known: &Self) -> ExternalFileChange {
-        let added = self.bases.difference(&known.bases).count();
-        let removed = known.bases.difference(&self.bases).count();
-        if added > 0 || removed > 0 {
-            return ExternalFileChange::Membership { added, removed };
-        }
-        if self.sequence != known.sequence {
-            return ExternalFileChange::Reordered;
-        }
-        ExternalFileChange::None
+/// How the file's active list `file` differs from the list `known`, by
+/// **exact** id: swapping `x` for `x_steam` is one added and one removed,
+/// which a base-id comparison would miss (`Session::file_matches` compares
+/// exact ids too, so Apply would overwrite the swap silently).
+fn external_change(file: &[ModId], known: &[ModId]) -> ExternalFileChange {
+    let file_ids: BTreeSet<&ModId> = file.iter().collect();
+    let known_ids: BTreeSet<&ModId> = known.iter().collect();
+    let added = file_ids.difference(&known_ids).count();
+    let removed = known_ids.difference(&file_ids).count();
+    if added > 0 || removed > 0 {
+        return ExternalFileChange::Membership { added, removed };
     }
+    if file != known {
+        return ExternalFileChange::Reordered;
+    }
+    ExternalFileChange::None
 }
 
 /// What someone else did to the file since Rimmerge last loaded or wrote
@@ -119,17 +120,18 @@ impl FileMembership {
 /// is only reported when the membership is the same.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ExternalFileChange {
-    /// The file is what Rimmerge last loaded or wrote (by base id).
+    /// The file is what Rimmerge last loaded or wrote.
     None,
-    /// Mods the file lists now that it did not, and mods it no longer
-    /// lists, counted by base id. At least one count is not zero.
+    /// Ids the file lists now that it did not, and ids it no longer lists,
+    /// counted by exact id (a `x` to `x_steam` swap is one of each). At
+    /// least one count is not zero.
     Membership {
         /// Mods the file lists now that it did not.
         added: usize,
         /// Mods the file no longer lists.
         removed: usize,
     },
-    /// The same mods (by base id) in another sequence.
+    /// The same ids in another sequence.
     Reordered,
 }
 
@@ -210,6 +212,6 @@ impl FileWatch {
     }
 
     pub(crate) fn change_to(&self, file_ids: &[ModId]) -> ExternalFileChange {
-        FileMembership::of(file_ids).change_from(&FileMembership::of(&self.acknowledged))
+        external_change(file_ids, &self.acknowledged)
     }
 }

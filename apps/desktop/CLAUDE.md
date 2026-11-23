@@ -17,7 +17,7 @@ license first.
 `src-tauri` is a composition root: every `#[tauri::command]` maps a DTO
 to a `rim-session` call and maps the result back. Filtering, paging,
 and aggregation live in `rim-session` (`FindingIndex`, `Session::mods`,
-`working_mod_list`/`inactive_mod_list`), never in a command handler or in Vue. The adapters a
+`working_mod_list`/`inactive_mod_list` and their Groups-view layout `working_mod_groups`/`inactive_mod_groups`, `order_rows`, `mod_detail`, `explain_placement`, `mod_names`), never in a command handler or in Vue. The adapters a
 command needs for the loaded project (scanner, decision/rule/patch
 stores, def reader, asset locator, release feed, ...) come from
 `AppState::adapters`, never constructed inline. The narrow exception is
@@ -48,10 +48,17 @@ of that command surface — no direct filesystem or process access outside
   `state.load_lock` and swap the session in with `replace_session`, which
   (like the rescan swap) re-reads the organization under the session write
   lock just before the swap, so an organization edit that landed during the
-  scan is not lost. Organization commands take only the session lock, never
-  `load_lock` (a drag must not wait on a scan). Rules and decisions have a
-  wider version of the same window (read inside `LoadProject`, outside the
-  lock); it is a known, unfixed follow-up.
+  scan is not lost. Both swaps go through `state::reload_persisted_state`,
+  which re-reads the organization and (`Session::reload_persisted`) the
+  rules, decisions, patches and assignments the scan read outside the lock;
+  the rescan's swap is `active_set::swap_scanned`. The sort and ledger are
+  recomputed once, only when rules or decisions changed, and a file that
+  cannot be re-read keeps the scanned copy and adds a
+  `persistedReloadFailed` rule warning (never fails the swap). The summary's
+  `ruleWarnings` are read from the swapped-in session (`replace_session`
+  and `swap_scanned` return them). Organization, rule and decision commands
+  take only the session lock, never `load_lock` (an edit must not wait on a
+  scan).
   `import_order` (`commands/order_share.rs`) is the rescan shape too: it is
   `rescan_with(ScanRequest::Import(order))`, so the order is validated
   (`ImportOrder::validate`, including its size bound), scanned and swapped in
@@ -102,6 +109,49 @@ of that command surface — no direct filesystem or process access outside
   `rim-session`. `GameRunning` reuses `rimworld_running`; `order_not_applied`,
   `game_executable_missing`, `steam_launch_failed` and `game_start_failed` are
   the new codes (every one needs wording in `utils/errors.ts`).
+- **Every path the webview sends goes through `parse_user_path` (`error/user_path.rs`), and a read
+  of a user-chosen file does not hold the session lock (#60).** The one rule is
+  `rim_session::user_path::UserPath::parse`, on the text alone (text with two leading separators is
+  classified by our own rule, never by `std`'s toolchain-dependent reading; only the exact
+  `\\?\<letter>:\` is a verbatim drive, so `\\?\C:/x` and `//?/C:/x` are `invalid_input`; it never
+  touches the file system, so refusing a share contacts nothing); `parse_user_path` trims
+  surrounding whitespace first, once, so every field answers to one rule. A drive-letter path
+  (`C:\x`, `\\?\C:\x`, a mapped `Z:\x`) is accepted; a UNC or WebDAV share (`\\server\share\x`,
+  `\\?\UNC\...` in any case, `\\server@SSL\x`) is `network_path_refused` (its own code, since a
+  picker can cause it and a drive letter fixes it; `utils/errors.ts` words it); a device path (the
+  bare volume `\\?\C:` too), a path with a legacy DOS device name as any component (`NUL`,
+  `COM1.rml`, `CON`, superscript digits included), a relative or drive-relative one, an empty one
+  and one with NUL are `invalid_input`. The reason is that any file-system call on a share (even
+  `metadata`) authenticates to the host (NTLMv2 leak to a compromised webview's chosen host, a
+  connection outside the closed network list) and that an offline share blocks until the SMB
+  timeout. It cannot see a symbolic link that leads to a share. The commands that take a path:
+  `load_project` (`ProjectPathsDto` is `TryFrom`, never `From`), `get_default_paths`,
+  `save_app_config`, `import_rimsort`, `import_game_log`, `preview_order_import_file`,
+  `export_order_file`, `preview_copy_organization`, `copy_organization`, `export_patch` and
+  `export_assignment` (`resolve_export_dir`, async: the text is parsed on the task and the
+  `canonicalize` runs on a bare `spawn_blocking`, before the session lock; a folder on a mapped
+  drive keeps its drive letter, see `rim_io::resolve_user_dir`); a new command with a path field
+  calls it too and never builds a `PathBuf` from request text. `get_default_paths` sets
+  `PathOverrides::policy` to `PathPolicy::DriveLettersOnly`, so the ladder drops a game folder,
+  workshop folder or `ModsConfig.xml` from an environment variable or `config.json` that fails the
+  parser **before** it stats or hashes it (a share saved by `rimmerge config set` would otherwise
+  be contacted on every Setup visit); a refused typed text or stored value is reported as
+  `DefaultPathsWarningDto::PathRefused { field, reason, source }` (`typed` or `configured`; worded
+  in `utils/defaultPaths.ts`), never dropped silently, and outranks `notAnInstall`. Detection and
+  the CLI are not restricted. Lock protocol, the `file_baseline` shape (a short `with_session`
+  probe, the read in a bare `spawn_blocking`, a short `with_session` commit, each command generic
+  over its store/reader/importer so a test slows the read down with `test_support::Gate`):
+  `preview_copy_organization`/`copy_organization` (commit re-plans against this profile at the
+  commit and refuses with `project_changed` when the profile folder changed), `import_rimsort`
+  (probe copies the active-mod map and the profile folder, `ImportRimSort::read` runs unlocked, the
+  commit refuses with `project_changed` unless both are unchanged, then `apply` saves the rules and
+  the manifest), `import_game_log` (probe copies `ModKnowledge`, commit is the pure
+  `attribute_game_log`; it commits nothing, so a project swapped in meanwhile just gets the log
+  attributed against it and no profile compare is made), `preview_order_import_file` and
+  `export_order_file` (probe only: a preview commits nothing and `import_order` re-validates, an
+  export writes outside the session). Still under the lock, on purpose: the two export commands'
+  writes (`export_patch`/`export_assignment` render from the session, and an install writes
+  `ModsConfig.xml` and persists session state).
 - **The Launch RimWorld button polls once, shares its in-flight state, and never
   stacks requests.** `components/launch/LaunchGameButton.vue` (sidebar under Apply,
   and the strip's done line) owns its Apply-first prompt and its own `ApplyDialog`;
@@ -271,9 +321,12 @@ of that command surface — no direct filesystem or process access outside
   `session://changed` with `activeSetChanged`; `move_mods` also returns the
   selection it left (`MoveModsResultDto`), because the first reorder while
   Suggested is selected switches to Current, and the caller adopts it and
-  says so. An *anchored* `activate_mods` (an explicit drop position) switches
-  the same way and so returns `ActivateModsResultDto { pending, selected,
-  didSwitchToCurrent }`; an un-anchored one (the button) never switches.
+  says so. `activate_mods` (every placement) returns `ActivateModsResultDto { pending,
+  activated, alreadyActive, selected, didSwitchToCurrent }`; an *anchored* one (an explicit drop
+  position) switches Suggested to Current the same way, an un-anchored one (the
+  button) never does. `deactivate_mods` returns `DeactivateModsResultDto { pending,
+  removed, notActive }`. These lists come from the commit's own plan (it re-plans, so
+  they can differ from the dialog's plan; a refused Core is in neither).
   `PendingActiveChangesDto.orderUnapplied` is Current differing from the list Rimmerge
   last loaded or wrote (the acknowledged list), not from the live file: a
   settled reorder changes no membership, so `unscanned`/`unapplied` are empty
@@ -294,21 +347,30 @@ of that command surface — no direct filesystem or process access outside
   deliberately not in `HANDLED_BY_MERGE_MUTATION`, so it invalidates everything like any
   other change. `get_mods_config_baseline` is the pure read behind
   `useFileBaselineQuery` (`FileBaselineDto`: `state` fresh or stale with a reason code,
-  and `externalChange`, a `kind`-tagged union: `none`, `membership` with `added`/`removed`
-  counts, or `reordered`). `composables/useFileBaselinePolling.ts`, called once
+  `externalChange`, a `kind`-tagged union: `none`, `membership` with `added`/`removed`
+  counts by **exact id** (a swap between a plain and a `_steam` copy is one of each), or
+  `reordered`, and `fileMatchesSelected`, the live `Session::file_holds_selected_exactly()`: the file
+  lists exactly the selected order's ids, the generated merge mod included, so an Apply overwrites
+  nothing; and `fileHoldsCurrentExactly`, the same exact comparison for Current, which the export panels'
+  install note reads). `composables/useFileBaselinePolling.ts`, called once
   in `TheShell.vue`, polls every 5 s while the document is visible and on window focus
   (`useVisiblePolling`, shared with the launch poller) and **skips a tick while its call is
   pending** (the call can wait behind a long command such as verify, and a tick per
   interval would queue). A failed poll is ignored. Each `ModListRowDto` carries
   `membership` (`none`/`added`/`removed`, by base id), drawn by `MembershipBadge.vue`
-  after the mod name (icon, word and tooltip, never colour alone). `FileChangeNote.vue`
+  after the mod name (icon, word and tooltip, never colour alone; below the table's `@lg` the word gives way to the icon, the
+  tooltip and the screen-reader text, so a changed row keeps room for its date and menu). `FileChangeNote.vue`
   on the Mods page shows two notes: the outside change (plain words, no file name; a
   membership change is the `(+N, -M)` sentence, a `reordered` change its own; each has a
   whole-sentence key with and without "Your pending changes are kept.", chosen by
-  `hasOwnPendingChanges`, never concatenated;
+  `hasOwnPendingChanges`, never concatenated, and a second set that drops "Applying would
+  overwrite" for "It already matches the order you have selected." while
+  `fileMatchesSelected` is true;
   its action runs `useOrderShare().previewModsConfig`, the existing
   `preview_order_import_file` preview on the session's own file path, so the existing
-  import confirm and replace warnings apply) and the stale-baseline failure (this one may
+  import confirm and replace warnings apply; the command recognises that path
+  (`is_same_file` with `modsConfig`) and plans with `IdSpelling::Exact`, so the copy the file
+  names is kept, where every other source keeps the base-id rule) and the stale-baseline failure (this one may
   name ModsConfig.xml, per reason code through `staleBaselineMessage`). The mock mirrors it:
   `window.__MODS_CONFIG_FILE__` (`{ status: "ok", activeMods }` or a failure status) is what
   the next refresh, rescan or import reads (a failure status makes the rescan or import fail
@@ -344,16 +406,52 @@ of that command surface — no direct filesystem or process access outside
 - **The Apply dialog confirms hard problems; it has no needs-input gate.**
   `useApplyPreflightQuery(source)` (enabled while the dialog is visible)
   holds `get_apply_preflight`; `submit()` asks `requiresConfirmation` (computed
-  in Rust, never re-derived in TypeScript), always awaiting a **fresh**
-  preflight first (`refreshPreflight()`: refetches when stale or errored, joins
-  an in-flight call) because Colada keeps stale data after an invalidation, so
-  held data may predate an undone decision or a rescan. A fetch error shows
-  and writes nothing; resolving with neither data nor an error is an
-  invariant breach and throws — never read as "nothing to confirm". When it is true and `writeModsConfig` is on, `awaitingProblemConfirm`
+  in Rust, never re-derived in TypeScript), always calling
+  `getApplyPreflight` **itself** and deciding from that call's own answer (written into the
+  query cache and kept for the panel as `confirmPreflight`), never from the query entry: held data
+  may predate an undone decision, a rescan or an outside edit, and the entry cannot be trusted
+  at the click (below). A failed call shows and writes nothing. When it is true and `writeModsConfig` is on, `awaitingProblemConfirm`
   swaps the action row for `ApplyConfirm.vue` ("Go back" focused, "Apply
   anyway" never default); only "Apply anyway" calls `performApply`. The
   running-game refusal (`awaitingForceConfirm`, "Write anyway") is a separate,
-  later step, never merged into the same button. The needs-input count is
+  later step, never merged into the same button. **An outside change of the file is
+  the same confirm, not a second one.** `get_apply_preflight` reads the file
+  **fresh** (it calls `refresh_mods_config_baseline_inner`: probe under the lock,
+  read in a bare `spawn_blocking`, commit under the lock) and then
+  runs `PreflightApply`, whose `outside_change` (`ApplyPreflightDto.outsideChange`,
+  the `ExternalFileChangeDto` union) is the live outside change **only when
+  `file_holds_exactly(source)` is false** (the strict comparison, generated merge mod included), i.e. only when writing that order would
+  overwrite something. `requiresConfirmation` is true for it alone; `ApplyConfirm.vue`
+  shows one panel with an outside section (whole sentence per kind, never
+  concatenated) above the unanswered problems, hiding the problem list and Findings
+  link when only the outside change asks. "Go back" stays focused. Committing the
+  fresh read is the baseline's one-shot change notice (the next poll reads the same list
+  and reports nothing), so the command returns the `BaselineChange` and `get_apply_preflight`
+  emits `session://changed` (`fileBaselineChanged`) only when it is `Changed`; the refetch
+  that causes reads the same file, finds it unchanged and emits nothing, so it cannot loop.
+  The command emits **before** it returns, so the event's invalidation reaches the webview first
+  and supersedes a Colada `refetch()` made at the click, resolving it with the entry's old state
+  (no outside change): `submit()` therefore never reads the entry (`ApplyDialog.confirm.test.ts`
+  pins it). This is a *live*
+  fact: it feeds the confirm and `OutsideChangeHint` only, never an "unsaved work"
+  copy. The mock's `get_apply_preflight` calls `observeModsConfigFile()` first, emits
+  `fileBaselineChanged` **before** returning when it returned true (the backend's order: the event reaches the webview before the response), and mirrors the rule. `OutsideChangeHint.vue` (shell, under `PendingChangesBanner`) is
+  the other reader: a note on every page except `mods`/`mod-detail`, shown while
+  `externalChange.kind !== "none"` **and `fileMatchesSelected` is false** (its only job is the
+  overwrite warning; with nothing to overwrite it stays away and `FileChangeNote` explains),
+  and gone by itself after a rescan, import or apply (the backend resets the fact). The three
+  banners (`PendingChangesBanner`, `FileChangeNote`, `OutsideChangeHint`) pass
+  `QUIET_MESSAGE_PT` (`utils/quietMessage.ts`) to `Message`: PrimeVue 4.5.5 renders
+  `role="alert" aria-live="assertive"` before `v-bind="ptm('root')"`, so the root pass-through
+  replaces both with `role="note" aria-live="off"`; behind a `v-if` an assertive alert is read
+  again at every page mount, and a polite region mounted together with its text is usually not
+  read at all. TheShell therefore has one always-mounted `role="status"` region
+  (`banner-live-region`, the `ApplyMergeModSection` pattern) holding `useBannerAnnouncerStore`'s
+  `message`; each banner reports its text through `useBannerAnnouncement(id, text)`, which speaks
+  a new or changed text and not the same text again when a page change re-mounts the banner
+  (`null` means gone, so it speaks again when it returns; `undefined` means only hidden here,
+  as the hint is on the Mods page). `session.setLoaded` clears the store (a new project's banners are new banners), and a `null` from the banner whose text the region holds empties the region, so the same text coming back is a real change. The hint and the note use separate ids, so moving between
+  them speaks the note's own wording. The needs-input count is
   information only (a count and an Inbox link); the old `applyAnyway` /
   `canSubmit` checkboxes in the dialog and on the Dashboard are gone.
 - **The Mods page's selection is a client-side view of the backend's lists.**
@@ -362,7 +460,12 @@ of that command surface — no direct filesystem or process access outside
   all N shown" never re-implements a filter in Vue. A selected id a later filter
   hides stays selected and is counted ("N not shown"); Clear removes all. An
   *unfiltered* response is the whole list, so a selected id missing from it is
-  pruned (`ModListPane`'s watcher); under a filter it is only hidden. The "(N not
+  pruned (`ModListPane`'s watcher); under a filter it is only hidden. After a commit,
+  `useModActivation`/`useModDeactivation` drop from that list's selection every id the
+  backend's commit-time plan names, never just the requested ids: `activated` plus
+  `alreadyActive` (requested mods found active by base id) for Inactive, `removed` plus
+  `notActive` (requested mods no longer active) for Active. So a dependency pulled in under a
+  filter that hides it leaves the selection, and a refused Core stays. The "(N not
   shown)" brackets are part of the `mods.selection.notShown` message, never the
   template, but the gap before them is the span's `ms-1` margin, not whitespace:
   vue-i18n trims whitespace around each plural form, so a leading space in the
@@ -384,7 +487,13 @@ of that command surface — no direct filesystem or process access outside
   active one flips its direction, another starts ascending (`nextSort` in
   `utils/modListSort.ts`). It has no `aria-pressed` (it never un-presses and its
   name changes); the active state is in its accessible name and title plus an
-  arrow and a thicker border. *Anchors name a neighbour by id, never an index*
+  arrow and a thicker border. It collapses to a `Select` of the criteria plus a direction button (`mods-sort-select`,
+  `mods-sort-direction`) when the buttons at their natural width do not fit the pane: `useCollapseToFit`
+  measures the always-rendered button group (`w-max`, hidden with `invisible absolute`, never `display: none`)
+  against the bar, so it is per-locale and cannot flip back and forth. Specs sort through `chooseSort` in
+  `e2e/specs/support.ts`, never a bare `mods-sort-<key>` click at a width or in a language where the bar may collapse. The pane
+  is a CSS container (`@container`); `ModFilterBar` gives the search its own line below `@md`, and the date cell
+  keeps a readable minimum (`w-24 min-w-10`, never a single character). `e2e/specs/mods-narrow-layout.spec.ts` pins all of it in en, de, ru, pl and fr at 1,024 px (the sort bar also at 1,280 px). The measured group is `shrink-0` with `whitespace-nowrap` buttons; without that it shrinks to min-content and wraps its labels instead of collapsing. Focus moves to the counterpart control when the form swaps. *Anchors name a neighbour by id, never an index*
   (`AnchorDto`, `utils/modMove.ts`): a drop gap, a one-step move and a "Move
   after…" choice are all turned into `before`/`after` a **shown** row that is not
   itself moving (`anchorForSlot`, `anchorForStep`), so a filtered view stays exact
@@ -395,6 +504,146 @@ of that command surface — no direct filesystem or process access outside
   menu items are disabled with the reason in the menu, Alt+Arrow announces the
   reason, and a note above the list says why. A mod dragged in from Inactive
   still activates, with `anchor: null`.
+- **Row polish on the Mods page (#54).** The open row is `ModsPage`'s route `modId`, passed down as
+  `openModId` (never the last focused row): it gets `aria-current`, the accent ring and the
+  `bg-accent-soft` tint; selection keeps only the ring. A plain double click emits `toggleActive`
+  and the page runs `openActivateFor`/`openDeactivateFor` with that one id, the same plan and
+  dialog as the buttons (Ctrl/Shift double clicks are selection and do nothing, and a double click
+  on the row's checkbox, menu button or chip is ignored). The row menu's colour swatches sit in
+  the `Menu`'s `#start` slot (pointer-only real buttons, one `set_mod_colors` call, no dialog);
+  keyboard users have the "Colour..." entry. A group chip or dot on a row is a pointer-only
+  `<button tabindex="-1" aria-hidden>` (the grid keeps one tab stop per row; its `mousedown` is
+  prevented so focus stays on the row) that sets the page's group scope; the keyboard route to the
+  same scope is the groups panel. There, the groups the open mod belongs to carry a small accent
+  dot (not the scope tint) and every group a folder icon. The row stripe is the mod's own colour,
+  else its first coloured group (`ModListRowDto.groups` arrives in group-tree order from
+  `rim-session`, never re-sorted in Vue), faded, with screen-reader text that names the group.
+  "Create group" in the Add to group dialogs is `create_group` with `modIds`: one backend edit and
+  one save, and the outcome's `members` is the count the toast reports (never counted in Vue); the
+  dialogs offer it only when no group has that exact name (case-insensitive), and the backend still
+  decides sibling clashes and limits.
+- **Groups view (#54) is a second table over the backend's own layout, never a branch in
+  `ModTable`.** Each pane's view (`usePaneViews`, a remembered display preference, see
+  "Remembered sort and view" below; List is *shown* while organization is unusable, the
+  remembered choice is kept) picks its query in `usePaneList` (only the current view's
+  query is enabled); the backend answers `GroupedModListDto` (`entries` plus the rows once in
+  `items`, `reorderable: false`) and `ModGroupsTable.vue` only draws it: a virtualized
+  `role="treegrid"` at a fixed 40 px with `aria-level` on every row, `aria-expanded` on headers
+  only and `aria-selected` on mod rows only. Placement, counts, which folders show and what a fold
+  hides are the backend's (`entries`, `matched`, `isCollapsed`); Vue never derives folder
+  membership. Rows are keyed by **entry key** (`f:<id>`/`f:u`/`m:<folder>:<modId>`,
+  `utils/groupedEntries.ts`), since one mod can appear in several folders: roving focus
+  (`useTreeRowKeys`), the `data-entry-key`/`mod-entry-<folder>-<modId>` test ids and a Shift range
+  use it, while **selection, counts, Select all, drag sets and the info panel stay per mod id**
+  (`useModSelection`'s optional `rangeLine`, headers in the line with `modId: null`; the List view
+  passes none and is unchanged). The mod `data-testid`s inside a row (`mod-row-select-<id>`,
+  `mod-row-name-<id>`, ...) repeat across copies: scope them through the entry. `ModRowCells`,
+  `ModRowMenu`, `useRowPointer` and the menu types and `hasRowMenuFor`/`isDirectActivateFor` in
+  `utils/modRowMenu.ts` are shared with `ModTable`; `ModFolderMenu` is the headers' one menu, and
+  `useGroupsView` holds the page's wiring (views, folds, prune, folder actions). While a pane's
+  rows are a placeholder (`usePaneList`'s `isPlaceholder`) nothing prunes the selection. Folds are
+  request input
+  (`useGroupsCollapse`: `localStorage` key `rimmerge.groupsView.collapsed.v1:<profileDir>`, one
+  array per pane, parsed with a bound and falling back to nothing folded, pruned to known group
+  ids once organization is loaded, every access in `try`/`catch`), sent sorted so the same set is
+  the same cache entry. A header takes a mod drag whatever the pane's drop mode
+  (`useFolderDropTarget`): a group's header is `useGroupDrop.dropMods` (organization edit only,
+  never a position or an activation, D12), "Ungrouped" refuses, a folded header opens after
+  800 ms; `useRowDrag` offers `copyMove` so the header can say `copy`. "Select all in folder"
+  (`useFolderSelect`) asks the pane's own list query again with the folder as the group filter
+  and adds the returned ids; Activate/Deactivate all are `useGroupScopeActions`. Moving is off in
+  Groups view with its own wording (`useModReorder`'s `isActiveGrouped`), not the sort's.
+- **Remembered sort and view, and "Show in load order" (#55, #56).** Each pane's sort and view
+  live in `usePreferencesStore().panes` (one value, `localStorage` key `rimmerge.modsPanes.v1`,
+  global like the id/name toggle, so a project switch keeps them). `utils/panePrefs.ts`
+  `parsePanePrefs` parses once at read against closed sets (the pane's own sort keys, the two
+  directions, the two views); each pane stands alone and a bad entry gives that pane its default,
+  malformed JSON or an oversized value gives both, and every storage access is in `try`/`catch`.
+  `useModListSort`/`usePaneViews` are writable computeds over the store, and the restored sort goes
+  into the list query like a chosen one: `reorderable` stays the backend's answer (a restored
+  non-load-order Active sort is not reorderable, the note and the position numbers follow). The
+  forced "back to List" watcher is gone: `useGroupsView` shows List only once an answer says the
+  groups cannot be used (`useGroupScope().isKnownUnusable`: organization answered not loaded, or
+  failed), never while organization is still loading, and never overwrites the remembered view.
+  "Show in load order" (`useShowInLoadOrder`) is Active only and offered by `ModRowMenu`
+  (`canShowInLoadOrder`) and `ModInfoPanel` only when the pane is not already List + `loadOrder`
+  ascending (`isLoadOrderSort`, used for the offer only, never for reorderability). It sets view and
+  sort through the preferences, waits a tick for Colada's key watcher, then asks the List query for
+  its current answer (`usePaneList().refreshList`, Colada's `refresh`: cached rows when fresh, else
+  the fetch; never rows already on screen, since a key used earlier answers from a stale cache at
+  once and an unobserved entry is only marked stale by an invalidation; when an invalidation
+  aborts the fetch it waits for the newest call, bounded, and answers only from a `success`
+  state, as the Launch button does) and looks for the mod there:
+  present, it focuses the row (`ModTable.focusRow`, which retries over animation frames since a far
+  row renders after the virtualizer's scroll event, and gives way to a newer call; the Groups
+  table's `focusKey` does the same, both through `useFocusRequests`); absent under a
+  filter, it clears the search, tag, source (`useModListFilters.clear`, which also skips the 300 ms
+  search debounce) and the page-wide group scope, sets the `mods-show-in-load-order-note` and asks
+  again; absent unfiltered, it ends. One request is current at a time (a token): a newer request, a
+  sort or view change away from load order, a filter the user changes meanwhile
+  (`filterSignature`, the typed inputs) or a failed query ends the older one without touching
+  anything, and leaving load order clears the note.
+  An inactive mod has no action. In overlay (drawer) mode the panel's button closes the drawer first.
+- **A vue-i18n warning fails the test that causes it.** `src/i18n/intlifyGuard.ts`, installed by
+  `test-setup.ts`, wraps `console.warn` once per test file and records every `[intlify]` message with
+  the current test's name; `afterEach` throws for that test's warnings and `afterAll` for any left
+  over (a late timer's; a zero-delay one is caught, a longer one is not). Other warnings still print.
+  A test that provokes warnings on purpose (the fallback-chain tests in `i18n.test.ts`) calls
+  `allowIntlifyWarnings()`. **Bypass:** a test that replaces `console.warn` itself
+  (`vi.spyOn(console, "warn").mockImplementation(...)` that does not call through) hides intlify
+  warnings from the guard while the spy is on. Every `<i18n-t>` names `scope="global"` (the default,
+  `parent`, warns on each render here), pinned by `i18nt-scope.guard.test.ts`. Vitest's minimal
+  reporter (picked in non-interactive runs) shows no console output of a passing test, which is
+  how those warnings went unseen.
+- **Search matches are marked from the backend's own ranges (#57).** `ModListRowDto.search`
+  (`SearchHighlightDto { name, id }`, ranges `{ start, end }` in UTF-16 code units, converted once from
+  `rim-session`'s byte ranges in `dto/mod_lists.rs`) is omitted when there is no search or no match, so a
+  10,000-row answer carries no empty objects. It holds the ranges for **both** texts, so the id/name
+  toggle needs no refetch. `ModRowCells` draws the label through `MarkedText.vue`, with ranges chosen by
+  `marksForLabel` (`utils/modRowMarks.ts`) from what is *shown*: the name's when the label equals the row's
+  name, the id's when it equals the id, else none (a name-mode label that fell back to the id marks the
+  id). `splitMarked` (`utils/textMarks.ts`) drops a range that cannot be a slice (out of bounds, empty,
+  fractional, cutting a surrogate pair) with a dev-only `console.warn`, never clamping, and joins overlaps.
+  A match is a styled `<span>` (`bg-search-match`, its own yellow token in both themes, at least 1.5:1 against every row background with 4.5:1 text on it, pinned in `searchMatch.contrast.test.ts`, plus a 2 px underline), not
+  `<mark>`: `mark` has a role that screen readers may announce around each matched row. Never `v-html`
+  (`no-v-html.guard.test.ts`). The mock (`matchRanges` in `scenario.ts`) mirrors the backend's fold and
+  widening in UTF-16 units; the fold (`foldSearch`) is `rim-session`'s `search_fold`: each character lowercased on its
+  own with `ς` written as `σ`, never the whole string, whose final-sigma rule would make `ΑΣ` miss `ΑΣΑ`
+  and a typed `κοσμος` miss `ΚΟΣΜΟΣ`. Every mock search box (`list_mods`, the findings, changes, merge
+  fields and def searches) uses it. The searches the frontend runs itself (`searchTree`,
+  `filterGroupsByName`, `CoverageList`'s filter, `GroupTree`'s type-ahead) use `utils/searchFold.ts`, the
+  same fold: never `toLowerCase()` on a name being searched. (`newGroupNameFor` compares sibling names for
+  equality, as the backend does, and is not a search.) `ModPicker`'s lists (scanned tier, `list_mods`) are not marked.
+- **Copying groups from another profile** (`commands/organization_copy.rs`,
+  `components/mods/organization/CopyProfileDialog.vue`, `composables/useCopyProfile.ts`) is two
+  commands over `CopyOrganization`: `preview_copy_organization` (a read) and `copy_organization`
+  (plans afresh, never trusts a preview). The folder comes from the existing `pickFolder`
+  (`dialog:allow-open`, no new capability; it starts at the parent of `session.paths.profileDir`,
+  where the sibling profile folders are), is parsed once at the command by `parse_user_path` (the
+  path policy below: a drive-letter path only, so a UNC or WebDAV share is `network_path_refused`
+  and `\\.\pipe\x`, `\\?\GLOBALROOT\x` and the like are `invalid_input`) and must be a
+  folder other than this profile's own (`canonicalize` compare, as the export's same-file check),
+  both checks and the read made on a bare `spawn_blocking` with the session lock released (probe
+  the profile folder, read, then plan and save under a second short lock, which refuses with
+  `invalid_input` when another project was loaded meanwhile; the plan is made from the bytes read,
+  against this profile as it is at the commit, so an organization edit made during the read is
+  merged with, never overwritten),
+  then only `organization.json` inside it is read, and `JsonOrganizationStore::load` opens it only
+  when it is a regular file (anything else is `unreadable`). A source equal to this profile's whole
+  organization (an alias the path compare missed, or an identical copy) is `nothingToCopy`. Both
+  answer a `CopyAnswerDto`:
+  a `report` or a `refused` reason; a refusal is an answer, not an error (`organization_unavailable`
+  and `profile_io_failed` are errors). Only a `report` from `copy_organization` emits
+  `organizationChanged`. The dialog is four steps (pick, preview with a Merge/Replace radiogroup,
+  a Replace confirm with Cancel focused, result); one serial in `useCopyProfile` guards every call,
+  so a preview for an earlier mode never overwrites a later one (the radios stay enabled while a
+  preview loads) and a copy that outlives a reset writes nothing. While a copy runs
+  (`isCopying`) the dialog is not closable (`closable`/`close-on-escape` off, both Cancel buttons
+  disabled), and a copy that returns refused or failed to the preview moves focus to Choose. The
+  mock (`copy_organization` in `scenario.ts`, sources from `window.__COPY_PROFILE_SOURCES__`, the
+  picker from `__PICK_FOLDER_RESULT__`, its options in `__PICK_FOLDER_OPTIONS__`) mirrors the merge
+  rule, the clashes and every refusal, including the source validation `from_parts` does at load
+  (a source over a limit on its own is `sourceUnusable` / `invalid`, not a `limit` refusal).
 - **Drag and drop is native HTML5, with no dependency, and the page owns the
   drag.** `useModReorder` holds the one `DragState` (source list, moving ids,
   whether Core is among them) and answers `dropModeFor(list)`: `position` (a line
@@ -522,8 +771,8 @@ of that command surface — no direct filesystem or process access outside
   install writes it, so an unapplied reorder reaches `ModsConfig.xml` with the
   export. That is kept on purpose, as for an unapplied import; the warning is
   the mitigation. A third note (`outsideChangeNote`, from `useFileBaselineQuery`'s
-  `externalChange.kind !== "none"`) says install writes Current over an outside change of
-  the list.
+  `externalChange.kind !== "none"` and not `fileHoldsCurrentExactly`) says install writes Current
+  over an outside change of the list.
 - **The selected order is backend-led.** `load_project_inner` selects
   `INITIAL_ORDER_SOURCE` (Suggested, the desktop's own presentation
   default; `Session::new` stays on Current for the CLI) before the
@@ -785,7 +1034,10 @@ The UI is localized in `en` plus twelve translated locales (`zh-CN`,
   three existing ones, e.g. `LoadEventKindDto`), struct variants need
   their own `rename_all`, `FindingKey`/`FieldPath` cross as strings, `u64` fields carry `#[ts(type = "number")]`, request
   DTOs use `deny_unknown_fields`. Mod lookups compare `ModId::base()` so
-  a `_steam` copy resolves the same as the primary one.
+  a `_steam` copy resolves the same as the primary one, except the single-mod
+  lookups, which try the exact id first and then the base id (so a plain and a
+  `_steam` copy both active each answer for themselves): `get_mod`,
+  `explain_placement`, `get_mod_info`, `read_mod_preview` and `read_texture`.
 - **Rust module layout**: `commands/assignments.rs` keeps every
   `#[tauri::command]` function and delegates to `*_inner` functions in
   `assignments/{projects,sections,rows,coverage,export}.rs`.
@@ -872,6 +1124,9 @@ The UI is localized in `en` plus twelve translated locales (`zh-CN`,
 - Biome's `useLiteralKeys` is off because `noPropertyAccessFromIndexSignature`
   forces bracket access on `route.params`. Vitest files are type-checked
   through `tsconfig.vitest.json`.
+- A Vitest guard that only scans sources with `node:fs` declares
+  `// @vitest-environment node` (no happy-dom window), so it stays inside the 5 s
+  default timeout under load.
 - **An imported game log's facts follow its coverage.** `GameLogSummaryDto.coverage`
   is a `kind`-tagged union whose variant is the log's kind (`playerLog` /
   `consoleSnapshot`); a consumer of the summary checks it
@@ -1001,7 +1256,18 @@ The UI is localized in `en` plus twelve translated locales (`zh-CN`,
   `--strictPort`** (fails fast instead of silently picking another
   port) **and `reuseExistingServer: false` unconditionally** — never
   reused, only one runner occupies that port at a time in this
-  workspace. Specs assert the exact IPC payloads
+  workspace. **It is HTTPS** (`RIMMERGE_E2E_HTTPS=1` from the configs'
+  `webServer.env`, `@vitejs/plugin-basic-ssl`'s throwaway certificate, cached
+  under `node_modules/.vite`, and `ignoreHTTPSErrors`), so Vite speaks HTTP/2: over HTTP/1.1 the
+  per-test contexts' closed keep-alive sockets pile up in Windows
+  `TIME_WAIT` and a module request is occasionally refused, leaving a
+  blank page (#58). `specs/http2.spec.ts` pins `h2`; `loadScenario` and
+  every spec with its own `page.goto` call
+  `failOnSameOriginRequestFailure(page)` first, which fails the test at
+  once on a failed same-origin request (not `ERR_ABORTED`). Anything
+  that turns `server.https` off (or a Vite that serves HTTPS over
+  HTTP/1.1) brings #58 back; `http2.spec.ts` catches it. `tauri dev` on
+  5173 stays HTTP. Specs assert the exact IPC payloads
   `e2e/fixtures/scenario.ts` records (its `__X_CALLS__` recorders), not
   presence.
 - **`e2e/fixtures/scenario.ts`'s `installScenario` is serialized with

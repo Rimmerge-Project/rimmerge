@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Patch>
-  <!-- ThingDef/Fixture_Wall — owners: fixture.moda,fixture.modb -->
+  <!-- ThingDef/Fixture_Wall - owners: fixture.moda,fixture.modb -->
   <Operation Class="PatchOperationSequence">
     <operations>
       <li Class="PatchOperationReplace" MayRequire="fixture.moda,fixture.modb">

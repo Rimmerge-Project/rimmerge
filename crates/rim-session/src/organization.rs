@@ -8,6 +8,7 @@
 //! the session holds it as an [`OrganizationState`].
 
 mod color;
+mod copy;
 mod edit;
 mod forest;
 mod group;
@@ -16,6 +17,7 @@ mod resolve;
 mod state;
 
 pub use color::{ColorToken, UnknownColor};
+pub use copy::{CopyMode, CopyPlan, CopyReport, Discarded, GroupColorClash, plan_copy};
 pub use edit::{EditOutcome, OrganizationEdit};
 pub use forest::{
     ColorChange, DeleteMode, DeleteOutcome, GroupNode, GroupScope, MembershipAdd, MembershipMove,

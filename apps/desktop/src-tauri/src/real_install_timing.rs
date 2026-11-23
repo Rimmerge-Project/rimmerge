@@ -7,6 +7,10 @@
 //! Run with:
 //! `RIMMERGE_GAME_DIR=<your install> RIMMERGE_PERF_PROFILE_DIR=<scratch copy> cargo nextest run -p rimmerge-desktop --all-features --release --run-ignored ignored-only -E 'test(real_install_timing)'`
 
+/// This module's path, checked against `.config/nextest.toml`'s `timing` filter by
+/// `real_install_support`'s drift guard.
+pub(crate) const MODULE_PATH: &str = module_path!();
+
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
@@ -1224,12 +1228,13 @@ async fn organization_against_the_real_install() {
     );
     *state.session.write().expect("lock") = Some(session);
 
-    let crate::dto::organization::OrganizationEditOutcomeDto::Created { id: group } =
+    let crate::dto::organization::OrganizationEditOutcomeDto::Created { id: group, .. } =
         create_group_inner(
             &state,
             CreateGroupRequestDto {
                 name: "Perf".to_string(),
                 parent: None,
+                mod_ids: None,
             },
         )
         .await

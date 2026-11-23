@@ -260,7 +260,7 @@ mod tests {
 
     #[test]
     fn importing_your_own_export_is_an_empty_diff() {
-        use crate::mod_list::{ImportContext, ImportedEntry, plan_import};
+        use crate::mod_list::{IdSpelling, ImportContext, ImportedEntry, plan_import};
 
         let report = ReportBuilder::new()
             .core("ludeon.rimworld")
@@ -289,6 +289,7 @@ mod tests {
                 own_merge_mod: own,
                 game_version: None,
                 has_pending_changes: false,
+                id_spelling: IdSpelling::Shared,
             },
         );
 

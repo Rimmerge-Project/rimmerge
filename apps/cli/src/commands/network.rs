@@ -34,8 +34,8 @@ pub enum NetworkCommand {
     Off(ToggleArgs),
     /// Restores every internet-access switch (master, updates,
     /// auto-refresh, and all three per-source fetch toggles) to its
-    /// default — every switch on, including the Steam Workshop database
-    /// (about 49 MB, downloaded only when you run `db refresh`) — leaving
+    /// default: every switch on, including the Steam Workshop database
+    /// (about 49 MB, downloaded only when you run `db refresh`), leaving
     /// the stale-reminder threshold untouched. The one way to recover
     /// from a corrupt `app-settings.json`, which fails closed (every
     /// switch off) rather than crashing, without hand-editing the file.
@@ -72,8 +72,8 @@ pub struct ToggleArgs {
     #[arg(long = "community-rules", value_enum)]
     community_rules: Option<OnOffArg>,
     /// Also sets whether a refresh may fetch the Steam Workshop
-    /// database (about 49 MB; on by default). This source is manual-only regardless — see
-    /// `RuleDatabase::is_auto_refresh_eligible` — this flag only ever
+    /// database (about 49 MB; on by default). This source is manual-only regardless (see
+    /// `RuleDatabase::is_auto_refresh_eligible`). This flag only ever
     /// controls whether a refresh may fetch it at all, not whether
     /// automatic refresh covers it.
     #[arg(long = "steam-workshop", value_enum)]

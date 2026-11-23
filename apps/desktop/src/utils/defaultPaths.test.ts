@@ -4,6 +4,7 @@ import {
   checkedLocations,
   describeDefaultPathsError,
   describeDefaultPathsWarning,
+  warningConcernsTheField,
 } from "@/utils/defaultPaths";
 
 describe("describeDefaultPathsWarning", () => {
@@ -12,6 +13,54 @@ describe("describeDefaultPathsWarning", () => {
       key: "defaultPathsWarning.notAnInstall",
       params: { gameDir: "C:/Games/Foo" },
     });
+  });
+
+  it("words a refused typed text by its reason, with no field or path parameter", () => {
+    expect(
+      describeDefaultPathsWarning({
+        kind: "pathRefused",
+        field: "gameDir",
+        reason: "networkShare",
+        source: "typed",
+      }),
+    ).toEqual({ key: "defaultPathsWarning.typedNetworkShare" });
+    expect(
+      describeDefaultPathsWarning({
+        kind: "pathRefused",
+        field: "gameDir",
+        reason: "invalid",
+        source: "typed",
+      }),
+    ).toEqual({ key: "defaultPathsWarning.typedInvalid" });
+  });
+
+  it("words a refused stored value by its field", () => {
+    const keys = (["gameDir", "workshopDir", "modsConfig"] as const).map(
+      (field) =>
+        describeDefaultPathsWarning({
+          kind: "pathRefused",
+          field,
+          reason: "networkShare",
+          source: "configured",
+        }).key,
+    );
+
+    expect(keys).toEqual([
+      "defaultPathsWarning.configuredGameDir",
+      "defaultPathsWarning.configuredWorkshopDir",
+      "defaultPathsWarning.configuredModsConfig",
+    ]);
+  });
+});
+
+describe("warningConcernsTheField", () => {
+  it("is true for the install note and a refused typed text, false for a stored value", () => {
+    const refused = (source: "typed" | "configured") =>
+      ({ kind: "pathRefused", field: "gameDir", reason: "invalid", source }) as const;
+
+    expect(warningConcernsTheField({ kind: "notAnInstall", gameDir: "C:/x" })).toBe(true);
+    expect(warningConcernsTheField(refused("typed"))).toBe(true);
+    expect(warningConcernsTheField(refused("configured"))).toBe(false);
   });
 });
 

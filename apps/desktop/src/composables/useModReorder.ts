@@ -2,8 +2,6 @@ import { useQueryCache } from "@pinia/colada";
 import { useToast } from "primevue/usetoast";
 import { computed, type MaybeRefOrGetter, nextTick, type Ref, ref, toValue } from "vue";
 import { useI18n } from "vue-i18n";
-
-import type { DropMode, MenuAction } from "@/components/mods/ModTable.vue";
 import { useModLabel } from "@/composables/useModLabel";
 import { useTranslateMessage } from "@/composables/useTranslateMessage";
 import { useMoveModsMutation } from "@/queries/activeSet";
@@ -14,9 +12,10 @@ import type { ModListDto } from "@/types/generated/ModListDto";
 import type { ModListRowDto } from "@/types/generated/ModListRowDto";
 import { assertNever } from "@/utils/assertNever";
 import { describeCommandError } from "@/utils/errors";
+import type { DropMode, MenuAction } from "@/utils/modRowMenu";
 
 /** The row menu entries that place a mod; Groups and Color are the page's own dialogs. */
-type PositionMenuAction = Exclude<MenuAction, "groups" | "color">;
+type PositionMenuAction = Exclude<MenuAction, "groups" | "color" | "showInLoadOrder">;
 
 import { anchorForSlot, anchorForStep, isNoopSlot, moveSetFor } from "@/utils/modMove";
 
@@ -60,6 +59,7 @@ export function useModReorder({
   activeList,
   inactiveList,
   isActiveFiltered,
+  isActiveGrouped = false,
   selectedActiveIds,
   selectedInactiveIds,
   activation,
@@ -73,6 +73,8 @@ export function useModReorder({
   inactiveList: MaybeRefOrGetter<ModListDto | undefined>;
   /** Whether the Active list is showing a filtered view (its `total` is then not the order's size). */
   isActiveFiltered: MaybeRefOrGetter<boolean>;
+  /** Whether the Active pane shows Groups view, where moving is off and the reason says so. */
+  isActiveGrouped?: MaybeRefOrGetter<boolean>;
   selectedActiveIds: Ref<string[]>;
   selectedInactiveIds: Ref<string[]>;
   activation: Activation;
@@ -99,8 +101,13 @@ export function useModReorder({
   const isReorderable = computed(() => toValue(activeList)?.reorderable === true);
   /** Why moving is off, or `null` while the Active list is in load order. */
   const reorderBlockedReason = computed(() =>
-    toValue(activeList) !== undefined && !isReorderable.value ? t("mods.move.blockedReason") : null,
+    toValue(activeList) !== undefined && !isReorderable.value ? blockedText() : null,
   );
+
+  /** Moving is off for one of two reasons the user can act on: the sort, or the Groups view. */
+  function blockedText(): string {
+    return toValue(isActiveGrouped) ? t("mods.move.groupsViewOff") : t("mods.move.blockedReason");
+  }
 
   function startDrag(from: ListKind, modId: string): void {
     const rows = from === "active" ? activeRows.value : inactiveRows.value;
@@ -144,7 +151,7 @@ export function useModReorder({
       return "";
     }
     if (target === "active") {
-      return t("mods.move.blockedReason");
+      return blockedText();
     }
     return drag.value?.from === "inactive"
       ? t("mods.move.inactiveNotOrdered")

@@ -44,6 +44,7 @@ const label = computed(() =>
     :title="label"
     :data-testid="`mod-row-menu-${modId}`"
     @click.stop="(event: MouseEvent) => emit('open', event)"
+    @dblclick.stop
     @keydown.stop
   />
 </template>

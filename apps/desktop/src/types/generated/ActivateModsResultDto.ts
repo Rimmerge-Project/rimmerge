@@ -3,8 +3,9 @@ import type { OrderSourceDto } from "./OrderSourceDto";
 import type { PendingActiveChangesDto } from "./PendingActiveChangesDto";
 
 /**
- * `activate_mods`'s result: the pending-change reading, plus the selection
- * after the call and whether it was this call that changed it (an anchored
+ * `activate_mods`'s result: the pending-change reading, which ids the
+ * commit-time plan added or found already active, plus the selection after
+ * the call and whether it was this call that changed it (an anchored
  * activation switches Suggested to Current like a move; an un-anchored one
  * never does).
  */
@@ -13,6 +14,18 @@ export type ActivateModsResultDto = {
  * What is still pending after the activation.
  */
 pending: PendingActiveChangesDto, 
+/**
+ * Every id the commit added to the active set, dependencies first. The
+ * commit re-plans, so this can differ from the plan the dialog showed;
+ * the caller drops these from its Inactive selection.
+ */
+activated: Array<string>, 
+/**
+ * Requested ids the commit-time plan found already active (by base id,
+ * so a copy of the same mod counts): nothing was added for them, and
+ * the caller drops them from its Inactive selection too.
+ */
+alreadyActive: Array<string>, 
 /**
  * The selected order now.
  */

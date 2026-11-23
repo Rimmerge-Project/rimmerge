@@ -8,7 +8,11 @@ export type OrganizationEditOutcomeDto = { "kind": "created",
 /**
  * Its id.
  */
-id: number, } | { "kind": "done" } | { "kind": "deleted", 
+id: number, 
+/**
+ * How many mods it holds as it is created (each mod once, whatever copies it had).
+ */
+members: number, } | { "kind": "done" } | { "kind": "deleted", 
 /**
  * Groups removed, the deleted group included.
  */

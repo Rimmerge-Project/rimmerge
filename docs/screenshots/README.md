@@ -12,6 +12,15 @@ yet." note, as embedded in [`docs/desktop.md`](../desktop.md). They are
 mock-tier captures at the same size, dark theme; `sort-toggle.png` and
 `order-not-applied-note.png` are crops of the page.
 
+`mods-page/groups-view.png` and `mods-page/search-highlight.png` show the Active
+list in Groups view (folders, colours) and with a search marked, dark theme,
+1280x800 (`search-highlight.png` is a crop of the list).
+`mods-page/apply-outside-change-confirm.png` is the Apply dialog's confirm
+section after the file changed outside Rimmerge and
+`mods-page/outside-change-hint.png` is the note shown on the other pages (a crop).
+`mods-page/copy-groups-preview.png` is the Copy groups from another profile
+dialog with its Merge preview, at 1900x900 like the two images below.
+
 `mods-page/groups-and-bulk-actions.png` and
 `mods-page/bulk-add-to-group-dialog.png` show the Groups panel and the bulk
 actions in [`docs/desktop.md`](../desktop.md); they are dark-theme captures at

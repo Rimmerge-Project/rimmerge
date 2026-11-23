@@ -18,6 +18,8 @@ use rim_resolve::domain::{
     FieldPath, FindingKey, MergeChoice, MergeState, OrderSource, PatchId, PatchScope,
 };
 
+use crate::search_fold::search_fold;
+
 /// One preview cache bucket: the selected order plus, for a patch's own
 /// preview, that patch's id. `patch: None` is the profile's own slot —
 /// [`PreviewSlot::profile`] builds it; [`PreviewSlot::patch`] builds a
@@ -188,7 +190,7 @@ impl MergePreview {
             }
         }
 
-        let search = filter.search.as_deref().map(str::to_lowercase);
+        let search = filter.search.as_deref().map(search_fold);
         let matching: Vec<&FieldDiff> = self
             .diff
             .fields
@@ -198,7 +200,7 @@ impl MergePreview {
             })
             .filter(|field| match &search {
                 Some(needle) if !needle.is_empty() => {
-                    field.path.to_string().to_lowercase().contains(needle)
+                    search_fold(&field.path.to_string()).contains(needle)
                 }
                 _ => true,
             })
@@ -547,6 +549,27 @@ mod tests {
 
         assert_eq!(page.total, 1);
         assert_eq!(page.fields[0].path.to_string(), "field2");
+    }
+
+    #[test]
+    fn a_greek_search_matches_a_capital_sigma_wherever_it_stands() {
+        let mut preview = preview_with_fields(2);
+        for (field, name) in preview.diff.fields.iter_mut().zip(["ΑΣΑ", "ΚΟΣΜΟΣ"]) {
+            field.path =
+                rim_merge::tree::FieldPath::new(vec![PathSegment::Child(name.to_string())]);
+        }
+        let search = |text: &str| {
+            preview
+                .field_page(&MergeFieldFilter {
+                    search: Some(text.to_string()),
+                    ..default_filter()
+                })
+                .total
+        };
+
+        // `str::to_lowercase` fails both: "ΑΣ" would fold to "ας", "κοσμος" would not meet "ΚΟΣΜΟΣ".
+        assert_eq!(search("ΑΣ"), 1);
+        assert_eq!(search("κοσμος"), 1);
     }
 
     #[test]

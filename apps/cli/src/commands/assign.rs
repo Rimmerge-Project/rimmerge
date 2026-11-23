@@ -130,7 +130,7 @@ pub enum AssignCommand {
     Show(ShowArgs),
     /// Applies a name/author/description/R/T/schema-refresh update.
     Update(UpdateArgs),
-    /// Records one section's row — target-keyed (`--target`/
+    /// Records one section's row: target-keyed (`--target`/
     /// `--key-field`) or free-standing (neither).
     SetRow(SetRowArgs),
     /// Removes one section's row.

@@ -180,7 +180,7 @@ impl<Reader: DefSourceReader> VerifyOrder<Reader> {
                 def_key.clone(),
                 target.selector,
                 format!(
-                    "{}/{}: replay stopped — {stopped_at}",
+                    "{}/{}: replay stopped: {stopped_at}",
                     target.def_type, target.def_name
                 ),
             ));
@@ -316,7 +316,7 @@ impl<Reader: DefSourceReader> VerifyOrder<Reader> {
                 def_key.clone(),
                 target.selector,
                 format!(
-                    "{}/{}: replay stopped — {error}",
+                    "{}/{}: replay stopped: {error}",
                     target.def_type, target.def_name
                 ),
             ));

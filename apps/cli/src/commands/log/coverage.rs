@@ -196,7 +196,7 @@ fn describe_snapshot(coverage: &SnapshotCoverage) -> String {
         ""
     };
     format!(
-        "console snapshot, {} \u{2014} {caveat}{head}",
+        "console snapshot, {} - {caveat}{head}",
         counted(entries, "entry", "entries")
     )
 }

@@ -2,6 +2,7 @@ import type { ChangeFilterDto } from "@/types/generated/ChangeFilterDto";
 import type { EffectiveFieldFilterDto } from "@/types/generated/EffectiveFieldFilterDto";
 import type { FieldRowFilterDto } from "@/types/generated/FieldRowFilterDto";
 import type { FindingFilterDto } from "@/types/generated/FindingFilterDto";
+import type { GroupedListQueryDto } from "@/types/generated/GroupedListQueryDto";
 import type { ListItemsFilterDto } from "@/types/generated/ListItemsFilterDto";
 import type { MergeFieldFilterDto } from "@/types/generated/MergeFieldFilterDto";
 import type { ModFilterDto } from "@/types/generated/ModFilterDto";
@@ -65,10 +66,19 @@ export const queryKeys = {
   modNames: () => ["mods", "names"] as const,
   /** `list_working_mods`'s result for one query — the Active tab. */
   workingMods: (query: ModListQueryDto) => [...WORKING_MODS_PREFIX, query] as const,
+  /**
+   * `list_working_mods_grouped`'s result: the Active tab in Groups view. Nested under the same
+   * prefix as {@link workingMods}, so every invalidation of the prefix covers it.
+   */
+  workingModsGrouped: (query: GroupedListQueryDto) =>
+    [...WORKING_MODS_PREFIX, "grouped", query] as const,
   /** Every Active-tab list query, whatever its query object: the invalidation prefix. */
   workingModsAll: () => WORKING_MODS_PREFIX,
   /** `list_inactive_mods`'s result for one query — the Inactive tab. */
   inactiveMods: (query: ModListQueryDto) => [...INACTIVE_MODS_PREFIX, query] as const,
+  /** `list_inactive_mods_grouped`'s result; nested under the Inactive prefix like the Active one. */
+  inactiveModsGrouped: (query: GroupedListQueryDto) =>
+    [...INACTIVE_MODS_PREFIX, "grouped", query] as const,
   /** Every Inactive-tab list query, whatever its query object: the invalidation prefix. */
   inactiveModsAll: () => INACTIVE_MODS_PREFIX,
   /** `get_organization`'s result: the group tree. */

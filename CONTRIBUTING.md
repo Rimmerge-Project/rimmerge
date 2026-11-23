@@ -41,6 +41,7 @@ cargo nextest run --workspace --all-features
 cargo deny check
 pwsh ./scripts/check-forbidden.ps1
 pwsh ./scripts/check-line-endings.ps1
+pwsh ./scripts/check-em-dashes.ps1
 pwsh ./scripts/check-doc-links.ps1
 cd apps/desktop && bun run types:check && bun run typecheck && bun run lint && bun run test && bun run e2e
 ```

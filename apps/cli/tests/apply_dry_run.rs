@@ -59,7 +59,7 @@ fn apply_dry_run_reports_and_writes_nothing_against_a_scratch_game_tree() {
         .success()
         .stdout(predicates::str::contains("Dry run:"))
         .stdout(predicates::str::contains(
-            "nothing written — this is a dry run",
+            "nothing written: this is a dry run",
         ));
 
     assert_eq!(

@@ -20,7 +20,7 @@ pub struct ProposeArgs {
     #[arg(long = "exclude-refs", default_value = "")]
     exclude_refs: String,
     /// The target set T, comma-separated package ids (Core/DLC ids
-    /// included). May be empty — a candidate with no `TargetKey` field
+    /// included). May be empty: a candidate with no `TargetKey` field
     /// (a "new def" candidate) is only offered when this is empty.
     #[arg(long, default_value = "")]
     targets: String,

@@ -510,6 +510,66 @@ describe("SetupPage", () => {
     ).toBe(false);
   });
 
+  it("says why a committed network folder was not used, and drops that note once the field changes", async () => {
+    // The backend never stats a refused text, so the answer holds the fallback folder
+    // and a `pathRefused` note instead of a resolved one for the typed text.
+    installMockIpc({
+      get_default_paths: (payload: unknown) => {
+        const { request } = payload as { request: { gameDir: string | null } };
+        return request.gameDir === null
+          ? defaultsFixture
+          : ({
+              ...defaultsFixture,
+              warningCode: {
+                kind: "pathRefused",
+                field: "gameDir",
+                reason: "networkShare",
+                source: "typed",
+              },
+            } satisfies DefaultPathsDto);
+      },
+    });
+    const { wrapper } = mountSetupPage();
+    await settle(wrapper);
+    expect(wrapper.find('[data-testid="setup-path-warning"]').exists()).toBe(false);
+
+    const input = wrapper.get('[data-testid="game-dir-input"]');
+    await input.setValue("\\\\server\\share\\RimWorld");
+    await input.trigger("blur");
+    await settle(wrapper);
+    await settle(wrapper);
+
+    expect(wrapper.get('[data-testid="setup-path-warning"]').text()).toContain("network share");
+
+    await input.setValue("C:/Somewhere/Else");
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.find('[data-testid="setup-path-warning"]').exists()).toBe(false);
+  });
+
+  it("keeps the note about a refused stored value whatever is typed", async () => {
+    installMockIpc({
+      get_default_paths: {
+        ...defaultsFixture,
+        warningCode: {
+          kind: "pathRefused",
+          field: "workshopDir",
+          reason: "networkShare",
+          source: "configured",
+        },
+      },
+    });
+    const { wrapper } = mountSetupPage();
+    await settle(wrapper);
+
+    await wrapper.get('[data-testid="game-dir-input"]').setValue("C:/Somewhere/Else");
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.get('[data-testid="setup-path-warning"]').text()).toContain(
+      "Steam workshop folder in your saved defaults",
+    );
+  });
+
   it("hides the detection message when the paths resolved", async () => {
     installMockIpc({ get_default_paths: defaultsFixture });
 

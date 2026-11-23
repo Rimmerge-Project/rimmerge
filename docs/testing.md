@@ -22,6 +22,30 @@ scale, against real, messy third-party content. But they can never run
 in CI, can never assume any particular mod is installed, and must never
 leak a real mod's name into a committed assertion.
 
+A third item is neither tier but belongs to the default one: how the desktop
+app's mock-IPC e2e tier is served (the section after this one).
+
+## The mock-IPC e2e tier runs over HTTPS and HTTP/2
+
+The desktop app's Playwright tier (`bun run e2e`) serves the app from Vite on
+port 5183 over **HTTPS with a throwaway self-signed certificate** (made once, cached
+under the gitignored `node_modules/.vite`), so the dev
+server speaks HTTP/2. The Playwright configs start it with
+`RIMMERGE_E2E_HTTPS=1`, which `vite.config.ts` reads; `tauri dev` on 5173 never
+sets it and stays plain HTTP. The reason is a Windows flake: every test opens a
+fresh browser context, and over HTTP/1.1 each opens about six keep-alive
+connections that the browser closes first, so about 1,500 client-side
+`TIME_WAIT` entries pile up per run. Now and then Windows hands out a local
+port whose 4-tuple is still in `TIME_WAIT`, the connection is refused
+(`net::ERR_CONNECTION_REFUSED`), one module of the app's import graph fails to
+load, and the page stays blank until the test times out. HTTP/2 uses about one
+connection per context. Two guards keep it that way: `specs/http2.spec.ts`
+asserts the page was served over `h2`, and `loadScenario` (and every spec that
+calls `page.goto` itself) fails the test at once, naming the URL, when a
+request to the app's own origin fails. Anything that turns `server.https` off
+(or a Vite that serves HTTPS over HTTP/1.1) brings the flake back, and
+`specs/http2.spec.ts` catches it.
+
 ## The three-state rule
 
 A real-install test is never allowed to silently report nothing as a
@@ -176,6 +200,37 @@ flag, distinct from `--build-jobs`, which controls compile
 parallelism) to either real-install command if you see this; it trades
 wall-clock time for headroom.
 
+## Timing guards run alone
+
+A real-install test that asserts a wall-clock budget (the desktop's
+`def_graphics_real_install`, `def_inspector_timing` and
+`real_install_timing` modules, the analyzer's `real_install_scan_timing` and
+`real_install_post_scan_analysis` binaries, the CLI's
+`real_install_save_import`, and `rim-resolve`'s
+`full_size_report_invariants_and_runtime_budget`) is sensitive to load: beside
+other tests in the same run, the def-graphics median measured 63 ms against a
+50 ms budget, and 29 ms alone. `.config/nextest.toml` puts exactly these tests
+in the `timing` test group (`max-threads = 1`) and sets
+`threads-required = "num-test-threads"` on them, so each one occupies every
+test thread and nothing else runs while it measures, at any `--test-threads`
+value (including the `--test-threads 4` the section above recommends). The cost
+is that the desktop real-install tier (and the other timing tests) now run one
+at a time: wall clock goes up, peak memory comes down. Budgets are never raised
+and nothing is retried to make a guard pass. Every other test keeps nextest's
+defaults, so the default gate is unchanged. A new timing guard joins the filter
+in that file; a drift guard in `real_install_support.rs` (desktop) and
+`sort_golden.rs` fails when a name the filter relies on is renamed. See the
+placement with
+`cargo nextest show-config test-groups --workspace --all-features --run-ignored all`.
+
+The Vitest side: a guard that only scans source files with `node:fs`
+(`style.guard.test.ts`, `progressbar.guard.test.ts`, `invalidation.guard.test.ts`,
+`i18n/locales.unusedKeys.test.ts`, and the colour contrast checks
+`markColors.contrast.test.ts` and `searchMatch.contrast.test.ts`, which read
+`style.css`) declares `// @vitest-environment node`
+so it does not pay for a happy-dom window, and stays well inside the default
+5 s test timeout on a loaded machine. The timeout is not raised.
+
 ## The pins file pattern
 
 A real-install test's *exact* assertions (naming a specific mod, a
@@ -302,7 +357,11 @@ Remove-Item -Recurse -Force $S                           # the scratch install
 
 That `rg` line checks the committed, shape-only public list. Maintainers who keep a
 private, gitignored project-specific list should also run
-`./scripts/check-forbidden.ps1`, which merges both automatically.
+`./scripts/check-forbidden.ps1`, which merges both automatically. The script
+scans hidden directories too (`.github/`, `.config/`, and the
+tracked `.claude/settings.json`). It excludes `.git`, `.journal/`, `target/`,
+`node_modules/` and the `rules/` submodule explicitly; the untracked rest of
+`.claude/` is hidden by `.gitignore`.
 
 Then **read** each `tests/snapshots/*.snap.new` file by hand before
 renaming it over the matching `.snap` to accept it. Never accept a

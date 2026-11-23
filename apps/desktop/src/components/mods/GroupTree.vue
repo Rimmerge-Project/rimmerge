@@ -2,6 +2,7 @@
 import { computed, nextTick, onScopeDispose, ref, useTemplateRef, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
+import GroupFolderIcon from "@/components/mods/GroupFolderIcon.vue";
 import type { GroupNodeDto } from "@/types/generated/GroupNodeDto";
 import { assertNever } from "@/utils/assertNever";
 import {
@@ -12,12 +13,12 @@ import {
 } from "@/utils/groupDrop";
 import {
   COLOR_NAME_KEY,
-  COLOR_SWATCH_CLASS,
   findNode,
   type GroupScopeChoice,
   isSameScope,
   visibleNodes,
 } from "@/utils/organization";
+import { searchFold } from "@/utils/searchFold";
 
 /**
  * The group tree, following the WAI-ARIA tree pattern: one roving tab stop; Up/Down move,
@@ -42,6 +43,7 @@ const {
   nodes,
   shown,
   rowDrag = null,
+  openModGroupIds = new Set<number>(),
 } = defineProps<{
   /** Every group, depth first, siblings by name. */
   nodes: readonly GroupNodeDto[];
@@ -49,6 +51,8 @@ const {
   shown: ReadonlySet<number> | null;
   /** The mods being dragged from a list (and how many of them a filter hides), or `null`. */
   rowDrag?: { readonly count: number; readonly hiddenCount: number } | null;
+  /** The groups the mod open in the info panel is a direct member of: drawn highlighted. */
+  openModGroupIds?: ReadonlySet<number>;
 }>();
 const emit = defineEmits<{
   /** Shift+F10, the ContextMenu key or a right click: open the menu of this group. */
@@ -164,7 +168,7 @@ let typeAheadTimer: ReturnType<typeof setTimeout> | undefined;
 /** Jumps to the next entry whose name starts with the typed text. */
 function typeAheadTo(character: string, from: number): void {
   clearTimeout(typeAheadTimer);
-  typeAhead += character.toLowerCase();
+  typeAhead += searchFold(character);
   typeAheadTimer = setTimeout(() => {
     typeAhead = "";
   }, TYPE_AHEAD_RESET_MS);
@@ -176,7 +180,7 @@ function typeAheadTo(character: string, from: number): void {
   const start = isCycling || typeAhead.length === 1 ? from + 1 : from;
   for (let step = 0; step < all.length; step += 1) {
     const candidate = all[(start + step) % all.length];
-    if (candidate !== undefined && nameOf(candidate).toLowerCase().startsWith(prefix)) {
+    if (candidate !== undefined && searchFold(nameOf(candidate)).startsWith(prefix)) {
       void focusKey(candidate.key);
       return;
     }
@@ -471,7 +475,8 @@ function onDragOver(event: DragEvent, entry: Entry): void {
   }
   event.preventDefault();
   if (event.dataTransfer) {
-    event.dataTransfer.dropEffect = "move";
+    // Mods dropped on a group are added to it (they stay where they are), as on a Groups view header.
+    event.dataTransfer.dropEffect = kind === "mods" ? "copy" : "move";
   }
 }
 
@@ -506,10 +511,6 @@ function onDrop(event: DragEvent, entry: Entry): void {
     draggedGroupId.value = null;
     emit("dropGroup", droppedGroup, entry.node?.id ?? null);
   }
-}
-
-function swatchClass(node: GroupNodeDto): string {
-  return node.color === null ? "border-border-strong border" : COLOR_SWATCH_CLASS[node.color];
 }
 
 defineExpose({ focusKey, focusCurrent });
@@ -579,11 +580,12 @@ defineExpose({ focusKey, focusCurrent });
             />
           </span>
           <span
-            class="size-3 shrink-0 rounded-full"
-            :class="swatchClass(entry.node)"
+            class="size-1.5 shrink-0 rounded-full"
+            :class="openModGroupIds.has(entry.node.id) ? 'bg-accent' : ''"
             aria-hidden="true"
-            :data-color="entry.node.color ?? undefined"
+            :data-testid="openModGroupIds.has(entry.node.id) ? 'group-node-open-dot' : undefined"
           />
+          <GroupFolderIcon :color="entry.node.color" />
           <span class="min-w-0 flex-1 truncate">{{ entry.node.name }}</span>
           <span
             class="text-text-muted shrink-0 text-xs font-normal"
@@ -602,6 +604,11 @@ defineExpose({ focusKey, focusCurrent });
           >{{
             t("mods.groups.nodeSubgroupCount", { count: entry.node.childCount }, entry.node.childCount)
           }}</span>
+          <span
+            v-if="openModGroupIds.has(entry.node.id)"
+            class="sr-only"
+            data-testid="group-node-open-mod"
+          >{{ t("mods.groups.openModIsMember") }}</span>
           <span
             v-if="entry.node.color !== null"
             class="sr-only"

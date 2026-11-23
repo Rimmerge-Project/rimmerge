@@ -17,8 +17,11 @@ function modRow(overrides: ModRowOverrides = {}) {
 
 let mountedWrappers: ReturnType<typeof mount>[] = [];
 
-function mountTable(props: InstanceType<typeof ModTable>["$props"]) {
-  installMockIpc({ list_mod_names: {} });
+function mountTable(
+  props: InstanceType<typeof ModTable>["$props"],
+  names: Record<string, string> = {},
+) {
+  installMockIpc({ list_mod_names: names });
   const wrapper = mount(ModTable, {
     props,
     // Connected to `document.body` — happy-dom only dispatches `focus`
@@ -70,6 +73,44 @@ describe("ModTable", () => {
     expect(wrapper.find('[data-testid="mod-row-select-fixture.mod"]').exists()).toBe(false);
     await wrapper.get('[data-testid="mod-row-fixture.mod"]').trigger("click");
     expect(wrapper.emitted("selectMod")).toEqual([["fixture.mod"]]);
+  });
+
+  it("marks the search match in the name the row is labelled with, and only there", async () => {
+    const row = {
+      ...modRow({ modId: "author.alpha", name: "Alpha Tools" }),
+      search: { name: [{ start: 0, end: 5 }], id: [{ start: 7, end: 12 }] },
+    };
+    const wrapper = mountTable({ mods: [row] }, { "author.alpha": "Alpha Tools" });
+    await flushPromises();
+
+    const label = wrapper.get('[data-testid="mod-row-name-author.alpha"]');
+    expect(label.text()).toBe("Alpha Tools");
+    expect(label.findAll('[data-testid="search-match"]').map((mark) => mark.text())).toEqual([
+      "Alpha",
+    ]);
+  });
+
+  it("marks the id's match when the label falls back to the id", async () => {
+    const row = {
+      ...modRow({ modId: "author.alpha", name: "Alpha Tools" }),
+      search: { name: [{ start: 0, end: 5 }], id: [{ start: 7, end: 12 }] },
+    };
+    // No resolved name, so the list labels the row with its id.
+    const wrapper = mountTable({ mods: [row] });
+    await flushPromises();
+
+    const label = wrapper.get('[data-testid="mod-row-name-author.alpha"]');
+    expect(label.text()).toBe("author.alpha");
+    expect(label.findAll('[data-testid="search-match"]').map((mark) => mark.text())).toEqual([
+      "alpha",
+    ]);
+  });
+
+  it("draws no mark on a row without a search", async () => {
+    const wrapper = mountTable({ mods: [modRow()] });
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="search-match"]').exists()).toBe(false);
   });
 
   it("renders a source badge per row instead of the raw source enum", async () => {
@@ -746,6 +787,31 @@ describe("ModTable", () => {
       expect(wrapper.emitted("menuAction")).toEqual([["b", "activateAt"]]);
     });
 
+    it("offers Show in load order on an Active row only when told to, and emits it", async () => {
+      const without = mountTable({ mods: THREE, rowMenu: "move" });
+      const offered = mountTable({ mods: THREE, rowMenu: "move", canShowInLoadOrder: true });
+      const inactive = mountTable({
+        mods: THREE,
+        rowMenu: "activate",
+        hasOrganizationActions: true,
+        canShowInLoadOrder: true,
+      });
+      await flushPromises();
+
+      await without.get('[data-testid="mod-row-menu-b"]').trigger("click");
+      await flushPromises();
+      expect(without.find('[data-testid="mod-show-in-load-order"]').exists()).toBe(false);
+      await offered.get('[data-testid="mod-row-menu-b"]').trigger("click");
+      await flushPromises();
+      await offered.get('[data-testid="mod-show-in-load-order"]').trigger("click");
+
+      expect(offered.emitted("menuAction")).toEqual([["b", "showInLoadOrder"]]);
+      // An Inactive row has no load-order position, so its menu never carries the entry.
+      await inactive.get('[data-testid="mod-row-menu-b"]').trigger("click");
+      await flushPromises();
+      expect(inactive.find('[data-testid="mod-show-in-load-order"]').exists()).toBe(false);
+    });
+
     it("adds Groups and Colour to the row menu only while organization is usable", async () => {
       const without = mountTable({ mods: THREE, rowMenu: "move" });
       const withOrganization = mountTable({
@@ -993,8 +1059,8 @@ describe("ModTable", () => {
 
       const chips = wrapper.findAll('[data-testid^="mod-row-group-"]:not([data-testid$="more"])');
       expect(chips.map((chip) => chip.text())).toEqual(["Weapons", "Armor"]);
-      expect(chips[0]?.attributes("title")).toBe("Weapons (Red)");
-      expect(chips[1]?.attributes("title")).toBe("Armor");
+      expect(chips[0]?.attributes("title")).toBe("Show only the mods in the group Weapons (Red).");
+      expect(chips[1]?.attributes("title")).toBe("Show only the mods in the group Armor.");
       const more = wrapper.get('[data-testid="mod-row-groups-more"]');
       expect(more.text()).toBe("+1");
       expect(more.attributes("title")).toBe("In groups: Weapons, Armor, and Loot");
@@ -1063,6 +1129,196 @@ describe("ModTable", () => {
       expect(inactive.get('[data-testid="mod-row-tags"]').text()).toBe("x");
       expect(inactive.get('[data-testid="mod-row-a"]').text()).not.toContain("3");
       expect(active.get('[data-testid="mod-row-a"]').text()).toContain("3");
+    });
+  });
+  describe("open row, double click, swatches and group scope", () => {
+    const GROUPS = [
+      { id: 1, name: "Weapons", color: "red" as const },
+      { id: 2, name: "Armor", color: null },
+    ];
+
+    it("draws the open mod's row with the accent ring and tint, and marks it current", async () => {
+      const wrapper = mountTable({
+        mods: [modRow({ modId: "a" }), modRow({ modId: "b" })],
+        selectable: true,
+        openModId: "a",
+      });
+      await flushPromises();
+
+      const open = wrapper.get('[data-testid="mod-row-a"]');
+      expect(open.attributes("aria-current")).toBe("true");
+      expect(open.classes()).toEqual(expect.arrayContaining(["bg-accent-soft", "inset-ring-2"]));
+      const other = wrapper.get('[data-testid="mod-row-b"]');
+      expect(other.attributes("aria-current")).toBeUndefined();
+      expect(other.classes()).not.toContain("inset-ring-2");
+    });
+
+    it("follows the open mod, not the last focused row", async () => {
+      const wrapper = mountTable({
+        mods: [modRow({ modId: "a" }), modRow({ modId: "b" })],
+        openModId: "a",
+      });
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-row-b"]').trigger("focus");
+
+      expect(wrapper.get('[data-testid="mod-row-a"]').attributes("aria-current")).toBe("true");
+      expect(wrapper.get('[data-testid="mod-row-b"]').attributes("aria-current")).toBeUndefined();
+    });
+
+    it("keeps the ring on a selected row and the tint only on the open one", async () => {
+      const wrapper = mountTable({
+        mods: [modRow({ modId: "a" }), modRow({ modId: "b" })],
+        selectable: true,
+        selectedIds: ["b"],
+        openModId: "a",
+      });
+      await flushPromises();
+
+      const selected = wrapper.get('[data-testid="mod-row-b"]');
+      expect(selected.classes()).toContain("inset-ring-2");
+      expect(selected.classes()).not.toContain("bg-accent-soft");
+    });
+
+    it("asks to toggle activation on a plain double click", async () => {
+      const wrapper = mountTable({ mods: [modRow({ modId: "a" })], selectable: true });
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-row-a"]').trigger("dblclick");
+
+      expect(wrapper.emitted("toggleActive")).toEqual([["a"]]);
+    });
+
+    it("leaves a Ctrl or Shift double click to selection", async () => {
+      const wrapper = mountTable({ mods: [modRow({ modId: "a" })], selectable: true });
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-row-a"]').trigger("dblclick", { ctrlKey: true });
+      await wrapper.get('[data-testid="mod-row-a"]').trigger("dblclick", { shiftKey: true });
+
+      expect(wrapper.emitted("toggleActive")).toBeUndefined();
+    });
+
+    it("ignores a double click on the row checkbox", async () => {
+      const wrapper = mountTable({ mods: [modRow({ modId: "a" })], selectable: true });
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-row-select-a"]').trigger("dblclick");
+      await wrapper.get('[data-testid="mod-row-select-a"] input').trigger("dblclick");
+
+      expect(wrapper.emitted("toggleActive")).toBeUndefined();
+    });
+
+    it("ignores a double click on the row menu button", async () => {
+      const wrapper = mountTable({
+        mods: [modRow({ modId: "a" })],
+        selectable: true,
+        rowMenu: "move",
+      });
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-row-menu-a"]').trigger("dblclick");
+
+      expect(wrapper.emitted("toggleActive")).toBeUndefined();
+    });
+
+    it("sets a colour from a swatch in the row menu with one click", async () => {
+      const wrapper = mountTable({
+        mods: [modRow({ modId: "a", color: "teal" })],
+        rowMenu: "move",
+        hasOrganizationActions: true,
+      });
+      await flushPromises();
+      await wrapper.get('[data-testid="mod-row-menu-a"]').trigger("click");
+      await flushPromises();
+
+      const swatch = wrapper.get('[data-testid="mod-menu-swatch-blue"]');
+      expect(swatch.attributes("aria-label")).toBe("Colour Blue");
+      await swatch.trigger("click");
+
+      expect(wrapper.emitted("setColor")).toEqual([["a", "blue"]]);
+    });
+
+    it("clears the colour from the no-colour swatch and marks the current one", async () => {
+      const wrapper = mountTable({
+        mods: [modRow({ modId: "a", color: "teal" })],
+        rowMenu: "move",
+        hasOrganizationActions: true,
+      });
+      await flushPromises();
+      await wrapper.get('[data-testid="mod-row-menu-a"]').trigger("click");
+      await flushPromises();
+
+      expect(wrapper.get('[data-testid="mod-menu-swatch-teal"]').attributes("aria-pressed")).toBe(
+        "true",
+      );
+      await wrapper.get('[data-testid="mod-menu-swatch-none"]').trigger("click");
+
+      expect(wrapper.emitted("setColor")).toEqual([["a", null]]);
+    });
+
+    it("offers no swatches while organization is not usable", async () => {
+      const wrapper = mountTable({ mods: [modRow({ modId: "a" })], rowMenu: "move" });
+      await flushPromises();
+      await wrapper.get('[data-testid="mod-row-menu-a"]').trigger("click");
+      await flushPromises();
+
+      expect(wrapper.find('[data-testid="mod-menu-swatches"]').exists()).toBe(false);
+    });
+
+    it("scopes to a group on a chip or dot click without opening the row", async () => {
+      const wrapper = mountTable({ mods: [modRow({ modId: "a", groups: GROUPS })] });
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-row-group-2"]').trigger("click");
+      await wrapper.get('[data-testid="mod-row-dot-1"]').trigger("click");
+
+      expect(wrapper.emitted("scopeGroup")).toEqual([[2], [1]]);
+      expect(wrapper.emitted("selectMod")).toBeUndefined();
+    });
+
+    it("draws an inherited stripe faded and names the group as its source", async () => {
+      const wrapper = mountTable({ mods: [modRow({ modId: "a", groups: GROUPS })] });
+      await flushPromises();
+
+      const stripe = wrapper.get('[data-testid="mod-row-color"]');
+      expect(stripe.attributes("data-color")).toBe("red");
+      expect(stripe.attributes("data-inherited")).toBe("true");
+      expect(stripe.classes()).toContain("opacity-40");
+      expect(wrapper.get('[data-testid="mod-row-color-name"]').text()).toBe(
+        "Colour from group Weapons: Red",
+      );
+    });
+
+    it("prefers the mod's own colour over its groups' and draws it solid", async () => {
+      const wrapper = mountTable({
+        mods: [modRow({ modId: "a", color: "teal", groups: GROUPS })],
+      });
+      await flushPromises();
+
+      const stripe = wrapper.get('[data-testid="mod-row-color"]');
+      expect(stripe.attributes("data-color")).toBe("teal");
+      expect(stripe.attributes("data-inherited")).toBeUndefined();
+      expect(wrapper.get('[data-testid="mod-row-color-name"]').text()).toBe("Colour: Teal");
+    });
+
+    it("draws no stripe when no group of the mod has a colour", async () => {
+      const wrapper = mountTable({
+        mods: [modRow({ modId: "a", groups: [{ id: 2, name: "Armor", color: null }] })],
+      });
+      await flushPromises();
+
+      expect(wrapper.find('[data-testid="mod-row-color"]').exists()).toBe(false);
+    });
+
+    it("collapses chips to dots with an outlined one for an uncoloured group", async () => {
+      const wrapper = mountTable({ mods: [modRow({ modId: "a", groups: GROUPS })] });
+      await flushPromises();
+
+      const dots = wrapper.get('[data-testid="mod-row-dots"]');
+      expect(dots.attributes("aria-hidden")).toBe("true");
+      expect(dots.get('[data-testid="mod-row-dot-1"] span').classes()).toContain("bg-mark-red");
+      expect(dots.get('[data-testid="mod-row-dot-2"] span').classes()).toContain("border");
     });
   });
 });

@@ -60,7 +60,10 @@ here or in the two interface apps; `rim-resolve`/`rim-merge`/
   reused after a reload, and it **refuses to write** a document larger than
   `MAX_FILE_BYTES` (a `StoreError`, so the edit rolls back): the app never
   writes a file its own reader would turn into `TooLarge`.
-  `archive_unusable` on a missing file is a no-op success.
+  `archive_unusable` on a missing file is a no-op success. `load` opens the file only
+  after `fs::metadata` says it is a regular file (a link to one still reads): a folder,
+  named pipe or device named `organization.json` is `Unreadable`, never opened, since
+  `load` runs under the session lock and a copy reads another profile's folder.
 - `net/` is this crate's only network dependency; its only two callers
   are `databases/cache.rs` and `release_feed.rs`. `net::http::UreqHttpGet`
   is the only thing anywhere in this workspace that opens a socket —
@@ -465,7 +468,15 @@ gate block in the root `CLAUDE.md`.
   `\\?\`-prefix) any of `game_dir`/`workshop_dir`/`mods_config`
   **before** it's written into `config.json` (both `apps/cli`'s
   `config set` and the desktop's own pin command go through it) — never
-  store a path a later lexical comparison could be fooled by.
+  store a path a later lexical comparison could be fooled by. `resolve_user_dir` strips the
+  `\\?\` prefix (`\\?\UNC\server\share` becomes `\\server\share`, never the relative
+  `UNC\server\share`) and keeps the caller's drive-letter spelling when a mapped drive
+  canonicalizes to its share (`settled_dir`), so an export folder or a pinned path stays `Z:\...`.
+  `PathOverrides::policy` (`PathPolicy`, default `TrustLocalUser`) is the one way a webview-driven
+  caller restricts rungs 2 and 3: under `DriveLettersOnly` a game folder, workshop folder or
+  `ModsConfig.xml` from an environment variable or `config.json` that `UserPath::parse` refuses is
+  dropped **before** `is_game_dir` stats it or `profile_dir` canonicalizes it, and the first one
+  dropped comes back in `PartialPaths::refused` so the caller can say so. The CLI keeps the default.
 - **`mod_knowledge.rs` + `build.rs`**: `FsModKnowledgeStore`
   implements `rim_session::ports::ModKnowledgeStore` as "the fetched
   `<cache_dir>/rimmergeRules.json` if present and it parses, else the
@@ -475,7 +486,7 @@ gate block in the root `CLAUDE.md`.
   skips the cache entirely, for a caller with no cache directory and for
   tests. The bundled snapshot is **one file, not one per section**: `build.rs`
   fails the build with a clear message
-  (`rules/rimmerge-rules.json not found — run: git submodule update
+  (`rules/rimmerge-rules.json not found. Run: git submodule update
   --init`) when the `rimmerge-rules` git submodule at `rules/` (workspace
   root, sibling of `crates/`) hasn't been checked out, and
   `mod_knowledge.rs`'s own `EMBEDDED_RULES_BUNDLE` `include_str!`s

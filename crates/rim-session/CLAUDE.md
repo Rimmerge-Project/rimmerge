@@ -29,6 +29,28 @@ the other way around.
   `current_order_replaced`), so Current is the second thing a use case
   changes without persisting. `file_active_mods` stays what the file held (the live baseline, see
   "The file baseline is live" below).
+- **`user_path::UserPath` is the one parser for a path from outside the process** (pure: text in,
+  validated path out, no file-system call). Text starting with two separators is classified by
+  our own rule before `std` is asked (`classify_double_separator`; `std` reads `\\?\C:/x` and
+  `//?/C:/x` differently per toolchain): a `?` or `.` then a separator or the end opens a namespace
+  in any separator spelling, only the exact `\\?\<letter>:\` is a drive path (a `/` anywhere
+  or a `.` or `..` component after it, split on `\`, is `DevicePath`), a `UNC` name (any case) is `NetworkPath`,
+  every other namespace form (`\\?\C:/x`, `//?/C:/x`, `\\?/C:\x`, bare `\\?\C:`, `\\.\pipe\x`,
+  `\\?\GLOBALROOT\x`) is `DevicePath`; other double-separator text is a server name and `std`
+  reads it (UNC and WebDAV are `NetworkPath`). Everything else is checked by its `std` prefix
+  (`Disk` only). A legacy DOS device name as any component (`is_reserved_device_name`: `CON`,
+  `PRN`, `AUX`, `NUL`, `COM1`-`COM9`, `LPT1`-`LPT9`, superscript digits, `CONIN$`/`CONOUT$`, any
+  case, extension or trailing spaces) is `DevicePath`, so refusing a share never contacts its host (see
+  `docs/privacy-and-network.md`). It lives here, not in `rim-io`, because it is pure and every
+  interface (and `rim-io`) may use it; the desktop applies it at every command boundary, the CLI
+  deliberately does not (its paths come from the local user, there is no webview and no session
+  lock to hold). Its Windows prefix tests are `cfg(windows)`: elsewhere `std` does not parse those
+  prefixes. It cannot see a symbolic link that leads to a share.
+- `CopyOrganization::read_source` + `preview_loaded`/`execute_loaded` split the source read from the
+  planning, so the desktop reads outside the session lock (the composed `preview`/`execute` check
+  that the organization is available before they read); `ImportGameLog::read(path, formats, kind)`
+  + the free `attribute_game_log` do the same for a log, and `ImportRimSort::read` + `apply` for a
+  RimSort import. `preview`/`execute` stay as the composed forms.
 - Declared ids never carry `_steam`; compare through `ModId::base()`.
   `ActiveMods` is the single authority for "is this id active".
 - Ports return typed errors; `Apply` writes `ModsConfig.xml` only when
@@ -60,8 +82,13 @@ the other way around.
 - `PreflightApply` is read-only (no ports): it lists
   `rim_resolve::preflight` problems for the order named by `source`, through
   `Session::hard_problems` (the ledger cache is built lazily, hence `&mut`).
-  `ApplyPreflight::requires_confirmation` is derived from the items, never
-  stored. `Session::file_matches(source)` compares that order with the
+  `ApplyPreflight::requires_confirmation` is derived from the items and
+  `outside_change`, never stored. `outside_change` is
+  `Session::external_file_change()` (the live baseline against the acknowledged
+  list) but `None` when `file_holds_exactly(source)` (the file already holds exactly that order, the merge mod included): it names only what writing
+  `source` would overwrite. The use case reads the baseline as it is; a caller
+  wanting the file now refreshes it first (the desktop does, see its CLAUDE.md).
+  The CLI loads a fresh session, so its preflight is always `None` there. `Session::file_matches(source)` compares that order with the
   file's live baseline list, ignoring the generated merge mod's package id on
   both sides.
 - **Module layout**: a facade file keeps the public API (and usually the
@@ -729,9 +756,17 @@ page marks follow an outside edit once a refresh has seen it, while
   Rimmerge itself last loaded or wrote (the **acknowledged** list), and
   `Session::external_file_change()` is a closed `ExternalFileChange::{None,
   Membership { added, removed }, Reordered}` of the live baseline against it: the
-  counts are base ids gained or lost, `Reordered` only when the membership is the
-  same but the base-id sequence differs. Rimmerge's own write resets it, so only
-  someone else's edit shows.
+  counts are **exact** ids gained or lost (a swap of `x` for `x_steam` is one of each,
+  the same exact comparison `file_matches` makes, so Apply cannot overwrite a swap
+  unasked), `Reordered` only when the membership is the same but the sequence differs.
+  Rimmerge's own write resets it, so only someone else's edit shows. The row marks
+  stay by base id (below), so a swap raises the note but marks no row.
+  `Session::file_holds_exactly(source)` is the strict sibling of `file_matches`: the same
+  ids in the same sequence with the generated merge mod **counted** (an outside edit that
+  only turned it on or off is a difference, since an Apply would put it back).
+  `file_holds_selected_exactly()` is it for the selected order, the live fact the
+  desktop's baseline DTO carries so a note never says an Apply would overwrite what it
+  would not; `PreflightApply` gates its `outside_change` on the same exact comparison.
 - **Own facts vs live facts.** Anything said about the user's *own unsaved work*
   compares with the acknowledged list, never the live baseline: an outside edit alone
   must not read as their pending changes. `pending_changes().unapplied` and
@@ -780,6 +815,24 @@ that same delta into `working` too (`ActiveSet::force_activate`, no
 inventory check — the caller just wrote this id to the real file) —
 otherwise a plain install-then-apply would read as stale for no reason.
 
+**The order and mod-detail read models are pure joins behind `Session`
+methods** (`order_rows.rs`, `mod_detail.rs`, `placement.rs`, `mod_names.rs`, each with a
+`session/` half): `order_rows(source)`, `mod_detail(id, source)`,
+`explain_placement(id)` and `mod_names()`. A lookup by id tries the **exact id
+first, then `ModId::base`** (`mod_detail`'s `find_active` over active mods,
+`explain_placement`'s `find_placement` over the sorter's placements), so with
+a plain and a `_steam` copy both active each request answers for its own copy;
+`mod_info`'s `resolve_installed_mod` has the same two passes and also reads
+inactive mods. `ReadTexture` (through `find_active`), the active mod info's cost
+row and `ReadDefTexture`'s undecodable check (against the exactly resolved
+owner) do the same. These lookups stay base-only on purpose: `is_own_export`
+(`assignment_coverage.rs`) and the two copies of `is_core`
+(`create_assignment.rs` and `export_assignment/validation.rs`). The fact each
+reads (is this Core, is this our own export) is the same for either copy, so
+which copy answers cannot change the result. A miss is `ModNotActive`, which the
+desktop maps to `mod_not_found`. `mod_names` keeps an active id's own name over
+a base-id alias or an inactive entry. The CLI has no equivalent lookup.
+
 `Session::mods` flows through `mod_index::query` (the **scanned** tier, paged
 and capped at `MAX_PAGE_SIZE`; patch scopes and rule pickers use it); it
 `.chain()`s a synthetic row per `report.missing_mods` entry so a missing mod
@@ -810,6 +863,26 @@ every known one in both directions. `LoadOrder` on the Inactive list means its
 default. `ListSort::is_load_order()` (ascending `LoadOrder`) is the one fact
 reordering must gate on. Sorting runs before the `MAX_MOD_LIST_ROWS` cut and
 never touches `working`/`orders`.
+
+**A search says where it matched, from the filter's own fold.** Each row
+carries `ModListRow::search: SearchHighlight` (`mod_lists/search.rs`): byte
+ranges into the row's original `name` and `mod_id`, empty without a search. It is
+filled by `admit`, which is also the search filter: a row is listed exactly when
+`SearchHighlight::of` finds a range in its folded name or id, so the
+marks and the filter are one computation and cannot drift (an empty needle admits
+everything unmarked). The fold is the crate-wide `search_fold` (`search_fold.rs`, shared by every search box:
+`mod_lists`, `mod_index`, `changes`, `finding_index`, `merge_workspace`): it lowercases **one character
+at a time** (`char::to_lowercase`) and writes `ς` as `σ`, for the needle and the searched text alike:
+`str::to_lowercase` writes a word-final `Σ` as `ς`, so `ΑΣ` would never find `ΑΣΑ`, and the `ς`
+mapping lets a typed `κοσμος` find `ΚΟΣΜΟΣ`. Sort keys keep `str::to_lowercase`. Every non-overlapping
+occurrence is marked. A hit in the folded
+text is widened to the whole original characters it touches (a fold can change
+length: `İ` lowercases to `i` plus a combining dot), overlapping hits merge and
+touching ones stay apart. The per-character spans add up to the folded text by
+construction; if the lengths ever stopped agreeing (a `debug_assert` fails in tests)
+the row is marked whole, so the filter's verdict never changes. The unit stays bytes here; an interface converts once at its own
+boundary (the desktop to UTF-16). The proptests pin the ranges against
+the fold's own hits (never wider than a hit touches).
 
 **Update times are a session fact, not a report fact.** `ModUpdateTimes`
 (`UpdateTime::Known(UnixSeconds) | Unavailable(ShippedWithGame | Unknown)`)
@@ -864,7 +937,19 @@ through `ports::OrganizationStore` (`rim-io`'s `JsonOrganizationStore`).
   rescan swap): every organization edit saves while holding that lock, so
   an edit that landed after `LoadProject` read the file is on disk by then
   and the swap cannot drop it (and the next save cannot erase it). A
-  `NotLoaded` session is left alone. `set_organization_state` is
+  `NotLoaded` session is left alone. The rules, decisions, patches and
+  assignments are re-read the same way by `Session::reload_persisted` (the
+  desktop calls it through `reload_persisted_state`, right after
+  `reload_organization`): it sets what differs, calls `recompute_sort` once
+  and only when rules or decisions changed, drops the scoped ledger and previews of
+  only the patches that were added, removed or changed (an unchanged patch
+  keeps its caches) or the assignment coverage cache. `rule_load_warnings()`
+  chains three separate fields in a fixed order (the rules file's own
+  warnings, the reload failures, the mod-knowledge notes), so a reload
+  replaces its own group and no setter order can misfile one. A store that
+  fails to re-read keeps the scanned copy and adds
+  `RulesLoadWarning::PersistedReloadFailed`; a failed rules re-read also
+  keeps the scan's rules-file warnings. `set_organization_state` is
   crate-private (fixtures in other crates use
   `test_support::set_organization_state`). Errors split by origin: an edit
   reports `OrganizationError`, reading a document reports
@@ -874,7 +959,9 @@ through `ports::OrganizationStore` (`rim-io`'s `JsonOrganizationStore`).
   reload.
 - **One use case, one closed command type.** `EditOrganization::execute`
   applies an `OrganizationEdit` (create, rename, reparent, delete, group
-  colour, add/remove/move members, mod colours), snapshots, saves once and
+  colour, add/remove/move members, mod colours; `CreateGroup` carries the mods
+  that join the new group, checked for room before the group exists, so
+  "create and add" is one edit and one save), snapshots, saves once and
   restores on a failed save; an edit that changes nothing writes nothing.
   `ResetOrganization` ("start over") is the only way out of `Recovered`:
   `OrganizationStore::archive_unusable` keeps a copy
@@ -894,15 +981,53 @@ through `ports::OrganizationStore` (`rim-io`'s `JsonOrganizationStore`).
   `find_by_base` rule, a copy already active wins, members found nowhere
   are counted, not dropped), reached through `Session::resolve_group_scope`
   for group-level activate/deactivate planning.
+- **Copying another profile's organization** is `organization::plan_copy` (pure:
+  `CopyMode::{Merge, Replace}`, a `CopyPlan` of the resulting `ModOrganization` and a
+  `CopyReport`) and the use case `CopyOrganization` (`preview` is a read; `execute` re-plans from a
+  fresh read of the source and saves once). The plan runs on a clone through the aggregate's own
+  mutators, so every limit and rule of an edit guards the copy, and any `OrganizationError` refuses
+  the whole copy (`CopyRefusal::Limit`) with nothing changed. The source is read through
+  `OrganizationStore::load(source_dir)` (its size bound and validation apply; missing, unusable
+  and empty are `CopyRefusal`s, and so is a source equal to this organization,
+  `NothingToCopy`: an alias of the own folder or an identical copy), never written. Merge matches groups by path (names compared with
+  `uniqueness_key`, siblings of one parent), keeps this profile's name spelling, id and colours
+  (a differing group colour is a `GroupColorClash`, a differing mod colour a count, an unset colour
+  is filled in); Replace starts from an empty organization that keeps this one's `next_group_id`
+  so no id it ever handed out is reused. A merge that changes nothing writes nothing; a failed
+  save leaves the session as it was and a `TooLarge` save is `CopyRefusal::TooLargeToSave`. The
+  desktop answers "is this profile's own folder" before the use case runs (it needs the
+  filesystem); the use case touches no order, working set, rule or `ModsConfig.xml`, and a test
+  pins that.
 - **`mod_lists`** gains `ModListQuery::group` (`GroupFilter::InScope`,
   descendants included and deduplicated, or `Ungrouped`), `ModListRow::groups`
-  (direct labels by name) and `ModListRow::color`. Both list functions now
+  (direct labels in group-tree order: depth first, siblings by name, so a row's first coloured group is the tree's first) and `ModListRow::color`. Both list functions now
   return `Result<_, ModListError>`: a stale group id is `UnknownGroup`, and
   a filter with unavailable organization is refused, never read as "no
   filter". A group filter is a filter: `reorderable` stays on.
   A row's `RowState::PendingScan` carries the mod's `manual_tags` (an
   unscanned mod has no evidence, so every tag it holds was added by hand);
   the tag filter matches scanned tags and these, in both lists.
+  **The Groups view is a second read model over the same rows**
+  (`mod_lists/grouped.rs`): `Session::working_mod_groups` /
+  `inactive_mod_groups` take a `GroupedListQuery` (the pane's `ModListQuery`
+  plus the folded `FolderKey`s, at most `MAX_COLLAPSED_FOLDERS` = `OrganizationLimits::MAX_GROUPS` + 1;
+  an unknown id is ignored) and return a `GroupedModList`: the List view's own
+  `ModList` (same rows, `reorderable` always `false`) plus a flat, preorder
+  `entries` sequence of folder headers (`depth`, distinct `matched` count,
+  `is_collapsed`) and mod copies (`folder`, `depth`, `also_in`), capped at
+  `MAX_GROUPED_ENTRIES` (10,000) with `total_entries` counted before the cut.
+  It is built from `working_rows`/`inactive_rows` (the uncut, decorated,
+  filtered and sorted rows the List view cuts), so placement uses the labels a
+  row carries and the pane's sort is never repeated: a folder's subfolders
+  come first, then its mods in pane order; "Ungrouped" is last and only
+  when it holds a mod; a group scope walks only its subtree, rebased to level
+  1; with no search, tag or source filter empty folders show at 0, under one a
+  folder with no match is left out. Counts are merged bottom up over one
+  `tree()` call (never `tree()`/`scope()` per node) and are taken before any
+  cut; a row past `MAX_MOD_LIST_ROWS` is counted, never emitted. The view needs
+  organization: `NotLoaded`/`Recovered` is `OrganizationUnavailable` even with
+  no group filter (the List view still degrades to no labels). It reads no
+  cache and changes none (organization is still never on the sort path).
 
 ## Sharing a load order (`mod_list`, `ExportOrder`, `PreviewOrderImport`, `ImportOrder`)
 
@@ -953,6 +1078,13 @@ through `ports::OrganizationStore` (`rim-io`'s `JsonOrganizationStore`).
   is never in `deactivated`. The profile's own merge mod is appended at the
   end when the file has it, after `moved` is counted, so it is neither
   deactivated nor counted as moved. `VersionCheck` compares major.minor.
+- **`ImportContext::id_spelling`** says how the list's ids were written. `Shared` (every
+  export, pasted text, a save) is the base-id rule above. `Exact` is for the game's own
+  `ModsConfig.xml` (`ImportTarget::for_the_games_own_list`, set by the desktop when the previewed
+  path is the session's own file): a listed copy that is installed wins before the
+  already-active-copy rule, so an outside swap of `x` for `x_steam` previews as that swap
+  (`x_steam` activated, `x` deactivated) instead of being undone. A listed copy that is not
+  installed falls back to the base-id rules. The CLI always passes `Shared`.
 - **`check_order` is the one import rule.** `ImportOrder::validate`
   (desktop, against the live session), `validate_order` (the CLI, against a
   discovered inventory) and `import_blocker` (why the preview's "Use this

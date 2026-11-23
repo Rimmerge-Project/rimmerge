@@ -11,6 +11,7 @@ import {
   resolveStoredLocale,
   setAppLocale,
 } from "@/i18n/i18n";
+import { allowIntlifyWarnings } from "@/i18n/intlifyGuard";
 import { SUPPORTED_LOCALES, type SupportedLocale } from "@/i18n/locales";
 import { usePreferencesStore } from "@/stores/preferences";
 
@@ -130,6 +131,11 @@ describe("a locale whose catalogue holds nothing yet", () => {
   // Every new locale starts as `{}` until its translator finishes; the
   // app must read as English in the meantime, never as raw dotted keys.
   const OTHER_LOCALES = SUPPORTED_LOCALES.filter((locale) => locale !== "en");
+
+  // The fallback chain is what these tests exercise, and vue-i18n warns on each step of it.
+  beforeEach(() => {
+    allowIntlifyWarnings();
+  });
 
   function emptyLocaleI18n(locale: SupportedLocale): AppI18n {
     const i18n = createAppI18n();

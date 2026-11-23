@@ -1874,8 +1874,8 @@ mod tests {
         assert_eq!(
             note.as_deref(),
             Some(
-                "1 assemblies outside `Assemblies/` (a/) were not analyzed \
-                 — runtime patches and assembly references in them are not \
+                "1 assemblies outside `Assemblies/` (a/) were not analyzed: \
+                 runtime patches and assembly references in them are not \
                  represented in this report."
             )
         );
@@ -1896,8 +1896,8 @@ mod tests {
         assert_eq!(
             note.as_deref(),
             Some(
-                "3 assemblies outside `Assemblies/` (Lunar/) were not analyzed \
-                 — runtime patches and assembly references in them are not \
+                "3 assemblies outside `Assemblies/` (Lunar/) were not analyzed: \
+                 runtime patches and assembly references in them are not \
                  represented in this report."
             )
         );
@@ -1967,8 +1967,8 @@ mod tests {
         assert_eq!(
             first.as_deref(),
             Some(
-                "5 assemblies outside `Assemblies/` (Alpha/, Middle/, Zeta/) were not analyzed \
-                 — runtime patches and assembly references in them are not represented in this \
+                "5 assemblies outside `Assemblies/` (Alpha/, Middle/, Zeta/) were not analyzed: \
+                 runtime patches and assembly references in them are not represented in this \
                  report."
             )
         );

@@ -11,12 +11,15 @@ import type { ApplyRequestDto } from "@/types/generated/ApplyRequestDto";
 import type { AppSettingsDto } from "@/types/generated/AppSettingsDto";
 import type { AppSettingsResponseDto } from "@/types/generated/AppSettingsResponseDto";
 import type { DashboardDto } from "@/types/generated/DashboardDto";
+import type { DeactivateModsResultDto } from "@/types/generated/DeactivateModsResultDto";
 import type { DeactivatePlanDto } from "@/types/generated/DeactivatePlanDto";
 import type { DeactivateRequestDto } from "@/types/generated/DeactivateRequestDto";
 import type { DefaultPathsDto } from "@/types/generated/DefaultPathsDto";
 import type { DefaultPathsRequestDto } from "@/types/generated/DefaultPathsRequestDto";
 import type { DefCacheCarrierDto } from "@/types/generated/DefCacheCarrierDto";
 import type { GameLogSummaryDto } from "@/types/generated/GameLogSummaryDto";
+import type { GroupedListQueryDto } from "@/types/generated/GroupedListQueryDto";
+import type { GroupedModListDto } from "@/types/generated/GroupedModListDto";
 import type { ImportGameLogRequestDto } from "@/types/generated/ImportGameLogRequestDto";
 import type { LedgerStatsDto } from "@/types/generated/LedgerStatsDto";
 import type { ModCostRowDto } from "@/types/generated/ModCostRowDto";
@@ -131,6 +134,19 @@ export function listInactiveMods(query: ModListQueryDto): Promise<ModListDto> {
 }
 
 /**
+ * The Active pane in Groups view: the rows of {@link listWorkingMods} laid out as folders by the
+ * backend. Needs organization loaded (`organization_unavailable` otherwise).
+ */
+export function listWorkingModsGrouped(query: GroupedListQueryDto): Promise<GroupedModListDto> {
+  return call("list_working_mods_grouped", { query });
+}
+
+/** The Inactive pane in Groups view; see {@link listWorkingModsGrouped}. */
+export function listInactiveModsGrouped(query: GroupedListQueryDto): Promise<GroupedModListDto> {
+  return call("list_inactive_mods_grouped", { query });
+}
+
+/**
  * One mod's full information for the mod info panel: active, inactive,
  * or missing, whichever `modId` resolves to, plus its lazily-read
  * `About.xml` details.
@@ -212,8 +228,11 @@ export function planDeactivateMods(request: DeactivateRequestDto): Promise<Deact
   return call("plan_deactivate_mods", { request });
 }
 
-/** Commits a deactivation onto the working (unscanned) active-mod set. */
-export function deactivateMods(request: DeactivateRequestDto): Promise<PendingActiveChangesDto> {
+/**
+ * Commits a deactivation onto the working (unscanned) active-mod set. The result names the ids the
+ * commit really removed and the requested ones that were not active (a refused Core is in neither).
+ */
+export function deactivateMods(request: DeactivateRequestDto): Promise<DeactivateModsResultDto> {
   return call("deactivate_mods", { request });
 }
 

@@ -25,13 +25,15 @@ const WEAPONS: GroupNodeDto = {
 let wrappers: ReturnType<typeof mount>[] = [];
 let organization: OrganizationDto = { kind: "loaded", groups: [WEAPONS], coloredModCount: 0 };
 let organizationReads = 0;
+/** What `get_organization` does; the default answers with `organization`. */
+let readOrganization: () => unknown = () => organization;
 
 async function mountScope() {
   organizationReads = 0;
   installMockIpc({
     get_organization: () => {
       organizationReads += 1;
-      return organization;
+      return readOrganization();
     },
   });
   let scope: ReturnType<typeof useGroupScope> | null = null;
@@ -59,6 +61,7 @@ afterEach(() => {
   wrappers = [];
   clearMocks();
   organization = { kind: "loaded", groups: [WEAPONS], coloredModCount: 0 };
+  readOrganization = () => organization;
 });
 
 describe("useGroupScope", () => {
@@ -124,5 +127,40 @@ describe("useGroupScope", () => {
     groups.dropScopeIfStale(new Error("not from the backend"));
 
     expect(groups.scope.value).toEqual({ kind: "group", id: 1 });
+  });
+
+  it("is not known to be unusable while the first answer is pending", async () => {
+    readOrganization = () => new Promise<never>(() => undefined);
+
+    const groups = await mountScope();
+
+    expect(groups.organization.value).toBeUndefined();
+    expect(groups.isUsable.value).toBe(false);
+    expect(groups.isKnownUnusable.value).toBe(false);
+  });
+
+  it("is known to be unusable once the answer says organization is not loaded", async () => {
+    organization = { kind: "recovered", issue: { kind: "malformed" } };
+
+    const groups = await mountScope();
+
+    expect(groups.isKnownUnusable.value).toBe(true);
+  });
+
+  it("is known to be unusable when the first load failed", async () => {
+    readOrganization = () => {
+      throw new Error("the organization could not be read");
+    };
+
+    const groups = await mountScope();
+
+    expect(groups.organization.value).toBeUndefined();
+    expect(groups.isKnownUnusable.value).toBe(true);
+  });
+
+  it("is usable, and not unusable, once organization is loaded", async () => {
+    const groups = await mountScope();
+
+    expect(groups.isKnownUnusable.value).toBe(false);
   });
 });

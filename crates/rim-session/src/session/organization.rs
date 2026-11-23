@@ -73,6 +73,14 @@ impl Session {
         Ok(GroupScopeResolution { scope, resolved })
     }
 
+    /// How many of `mods` are found nowhere on disk in this install (the
+    /// same rule [`Self::resolve_group_scope`] counts with). Pure (`&self`).
+    #[must_use]
+    pub fn count_not_installed(&self, mods: &BTreeSet<OrganizedModId>) -> usize {
+        let inventory = ModInventory::from_report(&self.report);
+        resolve_scope(mods, &inventory, &self.working).not_installed_count()
+    }
+
     /// How many of `mods` are direct members of each group, for the groups that hold at least
     /// one. What the Move to group dialog lists as possible sources. Pure (`&self`).
     ///

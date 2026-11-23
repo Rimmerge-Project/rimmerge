@@ -85,6 +85,7 @@ pub fn run() {
             commands::tags::set_manual_tags,
             commands::mods::list_mods,
             commands::mods::list_working_mods,
+            commands::mods::list_working_mods_grouped,
             commands::mods::get_mod,
             commands::mods::list_mod_names,
             commands::mods::get_mod_info,
@@ -98,6 +99,7 @@ pub fn run() {
             commands::links::open_app_link,
             commands::links::get_app_version,
             commands::active_set::list_inactive_mods,
+            commands::active_set::list_inactive_mods_grouped,
             commands::active_set::plan_activate_mods,
             commands::active_set::activate_mods,
             commands::active_set::plan_deactivate_mods,
@@ -183,6 +185,8 @@ pub fn run() {
             commands::organization::group_membership_counts,
             commands::organization::remove_uninstalled_members,
             commands::organization::reset_organization,
+            commands::organization_copy::preview_copy_organization,
+            commands::organization_copy::copy_organization,
         ])
         .run(tauri::generate_context!());
 

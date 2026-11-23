@@ -25,6 +25,7 @@ const {
   nodes,
   isOverlay = false,
   rowDrag = null,
+  openModGroupIds = new Set<number>(),
 } = defineProps<{
   /** Every group, depth first, siblings by name. */
   nodes: readonly GroupNodeDto[];
@@ -32,6 +33,8 @@ const {
   isOverlay?: boolean;
   /** The mods being dragged from a list, so the tree can take them as a drop. */
   rowDrag?: { readonly count: number; readonly hiddenCount: number } | null;
+  /** The groups the mod open in the info panel is a direct member of: highlighted in the tree. */
+  openModGroupIds?: ReadonlySet<number>;
 }>();
 const emit = defineEmits<{
   createGroup: [parent: number | null];
@@ -40,6 +43,8 @@ const emit = defineEmits<{
   moveGroup: [groupId: number];
   deleteGroup: [groupId: number];
   removeUninstalled: [groupId: number];
+  /** Open the dialog that copies groups and colours from another profile. */
+  copyFromProfile: [];
   /** Activate every installed mod of the group and its subgroups (opens the Activate dialog). */
   activateGroup: [groupId: number];
   /** Deactivate every active mod of the group and its subgroups (opens the Deactivate dialog). */
@@ -296,6 +301,15 @@ watch(
         @click="emit('createGroup', null)"
       />
       <Button
+        :label="t('mods.groups.copy.button')"
+        icon="pi pi-copy"
+        size="small"
+        severity="secondary"
+        text
+        data-testid="group-copy-profile"
+        @click="emit('copyFromProfile')"
+      />
+      <Button
         :label="t('mods.groups.actions')"
         icon="pi pi-ellipsis-h"
         size="small"
@@ -340,6 +354,7 @@ watch(
       :nodes="nodes"
       :shown="shown"
       :row-drag="rowDrag"
+      :open-mod-group-ids="openModGroupIds"
       @menu="openMenu"
       @rename="(id: number) => emit('renameGroup', id)"
       @delete="(id: number) => emit('deleteGroup', id)"

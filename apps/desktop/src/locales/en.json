@@ -95,6 +95,10 @@
   "shell": {
     "brand": "Rimmerge",
     "mainNavigation": "Main navigation",
+    "outsideChange": {
+      "text": "Your active mod list was changed outside Rimmerge. Applying would overwrite those changes.",
+      "link": "Review on the Mods page"
+    },
     "nav": {
       "dashboard": "Dashboard",
       "inbox": "Findings",
@@ -245,6 +249,12 @@
     "modKnowledgeCacheUnreadableHeadline": "Couldn't read the cached Rimmerge rules; using the bundled snapshot",
     "rowsOverRoleLimit": "Ignored {count} row over the per-role limit for the {role} role in the {section} rules | Ignored {count} rows over the per-role limit for the {role} role in the {section} rules",
     "precedenceRuleMissingFramework": "Ignored the precedence rule for {defType}: it names no framework",
+    "reloadFailed": {
+      "decisions": "Couldn't re-read your saved decisions after the scan, so a decision made while it ran may be missing",
+      "rules": "Couldn't re-read your saved rules after the scan, so a rule changed while it ran may be missing",
+      "patches": "Couldn't re-read your saved compatibility patches after the scan, so a change made while it ran may be missing",
+      "assignments": "Couldn't re-read your saved patch maker projects after the scan, so a change made while it ran may be missing"
+    },
     "what": {
       "precedenceRule": "precedence rule",
       "behaviour": "behaviour",
@@ -611,11 +621,24 @@
       "organization_limit": {
         "title": "A limit for groups was reached",
         "detail": "You reached a limit for groups and colours: how many groups, how deep they nest, how many mods are in groups or coloured, or how large the groups file (organization.json) may be. Nothing was changed. Remove groups, mods from groups or colours you no longer need, then try again."
+      },
+      "network_path_refused": {
+        "title": "Network folders aren't supported",
+        "detail": "Rimmerge only uses files and folders on a drive letter, such as C:\\ or a network drive you mapped to a letter. A network path like \\\\server\\share is refused, and nothing was contacted. Map the share to a drive letter in Windows, or copy the file to a local folder, then try again."
+      },
+      "project_changed": {
+        "title": "The project changed",
+        "detail": "Another project was loaded while Rimmerge was reading the file, so the result was not used and nothing was changed. Try again to use the file with the project that is open now."
       }
     }
   },
   "defaultPathsWarning": {
-    "notAnInstall": "{gameDir} does not look like a RimWorld install (Version.txt or Data/Core/ is missing)."
+    "notAnInstall": "{gameDir} does not look like a RimWorld install (Version.txt or Data/Core/ is missing).",
+    "typedNetworkShare": "That game folder is on a network share, so Rimmerge did not use it. Rimmerge only uses folders on a drive letter: map the share to a drive letter in Windows, or choose a local folder.",
+    "typedInvalid": "That is not a full path to a folder on a drive letter, such as C:\\Games\\RimWorld, so Rimmerge did not use it.",
+    "configuredGameDir": "The game folder in your saved defaults is not on a drive letter (it may be a network share), so Rimmerge ignored it. Choose a folder on a drive letter, then choose Save as defaults again.",
+    "configuredWorkshopDir": "The Steam workshop folder in your saved defaults is not on a drive letter (it may be a network share), so Rimmerge ignored it. Choose a folder on a drive letter, then choose Save as defaults again.",
+    "configuredModsConfig": "The ModsConfig.xml path in your saved defaults is not on a drive letter (it may be a network share), so Rimmerge ignored it. Choose a file on a drive letter, then choose Save as defaults again."
   },
   "defaultPathsError": {
     "noProfileBase": "Neither RIMMERGE_PROFILE_DIR nor LOCALAPPDATA is set, so Rimmerge has nowhere to keep its own files.",
@@ -1335,6 +1358,10 @@
       "reordered": "Your active order was changed outside Rimmerge. Your pending changes are kept. Applying would overwrite that order.",
       "outsideNoPending": "Your active mod list was changed outside Rimmerge (+{added}, -{removed}). Applying would overwrite those outside changes.",
       "reorderedNoPending": "Your active order was changed outside Rimmerge. Applying would overwrite that order.",
+      "outsideMatches": "Your active mod list was changed outside Rimmerge (+{added}, -{removed}). Your pending changes are kept. It already matches the order you have selected.",
+      "reorderedMatches": "Your active order was changed outside Rimmerge. Your pending changes are kept. It already matches the order you have selected.",
+      "outsideMatchesNoPending": "Your active mod list was changed outside Rimmerge (+{added}, -{removed}). It already matches the order you have selected.",
+      "reorderedMatchesNoPending": "Your active order was changed outside Rimmerge. It already matches the order you have selected.",
       "useFile": "Use the list from the file",
       "useFileTitle": "Opens a preview first. Nothing changes until you confirm.",
       "stale": {
@@ -1399,7 +1426,8 @@
       "deactivateButton": "Deactivate",
       "rescanButton": "Rescan mods",
       "searchActiveLabel": "Search the active mods",
-      "searchInactiveLabel": "Search the inactive mods"
+      "searchInactiveLabel": "Search the inactive mods",
+      "tagFilterLabel": "Filter the mods by tag"
     },
     "defSearch": {
       "ariaLabel": "Jump to a def",
@@ -1502,7 +1530,8 @@
       "suggestedNote": "Apply will write the suggested order. Moving a mod switches to your own order.",
       "coreStaysActive": "Core can't be deactivated.",
       "inactiveNotOrdered": "This list has no order of its own. Drag mods to the Active list to activate them.",
-      "activateAtItem": "Activate at…"
+      "activateAtItem": "Activate at…",
+      "groupsViewOff": "Moving is off in Groups view. Switch this list to List view to reorder mods."
     },
     "colors": {
       "names": {
@@ -1520,6 +1549,10 @@
         "slate": "Slate"
       },
       "rowColor": "Colour: {name}",
+      "rowColorFromGroup": "Colour from group {group}: {name}",
+      "swatchesLabel": "Set the mod's colour",
+      "swatch": "Colour {name}",
+      "swatchNone": "No colour",
       "groupTitle": "Group colour",
       "modTitle": "Mod colour",
       "groupHelp": "A colour marks the group in the tree and on mod rows. It changes nothing else.",
@@ -1534,6 +1567,40 @@
         "modChanged": "Colour changed for {name}",
         "modCleared": "Colour removed from {name}"
       }
+    },
+    "showInLoadOrder": {
+      "action": "Show in load order",
+      "announce": "Showing {name} in load order.",
+      "filterCleared": "{name} was hidden by the filter, so the filter was cleared."
+    },
+    "groupsView": {
+      "regionLabel": "Mods by group",
+      "rovingHint": "Use the arrow keys to move, Right and Left to open and close folders, Enter to open a mod, Space to select",
+      "switchHeading": "View",
+      "switchLabel": "How this list is shown",
+      "viewList": "List",
+      "viewGroups": "Groups",
+      "unavailable": "Groups view needs your groups, which can't be used right now.",
+      "collapseAll": "Collapse all",
+      "expandAll": "Expand all",
+      "modCount": "{count} mod | {count} mods",
+      "folderActions": "Actions for the folder {name}",
+      "folderLabelExpanded": "{name}, {count} mod, expanded | {name}, {count} mods, expanded",
+      "folderLabelCollapsed": "{name}, {count} mod, collapsed | {name}, {count} mods, collapsed",
+      "alsoInShort": "also in {count}",
+      "alsoInLong": "Also in {count} other group: {groups} | Also in {count} other groups: {groups}",
+      "alsoInTitle": "Also in: {groups}",
+      "menu": {
+        "select": "Select all in folder",
+        "activate": "Activate all…",
+        "deactivate": "Deactivate all…"
+      },
+      "folderSelected": "Selected {count} mod in {name}. | Selected {count} mods in {name}.",
+      "folderSelectedNone": "No mods to select in {name}.",
+      "empty": "There are no mods to show here.",
+      "emptyFiltered": "No mods match the current search, tag, source or group.",
+      "cutNote": "{hidden} line is not shown. Fold some folders or narrow the search to see it. | {hidden} lines are not shown. Fold some folders or narrow the search to see them.",
+      "ungroupedRefusesDrop": "Mods can't be added to \"Ungrouped\". To take a mod out of its groups, use \"Remove from group…\"."
     },
     "groups": {
       "regionLabel": "Groups",
@@ -1553,8 +1620,10 @@
       "noMatches": "No group matches.",
       "nodeModCount": "{count} mod, including subgroups | {count} mods, including subgroups",
       "nodeSubgroupCount": "{count} subgroup | {count} subgroups",
-      "chipWithColor": "{name} ({color})",
+      "chipScope": "Show only the mods in the group {name}.",
+      "chipScopeWithColor": "Show only the mods in the group {name} ({color}).",
       "allGroups": "In groups: {groups}",
+      "openModIsMember": "The open mod is in this group",
       "rowMenu": {
         "groups": "Groups…",
         "color": "Colour…",
@@ -1604,7 +1673,7 @@
         "moveButton": "Move",
         "modGroupsTitle": "Groups for {name}",
         "modGroupsHelp": "Check a group to add this mod to it. Clear it to take the mod out. Each change is saved at once.",
-        "modGroupsEmpty": "There are no groups yet. Create one from the Groups panel.",
+        "modGroupsEmpty": "No groups yet. Type a name above to create one.",
         "modGroupsList": "Groups",
         "done": "Done",
         "removeUninstalledTitle": "Remove mods that aren't installed",
@@ -1618,6 +1687,76 @@
         "title": "Start over without groups",
         "body": "Rimmerge keeps a copy of the unreadable file next to it, then starts with no groups and no colours. Your mods and load order are not affected.",
         "confirm": "Start over"
+      },
+      "copy": {
+        "button": "Copy from another profile…",
+        "title": "Copy groups from another profile",
+        "intro": "Choose the folder of another profile to copy its groups and colours from. Your mods, load order and rules are not touched, and nothing is written to that folder.",
+        "choose": "Choose profile folder…",
+        "chooseAnother": "Choose another folder…",
+        "folder": "Copying from {path}",
+        "modeLegend": "How to copy",
+        "mode": {
+          "merge": "Merge into my groups",
+          "mergeHelp": "Groups with the same name in the same place (for example Weapons / Melee) are combined and new groups are added. Where both profiles set a colour, yours stays.",
+          "replace": "Replace my groups",
+          "replaceHelp": "All your groups and colours are removed and that profile's take their place."
+        },
+        "previewHeading": "Copying will change this:",
+        "nothingChanges": "Nothing would change. Everything in that profile is already here.",
+        "line": {
+          "groupsAdded": "{count} group added | {count} groups added",
+          "groupsMerged": "{count} group merged into the group here with the same name in the same place | {count} groups merged into the groups here with the same name in the same place",
+          "membershipsAdded": "{count} group membership added | {count} group memberships added",
+          "membershipsAlready": "{count} membership was already here | {count} memberships were already here",
+          "modColorsAdded": "{count} mod colour added | {count} mod colours added",
+          "modColorsKept": "{count} mod already has a different colour here, so yours is kept | {count} mods already have a different colour here, so yours are kept",
+          "groupColorsAdopted": "{count} group without a colour gets the colour from the other profile | {count} groups without a colour get the colour from the other profile",
+          "notInstalled": "{count} mod in these groups isn't installed. It stays in its groups and comes back if you install it. | {count} mods in these groups aren't installed. They stay in their groups and come back if you install them."
+        },
+        "clashesHeading": "{count} group has a different colour here, so yours is kept: | {count} groups have a different colour here, so yours are kept:",
+        "clash": "{path}: yours is {kept}, theirs is {offered}",
+        "discard": {
+          "heading": "This removes what is here now:",
+          "groups": "{count} group | {count} groups",
+          "memberships": "{count} group membership | {count} group memberships",
+          "modColors": "{count} mod colour | {count} mod colours"
+        },
+        "mergeButton": "Merge",
+        "replaceButton": "Replace…",
+        "close": "Close",
+        "confirm": {
+          "title": "Replace all your groups?",
+          "body": "Replacing removes everything below and puts the other profile's groups and colours in its place. Your mods, load order and rules are not affected. This cannot be undone.",
+          "button": "Replace everything"
+        },
+        "done": {
+          "title": "Groups copied",
+          "merged": "Merged the other profile's groups and colours into yours.",
+          "replaced": "Replaced your groups and colours with the other profile's."
+        },
+        "refused": {
+          "sameProfile": "That is this profile's own folder. Choose the folder of a different profile. Nothing was changed.",
+          "notAFolder": "That is not a folder. Choose the folder of a profile. Nothing was changed.",
+          "missing": "That folder has no groups and colours file. Choose the folder of a profile that has groups. Nothing was changed.",
+          "empty": "That profile has no groups and no colours, so there is nothing to copy. Nothing was changed.",
+          "nothingToCopy": "That profile's groups and colours are already exactly yours, so there is nothing to copy. Nothing was changed.",
+          "tooLargeToSave": "The result would be {bytes}, more than the {limit} your groups and colours file can hold. Nothing was changed.",
+          "unusable": {
+            "unreadable": "The groups and colours file in that folder could not be read. Nothing was changed.",
+            "tooLarge": "The groups and colours file in that folder is too large to read. Nothing was changed.",
+            "malformed": "The groups and colours file in that folder is damaged or is not a groups file. Nothing was changed.",
+            "newerVersion": "The groups and colours file in that folder was saved by a newer version of Rimmerge. Nothing was changed.",
+            "invalid": "The groups and colours file in that folder has groups that don't fit together, for example a loop or repeated names. Nothing was changed."
+          },
+          "limit": {
+            "tooDeep": "The result would nest groups deeper than Rimmerge allows. Nothing was changed.",
+            "tooManyGroups": "The result would have more groups than Rimmerge allows. Nothing was changed.",
+            "tooManyMembers": "The result would put more mods in one group, or in groups overall, than Rimmerge allows. Nothing was changed.",
+            "tooManyColors": "The result would give colours to more mods than Rimmerge allows. Nothing was changed.",
+            "other": "The result would go over a limit for groups. Nothing was changed."
+          }
+        }
       },
       "notice": {
         "notLoaded": "Groups and colours are not available in this session.",
@@ -1641,7 +1780,7 @@
         "idleMods": "Drop {count} mod on a group to add it | Drop {count} mods on a group to add them",
         "idleGroup": "Drop on a group to put this group inside it, or on All mods to make it top level.",
         "needsGroup": "Mods can only be added to a group",
-        "notUngrouped": "A group can't go into Ungrouped. Use All mods to make it top level.",
+        "notUngrouped": "A group can't go into \"Ungrouped\". Use \"All mods\" to make it top level.",
         "withHidden": "{text} ({hidden})",
         "alreadyThere": "The group is already there",
         "makeTopLevel": "Make {name} a top-level group",
@@ -1653,8 +1792,18 @@
         "movedTop": "{name} is now a top-level group",
         "movedInside": "{name} moved inside {parent}"
       },
+      "search": {
+        "label": "Search the groups, or type a name to create a new one",
+        "placeholder": "Search or create a group",
+        "noMatch": "No group matches your search.",
+        "createOption": "Create group “{name}”",
+        "createHintBulk": "Creating it also adds the mods you chose, and both are saved at once.",
+        "createHintSingle": "Creating it also adds this mod, and both are saved at once.",
+        "parentLabel": "Create it inside"
+      },
       "toast": {
         "created": "Group created",
+        "createdAndAdded": "Created {name} and added {count} mod to it | Created {name} and added {count} mods to it",
         "renamed": "Group renamed",
         "moved": "Group moved",
         "deleted": "Group deleted",
@@ -2159,6 +2308,9 @@
     "confirm": {
       "heading": "Apply anyway?",
       "intro": "The {order} order has {count} problem to confirm before writing: | The {order} order has {count} problems to confirm before writing:",
+      "outsideHeading": "The active mod list changed outside Rimmerge",
+      "outsideMembership": "The active mod list was edited elsewhere after Rimmerge last read it (+{added}, -{removed}). Applying writes the {order} order over those edits. A backup of the changed file is made first.",
+      "outsideReordered": "The active order was changed elsewhere after Rimmerge last read it. Applying writes the {order} order over that change. A backup of the changed file is made first.",
       "acknowledgedHeading": "Already decided in Findings",
       "reviewInInbox": "Review in Findings",
       "goBackButton": "Go back",

@@ -23,6 +23,7 @@ use rim_analyzer::domain::{ModId, Report, Selector};
 use rim_resolve::domain::{DefKey, DefRef, GeneratedMods};
 
 use crate::MAX_PAGE_SIZE;
+use crate::search_fold::search_fold;
 use conflicts::index_conflicts;
 use inventory::{
     active_raw_ids, asset_rows, owns_def_rows, owns_template_rows, patches_def_rows, search_text,
@@ -68,13 +69,13 @@ pub(crate) fn query(
     // `kind_counts` is computed after `search` narrows the rows but
     // before `kinds` does — see `ChangePage::kind_counts`'s own doc
     // comment for why the order matters.
-    let search = filter.search.as_deref().map(str::to_lowercase);
+    let search = filter.search.as_deref().map(search_fold);
     let after_search: Vec<ChangeRow> = rows
         .into_iter()
         .filter(|row| {
             search
                 .as_deref()
-                .is_none_or(|needle| search_text(row).to_lowercase().contains(needle))
+                .is_none_or(|needle| search_fold(&search_text(row)).contains(needle))
         })
         .collect();
 
@@ -120,9 +121,9 @@ pub(crate) fn query(
 /// `None` for neither. `pub(crate)` doc per [`crate::Session::search_defs`]:
 /// "case-insensitive substring on the name then the type".
 fn match_rank(needle: &str, def_type: &str, def_name: &str) -> Option<u8> {
-    if def_name.to_lowercase().contains(needle) {
+    if search_fold(def_name).contains(needle) {
         Some(0)
-    } else if def_type.to_lowercase().contains(needle) {
+    } else if search_fold(def_type).contains(needle) {
         Some(1)
     } else {
         None
@@ -143,7 +144,7 @@ pub(crate) fn search(query: &str, limit: usize, sources: &SourceIndex) -> Vec<(D
     if query.is_empty() {
         return Vec::new();
     }
-    let needle = query.to_lowercase();
+    let needle = search_fold(query);
     let mut hits: Vec<(u8, DefRef, usize)> = Vec::new();
 
     for ((def_type, def_name), owners) in &sources.owners_by_def {

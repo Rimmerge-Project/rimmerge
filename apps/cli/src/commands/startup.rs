@@ -34,7 +34,7 @@ pub struct StartupArgs {
     /// analyze --json`).
     #[arg(long)]
     report: PathBuf,
-    /// Which column to sort descending by. Defaults to `texture-bytes` —
+    /// Which column to sort descending by. Defaults to `texture-bytes`:
     /// real-install measurement found texture loading the dominant
     /// startup cost.
     #[arg(long, value_enum, default_value_t = SortByArg::TextureBytes)]
@@ -134,7 +134,7 @@ fn flags(cost: &ModCost) -> String {
 
 fn print_text(rows: &[&ModCost], mods_by_id: &BTreeMap<ModId, &Mod>) {
     println!(
-        "Startup cost ({} mods) — patch ops (mutating), slow-shape xpaths, textures, DLLs, defs; no timings (import a Player.log for those)",
+        "Startup cost ({} mods): patch ops (mutating), slow-shape xpaths, textures, DLLs, defs; no timings (import a Player.log for those)",
         rows.len()
     );
     println!(

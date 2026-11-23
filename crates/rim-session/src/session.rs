@@ -39,14 +39,20 @@ mod assignments;
 mod def_index;
 mod findings;
 mod merge;
+mod mod_detail;
 mod mod_info;
+mod mod_names;
 mod order;
+mod order_rows;
 mod organization;
 mod patches;
+mod persisted;
+mod placement;
 mod rules;
 
 pub use assignments::UnknownAssignment;
 pub use patches::{PatchDecideError, UnknownPatch};
+pub use persisted::PersistedStores;
 pub use rules::{ManualTagsChange, RuleKey};
 
 // Sibling-file tests; `#[path]` keeps the module named `tests`.
@@ -415,12 +421,17 @@ pub struct Session {
     scoped: HashMap<(PatchId, OrderSource), (Ledger, FindingIndex)>,
     /// Non-fatal warnings [`crate::ports::RuleStore::load`] noticed while
     /// reading the rules file (currently only the dropped-cluster-rules
-    /// migration) — set once by the
-    /// composition root right after [`Session::new`]/
-    /// [`crate::use_cases::LoadProject::execute`], the same way
-    /// [`Session::set_def_source_reader`] threads its own capability.
-    /// Empty for a freshly-built `Session` most tests use directly.
-    rule_load_warnings: Vec<RulesLoadWarning>,
+    /// migration). Set by the composition root right after
+    /// [`Session::new`]/[`crate::use_cases::LoadProject::execute`] with
+    /// [`Session::set_rule_load_warnings`], and replaced only by a
+    /// [`Session::reload_persisted`] whose rules re-read succeeded.
+    rules_file_warnings: Vec<RulesLoadWarning>,
+    /// The [`RulesLoadWarning::PersistedReloadFailed`] entries of the last
+    /// [`Session::reload_persisted`]; empty until one has run.
+    reload_failures: Vec<RulesLoadWarning>,
+    /// Notes from loading the mod-specific knowledge data, set once by
+    /// [`crate::use_cases::LoadProject`].
+    knowledge_warnings: Vec<RulesLoadWarning>,
     /// The mod-specific knowledge that lives in data, set once by
     /// [`crate::use_cases::LoadProject`] from its
     /// [`crate::ports::ModKnowledgeStore`] — the same
@@ -543,7 +554,9 @@ impl std::fmt::Debug for Session {
             .field("patches", &self.patches)
             .field("assignments", &self.assignments)
             .field("scoped", &self.scoped)
-            .field("rule_load_warnings", &self.rule_load_warnings)
+            .field("rules_file_warnings", &self.rules_file_warnings)
+            .field("reload_failures", &self.reload_failures)
+            .field("knowledge_warnings", &self.knowledge_warnings)
             .field("organization", &self.organization)
             .field("selected", &self.selected)
             .field(
@@ -647,7 +660,9 @@ impl Session {
                 .map(|p| (p.id().clone(), p))
                 .collect(),
             scoped: HashMap::new(),
-            rule_load_warnings: Vec::new(),
+            rules_file_warnings: Vec::new(),
+            reload_failures: Vec::new(),
+            knowledge_warnings: Vec::new(),
             mod_knowledge: ModKnowledge::default(),
             update_times: ModUpdateTimes::default(),
             organization: OrganizationState::NotLoaded,
@@ -662,12 +677,20 @@ impl Session {
     }
 
     /// Records the warnings [`crate::ports::RuleStore::load`] returned
-    /// alongside the rules it read. Set once by the composition root right
-    /// after construction (see [`Session::set_def_source_reader`] for the
-    /// same threading pattern) — never mutated afterward, since a session
-    /// only ever loads its rules file once.
+    /// alongside the rules it read: the rules file's own warnings, which
+    /// [`Session::rule_load_warnings`] lists first. Set by the composition
+    /// root right after construction (see [`Session::set_def_source_reader`]
+    /// for the same threading pattern); afterwards only a successful
+    /// [`Session::reload_persisted`] rules re-read replaces them. A fixture
+    /// that has no knowledge notes or failed re-reads sees exactly these.
     pub fn set_rule_load_warnings(&mut self, warnings: Vec<RulesLoadWarning>) {
-        self.rule_load_warnings = warnings;
+        self.rules_file_warnings = warnings;
+    }
+
+    /// Records the notes from loading the mod-specific knowledge data;
+    /// [`Session::rule_load_warnings`] lists them last.
+    pub(crate) fn set_knowledge_warnings(&mut self, warnings: Vec<RulesLoadWarning>) {
+        self.knowledge_warnings = warnings;
     }
 
     /// Records the mod-specific knowledge
@@ -725,10 +748,16 @@ impl Session {
         self.file_active_mods = ids;
     }
 
-    /// Non-fatal warnings noticed while loading this session's rules file.
-    #[must_use]
-    pub fn rule_load_warnings(&self) -> &[RulesLoadWarning] {
-        &self.rule_load_warnings
+    /// Every non-fatal warning noticed while loading this session's
+    /// persisted state, in a fixed order: the rules file's own warnings,
+    /// then the files a [`Session::reload_persisted`] could not re-read,
+    /// then the mod-knowledge notes. Each group lives in its own field, so
+    /// replacing one never disturbs another.
+    pub fn rule_load_warnings(&self) -> impl Iterator<Item = &RulesLoadWarning> {
+        self.rules_file_warnings
+            .iter()
+            .chain(&self.reload_failures)
+            .chain(&self.knowledge_warnings)
     }
 
     /// Gives this session a [`DefSourceReader`], so

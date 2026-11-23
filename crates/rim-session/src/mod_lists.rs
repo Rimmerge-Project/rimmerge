@@ -20,10 +20,18 @@ use crate::mod_times::{ModUpdateTimes, UpdateTime};
 use crate::organization::{
     ColorToken, GroupId, GroupName, OrganizationState, OrganizationUnavailable,
 };
+use crate::search_fold::search_fold;
 
+mod grouped;
 mod organized;
+mod search;
 
+pub use grouped::{
+    Folder, FolderKey, GroupedEntry, GroupedListQuery, GroupedModList, MAX_COLLAPSED_FOLDERS,
+    MAX_GROUPED_ENTRIES, TooManyCollapsedFolders,
+};
 use organized::ListOrganization;
+pub use search::SearchHighlight;
 
 /// The most rows either list returns. Real installs hold a few thousand
 /// mods; the bound exists so a pathological `Mods` folder cannot make one
@@ -188,11 +196,16 @@ pub struct ModListRow {
     /// id: `Added` on an Active row the file lacks, `Removed` on an
     /// Inactive row the file lists. Order never makes a mark.
     pub membership: MembershipMark,
-    /// The groups the mod is a **direct** member of, by name. Empty while
-    /// organization is unavailable.
+    /// The groups the mod is a **direct** member of, in group-tree order
+    /// (depth first, siblings by name). Empty while organization is
+    /// unavailable.
     pub groups: Vec<GroupLabel>,
     /// The mod's own colour. A mod never inherits a group's colour.
     pub color: Option<ColorToken>,
+    /// Where the list's search matched in the name and the id; empty
+    /// without a search. Computed from the same lowercased text the filter
+    /// compares, so a mark never disagrees with it.
+    pub search: SearchHighlight,
 }
 
 /// One list: `total` rows matched the query, `items` holds at most
@@ -229,14 +242,6 @@ impl ModList {
     }
 }
 
-fn matches(row: &ModListRow, query: &ModListQuery, needle: Option<&str>) -> bool {
-    let search_ok = needle.is_none_or(|needle| {
-        row.mod_id.as_str().to_lowercase().contains(needle)
-            || row.name.to_lowercase().contains(needle)
-    });
-    search_ok && query.source.is_none_or(|source| row.source == Some(source))
-}
-
 /// Whether the row carries the query's tag (always, with no tag asked for):
 /// a scanned mod's every tag, an unscanned mod's tags added by hand.
 fn has_tag(row: &ModListRow, query: &ModListQuery) -> bool {
@@ -247,13 +252,33 @@ fn has_tag(row: &ModListRow, query: &ModListQuery) -> bool {
     })
 }
 
-fn admitted(
+/// The row as the list shows it when `query` admits it, `None` otherwise.
+///
+/// The search is decided by the same ranges that mark it: a row is admitted
+/// when its folded name or id contains the folded `needle`, which is
+/// exactly when [`SearchHighlight::of`] finds a range, so the filter and the
+/// marks have one source of truth. A missing or empty needle admits every
+/// row and marks nothing.
+fn admit(
     organized: Option<&ListOrganization>,
-    row: &ModListRow,
+    mut row: ModListRow,
     query: &ModListQuery,
     needle: Option<&str>,
-) -> bool {
-    ListOrganization::admits(organized, row) && matches(row, query, needle)
+) -> Option<ModListRow> {
+    let is_listed = has_tag(&row, query)
+        && ListOrganization::admits(organized, &row)
+        && query.source.is_none_or(|source| row.source == Some(source));
+    if !is_listed {
+        return None;
+    }
+    if let Some(needle) = needle.filter(|needle| !needle.is_empty()) {
+        let highlight = SearchHighlight::of(&row, needle);
+        if highlight.is_empty() {
+            return None;
+        }
+        row.search = highlight;
+    }
+    Some(row)
 }
 
 fn scanned_row(
@@ -278,6 +303,7 @@ fn scanned_row(
         membership,
         groups: Vec::new(),
         color: None,
+        search: SearchHighlight::default(),
     }
 }
 
@@ -304,6 +330,7 @@ fn pending_row(
         membership,
         groups: Vec::new(),
         color: None,
+        search: SearchHighlight::default(),
     }
 }
 
@@ -384,8 +411,36 @@ pub(crate) fn working_list(
     organization: &OrganizationState,
     query: &ModListQuery,
 ) -> Result<ModList, ModListError> {
+    let rows = working_rows(report, tagging, working, times, file, organization, query)?;
+    Ok(ModList::from_rows(rows.into_iter(), is_reorderable(query)))
+}
+
+/// Whether the Active list answering `query` may be reordered: it is shown
+/// in the working set's own order.
+fn is_reorderable(query: &ModListQuery) -> bool {
+    query
+        .sort
+        .unwrap_or(ListSort::ACTIVE_DEFAULT)
+        .is_load_order()
+}
+
+/// Every Active row `query` admits, decorated and sorted, before the
+/// [`MAX_MOD_LIST_ROWS`] cut.
+///
+/// # Errors
+///
+/// [`ModListError`] when the query's group filter cannot be applied.
+pub(crate) fn working_rows(
+    report: &Report,
+    tagging: &Tagging,
+    working: &ActiveSet,
+    times: &ModUpdateTimes,
+    file: &FileMembership,
+    organization: &OrganizationState,
+    query: &ModListQuery,
+) -> Result<Vec<ModListRow>, ModListError> {
     let organized = ListOrganization::open(organization, query.group)?;
-    let needle = query.search.as_deref().map(str::to_lowercase);
+    let needle = query.search.as_deref().map(search_fold);
     let scanned: BTreeMap<&ModId, &rim_analyzer::domain::Mod> =
         report.mods.iter().map(|m| (&m.id, m)).collect();
     let unscanned: BTreeMap<&ModId, &rim_analyzer::domain::InactiveMod> =
@@ -410,13 +465,12 @@ pub(crate) fn working_list(
             membership,
             groups: Vec::new(),
             color: None,
+            search: SearchHighlight::default(),
         }
     });
     let mut rows: Vec<ModListRow> = rows
         .map(|row| ListOrganization::decorate(organized.as_ref(), row))
-        .filter(|row| {
-            has_tag(row, query) && admitted(organized.as_ref(), row, query, needle.as_deref())
-        })
+        .filter_map(|row| admit(organized.as_ref(), row, query, needle.as_deref()))
         .collect();
     let sort = query.sort.unwrap_or(ListSort::ACTIVE_DEFAULT);
     // Working order is already the ascending load order; only another
@@ -424,7 +478,7 @@ pub(crate) fn working_list(
     if !sort.is_load_order() {
         sort_rows(&mut rows, sort);
     }
-    Ok(ModList::from_rows(rows.into_iter(), sort.is_load_order()))
+    Ok(rows)
 }
 
 /// The Inactive list: every mod found on disk whose base id is not in
@@ -443,8 +497,27 @@ pub(crate) fn inactive_list(
     organization: &OrganizationState,
     query: &ModListQuery,
 ) -> Result<ModList, ModListError> {
+    let rows = inactive_rows(report, tagging, working, times, file, organization, query)?;
+    Ok(ModList::from_rows(rows.into_iter(), false))
+}
+
+/// Every Inactive row `query` admits, decorated and sorted, before the
+/// [`MAX_MOD_LIST_ROWS`] cut.
+///
+/// # Errors
+///
+/// [`ModListError`] when the query's group filter cannot be applied.
+pub(crate) fn inactive_rows(
+    report: &Report,
+    tagging: &Tagging,
+    working: &ActiveSet,
+    times: &ModUpdateTimes,
+    file: &FileMembership,
+    organization: &OrganizationState,
+    query: &ModListQuery,
+) -> Result<Vec<ModListRow>, ModListError> {
     let organized = ListOrganization::open(organization, query.group)?;
-    let needle = query.search.as_deref().map(str::to_lowercase);
+    let needle = query.search.as_deref().map(search_fold);
     let working_bases: BTreeSet<ModId> = working.ids().iter().map(ModId::base).collect();
     let is_inactive = |id: &ModId| !working_bases.contains(&id.base());
 
@@ -461,9 +534,7 @@ pub(crate) fn inactive_list(
                 .map(|m| pending_row(m, tagging, times, None, file.mark_inactive(&m.id))),
         )
         .map(|row| ListOrganization::decorate(organized.as_ref(), row))
-        .filter(|row| {
-            has_tag(row, query) && admitted(organized.as_ref(), row, query, needle.as_deref())
-        })
+        .filter_map(|row| admit(organized.as_ref(), row, query, needle.as_deref()))
         .collect();
     // An inactive mod has no load-order position, so that key means the
     // list's default there.
@@ -472,7 +543,63 @@ pub(crate) fn inactive_list(
         Some(_) | None => ListSort::INACTIVE_DEFAULT,
     };
     sort_rows(&mut rows, sort);
-    Ok(ModList::from_rows(rows.into_iter(), false))
+    Ok(rows)
+}
+
+/// The Active pane as folders: [`working_rows`] laid out by
+/// [`grouped::build`].
+///
+/// # Errors
+///
+/// [`ModListError`] when organization is unavailable (the view needs
+/// groups) or the query's group filter names a missing group.
+pub(crate) fn working_groups(
+    report: &Report,
+    tagging: &Tagging,
+    working: &ActiveSet,
+    times: &ModUpdateTimes,
+    file: &FileMembership,
+    organization: &OrganizationState,
+    query: &GroupedListQuery,
+) -> Result<GroupedModList, ModListError> {
+    let loaded = organization.loaded()?;
+    let rows = working_rows(
+        report,
+        tagging,
+        working,
+        times,
+        file,
+        organization,
+        &query.list,
+    )?;
+    grouped::build(loaded, rows, query)
+}
+
+/// The Inactive pane as folders; see [`working_groups`].
+///
+/// # Errors
+///
+/// See [`working_groups`].
+pub(crate) fn inactive_groups(
+    report: &Report,
+    tagging: &Tagging,
+    working: &ActiveSet,
+    times: &ModUpdateTimes,
+    file: &FileMembership,
+    organization: &OrganizationState,
+    query: &GroupedListQuery,
+) -> Result<GroupedModList, ModListError> {
+    let loaded = organization.loaded()?;
+    let rows = inactive_rows(
+        report,
+        tagging,
+        working,
+        times,
+        file,
+        organization,
+        &query.list,
+    )?;
+    grouped::build(loaded, rows, query)
 }
 
 #[cfg(test)]
@@ -480,6 +607,7 @@ mod tests {
     use rim_resolve::domain::{TagAssignment, TagProvenance};
     use rim_resolve::test_support::ReportBuilder;
 
+    use super::search::span;
     use super::*;
 
     /// The tests that predate the sort have no update times.
@@ -732,6 +860,189 @@ mod tests {
         assert_eq!(ids(&by_tag), ["a"]);
         assert_eq!(ids(&by_search), ["b"]);
         assert_eq!(by_search.total, 1);
+    }
+
+    /// Active mods `(id, name)`, all in the working set.
+    fn named_report(mods: &[(&str, &str)]) -> (Report, ActiveSet) {
+        let mut builder = ReportBuilder::new();
+        for (id, name) in mods {
+            let name = (*name).to_string();
+            builder = builder.mod_with(id, move |m| m.name = name);
+        }
+        let ids: Vec<&str> = mods.iter().map(|(id, _)| *id).collect();
+        (builder.build(), working(&ids))
+    }
+
+    fn searching(text: &str) -> ModListQuery {
+        ModListQuery {
+            search: Some(text.to_string()),
+            ..ModListQuery::default()
+        }
+    }
+
+    #[test]
+    fn a_name_match_marks_the_name_and_an_id_match_marks_the_id() {
+        let (report, set) = named_report(&[
+            ("author.alpha", "Combat Pack"),
+            ("author.zeta", "Alpha Tools"),
+        ]);
+
+        let list = working_list(&report, &Tagging::default(), &set, &searching("ALPHA"));
+
+        // Both rows are admitted: the first by its id, the second by its name.
+        assert_eq!(ids(&list), ["author.alpha", "author.zeta"]);
+        assert!(list.items[0].search.name.is_empty());
+        assert_eq!(list.items[0].search.id, [span(7, 12)]);
+        assert_eq!(list.items[1].search.name, [span(0, 5)]);
+        assert!(list.items[1].search.id.is_empty());
+    }
+
+    #[test]
+    fn a_search_ending_in_capital_sigma_finds_it_inside_a_name() {
+        let (report, set) = named_report(&[("g.one", "Mod ΑΣΑ"), ("g.two", "Mod ΟΔΟΣ")]);
+
+        let list = working_list(&report, &Tagging::default(), &set, &searching("ΑΣ"));
+
+        // "ΑΣ" is 4 bytes; it starts after "Mod " (4 bytes).
+        assert_eq!(ids(&list), ["g.one"]);
+        assert_eq!(list.items[0].search.name, [span(4, 8)]);
+        assert_eq!(&list.items[0].name[4..8], "ΑΣ");
+        // The letter still matches at a word end.
+        let at_end = working_list(&report, &Tagging::default(), &set, &searching("ΟΔΟΣ"));
+        assert_eq!(ids(&at_end), ["g.two"]);
+    }
+
+    #[test]
+    fn a_row_matching_in_both_texts_marks_both_and_an_inactive_row_is_marked_too() {
+        let (report, _) = named_report(&[("pack.one", "One Pack"), ("other", "Zed")]);
+
+        let list = inactive_list(
+            &report,
+            &Tagging::default(),
+            &ActiveSet::trusted(Vec::new()),
+            &searching("on"),
+        );
+
+        let one = &list.items[0];
+        assert_eq!(one.mod_id.as_str(), "pack.one");
+        assert_eq!(one.search.name, [span(0, 2)]);
+        assert_eq!(one.search.id, [span(5, 7)]);
+    }
+
+    #[test]
+    fn a_list_without_a_search_or_with_an_empty_one_marks_nothing() {
+        let (report, set) = named_report(&[("a", "Alpha")]);
+
+        for query in [ModListQuery::default(), searching("")] {
+            let list = working_list(&report, &Tagging::default(), &set, &query);
+
+            assert!(list.items.iter().all(|row| row.search.is_empty()));
+        }
+    }
+
+    #[test]
+    fn a_tag_filter_alone_marks_nothing() {
+        let tag = Tag::new("framework").expect("valid tag");
+        let tagging = Tagging::new(vec![TagAssignment {
+            mod_id: ModId::new("a"),
+            tag: tag.clone(),
+            provenance: TagProvenance::Manual,
+        }]);
+        let (report, set) = named_report(&[("a", "Alpha")]);
+
+        let list = working_list(
+            &report,
+            &tagging,
+            &set,
+            &ModListQuery {
+                tag: Some(tag),
+                ..ModListQuery::default()
+            },
+        );
+
+        assert_eq!(ids(&list), ["a"]);
+        assert!(list.items[0].search.is_empty());
+    }
+
+    #[test]
+    fn marks_survive_a_non_ascii_name_whose_case_fold_changes_its_length() {
+        let (report, set) = named_report(&[("m", "İstanbul Ünï")]);
+
+        let list = working_list(&report, &Tagging::default(), &set, &searching("stan"));
+        let by_dotless = working_list(&report, &Tagging::default(), &set, &searching("ü"));
+
+        // 'İ' is two bytes, so "stan" starts at byte 2 in the original
+        // even though it starts at byte 4 in the lowercased text.
+        assert_eq!(list.items[0].search.name, [span(2, 6)]);
+        assert_eq!(&list.items[0].name[2..6], "stan");
+        assert_eq!(by_dotless.items[0].search.name, [span(10, 12)]);
+    }
+
+    mod admission {
+        use proptest::prelude::*;
+
+        use super::*;
+
+        proptest! {
+            /// The list is filtered by the same ranges that mark it: every row it
+            /// returns is marked, each marked piece folds to text holding the
+            /// search, and an empty search returns every row, unmarked.
+            #[test]
+            fn the_real_filter_lists_exactly_the_marked_rows(
+                names in proptest::collection::vec("[a-zA-ZİΣσςéÉ日 ]{0,10}", 1..6),
+                needle in "[a-zA-ZİΣσςéÉ日]{0,2}",
+            ) {
+                let mods: Vec<(String, String)> = names
+                    .iter()
+                    .enumerate()
+                    .map(|(index, name)| (format!("m{index}.id"), name.clone()))
+                    .collect();
+                let refs: Vec<(&str, &str)> =
+                    mods.iter().map(|(id, name)| (id.as_str(), name.as_str())).collect();
+                let (report, set) = named_report(&refs);
+
+                let list = working_list(&report, &Tagging::default(), &set, &searching(&needle));
+
+                if needle.is_empty() {
+                    prop_assert_eq!(list.items.len(), mods.len());
+                    prop_assert!(list.items.iter().all(|row| row.search.is_empty()));
+                } else {
+                    let folded_needle = search_fold(&needle);
+                    for row in &list.items {
+                        prop_assert!(!row.search.is_empty());
+                        for range in &row.search.name {
+                            let marked = search_fold(&row.name[range.clone()]);
+                            prop_assert!(marked.contains(&folded_needle));
+                        }
+                    }
+                    // The filter's definition, pinned as an oracle: a row is listed
+                    // exactly when its folded id or name holds the folded search.
+                    let expected: Vec<&str> = mods
+                        .iter()
+                        .filter(|(id, name)| {
+                            search_fold(id).contains(&folded_needle)
+                                || search_fold(name).contains(&folded_needle)
+                        })
+                        .map(|(id, _)| id.as_str())
+                        .collect();
+                    prop_assert_eq!(ids(&list), expected);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn every_admitted_row_of_a_search_has_a_mark_and_the_filter_is_unchanged() {
+        let (report, set) = named_report(&[
+            ("p.one", "Alpha"),
+            ("p.two", "Beta"),
+            ("alpha.three", "Gamma"),
+        ]);
+
+        let list = working_list(&report, &Tagging::default(), &set, &searching("alpha"));
+
+        assert_eq!(ids(&list), ["p.one", "alpha.three"]);
+        assert!(list.items.iter().all(|row| !row.search.is_empty()));
     }
 
     #[test]
@@ -1301,7 +1612,7 @@ mod tests {
         }
 
         #[test]
-        fn rows_carry_labels_by_base_id_sorted_by_name_and_their_own_colour() {
+        fn rows_carry_labels_by_base_id_in_group_tree_order_and_their_own_colour() {
             let (report, set, state, parent, kid) = fixture();
             let query = ModListQuery::default();
 
@@ -1312,8 +1623,8 @@ mod tests {
                 |row: &ModListRow| row.groups.iter().map(|label| label.id).collect::<Vec<_>>();
             assert_eq!(
                 labels(&active.items[0]),
-                [kid, parent],
-                "Kid sorts before Parent"
+                [parent, kid],
+                "tree order lists a group before its subgroup, though Kid sorts first by name"
             );
             assert_eq!(
                 labels(&active.items[1]),
@@ -1327,6 +1638,31 @@ mod tests {
                 "no colour is inherited from a group"
             );
             assert_eq!(labels(&inactive.items[0]), [parent]);
+        }
+
+        #[test]
+        fn labels_follow_the_tree_depth_first_with_siblings_by_name_not_creation_order() {
+            let report = ReportBuilder::new().mod_("a").build();
+            let mut organization = ModOrganization::new();
+            // Created Zeta, Alpha, Child, Beta: ids 1..=4, which is not the tree order.
+            let zeta = group(&mut organization, "Zeta", None);
+            let alpha = group(&mut organization, "Alpha", None);
+            let child = group(&mut organization, "Child", Some(alpha));
+            let beta = group(&mut organization, "Beta", None);
+            for id in [zeta, alpha, child, beta] {
+                organization.add_members(id, &set(&["a"])).expect("add");
+            }
+            let state = OrganizationState::Loaded(organization);
+
+            let active = active_list(&report, &working(&["a"]), &state, &ModListQuery::default())
+                .expect("ok");
+
+            let names: Vec<_> = active.items[0]
+                .groups
+                .iter()
+                .map(|label| label.name.as_str())
+                .collect();
+            assert_eq!(names, ["Alpha", "Child", "Beta", "Zeta"]);
         }
 
         #[test]

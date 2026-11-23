@@ -3,6 +3,191 @@
 This changelog starts at the first public release. Development history
 before that point is not summarized here.
 
+## [1.2.7] - 2026-11-23
+
+- **Change: the desktop app refuses folders and files on a network share.** A
+  folder or file you pick, or type, must now be on a drive letter (`C:\...`, or
+  a network drive you mapped to a letter such as `Z:\...`). A raw network path
+  (`\\server\share\...`, including WebDAV paths) is refused with a message that
+  says so, before anything is read, because even looking at such a path makes
+  Windows contact the host and send your sign-in hash to it, and an offline
+  share used to freeze the whole app until Windows gave up. This covers the
+  game, workshop and profile folders, `ModsConfig.xml`, the other profile's
+  folder when copying groups, mod list files, game logs, RimSort files and the
+  export folders. Names Windows treats as devices (`NUL`, `CON`, `COM1`, `LPT1`
+  and the like) are refused too. The Setup page now says when a folder you typed
+  or one saved earlier was not used because of this, instead of quietly showing
+  something else, and never opens a saved network path. The command line is
+  unchanged and still accepts them.
+- **Fix: a slow drive no longer stops the rest of the app.** Reading the folder
+  you copy groups from, the mod list file you preview or export, a game log or
+  RimSort's database files used to hold every other action still while it ran.
+  They now read first and touch your session only for a moment afterwards. If
+  you load another project while copying groups or importing RimSort's files,
+  that result is discarded with a message and nothing is changed.
+- **Fix: Add to group opens with the cursor in its search box.** It used to
+  open on the Close button, and about a third of a second later the dialog
+  pulled the keyboard focus there even if you had already started typing, so a
+  quick Enter could close the dialog instead of creating the group.
+- **Fix: exporting to, or saving as a default, a folder on a mapped network
+  drive keeps its drive letter.** The folder used to be turned into the
+  relative path `UNC\server\share\...`, so an export landed under the working
+  folder and `config.json` stored a path that no longer pointed anywhere.
+- **Fix: the outside-change notes no longer claim an overwrite that cannot
+  happen.** When `ModsConfig.xml` was edited outside Rimmerge but already held
+  exactly the order you have selected, the note on the Mods page and the one on
+  the other pages still said Applying would overwrite those changes, although
+  Apply asks nothing and writes the same list. The Mods page note now says your
+  active mod list already matches the selected order, and the note on the other
+  pages stays away. An edit that only turned the generated merge mod on or off
+  still counts as an overwrite, because Apply would put it back. The install
+  note under the patch and assignment export panels follows the same rule for
+  the Current order.
+- **Fix: swapping a mod for its other copy outside Rimmerge went unnoticed.**
+  Replacing a plain mod with its Steam Workshop copy in `ModsConfig.xml` (or the
+  other way round) was reported as no change, so Apply overwrote it without
+  asking. It now counts as one mod added and one removed, in the notes and in
+  Apply's confirmation. The note's **Use the list from the file** button now
+  keeps the copy the file names, where it used to swap it back to the copy that
+  was already active.
+- **Fix: screen readers could miss or repeat the banners.** The
+  pending-changes banner and the two outside-change notes were assertive alerts
+  that were read out again each time a page appeared, and a note that appeared
+  while you were on another page was not reliably read at all. The banners are
+  now quiet notes, and one polite status region that is always present in the
+  window reads their text when a banner appears or its text changes, and not
+  again when a page change shows the same banner.
+- **Fix: searching in Greek missed names with a capital sigma.** A search that
+  ended in a capital "Σ" (such as "ΑΣ") did not find a name that continued after
+  it ("ΑΣΑ"), and a search typed with a final "ς" (such as "κοσμος") did not find
+  "ΚΟΣΜΟΣ", because the letter was lowercased differently at the end of the
+  search than in the middle of a name. Every search box now folds the letter the
+  same way: the two Mods lists (where the matching letters are highlighted), the
+  mod pickers, the Findings and Changes lists, the merge fields, the def
+  search, the group tree and group picker, and the assignments coverage list.
+- **Fix: several views showed the wrong copy of a mod installed twice.** When
+  both a plain and a Steam Workshop copy of the same mod are active, opening one
+  copy's full details, the explanation of its place in the load order, one of
+  its textures or its scan cost could show the other copy. The def texture
+  viewer could also call one copy's image undecodable because the other copy's
+  was. Each now shows the copy you opened.
+- **New: a Groups view in both Mods lists.** Each list has a **List | Groups**
+  switch under its sort buttons. **Groups** shows the same mods as folders: your
+  group tree, each folder with its colour icon, its name and how many mods it
+  holds, its subfolders first and then its mods in the list's sort order, with
+  **Ungrouped** last. A mod in two groups appears under each, with an
+  "also in" mark, and selecting either copy selects the mod. Folders fold with a
+  click or the arrow keys, **Collapse all** and **Expand all** sit beside the
+  switch, and each list remembers its folded folders per profile. A folder's ⋮
+  menu has **Select all in folder**, **Activate all…** and **Deactivate all…**,
+  and dropping rows on a folder adds them to that group without activating or
+  moving them. The Active list keeps its load-order numbers but cannot be
+  reordered in Groups view; switch to List to move mods. Empty folders show
+  with 0 unless a search, tag or source filter is on.
+- **New: group colours on rows, an open-row mark and quicker group edits.**
+  Each Active row now always shows its load-order number, whatever the sort. A
+  mod with no colour of its own shows its first coloured group's colour as a
+  fainter stripe. On a narrow row the group chips become coloured dots, and
+  clicking a chip or dot narrows both lists to that group. The mod whose info
+  panel is open is marked on its row with a ring and a tint, and in the Groups
+  panel its groups have a small dot and every group a folder icon in its
+  colour. The row's ⋮ menu starts with the twelve colours as swatches. The Add
+  to group dialogs have a search box and offer **Create group** with the name
+  you typed, which creates the group and adds the mods, saving both at once. A
+  double click on a row opens the Activate or Deactivate dialog for that mod.
+- **Fix: the Mods page controls stay readable at 1,024 pixels in every language.** In
+  German, Russian, Polish and French the search and tag placeholders were cut
+  off, the sort bar wrapped onto a second line, a freshly added row's date could
+  shrink to a single character, and a Russian date overflowed its cell. The
+  search box now has its own line in a narrow list, a long placeholder is cut
+  with an ellipsis and shown in full as a tooltip, the sort bar collapses into a
+  dropdown with a direction button when its buttons do not fit, the date cell
+  keeps a readable minimum width, the Added and Removed marks show only their icon
+  in a narrow list, and the buttons above a selection never wrap their
+  labels.
+- **New: search matches are highlighted in the Mods lists.** The text a search
+  matched is marked in the mod's shown label, in both the List and the Groups
+  view, whether the list shows names or package ids. A mod can be listed because
+  of its id while the list shows its name: that label then has no mark, and
+  switching to package ids marks the match at once. The marks come from the same
+  matching that filters the list, so they never disagree with it, and every
+  match is marked, not just the first. The mark is a highlighted background with an underline
+  and adds nothing for a screen reader to announce.
+- **New: Show in load order.** From the Groups view or from any other sort, the
+  Active list's row menu and the mod info panel have a **Show in load order**
+  action. It switches the Active list to List view in load order, scrolls to the
+  mod and focuses its row. A filter that still shows the mod stays; one that
+  hides it (search, tag, source or the group scope) is cleared, and a note above
+  the list says so.
+- **New: each Mods list remembers its sort and its view.** The Active and
+  Inactive lists each come back after a restart with the sort (key and
+  direction) and the view (List or Groups) they had, and keep them when you load
+  another project. Before, both started over every time. A remembered value the
+  app no longer knows falls back to the default. A remembered sort other than
+  load order still turns reordering off and still shows the load-order numbers.
+- **New: copy groups and colours from another profile.** The Mods page's
+  groups panel has a **Copy from another profile…** button. Choose the other
+  profile's folder (the one holding its `organization.json`) and Rimmerge shows
+  what the copy would do before it does anything, for either mode.
+  **Merge** combines the other profile's groups with yours: a group with the
+  same name in the same place (the same names from the top level, ignoring
+  capitals) takes the other profile's mods, new groups are added under the
+  same parent, and where both profiles set a colour yours stays (a differing
+  group colour is listed as a clash). A colour
+  you have not set is filled in from the other profile. **Replace** removes all
+  your groups and colours and puts the other profile's in their place, after a
+  confirmation with **Cancel** focused. A copy that would pass a limit (groups,
+  mods in groups, coloured mods, nesting), a folder with no groups file, a
+  damaged or too large file, a folder holding exactly what you already have, or
+  your own folder is refused with the reason, and nothing is changed. Mods that are not installed keep their places in the
+  groups, as they do today. The copy is one save, only reads from the other
+  profile's folder, and never changes your load order, your active mods or your
+  rules.
+- **Fix: English text Rimmerge generates no longer uses em dashes.** Sort
+  explanations, finding text, error messages, command-line output and
+  `--help` pages, the description in a generated merge mod's `About.xml` and
+  the comments in generated patches now use plain punctuation (colons, commas,
+  full stops or " - "). The plain-text explanations (command line, saved rule
+  comments) now use the app's own wording. The meaning is otherwise unchanged,
+  and so is the order Rimmerge suggests. A new check,
+  `scripts/check-em-dashes.ps1`, and a test over the command-line help keep
+  em dashes out of those strings. Rimmerge's own source comments and its
+  empty-value placeholder in the app are not covered.
+- **New: Apply asks first when the active mod list was changed outside
+  Rimmerge.** When you press Apply, Rimmerge now reads `ModsConfig.xml`
+  again, right then, instead of trusting the last check (it re-reads every
+  5 seconds). If someone else changed the list since Rimmerge last read or
+  wrote it, and your order would overwrite that change, the "Apply anyway?"
+  panel says so, with how many mods were added and removed, or that the
+  order was changed, next to any problems you still have to confirm. It is
+  one panel, with **Go back** focused and **Apply anyway** never the default.
+  Applying anyway still saves a timestamped backup of the changed file
+  first, and the success message names it. Nothing is asked when the file
+  already holds the order you are about to write.
+- **New: a note on every page when the active mod list changed outside
+  Rimmerge.** Under the pending-changes banner, a short note says the list
+  was changed elsewhere and links to the Mods page, where the existing note
+  explains it. It goes away after a rescan, an import or an Apply. The Mods
+  page keeps its own note and does not show this one.
+- **Fix: a rule or decision saved while a rescan, a load or an import was
+  running could be lost.** Rimmerge reads your rules, decisions, patches and
+  patch maker projects from disk while it scans, and then swaps the scanned
+  copy in. A rule, decision, patch or patch maker edit saved in between was
+  in the file but missing from the new copy, and the next save wrote the
+  stale copy over it. The swap now reads those files again just before it
+  replaces the old copy, so the edit is kept and the order is sorted again
+  only when something really changed. If one of the files cannot be read
+  again, Rimmerge keeps what the scan read and shows a notice saying that an
+  edit made during the scan may be missing.
+- **Fix: a mod you activated or deactivated could stay selected, hidden
+  behind a filter.** Activating a mod together with its dependencies took
+  only the mod you asked for out of the Inactive selection, so a dependency
+  that a filter was hiding stayed selected, and the next "Activate selected"
+  quietly included it. Deactivating also took Core out of the selection,
+  although Core is never deactivated. Both lists now drop the mods the change
+  really moved, and the ones that were already where you sent them, and the
+  "N selected (M not shown)" count stays right.
+
 ## [1.2.6] - 2026-11-20
 
 - **New: import a load order from a RimWorld save.** The Load order page's

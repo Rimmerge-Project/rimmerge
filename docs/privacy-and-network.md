@@ -224,6 +224,37 @@ contacts, and the Internet access switch has nothing to block here.
   with its Workshop link when the list has one (see
   [Links you click](#links-you-click)); installing it is up to you.
 
+## Network shares are refused
+
+The desktop app only accepts files and folders on a drive letter (`C:\...`, or
+a network drive you mapped to a letter, which Windows presents as a local
+drive) from you or from the page. A raw network path (`\\server\share\...`,
+`\\?\UNC\...`, a WebDAV `\\server@SSL\...`) is refused with "Network folders
+aren't supported" before any file call. The reason is the connection, not the data: asking Windows for
+the size or existence of a file on a network path makes it contact the host and
+authenticate to it, which can hand your NTLMv2 sign-in hash to whoever runs
+that host, and it is a connection outside the list of hosts above. A path
+typed or pasted into a field, or one a compromised page sends, therefore can
+never make the app reach out. The check reads the text of the path only, never
+the file system, so refusing a path contacts nothing. Device names Windows
+resolves inside any folder (`NUL`, `CON`, `COM1`, `LPT1` and the like, with any
+extension) are refused too, since opening one can block. A mapped drive is a
+letter you set up yourself, so it is allowed; so is a symbolic link inside a
+local folder that leads to a share, which Windows resolves and Rimmerge cannot
+see (a junction cannot lead to a share, only a symbolic link can). A path
+saved earlier by the command line (`rimmerge config set`) or set in a
+`RIMMERGE_*` variable is checked the same way when the Setup page reads it: a
+network path there is ignored, named on the page, and never opened. The
+command line is run by you in your own account, takes the paths you type and is
+not covered; it contacts nothing automatically either way.
+
+Reading a file you chose no longer holds up the rest of the app: the other
+profile you copy groups from, a mod list you preview or export, a game log and
+RimSort's database files are read before the project is touched, so a slow or
+offline drive cannot freeze it. The writes that persist project state stay
+under the project's lock, because they need it: an export renders from the
+project, and installing one also writes `ModsConfig.xml`.
+
 ## Rate limits and being offline
 
 Being offline is normal: a failed check or refresh is recorded (shown

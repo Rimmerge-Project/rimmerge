@@ -544,6 +544,7 @@ function submit(): void {
                category as a keyboard-shortcut label; every other string
                in this block already goes through `t()`. -->
           <i18n-t
+            scope="global"
             keypath="settings.enforceSoft.description"
             tag="p"
             class="text-text-muted text-xs"
@@ -568,6 +569,7 @@ function submit(): void {
                label; every other string in this block already goes
                through `t()`. -->
           <i18n-t
+            scope="global"
             keypath="settings.enforceAwareness.description"
             tag="p"
             class="text-text-muted text-xs"
@@ -592,6 +594,7 @@ function submit(): void {
                label; every other string in this block already goes
                through `t()`. -->
           <i18n-t
+            scope="global"
             keypath="settings.enforceInferred.description"
             tag="p"
             class="text-text-muted text-xs"

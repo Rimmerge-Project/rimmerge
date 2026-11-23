@@ -95,6 +95,10 @@
   "shell": {
     "brand": "Rimmerge",
     "mainNavigation": "メインナビゲーション",
+    "outsideChange": {
+      "text": "有効なMODリストがRimmerge以外で変更されました。適用すると、その変更は上書きされます。",
+      "link": "「MOD」ページで確認"
+    },
     "nav": {
       "dashboard": "ダッシュボード",
       "inbox": "検出結果",
@@ -245,6 +249,12 @@
     "modKnowledgeCacheUnreadableHeadline": "キャッシュされたRimmergeルールを読み取れませんでした。同梱のスナップショットを使用します",
     "rowsOverRoleLimit": "{section}ルールの{role}の役割で、役割ごとの上限を超えた{count}行を無視しました",
     "precedenceRuleMissingFramework": "{defType}の優先ルールを無視しました：フレームワークが指定されていません",
+    "reloadFailed": {
+      "decisions": "スキャン後に保存済みの決定を再読み込みできなかったため、スキャン中に行われた決定が含まれていない可能性があります",
+      "rules": "スキャン後に保存済みのルールを再読み込みできなかったため、スキャン中に変更されたルールが含まれていない可能性があります",
+      "patches": "スキャン後に保存済みの互換パッチを再読み込みできなかったため、スキャン中に行われた変更が含まれていない可能性があります",
+      "assignments": "スキャン後に保存済みのパッチメーカーのプロジェクトを再読み込みできなかったため、スキャン中に行われた変更が含まれていない可能性があります"
+    },
     "what": {
       "precedenceRule": "優先ルール",
       "behaviour": "動作",
@@ -611,11 +621,24 @@
       "organization_limit": {
         "title": "グループの上限に達しました",
         "detail": "グループと色の上限（グループの数、入れ子の深さ、グループ内または色付きのMODの数、グループのファイル（organization.json）のサイズのいずれか）に達しました。何も変更されていません。不要になったグループを削除するか、グループからMODを外すか、色を外してから、再度お試しください。"
+      },
+      "network_path_refused": {
+        "title": "ネットワーク上のフォルダーには対応していません",
+        "detail": "Rimmergeが使用するのは、C:\\のようなドライブ文字のあるドライブ、またはドライブ文字を割り当てたネットワークドライブ上のファイルとフォルダーだけです。\\\\server\\shareのようなネットワークパスは拒否され、どこにも接続していません。Windowsで共有フォルダーにドライブ文字を割り当てる（ネットワークドライブの割り当て）か、ファイルをローカルフォルダーにコピーしてから、再度お試しください。"
+      },
+      "project_changed": {
+        "title": "プロジェクトが切り替わりました",
+        "detail": "Rimmergeがファイルを読み取っている間に別のプロジェクトが読み込まれたため、結果は使用されず、何も変更されていません。今開いているプロジェクトでファイルを使うには、再度お試しください。"
       }
     }
   },
   "defaultPathsWarning": {
-    "notAnInstall": "{gameDir}はRimWorldのインストールではないようです（Version.txtまたはData/Core/がありません）。"
+    "notAnInstall": "{gameDir}はRimWorldのインストールではないようです（Version.txtまたはData/Core/がありません）。",
+    "typedNetworkShare": "そのゲームのフォルダーはネットワーク上の共有フォルダーにあるため、Rimmergeは使用しませんでした。Rimmergeが使用するのは、ドライブ文字のあるドライブ上のフォルダーだけです。Windowsで共有フォルダーにドライブ文字を割り当てるか、ローカルフォルダーを選択してください。",
+    "typedInvalid": "C:\\Games\\RimWorldのような、ドライブ文字で始まるフォルダーのフルパスではないため、Rimmergeは使用しませんでした。",
+    "configuredGameDir": "既定として保存されているRimWorldのインストールフォルダーは、ドライブ文字のあるドライブ上にない（ネットワーク上の共有フォルダーの可能性があります）ため、Rimmergeは無視しました。ドライブ文字のあるドライブ上のフォルダーを選択してから、もう一度「既定として保存」を選択してください。",
+    "configuredWorkshopDir": "既定として保存されているSteamワークショップのフォルダーは、ドライブ文字のあるドライブ上にない（ネットワーク上の共有フォルダーの可能性があります）ため、Rimmergeは無視しました。ドライブ文字のあるドライブ上のフォルダーを選択してから、もう一度「既定として保存」を選択してください。",
+    "configuredModsConfig": "既定として保存されているModsConfig.xmlのパスは、ドライブ文字のあるドライブ上にない（ネットワーク上の共有フォルダーの可能性があります）ため、Rimmergeは無視しました。ドライブ文字のあるドライブ上のファイルを選択してから、もう一度「既定として保存」を選択してください。"
   },
   "defaultPathsError": {
     "noProfileBase": "RIMMERGE_PROFILE_DIRもLOCALAPPDATAも設定されていないため、Rimmergeが自身のファイルを保存する場所がありません。",
@@ -1335,6 +1358,10 @@
       "reordered": "有効なMODの順序がRimmerge以外で変更されました。保留中の変更は保持されています。適用すると、その順序は上書きされます。",
       "outsideNoPending": "有効なMODリストがRimmerge以外で変更されました（+{added}、-{removed}）。適用すると、この外部での変更は上書きされます。",
       "reorderedNoPending": "有効なMODの順序がRimmerge以外で変更されました。適用すると、その順序は上書きされます。",
+      "outsideMatches": "有効なMODリストがRimmerge以外で変更されました（+{added}、-{removed}）。保留中の変更は保持されています。リストはすでに、選択している順序と一致しています。",
+      "reorderedMatches": "有効なMODの順序がRimmerge以外で変更されました。保留中の変更は保持されています。リストはすでに、選択している順序と一致しています。",
+      "outsideMatchesNoPending": "有効なMODリストがRimmerge以外で変更されました（+{added}、-{removed}）。リストはすでに、選択している順序と一致しています。",
+      "reorderedMatchesNoPending": "有効なMODの順序がRimmerge以外で変更されました。リストはすでに、選択している順序と一致しています。",
       "useFile": "ファイルのリストを使用",
       "useFileTitle": "先にプレビューを開きます。確認するまで何も変更されません。",
       "stale": {
@@ -1399,7 +1426,8 @@
       "deactivateButton": "無効化",
       "rescanButton": "MODを再スキャン",
       "searchActiveLabel": "有効なMODを検索",
-      "searchInactiveLabel": "無効なMODを検索"
+      "searchInactiveLabel": "無効なMODを検索",
+      "tagFilterLabel": "タグでMODを絞り込む"
     },
     "defSearch": {
       "ariaLabel": "Defへ移動",
@@ -1502,7 +1530,8 @@
       "suggestedNote": "「適用」すると提案された順序が書き込まれます。MODを移動すると、独自の順序に切り替わります。",
       "coreStaysActive": "Coreは無効化できません。",
       "inactiveNotOrdered": "このリストに順序はありません。MODを有効化するには、「有効」リストへドラッグしてください。",
-      "activateAtItem": "位置を指定して有効化…"
+      "activateAtItem": "位置を指定して有効化…",
+      "groupsViewOff": "「グループ」表示では移動できません。MODの順序を変更するには、このリストを「リスト」表示に切り替えてください。"
     },
     "colors": {
       "names": {
@@ -1520,6 +1549,10 @@
         "slate": "灰色"
       },
       "rowColor": "色：{name}",
+      "rowColorFromGroup": "グループ「{group}」の色：{name}",
+      "swatchesLabel": "MODの色を設定",
+      "swatch": "色：{name}",
+      "swatchNone": "色なし",
       "groupTitle": "グループの色",
       "modTitle": "MODの色",
       "groupHelp": "色はツリー内とMODの行でグループを示す印です。ほかには何も変わりません。",
@@ -1534,6 +1567,40 @@
         "modChanged": "{name}の色を変更しました",
         "modCleared": "{name}の色を外しました"
       }
+    },
+    "showInLoadOrder": {
+      "action": "ロード順で表示",
+      "announce": "{name}をロード順で表示しています。",
+      "filterCleared": "{name}はフィルターで非表示になっていたため、フィルターを解除しました。"
+    },
+    "groupsView": {
+      "regionLabel": "グループ別のMOD",
+      "rovingHint": "矢印キーで移動、右／左キーでフォルダーを開閉、EnterキーでMODを開く、Spaceキーで選択",
+      "switchHeading": "表示",
+      "switchLabel": "このリストの表示方法",
+      "viewList": "リスト",
+      "viewGroups": "グループ",
+      "unavailable": "「グループ」表示にはグループが必要ですが、今はグループを使用できません。",
+      "collapseAll": "すべて閉じる",
+      "expandAll": "すべて開く",
+      "modCount": "MOD{count}個",
+      "folderActions": "フォルダー「{name}」の操作",
+      "folderLabelExpanded": "{name}、MOD{count}個、開いています",
+      "folderLabelCollapsed": "{name}、MOD{count}個、閉じています",
+      "alsoInShort": "他{count}グループ",
+      "alsoInLong": "ほかのグループ{count}個にも所属：{groups}",
+      "alsoInTitle": "ほかの所属グループ：{groups}",
+      "menu": {
+        "select": "フォルダー内をすべて選択",
+        "activate": "すべて有効化…",
+        "deactivate": "すべて無効化…"
+      },
+      "folderSelected": "{name}のMOD{count}個を選択しました。",
+      "folderSelectedNone": "{name}に選択できるMODはありません。",
+      "empty": "ここに表示するMODはありません。",
+      "emptyFiltered": "検索、タグ、入手元、グループの条件に一致するMODはありません。",
+      "cutNote": "{hidden}行が表示されていません。表示するには、いくつかのフォルダーを閉じるか、検索を絞り込んでください。",
+      "ungroupedRefusesDrop": "MODを「グループなし」に追加することはできません。MODをグループから外すには、「グループから外す…」を使用してください。"
     },
     "groups": {
       "regionLabel": "グループ",
@@ -1553,8 +1620,10 @@
       "noMatches": "一致するグループはありません。",
       "nodeModCount": "MOD{count}個（サブグループを含む）",
       "nodeSubgroupCount": "サブグループ{count}個",
-      "chipWithColor": "{name}（{color}）",
+      "chipScope": "グループ「{name}」のMODのみを表示します。",
+      "chipScopeWithColor": "グループ「{name}」（{color}）のMODのみを表示します。",
       "allGroups": "所属グループ：{groups}",
+      "openModIsMember": "開いているMODはこのグループに属しています",
       "rowMenu": {
         "groups": "グループ…",
         "color": "色…",
@@ -1604,7 +1673,7 @@
         "moveButton": "移動",
         "modGroupsTitle": "{name}のグループ",
         "modGroupsHelp": "グループにチェックを入れると、このMODがそのグループに追加されます。チェックを外すとグループから外れます。変更はそのつどすぐに保存されます。",
-        "modGroupsEmpty": "グループはまだありません。「グループ」パネルから作成してください。",
+        "modGroupsEmpty": "グループはまだありません。上の欄に名前を入力して作成してください。",
         "modGroupsList": "グループ",
         "done": "完了",
         "removeUninstalledTitle": "インストールされていないMODを外す",
@@ -1618,6 +1687,76 @@
         "title": "グループを空にして最初からやり直す",
         "body": "Rimmergeは読み取れないファイルのコピーを同じ場所に残し、グループも色もない状態から始めます。MODとロード順には影響しません。",
         "confirm": "最初からやり直す"
+      },
+      "copy": {
+        "button": "別のプロファイルからコピー…",
+        "title": "別のプロファイルからグループをコピー",
+        "intro": "グループと色のコピー元となる、別のプロファイルのフォルダーを選択してください。MOD、ロード順、ルールには影響せず、そのフォルダーには何も書き込まれません。",
+        "choose": "プロファイルのフォルダーを選択…",
+        "chooseAnother": "別のフォルダーを選択…",
+        "folder": "コピー元：{path}",
+        "modeLegend": "コピー方法",
+        "mode": {
+          "merge": "既存のグループにマージ",
+          "mergeHelp": "同じ場所にある同じ名前のグループ（例：武器 / 近接）は統合され、新しいグループは追加されます。両方のプロファイルで色が設定されている場合は、このプロファイルの色が残ります。",
+          "replace": "既存のグループを置き換える",
+          "replaceHelp": "このプロファイルのグループと色はすべて削除され、別のプロファイルのグループと色に置き換わります。"
+        },
+        "previewHeading": "コピーすると、次のように変更されます：",
+        "nothingChanges": "何も変更されません。そのプロファイルの内容はすべて、すでにここにあります。",
+        "line": {
+          "groupsAdded": "グループ{count}個を追加",
+          "groupsMerged": "グループ{count}個を、このプロファイル内で同じ場所にある同じ名前のグループに統合",
+          "membershipsAdded": "グループへの所属{count}件を追加",
+          "membershipsAlready": "所属{count}件はすでにここにあります",
+          "modColorsAdded": "MODの色{count}件を追加",
+          "modColorsKept": "MOD{count}個はここで別の色がすでに設定されているため、このプロファイルの色を残します",
+          "groupColorsAdopted": "色のないグループ{count}個に、別のプロファイルの色を設定",
+          "notInstalled": "これらのグループにあるMOD{count}個はインストールされていません。グループには残り、インストールすれば戻ります。"
+        },
+        "clashesHeading": "グループ{count}個はここで別の色が設定されているため、このプロファイルの色を残します：",
+        "clash": "{path}：このプロファイルは{kept}、別のプロファイルは{offered}",
+        "discard": {
+          "heading": "ここにある次の内容が削除されます：",
+          "groups": "グループ{count}個",
+          "memberships": "グループへの所属{count}件",
+          "modColors": "MODの色{count}件"
+        },
+        "mergeButton": "マージ",
+        "replaceButton": "置き換え…",
+        "close": "閉じる",
+        "confirm": {
+          "title": "すべてのグループを置き換えますか？",
+          "body": "置き換えると、以下のものがすべて削除され、別のプロファイルのグループと色に置き換わります。MOD、ロード順、ルールには影響しません。この操作は元に戻せません。",
+          "button": "すべて置き換える"
+        },
+        "done": {
+          "title": "グループをコピーしました",
+          "merged": "別のプロファイルのグループと色を、このプロファイルにマージしました。",
+          "replaced": "このプロファイルのグループと色を、別のプロファイルのものに置き換えました。"
+        },
+        "refused": {
+          "sameProfile": "これはこのプロファイル自身のフォルダーです。別のプロファイルのフォルダーを選択してください。何も変更されていません。",
+          "notAFolder": "選択したものはフォルダーではありません。プロファイルのフォルダーを選択してください。何も変更されていません。",
+          "missing": "そのフォルダーにはグループと色のファイルがありません。グループがあるプロファイルのフォルダーを選択してください。何も変更されていません。",
+          "empty": "そのプロファイルにはグループも色もないため、コピーするものがありません。何も変更されていません。",
+          "nothingToCopy": "そのプロファイルのグループと色はこのプロファイルとまったく同じため、コピーするものがありません。何も変更されていません。",
+          "tooLargeToSave": "結果は{bytes}になり、グループと色のファイルに保存できる上限の{limit}を超えます。何も変更されていません。",
+          "unusable": {
+            "unreadable": "そのフォルダーにあるグループと色のファイルを読み取れませんでした。何も変更されていません。",
+            "tooLarge": "そのフォルダーにあるグループと色のファイルは、大きすぎて読み取れません。何も変更されていません。",
+            "malformed": "そのフォルダーにあるグループと色のファイルは、破損しているか、グループのファイルではありません。何も変更されていません。",
+            "newerVersion": "そのフォルダーにあるグループと色のファイルは、新しいバージョンのRimmergeで保存されています。何も変更されていません。",
+            "invalid": "そのフォルダーにあるグループと色のファイルに、互いに整合しないグループ（循環や重複した名前など）があります。何も変更されていません。"
+          },
+          "limit": {
+            "tooDeep": "結果のグループの入れ子が、Rimmergeで許可されている深さを超えます。何も変更されていません。",
+            "tooManyGroups": "結果のグループ数が、Rimmergeで許可されている数を超えます。何も変更されていません。",
+            "tooManyMembers": "結果として、1つのグループ内のMODの数、またはすべてのグループの合計が、Rimmergeで許可されている数を超えます。何も変更されていません。",
+            "tooManyColors": "結果として色が付くMODの数が、Rimmergeで許可されている数を超えます。何も変更されていません。",
+            "other": "結果がグループの上限を超えます。何も変更されていません。"
+          }
+        }
       },
       "notice": {
         "notLoaded": "このセッションではグループと色を使用できません。",
@@ -1653,8 +1792,18 @@
         "movedTop": "{name}が最上位のグループになりました",
         "movedInside": "{name}を{parent}の中へ移動しました"
       },
+      "search": {
+        "label": "グループを検索するか、名前を入力して新しいグループを作成",
+        "placeholder": "グループを検索または作成",
+        "noMatch": "検索に一致するグループはありません。",
+        "createOption": "グループ「{name}」を作成",
+        "createHintBulk": "作成すると、選択したMODも追加され、グループの作成とMODの追加が同時に保存されます。",
+        "createHintSingle": "作成すると、このMODも追加され、グループの作成とMODの追加が同時に保存されます。",
+        "parentLabel": "作成先"
+      },
       "toast": {
         "created": "グループを作成しました",
+        "createdAndAdded": "{name}を作成し、MOD{count}個を追加しました",
         "renamed": "グループの名前を変更しました",
         "moved": "グループを移動しました",
         "deleted": "グループを削除しました",
@@ -2159,6 +2308,9 @@
     "confirm": {
       "heading": "それでも適用しますか？",
       "intro": "{order}には、書き込む前に確認が必要な問題が{count}件あります：",
+      "outsideHeading": "有効なMODリストがRimmerge以外で変更されています",
+      "outsideMembership": "有効なMODリストが、Rimmergeが前回読み取った後にほかの場所で編集されました（+{added}、-{removed}）。適用すると{order}が書き込まれ、その編集は上書きされます。変更されたファイルのバックアップが先に作成されます。",
+      "outsideReordered": "有効なMODの順序が、Rimmergeが前回読み取った後にほかの場所で変更されました。適用すると{order}が書き込まれ、その変更は上書きされます。変更されたファイルのバックアップが先に作成されます。",
       "acknowledgedHeading": "「検出結果」で決定済み",
       "reviewInInbox": "「検出結果」で確認",
       "goBackButton": "戻る",

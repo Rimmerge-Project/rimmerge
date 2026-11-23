@@ -22,6 +22,9 @@ mod organization;
 mod patches;
 mod project;
 mod recommended_rules;
+mod user_path;
+
+pub(crate) use user_path::{parse_optional_user_path, parse_user_path};
 
 // Sibling-file tests; `#[path]` keeps the module named `tests`.
 #[cfg(test)]
@@ -162,6 +165,19 @@ pub enum CommandErrorCode {
     /// A limit was hit: nesting depth, number of groups, mods in groups or
     /// coloured mods.
     OrganizationLimit,
+    /// A path from the user names a network share (`\\server\share`, a
+    /// WebDAV `\\server@SSL\x`): refused before any file-system call, since
+    /// touching it would contact the host. A user can cause it with a file
+    /// picker, and the way out is a drive letter (map the share), so it is
+    /// not `InvalidInput`. A relative, empty or device path stays
+    /// `InvalidInput`.
+    NetworkPathRefused,
+    /// Another project was loaded (or the loaded one was replaced) while a
+    /// command read a file with the session lock released, so what it read
+    /// was meant for the project it started on. Nothing was changed; trying
+    /// again acts on the project now loaded. A dedicated code, not
+    /// `InvalidInput`: the input was fine.
+    ProjectChanged,
 }
 
 /// Structured detail some [`CommandError`]s carry alongside their plain
@@ -306,6 +322,16 @@ impl CommandError {
     #[must_use]
     pub fn invalid_input(message: impl Into<String>) -> Self {
         Self::new(CommandErrorCode::InvalidInput, message.into())
+    }
+
+    /// The project changed while a file was being read; see
+    /// [`CommandErrorCode::ProjectChanged`].
+    #[must_use]
+    pub fn project_changed() -> Self {
+        Self::new(
+            CommandErrorCode::ProjectChanged,
+            "the project changed while the file was being read; try again",
+        )
     }
 
     /// The requested mod isn't in the active mod list.

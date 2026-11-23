@@ -7,6 +7,7 @@ use std::path::PathBuf;
 use rim_analyzer::domain::ModId;
 
 use crate::Session;
+use crate::mod_detail::find_active;
 use crate::ports::{AssetLocator, DefSourceError, TextureBytes};
 
 /// Everything that can go wrong reading a mod's texture back.
@@ -70,12 +71,7 @@ impl<Locator: AssetLocator> ReadTexture<Locator> {
         mod_id: &ModId,
         texture_path: &str,
     ) -> Result<ReadTextureOutput, ReadTextureError> {
-        let target = mod_id.base();
-        let mod_entry = session
-            .report()
-            .mods
-            .iter()
-            .find(|m| m.id.base() == target)
+        let mod_entry = find_active(session.report(), mod_id)
             .ok_or_else(|| ReadTextureError::UnknownMod(mod_id.clone()))?;
 
         let located = self
@@ -140,6 +136,23 @@ mod tests {
             .expect("the base id must resolve the _steam-suffixed active mod");
 
         assert_eq!(output.path, path);
+    }
+
+    #[test]
+    fn the_exact_copy_is_read_when_a_plain_and_a_steam_copy_are_both_active() {
+        let session = session_fixture(&["x", "x_steam"]);
+        let use_case = ReadTexture::new(FakeAssetLocator::default());
+
+        let result = use_case.execute(&session, &ModId::new("x_steam"), "things/wall");
+
+        assert!(
+            matches!(
+                &result,
+                Err(ReadTextureError::TextureNotFound { mod_id, .. })
+                    if *mod_id == ModId::new("x_steam")
+            ),
+            "result: {result:?}"
+        );
     }
 
     #[test]

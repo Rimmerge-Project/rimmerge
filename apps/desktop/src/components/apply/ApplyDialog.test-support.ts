@@ -11,6 +11,7 @@ import ApplyDialog from "@/components/apply/ApplyDialog.vue";
 import { useSessionStore } from "@/stores/session";
 import type { ApplyPreflightDto } from "@/types/generated/ApplyPreflightDto";
 import type { DashboardDto } from "@/types/generated/DashboardDto";
+import type { ExternalFileChangeDto } from "@/types/generated/ExternalFileChangeDto";
 import type { MergeModDto } from "@/types/generated/MergeModDto";
 import type { OrderSourceDto } from "@/types/generated/OrderSourceDto";
 import type { PendingActiveChangesDto } from "@/types/generated/PendingActiveChangesDto";
@@ -113,15 +114,17 @@ export function dashboardFixture(needsInput: number): DashboardDto {
   };
 }
 
-/** `get_apply_preflight`'s result: no problems unless the test passes some. */
+/** `get_apply_preflight`'s result: no problems and no outside change unless the test passes some. */
 export function preflightFixture(
   items: PreflightItemDto[] = [],
   source: OrderSourceDto = "current",
+  outsideChange: ExternalFileChangeDto = { kind: "none" },
 ): ApplyPreflightDto {
   return {
     source,
     items,
-    requiresConfirmation: items.some((item) => !item.acknowledged),
+    outsideChange,
+    requiresConfirmation: outsideChange.kind !== "none" || items.some((item) => !item.acknowledged),
   };
 }
 

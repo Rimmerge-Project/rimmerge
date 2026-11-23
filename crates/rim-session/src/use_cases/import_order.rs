@@ -270,7 +270,7 @@ impl ImportLoss {
 mod tests {
     use super::*;
     use crate::ProjectPaths;
-    use crate::mod_list::{CorePlacement, ImportContext, parse_text, plan_import};
+    use crate::mod_list::{CorePlacement, IdSpelling, ImportContext, parse_text, plan_import};
     use crate::ports::ModsConfigFile;
     use crate::test_support::{
         FakeModKnowledgeStore, FakeScanner, InMemoryAssignmentProjectStore, InMemoryDecisionStore,
@@ -412,6 +412,7 @@ mod tests {
                 own_merge_mod: ModId::new("rimmerge.merge.3f9a1c2b7d5e"),
                 game_version: None,
                 has_pending_changes: false,
+                id_spelling: IdSpelling::Shared,
             },
         );
         assert_eq!(plan.core, CorePlacement::Missing);
@@ -474,6 +475,7 @@ mod tests {
                 own_merge_mod: ModId::new("rimmerge.merge.3f9a1c2b7d5e"),
                 game_version: None,
                 has_pending_changes: false,
+                id_spelling: IdSpelling::Shared,
             },
         );
         (inventory, plan)
@@ -664,6 +666,7 @@ example.ghost
                 own_merge_mod: ModId::new("rimmerge.merge.3f9a1c2b7d5e"),
                 game_version: None,
                 has_pending_changes: false,
+                id_spelling: IdSpelling::Shared,
             },
         )
     }

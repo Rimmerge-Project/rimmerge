@@ -28,7 +28,7 @@ pub enum MergeCommand {
     Plan(PlanArgs),
     /// Tallies contested patch collisions by whether their xpaths parse
     /// under Rimmerge's own xpath grammar (`Supported`) or not
-    /// (`Unsupported`, grouped by reason), and — for the supported ones —
+    /// (`Unsupported`, grouped by reason), and, for the supported ones,
     /// by what an actual replay makes of them (`Agreeing` when every
     /// candidate order lands on the same value, `Conflict` when they
     /// differ).
@@ -126,12 +126,12 @@ fn run_plan(args: &PlanArgs) -> anyhow::Result<()> {
             println!("state:  NeedsFieldInput ({unresolved}/{total} field(s) unresolved)");
         }
         MergeState::CannotMerge { reason } => {
-            println!("state:  CannotMerge — {}", TerminalSafe::line(reason));
+            println!("state:  CannotMerge: {}", TerminalSafe::line(reason));
         }
     }
     if let Some(change) = &preview.structural_change {
         println!(
-            "guard:  {} differs ({} vs base) — confirm the winner; no field choice clears this",
+            "guard:  {} differs ({} vs base). Confirm the winner; no field choice clears this",
             change.field,
             TerminalSafe::line(&change.by)
         );
@@ -569,7 +569,7 @@ fn print_def_override_table(report: &MergeCoverageReport) {
     println!(
         "    (a ceiling: also needs no stored decision yet, \
          suggest_merge_when_clean on, and 85 meeting this profile's own \
-         threshold — none of which this count checks)"
+         threshold, none of which this count checks)"
     );
     println!("  post-redecision suggestion outcome (of every override with a real preview):");
     print_suggestion_outcomes(&overrides.suggestion_outcomes);

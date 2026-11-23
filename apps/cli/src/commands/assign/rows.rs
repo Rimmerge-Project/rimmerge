@@ -20,11 +20,11 @@ pub struct SetRowArgs {
     /// The assignment's id, from `assign list`.
     #[arg(long)]
     assignment: String,
-    /// Which section (by def type) to address — optional when the
+    /// Which section (by def type) to address; optional when the
     /// project has exactly one section.
     #[arg(long)]
     section: Option<String>,
-    /// The target def, `<def_type>/<def_name>` — a target-keyed row.
+    /// The target def, `<def_type>/<def_name>`: a target-keyed row.
     /// Requires `--key-field`; omit both for a free-standing row,
     /// addressed by `--def-name` alone.
     #[arg(long, requires = "key_field")]
@@ -111,11 +111,11 @@ pub struct ClearRowArgs {
     /// The assignment's id, from `assign list`.
     #[arg(long)]
     assignment: String,
-    /// Which section (by def type) to address — optional when the
+    /// Which section (by def type) to address; optional when the
     /// project has exactly one section.
     #[arg(long)]
     section: Option<String>,
-    /// The target def, `<def_type>/<def_name>` — a target-keyed row.
+    /// The target def, `<def_type>/<def_name>`: a target-keyed row.
     /// Requires `--key-field`; mutually exclusive with `--def-name`.
     #[arg(long, requires = "key_field", conflicts_with = "def_name")]
     target: Option<String>,
@@ -190,7 +190,7 @@ pub struct CopyFromArgs {
     /// The assignment's id, from `assign list`.
     #[arg(long)]
     assignment: String,
-    /// Which section (by def type) to address — optional when the
+    /// Which section (by def type) to address; optional when the
     /// project has exactly one section.
     #[arg(long)]
     section: Option<String>,

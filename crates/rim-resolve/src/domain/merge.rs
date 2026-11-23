@@ -158,7 +158,7 @@ impl fmt::Display for ItemId {
             Self::Key { child, value } => {
                 debug_assert!(
                     !child.is_empty(),
-                    "ItemId::Key's child must be non-empty — an empty child is indistinguishable \
+                    "ItemId::Key's child must be non-empty: an empty child is indistinguishable \
                      from ItemId::Text in the text form (see this field's own doc comment)"
                 );
                 write!(f, "{}={}", escape_leading_marker(child), escape(value))
@@ -175,7 +175,7 @@ impl fmt::Display for PathSegment {
             Self::Child(tag) => {
                 debug_assert!(
                     !tag.is_empty(),
-                    "PathSegment::Child's tag must be non-empty — an empty tag is \
+                    "PathSegment::Child's tag must be non-empty: an empty tag is \
                      indistinguishable from FieldPath's own empty-path sentinel (see this \
                      variant's own doc comment)"
                 );

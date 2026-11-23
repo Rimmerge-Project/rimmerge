@@ -110,7 +110,7 @@ describe("OrganizationDialogs: running an edit", () => {
   it("closes the dialog and says so after a successful edit", async () => {
     const wrapper = mountDialogs(
       { kind: "createGroup", parent: null },
-      { create_group: () => ({ kind: "created", id: 7 }) },
+      { create_group: () => ({ kind: "created", id: 7, members: 1 }) },
     );
     await flushPromises();
 

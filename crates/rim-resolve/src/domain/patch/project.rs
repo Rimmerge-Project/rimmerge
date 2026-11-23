@@ -24,7 +24,7 @@ pub enum PatchDecisionError {
     OutOfScope(Box<FindingKey>),
     /// The action isn't one a compat patch can publish (only `Merge`,
     /// `ShipAsset`, and `Ignore` are patchable).
-    #[error("a patch can only Merge, ShipAsset, or Ignore — not {0}")]
+    #[error("a patch can only Merge, ShipAsset, or Ignore, not {0}")]
     NotPatchable(UnpatchableAction),
     /// A `Merge` decision's per-field choice names an owner outside this
     /// patch's scope.

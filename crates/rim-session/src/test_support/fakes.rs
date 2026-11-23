@@ -731,6 +731,7 @@ impl ModListFileStore for InMemoryModListFileStore {
 pub struct InMemoryDecisionStore {
     saved: RefCell<Option<DecisionSet>>,
     fail_next_save: Cell<bool>,
+    fail_next_load: Cell<bool>,
 }
 
 impl InMemoryDecisionStore {
@@ -752,10 +753,19 @@ impl InMemoryDecisionStore {
     pub fn fail_next_save(&self) {
         self.fail_next_save.set(true);
     }
+
+    /// Makes the next [`DecisionStore::load`] call fail with a
+    /// [`StoreError`], then resets.
+    pub fn fail_next_load(&self) {
+        self.fail_next_load.set(true);
+    }
 }
 
 impl DecisionStore for InMemoryDecisionStore {
     fn load(&self, _dir: &Path) -> Result<DecisionSet, StoreError> {
+        if self.fail_next_load.replace(false) {
+            return Err(StoreError("simulated load failure".to_string()));
+        }
         Ok(self.saved.borrow().clone().unwrap_or_default())
     }
 
@@ -825,6 +835,7 @@ pub struct InMemoryRuleStore {
     fail_next_save: Cell<bool>,
     saves: Cell<usize>,
     warn_on_next_load: RefCell<Vec<RulesLoadWarning>>,
+    fail_next_load: Cell<bool>,
 }
 
 impl InMemoryRuleStore {
@@ -860,10 +871,19 @@ impl InMemoryRuleStore {
     pub fn warn_on_next_load(&self, warnings: Vec<RulesLoadWarning>) {
         *self.warn_on_next_load.borrow_mut() = warnings;
     }
+
+    /// Makes the next [`RuleStore::load`] call fail with a [`StoreError`],
+    /// then resets.
+    pub fn fail_next_load(&self) {
+        self.fail_next_load.set(true);
+    }
 }
 
 impl RuleStore for InMemoryRuleStore {
     fn load(&self, _dir: &Path) -> Result<LoadedRules, StoreError> {
+        if self.fail_next_load.replace(false) {
+            return Err(StoreError("simulated load failure".to_string()));
+        }
         Ok(LoadedRules {
             rules: self.saved.borrow().clone().unwrap_or_default(),
             warnings: self.warn_on_next_load.take(),
@@ -1437,7 +1457,7 @@ impl RuleDatabaseFetcher for FakeRuleDatabaseFetcher {
             .map(|database| {
                 let outcome = self.outcomes.get(database).cloned().unwrap_or_else(|| {
                     panic!(
-                        "FakeRuleDatabaseFetcher: no scripted outcome for {database:?} — every \
+                        "FakeRuleDatabaseFetcher: no scripted outcome for {database:?}; every \
                          database `refresh` is actually called with must have one, unless it \
                          was explicitly passed to `omitting`"
                     )

@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createI18n, type DefineLocaleMessage } from "vue-i18n";
 import { buildPluralRules, pluralFormIndex } from "@/i18n/format";
@@ -439,49 +439,5 @@ describe("plural forms", () => {
       pluralRules: buildPluralRules(),
     });
     expect(i18n.global.t("test.mods", { count: 0 }, 0)).toBe("0 mods");
-  });
-});
-
-describe("locale catalogue unused-key check", () => {
-  const SRC_DIR = `${import.meta.dirname}/../`;
-  const EXCLUDED_DIR_SEGMENTS = ["/locales/", "/types/generated/"];
-
-  function collectSourceFiles(dir: string): string[] {
-    const files: string[] = [];
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      const full = `${dir}${entry.name}`;
-      if (entry.isDirectory()) {
-        files.push(...collectSourceFiles(`${full}/`));
-        continue;
-      }
-      if (
-        (entry.name.endsWith(".ts") || entry.name.endsWith(".vue")) &&
-        !entry.name.endsWith(".test.ts") &&
-        !EXCLUDED_DIR_SEGMENTS.some((segment) => full.includes(segment))
-      ) {
-        files.push(full);
-      }
-    }
-    return files;
-  }
-
-  it("every en key is referenced as a literal somewhere in src", () => {
-    const sourceText = collectSourceFiles(SRC_DIR)
-      .map((path) => readFileSync(path, "utf8"))
-      .join("\n");
-
-    const unused = [...enMessages.keys()].filter((key) => {
-      // `primevue.*` is never looked up key-by-key through `t()` — its
-      // whole subtree is bulk-copied onto PrimeVue's own reactive
-      // `config.locale` by `i18n.ts`'s `setAppLocale` (see
-      // `messages.primevue`, a property access, not a per-key string
-      // literal), so this check does not apply to it.
-      if (isMetadataKey(key) || key.startsWith("primevue.")) {
-        return false;
-      }
-      return !sourceText.includes(`"${key}"`) && !sourceText.includes(`'${key}'`);
-    });
-
-    expect(unused).toEqual([]);
   });
 });

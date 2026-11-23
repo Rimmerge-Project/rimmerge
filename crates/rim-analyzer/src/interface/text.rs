@@ -126,7 +126,7 @@ fn print_capped<T, W: Write>(
 fn print_counts_table<W: Write>(printer: &mut Printer<W>, report: &Report, elapsed: Duration) {
     let m = &report.metadata;
     printer.line(format_args!(
-        "rim-analyzer — {} ({})",
+        "rim-analyzer - {} ({})",
         m.game_dir.display(),
         m.game_version
     ));
@@ -280,7 +280,7 @@ fn describe_constraint(constraint: &Constraint) -> String {
         .collect::<Vec<_>>()
         .join(", ");
     let kind = if *load_time { "load-time" } else { "lazy" };
-    format!("{after} references '{assembly}' ({kind}) — any of: {candidate_list}")
+    format!("{after} references '{assembly}' ({kind}), any of: {candidate_list}")
 }
 
 /// Which of the four mutually exclusive def-override categories a
@@ -649,7 +649,7 @@ fn print_framework_candidates<W: Write>(printer: &mut Printer<W>, report: &Repor
         verbose,
         |m| {
             format!(
-                "{} — hard dependents: {}, soft dependents: {}, awareness dependents: {}",
+                "{} - hard dependents: {}, soft dependents: {}, awareness dependents: {}",
                 m.id, m.hard_dependents, m.soft_dependents, m.awareness_dependents
             )
         },

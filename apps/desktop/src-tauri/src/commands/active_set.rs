@@ -12,6 +12,7 @@
 use std::time::Instant;
 
 use rim_analyzer::domain::ModId;
+use rim_session::ports::RulesLoadWarning;
 use rim_session::use_cases::{
     ActivateMods, DeactivateMods, DiscardPendingChanges, ImportOrder, LoadProject, MoveMods,
     RevertOrderToFile, ValidatedImport,
@@ -22,13 +23,15 @@ use tauri::async_runtime::spawn_blocking;
 use crate::commands::project::finish_loaded_session;
 use crate::commands::{EVENT_PROJECT_PROGRESS, emit_session_changed};
 use crate::dto::active_set::{
-    ActivateModsResultDto, ActivatePlanDto, ActivateRequestDto, DeactivatePlanDto,
-    DeactivateRequestDto, MoveModsResultDto, MoveRequestDto, PendingActiveChangesDto,
+    ActivateCommitted, ActivateModsResultDto, ActivatePlanDto, ActivateRequestDto,
+    DeactivateModsResultDto, DeactivatePlanDto, DeactivateRequestDto, MoveModsResultDto,
+    MoveRequestDto, PendingActiveChangesDto,
 };
+use crate::dto::grouped_mod_lists::{GroupedListQueryDto, GroupedModListDto};
 use crate::dto::mod_lists::{ModListDto, ModListQueryDto};
 use crate::dto::project::{ProgressEventDto, ProjectSummaryDto, SessionChangeReasonDto};
 use crate::error::CommandError;
-use crate::state::{Adapters, AppState, with_session};
+use crate::state::{Adapters, AppState, reload_persisted_state, with_session};
 
 /// The Mods page's Inactive list: every mod on disk whose base id is not
 /// in the working set, so a mod deactivated since the last scan appears at
@@ -65,6 +68,37 @@ pub async fn list_inactive_mods(
     query: ModListQueryDto,
 ) -> Result<ModListDto, CommandError> {
     list_inactive_mods_inner(&state, query).await
+}
+
+/// The Inactive pane in Groups view, laid out as folders by
+/// [`rim_session::Session::inactive_mod_groups`]; this only maps the DTO in
+/// and out.
+///
+/// # Errors
+///
+/// See [`crate::commands::mods::list_working_mods_grouped_inner`].
+pub(crate) async fn list_inactive_mods_grouped_inner(
+    state: &AppState,
+    query: GroupedListQueryDto,
+) -> Result<GroupedModListDto, CommandError> {
+    with_session(state, move |session| {
+        let query: rim_session::GroupedListQuery = query.try_into()?;
+        Ok(session.inactive_mod_groups(&query)?.into())
+    })
+    .await
+}
+
+/// See `list_inactive_mods_grouped_inner`.
+///
+/// # Errors
+///
+/// See `list_inactive_mods_grouped_inner`.
+#[tauri::command]
+pub async fn list_inactive_mods_grouped(
+    state: tauri::State<'_, AppState>,
+    query: GroupedListQueryDto,
+) -> Result<GroupedModListDto, CommandError> {
+    list_inactive_mods_grouped_inner(&state, query).await
 }
 
 /// Plans what `activate_mods` would do — the confirm dialog's own read,
@@ -116,22 +150,29 @@ pub async fn plan_activate_mods(
 /// to the current report, or `move_anchor_not_active` for a stale anchor.
 /// An anchored activation also switches a selected Suggested to Current
 /// (the result says so); an un-anchored one never changes the selection.
+/// Either way the result's `activated` lists the ids the commit really added
+/// and `already_active` the requested ones its own plan found already active.
 pub(crate) async fn activate_mods_inner(
     state: &AppState,
     request: ActivateRequestDto,
 ) -> Result<ActivateModsResultDto, CommandError> {
     with_session(state, move |session| {
         let plan = ActivateMods::plan(session, &request.mod_ids(), request.with_dependencies);
-        let outcome = match request.anchor {
-            Some(anchor) => Some(ActivateMods::execute_at(session, &plan, &anchor.into())?),
-            None => {
-                ActivateMods::execute(session, &plan)?;
-                None
+        let (activated, did_switch_to_current) = match request.anchor {
+            Some(anchor) => {
+                let outcome = ActivateMods::execute_at(session, &plan, &anchor.into())?;
+                (outcome.activated, outcome.did_switch_to_current)
             }
+            None => (ActivateMods::execute(session, &plan)?, false),
+        };
+        let committed = ActivateCommitted {
+            activated,
+            already_active: plan.already_active,
+            did_switch_to_current,
         };
         Ok(ActivateModsResultDto::new(
             &session.pending_changes(),
-            outcome.as_ref(),
+            &committed,
             session.selected(),
         ))
     })
@@ -189,7 +230,9 @@ pub async fn plan_deactivate_mods(
 /// Commits a deactivation onto the working set — re-plans first, the same
 /// as [`activate_mods_inner`]; unlike activation this is infallible
 /// (`DeactivateMods::execute` returns no `Result`), since a since-become-
-/// unknown id simply isn't in the working set to remove.
+/// unknown id simply isn't in the working set to remove. The result names
+/// the ids really removed and the requested ones that were not active (a
+/// refused Core is in neither).
 ///
 /// # Errors
 ///
@@ -197,11 +240,15 @@ pub async fn plan_deactivate_mods(
 pub(crate) async fn deactivate_mods_inner(
     state: &AppState,
     request: DeactivateRequestDto,
-) -> Result<PendingActiveChangesDto, CommandError> {
+) -> Result<DeactivateModsResultDto, CommandError> {
     with_session(state, move |session| {
         let plan = DeactivateMods::plan(session, &request.mod_ids());
-        DeactivateMods::execute(session, &plan);
-        Ok((&session.pending_changes()).into())
+        let removed = DeactivateMods::execute(session, &plan);
+        Ok(DeactivateModsResultDto::new(
+            &session.pending_changes(),
+            &removed,
+            &plan.not_active,
+        ))
     })
     .await
 }
@@ -217,7 +264,7 @@ pub async fn deactivate_mods(
     state: tauri::State<'_, AppState>,
     app: tauri::AppHandle,
     request: DeactivateRequestDto,
-) -> Result<PendingActiveChangesDto, CommandError> {
+) -> Result<DeactivateModsResultDto, CommandError> {
     let result = deactivate_mods_inner(&state, request).await;
     if result.is_ok() {
         emit_session_changed(&app, SessionChangeReasonDto::ActiveSetChanged);
@@ -468,6 +515,13 @@ pub(crate) async fn rescan_project_inner(
 /// set would silently discard that change, so this refuses instead and
 /// asks for a retry.
 ///
+/// That same swap call first re-reads the organization, rules, decisions,
+/// patches and assignments from disk ([`reload_persisted_state`]), because
+/// the scan read them outside the session lock: an edit saved while it ran
+/// would otherwise be dropped from the new session and erased by its next
+/// save. The summary's `rule_warnings` are rebuilt from the swapped-in
+/// session, so they follow that re-read.
+///
 /// An import's validation happens in phase 1, with `load_lock` already
 /// held, so validate, scan and swap all happen under one `load_lock`: no
 /// other load or rescan can change the inventory the order was checked
@@ -498,27 +552,49 @@ pub(crate) async fn rescan_with(
     .await?;
     let scan_ids = scan.scan_ids(&working_ids);
 
-    let (new_session, mut summary) =
+    let (new_session, summary) =
         scan_detached(state.adapters.clone(), paths, scan_ids, on_progress).await?;
 
-    let organization_store = state.adapters.organization_store.clone();
-    let selected = with_session(state, move |session| {
+    swap_scanned(state, new_session, working_ids, scan, summary).await
+}
+
+/// Phase 3 of [`rescan_with`]: swaps `new_session` in as the live session,
+/// and returns `summary` carrying the selection it ended on and its rule
+/// load warnings.
+///
+/// Refuses (`scan.working_changed_error()`) when the live working set no
+/// longer matches `working_ids`. Before the swap it re-reads the persisted
+/// files ([`reload_persisted_state`]): the scan read them outside the
+/// session lock, and every edit saves while holding it, so an edit that
+/// landed after the scan read a file is on disk by now.
+///
+/// # Errors
+///
+/// Returns [`CommandError`] when the working set changed, when the scan does
+/// not match what was validated (an import), or when no project is loaded.
+async fn swap_scanned(
+    state: &AppState,
+    new_session: Session,
+    working_ids: Vec<ModId>,
+    scan: ValidatedScan,
+    summary: ProjectSummaryDto,
+) -> Result<ProjectSummaryDto, CommandError> {
+    let adapters = state.adapters.clone();
+    let (selected, warnings) = with_session(state, move |session| {
         if session.working().ids() != working_ids.as_slice() {
             return Err(scan.working_changed_error());
         }
         let mut new_session = new_session;
-        // Under the write lock every organization edit holds while it
-        // saves: an edit that landed after the scan read the file is on
-        // disk, and this read sees it.
-        new_session.reload_organization(&*organization_store);
+        reload_persisted_state(&mut new_session, &adapters);
         scan.select_on(&mut new_session, session)?;
         let selected = new_session.selected();
+        let warnings: Vec<RulesLoadWarning> = new_session.rule_load_warnings().cloned().collect();
         *session = new_session;
-        Ok(selected)
+        Ok((selected, warnings))
     })
     .await?;
+    let mut summary = summary.with_rule_warnings(&warnings);
     summary.selected = selected.into();
-
     Ok(summary)
 }
 
@@ -603,8 +679,24 @@ mod tests {
     use crate::dto::mods::ModFilterDto;
 
     fn state_with(active: &[&str], inactive: &[&str]) -> AppState {
+        state_over(active, report_fixture_with_inactive(active, inactive))
+    }
+
+    /// `needs` (inactive) declares `base` (inactive) as a dependency.
+    fn state_with_dependency(active: &[&str]) -> AppState {
+        state_over(
+            active,
+            rim_resolve::test_support::ReportBuilder::new()
+                .mod_("a")
+                .inactive("needs")
+                .inactive("base")
+                .inactive_dependency("needs", "base")
+                .build(),
+        )
+    }
+
+    fn state_over(active: &[&str], report: rim_analyzer::domain::Report) -> AppState {
         let state = AppState::default();
-        let report = report_fixture_with_inactive(active, inactive);
         let session = rim_session::Session::new(
             rim_session::ProjectPaths {
                 game_dir: "game".into(),
@@ -772,6 +864,49 @@ mod tests {
         .expect("must succeed");
 
         assert_eq!(result.pending.unscanned.added, vec!["b".to_string()]);
+        assert_eq!(result.activated, vec!["b".to_string()]);
+    }
+
+    #[tokio::test]
+    async fn activate_mods_reports_the_pulled_in_dependencies_as_activated() {
+        let state = state_with_dependency(&["a"]);
+
+        let result = activate_mods_inner(
+            &state,
+            ActivateRequestDto {
+                ids: vec!["needs".to_string()],
+                with_dependencies: true,
+                anchor: None,
+            },
+        )
+        .await
+        .expect("must succeed");
+
+        assert_eq!(
+            result.activated,
+            vec!["base".to_string(), "needs".to_string()]
+        );
+    }
+
+    #[tokio::test]
+    async fn anchored_activate_mods_reports_the_pulled_in_dependencies_as_activated() {
+        let state = state_with_dependency(&["a"]);
+
+        let result = activate_mods_inner(
+            &state,
+            ActivateRequestDto {
+                ids: vec!["needs".to_string()],
+                with_dependencies: true,
+                anchor: Some(crate::dto::active_set::AnchorDto::Start),
+            },
+        )
+        .await
+        .expect("must succeed");
+
+        assert_eq!(
+            result.activated,
+            vec!["base".to_string(), "needs".to_string()]
+        );
     }
 
     #[tokio::test]
@@ -815,7 +950,7 @@ mod tests {
     async fn deactivate_mods_commits_and_reports_it_as_unscanned() {
         let state = state_with(&["a", "b"], &[]);
 
-        let pending = deactivate_mods_inner(
+        let result = deactivate_mods_inner(
             &state,
             DeactivateRequestDto {
                 ids: vec!["b".to_string()],
@@ -824,7 +959,99 @@ mod tests {
         .await
         .expect("must succeed");
 
-        assert_eq!(pending.unscanned.removed, vec!["b".to_string()]);
+        assert_eq!(result.pending.unscanned.removed, vec!["b".to_string()]);
+        assert_eq!(result.removed, vec!["b".to_string()]);
+    }
+
+    #[tokio::test]
+    async fn deactivate_mods_does_not_report_a_refused_core_as_removed() {
+        let state = state_with(&["ludeon.rimworld", "a"], &[]);
+
+        let result = deactivate_mods_inner(
+            &state,
+            DeactivateRequestDto {
+                ids: vec!["ludeon.rimworld".to_string(), "a".to_string()],
+            },
+        )
+        .await
+        .expect("must succeed");
+
+        assert_eq!(result.removed, vec!["a".to_string()]);
+        assert!(result.not_active.is_empty());
+    }
+
+    #[tokio::test]
+    async fn deactivate_mods_reports_a_requested_id_that_is_not_active_as_not_active() {
+        let state = state_with(&["a"], &["b"]);
+
+        let result = deactivate_mods_inner(
+            &state,
+            DeactivateRequestDto {
+                ids: vec!["a".to_string(), "b".to_string()],
+            },
+        )
+        .await
+        .expect("must succeed");
+
+        assert_eq!(result.removed, vec!["a".to_string()]);
+        assert_eq!(result.not_active, vec!["b".to_string()]);
+    }
+
+    #[tokio::test]
+    async fn activate_mods_reports_a_requested_id_already_active_apart_from_activated() {
+        let state = state_with(&["a"], &["b"]);
+
+        let result = activate_mods_inner(
+            &state,
+            ActivateRequestDto {
+                ids: vec!["a".to_string(), "b".to_string()],
+                with_dependencies: false,
+                anchor: None,
+            },
+        )
+        .await
+        .expect("must succeed");
+
+        assert_eq!(result.activated, vec!["b".to_string()]);
+        assert_eq!(result.already_active, vec!["a".to_string()]);
+    }
+
+    #[tokio::test]
+    async fn anchored_activate_mods_reports_an_already_active_id_apart_from_activated() {
+        let state = state_with(&["a"], &["b"]);
+
+        let result = activate_mods_inner(
+            &state,
+            ActivateRequestDto {
+                ids: vec!["a".to_string(), "b".to_string()],
+                with_dependencies: false,
+                anchor: Some(crate::dto::active_set::AnchorDto::End),
+            },
+        )
+        .await
+        .expect("must succeed");
+
+        assert_eq!(result.activated, vec!["b".to_string()]);
+        assert_eq!(result.already_active, vec!["a".to_string()]);
+    }
+
+    #[tokio::test]
+    async fn activate_mods_reports_a_base_id_duplicate_as_already_active() {
+        let state = state_with(&["a"], &["b", "b_steam"]);
+
+        let result = activate_mods_inner(
+            &state,
+            ActivateRequestDto {
+                ids: vec!["b".to_string(), "b_steam".to_string()],
+                with_dependencies: false,
+                anchor: None,
+            },
+        )
+        .await
+        .expect("must succeed");
+
+        assert_eq!(result.activated, vec!["b".to_string()]);
+        assert_eq!(result.already_active, vec!["b_steam".to_string()]);
     }
 
     #[tokio::test]
@@ -1650,5 +1877,92 @@ mod tests {
         assert!(in_order.reorderable);
         assert!(!sorted.reorderable);
         assert!(!inactive.reorderable);
+    }
+
+    // -- `swap_scanned`: the rescan swap re-reads what the scan read too early --
+
+    /// What phase 1 and 2 of a rescan hand to the swap, built by hand so a
+    /// test can save an edit between them: the scanned session itself, the
+    /// working set it was scanned from, and the validated request.
+    async fn scanned_for_swap(
+        state: &AppState,
+    ) -> (
+        rim_session::ProjectPaths,
+        Vec<ModId>,
+        ValidatedScan,
+        Session,
+    ) {
+        let (paths, working_ids, scan) = with_session(state, |session| {
+            let scan = ValidatedScan::prepare(ScanRequest::Rescan, session)?;
+            Ok((
+                session.paths().clone(),
+                session.working().ids().to_vec(),
+                scan,
+            ))
+        })
+        .await
+        .expect("a project is loaded");
+        let scanned = crate::test_support::scanned_session(
+            &state.adapters,
+            &paths,
+            Some(scan.scan_ids(&working_ids)),
+        );
+        (paths, working_ids, scan, scanned)
+    }
+
+    fn blank_summary() -> ProjectSummaryDto {
+        ProjectSummaryDto {
+            mod_count: 0,
+            game_version: String::new(),
+            elapsed_ms: 0,
+            warnings: Vec::new(),
+            rule_warnings: Vec::new(),
+            selected: rim_resolve::domain::OrderSource::Current.into(),
+        }
+    }
+
+    #[tokio::test]
+    async fn swap_scanned_keeps_a_rule_and_a_decision_saved_after_the_scan_read_them() {
+        let (_scratch, state) = loaded_sample_state().await;
+        let (paths, working_ids, scan, scanned) = scanned_for_swap(&state).await;
+        let key =
+            crate::test_support::save_late_rule_and_decision(&paths.profile_dir, &working_ids[0]);
+
+        swap_scanned(&state, scanned, working_ids, scan, blank_summary())
+            .await
+            .expect("the swap must succeed");
+
+        let guard = state.session.read().expect("lock");
+        let live = guard.as_ref().expect("a session is loaded");
+        assert_eq!(live.rules().placements.len(), 1, "the late rule survives");
+        assert!(
+            live.decisions().get(&key).is_some(),
+            "the late decision survives"
+        );
+    }
+
+    #[tokio::test]
+    async fn swap_scanned_keeps_the_scan_and_reports_a_warning_when_a_file_cannot_be_re_read() {
+        let (_scratch, state) = loaded_sample_state().await;
+        let (paths, working_ids, scan, scanned) = scanned_for_swap(&state).await;
+        let scanned_rules = scanned.rules().clone();
+        std::fs::write(paths.profile_dir.join("rules.json"), b"{ not json")
+            .expect("corrupt the rules file");
+
+        let summary = swap_scanned(&state, scanned, working_ids, scan, blank_summary())
+            .await
+            .expect("an unreadable file must never fail the swap");
+
+        assert!(matches!(
+            summary.rule_warnings.as_slice(),
+            [crate::dto::project::RuleWarningDto::PersistedReloadFailed {
+                file: crate::dto::project::PersistedKindDto::Rules,
+                ..
+            }]
+        ));
+        let guard = state.session.read().expect("lock");
+        let live = guard.as_ref().expect("the scanned session was swapped in");
+        assert_eq!(live.rules(), &scanned_rules, "the scan's rules stay");
+        assert_eq!(live.rule_load_warnings().count(), 1);
     }
 }

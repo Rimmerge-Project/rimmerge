@@ -140,7 +140,7 @@ pub(crate) fn discover(
         .context("reading ModsConfig.xml")?;
     let (inventory, _active) = rim_io::discover_inventory(&project_paths, Some(&file.active_mods))
         .context(
-            "discovering the mod inventory (no full scan — identity and declared dependencies \
+            "discovering the mod inventory (no full scan: identity and declared dependencies \
              only)",
         )?;
     Ok((project_paths, file, inventory))
@@ -784,7 +784,7 @@ fn print_activate_result(
             println!("backup: {}", path.display());
             println!("next: run 'rimmerge sort' then 'rimmerge apply' to place them");
         }
-        None => println!("(dry run — nothing written)"),
+        None => println!("(dry run, nothing written)"),
     }
     Ok(())
 }
@@ -886,7 +886,7 @@ fn print_deactivate_plan_text(plan: &DeactivatePlan) {
 
 /// Why `run_deactivate` did or didn't write — distinct from a bare
 /// `Option<&Path>` specifically so a refusal never prints the same
-/// "(dry run — nothing written)" text a genuine `--dry-run` does (a plain,
+/// "(dry run, nothing written)" text a genuine `--dry-run` does (a plain,
 /// non-dry-run refusal reported as "dry run" would misdescribe what
 /// happened).
 enum WriteOutcome<'a> {
@@ -922,10 +922,10 @@ fn print_deactivate_result(
             println!("backup: {}", backup_path.display());
             println!("next: run 'rimmerge sort' then 'rimmerge apply' to place them");
         }
-        WriteOutcome::DryRun => println!("(dry run — nothing written)"),
-        WriteOutcome::RefusedCore => println!("(refused — nothing written)"),
+        WriteOutcome::DryRun => println!("(dry run, nothing written)"),
+        WriteOutcome::RefusedCore => println!("(refused, nothing written)"),
         WriteOutcome::BlockedByDependents => println!(
-            "(blocked by active dependents — nothing written; pass --yes to deactivate anyway)"
+            "(blocked by active dependents, nothing written; pass --yes to deactivate anyway)"
         ),
     }
     Ok(())
@@ -958,7 +958,7 @@ fn run_deactivate(args: &DeactivateArgs, probe: &dyn GameProcessProbe) -> anyhow
         print_deactivate_result(&plan, &WriteOutcome::BlockedByDependents, args.json)?;
         bail!(
             "one or more mods to deactivate still have active dependents (see \
-             \"dependents\" above) — pass --yes to deactivate anyway, or deactivate the \
+             \"dependents\" above); pass --yes to deactivate anyway, or deactivate the \
              dependents first"
         );
     }

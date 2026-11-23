@@ -1,0 +1,27 @@
+# nextest configuration. Only the real-install timing guards are tuned here;
+# every other test keeps nextest's defaults, so the default gate
+# (`cargo nextest run --workspace --all-features`) behaves as before.
+#
+# A timing guard measures wall-clock time against a budget (a sort under
+# 500 ms, a def's graphics read under 50 ms median, a verify pass under
+# 60 s, ...). Run beside other tests it competes for the CPU and fails with
+# no regression behind it. `threads-required = "num-test-threads"` makes each
+# of these tests occupy every test thread, so nothing else runs while it
+# measures, whatever `--test-threads` the run uses; the `timing` group
+# (max-threads = 1) additionally keeps the timing tests serial among
+# themselves and lets `cargo nextest show-config test-groups` list them.
+# Budgets are never raised here: see docs/testing.md.
+
+[test-groups]
+timing = { max-threads = 1 }
+
+[[profile.default.overrides]]
+filter = '''
+    test(/^(def_graphics_real_install|def_inspector_timing|real_install_timing)::/)
+  | binary(real_install_scan_timing)
+  | binary(real_install_post_scan_analysis)
+  | binary(real_install_save_import)
+  | test(full_size_report_invariants_and_runtime_budget)
+'''
+test-group = 'timing'
+threads-required = 'num-test-threads'

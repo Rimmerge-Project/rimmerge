@@ -32,6 +32,7 @@ const {
   isOverlay = false,
   color = null,
   groups = [],
+  canShowInLoadOrder = false,
 } = defineProps<{
   /** `null` closes the panel; a mod id opens it and loads that mod's info. */
   modId: string | null;
@@ -44,8 +45,13 @@ const {
   color?: ColorTokenDto | null;
   /** The groups the mod is a direct member of, from its row in the list. */
   groups?: readonly GroupLabelDto[];
+  /**
+   * Whether "Show in load order" would do something for this mod: the page says so, since only it
+   * knows the Active pane's view, sort and filter. It is offered for an active mod only.
+   */
+  canShowInLoadOrder?: boolean;
 }>();
-const emit = defineEmits<{ close: [] }>();
+const emit = defineEmits<{ close: []; showInLoadOrder: [modId: string] }>();
 
 const { t, locale } = useI18n();
 const tm = useTranslateMessage();
@@ -210,7 +216,7 @@ function pendingChangeText(pending: PendingChangeDto): string {
           {{ t("modInfo.panel.missingHeading") }}
         </h3>
         <p class="text-text-muted text-sm">
-          {{ data.modId }} — {{ t("modInfo.panel.missingBody") }}
+          {{ data.modId }}: {{ t("modInfo.panel.missingBody") }}
         </p>
       </header>
       <section v-if="data.requiredBy.length > 0">
@@ -303,6 +309,15 @@ function pendingChangeText(pending: PendingChangeDto): string {
       </header>
 
       <div class="flex flex-wrap items-center gap-2">
+        <button
+          v-if="canShowInLoadOrder && activeOrInactive.kind === 'active'"
+          type="button"
+          class="border-border-subtle hover:bg-surface-2 cursor-pointer rounded border px-2 py-1 text-xs"
+          data-testid="mod-info-show-in-load-order"
+          @click="emit('showInLoadOrder', activeOrInactive.modId)"
+        >
+          {{ t("mods.showInLoadOrder.action") }}
+        </button>
         <button
           v-if="activeOrInactive.workshopId !== null"
           type="button"

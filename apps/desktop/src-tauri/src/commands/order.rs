@@ -1,10 +1,9 @@
 //! `select_order`/`list_order`/`explain_placement`: the load-order page's
 //! commands.
 
-use std::collections::BTreeMap;
-
 use rim_analyzer::domain::ModId;
 use rim_resolve::domain::OrderSource;
+use rim_session::ModNotActive;
 
 use crate::dto::common::OrderSourceDto;
 use crate::dto::finding::LedgerStatsDto;
@@ -43,7 +42,8 @@ pub async fn select_order(
     select_order_inner(&state, source).await
 }
 
-/// Lists every mod in `source`'s order, one row per mod.
+/// Lists every mod in `source`'s order, one row per mod. The join lives in
+/// [`rim_session::Session::order_rows`]; this only maps the DTO in and out.
 ///
 /// # Errors
 ///
@@ -54,55 +54,11 @@ pub(crate) async fn list_order_inner(
 ) -> Result<Vec<OrderRowDto>, CommandError> {
     let source: OrderSource = source.into();
     with_session(state, move |session| {
-        let order = session.orders().get(source).clone();
-        let current = session.orders().current.clone();
-        let placements = session.sort_outcome().placements.clone();
-        // Cloned out before the `needs_input_by_mod`/`report` calls below
-        // so no borrow of `session` outlives this statement — `Session`
-        // is single-writer, so every one of its methods needs the whole
-        // borrow to itself.
-        let needs_input_by_mod = session.needs_input_by_mod(source).clone();
-        let names: BTreeMap<ModId, String> = session
-            .report()
-            .mods
-            .iter()
-            .map(|m| (m.id.clone(), m.name.clone()))
-            .collect();
-        let hard_dependents: BTreeMap<ModId, usize> = session
-            .report()
-            .mods
-            .iter()
-            .map(|m| (m.id.clone(), m.hard_dependents))
-            .collect();
-
-        let mut rows = Vec::with_capacity(order.as_slice().len());
-        for (position, mod_id) in order.as_slice().iter().enumerate() {
-            let needs_input_count = needs_input_by_mod
-                .get(&mod_id.base())
-                .copied()
-                .unwrap_or_default();
-            let placement = placements.get(mod_id);
-            rows.push(OrderRowDto {
-                mod_id: mod_id.as_str().to_string(),
-                name: names.get(mod_id).cloned().unwrap_or_default(),
-                position,
-                previous_position: (source != OrderSource::Current)
-                    .then(|| current.position(mod_id))
-                    .flatten(),
-                tier: placement
-                    .map_or(rim_resolve::sort::Tier::Body, |p| p.tier)
-                    .into(),
-                tags: session
-                    .tagging()
-                    .tags_of(mod_id)
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect(),
-                hard_dependents: hard_dependents.get(mod_id).copied().unwrap_or_default(),
-                needs_input_count,
-            });
-        }
-        Ok(rows)
+        Ok(session
+            .order_rows(source)
+            .into_iter()
+            .map(Into::into)
+            .collect())
     })
     .await
 }
@@ -121,11 +77,10 @@ pub async fn list_order(
 }
 
 /// The full why-panel explanation for one mod's placement in the
-/// suggested order (the only order the sorter explains). Resolves
-/// `mod_id` by [`ModId::base`] on both sides, so an active `_steam`
-/// variant is found by its base id and vice versa — findings and other
-/// DTOs carry base ids, but the placements map (like the report itself)
-/// is keyed by whichever exact id is actually active.
+/// suggested order (the only order the sorter explains). The lookup lives
+/// in [`rim_session::Session::explain_placement`] (the exact id first, then
+/// [`ModId::base`], so an active `_steam` variant is found by its base id);
+/// this only maps the DTO in and out.
 ///
 /// # Errors
 ///
@@ -137,14 +92,11 @@ pub(crate) async fn explain_placement_inner(
     mod_id: String,
 ) -> Result<PlacementExplanationDto, CommandError> {
     with_session(state, move |session| {
-        let target = ModId::new(&mod_id).base();
         session
-            .sort_outcome()
-            .placements
-            .values()
-            .find(|explanation| explanation.mod_id.base() == target)
+            .explain_placement(&ModId::new(&mod_id))
             .map(Into::into)
-            .ok_or_else(|| CommandError::mod_not_found(&mod_id))
+            // The raw request text, as `get_mod` does.
+            .map_err(|ModNotActive(_)| CommandError::mod_not_found(&mod_id))
     })
     .await
 }

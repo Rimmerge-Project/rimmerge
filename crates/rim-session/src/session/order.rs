@@ -15,7 +15,9 @@ use crate::file_baseline::{
 };
 use crate::game_launch::{OrderOnDisk, UnappliedReason};
 use crate::mod_index::{self, ModFilter, ModPage};
-use crate::mod_lists::{self, ModList, ModListError, ModListQuery};
+use crate::mod_lists::{
+    self, GroupedListQuery, GroupedModList, ModList, ModListError, ModListQuery,
+};
 use crate::ports::ModsConfigFile;
 use crate::settings::SortProvenance;
 
@@ -87,6 +89,49 @@ impl Session {
     /// See [`Session::working_mod_list`].
     pub fn inactive_mod_list(&self, query: &ModListQuery) -> Result<ModList, ModListError> {
         mod_lists::inactive_list(
+            &self.report,
+            &self.tagging,
+            &self.working,
+            &self.update_times,
+            &FileMembership::of(&self.file_active_mods),
+            &self.organization,
+            query,
+        )
+    }
+
+    /// The Mods page's Active pane in Groups view: the rows of
+    /// [`Session::working_mod_list`] laid out as folders. Pure (`&self`).
+    ///
+    /// # Errors
+    ///
+    /// [`ModListError::OrganizationUnavailable`] unless groups are loaded
+    /// (even with no group filter), [`ModListError::UnknownGroup`] for a
+    /// stale group scope.
+    pub fn working_mod_groups(
+        &self,
+        query: &GroupedListQuery,
+    ) -> Result<GroupedModList, ModListError> {
+        mod_lists::working_groups(
+            &self.report,
+            &self.tagging,
+            &self.working,
+            &self.update_times,
+            &FileMembership::of(&self.file_active_mods),
+            &self.organization,
+            query,
+        )
+    }
+
+    /// The Inactive pane in Groups view. See [`Session::working_mod_groups`].
+    ///
+    /// # Errors
+    ///
+    /// See [`Session::working_mod_groups`].
+    pub fn inactive_mod_groups(
+        &self,
+        query: &GroupedListQuery,
+    ) -> Result<GroupedModList, ModListError> {
+        mod_lists::inactive_groups(
             &self.report,
             &self.tagging,
             &self.working,
@@ -224,8 +269,8 @@ impl Session {
         self.file_watch.baseline()
     }
 
-    /// What someone else did to the file's membership since Rimmerge last
-    /// loaded or wrote it, by base id.
+    /// What someone else did to the file since Rimmerge last loaded or wrote
+    /// it, by exact id (a swap between two copies of a mod counts).
     #[must_use]
     pub fn external_file_change(&self) -> ExternalFileChange {
         self.file_watch.change_to(&self.file_active_mods)
@@ -441,6 +486,27 @@ impl Session {
             self.orders.get(source).as_slice(),
             &self.file_active_mods,
         )
+    }
+
+    /// Whether `ModsConfig.xml` (as last read) lists exactly `source`'s ids in
+    /// the same sequence, the generated merge mod **included**: writing that
+    /// order as it is would change nothing, so an outside edit of the list
+    /// would be lost to no one. Stricter than [`Self::file_matches`], which
+    /// ignores the merge mod on purpose (a freshly applied file has it and a
+    /// suggested order may not yet): an outside edit that only turned the
+    /// merge mod on or off is not a match here, because an `Apply` would put
+    /// it back.
+    #[must_use]
+    pub fn file_holds_exactly(&self, source: OrderSource) -> bool {
+        self.orders.get(source).as_slice() == self.file_active_mods.as_slice()
+    }
+
+    /// [`Self::file_holds_exactly`] for the order the interface has selected:
+    /// the fact that says whether applying what the user sees would overwrite
+    /// anything of the file's.
+    #[must_use]
+    pub fn file_holds_selected_exactly(&self) -> bool {
+        self.file_holds_exactly(self.selected())
     }
 
     /// Whether the working set has changes a rescan hasn't picked up yet

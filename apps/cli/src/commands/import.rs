@@ -44,7 +44,7 @@ pub struct ImportArgs {
     #[command(flatten)]
     paths: PathsArgs,
     /// Import community/steam rules from a local RimSort install instead
-    /// of the global cache — a directory containing `userRules.json`
+    /// of the global cache; a directory containing `userRules.json`
     /// directly, plus `Community-Rules-Database`/`Steam-Workshop-Database`
     /// subfolders holding `communityRules.json`/`steamDB.json`. RimSort's
     /// own default location is `%LOCALAPPDATA%\RimSort\dbs`. Also
@@ -53,7 +53,7 @@ pub struct ImportArgs {
     rimsort_dir: Option<PathBuf>,
     /// Import community/steam rules from the global cache (`rimmerge db
     /// refresh`'s own target) instead of a local RimSort install. This is
-    /// already the default whenever `--rimsort-dir` isn't given — pass
+    /// already the default whenever `--rimsort-dir` isn't given; pass
     /// this to say so explicitly and get a warning if the cache turns out
     /// to have nothing usable in it.
     #[arg(long, conflicts_with = "rimsort_dir")]
@@ -62,7 +62,7 @@ pub struct ImportArgs {
     /// edited rules have no cache to fetch from, so this is the one
     /// source you always point at explicitly if you want it from
     /// somewhere other than `--rimsort-dir`. Without either flag, user
-    /// rules are simply not part of this import (never a silent zero —
+    /// rules are simply not part of this import (never a silent zero:
     /// the summary says "not imported").
     #[arg(long = "user-rules")]
     user_rules: Option<PathBuf>,
@@ -100,7 +100,7 @@ fn resolve_rimsort_paths(
     if args.from_cache && paths.community_rules.is_none() && paths.steam_db.is_none() {
         eprintln!(
             "warning: --from-cache was given but no enabled source's cache file was found \
-             under {} — nothing imported for community/steam rules",
+             under {}, nothing imported for community/steam rules",
             cache_dir.display()
         );
     }

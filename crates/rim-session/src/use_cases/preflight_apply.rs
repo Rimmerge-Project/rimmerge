@@ -5,7 +5,7 @@
 use rim_resolve::domain::OrderSource;
 use rim_resolve::preflight::PreflightItem;
 
-use crate::Session;
+use crate::{ExternalFileChange, Session};
 
 /// The hard problems in one order, ready for an interface to present.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -14,15 +14,23 @@ pub struct ApplyPreflight {
     pub source: OrderSource,
     /// The problems, sorted (see [`rim_resolve::preflight::hard_problems`]).
     pub items: Vec<PreflightItem>,
+    /// What someone else changed in `ModsConfig.xml` since Rimmerge last
+    /// loaded or wrote it, when writing `source` would overwrite that
+    /// change; [`ExternalFileChange::None`] otherwise (no outside change,
+    /// or the file already holds `source`'s ids exactly, merge mod included,
+    /// so nothing is lost).
+    pub outside_change: ExternalFileChange,
 }
 
 impl ApplyPreflight {
     /// Whether the user must confirm before applying: some problem is
-    /// still unanswered. Derived, never stored — a list whose every
-    /// problem was decided in the Inbox asks nothing.
+    /// still unanswered, or the write would overwrite an outside change of
+    /// the file. Derived, never stored — a list whose every problem was
+    /// decided in the Inbox asks nothing.
     #[must_use]
     pub fn requires_confirmation(&self) -> bool {
-        self.items.iter().any(|item| !item.acknowledged)
+        self.outside_change != ExternalFileChange::None
+            || self.items.iter().any(|item| !item.acknowledged)
     }
 }
 
@@ -37,15 +45,24 @@ impl PreflightApply {
         Self
     }
 
-    /// The hard problems in `source`'s order, as `Apply` would write it.
+    /// The hard problems in `source`'s order, as `Apply` would write it,
+    /// plus the outside change of the file that writing it would overwrite.
+    /// The outside change is the session's live baseline: a caller that
+    /// wants the file as it is now refreshes the baseline first.
     ///
     /// `&mut Session` only because the session builds its ledger cache
     /// lazily, as every other ledger read does.
     #[must_use]
     pub fn execute(self, session: &mut Session, source: OrderSource) -> ApplyPreflight {
+        let outside_change = if session.file_holds_exactly(source) {
+            ExternalFileChange::None
+        } else {
+            session.external_file_change()
+        };
         ApplyPreflight {
             source,
             items: session.hard_problems(source),
+            outside_change,
         }
     }
 }
@@ -59,7 +76,13 @@ mod tests {
     use rim_resolve::test_support::ReportBuilder;
 
     use super::*;
-    use crate::test_support::{session_fixture, session_with_sources_and_mods};
+    use crate::active_set::Anchor;
+    use crate::ports::ModsConfigFile;
+    use crate::test_support::{
+        InMemoryModsConfigStore, session_fixture, session_fixture_with_inactive,
+        session_with_sources_and_mods,
+    };
+    use crate::use_cases::{MoveMods, RefreshFileBaseline};
 
     fn session_with_missing_mods(missing: &[&str]) -> Session {
         let mut builder = ReportBuilder::new().mod_("a");
@@ -140,5 +163,144 @@ mod tests {
         assert_eq!(preflight.items.len(), 1);
         assert!(preflight.items[0].acknowledged);
         assert!(!preflight.requires_confirmation());
+    }
+
+    fn file(active: &[&str]) -> ModsConfigFile {
+        ModsConfigFile {
+            version: "1.6".to_string(),
+            active_mods: active.iter().map(|id| ModId::new(*id)).collect(),
+            known_expansions: Vec::new(),
+        }
+    }
+
+    /// A session over active `a`, `b` whose file is then rewritten by
+    /// "someone else" to `outside` and re-read into the baseline.
+    fn session_after_outside_edit(outside: &[&str]) -> Session {
+        let mut session = session_fixture_with_inactive(&["a", "b"], &["x"]);
+        let store = InMemoryModsConfigStore::new(file(outside));
+        RefreshFileBaseline::new(&store).execute(&mut session);
+        session
+    }
+
+    #[test]
+    fn an_untouched_file_reports_no_outside_change() {
+        let mut session = session_after_outside_edit(&["a", "b"]);
+
+        let preflight = PreflightApply::new().execute(&mut session, OrderSource::Current);
+
+        assert_eq!(preflight.outside_change, ExternalFileChange::None);
+        assert!(!preflight.requires_confirmation());
+    }
+
+    #[test]
+    fn an_outside_membership_change_requires_confirmation_and_is_counted() {
+        let mut session = session_after_outside_edit(&["a", "b", "x"]);
+
+        let preflight = PreflightApply::new().execute(&mut session, OrderSource::Current);
+
+        assert_eq!(
+            preflight.outside_change,
+            ExternalFileChange::Membership {
+                added: 1,
+                removed: 0
+            }
+        );
+        assert!(preflight.items.is_empty());
+        assert!(preflight.requires_confirmation());
+    }
+
+    #[test]
+    fn an_outside_reorder_requires_confirmation() {
+        let mut session = session_after_outside_edit(&["b", "a"]);
+
+        let preflight = PreflightApply::new().execute(&mut session, OrderSource::Current);
+
+        assert_eq!(preflight.outside_change, ExternalFileChange::Reordered);
+        assert!(preflight.requires_confirmation());
+    }
+
+    #[test]
+    fn an_outside_change_is_not_reported_when_the_file_already_holds_the_order() {
+        // Current is settled onto [b, a] by an own move (this leaves the file
+        // watch alone), then the file is outside-edited to the same [b, a]:
+        // the live change reads as Reordered, yet writing Current overwrites
+        // nothing, so only the `file_matches` rule keeps it quiet.
+        let mut session = session_fixture_with_inactive(&["a", "b"], &["x"]);
+        MoveMods::execute(&mut session, &[ModId::new("b")], &Anchor::Start)
+            .expect("move b to the start");
+        let store = InMemoryModsConfigStore::new(file(&["b", "a"]));
+        RefreshFileBaseline::new(&store).execute(&mut session);
+        assert_eq!(
+            session.external_file_change(),
+            ExternalFileChange::Reordered
+        );
+
+        let preflight = PreflightApply::new().execute(&mut session, OrderSource::Current);
+
+        assert_eq!(preflight.outside_change, ExternalFileChange::None);
+        assert!(!preflight.requires_confirmation());
+    }
+
+    #[test]
+    fn an_outside_swap_between_two_copies_requires_confirmation() {
+        let mut session = session_after_outside_edit(&["a", "b_steam"]);
+
+        let preflight = PreflightApply::new().execute(&mut session, OrderSource::Current);
+
+        assert_eq!(
+            preflight.outside_change,
+            ExternalFileChange::Membership {
+                added: 1,
+                removed: 1
+            }
+        );
+        assert!(preflight.requires_confirmation());
+    }
+
+    #[test]
+    fn an_outside_edit_that_only_removes_the_merge_mod_is_still_an_overwrite() {
+        // Current lists the profile's merge mod (it was in the file at load);
+        // the user turns it off in the game. `file_matches` ignores the merge
+        // mod, but writing Current would put it back.
+        let own_id = rim_resolve::domain::GeneratedModIdentity::for_profile(
+            crate::test_support::session_fixture(&[])
+                .paths()
+                .profile_hash(),
+        )
+        .package_id;
+        let mut session = crate::test_support::session_fixture_with_generated(
+            &["a", "b", own_id.as_str()],
+            own_id.as_str(),
+        );
+        let store = InMemoryModsConfigStore::new(file(&["a", "b"]));
+        RefreshFileBaseline::new(&store).execute(&mut session);
+        assert!(
+            session.file_matches(OrderSource::Current),
+            "sanity: the merge-mod-blind comparison sees no difference"
+        );
+
+        let preflight = PreflightApply::new().execute(&mut session, OrderSource::Current);
+
+        assert!(!session.file_holds_selected_exactly());
+        assert_eq!(
+            preflight.outside_change,
+            ExternalFileChange::Membership {
+                added: 0,
+                removed: 1
+            }
+        );
+        assert!(preflight.requires_confirmation());
+    }
+
+    #[test]
+    fn an_outside_change_and_a_problem_both_show_in_one_preflight() {
+        let mut session = session_with_missing_mods(&["gone"]);
+        let store = InMemoryModsConfigStore::new(file(&["a", "extra"]));
+        RefreshFileBaseline::new(&store).execute(&mut session);
+
+        let preflight = PreflightApply::new().execute(&mut session, OrderSource::Suggested);
+
+        assert_eq!(preflight.items.len(), 1);
+        assert_ne!(preflight.outside_change, ExternalFileChange::None);
     }
 }

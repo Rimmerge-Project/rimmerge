@@ -177,11 +177,9 @@ test.describe("mods display sort", () => {
     expect(await sessionSnapshot(page)).toEqual(snapshotBefore);
   });
 
-  test("Active rows show their load-order position while sorted by anything else", async ({
-    page,
-  }) => {
+  test("Active rows always show their load-order position, whatever the sort", async ({ page }) => {
     await openMods(page);
-    await expect(page.getByTestId("mod-row-position-mod.000")).toHaveCount(0);
+    await expect(page.getByTestId("mod-row-position-mod.000")).toHaveText("#1");
 
     await modsPane(page, "active").getByTestId("mods-sort-name").click();
     await expect(page.getByTestId("mod-row-position-mod.000")).toBeVisible();
@@ -189,7 +187,7 @@ test.describe("mods display sort", () => {
     await expect(page.getByTestId("mod-row-mod.000")).toContainText("Load order position 1");
 
     await modsPane(page, "active").getByTestId("mods-sort-loadOrder").click();
-    await expect(page.getByTestId("mod-row-position-mod.000")).toHaveCount(0);
+    await expect(page.getByTestId("mod-row-position-mod.000")).toHaveText("#1");
   });
 
   test("a sort button works from the keyboard", async ({ page }) => {

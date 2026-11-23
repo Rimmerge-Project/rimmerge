@@ -9,7 +9,10 @@ import ToastService from "primevue/toastservice";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
-import { dashboardFixture } from "@/components/apply/ApplyDialog.test-support";
+import {
+  dashboardFixture,
+  EMPTY_PENDING_ACTIVE_CHANGES,
+} from "@/components/apply/ApplyDialog.test-support";
 import { modList, modRow } from "@/components/mods/modListRow.test-support";
 import GroupDeleteDialog from "@/components/mods/organization/GroupDeleteDialog.vue";
 import ModsPage from "@/pages/ModsPage.vue";
@@ -40,6 +43,8 @@ const WEAPONS = node(1, "Weapons");
 const ARMOR = node(2, "Armor");
 
 let organization: OrganizationDto;
+/** Holds `get_organization` unanswered, as while the first read is still running. */
+let isOrganizationLoading = false;
 const activeQueries: ModListQueryDto[] = [];
 const inactiveQueries: ModListQueryDto[] = [];
 const calls: { command: string; payload: unknown }[] = [];
@@ -49,6 +54,8 @@ let refuseGroupFilter: "group_not_found" | "organization_unavailable" | null = n
 let afterRescan: OrganizationDto | null = null;
 /** The Active list's rows; a search keeps the rows whose id contains it. */
 let activeRows: ReturnType<typeof modRow>[] = [];
+/** The ids each plan request carried, so a double click can be shown to plan exactly one mod. */
+const planCalls: { command: string; ids: string[] }[] = [];
 /** What `add_group_members` answers. */
 let addOutcome: { kind: "added"; added: number; already: number } = {
   kind: "added",
@@ -67,6 +74,7 @@ function mountPage() {
   activeQueries.length = 0;
   inactiveQueries.length = 0;
   calls.length = 0;
+  planCalls.length = 0;
   installMockIpc({
     list_working_mods: (payload: unknown) => {
       const query = (payload as { query: ModListQueryDto }).query;
@@ -84,7 +92,7 @@ function mountPage() {
       ]);
     },
     list_mod_names: {},
-    get_organization: () => organization,
+    get_organization: () => (isOrganizationLoading ? new Promise(() => undefined) : organization),
     rescan_project: () => {
       if (afterRescan !== null) {
         organization = afterRescan;
@@ -94,7 +102,7 @@ function mountPage() {
     get_dashboard: dashboardFixture(0),
     list_findings: { total: 0, items: [] },
     get_mod_info: () => new Promise(() => {}),
-    create_group: record("create_group", { kind: "created", id: 9 }),
+    create_group: record("create_group", { kind: "created", id: 9, members: 1 }),
     delete_group: (payload: unknown) => {
       calls.push({ command: "delete_group", payload });
       const { id } = (payload as { request: { id: number } }).request;
@@ -125,8 +133,28 @@ function mountPage() {
       notInstalled: 0,
       notInstalledIds: [],
     }),
-    activate_mods: record("activate_mods", null),
-    deactivate_mods: record("deactivate_mods", null),
+    plan_activate_mods: (payload: unknown) => {
+      const { ids } = (payload as { request: { ids: string[] } }).request;
+      planCalls.push({ command: "plan_activate_mods", ids });
+      return { toAdd: ids, unresolvableDependencies: {}, alreadyActive: [] };
+    },
+    plan_deactivate_mods: (payload: unknown) => {
+      const { ids } = (payload as { request: { ids: string[] } }).request;
+      planCalls.push({ command: "plan_deactivate_mods", ids });
+      return { toRemove: ids, dependentsStillActive: {}, refused: [] };
+    },
+    activate_mods: record("activate_mods", {
+      pending: EMPTY_PENDING_ACTIVE_CHANGES,
+      activated: [],
+      alreadyActive: [],
+      selected: "current",
+      didSwitchToCurrent: false,
+    }),
+    deactivate_mods: record("deactivate_mods", {
+      pending: EMPTY_PENDING_ACTIVE_CHANGES,
+      removed: [],
+      notActive: [],
+    }),
     move_mods: record("move_mods", null),
     apply: record("apply", null),
   });
@@ -172,7 +200,10 @@ function setViewport(width: number, height: number): void {
 
 describe("ModsPage groups", () => {
   beforeEach(() => {
+    // A sort or view remembered by an earlier test would otherwise carry into this one.
+    localStorage.clear();
     organization = { kind: "loaded", groups: [WEAPONS, ARMOR], coloredModCount: 1 };
+    isOrganizationLoading = false;
     refuseGroupFilter = null;
     afterRescan = null;
     addOutcome = { kind: "added", added: 1, already: 0 };
@@ -417,6 +448,34 @@ describe("ModsPage groups", () => {
     expect(wrapper.find('[data-testid="mod-menu-groups"]').exists()).toBe(false);
   });
 
+  it("keeps the view switch usable, with no unavailable text, while organization is still loading", async () => {
+    isOrganizationLoading = true;
+
+    const wrapper = await mountAt(1900);
+
+    const switches = wrapper.findAll('[data-testid="mods-view-switch"]');
+    expect(switches).toHaveLength(2);
+    for (const viewSwitch of switches) {
+      expect(viewSwitch.get('[data-testid="mods-view-groups"]').attributes("aria-disabled")).toBe(
+        undefined,
+      );
+    }
+    expect(wrapper.find('[data-testid="mods-view-unavailable"]').exists()).toBe(false);
+  });
+
+  it("disables the Groups choice and says why once organization is known to be unusable", async () => {
+    organization = { kind: "recovered", issue: { kind: "malformed" } };
+
+    const wrapper = await mountAt(1900);
+
+    expect(
+      wrapper
+        .get('[data-testid="mods-view-switch"] [data-testid="mods-view-groups"]')
+        .attributes("aria-disabled"),
+    ).toBe("true");
+    expect(wrapper.find('[data-testid="mods-view-unavailable"]').exists()).toBe(true);
+  });
+
   it("shows chips, colour and tags on rows, manual tags included on an inactive row", async () => {
     const wrapper = await mountAt(1900);
 
@@ -474,6 +533,93 @@ describe("ModsPage groups", () => {
       wrapper.get<HTMLInputElement>('[data-testid="mod-row-select-active.mod"] input').element
         .checked,
     ).toBe(true);
+  });
+
+  describe("row polish", () => {
+    it("draws the open mod's row and its groups in the panel, and only while it is open", async () => {
+      const wrapper = await mountAt(1900);
+      const row = wrapper.get('[data-testid="mod-row-active.mod"]');
+      expect(row.attributes("aria-current")).toBeUndefined();
+
+      await row.trigger("click");
+      await flushPromises();
+
+      const open = wrapper.get('[data-testid="mod-row-active.mod"]');
+      expect(open.attributes("aria-current")).toBe("true");
+      expect(open.classes()).toEqual(expect.arrayContaining(["bg-accent-soft", "inset-ring-2"]));
+      const member = wrapper.get('[data-testid="group-node-1"]');
+      expect(member.find('[data-testid="group-node-open-dot"]').exists()).toBe(true);
+      expect(member.find('[data-testid="group-node-open-mod"]').text()).toBe(
+        "The open mod is in this group",
+      );
+      expect(
+        wrapper
+          .get('[data-testid="group-node-2"]')
+          .find('[data-testid="group-node-open-dot"]')
+          .exists(),
+      ).toBe(false);
+    });
+
+    it("shows the load-order number in the Active list at all times, never in Inactive", async () => {
+      const wrapper = await mountAt(1900);
+
+      expect(wrapper.get('[data-testid="mod-row-position-active.mod"]').text()).toBe("#1");
+      expect(wrapper.find('[data-testid="mod-row-position-idle.mod"]').exists()).toBe(false);
+    });
+
+    it("deactivates an active mod and activates an inactive one on a double click, through the plan", async () => {
+      const wrapper = await mountAt(1900);
+
+      await wrapper.get('[data-testid="mod-row-active.mod"]').trigger("dblclick");
+      await flushPromises();
+      expect(planCalls).toEqual([{ command: "plan_deactivate_mods", ids: ["active.mod"] }]);
+      expect(wrapper.find('[data-testid="deactivate-confirm-dialog"]').exists()).toBe(true);
+      expect(calls.some((call) => call.command === "deactivate_mods")).toBe(false);
+
+      await wrapper.get('[data-testid="mod-row-idle.mod"]').trigger("dblclick");
+      await flushPromises();
+      expect(planCalls.at(-1)).toEqual({ command: "plan_activate_mods", ids: ["idle.mod"] });
+      expect(calls.some((call) => call.command === "activate_mods")).toBe(false);
+    });
+
+    it("sets a colour from a row-menu swatch with one set_mod_colors call and a toast", async () => {
+      const wrapper = await mountAt(1900);
+      await wrapper.get('[data-testid="mod-row-menu-active.mod"]').trigger("click");
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-menu-swatch-pink"]').trigger("click");
+      await flushPromises();
+
+      expect(calls.map((call) => call.command)).toEqual(["set_mod_colors"]);
+      expect(calls[0]?.payload).toEqual({ request: { modIds: ["active.mod"], color: "pink" } });
+      expect(toastAddSpy.mock.calls[0]?.[0]).toMatchObject({
+        summary: "Colour changed for active.mod",
+      });
+    });
+
+    it("clears the colour from the no-colour swatch", async () => {
+      const wrapper = await mountAt(1900);
+      await wrapper.get('[data-testid="mod-row-menu-active.mod"]').trigger("click");
+      await flushPromises();
+
+      await wrapper.get('[data-testid="mod-menu-swatch-none"]').trigger("click");
+      await flushPromises();
+
+      expect(calls[0]?.payload).toEqual({ request: { modIds: ["active.mod"], color: null } });
+    });
+
+    it("scopes both lists to a group when its chip on a row is clicked, without opening the mod", async () => {
+      const wrapper = await mountAt(1900);
+
+      await wrapper.get('[data-testid="mod-row-group-1"]').trigger("click");
+      await flushPromises();
+
+      const filter = { kind: "inScope", groupId: 1 };
+      expect(activeQueries.at(-1)?.group).toEqual(filter);
+      expect(inactiveQueries.at(-1)?.group).toEqual(filter);
+      expect(wrapper.get('[data-testid="group-scope-text"]').text()).toContain("Weapons");
+      expect(wrapper.vm.$route.name).toBe("mods");
+    });
   });
 
   it("creates a group from the rail and sends only create_group", async () => {

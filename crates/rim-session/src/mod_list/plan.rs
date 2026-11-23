@@ -18,6 +18,21 @@ pub(super) use crate::active_set::CORE_MOD_ID as CORE_PACKAGE_ID;
 /// Every DLC's package id starts with this (Core's own id has no trailing dot).
 pub(super) const DLC_PACKAGE_PREFIX: &str = "ludeon.rimworld.";
 
+/// How the ids of the list being imported were written, which decides how a
+/// listed copy of a mod is weighed against the copy that is already active.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum IdSpelling {
+    /// A shared list (an export, pasted text, a save): ids are base ids, so a
+    /// copy of the package that is already active wins whichever spelling the
+    /// list uses, and re-importing your own export never swaps a `_steam`
+    /// copy for a local one.
+    Shared,
+    /// A list written by the game itself (the session's own `ModsConfig.xml`):
+    /// every id is the exact copy the file holds, so a listed copy that is
+    /// installed wins, and an outside swap between two copies is kept.
+    Exact,
+}
+
 /// What the receiver's side contributes to a diff.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ImportContext {
@@ -29,6 +44,8 @@ pub struct ImportContext {
     /// Whether the session holds activation edits not yet rescanned
     /// (always `false` from the CLI, which has no working set).
     pub has_pending_changes: bool,
+    /// How the list's ids were written.
+    pub id_spelling: IdSpelling,
 }
 
 /// The diff of a shared list against this install.
@@ -168,7 +185,7 @@ pub fn plan_import(
     context: ImportContext,
 ) -> ImportPlan {
     let active = ActiveIndex::new(active_ids, inventory);
-    let (entries, mut order) = resolve_entries(list, inventory, &active);
+    let (entries, mut order) = resolve_entries(list, inventory, &active, context.id_spelling);
     let core = place_core(&mut order, inventory);
     let deactivated = deactivated_ids(active_ids, &order, &context.own_merge_mod);
     // Counted before the merge mod is re-added: it is not the list's to
@@ -212,6 +229,7 @@ fn resolve_entries(
     list: &SharedModList,
     inventory: &ModInventory,
     active: &ActiveIndex<'_>,
+    spelling: IdSpelling,
 ) -> (Vec<ImportedEntry>, Vec<ModId>) {
     let mut first_positions: BTreeMap<ModId, u32> = BTreeMap::new();
     let mut entries = Vec::with_capacity(list.entries().len());
@@ -227,7 +245,7 @@ fn resolve_entries(
             continue;
         }
         first_positions.insert(base.clone(), position);
-        let imported = resolve_entry(entry, &base, inventory, active);
+        let imported = resolve_entry(entry, &base, inventory, active, spelling);
         order.extend(imported.installed_id().cloned());
         entries.push(imported);
     }
@@ -239,12 +257,23 @@ fn resolve_entry(
     base: &ModId,
     inventory: &ModInventory,
     active: &ActiveIndex<'_>,
+    spelling: IdSpelling,
 ) -> ImportedEntry {
     let listed = entry.id.as_mod_id();
     // The sender's merge mod is never activated, even when this machine
     // has a generated mod of the same id.
     if GeneratedModIdentity::is_generated(listed) {
         return not_installed(entry, MissingKind::RimmergeMergeMod);
+    }
+    // The game's own file names the exact copy it loads: an installed listed
+    // copy is taken as written, even when the other copy is the active one.
+    let is_listed_copy_installed = inventory.entry(listed).is_some_and(|e| e.present_on_disk);
+    if spelling == IdSpelling::Exact && is_listed_copy_installed {
+        return if active.ids.contains(listed) {
+            ImportedEntry::AlreadyActive { id: listed.clone() }
+        } else {
+            ImportedEntry::Activated { id: listed.clone() }
+        };
     }
     // A copy of this package that is already active is kept, whichever
     // spelling the list uses: re-importing your own export (base ids) must
@@ -421,6 +450,7 @@ mod tests {
             own_merge_mod: id(OWN_MERGE),
             game_version: None,
             has_pending_changes: false,
+            id_spelling: IdSpelling::Shared,
         }
     }
 
@@ -925,6 +955,72 @@ mod tests {
             }
         );
         assert_eq!(plan.order, ids(&["ludeon.rimworld", "example.pair_steam"]));
+        assert!(plan.deactivated.is_empty());
+    }
+
+    fn pair_report_with_plain_copy_active() -> rim_analyzer::domain::Report {
+        ReportBuilder::new()
+            .core("ludeon.rimworld")
+            .mod_("example.pair")
+            .inactive("example.pair_steam")
+            .build()
+    }
+
+    fn exact_context() -> ImportContext {
+        ImportContext {
+            id_spelling: IdSpelling::Exact,
+            ..context()
+        }
+    }
+
+    #[test]
+    fn the_games_own_list_keeps_the_exact_copy_it_names() {
+        // Working holds the plain copy; the file was edited outside to the Steam copy.
+        let plan = plan_import(
+            &list_of(&["ludeon.rimworld", "example.pair_steam"]),
+            &inventory_of(&pair_report_with_plain_copy_active()),
+            &ids(&["ludeon.rimworld", "example.pair"]),
+            exact_context(),
+        );
+
+        assert_eq!(
+            plan.entries[1],
+            ImportedEntry::Activated {
+                id: id("example.pair_steam")
+            }
+        );
+        assert_eq!(plan.order, ids(&["ludeon.rimworld", "example.pair_steam"]));
+        assert_eq!(plan.deactivated, ids(&["example.pair"]));
+    }
+
+    #[test]
+    fn a_shared_list_still_keeps_the_active_copy_over_the_listed_one() {
+        let plan = plan_import(
+            &list_of(&["ludeon.rimworld", "example.pair_steam"]),
+            &inventory_of(&pair_report_with_plain_copy_active()),
+            &ids(&["ludeon.rimworld", "example.pair"]),
+            context(),
+        );
+
+        assert_eq!(plan.order, ids(&["ludeon.rimworld", "example.pair"]));
+        assert!(plan.deactivated.is_empty());
+    }
+
+    #[test]
+    fn the_games_own_list_falls_back_to_the_installed_copy_when_the_named_one_is_gone() {
+        let report = ReportBuilder::new()
+            .core("ludeon.rimworld")
+            .mod_("example.pair")
+            .build();
+
+        let plan = plan_import(
+            &list_of(&["ludeon.rimworld", "example.pair_steam"]),
+            &inventory_of(&report),
+            &ids(&["ludeon.rimworld", "example.pair"]),
+            exact_context(),
+        );
+
+        assert_eq!(plan.order, ids(&["ludeon.rimworld", "example.pair"]));
         assert!(plan.deactivated.is_empty());
     }
 

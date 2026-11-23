@@ -5,7 +5,7 @@
 use std::collections::BTreeMap;
 
 use rim_analyzer::domain::ModId;
-use rim_session::use_cases::{ActivateOutcome, MoveOutcome};
+use rim_session::use_cases::MoveOutcome;
 use rim_session::{ActivatePlan, ActiveSetDiff, Anchor, DeactivatePlan, PendingActiveChanges};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
@@ -43,8 +43,8 @@ impl From<&ActiveSetDiff> for ActiveSetDiffDto {
 }
 
 /// Mirrors [`PendingActiveChanges`]. `get_pending_active_changes`'s
-/// result, and `activate_mods`/`deactivate_mods`/`rescan_project`'s own
-/// updated reading of it — a non-empty `unscanned` is what the Rescan
+/// result, and the `pending` of `activate_mods`/`deactivate_mods`'s results and
+/// `rescan_project`'s own updated reading of it — a non-empty `unscanned` is what the Rescan
 /// banner reads, a non-empty `unapplied` is what the apply dialog warns
 /// about. Everything here is the user's own unsaved work: `unapplied` and
 /// `order_unapplied` compare with what Rimmerge last loaded or wrote, so an
@@ -172,8 +172,21 @@ impl MoveModsResultDto {
     }
 }
 
-/// `activate_mods`'s result: the pending-change reading, plus the selection
-/// after the call and whether it was this call that changed it (an anchored
+/// What an activation commit did, as the backend measured it: the input of
+/// [`ActivateModsResultDto::new`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ActivateCommitted {
+    /// The ids the commit added, dependencies first.
+    pub activated: Vec<ModId>,
+    /// The requested ids the commit-time plan found already active.
+    pub already_active: Vec<ModId>,
+    /// Whether the commit switched the selection from Suggested to Current.
+    pub did_switch_to_current: bool,
+}
+
+/// `activate_mods`'s result: the pending-change reading, which ids the
+/// commit-time plan added or found already active, plus the selection after
+/// the call and whether it was this call that changed it (an anchored
 /// activation switches Suggested to Current like a move; an un-anchored one
 /// never does).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -182,6 +195,14 @@ impl MoveModsResultDto {
 pub struct ActivateModsResultDto {
     /// What is still pending after the activation.
     pub pending: PendingActiveChangesDto,
+    /// Every id the commit added to the active set, dependencies first. The
+    /// commit re-plans, so this can differ from the plan the dialog showed;
+    /// the caller drops these from its Inactive selection.
+    pub activated: Vec<String>,
+    /// Requested ids the commit-time plan found already active (by base id,
+    /// so a copy of the same mod counts): nothing was added for them, and
+    /// the caller drops them from its Inactive selection too.
+    pub already_active: Vec<String>,
     /// The selected order now.
     pub selected: OrderSourceDto,
     /// Whether this call switched the selection from Suggested to Current.
@@ -189,18 +210,51 @@ pub struct ActivateModsResultDto {
 }
 
 impl ActivateModsResultDto {
-    /// Pairs the pending reading and the selection with whether `outcome`
-    /// (`None` for an un-anchored activation) switched the selection.
+    /// Pairs the pending reading and what the commit did with the selection
+    /// after the call.
     #[must_use]
     pub fn new(
         pending: &PendingActiveChanges,
-        outcome: Option<&ActivateOutcome>,
+        committed: &ActivateCommitted,
         selected: rim_resolve::domain::OrderSource,
     ) -> Self {
         Self {
             pending: pending.into(),
+            activated: id_strings(&committed.activated),
+            already_active: id_strings(&committed.already_active),
             selected: selected.into(),
-            did_switch_to_current: outcome.is_some_and(|outcome| outcome.did_switch_to_current),
+            did_switch_to_current: committed.did_switch_to_current,
+        }
+    }
+}
+
+/// `deactivate_mods`'s result: the pending-change reading plus which ids the
+/// commit-time plan removed or found not active (a refused Core is in
+/// neither).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export, export_to = "../../src/types/generated/")]
+pub struct DeactivateModsResultDto {
+    /// What is still pending after the deactivation.
+    pub pending: PendingActiveChangesDto,
+    /// Every id the commit removed from the active set. The commit
+    /// re-plans, so this can differ from the plan the dialog showed; the
+    /// caller drops these from its Active selection. Dependents that stay
+    /// active are only warned about and never appear here.
+    pub removed: Vec<String>,
+    /// Requested ids that were no longer active at commit (nothing to
+    /// remove); the caller drops them from its Active selection too.
+    pub not_active: Vec<String>,
+}
+
+impl DeactivateModsResultDto {
+    /// Pairs the pending reading with the removed and the not-active ids.
+    #[must_use]
+    pub fn new(pending: &PendingActiveChanges, removed: &[ModId], not_active: &[ModId]) -> Self {
+        Self {
+            pending: pending.into(),
+            removed: id_strings(removed),
+            not_active: id_strings(not_active),
         }
     }
 }

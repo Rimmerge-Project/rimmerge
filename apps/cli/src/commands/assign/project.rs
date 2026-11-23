@@ -37,7 +37,7 @@ pub struct CreateArgs {
     #[arg(long = "exclude-refs", default_value = "")]
     exclude_refs: String,
     /// The target set T, comma-separated package ids. May be empty only
-    /// for a "new def" candidate — one with no `TargetKey` field.
+    /// for a "new def" candidate: one with no `TargetKey` field.
     #[arg(long, default_value = "")]
     targets: String,
     /// Which candidate def type (from `assign propose`'s own phase-1

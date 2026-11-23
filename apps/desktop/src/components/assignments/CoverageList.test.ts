@@ -86,6 +86,20 @@ describe("CoverageList", () => {
     expect(wrapper.find('[data-testid="coverage-row-Orc"]').exists()).toBe(true);
   });
 
+  it("finds a def name that continues after a capital sigma", async () => {
+    const greek: CoverageRowDto = {
+      ...UNCOVERED,
+      target: { ...UNCOVERED.target, def: { defType: "ThingDef", defName: "ΑΣΑ" } },
+    };
+    const wrapper = mountList([greek, OVERRIDE_ROW]);
+    await flushPromises();
+
+    await wrapper.get('[data-testid="coverage-search"]').setValue("ΑΣ");
+
+    expect(wrapper.find('[data-testid="coverage-row-ΑΣΑ"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="coverage-row-Orc"]').exists()).toBe(false);
+  });
+
   it("emits select with the clicked row", async () => {
     const wrapper = mountList([UNCOVERED]);
     await flushPromises();

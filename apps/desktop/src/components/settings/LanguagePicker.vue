@@ -77,6 +77,7 @@ async function handleChange(value: StoredLocale): Promise<void> {
     </label>
     <i18n-t
       v-if="selectedIsPreview"
+      scope="global"
       keypath="settings.language.previewNote"
       tag="p"
       class="text-text-muted text-xs"

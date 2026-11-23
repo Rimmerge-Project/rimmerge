@@ -14,13 +14,15 @@ import { isPlainDeactivation, type PlanMode } from "@/utils/modMove";
  * commits straight away when the plan removes exactly the dropped mods with no warning and
  * otherwise opens the same dialog.
  *
- * A successful commit closes the dialog, takes the committed mods out of `selectedIds` and
- * toasts; a failed one keeps both and shows the error in the dialog.
+ * A successful commit closes the dialog, takes out of `selectedIds` every id the backend's
+ * commit-time plan names (`removed`, and `notActive`: requested mods no longer active by then) and
+ * toasts; a refused Core stays selected. A failed commit keeps both the dialog and the selection
+ * and shows the error in the dialog.
  */
 export function useModDeactivation({
   selectedIds,
 }: {
-  /** The active mods the button deactivates; the committed ones leave it after a commit. */
+  /** The active mods the button deactivates; what the commit removed or found inactive leaves it. */
   selectedIds: Ref<string[]>;
 }) {
   const { t } = useI18n();
@@ -34,10 +36,10 @@ export function useModDeactivation({
   const plannedIds = ref<string[]>([]);
 
   async function commit(ids: string[]): Promise<void> {
-    await commitDeactivate({ ids });
+    const result = await commitDeactivate({ ids });
     isDialogVisible.value = false;
-    const committed = new Set(ids);
-    selectedIds.value = selectedIds.value.filter((id) => !committed.has(id));
+    const left = new Set([...result.removed, ...result.notActive]);
+    selectedIds.value = selectedIds.value.filter((id) => !left.has(id));
     toast.add({ severity: "success", summary: t("mods.page.deactivatedToast"), life: 4000 });
   }
 
