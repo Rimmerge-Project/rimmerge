@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { installScenario } from "../fixtures/scenario";
 import { failOnSameOriginRequestFailure } from "./support";
 
 // The tier's server must speak HTTP/2 (#58): over HTTP/1.1 every per-test context opens about
@@ -10,6 +11,8 @@ import { failOnSameOriginRequestFailure } from "./support";
 test.describe("e2e dev server", () => {
   test("serves the app over HTTP/2", async ({ page }) => {
     failOnSameOriginRequestFailure(page);
+    // The mock backend, so the app boots as in every other spec instead of logging a missing Tauri.
+    await page.addInitScript(installScenario);
     await page.goto("/setup");
 
     const protocol = await page.evaluate(() => {

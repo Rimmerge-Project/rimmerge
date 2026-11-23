@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 // Type-only: pulls in `Window.__E2E_MOCK_IPC__`'s ambient declaration.
 import type {} from "../../src/e2e-mock-bootstrap";
 import { LOCALE_OPTIONS } from "../../src/i18n/locales";
+import { installScenario } from "../fixtures/scenario";
 import { failOnSameOriginRequestFailure, loadScenario } from "./support";
 
 /**
@@ -96,6 +97,8 @@ test.describe("language picker", () => {
 
   test("the Setup page's own picker applies before a project is loaded", async ({ page }) => {
     failOnSameOriginRequestFailure(page);
+    // The mock backend with no project loaded, so the app boots without logging a missing Tauri.
+    await page.addInitScript(installScenario);
     await page.goto("/setup");
 
     const select = page.getByTestId("language-picker-select");
