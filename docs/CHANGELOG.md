@@ -3,7 +3,7 @@
 This changelog starts at the first public release. Development history
 before that point is not summarized here.
 
-## [Unreleased]
+## [1.2.7] - 2026-11-23
 
 - **Change: the desktop app refuses folders and files on a network share.** A
   folder or file you pick, or type, must now be on a drive letter (`C:\...`, or
