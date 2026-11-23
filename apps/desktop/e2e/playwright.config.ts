@@ -5,27 +5,31 @@ import { defineConfig } from "@playwright/test";
 // `src/e2e-mock-bootstrap.ts` and `services/ipc.mock.ts`) — no Tauri
 // binary involved. `e2e/smoke/playwright.config.ts` is the other tier,
 // against the real `bun run tauri dev` build over CDP.
+// The server is started with `RIMMERGE_E2E_HTTPS=1`, so it is HTTPS with a
+// throwaway self-signed certificate and Vite speaks HTTP/2 (`vite.config.ts` says why:
+// over HTTP/1.1 the per-test contexts' closed keep-alive sockets pile up in
+// TIME_WAIT and Windows eventually refuses a module request, #58);
+// `specs/http2.spec.ts` pins it.
 export default defineConfig({
   testDir: "./specs",
   fullyParallel: true,
-  // A wide-open worker count throws many browser contexts at Vite's dev
-  // server at once; on a cold server (freshly started, nothing
-  // transformed yet — every CI run, and any local run right after
-  // editing source) that first concurrent burst of dynamic-import
-  // requests can occasionally 500 mid-transform, breaking the app's
-  // very first route resolution for whichever test hit it. Capping
-  // workers keeps the burst small enough that Vite's transform cache is
-  // warm well before the tail of the suite runs.
+  // Bounds how many browser contexts hit the one dev server (and one
+  // machine's CPU and memory) at once. On a cold server the first
+  // concurrent burst of dynamic-import requests is what a small cap keeps
+  // modest; `vite.config.ts`'s `server.warmup` and `optimizeDeps.include`
+  // are what actually prevent the mid-transform 500s.
   workers: 4,
   forbidOnly: !!process.env.CI,
-  // CI-only: the cold-dev-server flake above is now addressed directly,
-  // at the source, by `vite.config.ts`'s `server.warmup` and
-  // `optimizeDeps.include` — a local retry would just paper back over a
-  // real failure a developer needs to see immediately.
+  // CI-only. The cold-server 500s are handled by `vite.config.ts`'s
+  // `server.warmup` and `optimizeDeps.include`, and the blank-page
+  // TIME_WAIT flake by HTTP/2 (#58). A local retry would hide a real
+  // failure a developer needs to see immediately.
   retries: process.env.CI ? 1 : 0,
   reporter: "list",
   use: {
-    baseURL: "http://localhost:5183",
+    baseURL: "https://localhost:5183",
+    // The certificate is self-signed, made once and cached under `node_modules/.vite`.
+    ignoreHTTPSErrors: true,
     trace: "on-first-retry",
     // Pins `navigator.languages` so `detectLocale` (`src/i18n/locales.ts`)
     // resolves to `en` deterministically on a zh-CN or pt-BR developer
@@ -48,7 +52,9 @@ export default defineConfig({
     // Playwright's own "Process from config.webServer was not able to
     // start" message rather than reconnecting to a foreign server.
     command: "bun run dev -- --port 5183 --strictPort",
-    url: "http://localhost:5183",
+    env: { RIMMERGE_E2E_HTTPS: "1" },
+    url: "https://localhost:5183",
+    ignoreHTTPSErrors: true,
     // Never reuse a server this config did not start itself — the exact
     // hazard above. CI already ran with this off; it is now off
     // everywhere, so a local run has the identical guarantee.

@@ -22,6 +22,30 @@ scale, against real, messy third-party content. But they can never run
 in CI, can never assume any particular mod is installed, and must never
 leak a real mod's name into a committed assertion.
 
+A third item is neither tier but belongs to the default one: how the desktop
+app's mock-IPC e2e tier is served (the section after this one).
+
+## The mock-IPC e2e tier runs over HTTPS and HTTP/2
+
+The desktop app's Playwright tier (`bun run e2e`) serves the app from Vite on
+port 5183 over **HTTPS with a throwaway self-signed certificate** (made once, cached
+under the gitignored `node_modules/.vite`), so the dev
+server speaks HTTP/2. The Playwright configs start it with
+`RIMMERGE_E2E_HTTPS=1`, which `vite.config.ts` reads; `tauri dev` on 5173 never
+sets it and stays plain HTTP. The reason is a Windows flake: every test opens a
+fresh browser context, and over HTTP/1.1 each opens about six keep-alive
+connections that the browser closes first, so about 1,500 client-side
+`TIME_WAIT` entries pile up per run. Now and then Windows hands out a local
+port whose 4-tuple is still in `TIME_WAIT`, the connection is refused
+(`net::ERR_CONNECTION_REFUSED`), one module of the app's import graph fails to
+load, and the page stays blank until the test times out. HTTP/2 uses about one
+connection per context. Two guards keep it that way: `specs/http2.spec.ts`
+asserts the page was served over `h2`, and `loadScenario` (and every spec that
+calls `page.goto` itself) fails the test at once, naming the URL, when a
+request to the app's own origin fails. Anything that turns `server.https` off
+(or a Vite that serves HTTPS over HTTP/1.1) brings the flake back, and
+`specs/http2.spec.ts` catches it.
+
 ## The three-state rule
 
 A real-install test is never allowed to silently report nothing as a

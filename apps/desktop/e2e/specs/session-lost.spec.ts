@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 // Type-only: pulls in `Window.__E2E_MOCK_IPC__`'s ambient declaration.
 import type {} from "../../src/e2e-mock-bootstrap";
 import { dashboardFixture } from "../fixtures/dashboard";
+import { failOnSameOriginRequestFailure } from "./support";
 
 test.describe("session lost", () => {
   test("a session_lost response transparently reloads the project and lands back on the dashboard", async ({
@@ -67,6 +68,7 @@ test.describe("session lost", () => {
       };
     }, dashboardFixture);
 
+    failOnSameOriginRequestFailure(page);
     await page.goto("/");
     await expect(page).toHaveURL(/\/setup$/);
     // Must match the literal `load_project` checks against inside the
@@ -110,6 +112,7 @@ test.describe("session lost", () => {
       };
     });
 
+    failOnSameOriginRequestFailure(page);
     await page.goto("/");
     await page.getByTestId("load-project-button").click();
 

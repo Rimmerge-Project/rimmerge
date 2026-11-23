@@ -1,5 +1,6 @@
 import { fileURLToPath, URL } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
+import basicSsl from "@vitejs/plugin-basic-ssl";
 import vue from "@vitejs/plugin-vue";
 import { defineConfig } from "vite";
 
@@ -8,8 +9,22 @@ import { defineConfig } from "vite";
 // even when a command fails, plus to ignore `src-tauri/` (a Rust change
 // there triggers a separate cargo rebuild, not a Vite reload).
 // https://v2.tauri.app/start/frontend/vite/
+//
+// `RIMMERGE_E2E_HTTPS=1` (set only by the Playwright configs' `webServer`)
+// serves the dev server over TLS with a throwaway self-signed certificate
+// (made once and cached under `node_modules/.vite`, which is gitignored),
+// which makes Vite speak HTTP/2. The e2e tier opens a fresh browser context
+// per test; over HTTP/1.1 each opens about six keep-alive sockets that the
+// browser closes first, so Windows piles up client-side TIME_WAIT entries and
+// now and then hands out a port still in one, refusing a module request and
+// leaving a blank page (#58). HTTP/2 needs about one connection per context.
+// `tauri dev` never sets it: its fixed `devUrl` is plain http. Anything that
+// turns `server.https` off (or a Vite that serves HTTPS over HTTP/1.1) brings
+// #58 back; `specs/http2.spec.ts` catches it.
+const isE2eHttps = process.env["RIMMERGE_E2E_HTTPS"] === "1";
+
 export default defineConfig({
-  plugins: [vue(), tailwindcss()],
+  plugins: [vue(), tailwindcss(), ...(isE2eHttps ? [basicSsl()] : [])],
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),

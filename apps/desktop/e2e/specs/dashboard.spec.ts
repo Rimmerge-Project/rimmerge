@@ -5,7 +5,7 @@ import { expect, test } from "@playwright/test";
 import type {} from "../../src/e2e-mock-bootstrap";
 import { dashboardFixture, dashboardScenario, defaultPathsFixture } from "../fixtures/dashboard";
 import { installScenario } from "../fixtures/scenario";
-import { loadScenario } from "./support";
+import { failOnSameOriginRequestFailure, loadScenario } from "./support";
 
 test.describe("setup page path config", () => {
   test("saves the three install paths as defaults, never the derived profile directory", async ({
@@ -16,6 +16,7 @@ test.describe("setup page path config", () => {
     // `addInitScript` as an argument crosses the Node/browser boundary as
     // JSON, which drops functions.
     await page.addInitScript(installScenario);
+    failOnSameOriginRequestFailure(page);
     await page.goto("/setup");
 
     await page.getByTestId("game-dir-input").fill("Q:/Steam/steamapps/common/RimWorld");
@@ -63,6 +64,7 @@ test.describe("setup page path config", () => {
         },
       };
     }, dashboardScenario);
+    failOnSameOriginRequestFailure(page);
     await page.goto("/setup");
 
     const banner = page.getByTestId("setup-detection-error");
@@ -80,6 +82,7 @@ test.describe("setup page path config", () => {
     page,
   }) => {
     await page.addInitScript(installScenario);
+    failOnSameOriginRequestFailure(page);
     await page.goto("/setup");
 
     await page.getByTestId("game-dir-input").fill("D:/Steam/steamapps/common/RimWorld");
@@ -109,6 +112,7 @@ test.describe("setup and dashboard", () => {
       // (installed by the bootstrap module) is what defines it.
     }, dashboardScenario);
 
+    failOnSameOriginRequestFailure(page);
     await page.goto("/");
 
     // No project loaded yet: the router guard sends us to /setup, and the
@@ -205,6 +209,7 @@ test.describe("setup and dashboard", () => {
       };
     });
 
+    failOnSameOriginRequestFailure(page);
     await page.goto("/");
     await page.getByTestId("load-project-button").click();
     await page.waitForURL(/\/$/);

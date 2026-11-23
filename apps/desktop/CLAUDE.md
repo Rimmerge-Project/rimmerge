@@ -1254,7 +1254,18 @@ The UI is localized in `en` plus twelve translated locales (`zh-CN`,
   `--strictPort`** (fails fast instead of silently picking another
   port) **and `reuseExistingServer: false` unconditionally** — never
   reused, only one runner occupies that port at a time in this
-  workspace. Specs assert the exact IPC payloads
+  workspace. **It is HTTPS** (`RIMMERGE_E2E_HTTPS=1` from the configs'
+  `webServer.env`, `@vitejs/plugin-basic-ssl`'s throwaway certificate, cached
+  under `node_modules/.vite`, and `ignoreHTTPSErrors`), so Vite speaks HTTP/2: over HTTP/1.1 the
+  per-test contexts' closed keep-alive sockets pile up in Windows
+  `TIME_WAIT` and a module request is occasionally refused, leaving a
+  blank page (#58). `specs/http2.spec.ts` pins `h2`; `loadScenario` and
+  every spec with its own `page.goto` call
+  `failOnSameOriginRequestFailure(page)` first, which fails the test at
+  once on a failed same-origin request (not `ERR_ABORTED`). Anything
+  that turns `server.https` off (or a Vite that serves HTTPS over
+  HTTP/1.1) brings #58 back; `http2.spec.ts` catches it. `tauri dev` on
+  5173 stays HTTP. Specs assert the exact IPC payloads
   `e2e/fixtures/scenario.ts` records (its `__X_CALLS__` recorders), not
   presence.
 - **`e2e/fixtures/scenario.ts`'s `installScenario` is serialized with

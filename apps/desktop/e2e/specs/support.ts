@@ -1,8 +1,39 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { LOCALE_OPTIONS, type SupportedLocale } from "../../src/i18n/locales";
 import type { ListSortKeyDto } from "../../src/types/generated/ListSortKeyDto";
 import { installScenario } from "../fixtures/scenario";
+
+/**
+ * Fails the test at once, naming the URL and the error, when a request to the app's own origin
+ * fails at the network level (#58). A refused module request drops the whole ES module graph and
+ * leaves a blank page, which would otherwise show only as a 30 s timeout on the first locator.
+ * Call it before the first `page.goto`. The page is closed with the reason, so whatever the test
+ * is awaiting rejects with it.
+ *
+ * `net::ERR_ABORTED` is not a failure: the browser cancels requests on purpose (a navigation
+ * away, a superseded prefetch). Other origins are ignored, and so is anything after the page has
+ * closed (teardown cancels in-flight requests). Websockets (HMR) do not raise `requestfailed`.
+ */
+export function failOnSameOriginRequestFailure(page: Page): void {
+  const baseURL = test.info().project.use.baseURL;
+  if (baseURL === undefined) {
+    throw new Error("the project has no baseURL to tell the app's own requests from others");
+  }
+  const appOrigin = new URL(baseURL).origin;
+  page.on("requestfailed", (request) => {
+    // `requestfailed` fires only for a request that has a failure.
+    // biome-ignore lint/style/noNonNullAssertion: see the line above
+    const errorText = request.failure()!.errorText;
+    const isSameOrigin = new URL(request.url()).origin === appOrigin;
+    if (!isSameOrigin || errorText === "net::ERR_ABORTED" || page.isClosed()) {
+      return;
+    }
+    const reason = `request to the app failed: ${request.url()} (${errorText})`;
+    test.info().annotations.push({ type: "request-failed", description: reason });
+    void page.close({ reason }); // fire and forget: the closure is what interrupts the test's own awaits
+  });
+}
 
 /**
  * Installs the full mock-IPC scenario and loads it through the setup
@@ -10,6 +41,7 @@ import { installScenario } from "../fixtures/scenario";
  * dashboard — the same starting point every spec in this tier needs.
  */
 export async function loadScenario(page: Page): Promise<void> {
+  failOnSameOriginRequestFailure(page);
   await page.addInitScript(installScenario);
   await page.goto("/");
   await page.getByTestId("load-project-button").click();
