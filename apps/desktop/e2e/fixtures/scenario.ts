@@ -3308,13 +3308,12 @@ export function installScenario(): void {
   // current order and becomes whichever order a successful
   // `apply { writeModsConfig: true }` wrote.
   let fileOrder = [...currentOrder];
-  // The live file baseline (`Session::file_watch`): the base ids the session itself last loaded or
-  // wrote (to tell an outside change from its own), and why the latest read of the file failed.
-  // `fileActiveIds`/`fileOrder` above are the baseline's list, the last one that read fine.
-  let acknowledgedFileBases = new Set([...fileActiveIds].map((id) => baseOf(id)));
-  let acknowledgedFileSequence = [...fileActiveIds].map((id) => baseOf(id));
-  // The same acknowledged list by exact id: "your own unsaved work" (`pendingActiveChanges`) is
-  // measured against it, never against the live `fileActiveIds`/`fileOrder`.
+  // The live file baseline (`Session::file_watch`): the exact ids the session itself last loaded or
+  // wrote (to tell an outside change from its own, `external_change` in `file_baseline.rs`, which
+  // compares exact ids so a swap between two copies of a mod counts), and why the latest read of the
+  // file failed. `fileActiveIds`/`fileOrder` above are the baseline's list, the last one that read
+  // fine. "Your own unsaved work" (`pendingActiveChanges`) is measured against the same list, never
+  // against the live `fileActiveIds`/`fileOrder`.
   let acknowledgedFileIds = new Set(fileActiveIds);
   let acknowledgedFileOrder = [...fileOrder];
   let baselineIssue: "missing" | "unreadable" | "malformed" | null = null;
@@ -3747,6 +3746,11 @@ export function installScenario(): void {
     }
   }
 
+  /** `Session::file_holds_exactly`: the same ids in the same sequence, nothing ignored. */
+  function sameOrderExactly(a: string[], b: string[]): boolean {
+    return a.length === b.length && a.every((id, index) => id === b[index]);
+  }
+
   function sameOrderIgnoringMergeMod(a: string[], b: string[]): boolean {
     const strip = (ids: string[]): string[] => ids.filter((id) => id !== MERGE_MOD_PACKAGE_ID);
     const left = strip(a);
@@ -4176,7 +4180,10 @@ export function installScenario(): void {
   }
 
   /** Mirrors `plan_import` over the mock inventory, diffing against the working list. */
-  function planOrderImport(parsed: Extract<ParsedOrderList, { kind: "parsed" }>) {
+  function planOrderImport(
+    parsed: Extract<ParsedOrderList, { kind: "parsed" }>,
+    isGamesOwnList = false,
+  ) {
     // `ImportTarget::from_session`: the diff is against the working list (pending edits included), the
     // mock's own fixture-only owners left out like `currentOrder` leaves them out.
     const activeList = [...workingActiveIds].filter((id) => !omittedFromCurrentOrder.includes(id));
@@ -4208,6 +4215,17 @@ export function installScenario(): void {
           name: listed.name,
           missing: missingKindFor(listed),
         });
+        continue;
+      }
+      // `IdSpelling::Exact`: the game's own file names the exact copy it loads, so an installed listed
+      // copy is taken as written (an outside swap between two copies is kept).
+      if (isGamesOwnList && present.has(listed.id)) {
+        order.push(listed.id);
+        entries.push(
+          fileSet.has(listed.id)
+            ? { kind: "alreadyActive", id: listed.id, name: nameOf(listed.id) }
+            : { kind: "activated", id: listed.id, name: nameOf(listed.id) },
+        );
         continue;
       }
       // An already-active copy is kept before any exact-then-base lookup, so re-importing your own export is an empty diff.
@@ -4315,10 +4333,10 @@ export function installScenario(): void {
     if (inActive !== undefined) order.push(inActive);
   }
 
-  function previewOrderDocument(text: string): OrderImportOutcomeDto {
+  function previewOrderDocument(text: string, isGamesOwnList = false): OrderImportOutcomeDto {
     const parsed = parseOrderDocument(text);
     if (parsed.kind === "rejected") return parsed;
-    return { kind: "ready", preview: planOrderImport(parsed) };
+    return { kind: "ready", preview: planOrderImport(parsed, isGamesOwnList) };
   }
 
   /** The names of every listed active mod, in the file's order — what an export holds. */
@@ -5955,35 +5973,37 @@ export function installScenario(): void {
 
   /** Rimmerge itself loaded or wrote the file: its mods and their order are what an outside change is measured from. */
   function acknowledgeFile(): void {
-    acknowledgedFileBases = new Set([...fileActiveIds].map((id) => baseOf(id)));
-    acknowledgedFileSequence = [...fileActiveIds].map((id) => baseOf(id));
     acknowledgedFileIds = new Set(fileActiveIds);
     acknowledgedFileOrder = [...fileOrder];
   }
 
   /** `ExternalFileChangeDto`: a membership change first, else the same mods in another order, else none. */
-  function externalChange(added: number, removed: number, fileSequence: string[]) {
+  function externalChange(added: number, removed: number) {
     if (added > 0 || removed > 0) {
       return { kind: "membership" as const, added, removed };
     }
-    if (fileSequence.join(",") !== acknowledgedFileSequence.join(",")) {
+    if (!sameOrderExactly(fileOrder, acknowledgedFileOrder)) {
       return { kind: "reordered" as const };
     }
     return { kind: "none" as const };
   }
 
-  /** `FileBaselineDto`: the baseline's status and what someone else changed in the file's membership. */
+  /**
+   * `FileBaselineDto`: the baseline's status, what someone else changed in the file (by exact id)
+   * and whether the file already holds the selected order (`Session::file_matches_selected`).
+   */
   function fileBaselineDto() {
-    const fileBases = new Set([...fileActiveIds].map((id) => baseOf(id)));
-    const added = [...fileBases].filter((id) => !acknowledgedFileBases.has(id)).length;
-    const removed = [...acknowledgedFileBases].filter((id) => !fileBases.has(id)).length;
-    const fileSequence = [...fileActiveIds].map((id) => baseOf(id));
+    const added = [...fileActiveIds].filter((id) => !acknowledgedFileIds.has(id)).length;
+    const removed = [...acknowledgedFileIds].filter((id) => !fileActiveIds.has(id)).length;
     return {
       state:
         baselineIssue === null
           ? { kind: "fresh" as const }
           : { kind: "stale" as const, reason: baselineIssue },
-      externalChange: externalChange(added, removed, fileSequence),
+      externalChange: externalChange(added, removed),
+      // `Session::file_holds_exactly`: the ids and sequence, the generated merge mod included.
+      fileMatchesSelected: sameOrderExactly(orderFor(selected), fileOrder),
+      fileHoldsCurrentExactly: sameOrderExactly(currentOrder, fileOrder),
     };
   }
 
@@ -6009,7 +6029,10 @@ export function installScenario(): void {
     baselineIssue = null;
     const isListChanged = file.activeMods.join(",") !== [...fileActiveIds].join(",");
     fileActiveIds = new Set(file.activeMods);
-    fileOrder = [...file.activeMods];
+    // Like `currentOrder`, the order leaves out the ids the mock keeps out of it (see
+    // `omittedFromCurrentOrder`), so a file that reproduces the loaded list reads as unchanged.
+    // Mock convention: an outside edit that only moves an omitted id reads as none, but reordered in the backend.
+    fileOrder = file.activeMods.filter((id) => !omittedFromCurrentOrder.includes(id));
     return isListChanged || wasStale;
   }
 
@@ -8121,7 +8144,7 @@ export function installScenario(): void {
         });
       }
       const items = hardProblemsFor(source);
-      const outsideChange = sameOrderIgnoringMergeMod(orderFor(source), fileOrder)
+      const outsideChange = sameOrderExactly(orderFor(source), fileOrder)
         ? ({ kind: "none" } as const)
         : fileBaselineDto().externalChange;
       return {
@@ -9225,7 +9248,7 @@ export function installScenario(): void {
       if (content === undefined) {
         throw { code: "mod_list_io_failed", message: `${request.path}: the file was not found` };
       }
-      return previewOrderDocument(content);
+      return previewOrderDocument(content, request.path === MODS_CONFIG_PATH);
     },
     preview_order_import_text: (payload: unknown): OrderImportOutcomeDto => {
       const request = (payload as { request: PreviewOrderImportTextRequestDto }).request;

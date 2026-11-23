@@ -295,7 +295,12 @@ pub(crate) async fn preview_order_import_file_inner(
     let adapters = state.adapters.clone();
     with_session(state, move |session| {
         require_regular_file(&path)?;
-        let target = ImportTarget::from_session(session);
+        let mut target = ImportTarget::from_session(session);
+        // The note's "Use the list from the file" reads the session's own file,
+        // whose ids are exact: an outside swap between two copies is kept.
+        if is_same_file(&path, &session.paths().mods_config) {
+            target = target.for_the_games_own_list();
+        }
         let preview = PreviewOrderImport::new(adapters.mod_list_store).from_file(&path, &target)?;
         Ok(outcome(&preview, &target))
     })
@@ -909,6 +914,67 @@ mod tests {
         );
 
         assert_eq!(preview.format, ListFormatDto::SaveHeader);
+    }
+
+    /// The session's own file after an outside swap of `b` for its Steam copy.
+    fn state_with_outside_swapped_file() -> (tempfile::TempDir, AppState, PathBuf) {
+        let report = rim_session::test_support::report_fixture_with_inactive(
+            &["example.a", "example.b"],
+            &["example.b_steam"],
+        );
+        let (temp_dir, session) = crate::test_support::session_with_temp_paths(
+            report,
+            rim_analyzer::analysis::SourceIndex::default(),
+            &["example.a", "example.b"],
+        );
+        let mods_config = session.paths().mods_config.clone();
+        std::fs::write(
+            &mods_config,
+            "<ModsConfigData><version>1.6.0</version><activeMods>\
+             <li>example.a</li><li>example.b_steam</li></activeMods></ModsConfigData>",
+        )
+        .expect("simulate the outside swap");
+        let state = AppState::default();
+        *state.session.write().expect("lock") = Some(session);
+        (temp_dir, state, mods_config)
+    }
+
+    #[tokio::test]
+    async fn previewing_the_sessions_own_file_keeps_an_outside_swap_between_copies() {
+        let (_temp_dir, state, mods_config) = state_with_outside_swapped_file();
+
+        let preview = ready(
+            preview_order_import_file_inner(
+                &state,
+                PreviewOrderImportFileRequestDto {
+                    path: mods_config.display().to_string(),
+                },
+            )
+            .await
+            .expect("previews"),
+        );
+
+        assert_eq!(preview.order, mod_ids(&["example.a", "example.b_steam"]));
+    }
+
+    #[tokio::test]
+    async fn previewing_a_copy_of_that_file_elsewhere_keeps_the_active_copy() {
+        let (temp_dir, state, mods_config) = state_with_outside_swapped_file();
+        let elsewhere = temp_dir.path().join("copy.xml");
+        std::fs::copy(&mods_config, &elsewhere).expect("copy the file");
+
+        let preview = ready(
+            preview_order_import_file_inner(
+                &state,
+                PreviewOrderImportFileRequestDto {
+                    path: elsewhere.display().to_string(),
+                },
+            )
+            .await
+            .expect("previews"),
+        );
+
+        assert_eq!(preview.order, mod_ids(&["example.a", "example.b"]));
     }
 
     #[tokio::test]

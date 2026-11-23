@@ -4,8 +4,8 @@ import type { FileBaselineStateDto } from "./FileBaselineStateDto";
 
 /**
  * `get_mods_config_baseline`/`refresh_mods_config_baseline`'s result: the
- * baseline's status and the outside change, which together drive the
- * Mods page notice.
+ * baseline's status, the outside change and whether the file already holds
+ * the selected order, which together drive the outside-change notes.
  */
 export type FileBaselineDto = { 
 /**
@@ -15,4 +15,17 @@ state: FileBaselineStateDto,
 /**
  * What someone else changed in the file's membership.
  */
-externalChange: ExternalFileChangeDto, };
+externalChange: ExternalFileChangeDto, 
+/**
+ * Whether the file already lists exactly the selected order's ids, the
+ * generated merge mod included. When true, applying it overwrites nothing,
+ * so a note must not say it would. Live: it follows the file and the
+ * selection.
+ */
+fileMatchesSelected: boolean, 
+/**
+ * Whether the file already lists exactly Current's ids (merge mod
+ * included), whichever order is selected: an install export writes
+ * Current, so when this is true it overwrites no outside change.
+ */
+fileHoldsCurrentExactly: boolean, };

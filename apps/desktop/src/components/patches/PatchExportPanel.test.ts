@@ -56,6 +56,7 @@ function mountPanel(
     exportPatch?: (payload: unknown) => unknown;
     pendingActiveChanges?: PendingActiveChangesDto;
     externalChange?: ExternalFileChangeDto;
+    fileHoldsCurrentExactly?: boolean;
   } = {},
 ) {
   const calls: ExportPatchRequestDto[] = [];
@@ -64,6 +65,7 @@ function mountPanel(
     get_mods_config_baseline: {
       state: { kind: "fresh" },
       externalChange: options.externalChange ?? { kind: "none" },
+      fileHoldsCurrentExactly: options.fileHoldsCurrentExactly ?? false,
     },
     get_pending_active_changes: options.pendingActiveChanges ?? {
       unscanned: { added: [], removed: [] },
@@ -258,6 +260,18 @@ describe("PatchExportPanel", () => {
     expect(wrapper.get('[data-testid="patch-export-outside-change-note"]').text()).toBe(
       "Your active mod list was changed outside Rimmerge. Installing writes your Current order over those changes.",
     );
+  });
+
+  it("shows no outside-change note when the file already holds Current, whatever changed outside", async () => {
+    const { wrapper } = mountPanel(renderFixture(), {
+      externalChange: { kind: "reordered" },
+      fileHoldsCurrentExactly: true,
+    });
+    await flushPromises();
+
+    await wrapper.get('[data-testid="patch-export-install-checkbox"]').find("input").setValue(true);
+
+    expect(wrapper.find('[data-testid="patch-export-outside-change-note"]').exists()).toBe(false);
   });
 
   it("shows no outside-change note when nobody else changed the list", async () => {

@@ -2,6 +2,7 @@ import { createTestingPinia } from "@pinia/testing";
 import { setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { useBannerAnnouncerStore } from "@/stores/bannerAnnouncer";
 import { useSessionStore } from "@/stores/session";
 import type { GameLogSummaryDto } from "@/types/generated/GameLogSummaryDto";
 import type { LoadEventDto } from "@/types/generated/LoadEventDto";
@@ -88,6 +89,25 @@ describe("useSessionStore", () => {
     session.setLoaded(paths, "suggested");
 
     expect(session.selected).toBe("suggested");
+  });
+
+  it("setLoaded makes a banner's text from the previous project speak again", () => {
+    const session = useSessionStore();
+    const announcer = useBannerAnnouncerStore();
+    const paths = {
+      gameDir: "C:/Game",
+      workshopDir: "C:/Workshop",
+      modsConfig: "C:/Game/ModsConfig.xml",
+      profileDir: "C:/Profile",
+    };
+    session.setLoaded(paths, "current");
+    announcer.report("outsideNote", "The list changed.");
+
+    session.setLoaded(paths, "current");
+    expect(announcer.message).toBe("");
+    announcer.report("outsideNote", "The list changed.");
+
+    expect(announcer.message).toBe("The list changed.");
   });
 
   it("reset clears the loaded project and returns to the current order", () => {

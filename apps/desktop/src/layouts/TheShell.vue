@@ -19,6 +19,7 @@ import { useTauriEvent } from "@/composables/useTauriEvent";
 import { useTranslateMessage } from "@/composables/useTranslateMessage";
 import { useOpenAppLinkMutation } from "@/queries/links";
 import { useNotificationsQuery } from "@/queries/notifications";
+import { useBannerAnnouncerStore } from "@/stores/bannerAnnouncer";
 import { useSessionStore } from "@/stores/session";
 import type { OrderSourceDto } from "@/types/generated/OrderSourceDto";
 import type { ProgressEventDto } from "@/types/generated/ProgressEventDto";
@@ -47,6 +48,9 @@ useFileBaselinePolling();
  */
 const { data: notifications } = useNotificationsQuery();
 const liveAnnouncement = ref("");
+// What the pending-changes banner and the outside-change notes say: they sit behind `v-if`, so
+// they are quiet notes and this always-mounted region speaks for them (see `bannerAnnouncer`).
+const bannerAnnouncer = useBannerAnnouncerStore();
 let previousKeys: Set<string> | null = null;
 watch(
   () => notifications.value,
@@ -380,6 +384,15 @@ const NAV_ITEMS: { to: string; labelKey: string; testId: string; icon: string }[
       data-testid="notification-live-region"
     >
       {{ liveAnnouncement }}
+    </div>
+    <div
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      class="sr-only"
+      data-testid="banner-live-region"
+    >
+      {{ bannerAnnouncer.message }}
     </div>
   </div>
 </template>

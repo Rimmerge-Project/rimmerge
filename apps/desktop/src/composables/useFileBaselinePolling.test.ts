@@ -13,6 +13,8 @@ import type { FileBaselineDto } from "@/types/generated/FileBaselineDto";
 const QUIET: FileBaselineDto = {
   state: { kind: "fresh" },
   externalChange: { kind: "none" },
+  fileMatchesSelected: true,
+  fileHoldsCurrentExactly: true,
 };
 
 const Host = defineComponent({

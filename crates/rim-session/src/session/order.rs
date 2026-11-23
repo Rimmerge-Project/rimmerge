@@ -269,8 +269,8 @@ impl Session {
         self.file_watch.baseline()
     }
 
-    /// What someone else did to the file's membership since Rimmerge last
-    /// loaded or wrote it, by base id.
+    /// What someone else did to the file since Rimmerge last loaded or wrote
+    /// it, by exact id (a swap between two copies of a mod counts).
     #[must_use]
     pub fn external_file_change(&self) -> ExternalFileChange {
         self.file_watch.change_to(&self.file_active_mods)
@@ -486,6 +486,27 @@ impl Session {
             self.orders.get(source).as_slice(),
             &self.file_active_mods,
         )
+    }
+
+    /// Whether `ModsConfig.xml` (as last read) lists exactly `source`'s ids in
+    /// the same sequence, the generated merge mod **included**: writing that
+    /// order as it is would change nothing, so an outside edit of the list
+    /// would be lost to no one. Stricter than [`Self::file_matches`], which
+    /// ignores the merge mod on purpose (a freshly applied file has it and a
+    /// suggested order may not yet): an outside edit that only turned the
+    /// merge mod on or off is not a match here, because an `Apply` would put
+    /// it back.
+    #[must_use]
+    pub fn file_holds_exactly(&self, source: OrderSource) -> bool {
+        self.orders.get(source).as_slice() == self.file_active_mods.as_slice()
+    }
+
+    /// [`Self::file_holds_exactly`] for the order the interface has selected:
+    /// the fact that says whether applying what the user sees would overwrite
+    /// anything of the file's.
+    #[must_use]
+    pub fn file_holds_selected_exactly(&self) -> bool {
+        self.file_holds_exactly(self.selected())
     }
 
     /// Whether the working set has changes a rescan hasn't picked up yet

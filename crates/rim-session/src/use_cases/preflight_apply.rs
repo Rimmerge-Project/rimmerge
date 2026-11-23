@@ -17,7 +17,8 @@ pub struct ApplyPreflight {
     /// What someone else changed in `ModsConfig.xml` since Rimmerge last
     /// loaded or wrote it, when writing `source` would overwrite that
     /// change; [`ExternalFileChange::None`] otherwise (no outside change,
-    /// or the file already holds `source`'s order, so nothing is lost).
+    /// or the file already holds `source`'s ids exactly, merge mod included,
+    /// so nothing is lost).
     pub outside_change: ExternalFileChange,
 }
 
@@ -53,7 +54,7 @@ impl PreflightApply {
     /// lazily, as every other ledger read does.
     #[must_use]
     pub fn execute(self, session: &mut Session, source: OrderSource) -> ApplyPreflight {
-        let outside_change = if session.file_matches(source) {
+        let outside_change = if session.file_holds_exactly(source) {
             ExternalFileChange::None
         } else {
             session.external_file_change()
@@ -238,6 +239,57 @@ mod tests {
 
         assert_eq!(preflight.outside_change, ExternalFileChange::None);
         assert!(!preflight.requires_confirmation());
+    }
+
+    #[test]
+    fn an_outside_swap_between_two_copies_requires_confirmation() {
+        let mut session = session_after_outside_edit(&["a", "b_steam"]);
+
+        let preflight = PreflightApply::new().execute(&mut session, OrderSource::Current);
+
+        assert_eq!(
+            preflight.outside_change,
+            ExternalFileChange::Membership {
+                added: 1,
+                removed: 1
+            }
+        );
+        assert!(preflight.requires_confirmation());
+    }
+
+    #[test]
+    fn an_outside_edit_that_only_removes_the_merge_mod_is_still_an_overwrite() {
+        // Current lists the profile's merge mod (it was in the file at load);
+        // the user turns it off in the game. `file_matches` ignores the merge
+        // mod, but writing Current would put it back.
+        let own_id = rim_resolve::domain::GeneratedModIdentity::for_profile(
+            crate::test_support::session_fixture(&[])
+                .paths()
+                .profile_hash(),
+        )
+        .package_id;
+        let mut session = crate::test_support::session_fixture_with_generated(
+            &["a", "b", own_id.as_str()],
+            own_id.as_str(),
+        );
+        let store = InMemoryModsConfigStore::new(file(&["a", "b"]));
+        RefreshFileBaseline::new(&store).execute(&mut session);
+        assert!(
+            session.file_matches(OrderSource::Current),
+            "sanity: the merge-mod-blind comparison sees no difference"
+        );
+
+        let preflight = PreflightApply::new().execute(&mut session, OrderSource::Current);
+
+        assert!(!session.file_holds_selected_exactly());
+        assert_eq!(
+            preflight.outside_change,
+            ExternalFileChange::Membership {
+                added: 0,
+                removed: 1
+            }
+        );
+        assert!(preflight.requires_confirmation());
     }
 
     #[test]

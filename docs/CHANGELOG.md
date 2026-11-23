@@ -5,6 +5,30 @@ before that point is not summarized here.
 
 ## [Unreleased]
 
+- **Fix: the outside-change notes no longer claim an overwrite that cannot
+  happen.** When `ModsConfig.xml` was edited outside Rimmerge but already held
+  exactly the order you have selected, the note on the Mods page and the one on
+  the other pages still said Applying would overwrite those changes, although
+  Apply asks nothing and writes the same list. The Mods page note now says your
+  active mod list already matches the selected order, and the note on the other
+  pages stays away. An edit that only turned the generated merge mod on or off
+  still counts as an overwrite, because Apply would put it back. The install
+  note under the patch and assignment export panels follows the same rule for
+  the Current order.
+- **Fix: swapping a mod for its other copy outside Rimmerge went unnoticed.**
+  Replacing a plain mod with its Steam Workshop copy in `ModsConfig.xml` (or the
+  other way round) was reported as no change, so Apply overwrote it without
+  asking. It now counts as one mod added and one removed, in the notes and in
+  Apply's confirmation. The note's **Use the list from the file** button now
+  keeps the copy the file names, where it used to swap it back to the copy that
+  was already active.
+- **Fix: screen readers could miss or repeat the banners.** The
+  pending-changes banner and the two outside-change notes were assertive alerts
+  that were read out again each time a page appeared, and a note that appeared
+  while you were on another page was not reliably read at all. The banners are
+  now quiet notes, and one polite status region that is always present in the
+  window reads their text when a banner appears or its text changes, and not
+  again when a page change shows the same banner.
 - **Fix: searching in Greek missed names with a capital sigma.** A search that
   ended in a capital "Σ" (such as "ΑΣ") did not find a name that continued after
   it ("ΑΣΑ"), and a search typed with a final "ς" (such as "κοσμος") did not find

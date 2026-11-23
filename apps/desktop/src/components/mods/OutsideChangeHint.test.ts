@@ -15,9 +15,13 @@ import type { ExternalFileChangeDto } from "@/types/generated/ExternalFileChange
 
 const STUB = { template: "<div />" };
 
-async function mountHint(routeName: string, externalChange: ExternalFileChangeDto) {
+async function mountHint(
+  routeName: string,
+  externalChange: ExternalFileChangeDto,
+  fileMatchesSelected = false,
+) {
   installMockIpc({
-    get_mods_config_baseline: { state: { kind: "fresh" }, externalChange },
+    get_mods_config_baseline: { state: { kind: "fresh" }, externalChange, fileMatchesSelected },
   });
   const router = createRouter({
     history: createMemoryHistory(),
@@ -47,6 +51,25 @@ describe("OutsideChangeHint", () => {
     expect(wrapper.get('[data-testid="outside-change-hint-link"]').attributes("href")).toBe(
       "/mods",
     );
+  });
+
+  it("is a quiet note, not a live region of its own", async () => {
+    const wrapper = await mountHint("dashboard", { kind: "reordered" });
+
+    // The test transition stub carries the test id; the live region is the message inside it.
+    const hint = wrapper.get('[data-testid="outside-change-hint"] .p-message');
+    expect(hint.attributes("role")).toBe("note");
+    expect(hint.attributes("aria-live")).toBe("off");
+  });
+
+  it("is hidden while the file already holds the selected order, since applying overwrites nothing", async () => {
+    const wrapper = await mountHint(
+      "dashboard",
+      { kind: "membership", added: 1, removed: 1 },
+      true,
+    );
+
+    expect(wrapper.find('[data-testid="outside-change-hint"]').exists()).toBe(false);
   });
 
   it("is hidden when nothing changed outside", async () => {

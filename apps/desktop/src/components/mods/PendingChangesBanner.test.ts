@@ -80,6 +80,20 @@ describe("PendingChangesBanner", () => {
     expect(wrapper.find('[data-testid="pending-changes-unapplied-text"]').exists()).toBe(false);
   });
 
+  it("is a quiet note, not an assertive alert", async () => {
+    const wrapper = mountBanner({
+      unscanned: { added: ["a.mod"], removed: [] },
+      unapplied: { added: [], removed: [] },
+      orderUnapplied: false,
+    });
+    await flushPromises();
+
+    const message = wrapper.get('[data-testid="pending-changes-banner"] [role]');
+    expect(message.attributes("role")).toBe("note");
+    expect(message.attributes("aria-live")).toBe("off");
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+  });
+
   it("clicking Rescan calls rescan_project", async () => {
     let calls = 0;
     const wrapper = mountBanner(

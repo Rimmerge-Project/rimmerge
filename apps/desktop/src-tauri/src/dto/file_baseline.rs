@@ -2,6 +2,7 @@
 //! worked, what someone else changed, and how a Mods page row differs from
 //! the file. Every enum crosses as a code the interface words.
 
+use rim_resolve::domain::OrderSource;
 use rim_session::{BaselineIssue, ExternalFileChange, FileBaseline, MembershipMark, Session};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
@@ -89,8 +90,8 @@ impl From<FileBaseline> for FileBaselineStateDto {
 pub enum ExternalFileChangeDto {
     /// The file is what Rimmerge last loaded or wrote.
     None,
-    /// Mods the file lists now that it did not, and mods it no longer
-    /// lists, counted by base id.
+    /// Ids the file lists now that it did not, and ids it no longer lists,
+    /// counted by exact id (swapping `x` for `x_steam` is one of each).
     Membership {
         /// Mods the file lists now that it did not.
         added: usize,
@@ -114,8 +115,8 @@ impl From<ExternalFileChange> for ExternalFileChangeDto {
 }
 
 /// `get_mods_config_baseline`/`refresh_mods_config_baseline`'s result: the
-/// baseline's status and the outside change, which together drive the
-/// Mods page notice.
+/// baseline's status, the outside change and whether the file already holds
+/// the selected order, which together drive the outside-change notes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export, export_to = "../../src/types/generated/")]
@@ -124,6 +125,15 @@ pub struct FileBaselineDto {
     pub state: FileBaselineStateDto,
     /// What someone else changed in the file's membership.
     pub external_change: ExternalFileChangeDto,
+    /// Whether the file already lists exactly the selected order's ids, the
+    /// generated merge mod included. When true, applying it overwrites nothing,
+    /// so a note must not say it would. Live: it follows the file and the
+    /// selection.
+    pub file_matches_selected: bool,
+    /// Whether the file already lists exactly Current's ids (merge mod
+    /// included), whichever order is selected: an install export writes
+    /// Current, so when this is true it overwrites no outside change.
+    pub file_holds_current_exactly: bool,
 }
 
 impl From<&Session> for FileBaselineDto {
@@ -131,6 +141,8 @@ impl From<&Session> for FileBaselineDto {
         Self {
             state: session.file_baseline().into(),
             external_change: session.external_file_change().into(),
+            file_matches_selected: session.file_holds_selected_exactly(),
+            file_holds_current_exactly: session.file_holds_exactly(OrderSource::Current),
         }
     }
 }

@@ -63,7 +63,7 @@ the other way around.
   `ApplyPreflight::requires_confirmation` is derived from the items and
   `outside_change`, never stored. `outside_change` is
   `Session::external_file_change()` (the live baseline against the acknowledged
-  list) but `None` when `file_matches(source)`: it names only what writing
+  list) but `None` when `file_holds_exactly(source)` (the file already holds exactly that order, the merge mod included): it names only what writing
   `source` would overwrite. The use case reads the baseline as it is; a caller
   wanting the file now refreshes it first (the desktop does, see its CLAUDE.md).
   The CLI loads a fresh session, so its preflight is always `None` there. `Session::file_matches(source)` compares that order with the
@@ -734,9 +734,17 @@ page marks follow an outside edit once a refresh has seen it, while
   Rimmerge itself last loaded or wrote (the **acknowledged** list), and
   `Session::external_file_change()` is a closed `ExternalFileChange::{None,
   Membership { added, removed }, Reordered}` of the live baseline against it: the
-  counts are base ids gained or lost, `Reordered` only when the membership is the
-  same but the base-id sequence differs. Rimmerge's own write resets it, so only
-  someone else's edit shows.
+  counts are **exact** ids gained or lost (a swap of `x` for `x_steam` is one of each,
+  the same exact comparison `file_matches` makes, so Apply cannot overwrite a swap
+  unasked), `Reordered` only when the membership is the same but the sequence differs.
+  Rimmerge's own write resets it, so only someone else's edit shows. The row marks
+  stay by base id (below), so a swap raises the note but marks no row.
+  `Session::file_holds_exactly(source)` is the strict sibling of `file_matches`: the same
+  ids in the same sequence with the generated merge mod **counted** (an outside edit that
+  only turned it on or off is a difference, since an Apply would put it back).
+  `file_holds_selected_exactly()` is it for the selected order, the live fact the
+  desktop's baseline DTO carries so a note never says an Apply would overwrite what it
+  would not; `PreflightApply` gates its `outside_change` on the same exact comparison.
 - **Own facts vs live facts.** Anything said about the user's *own unsaved work*
   compares with the acknowledged list, never the live baseline: an outside edit alone
   must not read as their pending changes. `pending_changes().unapplied` and
@@ -1048,6 +1056,13 @@ through `ports::OrganizationStore` (`rim-io`'s `JsonOrganizationStore`).
   is never in `deactivated`. The profile's own merge mod is appended at the
   end when the file has it, after `moved` is counted, so it is neither
   deactivated nor counted as moved. `VersionCheck` compares major.minor.
+- **`ImportContext::id_spelling`** says how the list's ids were written. `Shared` (every
+  export, pasted text, a save) is the base-id rule above. `Exact` is for the game's own
+  `ModsConfig.xml` (`ImportTarget::for_the_games_own_list`, set by the desktop when the previewed
+  path is the session's own file): a listed copy that is installed wins before the
+  already-active-copy rule, so an outside swap of `x` for `x_steam` previews as that swap
+  (`x_steam` activated, `x` deactivated) instead of being undone. A listed copy that is not
+  installed falls back to the base-id rules. The CLI always passes `Shared`.
 - **`check_order` is the one import rule.** `ImportOrder::validate`
   (desktop, against the live session), `validate_order` (the CLI, against a
   discovered inventory) and `import_blocker` (why the preview's "Use this

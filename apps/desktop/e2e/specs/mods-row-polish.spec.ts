@@ -283,6 +283,9 @@ test.describe("mods row polish", () => {
     await page.getByTestId("mod-menu-groups").click();
     const input = page.getByTestId("group-search-input");
     await input.fill("Melee");
+    // The create option renders once the typed name is known to be new; tabbing
+    // before it exists would move focus past it.
+    await expect(page.getByTestId("group-create-button")).toBeVisible();
 
     await page.keyboard.press("Tab");
     await expect(page.getByTestId("group-create-button")).toBeFocused();

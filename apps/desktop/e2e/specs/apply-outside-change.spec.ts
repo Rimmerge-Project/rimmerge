@@ -144,6 +144,19 @@ test.describe("apply and an outside change of the file", () => {
     expect(kinds.current).not.toBe("none");
   });
 
+  test("an outside swap between two copies of a mod is named in the confirm", async ({ page }) => {
+    await loadScenario(page);
+    const ids = await activeIds(page);
+    const swapped = ids.map((id, index) => (index === 1 ? `${id}_steam` : id));
+    await writeFileOutside(page, swapped);
+
+    await page.getByTestId("dashboard-apply-button").click();
+    await page.getByTestId("apply-dialog-submit").click();
+
+    await expect(page.getByTestId("apply-confirm-outside-text")).toContainText("(+1, -1)");
+    expect(await page.evaluate(() => window.__APPLY_CALLS__ ?? [])).toEqual([]);
+  });
+
   test("without an outside edit the confirm has no outside section", async ({ page }) => {
     await loadScenario(page);
 
@@ -213,6 +226,53 @@ test.describe("apply and an outside change of the file", () => {
   });
 });
 
+test.describe("the outside-change notes", () => {
+  test("a swap between two copies is reported on the Mods page", async ({ page }) => {
+    await loadScenario(page);
+    const ids = await activeIds(page);
+
+    await writeFileThenFocus(
+      page,
+      ids.map((id, index) => (index === 1 ? `${id}_steam` : id)),
+    );
+    await expect(page.getByTestId("outside-change-hint")).toBeVisible();
+    await page.getByTestId("outside-change-hint-link").click();
+
+    await expect(page.getByTestId("file-changed-outside-text")).toContainText("(+1, -1)");
+    await expect(page.getByTestId("file-changed-outside-text")).toContainText(
+      "Applying would overwrite",
+    );
+  });
+
+  test("a file that already holds the selected order is explained without an overwrite claim", async ({
+    page,
+  }) => {
+    await loadScenario(page);
+    await page.getByTestId("order-source-suggested").click();
+    await expect(page.getByTestId("order-source-suggested")).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    const suggested = await page.evaluate(async () => {
+      const rows = (await window.__TAURI_INTERNALS__.invoke("list_order", {
+        source: "suggested",
+      })) as { modId: string }[];
+      return rows.map((row) => row.modId);
+    });
+
+    await writeFileThenFocus(page, suggested);
+    await page.getByTestId("nav-mods").click();
+
+    const note = page.getByTestId("file-changed-outside-text");
+    await expect(note).toContainText("It already matches the order you have selected.");
+    await expect(note).not.toContainText("overwrite");
+    await page.getByTestId("nav-dashboard").click();
+    // The Dashboard has rendered, so the hint's absence is not just a page still loading.
+    await expect(page.getByTestId("dashboard-counts")).toBeVisible();
+    await expect(page.getByTestId("outside-change-hint")).toHaveCount(0);
+  });
+});
+
 test.describe("the outside-change hint", () => {
   test("shows off the Mods page, and goes away after a rescan", async ({ page }) => {
     await loadScenario(page);
@@ -221,6 +281,10 @@ test.describe("the outside-change hint", () => {
     await writeFileThenFocus(page, [...(await activeIds(page)), "mod.905"]);
 
     await expect(page.getByTestId("outside-change-hint")).toBeVisible();
+    await expect(page.getByTestId("outside-change-hint")).toHaveAttribute("aria-live", "off");
+    await expect(page.getByTestId("banner-live-region")).toContainText(
+      "Your active mod list was changed outside Rimmerge.",
+    );
     await page.getByTestId("nav-rules").click();
     await expect(page.getByTestId("outside-change-hint")).toBeVisible();
 

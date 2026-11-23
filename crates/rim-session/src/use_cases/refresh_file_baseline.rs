@@ -289,6 +289,50 @@ mod tests {
     }
 
     #[test]
+    fn a_swap_between_two_copies_of_a_mod_is_an_outside_change() {
+        let (mut session, store) = fixture();
+        store.set_file(file(&["a", "b_steam"]));
+
+        refresh(&mut session, &store);
+
+        assert_eq!(
+            session.external_file_change(),
+            ExternalFileChange::Membership {
+                added: 1,
+                removed: 1
+            }
+        );
+        assert!(
+            !session.file_matches(OrderSource::Current),
+            "the same comparison Apply's overwrite check uses sees the swap"
+        );
+        assert!(has_no_marks(&session), "the marks stay by base id");
+    }
+
+    #[test]
+    fn swapping_a_copy_back_clears_the_outside_change() {
+        let (mut session, store) = fixture();
+        store.set_file(file(&["a", "b_steam"]));
+        refresh(&mut session, &store);
+
+        store.set_file(file(&["a", "b"]));
+        refresh(&mut session, &store);
+
+        assert_eq!(session.external_file_change(), ExternalFileChange::None);
+    }
+
+    #[test]
+    fn writing_a_swapped_copy_ourselves_is_not_an_outside_change() {
+        let (mut session, store) = fixture();
+        store.set_file(file(&["a", "b_steam"]));
+        refresh(&mut session, &store);
+
+        session.set_current_order(LoadOrder::new(ids(&["a", "b_steam"])));
+
+        assert_eq!(session.external_file_change(), ExternalFileChange::None);
+    }
+
+    #[test]
     fn writing_the_same_order_back_clears_the_reorder() {
         let (mut session, store) = fixture();
         store.set_file(file(&["b", "a"]));

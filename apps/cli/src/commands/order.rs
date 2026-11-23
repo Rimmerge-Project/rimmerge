@@ -21,8 +21,8 @@ use rim_io::GameProcessProbe;
 use rim_resolve::domain::GeneratedModIdentity;
 use rim_session::mod_info::workshop_url;
 use rim_session::mod_list::{
-    Activation, CorePlacement, ImportContext, ImportPlan, ImportedEntry, ListAlignment, ListFormat,
-    MissingKind, Rejection, SkippedEntry, VersionCheck, render_text,
+    Activation, CorePlacement, IdSpelling, ImportContext, ImportPlan, ImportedEntry, ListAlignment,
+    ListFormat, MissingKind, Rejection, SkippedEntry, VersionCheck, render_text,
 };
 use rim_session::use_cases::{
     ExportOrder, ExportSource, ImportLoss, ImportOrder, ImportOrderError, ImportPreview,
@@ -172,6 +172,7 @@ fn import_target(
             game_version: game_version(paths),
             // The CLI has no working set, so there is nothing to replace.
             has_pending_changes: false,
+            id_spelling: IdSpelling::Shared,
         },
     })
 }

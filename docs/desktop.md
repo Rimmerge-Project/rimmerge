@@ -115,8 +115,9 @@ Pressing Apply also reads `ModsConfig.xml` again, right then (not the
 note on other pages then go by what that read found, even if you go back. If the list was changed
 outside Rimmerge since it last read or wrote it, and the order you are
 applying would overwrite that change, the same panel names it first: how
-many mods were added and removed, or that the order was changed. The
-outside change and any undecided problems share one panel, so **Go back**
+many mods were added and removed, or that the order was changed. A mod
+swapped for its other copy (a plain one for its Steam Workshop twin) counts as
+one added and one removed. The outside change and any undecided problems share one panel, so **Go back**
 stays the focused button. Nothing is asked when the file already holds the
 order you are applying. **Apply anyway** still saves a timestamped backup of
 the changed file before writing, and the success message names it. If the
@@ -431,13 +432,20 @@ never touches your pending changes or your order. When nothing changed it does
 nothing visible. If the list was changed outside Rimmerge, a note above the
 lists says so: "Your active mod list was changed outside Rimmerge (+2, -1).
 Applying would overwrite those outside changes." (When you have pending
-changes of your own, it adds "Your pending changes are kept.") An outside edit
+changes of your own, it adds "Your pending changes are kept.") A mod swapped
+for its other copy counts as one added and one removed here too. When the file
+matches the order you have selected exactly, Applying would overwrite nothing, so
+the note drops that sentence and says "Your active mod list already matches the
+order you have selected." instead. "Exactly" counts the generated merge mod: an
+outside edit that only turned it on or off still says Applying would overwrite,
+because Apply would put it back. An outside edit
 is explained by this note alone. It is never counted as your own unsaved work:
 the warning when you close the window or switch project, the pending-changes
 banner, the "This isn't your active order yet." note and the import
 preview's "replaces your Current order" warning only look at what you changed
 since Rimmerge last loaded or wrote the list. Its **Use the list from the file** button opens the same import
-preview as the Load order page's Import menu, with the file's list; nothing is
+preview as the Load order page's Import menu, with the file's list (the copy the
+file names is kept, so a swap between two copies is not undone); nothing is
 replaced until you confirm there. A change that only reorders the file's mods
 raises its own note without a count: "Your active order was changed outside
 Rimmerge. Applying would overwrite that order." (with the same "Your pending
@@ -446,7 +454,13 @@ partly written, a note says which, and the marks keep using the last list that
 could be read; the next good read clears the note. Rescan and an import read the file fresh as well, and after an Apply the
 saved list is what Rimmerge wrote. On every other page, a short note under the
 pending-changes banner says the list was changed outside Rimmerge and links
-here; it goes away after a rescan, an import or an Apply.
+here; it goes away after a rescan, an import or an Apply. It is not shown while
+your active mod list matches the order you have selected, since an Apply would
+overwrite nothing; the note on this page still says so. The banners (pending
+changes, the outside change and an unreadable file) are quiet notes for a screen
+reader; one polite status region that is always present in the window reads
+their text when a banner appears or its text changes, and not again when a page
+change shows the same banner.
 
 ![The note on other pages: Your active mod list was changed outside Rimmerge, with a link to the Mods page](screenshots/mods-page/outside-change-hint.png)
 
@@ -1070,7 +1084,7 @@ Apply. An install export writes your current order, so an order you have not
 applied yet (a move, an import) goes into the file with it; the export panel
 warns when that is the case, and warns too when the active mod list was
 changed outside Rimmerge, since the install writes your order over those
-changes. Every
+changes (not when the file already holds your current order exactly). Every
 write takes a timestamped backup first, and each refuses to write while
 RimWorld looks like it is running unless you confirm the override.
 

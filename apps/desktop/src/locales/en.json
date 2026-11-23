@@ -1345,6 +1345,10 @@
       "reordered": "Your active order was changed outside Rimmerge. Your pending changes are kept. Applying would overwrite that order.",
       "outsideNoPending": "Your active mod list was changed outside Rimmerge (+{added}, -{removed}). Applying would overwrite those outside changes.",
       "reorderedNoPending": "Your active order was changed outside Rimmerge. Applying would overwrite that order.",
+      "outsideMatches": "Your active mod list was changed outside Rimmerge (+{added}, -{removed}). Your pending changes are kept. It already matches the order you have selected.",
+      "reorderedMatches": "Your active order was changed outside Rimmerge. Your pending changes are kept. It already matches the order you have selected.",
+      "outsideMatchesNoPending": "Your active mod list was changed outside Rimmerge (+{added}, -{removed}). It already matches the order you have selected.",
+      "reorderedMatchesNoPending": "Your active order was changed outside Rimmerge. It already matches the order you have selected.",
       "useFile": "Use the list from the file",
       "useFileTitle": "Opens a preview first. Nothing changes until you confirm.",
       "stale": {

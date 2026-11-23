@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { useBannerAnnouncerStore } from "@/stores/bannerAnnouncer";
 import type { GameLogSummaryDto } from "@/types/generated/GameLogSummaryDto";
 import type { OrderSourceDto } from "@/types/generated/OrderSourceDto";
 import type { ProjectPathsDto } from "@/types/generated/ProjectPathsDto";
@@ -70,6 +71,9 @@ export const useSessionStore = defineStore("session", () => {
     paths.value = projectPaths;
     loaded.value = true;
     selected.value = selectedSource;
+    // The new project's banners are new banners: one showing the text the previous project last
+    // spoke must still be spoken. Called here, not at module level, so the stores never cycle.
+    useBannerAnnouncerStore().clear();
   }
 
   /** Changes which order source the UI is browsing. */

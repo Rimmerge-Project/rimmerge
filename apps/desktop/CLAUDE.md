@@ -304,8 +304,12 @@ of that command surface — no direct filesystem or process access outside
   deliberately not in `HANDLED_BY_MERGE_MUTATION`, so it invalidates everything like any
   other change. `get_mods_config_baseline` is the pure read behind
   `useFileBaselineQuery` (`FileBaselineDto`: `state` fresh or stale with a reason code,
-  and `externalChange`, a `kind`-tagged union: `none`, `membership` with `added`/`removed`
-  counts, or `reordered`). `composables/useFileBaselinePolling.ts`, called once
+  `externalChange`, a `kind`-tagged union: `none`, `membership` with `added`/`removed`
+  counts by **exact id** (a swap between a plain and a `_steam` copy is one of each), or
+  `reordered`, and `fileMatchesSelected`, the live `Session::file_holds_selected_exactly()`: the file
+  lists exactly the selected order's ids, the generated merge mod included, so an Apply overwrites
+  nothing; and `fileHoldsCurrentExactly`, the same exact comparison for Current, which the export panels'
+  install note reads). `composables/useFileBaselinePolling.ts`, called once
   in `TheShell.vue`, polls every 5 s while the document is visible and on window focus
   (`useVisiblePolling`, shared with the launch poller) and **skips a tick while its call is
   pending** (the call can wait behind a long command such as verify, and a tick per
@@ -316,10 +320,14 @@ of that command surface — no direct filesystem or process access outside
   on the Mods page shows two notes: the outside change (plain words, no file name; a
   membership change is the `(+N, -M)` sentence, a `reordered` change its own; each has a
   whole-sentence key with and without "Your pending changes are kept.", chosen by
-  `hasOwnPendingChanges`, never concatenated;
+  `hasOwnPendingChanges`, never concatenated, and a second set that drops "Applying would
+  overwrite" for "It already matches the order you have selected." while
+  `fileMatchesSelected` is true;
   its action runs `useOrderShare().previewModsConfig`, the existing
   `preview_order_import_file` preview on the session's own file path, so the existing
-  import confirm and replace warnings apply) and the stale-baseline failure (this one may
+  import confirm and replace warnings apply; the command recognises that path
+  (`is_same_file` with `modsConfig`) and plans with `IdSpelling::Exact`, so the copy the file
+  names is kept, where every other source keeps the base-id rule) and the stale-baseline failure (this one may
   name ModsConfig.xml, per reason code through `staleBaselineMessage`). The mock mirrors it:
   `window.__MODS_CONFIG_FILE__` (`{ status: "ok", activeMods }` or a failure status) is what
   the next refresh, rescan or import reads (a failure status makes the rescan or import fail
@@ -369,7 +377,7 @@ of that command surface — no direct filesystem or process access outside
   read in a bare `spawn_blocking`, commit under the lock) and then
   runs `PreflightApply`, whose `outside_change` (`ApplyPreflightDto.outsideChange`,
   the `ExternalFileChangeDto` union) is the live outside change **only when
-  `file_matches(source)` is false**, i.e. only when writing that order would
+  `file_holds_exactly(source)` is false** (the strict comparison, generated merge mod included), i.e. only when writing that order would
   overwrite something. `requiresConfirmation` is true for it alone; `ApplyConfirm.vue`
   shows one panel with an outside section (whole sentence per kind, never
   concatenated) above the unanswered problems, hiding the problem list and Findings
@@ -386,8 +394,21 @@ of that command surface — no direct filesystem or process access outside
   copy. The mock's `get_apply_preflight` calls `observeModsConfigFile()` first, emits
   `fileBaselineChanged` **before** returning when it returned true (the backend's order: the event reaches the webview before the response), and mirrors the rule. `OutsideChangeHint.vue` (shell, under `PendingChangesBanner`) is
   the other reader: a note on every page except `mods`/`mod-detail`, shown while
-  `externalChange.kind !== "none"` and gone by itself after a rescan, import or
-  apply (the backend resets the fact). The needs-input count is
+  `externalChange.kind !== "none"` **and `fileMatchesSelected` is false** (its only job is the
+  overwrite warning; with nothing to overwrite it stays away and `FileChangeNote` explains),
+  and gone by itself after a rescan, import or apply (the backend resets the fact). The three
+  banners (`PendingChangesBanner`, `FileChangeNote`, `OutsideChangeHint`) pass
+  `QUIET_MESSAGE_PT` (`utils/quietMessage.ts`) to `Message`: PrimeVue 4.5.5 renders
+  `role="alert" aria-live="assertive"` before `v-bind="ptm('root')"`, so the root pass-through
+  replaces both with `role="note" aria-live="off"`; behind a `v-if` an assertive alert is read
+  again at every page mount, and a polite region mounted together with its text is usually not
+  read at all. TheShell therefore has one always-mounted `role="status"` region
+  (`banner-live-region`, the `ApplyMergeModSection` pattern) holding `useBannerAnnouncerStore`'s
+  `message`; each banner reports its text through `useBannerAnnouncement(id, text)`, which speaks
+  a new or changed text and not the same text again when a page change re-mounts the banner
+  (`null` means gone, so it speaks again when it returns; `undefined` means only hidden here,
+  as the hint is on the Mods page). `session.setLoaded` clears the store (a new project's banners are new banners), and a `null` from the banner whose text the region holds empties the region, so the same text coming back is a real change. The hint and the note use separate ids, so moving between
+  them speaks the note's own wording. The needs-input count is
   information only (a count and an Inbox link); the old `applyAnyway` /
   `canSubmit` checkboxes in the dialog and on the Dashboard are gone.
 - **The Mods page's selection is a client-side view of the backend's lists.**
@@ -703,8 +724,8 @@ of that command surface — no direct filesystem or process access outside
   install writes it, so an unapplied reorder reaches `ModsConfig.xml` with the
   export. That is kept on purpose, as for an unapplied import; the warning is
   the mitigation. A third note (`outsideChangeNote`, from `useFileBaselineQuery`'s
-  `externalChange.kind !== "none"`) says install writes Current over an outside change of
-  the list.
+  `externalChange.kind !== "none"` and not `fileHoldsCurrentExactly`) says install writes Current
+  over an outside change of the list.
 - **The selected order is backend-led.** `load_project_inner` selects
   `INITIAL_ORDER_SOURCE` (Suggested, the desktop's own presentation
   default; `Session::new` stays on Current for the CLI) before the

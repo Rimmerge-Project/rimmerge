@@ -9,8 +9,8 @@ use rim_analyzer::domain::ModId;
 use crate::Session;
 use crate::mod_inventory::ModInventory;
 use crate::mod_list::{
-    ImportContext, ImportPlan, ListAlignment, ListFormat, ListedGameVersion, ParsedModList,
-    Rejection, SkippedEntry, parse_text, plan_import,
+    IdSpelling, ImportContext, ImportPlan, ListAlignment, ListFormat, ListedGameVersion,
+    ParsedModList, Rejection, SkippedEntry, parse_text, plan_import,
 };
 use crate::ports::{ModListFileError, ModListFileStore, ModListRead};
 
@@ -43,8 +43,19 @@ impl ImportTarget {
                 own_merge_mod: session.own_merge_mod_id(),
                 game_version: session.game_version(),
                 has_pending_changes: session.is_stale(),
+                id_spelling: IdSpelling::Shared,
             },
         }
+    }
+}
+
+impl ImportTarget {
+    /// The same target for a list the game itself wrote (the session's own
+    /// `ModsConfig.xml`): its ids are exact copies, not base ids.
+    #[must_use]
+    pub fn for_the_games_own_list(mut self) -> Self {
+        self.context.id_spelling = IdSpelling::Exact;
+        self
     }
 }
 
@@ -179,6 +190,7 @@ mod tests {
                 own_merge_mod: ModId::new("rimmerge.merge.3f9a1c2b7d5e"),
                 game_version: None,
                 has_pending_changes: false,
+                id_spelling: IdSpelling::Shared,
             },
         }
     }
