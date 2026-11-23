@@ -7,13 +7,13 @@
 //! labelled, never mistaken for a whole session; the frontend holds the last result in `stores/session.ts`
 //! for as long as it's useful (predicted-vs-observed, the def-cache note).
 
-use std::path::PathBuf;
-
 use rim_session::ports::{GameLogReader, KindChoice};
-use rim_session::use_cases::ImportGameLog;
+use rim_session::use_cases::{ImportGameLog, attribute_game_log};
+use rim_session::user_path::UserPath;
+use tauri::async_runtime::spawn_blocking;
 
 use crate::dto::game_log::{GameLogSummaryDto, ImportGameLogRequestDto};
-use crate::error::CommandError;
+use crate::error::{CommandError, parse_user_path};
 use crate::state::{AppState, with_session};
 
 /// See [`import_game_log`]. Generic over the reader port so a test can
@@ -21,26 +21,59 @@ use crate::state::{AppState, with_session};
 /// real, file-backed one — production callers always pass
 /// `state.adapters.game_log_reader`.
 ///
+/// A log can be hundreds of megabytes, so the read never holds the session
+/// lock: a short `with_session` copies the project's log formats, the read and
+/// parse run on a bare `spawn_blocking`, and a second short `with_session`
+/// attributes the parsed log against the session as it is then (a pure join
+/// over the active mods, no file access). Nothing is committed to the session,
+/// so a project swapped in between just attributes the log against the new
+/// project, which is what the user sees next anyway.
+///
 /// # Errors
 ///
 /// Returns [`CommandError::no_project_loaded`] when no project is
 /// loaded, or [`CommandError::invalid_input`] when the log can't be read.
 pub(crate) async fn import_game_log_with_reader<Reader>(
     state: &AppState,
-    path: PathBuf,
+    path: UserPath,
     reader: Reader,
 ) -> Result<GameLogSummaryDto, CommandError>
 where
     Reader: GameLogReader + Send + 'static,
 {
+    let knowledge = with_session(state, |session| Ok(session.mod_knowledge().clone())).await?;
+    let parsed = spawn_blocking(move || {
+        ImportGameLog::new(reader)
+            .read(path.as_path(), &knowledge.log_formats(), KindChoice::Detect)
+            .map_err(|error| CommandError::invalid_input(error.to_string()))
+    })
+    .await
+    .unwrap_or_else(|join_error| {
+        tracing::warn!(error = %join_error, "game log read task panicked");
+        Err(CommandError::internal("background task panicked"))
+    })?;
     with_session(state, move |session| {
-        let use_case = ImportGameLog::new(reader);
-        let summary = use_case
-            .execute(session, &path, KindChoice::Detect)
-            .map_err(|error| CommandError::invalid_input(error.to_string()))?;
+        let summary = attribute_game_log(session, parsed);
         Ok((&summary).into())
     })
     .await
+}
+
+/// Parses `request.path` (before anything else: no session, no file) and
+/// imports it with the project's own reader.
+///
+/// # Errors
+///
+/// See [`import_game_log_with_reader`]; also `network_path_refused` for a
+/// network share and [`CommandError::invalid_input`] for an empty, relative
+/// or device path.
+pub(crate) async fn import_game_log_inner(
+    state: &AppState,
+    request: ImportGameLogRequestDto,
+) -> Result<GameLogSummaryDto, CommandError> {
+    let path = parse_user_path(&request.path, "the log file")?;
+    let reader = state.adapters.game_log_reader;
+    import_game_log_with_reader(state, path, reader).await
 }
 
 /// Reads, parses, and attributes `request.path` against the currently
@@ -48,14 +81,13 @@ where
 ///
 /// # Errors
 ///
-/// See [`import_game_log_with_reader`].
+/// See [`import_game_log_inner`].
 #[tauri::command]
 pub async fn import_game_log(
     state: tauri::State<'_, AppState>,
     request: ImportGameLogRequestDto,
 ) -> Result<GameLogSummaryDto, CommandError> {
-    let reader = state.adapters.game_log_reader;
-    import_game_log_with_reader(&state, PathBuf::from(request.path), reader).await
+    import_game_log_inner(&state, request).await
 }
 
 #[cfg(test)]
@@ -70,7 +102,105 @@ mod tests {
     use crate::dto::game_log_coverage::{
         ConsoleFillDto, EndStateDto, GapEndDto, LogCoverageDto, LoggingGapDto,
     };
-    use crate::test_support::session_fixture_with_temp_paths;
+    use crate::test_support::{Gate, session_fixture_with_temp_paths};
+
+    /// An absolute drive-letter path for a log that a fake reader never opens.
+    fn log_path(name: &str) -> UserPath {
+        UserPath::parse(&std::env::temp_dir().join(name).to_string_lossy())
+            .expect("the temp folder is a drive path")
+    }
+
+    /// A reader whose read waits at a gate, then returns an empty log.
+    struct GatedReader(std::sync::Arc<Gate>);
+
+    impl GameLogReader for GatedReader {
+        fn read(
+            &self,
+            _path: &std::path::Path,
+            _formats: &rim_session::ports::LogFormats<'_>,
+            _kind: KindChoice,
+        ) -> Result<ParsedGameLog, GameLogError> {
+            self.0.block();
+            Ok(ParsedGameLog::default())
+        }
+    }
+
+    /// While the log is read another session command must run; were the lock
+    /// held across the read, the read would give up on its own timeout.
+    #[tokio::test]
+    async fn the_session_lock_is_free_while_the_log_is_read() {
+        let (_temp_dir, session) = session_fixture_with_temp_paths(&["a.mod"]);
+        let state = AppState::default();
+        *state.session.write().expect("lock") = Some(session);
+        let gate = Gate::new();
+
+        let import = import_game_log_with_reader(
+            &state,
+            log_path("Player.log"),
+            GatedReader(std::sync::Arc::clone(&gate)),
+        );
+        let other_command = async {
+            gate.wait_until_blocked().await;
+            let meanwhile = with_session(&state, |session| Ok(session.working().ids().len())).await;
+            gate.release();
+            meanwhile
+        };
+        let (imported, meanwhile) = tokio::join!(import, other_command);
+
+        assert_eq!(meanwhile.expect("a second command ran"), 1);
+        assert!(gate.was_released(), "the lock blocked the read");
+        assert!(imported.is_ok());
+    }
+
+    /// The command refuses a share from its text alone: with no project
+    /// loaded the answer is still the path refusal (not `no_project_loaded`),
+    /// so neither the session nor the file system was consulted.
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn a_network_share_is_refused_before_the_session_or_the_file_is_consulted() {
+        let state = AppState::default();
+
+        for raw in [
+            r"\\server\share\Player.log",
+            r"\\?\UNC\server\share\Player.log",
+        ] {
+            let result = import_game_log_inner(
+                &state,
+                ImportGameLogRequestDto {
+                    path: raw.to_string(),
+                },
+            )
+            .await;
+
+            assert_eq!(
+                result.expect_err("refused").code,
+                crate::error::CommandErrorCode::NetworkPathRefused,
+                "{raw}"
+            );
+        }
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn a_device_or_relative_log_path_is_invalid_input() {
+        let state = AppState::default();
+
+        for raw in [r"Player.log", r"\\.\pipe\x", r"C:\x\CON"] {
+            let result = import_game_log_inner(
+                &state,
+                ImportGameLogRequestDto {
+                    path: raw.to_string(),
+                },
+            )
+            .await;
+
+            assert_eq!(
+                result.expect_err("refused").code,
+                crate::error::CommandErrorCode::InvalidInput,
+                "{raw}"
+            );
+        }
+    }
 
     #[tokio::test]
     async fn a_successful_parse_maps_to_the_dto() {
@@ -92,7 +222,7 @@ mod tests {
 
         let dto = import_game_log_with_reader(
             &state,
-            PathBuf::from("Player.log"),
+            log_path("Player.log"),
             FakeGameLogReader::new(Ok(parsed)),
         )
         .await
@@ -116,7 +246,7 @@ mod tests {
 
         let result = import_game_log_with_reader(
             &state,
-            PathBuf::from("Player.log"),
+            log_path("Player.log"),
             FakeGameLogReader::new(Err(GameLogError("not a Player.log".to_string()))),
         )
         .await;
@@ -152,7 +282,7 @@ mod tests {
 
         let dto = import_game_log_with_reader(
             &state,
-            PathBuf::from("midgame1.txt"),
+            log_path("midgame1.txt"),
             FakeGameLogReader::new(Ok(snapshot)),
         )
         .await
@@ -187,9 +317,13 @@ mod tests {
         let path = temp_dir.path().join("midgame1.txt");
         std::fs::write(&path, copy).expect("write the copy");
 
-        let dto = import_game_log_with_reader(&state, path, FileGameLogReader::new())
-            .await
-            .expect("the copy is accepted");
+        let dto = import_game_log_with_reader(
+            &state,
+            UserPath::parse(&path.to_string_lossy()).expect("drive path"),
+            FileGameLogReader::new(),
+        )
+        .await
+        .expect("the copy is accepted");
 
         assert!(
             matches!(
@@ -213,9 +347,13 @@ mod tests {
         let path = temp_dir.path().join("Player.log");
         std::fs::write(&path, log).expect("write the log");
 
-        let dto = import_game_log_with_reader(&state, path, FileGameLogReader::new())
-            .await
-            .expect("the log is accepted");
+        let dto = import_game_log_with_reader(
+            &state,
+            UserPath::parse(&path.to_string_lossy()).expect("drive path"),
+            FileGameLogReader::new(),
+        )
+        .await
+        .expect("the log is accepted");
 
         assert!(matches!(
             dto.coverage,
@@ -256,9 +394,13 @@ mod tests {
         )
         .expect("write the log");
 
-        let dto = import_game_log_with_reader(&state, path, FileGameLogReader::new())
-            .await
-            .expect("the log is accepted");
+        let dto = import_game_log_with_reader(
+            &state,
+            UserPath::parse(&path.to_string_lossy()).expect("drive path"),
+            FileGameLogReader::new(),
+        )
+        .await
+        .expect("the log is accepted");
 
         assert!(dto.logging_gaps.is_empty());
         assert_eq!(dto.lower_bound, None);

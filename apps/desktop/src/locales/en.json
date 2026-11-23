@@ -621,11 +621,24 @@
       "organization_limit": {
         "title": "A limit for groups was reached",
         "detail": "You reached a limit for groups and colours: how many groups, how deep they nest, how many mods are in groups or coloured, or how large the groups file (organization.json) may be. Nothing was changed. Remove groups, mods from groups or colours you no longer need, then try again."
+      },
+      "network_path_refused": {
+        "title": "Network folders aren't supported",
+        "detail": "Rimmerge only uses files and folders on a drive letter, such as C:\\ or a network drive you mapped to a letter. A network path like \\\\server\\share is refused, and nothing was contacted. Map the share to a drive letter in Windows, or copy the file to a local folder, then try again."
+      },
+      "project_changed": {
+        "title": "The project changed",
+        "detail": "Another project was loaded while Rimmerge was reading the file, so the result was not used and nothing was changed. Try again to use the file with the project that is open now."
       }
     }
   },
   "defaultPathsWarning": {
-    "notAnInstall": "{gameDir} does not look like a RimWorld install (Version.txt or Data/Core/ is missing)."
+    "notAnInstall": "{gameDir} does not look like a RimWorld install (Version.txt or Data/Core/ is missing).",
+    "typedNetworkShare": "That game folder is on a network share, so Rimmerge did not use it. Rimmerge only uses folders on a drive letter: map the share to a drive letter in Windows, or choose a local folder.",
+    "typedInvalid": "That is not a full path to a folder on a drive letter, such as C:\\Games\\RimWorld, so Rimmerge did not use it.",
+    "configuredGameDir": "The saved game folder is not on a drive letter (it may be a network share), so Rimmerge ignored it. Choose a folder on a drive letter and save the defaults again.",
+    "configuredWorkshopDir": "The saved workshop folder is not on a drive letter (it may be a network share), so Rimmerge ignored it. Choose a folder on a drive letter and save the defaults again.",
+    "configuredModsConfig": "The saved ModsConfig.xml path is not on a drive letter (it may be a network share), so Rimmerge ignored it. Choose a file on a drive letter and save the defaults again."
   },
   "defaultPathsError": {
     "noProfileBase": "Neither RIMMERGE_PROFILE_DIR nor LOCALAPPDATA is set, so Rimmerge has nowhere to keep its own files.",

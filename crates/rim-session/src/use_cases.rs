@@ -131,7 +131,7 @@ pub use get_recommended_rules::{
 pub use import_game_log::{
     AttributedClass, DdsFailureSummary, DependencyWarningSummary, EnclosingOp, FamilyAttribution,
     GameLogSummary, ImportGameLog, ImportGameLogError, LoadEvent, LogAttribution,
-    PatchFailureSummary, StackTraceDetail, TimerSummary, UnpairedStackTrace,
+    PatchFailureSummary, StackTraceDetail, TimerSummary, UnpairedStackTrace, attribute_game_log,
 };
 pub use import_order::{ImportBlocker, ImportLoss, ImportOrder, ImportOrderError, ValidatedImport};
 pub use import_profile_decisions::{

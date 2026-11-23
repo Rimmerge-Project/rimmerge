@@ -18,6 +18,22 @@ field you changed yourself is never overwritten. A folder that is not a
 RimWorld install is flagged but does not block Load; choose **Save as
 defaults** to keep your choice.
 
+Every folder or file the app asks you for, here and elsewhere (the other
+profile when copying groups, a mod list or save to import or export, a game
+log, RimSort's database files, an export folder), must be on a drive letter:
+`C:\...`, or a network drive you mapped to a letter such as `Z:\...`. A raw
+network path (`\\server\share\...`, including `\\server@SSL\...` WebDAV paths)
+is refused with "Network folders aren't supported" before anything is read, so
+the app never contacts that host and never sends your Windows sign-in to it;
+map the share to a drive letter, or copy the files to a local folder. A
+relative path, an empty one, a device path and a path with a device name such
+as `NUL` or `COM1` in it are refused as invalid input. The command line
+([cli.md](cli.md)) has no such rule. A folder you type that is refused is
+named in a note on the Setup page instead of being dropped quietly. The
+`RIMMERGE_*` variables and `config.json` are checked when the page reads them:
+a network path saved there is ignored, never opened, and named in the same
+way.
+
 ## Dashboard
 
 The landing page once a profile is open: a getting-started strip, then a

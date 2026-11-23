@@ -558,7 +558,8 @@ mod tests {
     async fn replace_session_keeps_a_rule_and_a_decision_saved_after_the_scan_read_them() {
         let (_scratch, paths) = crate::test_support::scratch_sample_game();
         let state = AppState::default();
-        let project_paths: rim_session::ProjectPaths = paths.into();
+        let project_paths =
+            rim_session::ProjectPaths::try_from(paths).expect("scratch paths are drive paths");
         let scanned = crate::test_support::scanned_session(&state.adapters, &project_paths, None);
         let mod_id = scanned.working().ids()[0].clone();
         assert!(scanned.rules().placements.is_empty(), "sanity check");
@@ -582,7 +583,8 @@ mod tests {
     async fn replace_session_keeps_the_scan_and_warns_when_a_file_cannot_be_re_read() {
         let (_scratch, paths) = crate::test_support::scratch_sample_game();
         let state = AppState::default();
-        let project_paths: rim_session::ProjectPaths = paths.into();
+        let project_paths =
+            rim_session::ProjectPaths::try_from(paths).expect("scratch paths are drive paths");
         let scanned = crate::test_support::scanned_session(&state.adapters, &project_paths, None);
         std::fs::create_dir_all(&project_paths.profile_dir).expect("profile dir");
         std::fs::write(project_paths.profile_dir.join("rules.json"), b"{ not json")

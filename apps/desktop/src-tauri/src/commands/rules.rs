@@ -2,9 +2,14 @@
 //! `list_orphaned_decisions`: the rules page's commands.
 
 use std::collections::BTreeSet;
+use std::path::PathBuf;
 
 use rim_resolve::domain::{OrderSource, Rule};
+use rim_session::ports::{RimSortImporter, RimSortPaths};
+use rim_session::use_cases::ImportRimSort;
 use rim_session::{RuleKey, Session};
+
+use tauri::async_runtime::spawn_blocking;
 
 use crate::commands::emit_session_changed;
 use crate::dto::finding::OrphanedDecisionDto;
@@ -68,24 +73,75 @@ pub async fn list_rules(
 /// Imports RimSort's three database files, replacing any previously
 /// imported rules.
 ///
+/// **Lock protocol** (the `file_baseline` shape): a short `with_session`
+/// probes what the import reads from the session (the active-mod map and
+/// the profile folder the importer snapshots into), the files are read and
+/// parsed on a bare `spawn_blocking` with the lock released (a Steam database
+/// takes seconds), and a second short `with_session` applies the result, saves
+/// the rules and records the manifest. The commit refuses with
+/// `project_changed` when the session no longer has the profile folder or
+/// the active-mod map the read was made against: the rules were matched to
+/// those mods, so applying them to another project (or to one a rescan
+/// changed) would be wrong, and nothing has been written yet at that point
+/// but the importer's own snapshot copies under the profile it was told.
+///
 /// # Errors
 ///
-/// Returns [`CommandError`] when a database file can't be read, or when
-/// saving the merged rules fails.
+/// Returns `network_path_refused` for a network share and
+/// [`CommandError::invalid_input`] for a relative or device path, `project_changed`
+/// when the project changed during the read, or [`CommandError`] when a
+/// database file can't be read, or when saving the merged rules fails.
 pub(crate) async fn import_rimsort_inner(
     state: &AppState,
     paths: RimSortPathsDto,
 ) -> Result<ImportReportDto, CommandError> {
-    let rule_store = state.adapters.rule_store;
+    import_rimsort_with(state, paths, rim_io::RimSortImporter::new).await
+}
+
+/// [`import_rimsort_inner`] over an importer built from the profile folder by
+/// `make_importer` (generic so a test can slow the read down).
+///
+/// # Errors
+///
+/// See `import_rimsort_inner`.
+pub(crate) async fn import_rimsort_with<Importer>(
+    state: &AppState,
+    paths: RimSortPathsDto,
+    make_importer: impl FnOnce(PathBuf) -> Importer,
+) -> Result<ImportReportDto, CommandError>
+where
+    Importer: RimSortImporter + Send + 'static,
+{
+    let paths = RimSortPaths::try_from(paths)?;
+    let (active, profile_dir) = with_session(state, |session| {
+        Ok((
+            session.active_mods_by_base_id(),
+            session.paths().profile_dir.clone(),
+        ))
+    })
+    .await?;
+    let use_case = ImportRimSort::new(
+        make_importer(profile_dir.clone()),
+        state.adapters.rule_store,
+        rim_io::JsonImportManifestStore::new(),
+    );
+    let (use_case, read, active) = spawn_blocking(move || {
+        let read = use_case.read(&paths, &active);
+        (use_case, read, active)
+    })
+    .await
+    .map_err(|join_error| {
+        tracing::warn!(error = %join_error, "RimSort import read task panicked");
+        CommandError::internal("background task panicked")
+    })?;
+    let imported = read?;
     with_session(state, move |session| {
-        let importer = rim_io::RimSortImporter::new(session.paths().profile_dir.clone());
-        let use_case = rim_session::use_cases::ImportRimSort::new(
-            importer,
-            rule_store,
-            rim_io::JsonImportManifestStore::new(),
-        );
-        let imported = use_case.execute(session, &paths.into())?;
-        Ok((&imported).into())
+        if session.paths().profile_dir != profile_dir || session.active_mods_by_base_id() != active
+        {
+            return Err(CommandError::project_changed());
+        }
+        let applied = use_case.apply(session, imported)?;
+        Ok((&applied).into())
     })
     .await
 }
@@ -525,6 +581,188 @@ mod tests {
                 .expect("the commands must not wait for the load lock")
                 .is_ok(),
             "both commands succeed while a scan holds the load lock"
+        );
+    }
+
+    // -- import_rimsort lock protocol --
+
+    use std::sync::Arc;
+
+    use rim_analyzer::domain::ModId;
+    use rim_resolve::domain::{PairRule, RuleOrigin};
+    use rim_session::ports::{ImportError, ImportedRules};
+    use rim_session::test_support::{FakeRimSortImporter, session_fixture_in_profile};
+
+    use crate::error::CommandErrorCode;
+    use crate::test_support::Gate;
+
+    /// An importer whose read waits at a gate, then answers one pair rule.
+    struct GatedImporter {
+        gate: Arc<Gate>,
+        answer: FakeRimSortImporter,
+    }
+
+    impl GatedImporter {
+        fn new(gate: &Arc<Gate>) -> Self {
+            let imported = ImportedRules {
+                user_rules: Some(vec![Rule::Pair(PairRule {
+                    after: ModId::new("a"),
+                    before: ModId::new("b"),
+                    origin: RuleOrigin::RimSortUser,
+                    comment: None,
+                    overrides_declared: false,
+                })]),
+                community_rules: None,
+                steam_dependencies: None,
+                skipped_inactive_rules: 0,
+                skipped_inactive_steam: 0,
+                provenance: std::collections::BTreeMap::new(),
+            };
+            Self {
+                gate: Arc::clone(gate),
+                answer: FakeRimSortImporter::new(imported),
+            }
+        }
+    }
+
+    impl RimSortImporter for GatedImporter {
+        fn import(
+            &self,
+            paths: &RimSortPaths,
+            active: &std::collections::BTreeMap<ModId, Option<u64>>,
+        ) -> Result<ImportedRules, ImportError> {
+            self.gate.block();
+            self.answer.import(paths, active)
+        }
+    }
+
+    /// A user-rules path for an importer that never opens it.
+    fn user_rules_request() -> RimSortPathsDto {
+        RimSortPathsDto {
+            user_rules: Some(
+                std::env::temp_dir()
+                    .join("userRules.json")
+                    .display()
+                    .to_string(),
+            ),
+            community_rules: None,
+            steam_db: None,
+        }
+    }
+
+    /// While the files are read another session command must run; were the
+    /// lock held across the read, the read would give up on its own timeout.
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn the_session_lock_is_free_while_the_rimsort_files_are_read() {
+        let profile = tempfile::tempdir().expect("profile");
+        let state = AppState::default();
+        *state.session.write().expect("lock") =
+            Some(session_fixture_in_profile(&["a", "b"], profile.path()));
+        let gate = Gate::new();
+
+        let import =
+            import_rimsort_with(&state, user_rules_request(), |_| GatedImporter::new(&gate));
+        let other_command = async {
+            gate.wait_until_blocked().await;
+            let meanwhile = with_session(&state, |session| Ok(session.working().ids().len())).await;
+            gate.release();
+            meanwhile
+        };
+        let (imported, meanwhile) = tokio::join!(import, other_command);
+
+        assert_eq!(meanwhile.expect("a second command ran"), 2);
+        assert!(gate.was_released(), "the lock blocked the read");
+        imported.expect("the import applied");
+        let rules = with_session(&state, |session| Ok(session.rules().pairs.len()))
+            .await
+            .expect("session");
+        assert_eq!(rules, 1);
+        assert!(profile.path().join("rules.json").is_file());
+    }
+
+    /// Runs an import whose read is interrupted by `swap` replacing the
+    /// loaded session, and returns what the import answered.
+    async fn import_interrupted_by(
+        first: &std::path::Path,
+        swap: impl FnOnce() -> Session,
+    ) -> (AppState, Result<ImportReportDto, CommandError>) {
+        let state = AppState::default();
+        *state.session.write().expect("lock") =
+            Some(session_fixture_in_profile(&["a", "b"], first));
+        let gate = Gate::new();
+
+        let import =
+            import_rimsort_with(&state, user_rules_request(), |_| GatedImporter::new(&gate));
+        let replace = async {
+            gate.wait_until_blocked().await;
+            *state.session.write().expect("lock") = Some(swap());
+            gate.release();
+        };
+        let (result, ()) = tokio::join!(import, replace);
+        (state, result)
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn a_project_swapped_while_the_files_are_read_is_refused_and_nothing_is_saved() {
+        let first = tempfile::tempdir().expect("first");
+        let second = tempfile::tempdir().expect("second");
+
+        let (state, result) = import_interrupted_by(first.path(), || {
+            session_fixture_in_profile(&["a", "b"], second.path())
+        })
+        .await;
+
+        assert_eq!(
+            result.expect_err("refused").code,
+            CommandErrorCode::ProjectChanged
+        );
+        let rules = with_session(&state, |session| Ok(session.rules().pairs.len()))
+            .await
+            .expect("session");
+        assert_eq!(rules, 0, "the new project did not receive the rules");
+        assert_eq!(std::fs::read_dir(second.path()).expect("list").count(), 0);
+        assert!(!first.path().join("rules.json").exists());
+    }
+
+    /// A rescan swaps in a session for the same profile folder with another
+    /// active set; the rules were matched against the old one.
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn a_rescan_that_changed_the_active_mods_during_the_read_is_refused() {
+        let profile = tempfile::tempdir().expect("profile");
+
+        let (_state, result) = import_interrupted_by(profile.path(), || {
+            session_fixture_in_profile(&["a"], profile.path())
+        })
+        .await;
+
+        assert_eq!(
+            result.expect_err("refused").code,
+            CommandErrorCode::ProjectChanged
+        );
+        assert!(!profile.path().join("rules.json").exists());
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn a_network_share_is_refused_before_the_session_is_consulted() {
+        let state = AppState::default();
+
+        let result = import_rimsort_inner(
+            &state,
+            RimSortPathsDto {
+                user_rules: None,
+                community_rules: Some(r"\\server\share\communityRules.json".to_string()),
+                steam_db: None,
+            },
+        )
+        .await;
+
+        assert_eq!(
+            result.expect_err("refused").code,
+            CommandErrorCode::NetworkPathRefused
         );
     }
 }

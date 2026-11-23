@@ -29,6 +29,23 @@ the other way around.
   `current_order_replaced`), so Current is the second thing a use case
   changes without persisting. `file_active_mods` stays what the file held (the live baseline, see
   "The file baseline is live" below).
+- **`user_path::UserPath` is the one parser for a path from outside the process** (pure: text in,
+  validated path out, no file-system call). Only a drive-letter prefix (`Disk`, or `VerbatimDisk`
+  followed by a root) is accepted; `UNC`/`VerbatimUNC` (and a `Verbatim` named `UNC` in any case)
+  is `UserPathError::NetworkPath`, and `DeviceNS`, the other `Verbatim` names, the bare `\\?\C:`
+  and a legacy DOS device name as any component (`is_reserved_device_name`: `CON`, `PRN`, `AUX`,
+  `NUL`, `COM1`-`COM9`, `LPT1`-`LPT9`, superscript digits, `CONIN$`/`CONOUT$`, any case, extension
+  or trailing spaces) are `DevicePath`, so refusing a share never contacts its host (see
+  `docs/privacy-and-network.md`). It lives here, not in `rim-io`, because it is pure and every
+  interface (and `rim-io`) may use it; the desktop applies it at every command boundary, the CLI
+  deliberately does not (its paths come from the local user, there is no webview and no session
+  lock to hold). Its Windows prefix tests are `cfg(windows)`: elsewhere `std` does not parse those
+  prefixes. It cannot see a symbolic link that leads to a share.
+- `CopyOrganization::read_source` + `preview_loaded`/`execute_loaded` split the source read from the
+  planning, so the desktop reads outside the session lock (the composed `preview`/`execute` check
+  that the organization is available before they read); `ImportGameLog::read(path, formats, kind)`
+  + the free `attribute_game_log` do the same for a log, and `ImportRimSort::read` + `apply` for a
+  RimSort import. `preview`/`execute` stay as the composed forms.
 - Declared ids never carry `_steam`; compare through `ModId::base()`.
   `ActiveMods` is the single authority for "is this id active".
 - Ports return typed errors; `Apply` writes `ModsConfig.xml` only when

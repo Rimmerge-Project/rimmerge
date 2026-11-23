@@ -5207,38 +5207,78 @@ export function installScenario(): void {
     return path.replaceAll("\\", "/").replace(/\/+$/, "").toLowerCase();
   }
 
-  function isAbsolutePath(path: string): boolean {
-    return /^[A-Za-z]:[\\/]/.test(path) || path.startsWith("/") || path.startsWith("\\\\");
+  /**
+   * Whether one path component is a legacy DOS device name (`rim_session::user_path::
+   * is_reserved_device_name`): `CON`, `PRN`, `AUX`, `NUL`, `COM1`-`COM9`, `LPT1`-`LPT9` (also with
+   * the superscript digits), `CONIN$` and `CONOUT$`, whatever the case, the extension or the
+   * spaces before it.
+   */
+  function isReservedDeviceName(component: string): boolean {
+    const stem = (component.split(/[.:]/)[0] ?? "").replace(/ +$/, "").toUpperCase();
+    if (["CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$"].includes(stem)) return true;
+    return /^(COM|LPT)[1-9\u00b9\u00b2\u00b3]$/.test(stem);
   }
 
   /**
-   * `is_file_system_path`: an allowlist on the Windows prefix. A drive (`C:\`, `\\?\C:\`) and a
-   * share (`\\server\share`, `\\?\UNC\server\share`) are folders; any other `\\`-led prefix
-   * (`\\.\pipe\x`, `\\?\pipe\x`, `\\?\CONIN$`, `\\?\GLOBALROOT\x`) is a device.
+   * `parse_user_path` (`rim_session::user_path::UserPath::parse`, surrounding whitespace trimmed
+   * first): the one rule for every path the webview sends. It reads the text as `std` does on
+   * Windows (a prefix, then a root), so it agrees with the backend on every odd spelling. Only a
+   * drive-letter path is accepted (`C:\x`, `C:/x`, `\\?\C:\x`; a mapped drive is just a letter). A
+   * network share is `network_path_refused`: `\\server\share`, `//server/share`, `\\?\UNC\...` in
+   * any case, a WebDAV `\\server@SSL\x`, and `//?/C:/x` (`std` reads its `?` as a server). A
+   * device path (`\\.\pipe\x`, `\\?\GLOBALROOT\x`, the bare volume `\\?\C:`), a legacy device
+   * name as any component (`C:\x\NUL`, `C:\x\COM1.rml`), a relative or drive-relative path
+   * (`\\server` with no share and `\\\server\share` have no prefix), an empty one and one holding
+   * NUL are `invalid_input`. Works on the text alone, like the backend, and so never contacts a
+   * host. Returns the trimmed text.
    */
-  function isFileSystemPath(raw: string): boolean {
-    const normalized = raw.replaceAll("/", "\\");
-    if (!normalized.startsWith("\\\\")) return true;
-    return (
-      /^\\\\\?\\[A-Za-z]:/.test(normalized) ||
-      /^\\\\\?\\UNC\\[^\\]+\\[^\\]+/i.test(normalized) ||
-      /^\\\\[^\\.?][^\\]*\\[^\\]+/.test(normalized)
-    );
+  function parseUserPath(raw: string, what: string): string {
+    const text = raw.trim();
+    if (text.length === 0) organizationError("invalid_input", `${what}: the path is empty`);
+    if (text.includes("\u0000")) {
+      organizationError("invalid_input", `${what}: the path holds a character a path cannot`);
+    }
+    const refuse = (reason: "network" | "device" | "relative"): never => {
+      if (reason === "network") {
+        return organizationError(
+          "network_path_refused",
+          `${what} is on a network share; use a folder on a drive letter`,
+        );
+      }
+      return organizationError(
+        "invalid_input",
+        reason === "device"
+          ? `${what}: the path is a device path`
+          : `${what}: the path must be absolute`,
+      );
+    };
+    let afterPrefix: string;
+    if (/^[\\/]{2}/.test(text)) {
+      const body = text.slice(2);
+      if (body.startsWith("?\\")) {
+        const verbatim = body.slice(2);
+        if ((verbatim.split("\\")[0] ?? "").toLowerCase() === "unc") return refuse("network");
+        // A verbatim drive needs a root after it: the bare `\\?\C:` names the volume device.
+        if (!/^[A-Za-z]:[\\/]/.test(verbatim)) return refuse("device");
+        afterPrefix = verbatim.slice(2);
+      } else if (/^\.[\\/]/.test(body)) {
+        return refuse("device");
+      } else {
+        const [server = "", share = ""] = body.split(/[\\/]/);
+        return refuse(server !== "" && share !== "" ? "network" : "relative");
+      }
+    } else if (/^[A-Za-z]:[\\/]/.test(text)) {
+      afterPrefix = text.slice(2);
+    } else {
+      return refuse("relative");
+    }
+    if (afterPrefix.split(/[\\/]/).some(isReservedDeviceName)) return refuse("device");
+    return text;
   }
 
-  /** `parse_source_dir`: never empty, absolute, free of NUL, not a device path. */
+  /** `parse_source_dir`: the copy source folder, parsed once. */
   function parseCopySourceDir(raw: string): string {
-    if (raw.trim().length === 0) organizationError("invalid_input", "the profile folder is empty");
-    if (raw.includes("\u0000")) {
-      organizationError("invalid_input", "the profile folder holds a character a path cannot");
-    }
-    if (!isFileSystemPath(raw)) {
-      organizationError("invalid_input", "the profile folder must be a folder, not a device path");
-    }
-    if (!isAbsolutePath(raw)) {
-      organizationError("invalid_input", "the profile folder must be an absolute path");
-    }
-    return raw;
+    return parseUserPath(raw, "the profile folder");
   }
 
   function copySourceFor(path: string): CopyProfileSourceMock | null {
@@ -7996,11 +8036,31 @@ export function installScenario(): void {
 
   const fixtures: IpcFixtures = {
     // Mirrors the rung-1 rule: a requested game folder is what the backend
-    // answers with; every other path keeps its detected default.
+    // answers with; every other path keeps its detected default. A requested
+    // text that is not a drive-letter path is no answer (the backend never
+    // stats it) and is reported as a `pathRefused` warning instead.
     get_default_paths: (payload: unknown) => {
       const { request } = payload as { request?: DefaultPathsRequestDto | null };
       window.__GET_DEFAULT_PATHS_CALLS__?.push(request ?? { gameDir: null });
-      const gameDir = request?.gameDir ?? "C:/RimWorld";
+      let requested = (request?.gameDir ?? "").trim() === "" ? null : (request?.gameDir ?? null);
+      let warningCode: Record<string, string> | null = null;
+      if (requested !== null) {
+        try {
+          requested = parseUserPath(requested, "the game folder");
+        } catch (error) {
+          requested = null;
+          warningCode = {
+            kind: "pathRefused",
+            field: "gameDir",
+            reason:
+              (error as { code: string }).code === "network_path_refused"
+                ? "networkShare"
+                : "invalid",
+            source: "typed",
+          };
+        }
+      }
+      const gameDir = requested ?? "C:/RimWorld";
       // Mirrors `default_workshop_dir`: the game folder's grandparent plus
       // `workshop/content/294100` (`<library>/steamapps/common/<x>` lands in
       // `<library>/steamapps/workshop/...`); without two parents it is
@@ -8015,12 +8075,23 @@ export function installScenario(): void {
         workshopDir,
         modsConfig: MODS_CONFIG_PATH,
         profileDir: "C:/Profile/rimmerge",
-        warningCode: null,
+        warningCode,
         errorCode: null,
       };
     },
+    // Mirrors `save_app_config_at`: every non-blank path is parsed before anything is saved, so
+    // one refusal leaves the stored config as it was (and records no call).
     save_app_config: (payload: unknown) => {
-      window.__SAVE_APP_CONFIG_CALLS__?.push((payload as { config: AppConfigDto }).config);
+      const config = (payload as { config: AppConfigDto }).config;
+      const fields = [
+        [config.gameDir, "the game folder"],
+        [config.workshopDir, "the workshop folder"],
+        [config.modsConfig, "the ModsConfig.xml path"],
+      ] as const;
+      for (const [value, what] of fields) {
+        if ((value ?? "").trim() !== "") parseUserPath(value ?? "", what);
+      }
+      window.__SAVE_APP_CONFIG_CALLS__?.push(config);
       return null;
     },
     get_default_rimsort_paths: {
@@ -8028,7 +8099,15 @@ export function installScenario(): void {
       communityRules: "C:/RimSort/dbs/Community-Rules-Database/communityRules.json",
       steamDb: "C:/RimSort/dbs/Steam-Workshop-Database/steamDB.json",
     },
-    load_project: async () => {
+    load_project: async (payload: unknown) => {
+      // `ProjectPathsDto::try_from`: every path is parsed before anything is read.
+      const paths = (payload as { paths?: Record<string, string> } | undefined)?.paths;
+      if (paths !== undefined) {
+        parseUserPath(paths.gameDir ?? "", "the game folder");
+        parseUserPath(paths.workshopDir ?? "", "the workshop folder");
+        parseUserPath(paths.modsConfig ?? "", "the ModsConfig.xml path");
+        parseUserPath(paths.profileDir ?? "", "the profile folder");
+      }
       const progress = window.__LOAD_PROJECT_PROGRESS__;
       if (progress) {
         for (const payload of progress) {
@@ -8556,7 +8635,16 @@ export function installScenario(): void {
       return withPromotionFields(rules);
     },
     import_rimsort: (payload: unknown) => {
-      window.__IMPORT_RIMSORT_CALLS__?.push((payload as { paths: RimSortPathsDto }).paths);
+      const paths = (payload as { paths: RimSortPathsDto }).paths;
+      // `RimSortPaths::try_from`: each present path is parsed before the session is touched.
+      for (const [value, what] of [
+        [paths.userRules, "the user rules file"],
+        [paths.communityRules, "the community rules file"],
+        [paths.steamDb, "the Steam database file"],
+      ] as const) {
+        if (value !== null && value !== undefined) parseUserPath(value, what);
+      }
+      window.__IMPORT_RIMSORT_CALLS__?.push(paths);
       return {
         userRules: 2,
         communityRules: 1,
@@ -9194,6 +9282,7 @@ export function installScenario(): void {
     export_order_file: (payload: unknown): ExportResultDto => {
       const request = (payload as { request: ExportOrderFileRequestDto }).request;
       window.__EXPORT_ORDER_FILE_CALLS__?.push(request);
+      parseUserPath(request.path, "the file path");
       if (!isExportablePath(request.path)) {
         throw { code: "invalid_input", message: "a mod list is saved as a .rml file" };
       }
@@ -9240,6 +9329,7 @@ export function installScenario(): void {
     preview_order_import_file: (payload: unknown): OrderImportOutcomeDto => {
       const request = (payload as { request: PreviewOrderImportFileRequestDto }).request;
       window.__PREVIEW_ORDER_IMPORT_FILE_CALLS__?.push(request);
+      parseUserPath(request.path, "the file path");
       // The session's own ModsConfig.xml reads as the file's current list (what the real backend
       // would parse), one package id per line, so "Use the list from the file" previews it.
       const content =
@@ -9986,6 +10076,7 @@ export function installScenario(): void {
     export_patch: (payload: unknown) => {
       const request = (payload as { request: ExportPatchRequestDto }).request;
       window.__EXPORT_PATCH_CALLS__?.push(request);
+      parseUserPath(request.outDir, "the output folder");
       const patch = requirePatch(request.patchId);
       patch.exportDir = request.outDir;
       patch.updatedAt = new Date().toISOString();
@@ -10314,6 +10405,7 @@ export function installScenario(): void {
     export_assignment: (payload: unknown) => {
       const request = (payload as { request: ExportAssignmentRequestDto }).request;
       window.__EXPORT_ASSIGNMENT_CALLS__?.push(request);
+      parseUserPath(request.outDir, "the output folder");
       const assignment = requireAssignment(request.assignmentId);
       assignment.exportDir = request.outDir;
       assignment.updatedAt = new Date().toISOString();
@@ -10388,11 +10480,15 @@ export function installScenario(): void {
     get_startup_costs: () => window.__STARTUP_COSTS_OVERRIDE__ ?? startupCosts,
     // Reads and attributes a `Player.log` — the
     // fixed default unless a spec overrides `window.__IMPORT_GAME_LOG_RESULT__`.
-    import_game_log: () =>
-      window.__IMPORT_GAME_LOG_RESULT__ ?? {
-        ...IMPORT_GAME_LOG_DEFAULT,
-        ...window.__IMPORT_GAME_LOG_OVERRIDES__,
-      },
+    import_game_log: (payload: unknown) => {
+      parseUserPath((payload as { request: { path: string } }).request.path, "the log file");
+      return (
+        window.__IMPORT_GAME_LOG_RESULT__ ?? {
+          ...IMPORT_GAME_LOG_DEFAULT,
+          ...window.__IMPORT_GAME_LOG_OVERRIDES__,
+        }
+      );
+    },
     // The apply dialog's own def-cache note.
     get_def_cache_carrier: () => ({ carrierModId: window.__DEF_CACHE_CARRIER_MOD_ID__ ?? null }),
     list_notifications: () => computeNotifications(),

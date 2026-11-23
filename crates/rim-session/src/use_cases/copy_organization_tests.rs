@@ -462,15 +462,22 @@ fn an_unavailable_organization_refuses_the_copy_and_never_reads_the_source() {
         group(&mut source, "G", None, &[], None);
         let store = store_with_source(source);
 
-        let result =
-            CopyOrganization::new(&store).execute(&mut session, &source_dir(), CopyMode::Merge);
+        let use_case = CopyOrganization::new(&store);
+
+        let copied = use_case.execute(&mut session, &source_dir(), CopyMode::Merge);
+        let previewed = use_case.preview(&session, &source_dir(), CopyMode::Merge);
 
         assert!(
-            matches!(result, Err(CopyOrganizationError::Unavailable(_))),
+            matches!(copied, Err(CopyOrganizationError::Unavailable(_))),
+            "{state:?}"
+        );
+        assert!(
+            matches!(previewed, Err(CopyOrganizationError::Unavailable(_))),
             "{state:?}"
         );
         assert_eq!(session.organization(), &state);
         assert_eq!(store.save_count(), 0);
+        assert_eq!(store.load_count(), 0, "the source was read for nothing");
     }
 }
 
@@ -600,6 +607,61 @@ fn execute_plans_from_the_source_as_it_is_now_not_as_it_was_previewed() {
         names_of(loaded(&session)),
         BTreeSet::from(["After".to_string()]),
         "the changed source is what was copied"
+    );
+}
+
+#[test]
+fn a_source_read_beforehand_is_what_is_planned_not_what_the_store_holds_now() {
+    let mut on_disk = ModOrganization::new();
+    group(&mut on_disk, "OnDisk", None, &["a"], None);
+    let mut read_earlier = ModOrganization::new();
+    group(&mut read_earlier, "ReadEarlier", None, &["b"], None);
+    let mut session = session_with(ModOrganization::new());
+    let store = store_with_source(on_disk);
+    let use_case = CopyOrganization::new(&store);
+
+    let previewed = use_case
+        .preview_loaded(
+            &session,
+            OrganizationLoad::Loaded(read_earlier.clone()),
+            CopyMode::Merge,
+        )
+        .expect("preview");
+    use_case
+        .execute_loaded(
+            &mut session,
+            OrganizationLoad::Loaded(read_earlier),
+            CopyMode::Merge,
+        )
+        .expect("copy");
+
+    assert_eq!(previewed.groups_added, 1);
+    assert_eq!(
+        names_of(loaded(&session)),
+        BTreeSet::from(["ReadEarlier".to_string()])
+    );
+}
+
+#[test]
+fn a_source_read_beforehand_is_planned_against_this_profile_as_it_is_at_the_commit() {
+    let mut source = ModOrganization::new();
+    group(&mut source, "Theirs", None, &["a"], None);
+    let mut session = session_with(ModOrganization::new());
+    let store = store_with_source(source);
+    let use_case = CopyOrganization::new(&store);
+    let read = use_case.read_source(&source_dir());
+    let mut mine = ModOrganization::new();
+    group(&mut mine, "Mine", None, &["b"], None);
+    session.set_organization_state(OrganizationState::Loaded(mine));
+
+    use_case
+        .execute_loaded(&mut session, read, CopyMode::Merge)
+        .expect("copy");
+
+    assert_eq!(
+        names_of(loaded(&session)),
+        BTreeSet::from(["Mine".to_string(), "Theirs".to_string()]),
+        "an edit made after the read is kept"
     );
 }
 

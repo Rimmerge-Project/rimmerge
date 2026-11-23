@@ -323,16 +323,232 @@ async fn a_device_namespace_path_is_refused_promptly_without_being_opened() {
     }
 }
 
-#[test]
-fn drive_letter_extended_and_unc_paths_are_file_system_paths() {
-    for raw in [
-        r"\\?\C:\profiles\one",
-        r"\\server\share\profiles",
-        r"\\?\UNC\server\share\x",
-        r"C:\profiles",
-    ] {
-        assert!(is_file_system_path(raw), "{raw}");
+/// A store that counts every read, so a test can prove none happened.
+#[derive(Clone, Default)]
+struct CountingStore {
+    loads: std::sync::Arc<std::sync::atomic::AtomicUsize>,
+}
+
+impl OrganizationStore for CountingStore {
+    fn load(&self, _dir: &Path) -> rim_session::organization::OrganizationLoad {
+        self.loads.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        rim_session::organization::OrganizationLoad::Missing
     }
+
+    fn save(
+        &self,
+        _dir: &Path,
+        _organization: &ModOrganization,
+    ) -> Result<(), rim_session::ports::OrganizationSaveError> {
+        panic!("a refused path never saves");
+    }
+
+    fn archive_unusable(&self, _dir: &Path) -> Result<(), rim_session::ports::StoreError> {
+        panic!("a copy never archives");
+    }
+}
+
+/// A network share is refused from the text alone, before the session is
+/// even consulted (an empty state answers with the path refusal, not
+/// `no_project_loaded`) and before the store reads anything, so no host is
+/// ever contacted.
+#[cfg(windows)]
+#[tokio::test]
+async fn a_network_share_is_refused_before_anything_is_touched() {
+    for raw in [
+        r"\\server\share\profiles",
+        r"//server/share/profiles",
+        r"\\?\UNC\server\share\x",
+        r"\\server@SSL\DavWWWRoot\x",
+    ] {
+        let state = AppState::default();
+        let store = CountingStore::default();
+        let request = || CopyOrganizationRequestDto {
+            source_dir: raw.to_string(),
+            mode: CopyModeDto::Merge,
+        };
+
+        let previewed = preview_copy_organization_with(&state, request(), store.clone()).await;
+        let copied = copy_organization_with(&state, request(), store.clone()).await;
+
+        for result in [previewed, copied] {
+            assert_eq!(
+                result.expect_err("refused").code,
+                CommandErrorCode::NetworkPathRefused,
+                "{raw}"
+            );
+        }
+        assert_eq!(
+            store.loads.load(std::sync::atomic::Ordering::SeqCst),
+            0,
+            "{raw}"
+        );
+    }
+}
+
+#[tokio::test]
+async fn a_drive_letter_and_an_extended_length_drive_path_are_accepted() {
+    let profile = tempfile::tempdir().expect("tempdir");
+    let other = tempfile::tempdir().expect("tempdir");
+    write_source(other.path());
+    let state = app(profile.path());
+    let canonical = other.path().canonicalize().expect("canonical");
+
+    let plain = preview_copy_organization_inner(&state, request(other.path(), CopyModeDto::Merge))
+        .await
+        .expect("drive path");
+    let verbatim = preview_copy_organization_inner(&state, request(&canonical, CopyModeDto::Merge))
+        .await
+        .expect("verbatim drive path");
+
+    assert!(matches!(plain, CopyAnswerDto::Report { .. }));
+    assert!(matches!(verbatim, CopyAnswerDto::Report { .. }));
+}
+
+/// The real JSON store whose `load` waits at a gate.
+#[derive(Clone)]
+struct GatedStore {
+    gate: std::sync::Arc<crate::test_support::Gate>,
+    inner: std::sync::Arc<rim_io::JsonOrganizationStore>,
+}
+
+impl GatedStore {
+    fn new(gate: &std::sync::Arc<crate::test_support::Gate>) -> Self {
+        Self {
+            gate: std::sync::Arc::clone(gate),
+            inner: std::sync::Arc::new(rim_io::JsonOrganizationStore::new()),
+        }
+    }
+}
+
+impl OrganizationStore for GatedStore {
+    fn load(&self, dir: &Path) -> rim_session::organization::OrganizationLoad {
+        self.gate.block();
+        self.inner.load(dir)
+    }
+
+    fn save(
+        &self,
+        dir: &Path,
+        organization: &ModOrganization,
+    ) -> Result<(), rim_session::ports::OrganizationSaveError> {
+        self.inner.save(dir, organization)
+    }
+
+    fn archive_unusable(&self, dir: &Path) -> Result<(), rim_session::ports::StoreError> {
+        self.inner.archive_unusable(dir)
+    }
+}
+
+/// While the source folder is being read another session command must run.
+/// Were the lock held across the read, the second command would wait for a
+/// release only it can send, and the read would give up on its timeout.
+#[tokio::test]
+async fn the_session_lock_is_free_while_the_source_is_read() {
+    for is_copy in [false, true] {
+        let profile = tempfile::tempdir().expect("tempdir");
+        let other = tempfile::tempdir().expect("tempdir");
+        write_source(other.path());
+        let state = app(profile.path());
+        let gate = crate::test_support::Gate::new();
+        let store = GatedStore::new(&gate);
+        let wanted = request(other.path(), CopyModeDto::Merge);
+
+        let command = async {
+            if is_copy {
+                copy_organization_with(&state, wanted, store).await
+            } else {
+                preview_copy_organization_with(&state, wanted, store).await
+            }
+        };
+        let other_command = async {
+            gate.wait_until_blocked().await;
+            let meanwhile = with_session(&state, |session| Ok(session.working().ids().len())).await;
+            gate.release();
+            meanwhile
+        };
+        let (answer, meanwhile) = tokio::join!(command, other_command);
+
+        assert_eq!(meanwhile.expect("a second command ran"), 2, "{is_copy}");
+        assert!(gate.was_released(), "{is_copy}: the lock blocked the read");
+        assert!(matches!(
+            answer.expect("answer"),
+            CopyAnswerDto::Report { .. }
+        ));
+        assert_eq!(group_names(&state).len(), usize::from(is_copy));
+    }
+}
+
+/// An organization edit that lands while the source is being read is merged
+/// with by the commit, not overwritten: the plan reads this profile under the
+/// lock, at the commit.
+#[tokio::test]
+async fn an_edit_made_while_the_source_is_read_is_kept_by_the_copy() {
+    let profile = tempfile::tempdir().expect("tempdir");
+    let other = tempfile::tempdir().expect("tempdir");
+    write_source(other.path());
+    let state = app(profile.path());
+    let gate = crate::test_support::Gate::new();
+    let store = GatedStore::new(&gate);
+
+    let command = copy_organization_with(&state, request(other.path(), CopyModeDto::Merge), store);
+    let edit = async {
+        gate.wait_until_blocked().await;
+        let edited = with_session(&state, |session| {
+            let mut organization = ModOrganization::new();
+            organization
+                .create_group(GroupName::new("Mine").expect("name"), None)
+                .expect("create");
+            set_organization_state(session, OrganizationState::Loaded(organization));
+            Ok(())
+        })
+        .await;
+        gate.release();
+        edited
+    };
+    let (answer, edited) = tokio::join!(command, edit);
+
+    edited.expect("the edit ran");
+    assert!(matches!(
+        answer.expect("answer"),
+        CopyAnswerDto::Report { .. }
+    ));
+    let mut names = group_names(&state);
+    names.sort();
+    assert_eq!(names, ["Mine", "Weapons"]);
+}
+
+/// A project loaded while the source was read invalidates the checks that
+/// were made against the old profile folder.
+#[tokio::test]
+async fn a_project_swapped_while_the_source_is_read_is_refused() {
+    let first = tempfile::tempdir().expect("tempdir");
+    let second = tempfile::tempdir().expect("tempdir");
+    let other = tempfile::tempdir().expect("tempdir");
+    write_source(other.path());
+    let state = app(first.path());
+    let gate = crate::test_support::Gate::new();
+    let store = GatedStore::new(&gate);
+
+    let command = copy_organization_with(&state, request(other.path(), CopyModeDto::Merge), store);
+    let swap = async {
+        gate.wait_until_blocked().await;
+        let mut replacement = session_fixture_in_profile(&["a", "b"], second.path());
+        set_organization_state(
+            &mut replacement,
+            OrganizationState::Loaded(ModOrganization::new()),
+        );
+        *state.session.write().expect("lock") = Some(replacement);
+        gate.release();
+    };
+    let (result, ()) = tokio::join!(command, swap);
+
+    assert_eq!(
+        result.expect_err("refused").code,
+        CommandErrorCode::ProjectChanged
+    );
+    assert!(group_names(&state).is_empty());
+    assert_eq!(fs::read_dir(second.path()).expect("list").count(), 0);
 }
 
 #[tokio::test]

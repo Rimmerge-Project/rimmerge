@@ -28,6 +28,7 @@ pub struct InMemoryOrganizationStore {
     change_after_next_load: Mutex<Option<ModOrganization>>,
     saves: AtomicUsize,
     archives: AtomicUsize,
+    loads: AtomicUsize,
     /// Other directories' files: `load` of one of these answers its own
     /// seed, so a test can read a second profile beside the first.
     other_dirs: Mutex<BTreeMap<PathBuf, OrganizationLoad>>,
@@ -58,6 +59,7 @@ impl InMemoryOrganizationStore {
             change_after_next_load: Mutex::new(None),
             saves: AtomicUsize::new(0),
             archives: AtomicUsize::new(0),
+            loads: AtomicUsize::new(0),
             other_dirs: Mutex::new(BTreeMap::new()),
             saved_dirs: Mutex::new(Vec::new()),
         }
@@ -86,6 +88,12 @@ impl InMemoryOrganizationStore {
     #[must_use]
     pub fn save_count(&self) -> usize {
         self.saves.load(Ordering::SeqCst)
+    }
+
+    /// How many times `load` was called, for any directory.
+    #[must_use]
+    pub fn load_count(&self) -> usize {
+        self.loads.load(Ordering::SeqCst)
     }
 
     /// How many archive copies succeeded.
@@ -148,6 +156,7 @@ impl InMemoryOrganizationStore {
 
 impl OrganizationStore for InMemoryOrganizationStore {
     fn load(&self, dir: &Path) -> OrganizationLoad {
+        self.loads.fetch_add(1, Ordering::SeqCst);
         if let Some(seeded) = self
             .other_dirs
             .lock()

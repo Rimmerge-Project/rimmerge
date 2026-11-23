@@ -165,6 +165,7 @@ pub(crate) fn overrides_from(args: &PathsArgs, base: PathBuf) -> rim_io::PathOve
         workshop_dir: args.workshop_dir.clone(),
         mods_config: args.mods_config.clone(),
         profile_dir: args.profile_dir.clone(),
+        policy: rim_io::PathPolicy::TrustLocalUser,
     }
 }
 

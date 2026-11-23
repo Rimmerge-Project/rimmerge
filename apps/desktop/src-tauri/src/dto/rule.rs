@@ -3,11 +3,12 @@
 
 use rim_resolve::domain::{IncompatibleRule, PairRule, PlacementRule, Rule};
 use rim_session::ports::{ImportedRules, RimSortPaths, StoredRules};
+use rim_session::user_path::UserPath;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use super::common::{PlacementDto, RuleOriginDto};
-use crate::error::CommandError;
+use crate::error::{CommandError, parse_optional_user_path};
 
 /// Mirrors [`PairRule`].
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -295,13 +296,21 @@ pub struct RimSortPathsDto {
     pub steam_db: Option<String>,
 }
 
-impl From<RimSortPathsDto> for RimSortPaths {
-    fn from(value: RimSortPathsDto) -> Self {
-        Self {
-            user_rules: value.user_rules.map(Into::into),
-            community_rules: value.community_rules.map(Into::into),
-            steam_db: value.steam_db.map(Into::into),
-        }
+impl TryFrom<RimSortPathsDto> for RimSortPaths {
+    type Error = CommandError;
+
+    /// Each present path is parsed once, here: a drive-letter path, never a
+    /// network share or a device (see `parse_optional_user_path`).
+    fn try_from(value: RimSortPathsDto) -> Result<Self, Self::Error> {
+        let parse = |raw: Option<&String>, what: &str| {
+            parse_optional_user_path(raw.map(String::as_str), what)
+                .map(|path| path.map(UserPath::into_path_buf))
+        };
+        Ok(Self {
+            user_rules: parse(value.user_rules.as_ref(), "the user rules file")?,
+            community_rules: parse(value.community_rules.as_ref(), "the community rules file")?,
+            steam_db: parse(value.steam_db.as_ref(), "the Steam database file")?,
+        })
     }
 }
 

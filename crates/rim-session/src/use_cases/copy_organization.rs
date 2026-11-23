@@ -75,6 +75,14 @@ impl<Store: OrganizationStore> CopyOrganization<Store> {
         Self { store }
     }
 
+    /// Reads the source profile's organization. Touches no session, so an
+    /// interface calls it outside the session lock, then hands the result to
+    /// [`Self::preview_loaded`] or [`Self::execute_loaded`] under it.
+    #[must_use]
+    pub fn read_source(&self, source_dir: &Path) -> OrganizationLoad {
+        self.store.load(source_dir)
+    }
+
     /// What copying `source_dir` in `mode` would do. Changes nothing.
     ///
     /// # Errors
@@ -87,7 +95,25 @@ impl<Store: OrganizationStore> CopyOrganization<Store> {
         source_dir: &Path,
         mode: CopyMode,
     ) -> Result<CopyReport, CopyOrganizationError> {
-        Ok(self.plan(session, source_dir, mode)?.report)
+        // The cheap availability check first: an unavailable organization
+        // refuses the copy before the source is read.
+        session.organization().loaded()?;
+        self.preview_loaded(session, self.read_source(source_dir), mode)
+    }
+
+    /// [`Self::preview`] over a source already read with
+    /// [`Self::read_source`].
+    ///
+    /// # Errors
+    ///
+    /// As [`Self::preview`].
+    pub fn preview_loaded(
+        &self,
+        session: &Session,
+        source: OrganizationLoad,
+        mode: CopyMode,
+    ) -> Result<CopyReport, CopyOrganizationError> {
+        Ok(self.plan(session, source, mode)?.report)
     }
 
     /// Plans afresh from the source as it is now, then saves the result
@@ -104,7 +130,25 @@ impl<Store: OrganizationStore> CopyOrganization<Store> {
         source_dir: &Path,
         mode: CopyMode,
     ) -> Result<CopyReport, CopyOrganizationError> {
-        let CopyPlan { result, report } = self.plan(session, source_dir, mode)?;
+        session.organization().loaded()?;
+        self.execute_loaded(session, self.read_source(source_dir), mode)
+    }
+
+    /// [`Self::execute`] over a source already read with
+    /// [`Self::read_source`]. The plan is made against the session as it is
+    /// now, so an edit made after the source was read is merged with, never
+    /// overwritten.
+    ///
+    /// # Errors
+    ///
+    /// As [`Self::execute`].
+    pub fn execute_loaded(
+        &self,
+        session: &mut Session,
+        source: OrganizationLoad,
+        mode: CopyMode,
+    ) -> Result<CopyReport, CopyOrganizationError> {
+        let CopyPlan { result, report } = self.plan(session, source, mode)?;
         let profile_dir = session.paths().profile_dir.clone();
         let organization = session.organization_for_edit()?;
         if *organization == result {
@@ -125,11 +169,11 @@ impl<Store: OrganizationStore> CopyOrganization<Store> {
     fn plan(
         &self,
         session: &Session,
-        source_dir: &Path,
+        source: OrganizationLoad,
         mode: CopyMode,
     ) -> Result<CopyPlan, CopyOrganizationError> {
         let target = session.organization().loaded()?;
-        let source = match self.store.load(source_dir) {
+        let source = match source {
             OrganizationLoad::Missing => return Err(CopyRefusal::SourceMissing.into()),
             OrganizationLoad::Unusable(issue) => {
                 return Err(CopyRefusal::SourceUnusable(issue).into());

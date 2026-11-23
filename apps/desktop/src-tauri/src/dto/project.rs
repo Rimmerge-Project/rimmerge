@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use super::common::OrderSourceDto;
+use crate::error::{CommandError, parse_user_path};
 
 /// Request shape for `load_project`. Mirrors [`ProjectPaths`].
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -25,14 +26,20 @@ pub struct ProjectPathsDto {
     pub profile_dir: String,
 }
 
-impl From<ProjectPathsDto> for ProjectPaths {
-    fn from(value: ProjectPathsDto) -> Self {
-        Self {
-            game_dir: value.game_dir.into(),
-            workshop_dir: value.workshop_dir.into(),
-            mods_config: value.mods_config.into(),
-            profile_dir: value.profile_dir.into(),
-        }
+impl TryFrom<ProjectPathsDto> for ProjectPaths {
+    type Error = CommandError;
+
+    /// Every path is parsed once, here: a drive-letter path, never a network
+    /// share or a device (see `parse_user_path`).
+    fn try_from(value: ProjectPathsDto) -> Result<Self, Self::Error> {
+        Ok(Self {
+            game_dir: parse_user_path(&value.game_dir, "the game folder")?.into_path_buf(),
+            workshop_dir: parse_user_path(&value.workshop_dir, "the workshop folder")?
+                .into_path_buf(),
+            mods_config: parse_user_path(&value.mods_config, "the ModsConfig.xml path")?
+                .into_path_buf(),
+            profile_dir: parse_user_path(&value.profile_dir, "the profile folder")?.into_path_buf(),
+        })
     }
 }
 
@@ -60,10 +67,8 @@ pub struct DefaultPathsRequestDto {
 }
 
 /// A closed, machine-readable reason for [`DefaultPathsDto::warning_code`].
-/// Today there is exactly one ([`rim_io::not_an_install_warning`]'s case),
-/// but this stays a `kind`-tagged union so a second warning shape is an
-/// additive variant, never a breaking rename. The frontend renders it,
-/// localized.
+/// It stays a `kind`-tagged union so a further warning shape is an additive
+/// variant, never a breaking rename. The frontend renders it, localized.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[ts(export, export_to = "../../src/types/generated/")]
@@ -76,6 +81,55 @@ pub enum DefaultPathsWarningDto {
         #[serde(rename = "gameDir")]
         game_dir: String,
     },
+    /// A path was not used because it is not a drive-letter path: nothing
+    /// was opened, checked or contacted. Said instead of being dropped
+    /// silently, so a user who typed or saved a network folder learns why the
+    /// page shows something else.
+    PathRefused {
+        /// Which path.
+        field: DefaultPathFieldDto,
+        /// Why it was refused.
+        reason: PathRefusalReasonDto,
+        /// Where the refused text came from.
+        source: PathRefusalSourceDto,
+    },
+}
+
+/// The paths the Setup page's defaults cover.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export, export_to = "../../src/types/generated/")]
+pub enum DefaultPathFieldDto {
+    /// The RimWorld install folder.
+    GameDir,
+    /// The Steam workshop content folder.
+    WorkshopDir,
+    /// The `ModsConfig.xml` path.
+    ModsConfig,
+}
+
+/// Why a path was refused (`rim_session::user_path::UserPathError` grouped by
+/// what a user can do about it).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export, export_to = "../../src/types/generated/")]
+pub enum PathRefusalReasonDto {
+    /// A network share (`\\server\share`): map it to a drive letter.
+    NetworkShare,
+    /// Anything else that is not an absolute drive-letter path (relative,
+    /// a device, a reserved name).
+    Invalid,
+}
+
+/// Where a refused path text came from.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export, export_to = "../../src/types/generated/")]
+pub enum PathRefusalSourceDto {
+    /// The text in the page's own field.
+    Typed,
+    /// A stored value: `config.json` or an environment variable.
+    Configured,
 }
 
 /// A closed, machine-readable reason `get_default_paths` could not

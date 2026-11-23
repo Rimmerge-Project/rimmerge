@@ -468,7 +468,15 @@ gate block in the root `CLAUDE.md`.
   `\\?\`-prefix) any of `game_dir`/`workshop_dir`/`mods_config`
   **before** it's written into `config.json` (both `apps/cli`'s
   `config set` and the desktop's own pin command go through it) — never
-  store a path a later lexical comparison could be fooled by.
+  store a path a later lexical comparison could be fooled by. `resolve_user_dir` strips the
+  `\\?\` prefix (`\\?\UNC\server\share` becomes `\\server\share`, never the relative
+  `UNC\server\share`) and keeps the caller's drive-letter spelling when a mapped drive
+  canonicalizes to its share (`settled_dir`), so an export folder or a pinned path stays `Z:\...`.
+  `PathOverrides::policy` (`PathPolicy`, default `TrustLocalUser`) is the one way a webview-driven
+  caller restricts rungs 2 and 3: under `DriveLettersOnly` a game folder, workshop folder or
+  `ModsConfig.xml` from an environment variable or `config.json` that `UserPath::parse` refuses is
+  dropped **before** `is_game_dir` stats it or `profile_dir` canonicalizes it, and the first one
+  dropped comes back in `PartialPaths::refused` so the caller can say so. The CLI keeps the default.
 - **`mod_knowledge.rs` + `build.rs`**: `FsModKnowledgeStore`
   implements `rim_session::ports::ModKnowledgeStore` as "the fetched
   `<cache_dir>/rimmergeRules.json` if present and it parses, else the

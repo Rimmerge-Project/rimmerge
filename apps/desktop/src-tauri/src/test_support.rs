@@ -324,3 +324,73 @@ impl GameLauncher for RecordingGameLauncher {
         Ok(())
     }
 }
+
+/// A slow read, made deterministic: the reader calls [`Gate::block`] from
+/// inside the blocking task and stays there until the test calls
+/// [`Gate::release`]. A test starts the command under test, waits with
+/// [`Gate::wait_until_blocked`] until the read is in flight, runs another
+/// session command meanwhile and releases the read afterwards. If the
+/// command held the session lock across the read, that other command could
+/// never run and the read would give up on its own timeout, which
+/// [`Gate::was_released`] reports.
+pub(crate) struct Gate {
+    started_tx: std::sync::mpsc::Sender<()>,
+    started_rx: std::sync::Mutex<std::sync::mpsc::Receiver<()>>,
+    release_tx: std::sync::mpsc::Sender<()>,
+    release_rx: std::sync::Mutex<std::sync::mpsc::Receiver<()>>,
+    was_released: std::sync::atomic::AtomicBool,
+}
+
+impl Gate {
+    /// How long either side waits for the other before giving up.
+    const PATIENCE: std::time::Duration = std::time::Duration::from_secs(10);
+
+    pub(crate) fn new() -> std::sync::Arc<Self> {
+        let (started_tx, started_rx) = std::sync::mpsc::channel();
+        let (release_tx, release_rx) = std::sync::mpsc::channel();
+        std::sync::Arc::new(Self {
+            started_tx,
+            started_rx: std::sync::Mutex::new(started_rx),
+            release_tx,
+            release_rx: std::sync::Mutex::new(release_rx),
+            was_released: std::sync::atomic::AtomicBool::new(false),
+        })
+    }
+
+    /// Reader side: announces the read and waits for [`Self::release`].
+    pub(crate) fn block(&self) {
+        self.started_tx.send(()).expect("the test is listening");
+        let released = self
+            .release_rx
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .recv_timeout(Self::PATIENCE)
+            .is_ok();
+        self.was_released
+            .store(released, std::sync::atomic::Ordering::SeqCst);
+    }
+
+    /// Test side: returns once a reader is inside [`Self::block`].
+    pub(crate) async fn wait_until_blocked(self: &std::sync::Arc<Self>) {
+        let gate = std::sync::Arc::clone(self);
+        tauri::async_runtime::spawn_blocking(move || {
+            gate.started_rx
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .recv_timeout(Self::PATIENCE)
+        })
+        .await
+        .expect("join")
+        .expect("the read started");
+    }
+
+    /// Test side: lets the blocked reader go on.
+    pub(crate) fn release(&self) {
+        self.release_tx.send(()).expect("the read is waiting");
+    }
+
+    /// Whether the reader was released by the test and not by its timeout.
+    pub(crate) fn was_released(&self) -> bool {
+        self.was_released.load(std::sync::atomic::Ordering::SeqCst)
+    }
+}

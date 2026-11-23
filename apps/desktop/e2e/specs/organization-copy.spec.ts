@@ -286,6 +286,34 @@ test.describe("copy groups from another profile", () => {
     await expectNothingMoved(page, before);
   });
 
+  test("a network share is refused by name and a drive letter still works", async ({ page }) => {
+    await withSources(page, { [OTHER]: TARGET_SOURCE });
+    const before = await openMods(page);
+
+    await openCopyDialog(page, "\\\\server\\share\\profiles");
+    await expect(page.getByTestId("organization-error")).toContainText(
+      "Network folders aren't supported",
+    );
+    await expect(page.getByTestId("copy-submit")).toBeDisabled();
+
+    await pick(page, "\\\\server@SSL\\DavWWWRoot\\profiles");
+    await page.getByTestId("copy-choose").click();
+    await expect(page.getByTestId("organization-error")).toContainText(
+      "Network folders aren't supported",
+    );
+
+    await pick(page, "\\\\.\\pipe\\profiles");
+    await page.getByTestId("copy-choose").click();
+    await expect(page.getByTestId("organization-error")).toContainText("Invalid input");
+
+    await pick(page, OTHER);
+    await page.getByTestId("copy-choose").click();
+    await expect(page.getByTestId("copy-preview")).toBeVisible();
+    await expect(page.getByTestId("organization-error")).toHaveCount(0);
+    await page.getByTestId("copy-cancel").click();
+    await expectNothingMoved(page, before);
+  });
+
   test("the folder picker opens beside this profile's own folder", async ({ page }) => {
     await withSources(page, { [OTHER]: TARGET_SOURCE });
     await openMods(page);

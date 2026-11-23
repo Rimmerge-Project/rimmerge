@@ -4,6 +4,10 @@
 //! succeeded — records each imported source's provenance in
 //! `<profile>/imports/manifest.json` through [`ImportManifestStore`].
 
+use std::collections::BTreeMap;
+
+use rim_analyzer::domain::ModId;
+
 use crate::Session;
 use crate::ports::{
     ImportError, ImportManifestStore, ImportedRules, RimSortImporter, RimSortPaths, RuleStore,
@@ -102,8 +106,41 @@ impl<Importer: RimSortImporter, Rules: RuleStore, Manifest: ImportManifestStore>
         session: &mut Session,
         paths: &RimSortPaths,
     ) -> Result<ImportedRules, ImportRimSortError> {
-        let active = session.active_mods_by_base_id();
-        let imported = self.importer.import(paths, &active)?;
+        let imported = self.read(paths, &session.active_mods_by_base_id())?;
+        self.apply(session, imported)
+    }
+
+    /// Reads and parses the database files against `active` (what
+    /// [`Session::active_mods_by_base_id`] answers) and snapshots them into the
+    /// profile, touching no session: a Steam database can take seconds, so an
+    /// interface calls this outside the session lock and then hands the result
+    /// to [`Self::apply`] under it.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ImportRimSortError::Import`] when a database file can't be
+    /// read.
+    pub fn read(
+        &self,
+        paths: &RimSortPaths,
+        active: &BTreeMap<ModId, Option<u64>>,
+    ) -> Result<ImportedRules, ImportRimSortError> {
+        Ok(self.importer.import(paths, active)?)
+    }
+
+    /// Applies an import made by [`Self::read`] to `session`, saves the rules
+    /// and records the manifest, in the order [`Self::execute`] documents
+    /// (the rules first, the manifest only after they are saved).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ImportRimSortError::Store`] or [`ImportRimSortError::Manifest`]
+    /// as [`Self::execute`] does.
+    pub fn apply(
+        &self,
+        session: &mut Session,
+        imported: ImportedRules,
+    ) -> Result<ImportedRules, ImportRimSortError> {
         let snapshot = session.rules_snapshot();
         session.apply_import(imported.clone());
         if let Err(error) = self
@@ -191,6 +228,43 @@ mod tests {
                 .expect("must have saved")
                 .pairs
                 .len(),
+            1
+        );
+    }
+
+    #[test]
+    fn a_read_made_beforehand_touches_no_session_until_it_is_applied() {
+        let mut session = session_fixture(&["a", "b"]);
+        let imported = ImportedRules {
+            user_rules: Some(vec![Rule::Pair(PairRule {
+                after: ModId::new("a"),
+                before: ModId::new("b"),
+                origin: RuleOrigin::RimSortUser,
+                comment: None,
+                overrides_declared: false,
+            })]),
+            community_rules: None,
+            steam_dependencies: None,
+            skipped_inactive_rules: 0,
+            skipped_inactive_steam: 0,
+            provenance: BTreeMap::new(),
+        };
+        let use_case = ImportRimSort::new(
+            FakeRimSortImporter::new(imported),
+            InMemoryRuleStore::new(),
+            InMemoryImportManifestStore::new(),
+        );
+
+        let read = use_case
+            .read(&rimsort_paths(), &session.active_mods_by_base_id())
+            .expect("read");
+        assert!(session.rules().pairs.is_empty(), "reading changes nothing");
+        assert!(use_case.rule_store.last_saved().is_none());
+        use_case.apply(&mut session, read).expect("apply");
+
+        assert_eq!(session.rules().pairs.len(), 1);
+        assert_eq!(
+            use_case.rule_store.last_saved().expect("saved").pairs.len(),
             1
         );
     }

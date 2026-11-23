@@ -5,6 +5,30 @@ before that point is not summarized here.
 
 ## [Unreleased]
 
+- **Change: the desktop app refuses folders and files on a network share.** A
+  folder or file you pick, or type, must now be on a drive letter (`C:\...`, or
+  a network drive you mapped to a letter such as `Z:\...`). A raw network path
+  (`\\server\share\...`, including WebDAV paths) is refused with a message that
+  says so, before anything is read, because even looking at such a path makes
+  Windows contact the host and send your sign-in hash to it, and an offline
+  share used to freeze the whole app until Windows gave up. This covers the
+  game, workshop and profile folders, `ModsConfig.xml`, the other profile's
+  folder when copying groups, mod list files, game logs, RimSort files and the
+  export folders. Names Windows treats as devices (`NUL`, `CON`, `COM1`, `LPT1`
+  and the like) are refused too. The Setup page now says when a folder you typed
+  or one saved earlier was not used because of this, instead of quietly showing
+  something else, and never opens a saved network path. The command line is
+  unchanged and still accepts them.
+- **Fix: a slow drive no longer stops the rest of the app.** Reading the folder
+  you copy groups from, the mod list file you preview or export, a game log or
+  RimSort's database files used to hold every other action still while it ran.
+  They now read first and touch your session only for a moment afterwards. If
+  you load another project while copying groups or importing RimSort's files,
+  that result is discarded with a message and nothing is changed.
+- **Fix: exporting to, or saving as a default, a folder on a mapped network
+  drive keeps its drive letter.** The folder used to be turned into the
+  relative path `UNC\server\share\...`, so an export landed under the working
+  folder and `config.json` stored a path that no longer pointed anywhere.
 - **Fix: the outside-change notes no longer claim an overwrite that cannot
   happen.** When `ModsConfig.xml` was edited outside Rimmerge but already held
   exactly the order you have selected, the note on the Mods page and the one on

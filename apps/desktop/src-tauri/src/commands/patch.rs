@@ -12,7 +12,7 @@
 //! and the scoped ledger itself all live in `rim-session`
 //! (`Session::patch_findings`/`patch_ledger`).
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -22,6 +22,7 @@ use rim_session::use_cases::{
     CreatePatch, DecidePatch, DeletePatch, ExportOptions, ExportPatch, ImportProfileDecisions,
     PrunePatchDecisions, RenderPatch, RevertPatchDecision, UpdatePatch,
 };
+use tauri::async_runtime::spawn_blocking;
 
 use crate::commands::{emit_session_changed, mod_names};
 use crate::dto::finding::{DecideResultDto, FindingPageDto, ResolutionDetailDto};
@@ -33,7 +34,7 @@ use crate::dto::patch::{
     UpdatePatchRequestDto, patch_detail_dto, patch_render_dto, patch_summary_dto,
 };
 use crate::dto::project::SessionChangeReasonDto;
-use crate::error::CommandError;
+use crate::error::{CommandError, parse_user_path};
 use crate::state::{AppState, with_session};
 
 /// Parses `text` as a [`PatchId`], mapping a malformed id to
@@ -675,6 +676,35 @@ pub async fn preview_patch_file(
     preview_patch_file_inner(&state, patch_id, relative_path).await
 }
 
+/// The export folder as a path ready for `ExportPatch`/`ExportAssignment`:
+/// a drive-letter path (a network share is refused from its text, see
+/// [`crate::error::parse_user_path`]), absolutized and, when it already
+/// exists, canonicalized (resolving `.`/`..`, symlinks, and junctions, with the
+/// extended-length prefix stripped back off; a folder on a mapped network
+/// drive keeps its drive letter, see `rim_io::resolve_user_dir`). The use
+/// cases have no file-system access of their own and can only compare
+/// `out_dir` lexically (see `ExportPatch`'s `is_inside`), so a junction
+/// pointing into the game's `Mods` folder must be resolved here, before it
+/// reaches them.
+///
+/// The text is parsed on the calling task; the canonicalization is a
+/// file-system call, so it runs on a bare `spawn_blocking`, never on the
+/// async executor and never under the session lock.
+pub(crate) async fn resolve_export_dir(raw: &str) -> Result<PathBuf, CommandError> {
+    let parsed = parse_user_path(raw, "the output folder")?;
+    let shown = raw.to_string();
+    spawn_blocking(move || {
+        rim_io::resolve_user_dir(parsed.as_path()).map_err(|error| {
+            CommandError::invalid_input(format!("resolving out_dir {shown}: {error}"))
+        })
+    })
+    .await
+    .unwrap_or_else(|join_error| {
+        tracing::warn!(error = %join_error, "export folder resolution task panicked");
+        Err(CommandError::internal("background task panicked"))
+    })
+}
+
 /// Renders, writes, and (when asked) installs `request.patch_id`'s
 /// patch. Refuses to write to the game's `Mods` folder while
 /// `RimWorldWin64.exe` looks like it's running (per
@@ -696,6 +726,10 @@ pub(crate) async fn export_patch_inner(
     state: &AppState,
     request: ExportPatchRequestDto,
 ) -> Result<ExportPatchReportDto, CommandError> {
+    // Parsed and resolved before the session lock is taken, off the async
+    // executor: the folder is the user's text, `resolve_user_dir`
+    // canonicalizes it (a file-system call), and neither needs the session.
+    let out_dir = resolve_export_dir(&request.out_dir).await?;
     let adapters = state.adapters.clone();
     let probe = Arc::clone(&state.game_process_probe);
     with_session(state, move |session| {
@@ -703,20 +737,6 @@ pub(crate) async fn export_patch_inner(
         if request.install && !request.force && probe.is_running() {
             return Err(CommandError::rimworld_running());
         }
-
-        // Absolutized (`std::path::absolute`) and, when it already
-        // exists, canonicalized (resolving `.`/`..`, symlinks, and
-        // junctions, with the `\\?\` prefix stripped back off) —
-        // `ExportPatch` itself has no filesystem access of its own and
-        // can only compare `out_dir` lexically (see that use case's doc
-        // comment on `is_inside`), so a relative path from a hand-typed
-        // field or a junction pointing into the game's `Mods` folder
-        // must be resolved here, before it ever reaches the use case.
-        // Tauri's own folder picker always returns an absolute path, so
-        // this only ever does real work against a hand-typed `out_dir`.
-        let out_dir = rim_io::resolve_user_dir(Path::new(&request.out_dir)).map_err(|error| {
-            CommandError::invalid_input(format!("resolving out_dir {}: {error}", request.out_dir))
-        })?;
 
         let use_case = ExportPatch::new(
             adapters.merge_mod_writer,
@@ -1196,5 +1216,27 @@ mod tests {
     fn parse_patch_id_rejects_a_malformed_id() {
         let result = parse_patch_id("not-a-valid-id");
         assert_eq!(result.unwrap_err().code, CommandErrorCode::InvalidInput);
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn the_export_folder_refuses_a_share_from_its_text_and_resolves_a_drive_path() {
+        let scratch = tempfile::tempdir().expect("scratch");
+        let messy = scratch.path().join("sub").join("..");
+
+        let share = resolve_export_dir(r"\\server\share\out").await;
+        let resolved = resolve_export_dir(&messy.display().to_string())
+            .await
+            .expect("a drive path resolves");
+
+        assert_eq!(
+            share.expect_err("refused").code,
+            CommandErrorCode::NetworkPathRefused
+        );
+        assert!(
+            !resolved.to_string_lossy().contains(".."),
+            "the `..` segment was resolved away: {resolved:?}"
+        );
+        assert!(resolved.is_absolute());
     }
 }

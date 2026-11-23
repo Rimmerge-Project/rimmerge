@@ -8,16 +8,17 @@ use std::time::Instant;
 
 use rim_resolve::domain::OrderSource;
 use rim_session::ports::DefSourceReader;
+use rim_session::user_path::{UserPath, UserPathError};
 use rim_session::{ProjectPaths, Session};
 use tauri::async_runtime::spawn_blocking;
 
 use crate::dto::project::{
-    AppConfigDto, DefaultPathsDto, DefaultPathsErrorDto, DefaultPathsRequestDto,
-    DefaultPathsWarningDto, ProgressEventDto, ProjectPathsDto, ProjectSummaryDto, RuleWarningDto,
-    ScanWarningDto,
+    AppConfigDto, DefaultPathFieldDto, DefaultPathsDto, DefaultPathsErrorDto,
+    DefaultPathsRequestDto, DefaultPathsWarningDto, PathRefusalReasonDto, PathRefusalSourceDto,
+    ProgressEventDto, ProjectPathsDto, ProjectSummaryDto, RuleWarningDto, ScanWarningDto,
 };
 use crate::dto::rule::RimSortPathsDto;
-use crate::error::CommandError;
+use crate::error::{CommandError, parse_user_path};
 use crate::state::{AppState, replace_session, with_session};
 
 /// The order a freshly loaded project opens on. The desktop's own
@@ -103,17 +104,20 @@ pub(crate) fn finish_loaded_session(
 ///
 /// # Errors
 ///
-/// Returns [`CommandError`] when reading `ModsConfig.xml`, scanning, or
-/// loading persisted decisions/rules fails.
+/// Returns `network_path_refused` when a path is a network share and
+/// [`CommandError::invalid_input`] when one is empty, relative or a device
+/// path (every path is parsed before anything is read; see
+/// [`crate::error::parse_user_path`]), or [`CommandError`] when reading
+/// `ModsConfig.xml`, scanning, or loading persisted decisions/rules fails.
 pub(crate) async fn load_project_inner(
     state: &AppState,
     paths: ProjectPathsDto,
     mut on_progress: impl FnMut(ProgressEventDto) + Send + 'static,
 ) -> Result<ProjectSummaryDto, CommandError> {
+    let project_paths = ProjectPaths::try_from(paths)?;
     let _permit = state.load_lock.lock().await;
 
     let adapters = state.adapters.clone();
-    let project_paths: ProjectPaths = paths.into();
 
     let (session, summary) = spawn_blocking(move || {
         let use_case = rim_session::use_cases::LoadProject::new(
@@ -248,11 +252,14 @@ pub(crate) fn get_default_paths_at(
     request: DefaultPathsRequestDto,
 ) -> DefaultPathsDto {
     let mut overrides = rim_io::PathOverrides::new(base);
-    overrides.game_dir = request
-        .game_dir
-        .map(|text| text.trim().to_string())
-        .filter(|text| !text.is_empty())
-        .map(PathBuf::from);
+    // The stored rungs (environment, `config.json`) are checked against the
+    // same rule as the typed text: one that is not a drive-letter path is
+    // dropped before the ladder stats or hashes it, so a network path saved
+    // earlier never contacts its host on a visit to Setup.
+    overrides.policy = rim_io::PathPolicy::DriveLettersOnly;
+    let typed = typed_game_dir(request.game_dir.as_deref());
+    let has_typed_answer = typed.path.is_some();
+    overrides.game_dir = typed.path;
     let partial = rim_io::resolve_each_path(&overrides);
     let display = |path: &PathBuf| path.display().to_string();
 
@@ -262,7 +269,7 @@ pub(crate) fn get_default_paths_at(
         .err()
         .or_else(|| partial.mods_config.as_ref().err())
         .map(path_resolution_error_to_dto);
-    let warning_code = partial.warning.as_ref().and_then(|_| {
+    let not_an_install = partial.warning.as_ref().and_then(|_| {
         partial
             .game_dir
             .as_ref()
@@ -271,13 +278,83 @@ pub(crate) fn get_default_paths_at(
                 game_dir: display(game_dir),
             })
     });
+    // A refusal outranks the install note: it says why a path the user gave
+    // is not the one shown. A stored game folder the ladder dropped is moot
+    // when the page's own field answered.
+    let refusal = typed.refusal.or_else(|| {
+        partial
+            .refused
+            .as_ref()
+            .filter(|refused| !(has_typed_answer && refused.field == rim_io::PathField::GameDir))
+            .map(configured_refusal)
+    });
     DefaultPathsDto {
         game_dir: partial.game_dir.as_ref().ok().map(display),
         workshop_dir: partial.workshop_dir.as_ref().map(display),
         mods_config: partial.mods_config.as_ref().ok().map(display),
         profile_dir: partial.profile_dir.as_ref().map(display),
-        warning_code,
+        warning_code: refusal.or(not_an_install),
         error_code,
+    }
+}
+
+/// The Setup field's text as the ladder's rung 1: a drive-letter path is the
+/// answer, blank text is no answer, and any other text is no answer either
+/// but is reported, never stat'ed (the load refuses it by name when the user
+/// submits the form).
+struct TypedGameDir {
+    path: Option<PathBuf>,
+    refusal: Option<DefaultPathsWarningDto>,
+}
+
+fn typed_game_dir(text: Option<&str>) -> TypedGameDir {
+    let Some(text) = text.map(str::trim).filter(|text| !text.is_empty()) else {
+        return TypedGameDir {
+            path: None,
+            refusal: None,
+        };
+    };
+    match UserPath::parse(text) {
+        Ok(path) => TypedGameDir {
+            path: Some(path.into_path_buf()),
+            refusal: None,
+        },
+        Err(error) => TypedGameDir {
+            path: None,
+            refusal: Some(DefaultPathsWarningDto::PathRefused {
+                field: DefaultPathFieldDto::GameDir,
+                reason: refusal_reason(error),
+                source: PathRefusalSourceDto::Typed,
+            }),
+        },
+    }
+}
+
+/// The ladder's own refusal of a stored value, as a warning.
+fn configured_refusal(refused: &rim_io::RefusedPath) -> DefaultPathsWarningDto {
+    let reason = UserPath::parse(&refused.path.to_string_lossy())
+        .err()
+        .map_or(PathRefusalReasonDto::Invalid, refusal_reason);
+    DefaultPathsWarningDto::PathRefused {
+        field: match refused.field {
+            rim_io::PathField::GameDir => DefaultPathFieldDto::GameDir,
+            rim_io::PathField::WorkshopDir => DefaultPathFieldDto::WorkshopDir,
+            rim_io::PathField::ModsConfig => DefaultPathFieldDto::ModsConfig,
+        },
+        reason,
+        source: PathRefusalSourceDto::Configured,
+    }
+}
+
+/// What a user can do about a refusal: only a network share has its own
+/// advice (map it to a drive letter).
+fn refusal_reason(error: UserPathError) -> PathRefusalReasonDto {
+    match error {
+        UserPathError::NetworkPath => PathRefusalReasonDto::NetworkShare,
+        UserPathError::Empty
+        | UserPathError::ContainsNul
+        | UserPathError::NotAbsolute
+        | UserPathError::DevicePath => PathRefusalReasonDto::Invalid,
     }
 }
 
@@ -313,22 +390,41 @@ fn path_resolution_error_to_dto(error: &rim_io::PathResolutionError) -> DefaultP
 ///
 /// # Errors
 ///
-/// Returns [`CommandError`] when no base directory can be resolved, or
+/// Returns `network_path_refused` for a network share and
+/// [`CommandError::invalid_input`] for a relative or device path (nothing is
+/// pinned then), [`CommandError`] when no base directory can be resolved, or
 /// when the write fails.
 #[tauri::command]
 pub async fn save_app_config(config: AppConfigDto) -> Result<(), CommandError> {
-    let base = profile_base().ok_or_else(|| {
-        CommandError::internal(
-            "neither RIMMERGE_PROFILE_DIR nor LOCALAPPDATA is set, so there is nowhere to write \
-             config.json",
-        )
-    })?;
+    let base = profile_base().ok_or_else(no_profile_base)?;
+    save_app_config_at(&base, config)
+}
+
+/// The refusal when neither `RIMMERGE_PROFILE_DIR` nor `LOCALAPPDATA` gives
+/// a place for `config.json`.
+fn no_profile_base() -> CommandError {
+    CommandError::internal(
+        "neither RIMMERGE_PROFILE_DIR nor LOCALAPPDATA is set, so there is nowhere to write \
+         config.json",
+    )
+}
+
+/// [`save_app_config`] over an explicit `base`, so its tests run against a
+/// temp directory. Every path is parsed before anything is written, so a
+/// refusal leaves `config.json` as it was.
+pub(crate) fn save_app_config_at(
+    base: &std::path::Path,
+    config: AppConfigDto,
+) -> Result<(), CommandError> {
+    let game_dir = pinned_path(config.game_dir, "the game folder")?;
+    let workshop_dir = pinned_path(config.workshop_dir, "the workshop folder")?;
+    let mods_config = pinned_path(config.mods_config, "the ModsConfig.xml path")?;
     rim_io::AppConfig {
-        game_dir: pinned_path(config.game_dir),
-        workshop_dir: pinned_path(config.workshop_dir),
-        mods_config: pinned_path(config.mods_config),
+        game_dir,
+        workshop_dir,
+        mods_config,
     }
-    .save(&base)
+    .save(base)
     .map_err(CommandError::from)
 }
 
@@ -336,12 +432,15 @@ pub async fn save_app_config(config: AppConfigDto) -> Result<(), CommandError> {
 /// "pin the empty path", and whatever survives is absolutized through
 /// [`rim_io::pinned_path`] — `config.json` outlives the working directory
 /// the app was launched from, so a relative path stored here would mean
-/// something different on the next start.
-fn pinned_path(value: Option<String>) -> Option<PathBuf> {
-    value
-        .map(|text| text.trim().to_string())
-        .filter(|text| !text.is_empty())
-        .map(|text| rim_io::pinned_path(&PathBuf::from(text)))
+/// something different on the next start. A text that is not a drive-letter
+/// path is refused before [`rim_io::pinned_path`] canonicalizes it, since
+/// canonicalizing a network share contacts the host.
+fn pinned_path(value: Option<String>, what: &str) -> Result<Option<PathBuf>, CommandError> {
+    let Some(text) = value.filter(|text| !text.trim().is_empty()) else {
+        return Ok(None);
+    };
+    let path = parse_user_path(&text, what)?;
+    Ok(Some(rim_io::pinned_path(path.as_path())))
 }
 
 /// RimSort's own default database directory, `%LOCALAPPDATA%\RimSort\dbs`,
@@ -493,7 +592,7 @@ mod tests {
     async fn swap_loaded_puts_the_swapped_sessions_warnings_on_the_summary() {
         let (_scratch, paths) = crate::test_support::scratch_sample_game();
         let state = AppState::default();
-        let project_paths: ProjectPaths = paths.into();
+        let project_paths = ProjectPaths::try_from(paths).expect("scratch paths are drive paths");
         let mut scanned =
             crate::test_support::scanned_session(&state.adapters, &project_paths, None);
         let summary = finish_loaded_session(
@@ -691,5 +790,267 @@ mod tests {
             })
         );
         assert!(dto.workshop_dir.is_some());
+    }
+
+    // -- network paths --
+
+    #[cfg(windows)]
+    fn paths_with(field: usize, text: &str) -> ProjectPathsDto {
+        let mut fields = [
+            r"C:\game".to_string(),
+            r"C:\workshop".to_string(),
+            r"C:\config\ModsConfig.xml".to_string(),
+            r"C:\profile".to_string(),
+        ];
+        fields[field] = text.to_string();
+        let [game_dir, workshop_dir, mods_config, profile_dir] = fields;
+        ProjectPathsDto {
+            game_dir,
+            workshop_dir,
+            mods_config,
+            profile_dir,
+        }
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn a_network_share_in_any_project_path_is_refused_before_anything_is_read() {
+        let state = AppState::default();
+
+        for field in 0..4 {
+            let result = load_project_inner(
+                &state,
+                paths_with(field, r"\\server\share\x"),
+                |_progress| {},
+            )
+            .await;
+
+            assert_eq!(
+                result.expect_err("refused").code,
+                crate::error::CommandErrorCode::NetworkPathRefused,
+                "field {field}"
+            );
+        }
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn a_relative_or_device_project_path_is_invalid_input() {
+        let state = AppState::default();
+
+        for raw in [r"relative\dir", r"\\.\pipe\x", ""] {
+            let result = load_project_inner(&state, paths_with(0, raw), |_progress| {}).await;
+
+            assert_eq!(
+                result.expect_err("refused").code,
+                crate::error::CommandErrorCode::InvalidInput,
+                "{raw:?}"
+            );
+        }
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn a_network_share_is_not_pinned_and_config_json_is_left_alone() {
+        let base = tempfile::tempdir().expect("base");
+
+        let result = save_app_config_at(
+            base.path(),
+            AppConfigDto {
+                game_dir: Some(r"C:\game".to_string()),
+                workshop_dir: Some(r"\\server\share\workshop".to_string()),
+                mods_config: None,
+            },
+        );
+
+        assert_eq!(
+            result.expect_err("refused").code,
+            crate::error::CommandErrorCode::NetworkPathRefused
+        );
+        assert_eq!(
+            std::fs::read_dir(base.path()).expect("list").count(),
+            0,
+            "nothing was written, not even the drive path"
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn a_blank_field_still_unpins_and_a_drive_path_is_saved() {
+        let base = tempfile::tempdir().expect("base");
+
+        save_app_config_at(
+            base.path(),
+            AppConfigDto {
+                game_dir: Some(format!("  {}  ", base.path().display())),
+                workshop_dir: Some("   ".to_string()),
+                mods_config: None,
+            },
+        )
+        .expect("save");
+
+        assert!(base.path().join("config.json").is_file());
+    }
+
+    #[cfg(windows)]
+    fn default_paths_for(typed: &str) -> DefaultPathsDto {
+        let base = tempfile::tempdir().expect("base");
+        get_default_paths_at(
+            base.path().to_path_buf(),
+            DefaultPathsRequestDto {
+                game_dir: Some(typed.to_string()),
+            },
+        )
+    }
+
+    #[cfg(windows)]
+    fn typed_refusal(reason: PathRefusalReasonDto) -> Option<DefaultPathsWarningDto> {
+        Some(DefaultPathsWarningDto::PathRefused {
+            field: DefaultPathFieldDto::GameDir,
+            reason,
+            source: PathRefusalSourceDto::Typed,
+        })
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn a_typed_network_share_is_reported_as_refused_not_dropped_silently() {
+        for raw in [
+            r"\\server\share\RimWorld",
+            r"  \\?\UNC\server\share\RimWorld ",
+            r"\\server@SSL\x",
+        ] {
+            let dto = default_paths_for(raw);
+
+            assert_eq!(
+                dto.warning_code,
+                typed_refusal(PathRefusalReasonDto::NetworkShare),
+                "{raw}"
+            );
+        }
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn a_typed_text_that_is_not_a_drive_path_is_reported_as_invalid() {
+        for raw in [r"RimWorld", r"\\.\pipe\x", r"C:\x\NUL"] {
+            let dto = default_paths_for(raw);
+
+            assert_eq!(
+                dto.warning_code,
+                typed_refusal(PathRefusalReasonDto::Invalid),
+                "{raw}"
+            );
+        }
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn a_typed_drive_path_is_the_answer_and_a_blank_is_no_refusal() {
+        let scratch = tempfile::tempdir().expect("scratch");
+
+        let typed = default_paths_for(&scratch.path().display().to_string());
+        let blank = default_paths_for("   ");
+
+        assert_eq!(
+            typed.game_dir,
+            Some(scratch.path().display().to_string()),
+            "the typed folder is rung 1"
+        );
+        assert!(
+            !matches!(
+                typed.warning_code,
+                Some(DefaultPathsWarningDto::PathRefused { .. })
+            ),
+            "a drive path is never a refusal"
+        );
+        assert!(
+            !matches!(
+                blank.warning_code,
+                Some(DefaultPathsWarningDto::PathRefused {
+                    source: PathRefusalSourceDto::Typed,
+                    ..
+                })
+            ),
+            "blank text is no answer, not a refused one"
+        );
+    }
+
+    /// A `config.json` written by `rimmerge config set` can hold a share; the
+    /// Setup page must say it ignored it, and never stat it.
+    #[cfg(windows)]
+    #[test]
+    fn a_saved_network_game_folder_is_ignored_and_reported() {
+        let base = tempfile::tempdir().expect("base");
+        rim_io::AppConfig {
+            game_dir: Some(PathBuf::from(r"\\server\share\RimWorld")),
+            workshop_dir: None,
+            mods_config: None,
+        }
+        .save(base.path())
+        .expect("seed config.json");
+
+        let dto = get_default_paths_at(
+            base.path().to_path_buf(),
+            DefaultPathsRequestDto { game_dir: None },
+        );
+
+        assert_ne!(dto.game_dir.as_deref(), Some(r"\\server\share\RimWorld"));
+        assert!(
+            matches!(
+                dto.warning_code,
+                Some(DefaultPathsWarningDto::PathRefused {
+                    field: DefaultPathFieldDto::GameDir,
+                    source: PathRefusalSourceDto::Configured,
+                    ..
+                })
+            ),
+            "{:?}",
+            dto.warning_code
+        );
+    }
+
+    /// The same saved share is moot once the page's own field names a folder.
+    #[cfg(windows)]
+    #[test]
+    fn a_saved_network_game_folder_is_not_reported_when_the_field_answers() {
+        let base = tempfile::tempdir().expect("base");
+        let scratch = tempfile::tempdir().expect("scratch");
+        rim_io::AppConfig {
+            game_dir: Some(PathBuf::from(r"\\server\share\RimWorld")),
+            workshop_dir: None,
+            mods_config: None,
+        }
+        .save(base.path())
+        .expect("seed config.json");
+
+        let dto = get_default_paths_at(
+            base.path().to_path_buf(),
+            DefaultPathsRequestDto {
+                game_dir: Some(scratch.path().display().to_string()),
+            },
+        );
+
+        assert!(
+            !matches!(
+                dto.warning_code,
+                Some(DefaultPathsWarningDto::PathRefused {
+                    field: DefaultPathFieldDto::GameDir,
+                    ..
+                })
+            ),
+            "{:?}",
+            dto.warning_code
+        );
+    }
+
+    #[test]
+    fn the_missing_profile_base_message_reads_as_one_sentence() {
+        let message = no_profile_base().message;
+
+        assert!(
+            message.ends_with("so there is nowhere to write config.json"),
+            "{message}"
+        );
     }
 }

@@ -109,6 +109,47 @@ of that command surface — no direct filesystem or process access outside
   `rim-session`. `GameRunning` reuses `rimworld_running`; `order_not_applied`,
   `game_executable_missing`, `steam_launch_failed` and `game_start_failed` are
   the new codes (every one needs wording in `utils/errors.ts`).
+- **Every path the webview sends goes through `parse_user_path` (`error/user_path.rs`), and a read
+  of a user-chosen file does not hold the session lock (#60).** The one rule is
+  `rim_session::user_path::UserPath::parse`, on the parsed `std::path::Prefix` only (it never
+  touches the file system, so refusing a share contacts nothing); `parse_user_path` trims
+  surrounding whitespace first, once, so every field answers to one rule. A drive-letter path
+  (`C:\x`, `\\?\C:\x`, a mapped `Z:\x`) is accepted; a UNC or WebDAV share (`\\server\share\x`,
+  `\\?\UNC\...` in any case, `\\server@SSL\x`) is `network_path_refused` (its own code, since a
+  picker can cause it and a drive letter fixes it; `utils/errors.ts` words it); a device path (the
+  bare volume `\\?\C:` too), a path with a legacy DOS device name as any component (`NUL`,
+  `COM1.rml`, `CON`, superscript digits included), a relative or drive-relative one, an empty one
+  and one with NUL are `invalid_input`. The reason is that any file-system call on a share (even
+  `metadata`) authenticates to the host (NTLMv2 leak to a compromised webview's chosen host, a
+  connection outside the closed network list) and that an offline share blocks until the SMB
+  timeout. It cannot see a symbolic link that leads to a share. The commands that take a path:
+  `load_project` (`ProjectPathsDto` is `TryFrom`, never `From`), `get_default_paths`,
+  `save_app_config`, `import_rimsort`, `import_game_log`, `preview_order_import_file`,
+  `export_order_file`, `preview_copy_organization`, `copy_organization`, `export_patch` and
+  `export_assignment` (`resolve_export_dir`, async: the text is parsed on the task and the
+  `canonicalize` runs on a bare `spawn_blocking`, before the session lock; a folder on a mapped
+  drive keeps its drive letter, see `rim_io::resolve_user_dir`); a new command with a path field
+  calls it too and never builds a `PathBuf` from request text. `get_default_paths` sets
+  `PathOverrides::policy` to `PathPolicy::DriveLettersOnly`, so the ladder drops a game folder,
+  workshop folder or `ModsConfig.xml` from an environment variable or `config.json` that fails the
+  parser **before** it stats or hashes it (a share saved by `rimmerge config set` would otherwise
+  be contacted on every Setup visit); a refused typed text or stored value is reported as
+  `DefaultPathsWarningDto::PathRefused { field, reason, source }` (`typed` or `configured`; worded
+  in `utils/defaultPaths.ts`), never dropped silently, and outranks `notAnInstall`. Detection and
+  the CLI are not restricted. Lock protocol, the `file_baseline` shape (a short `with_session`
+  probe, the read in a bare `spawn_blocking`, a short `with_session` commit, each command generic
+  over its store/reader/importer so a test slows the read down with `test_support::Gate`):
+  `preview_copy_organization`/`copy_organization` (commit re-plans against this profile at the
+  commit and refuses with `project_changed` when the profile folder changed), `import_rimsort`
+  (probe copies the active-mod map and the profile folder, `ImportRimSort::read` runs unlocked, the
+  commit refuses with `project_changed` unless both are unchanged, then `apply` saves the rules and
+  the manifest), `import_game_log` (probe copies `ModKnowledge`, commit is the pure
+  `attribute_game_log`; it commits nothing, so a project swapped in meanwhile just gets the log
+  attributed against it and no profile compare is made), `preview_order_import_file` and
+  `export_order_file` (probe only: a preview commits nothing and `import_order` re-validates, an
+  export writes outside the session). Still under the lock, on purpose: the two export commands'
+  writes (`export_patch`/`export_assignment` render from the session, and an install writes
+  `ModsConfig.xml` and persists session state).
 - **The Launch RimWorld button polls once, shares its in-flight state, and never
   stacks requests.** `components/launch/LaunchGameButton.vue` (sidebar under Apply,
   and the strip's done line) owns its Apply-first prompt and its own `ApplyDialog`;
@@ -576,11 +617,15 @@ of that command surface — no direct filesystem or process access outside
   commands over `CopyOrganization`: `preview_copy_organization` (a read) and `copy_organization`
   (plans afresh, never trusts a preview). The folder comes from the existing `pickFolder`
   (`dialog:allow-open`, no new capability; it starts at the parent of `session.paths.profileDir`,
-  where the sibling profile folders are), is parsed once at the command (non-empty, absolute, no
-  NUL, and a file-system path: an allowlist on the parsed Windows prefix (`Disk`, `VerbatimDisk`, `UNC`,
-  `VerbatimUNC`), so `\\.\pipe\x`, `\\?\pipe\x`, `\\?\CONIN$` and `\\?\GLOBALROOT\x` are `invalid_input`,
-  since opening a named pipe could block under the session lock; `\\?\C:\` and UNC paths stay allowed) and must be a
+  where the sibling profile folders are), is parsed once at the command by `parse_user_path` (the
+  path policy below: a drive-letter path only, so a UNC or WebDAV share is `network_path_refused`
+  and `\\.\pipe\x`, `\\?\GLOBALROOT\x` and the like are `invalid_input`) and must be a
   folder other than this profile's own (`canonicalize` compare, as the export's same-file check),
+  both checks and the read made on a bare `spawn_blocking` with the session lock released (probe
+  the profile folder, read, then plan and save under a second short lock, which refuses with
+  `invalid_input` when another project was loaded meanwhile; the plan is made from the bytes read,
+  against this profile as it is at the commit, so an organization edit made during the read is
+  merged with, never overwritten),
   then only `organization.json` inside it is read, and `JsonOrganizationStore::load` opens it only
   when it is a regular file (anything else is `unreadable`). A source equal to this profile's whole
   organization (an alias the path compare missed, or an identical copy) is `nothingToCopy`. Both
