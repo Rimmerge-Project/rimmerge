@@ -621,11 +621,24 @@
       "organization_limit": {
         "title": "已達到分組的上限",
         "detail": "分組與顏色已達到某項上限：分組數量、巢狀層級深度、分組中或已設定顏色的模組數量，或分組檔案（organization.json）的大小。未做任何變更。請移除不再需要的分組、分組中的模組或顏色，然後再試一次。"
+      },
+      "network_path_refused": {
+        "title": "不支援網路資料夾",
+        "detail": "Rimmerge 只使用位於磁碟機代號上的檔案和資料夾，例如 C:\\ 或你已對應到磁碟機代號的網路磁碟機。像 \\\\server\\share 這樣的網路路徑會被拒絕，且未連線到任何位置。請在 Windows 中以「連線網路磁碟機」將該共用資料夾對應到磁碟機代號，或將檔案複製到本機資料夾，然後再試一次。"
+      },
+      "project_changed": {
+        "title": "專案已變更",
+        "detail": "Rimmerge 讀取檔案期間載入了另一個專案，因此未使用讀取結果，也未變更任何內容。若要將該檔案用於現在開啟的專案，請再試一次。"
       }
     }
   },
   "defaultPathsWarning": {
-    "notAnInstall": "{gameDir} 看起來不是 RimWorld 安裝（缺少 Version.txt 或 Data/Core/）。"
+    "notAnInstall": "{gameDir} 看起來不是 RimWorld 安裝（缺少 Version.txt 或 Data/Core/）。",
+    "typedNetworkShare": "該遊戲資料夾位於網路共用資料夾上，因此 Rimmerge 未使用它。Rimmerge 只使用位於磁碟機代號上的資料夾：請在 Windows 中將該共用資料夾對應到磁碟機代號，或選擇本機資料夾。",
+    "typedInvalid": "這不是位於磁碟機代號上的資料夾完整路徑（例如 C:\\Games\\RimWorld），因此 Rimmerge 未使用它。",
+    "configuredGameDir": "你儲存的預設值中的遊戲資料夾不在磁碟機代號上（可能是網路共用資料夾），因此 Rimmerge 已忽略它。請選擇位於磁碟機代號上的資料夾，然後再按一次「儲存為預設值」。",
+    "configuredWorkshopDir": "你儲存的預設值中的 Steam 創意工坊資料夾不在磁碟機代號上（可能是網路共用資料夾），因此 Rimmerge 已忽略它。請選擇位於磁碟機代號上的資料夾，然後再按一次「儲存為預設值」。",
+    "configuredModsConfig": "你儲存的預設值中的 ModsConfig.xml 路徑不在磁碟機代號上（可能是網路共用資料夾），因此 Rimmerge 已忽略它。請選擇位於磁碟機代號上的檔案，然後再按一次「儲存為預設值」。"
   },
   "defaultPathsError": {
     "noProfileBase": "RIMMERGE_PROFILE_DIR 和 LOCALAPPDATA 都未設定，因此 Rimmerge 沒有地方存放自己的檔案。",
@@ -1345,6 +1358,10 @@
       "reordered": "已啟用模組的順序已在 Rimmerge 之外被變更。你在 Rimmerge 中尚未套用的變更會保留。套用會覆蓋該順序。",
       "outsideNoPending": "你的已啟用模組清單已在 Rimmerge 之外被變更（+{added}，-{removed}）。套用會覆蓋這些外部變更。",
       "reorderedNoPending": "已啟用模組的順序已在 Rimmerge 之外被變更。套用會覆蓋該順序。",
+      "outsideMatches": "你的已啟用模組清單已在 Rimmerge 之外被變更（+{added}，-{removed}）。你在 Rimmerge 中尚未套用的變更會保留。已啟用模組清單已與你選取的順序一致。",
+      "reorderedMatches": "已啟用模組的順序已在 Rimmerge 之外被變更。你在 Rimmerge 中尚未套用的變更會保留。已啟用模組清單已與你選取的順序一致。",
+      "outsideMatchesNoPending": "你的已啟用模組清單已在 Rimmerge 之外被變更（+{added}，-{removed}）。已啟用模組清單已與你選取的順序一致。",
+      "reorderedMatchesNoPending": "已啟用模組的順序已在 Rimmerge 之外被變更。已啟用模組清單已與你選取的順序一致。",
       "useFile": "使用檔案中的清單",
       "useFileTitle": "會先開啟預覽。在你確認之前不會變更任何內容。",
       "stale": {
@@ -1583,7 +1600,7 @@
       "empty": "這裡沒有可顯示的模組。",
       "emptyFiltered": "沒有符合目前搜尋、標籤、來源或分組的模組。",
       "cutNote": "有 {hidden} 列未顯示。請收合一些資料夾或縮小搜尋範圍，以查看這些列。",
-      "ungroupedRefusesDrop": "無法將模組加入「不在任何分組中」。若要將模組移出其分組，請使用「從分組移除」。"
+      "ungroupedRefusesDrop": "無法將模組加入「未分組」。若要將模組移出其分組，請使用「從分組移除…」。"
     },
     "groups": {
       "regionLabel": "分組",
@@ -1681,7 +1698,7 @@
         "modeLegend": "複製方式",
         "mode": {
           "merge": "合併到我的分組",
-          "mergeHelp": "名稱路徑相同的分組會合併，並加入新的分組。兩個設定檔都設定了顏色時，保留你的顏色。",
+          "mergeHelp": "名稱相同且位於相同位置的分組（例如「武器 / 近戰」）會合併，並加入新的分組。兩個設定檔都設定了顏色時，保留你的顏色。",
           "replace": "取代我的分組",
           "replaceHelp": "你的所有分組與顏色都會被移除，改用該設定檔的分組與顏色。"
         },
@@ -1689,12 +1706,12 @@
         "nothingChanges": "不會有任何變更。該設定檔中的所有內容都已在這裡。",
         "line": {
           "groupsAdded": "新增 {count} 個分組",
-          "groupsMerged": "{count} 個分組併入此處名稱路徑相同的分組",
+          "groupsMerged": "{count} 個分組併入此處名稱相同且位於相同位置的分組",
           "membershipsAdded": "新增 {count} 筆分組歸屬",
           "membershipsAlready": "{count} 筆分組歸屬原本就已存在",
           "modColorsAdded": "新增 {count} 個模組顏色",
           "modColorsKept": "{count} 個模組在這裡已有不同的顏色，因此保留你的顏色",
-          "groupColorsAdopted": "{count} 個沒有顏色的分組採用了另一個設定檔的顏色",
+          "groupColorsAdopted": "{count} 個沒有顏色的分組採用另一個設定檔的顏色",
           "notInstalled": "這些分組中有 {count} 個模組未安裝。它們會保留在所屬的分組中，你安裝後就會重新出現。"
         },
         "clashesHeading": "{count} 個分組在這裡已有不同的顏色，因此保留你的顏色：",
@@ -1735,9 +1752,9 @@
           "limit": {
             "tooDeep": "結果的分組巢狀層級會超過 Rimmerge 允許的深度。未變更任何內容。",
             "tooManyGroups": "結果的分組數量會超過 Rimmerge 允許的上限。未變更任何內容。",
-            "tooManyMembers": "結果放入分組的模組數量會超過 Rimmerge 允許的上限（單一分組或總計）。未變更任何內容。",
+            "tooManyMembers": "結果會讓單一分組或所有分組中的模組數量超過 Rimmerge 允許的上限。未變更任何內容。",
             "tooManyColors": "結果設定顏色的模組數量會超過 Rimmerge 允許的上限。未變更任何內容。",
-            "other": "結果會違反分組的規則。未變更任何內容。"
+            "other": "結果會超過分組的某項上限。未變更任何內容。"
           }
         }
       },
@@ -1780,8 +1797,8 @@
         "placeholder": "搜尋或建立分組",
         "noMatch": "沒有符合搜尋的分組。",
         "createOption": "建立分組「{name}」",
-        "createHintBulk": "建立時也會加入你選擇的模組，一次儲存完成。",
-        "createHintSingle": "建立時也會加入此模組，一次儲存完成。",
+        "createHintBulk": "建立時也會加入你選擇的模組，兩者會同時儲存。",
+        "createHintSingle": "建立時也會加入此模組，兩者會同時儲存。",
         "parentLabel": "建立於"
       },
       "toast": {
@@ -2292,8 +2309,8 @@
       "heading": "仍要套用嗎？",
       "intro": "{order}順序在寫入前有 {count} 個問題需要確認：",
       "outsideHeading": "已啟用模組清單已在 Rimmerge 之外被變更",
-      "outsideMembership": "自 Rimmerge 上次讀取後，已啟用模組清單已在其他地方被編輯（+{added}，-{removed}）。套用會以{order}順序覆蓋這些編輯。寫入前會先備份已變更的檔案。",
-      "outsideReordered": "自 Rimmerge 上次讀取後，已啟用模組的順序已在其他地方被變更。套用會以{order}順序覆蓋該順序。寫入前會先備份已變更的檔案。",
+      "outsideMembership": "已啟用模組清單在 Rimmerge 上次讀取後已在其他地方被編輯（+{added}，-{removed}）。套用會以{order}順序覆蓋這些編輯。寫入前會先備份已變更的檔案。",
+      "outsideReordered": "已啟用模組的順序在 Rimmerge 上次讀取後已在其他地方被變更。套用會以{order}順序覆蓋該變更。寫入前會先備份已變更的檔案。",
       "acknowledgedHeading": "已在「檢查結果」中決定",
       "reviewInInbox": "在「檢查結果」中檢閱",
       "goBackButton": "返回",

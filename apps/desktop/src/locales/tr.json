@@ -621,11 +621,24 @@
       "organization_limit": {
         "title": "Gruplar için bir sınıra ulaşıldı",
         "detail": "Gruplar ve renkler için bir sınıra ulaştın: grup sayısı, iç içe geçme derinliği, gruplardaki ya da renklendirilmiş mod sayısı veya grup dosyasının (organization.json) boyutu. Hiçbir şey değiştirilmedi. Artık gerek duymadığın grupları, gruplardaki modları ya da renkleri kaldırıp yeniden dene."
+      },
+      "network_path_refused": {
+        "title": "Ağ klasörleri desteklenmiyor",
+        "detail": "Rimmerge yalnızca bir sürücü harfindeki dosya ve klasörleri kullanır; örneğin C:\\ ya da bir harfe bağladığın bir ağ sürücüsü. \\\\server\\share gibi ağ yolları reddedilir; hiçbir yere bağlanılmadı. Paylaşımı Windows'ta bir sürücü harfine bağla (Ağ sürücüsüne bağlan) ya da dosyayı yerel bir klasöre kopyala, sonra yeniden dene."
+      },
+      "project_changed": {
+        "title": "Proje değişti",
+        "detail": "Rimmerge dosyayı okurken başka bir proje yüklendi; bu yüzden sonuç kullanılmadı ve hiçbir şey değiştirilmedi. Dosyayı şu anda açık olan projeyle kullanmak için yeniden dene."
       }
     }
   },
   "defaultPathsWarning": {
-    "notAnInstall": "{gameDir} bir RimWorld kurulumuna benzemiyor (Version.txt veya Data/Core/ eksik)."
+    "notAnInstall": "{gameDir} bir RimWorld kurulumuna benzemiyor (Version.txt veya Data/Core/ eksik).",
+    "typedNetworkShare": "Bu oyun klasörü bir ağ paylaşımında olduğu için Rimmerge onu kullanmadı. Rimmerge yalnızca bir sürücü harfindeki klasörleri kullanır: paylaşımı Windows'ta bir sürücü harfine bağla ya da yerel bir klasör seç.",
+    "typedInvalid": "Bu, bir sürücü harfindeki bir klasörün tam yolu değil (örneğin C:\\Games\\RimWorld); bu yüzden Rimmerge onu kullanmadı.",
+    "configuredGameDir": "Kaydettiğin varsayılanlardaki oyun klasörü bir sürücü harfinde değil (bir ağ paylaşımı olabilir); bu yüzden Rimmerge onu yok saydı. Bir sürücü harfindeki bir klasörü seç, sonra yeniden \"Varsayılan olarak kaydet\" düğmesine bas.",
+    "configuredWorkshopDir": "Kaydettiğin varsayılanlardaki Steam Atölyesi klasörü bir sürücü harfinde değil (bir ağ paylaşımı olabilir); bu yüzden Rimmerge onu yok saydı. Bir sürücü harfindeki bir klasörü seç, sonra yeniden \"Varsayılan olarak kaydet\" düğmesine bas.",
+    "configuredModsConfig": "Kaydettiğin varsayılanlardaki ModsConfig.xml yolu bir sürücü harfinde değil (bir ağ paylaşımı olabilir); bu yüzden Rimmerge onu yok saydı. Bir sürücü harfindeki bir dosyayı seç, sonra yeniden \"Varsayılan olarak kaydet\" düğmesine bas."
   },
   "defaultPathsError": {
     "noProfileBase": "Ne RIMMERGE_PROFILE_DIR ne de LOCALAPPDATA ayarlı; bu yüzden Rimmerge kendi dosyalarını tutacak bir yer bulamıyor.",
@@ -1345,6 +1358,10 @@
       "reordered": "Etkin sıran Rimmerge dışında değiştirildi. Bekleyen değişikliklerin korunuyor. Uygula'ya basarsan bu sıranın üzerine yazılır.",
       "outsideNoPending": "Etkin mod listen Rimmerge dışında değiştirildi (+{added}, -{removed}). Uygula'ya basarsan bu dış değişikliklerin üzerine yazılır.",
       "reorderedNoPending": "Etkin sıran Rimmerge dışında değiştirildi. Uygula'ya basarsan bu sıranın üzerine yazılır.",
+      "outsideMatches": "Etkin mod listen Rimmerge dışında değiştirildi (+{added}, -{removed}). Bekleyen değişikliklerin korunuyor. Etkin mod listen seçtiğin sırayla zaten eşleşiyor.",
+      "reorderedMatches": "Etkin sıran Rimmerge dışında değiştirildi. Bekleyen değişikliklerin korunuyor. Etkin mod listen seçtiğin sırayla zaten eşleşiyor.",
+      "outsideMatchesNoPending": "Etkin mod listen Rimmerge dışında değiştirildi (+{added}, -{removed}). Etkin mod listen seçtiğin sırayla zaten eşleşiyor.",
+      "reorderedMatchesNoPending": "Etkin sıran Rimmerge dışında değiştirildi. Etkin mod listen seçtiğin sırayla zaten eşleşiyor.",
       "useFile": "Dosyadaki listeyi kullan",
       "useFileTitle": "Önce bir önizleme açar. Onaylayana kadar hiçbir şey değişmez.",
       "stale": {
@@ -1568,7 +1585,7 @@
       "expandAll": "Tümünü genişlet",
       "modCount": "{count} mod | {count} mod",
       "folderActions": "{name} klasörü için işlemler",
-      "folderLabelExpanded": "{name}, {count} mod, açık | {name}, {count} mod, açık",
+      "folderLabelExpanded": "{name}, {count} mod, genişletilmiş | {name}, {count} mod, genişletilmiş",
       "folderLabelCollapsed": "{name}, {count} mod, daraltılmış | {name}, {count} mod, daraltılmış",
       "alsoInShort": "{count} grupta daha",
       "alsoInLong": "Diğer {count} grupta da var: {groups} | Diğer {count} grupta da var: {groups}",
@@ -1583,7 +1600,7 @@
       "empty": "Burada gösterilecek mod yok.",
       "emptyFiltered": "Mevcut arama, etiket, kaynak veya grupla eşleşen mod yok.",
       "cutNote": "{hidden} satır gösterilmiyor. Görmek için bazı klasörleri kapat ya da aramayı daralt. | {hidden} satır gösterilmiyor. Görmek için bazı klasörleri kapat ya da aramayı daralt.",
-      "ungroupedRefusesDrop": "Modlar Grupta olmayanlar klasörüne eklenemez. Bir modu gruplarından çıkarmak için Gruptan çıkar seçeneğini kullan."
+      "ungroupedRefusesDrop": "Modlar \"Grupsuz\" klasörüne eklenemez. Bir modu gruplarından çıkarmak için \"Gruptan çıkar…\" seçeneğini kullan."
     },
     "groups": {
       "regionLabel": "Gruplar",
@@ -1681,7 +1698,7 @@
         "modeLegend": "Nasıl kopyalansın",
         "mode": {
           "merge": "Gruplarımla birleştir",
-          "mergeHelp": "Aynı ad yoluna sahip gruplar birleştirilir ve yeni gruplar eklenir. İki profil de bir renk belirlediyse seninki kalır.",
+          "mergeHelp": "Aynı yerde aynı ada sahip gruplar (örneğin Silahlar / Yakın dövüş) birleştirilir ve yeni gruplar eklenir. İki profil de bir renk belirlediyse seninki kalır.",
           "replace": "Gruplarımı onlarınkiyle değiştir",
           "replaceHelp": "Tüm grupların ve renklerin kaldırılır, yerlerini o profilinkiler alır."
         },
@@ -1689,7 +1706,7 @@
         "nothingChanges": "Hiçbir şey değişmez. O profildeki her şey zaten burada.",
         "line": {
           "groupsAdded": "Eklenen grup: {count} | Eklenen grup: {count}",
-          "groupsMerged": "Buradaki aynı ad yoluna sahip grupla birleştirilen grup: {count} | Buradaki aynı ad yoluna sahip gruplarla birleştirilen grup: {count}",
+          "groupsMerged": "Buradaki, aynı yerde aynı ada sahip grupla birleştirilen grup: {count} | Buradaki, aynı yerde aynı ada sahip gruplarla birleştirilen grup: {count}",
           "membershipsAdded": "Eklenen grup üyeliği: {count} | Eklenen grup üyeliği: {count}",
           "membershipsAlready": "Zaten burada olan üyelik: {count} | Zaten burada olan üyelik: {count}",
           "modColorsAdded": "Eklenen mod rengi: {count} | Eklenen mod rengi: {count}",
@@ -1735,9 +1752,9 @@
           "limit": {
             "tooDeep": "Kopyalama sonucunda grupların iç içe düzeyi, Rimmerge uygulamasının izin verdiği sınırı aşardı. Hiçbir şey değiştirilmedi.",
             "tooManyGroups": "Kopyalama sonucunda grup sayısı, Rimmerge uygulamasının izin verdiği sınırı aşardı. Hiçbir şey değiştirilmedi.",
-            "tooManyMembers": "Kopyalama sonucunda gruplardaki mod sayısı, tek bir grupta ya da toplamda, Rimmerge uygulamasının izin verdiği sınırı aşardı. Hiçbir şey değiştirilmedi.",
+            "tooManyMembers": "Kopyalama sonucunda tek bir gruptaki ya da tüm gruplardaki mod sayısı, Rimmerge uygulamasının izin verdiği sınırı aşardı. Hiçbir şey değiştirilmedi.",
             "tooManyColors": "Kopyalama sonucunda renk verilen mod sayısı, Rimmerge uygulamasının izin verdiği sınırı aşardı. Hiçbir şey değiştirilmedi.",
-            "other": "Kopyalama sonucu, gruplarla ilgili bir kuralı ihlal ederdi. Hiçbir şey değiştirilmedi."
+            "other": "Kopyalama sonucunda gruplar için bir sınır aşılırdı. Hiçbir şey değiştirilmedi."
           }
         }
       },
@@ -1763,7 +1780,7 @@
         "idleMods": "{count} modu eklemek için bir grubun üzerine bırak | {count} modu eklemek için bir grubun üzerine bırak",
         "idleGroup": "Bu grubu başka bir grubun içine koymak için o grubun üzerine, en üst düzeye taşımak için Tüm modlar öğesinin üzerine bırak.",
         "needsGroup": "Modlar yalnızca bir gruba eklenebilir",
-        "notUngrouped": "Bir grup Grupsuz bölümüne konamaz. En üst düzeye taşımak için Tüm modlar öğesini kullan.",
+        "notUngrouped": "Bir grup \"Grupsuz\" öğesine konamaz. En üst düzeye taşımak için \"Tüm modlar\" öğesini kullan.",
         "withHidden": "{text} ({hidden})",
         "alreadyThere": "Grup zaten orada",
         "makeTopLevel": "{name} grubunu en üst düzeye taşı",
@@ -1780,8 +1797,8 @@
         "placeholder": "Ara ya da grup oluştur",
         "noMatch": "Aramanla eşleşen grup yok.",
         "createOption": "“{name}” grubunu oluştur",
-        "createHintBulk": "Oluşturunca seçtiğin modlar da eklenir; hepsi tek seferde kaydedilir.",
-        "createHintSingle": "Oluşturunca bu mod da eklenir; ikisi tek seferde kaydedilir.",
+        "createHintBulk": "Oluşturunca seçtiğin modlar da eklenir; grup ve modlar aynı anda kaydedilir.",
+        "createHintSingle": "Oluşturunca bu mod da eklenir; grup ve mod aynı anda kaydedilir.",
         "parentLabel": "Oluşturulacağı yer"
       },
       "toast": {
@@ -2292,8 +2309,8 @@
       "heading": "Yine de uygulansın mı?",
       "intro": "{order} sırada, yazmadan önce onaylanacak {count} sorun var: | {order} sırada, yazmadan önce onaylanacak {count} sorun var:",
       "outsideHeading": "Etkin mod listesi Rimmerge dışında değişti",
-      "outsideMembership": "Rimmerge son okuduğundan beri etkin mod listesi başka bir yerde düzenlendi (+{added}, -{removed}). Uygula'ya basarsan {order} sıra bu düzenlemelerin üzerine yazılır. Önce değişen dosyanın bir yedeği alınır.",
-      "outsideReordered": "Rimmerge son okuduğundan beri etkin sıra başka bir yerde değiştirildi. Uygula'ya basarsan {order} sıra bunun üzerine yazılır. Önce değişen dosyanın bir yedeği alınır.",
+      "outsideMembership": "Etkin mod listesi, Rimmerge onu son okuduktan sonra başka bir yerde düzenlendi (+{added}, -{removed}). Uygula'ya basarsan {order} sıra bu düzenlemelerin üzerine yazılır. Önce değişen dosyanın bir yedeği alınır.",
+      "outsideReordered": "Etkin sıra, Rimmerge onu son okuduktan sonra başka bir yerde değiştirildi. Uygula'ya basarsan {order} sıra bu değişikliğin üzerine yazılır. Önce değişen dosyanın bir yedeği alınır.",
       "acknowledgedHeading": "Bulgular sayfasında zaten karar verildi",
       "reviewInInbox": "Bulgular sayfasında incele",
       "goBackButton": "Geri dön",

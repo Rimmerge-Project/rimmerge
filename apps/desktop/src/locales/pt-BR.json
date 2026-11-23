@@ -621,11 +621,24 @@
       "organization_limit": {
         "title": "Um limite de grupos foi atingido",
         "detail": "Você atingiu um limite de grupos e cores: quantos grupos pode haver, em quantos níveis eles podem ser aninhados, quantos mods podem estar em grupos ou ter cor, ou o tamanho máximo do arquivo de grupos (organization.json). Nada foi alterado. Remova grupos, mods de grupos ou cores de que você não precisa mais e tente novamente."
+      },
+      "network_path_refused": {
+        "title": "Pastas de rede não são compatíveis",
+        "detail": "O Rimmerge só usa arquivos e pastas em uma unidade com letra, como C:\\ ou uma unidade de rede que você mapeou para uma letra. Um caminho de rede como \\\\server\\share é recusado, e nenhum servidor foi contatado. Mapeie o compartilhamento para uma letra de unidade no Windows ou copie o arquivo para uma pasta local e tente novamente."
+      },
+      "project_changed": {
+        "title": "O projeto mudou",
+        "detail": "Outro projeto foi carregado enquanto o Rimmerge lia o arquivo, então o resultado não foi usado e nada foi alterado. Tente novamente para usar o arquivo com o projeto que está aberto agora."
       }
     }
   },
   "defaultPathsWarning": {
-    "notAnInstall": "{gameDir} não parece ser uma instalação do RimWorld (falta Version.txt ou Data/Core/)."
+    "notAnInstall": "{gameDir} não parece ser uma instalação do RimWorld (falta Version.txt ou Data/Core/).",
+    "typedNetworkShare": "Essa pasta do jogo está em um compartilhamento de rede, então o Rimmerge não a usou. O Rimmerge só usa pastas em uma unidade com letra: mapeie o compartilhamento para uma letra de unidade no Windows ou escolha uma pasta local.",
+    "typedInvalid": "Isso não é um caminho completo para uma pasta em uma unidade com letra, como C:\\Games\\RimWorld, então o Rimmerge não o usou.",
+    "configuredGameDir": "A pasta do jogo nos seus padrões salvos não está em uma unidade com letra (pode ser um compartilhamento de rede), então o Rimmerge a ignorou. Escolha uma pasta em uma unidade com letra e clique em \"Salvar como padrão\" novamente.",
+    "configuredWorkshopDir": "A pasta da Oficina Steam nos seus padrões salvos não está em uma unidade com letra (pode ser um compartilhamento de rede), então o Rimmerge a ignorou. Escolha uma pasta em uma unidade com letra e clique em \"Salvar como padrão\" novamente.",
+    "configuredModsConfig": "O caminho do ModsConfig.xml nos seus padrões salvos não está em uma unidade com letra (pode ser um compartilhamento de rede), então o Rimmerge o ignorou. Escolha um arquivo em uma unidade com letra e clique em \"Salvar como padrão\" novamente."
   },
   "defaultPathsError": {
     "noProfileBase": "Nem RIMMERGE_PROFILE_DIR nem LOCALAPPDATA estão definidos, então o Rimmerge não tem onde guardar os próprios arquivos.",
@@ -1345,6 +1358,10 @@
       "reordered": "Sua ordem ativa foi alterada fora do Rimmerge. Suas alterações pendentes foram mantidas. Aplicar sobrescreveria essa ordem.",
       "outsideNoPending": "Sua lista de mods ativos foi alterada fora do Rimmerge (+{added}, -{removed}). Aplicar sobrescreveria essas alterações externas.",
       "reorderedNoPending": "Sua ordem ativa foi alterada fora do Rimmerge. Aplicar sobrescreveria essa ordem.",
+      "outsideMatches": "Sua lista de mods ativos foi alterada fora do Rimmerge (+{added}, -{removed}). Suas alterações pendentes foram mantidas. Ela já corresponde à ordem que você selecionou.",
+      "reorderedMatches": "Sua ordem ativa foi alterada fora do Rimmerge. Suas alterações pendentes foram mantidas. Ela já corresponde à ordem que você selecionou.",
+      "outsideMatchesNoPending": "Sua lista de mods ativos foi alterada fora do Rimmerge (+{added}, -{removed}). Ela já corresponde à ordem que você selecionou.",
+      "reorderedMatchesNoPending": "Sua ordem ativa foi alterada fora do Rimmerge. Ela já corresponde à ordem que você selecionou.",
       "useFile": "Usar a lista do arquivo",
       "useFileTitle": "Abre uma prévia antes. Nada muda até você confirmar.",
       "stale": {
@@ -1568,7 +1585,7 @@
       "expandAll": "Expandir tudo",
       "modCount": "{count} mod | {count} mods",
       "folderActions": "Ações da pasta {name}",
-      "folderLabelExpanded": "{name}, {count} mod, aberta | {name}, {count} mods, aberta",
+      "folderLabelExpanded": "{name}, {count} mod, expandida | {name}, {count} mods, expandida",
       "folderLabelCollapsed": "{name}, {count} mod, recolhida | {name}, {count} mods, recolhida",
       "alsoInShort": "também em {count}",
       "alsoInLong": "Também em {count} outro grupo: {groups} | Também em {count} outros grupos: {groups}",
@@ -1583,7 +1600,7 @@
       "empty": "Não há mods para mostrar aqui.",
       "emptyFiltered": "Nenhum mod corresponde à pesquisa, à tag, à fonte ou ao grupo atuais.",
       "cutNote": "{hidden} linha não é exibida. Recolha algumas pastas ou refine a pesquisa para vê-la. | {hidden} linhas não são exibidas. Recolha algumas pastas ou refine a pesquisa para vê-las.",
-      "ungroupedRefusesDrop": "Mods não podem ser adicionados a Sem grupo. Para tirar um mod dos grupos dele, use Remover do grupo."
+      "ungroupedRefusesDrop": "Mods não podem ser adicionados a \"Sem grupo\". Para tirar um mod dos grupos dele, use \"Remover do grupo…\"."
     },
     "groups": {
       "regionLabel": "Grupos",
@@ -1681,7 +1698,7 @@
         "modeLegend": "Como copiar",
         "mode": {
           "merge": "Combinar com meus grupos",
-          "mergeHelp": "Grupos com o mesmo caminho de nomes são combinados e os grupos novos são adicionados. Onde os dois perfis definem uma cor, a sua é mantida.",
+          "mergeHelp": "Grupos com o mesmo nome no mesmo lugar (por exemplo, Armas / Corpo a corpo) são combinados e os grupos novos são adicionados. Onde os dois perfis definem uma cor, a sua é mantida.",
           "replace": "Substituir meus grupos",
           "replaceHelp": "Todos os seus grupos e cores são removidos, e os daquele perfil tomam o lugar deles."
         },
@@ -1689,12 +1706,12 @@
         "nothingChanges": "Nada mudaria. Tudo o que há naquele perfil já está aqui.",
         "line": {
           "groupsAdded": "{count} grupo adicionado | {count} grupos adicionados",
-          "groupsMerged": "{count} grupo combinado com o grupo de mesmo caminho de nomes daqui | {count} grupos combinados com os grupos de mesmo caminho de nomes daqui",
+          "groupsMerged": "{count} grupo combinado com o grupo daqui de mesmo nome no mesmo lugar | {count} grupos combinados com os grupos daqui de mesmo nome no mesmo lugar",
           "membershipsAdded": "{count} associação a grupo adicionada | {count} associações a grupos adicionadas",
           "membershipsAlready": "{count} associação já estava aqui | {count} associações já estavam aqui",
           "modColorsAdded": "{count} cor de mod adicionada | {count} cores de mods adicionadas",
           "modColorsKept": "{count} mod já tem outra cor aqui, então a sua é mantida | {count} mods já têm outra cor aqui, então as suas são mantidas",
-          "groupColorsAdopted": "{count} grupo sem cor recebeu a cor do outro perfil | {count} grupos sem cor receberam a cor do outro perfil",
+          "groupColorsAdopted": "{count} grupo sem cor recebe a cor do outro perfil | {count} grupos sem cor recebem a cor do outro perfil",
           "notInstalled": "{count} mod desses grupos não está instalado. Ele continua nos grupos dele e volta se você o instalar. | {count} mods desses grupos não estão instalados. Eles continuam nos grupos deles e voltam se você os instalar."
         },
         "clashesHeading": "{count} grupo tem outra cor aqui, então a sua é mantida: | {count} grupos têm outra cor aqui, então as suas são mantidas:",
@@ -1735,9 +1752,9 @@
           "limit": {
             "tooDeep": "O resultado aninharia grupos em mais níveis do que o Rimmerge permite. Nada foi alterado.",
             "tooManyGroups": "O resultado teria mais grupos do que o Rimmerge permite. Nada foi alterado.",
-            "tooManyMembers": "O resultado colocaria em grupos mais mods do que o Rimmerge permite, em um grupo ou no total. Nada foi alterado.",
+            "tooManyMembers": "O resultado colocaria mais mods em um grupo, ou em grupos no total, do que o Rimmerge permite. Nada foi alterado.",
             "tooManyColors": "O resultado daria cores a mais mods do que o Rimmerge permite. Nada foi alterado.",
-            "other": "O resultado violaria uma regra dos grupos. Nada foi alterado."
+            "other": "O resultado ultrapassaria um limite de grupos. Nada foi alterado."
           }
         }
       },
@@ -1763,7 +1780,7 @@
         "idleMods": "Solte {count} mod em um grupo para adicioná-lo | Solte {count} mods em um grupo para adicioná-los",
         "idleGroup": "Solte em um grupo para colocar este grupo dentro dele, ou em Todos os mods para levá-lo ao primeiro nível.",
         "needsGroup": "Mods só podem ser adicionados a um grupo",
-        "notUngrouped": "Um grupo não pode ir para Sem grupo. Use Todos os mods para levá-lo ao primeiro nível.",
+        "notUngrouped": "Um grupo não pode ir para \"Sem grupo\". Use \"Todos os mods\" para levá-lo ao primeiro nível.",
         "withHidden": "{text} ({hidden})",
         "alreadyThere": "O grupo já está aí",
         "makeTopLevel": "Levar {name} ao primeiro nível",
@@ -1780,8 +1797,8 @@
         "placeholder": "Pesquisar ou criar grupo",
         "noMatch": "Nenhum grupo corresponde à sua pesquisa.",
         "createOption": "Criar grupo “{name}”",
-        "createHintBulk": "Criá-lo também adiciona os mods escolhidos, em um só salvamento.",
-        "createHintSingle": "Criá-lo também adiciona este mod, em um só salvamento.",
+        "createHintBulk": "Criá-lo também adiciona os mods escolhidos, e tudo é salvo de uma vez.",
+        "createHintSingle": "Criá-lo também adiciona este mod, e tudo é salvo de uma vez.",
         "parentLabel": "Criar em"
       },
       "toast": {
@@ -2292,8 +2309,8 @@
       "heading": "Aplicar mesmo assim?",
       "intro": "A ordem {order} tem {count} problema a confirmar antes de escrever: | A ordem {order} tem {count} problemas a confirmar antes de escrever:",
       "outsideHeading": "A lista de mods ativos foi alterada fora do Rimmerge",
-      "outsideMembership": "Desde a última leitura do Rimmerge, a lista de mods ativos foi editada em outro lugar (+{added}, -{removed}). Aplicar escreve a ordem {order} por cima dessas edições. Antes, é feita uma cópia de segurança do arquivo alterado.",
-      "outsideReordered": "Desde a última leitura do Rimmerge, a ordem ativa foi alterada em outro lugar. Aplicar escreve a ordem {order} por cima dela. Antes, é feita uma cópia de segurança do arquivo alterado.",
+      "outsideMembership": "A lista de mods ativos foi editada em outro lugar depois da última leitura do Rimmerge (+{added}, -{removed}). Aplicar escreve a ordem {order} por cima dessas edições. Antes, é feita uma cópia de segurança do arquivo alterado.",
+      "outsideReordered": "A ordem ativa foi alterada em outro lugar depois da última leitura do Rimmerge. Aplicar escreve a ordem {order} por cima dessa alteração. Antes, é feita uma cópia de segurança do arquivo alterado.",
       "acknowledgedHeading": "Já decididos em Achados",
       "reviewInInbox": "Revisar em Achados",
       "goBackButton": "Voltar",

@@ -621,11 +621,24 @@
       "organization_limit": {
         "title": "Osiągnięto limit grup",
         "detail": "Osiągnięto limit dla grup i kolorów: liczby grup, głębokości zagnieżdżenia, liczby modów w grupach lub z kolorem albo rozmiaru pliku grup (organization.json). Nic nie zostało zmienione. Usuń niepotrzebne już grupy, mody z grup lub kolory i spróbuj ponownie."
+      },
+      "network_path_refused": {
+        "title": "Foldery sieciowe nie są obsługiwane",
+        "detail": "Rimmerge używa tylko plików i folderów na dysku oznaczonym literą, takim jak C:\\ albo dysk sieciowy zmapowany na literę. Ścieżka sieciowa, taka jak \\\\server\\share, jest odrzucana i nie nawiązano żadnego połączenia. Zmapuj udział na literę dysku w systemie Windows albo skopiuj plik do lokalnego folderu, a potem spróbuj ponownie."
+      },
+      "project_changed": {
+        "title": "Projekt się zmienił",
+        "detail": "Podczas odczytu pliku przez Rimmerge wczytano inny projekt, więc wynik nie został użyty i nic nie zostało zmienione. Spróbuj ponownie, aby użyć pliku z projektem, który jest teraz otwarty."
       }
     }
   },
   "defaultPathsWarning": {
-    "notAnInstall": "{gameDir} nie wygląda na instalację RimWorld (brak Version.txt lub Data/Core/)."
+    "notAnInstall": "{gameDir} nie wygląda na instalację RimWorld (brak Version.txt lub Data/Core/).",
+    "typedNetworkShare": "Ten folder gry jest w udziale sieciowym, więc Rimmerge go nie użył. Rimmerge używa tylko folderów na dysku oznaczonym literą: zmapuj udział na literę dysku w systemie Windows albo wybierz lokalny folder.",
+    "typedInvalid": "To nie jest pełna ścieżka do folderu na dysku oznaczonym literą (na przykład C:\\Games\\RimWorld), więc Rimmerge jej nie użył.",
+    "configuredGameDir": "Folder gry w zapisanych ustawieniach domyślnych nie jest na dysku oznaczonym literą (może to być udział sieciowy), więc Rimmerge go zignorował. Wybierz folder na dysku oznaczonym literą, a potem ponownie wybierz „Zapisz jako domyślne”.",
+    "configuredWorkshopDir": "Folder Warsztatu Steam w zapisanych ustawieniach domyślnych nie jest na dysku oznaczonym literą (może to być udział sieciowy), więc Rimmerge go zignorował. Wybierz folder na dysku oznaczonym literą, a potem ponownie wybierz „Zapisz jako domyślne”.",
+    "configuredModsConfig": "Ścieżka do ModsConfig.xml w zapisanych ustawieniach domyślnych nie jest na dysku oznaczonym literą (może to być udział sieciowy), więc Rimmerge ją zignorował. Wybierz plik na dysku oznaczonym literą, a potem ponownie wybierz „Zapisz jako domyślne”."
   },
   "defaultPathsError": {
     "noProfileBase": "Nie ustawiono ani RIMMERGE_PROFILE_DIR, ani LOCALAPPDATA, więc Rimmerge nie ma gdzie przechowywać własnych plików.",
@@ -1345,6 +1358,10 @@
       "reordered": "Kolejność aktywnych modów została zmieniona poza Rimmerge. Twoje oczekujące zmiany zostają zachowane. Zastosowanie nadpisałoby tę kolejność.",
       "outsideNoPending": "Lista aktywnych modów została zmieniona poza Rimmerge (+{added}, -{removed}). Zastosowanie nadpisałoby te zewnętrzne zmiany.",
       "reorderedNoPending": "Kolejność aktywnych modów została zmieniona poza Rimmerge. Zastosowanie nadpisałoby tę kolejność.",
+      "outsideMatches": "Lista aktywnych modów została zmieniona poza Rimmerge (+{added}, -{removed}). Twoje oczekujące zmiany zostają zachowane. Lista jest już zgodna z wybraną kolejnością.",
+      "reorderedMatches": "Kolejność aktywnych modów została zmieniona poza Rimmerge. Twoje oczekujące zmiany zostają zachowane. Lista aktywnych modów jest już zgodna z wybraną kolejnością.",
+      "outsideMatchesNoPending": "Lista aktywnych modów została zmieniona poza Rimmerge (+{added}, -{removed}). Lista jest już zgodna z wybraną kolejnością.",
+      "reorderedMatchesNoPending": "Kolejność aktywnych modów została zmieniona poza Rimmerge. Lista aktywnych modów jest już zgodna z wybraną kolejnością.",
       "useFile": "Użyj listy z pliku",
       "useFileTitle": "Najpierw otwiera podgląd. Nic się nie zmieni, dopóki nie potwierdzisz.",
       "stale": {
@@ -1583,7 +1600,7 @@
       "empty": "Nie ma tu modów do pokazania.",
       "emptyFiltered": "Żaden mod nie pasuje do obecnego wyszukiwania, tagu, źródła ani grupy.",
       "cutNote": "{hidden} wiersz jest niewidoczny. Zwiń niektóre foldery lub zawęź wyszukiwanie, aby go zobaczyć. | {hidden} wiersze są niewidoczne. Zwiń niektóre foldery lub zawęź wyszukiwanie, aby je zobaczyć. | {hidden} wierszy jest niewidocznych. Zwiń niektóre foldery lub zawęź wyszukiwanie, aby je zobaczyć.",
-      "ungroupedRefusesDrop": "Nie można dodawać modów do „Bez grupy”. Aby wyjąć mod z jego grup, użyj opcji „Usuń z grupy”."
+      "ungroupedRefusesDrop": "Nie można dodawać modów do „Bez grupy”. Aby wyjąć mod z jego grup, użyj opcji „Usuń z grupy…”."
     },
     "groups": {
       "regionLabel": "Grupy",
@@ -1681,7 +1698,7 @@
         "modeLegend": "Sposób kopiowania",
         "mode": {
           "merge": "Scal z moimi grupami",
-          "mergeHelp": "Grupy o tej samej ścieżce nazw zostaną połączone, a nowe grupy dodane. Jeśli oba profile ustawiają kolor, zostaje twój.",
+          "mergeHelp": "Grupy o tej samej nazwie w tym samym miejscu (na przykład Broń / Wręcz) zostaną połączone, a nowe grupy dodane. Jeśli oba profile ustawiają kolor, zostaje twój.",
           "replace": "Zastąp moje grupy",
           "replaceHelp": "Wszystkie twoje grupy i kolory zostaną usunięte, a ich miejsce zajmą grupy i kolory tamtego profilu."
         },
@@ -1689,12 +1706,12 @@
         "nothingChanges": "Nic by się nie zmieniło. Wszystko z tamtego profilu już tu jest.",
         "line": {
           "groupsAdded": "{count} dodana grupa | {count} dodane grupy | {count} dodanych grup",
-          "groupsMerged": "{count} grupa scalona z tutejszą grupą o tej samej ścieżce nazw | {count} grupy scalone z tutejszymi grupami o tej samej ścieżce nazw | {count} grup scalonych z tutejszymi grupami o tej samej ścieżce nazw",
+          "groupsMerged": "{count} grupa scalona z tutejszą grupą o tej samej nazwie w tym samym miejscu | {count} grupy scalone z tutejszymi grupami o tej samej nazwie w tym samym miejscu | {count} grup scalonych z tutejszymi grupami o tej samej nazwie w tym samym miejscu",
           "membershipsAdded": "{count} dodana przynależność do grupy | {count} dodane przynależności do grup | {count} dodanych przynależności do grup",
           "membershipsAlready": "{count} przynależność już tu była | {count} przynależności już tu były | {count} przynależności już tu było",
           "modColorsAdded": "{count} dodany kolor moda | {count} dodane kolory modów | {count} dodanych kolorów modów",
           "modColorsKept": "{count} mod ma już tu inny kolor, więc zostaje twój | {count} mody mają już tu inne kolory, więc zostają twoje | {count} modów ma już tu inne kolory, więc zostają twoje",
-          "groupColorsAdopted": "{count} grupa bez koloru otrzymała kolor z drugiego profilu | {count} grupy bez koloru otrzymały kolor z drugiego profilu | {count} grup bez koloru otrzymało kolor z drugiego profilu",
+          "groupColorsAdopted": "{count} grupa bez koloru otrzymuje kolor z drugiego profilu | {count} grupy bez koloru otrzymują kolor z drugiego profilu | {count} grup bez koloru otrzymuje kolor z drugiego profilu",
           "notInstalled": "{count} mod w tych grupach nie jest zainstalowany. Pozostaje w swoich grupach i wróci, jeśli go zainstalujesz. | {count} mody w tych grupach nie są zainstalowane. Pozostają w swoich grupach i wrócą, jeśli je zainstalujesz. | {count} modów w tych grupach nie jest zainstalowanych. Pozostają w swoich grupach i wrócą, jeśli je zainstalujesz."
         },
         "clashesHeading": "{count} grupa ma tu inny kolor, więc zostaje twój: | {count} grupy mają tu inne kolory, więc zostają twoje: | {count} grup ma tu inne kolory, więc zostają twoje:",
@@ -1735,9 +1752,9 @@
           "limit": {
             "tooDeep": "Wynik zagnieździłby grupy głębiej, niż pozwala Rimmerge. Nic nie zostało zmienione.",
             "tooManyGroups": "Wynik miałby więcej grup, niż pozwala Rimmerge. Nic nie zostało zmienione.",
-            "tooManyMembers": "Wynik umieściłby w grupach więcej modów, niż pozwala Rimmerge, w jednej grupie lub łącznie. Nic nie zostało zmienione.",
+            "tooManyMembers": "Wynik umieściłby więcej modów w jednej grupie lub w grupach łącznie, niż pozwala Rimmerge. Nic nie zostało zmienione.",
             "tooManyColors": "Wynik nadałby kolory większej liczbie modów, niż pozwala Rimmerge. Nic nie zostało zmienione.",
-            "other": "Wynik naruszyłby zasady dotyczące grup. Nic nie zostało zmienione."
+            "other": "Wynik przekroczyłby limit dotyczący grup. Nic nie zostało zmienione."
           }
         }
       },
@@ -1763,7 +1780,7 @@
         "idleMods": "Upuść {count} mod na grupę, aby go do niej dodać | Upuść {count} mody na grupę, aby je do niej dodać | Upuść {count} modów na grupę, aby je do niej dodać",
         "idleGroup": "Upuść na grupę, aby umieścić w niej tę grupę, albo na „Wszystkie mody”, aby przenieść ją na najwyższy poziom.",
         "needsGroup": "Mody można dodawać tylko do grupy",
-        "notUngrouped": "Grupy nie można przenieść do „Bez grupy”. Upuść ją na „Wszystkie mody”, aby przenieść ją na najwyższy poziom.",
+        "notUngrouped": "Grupy nie można przenieść do „Bez grupy”. Użyj pozycji „Wszystkie mody”, aby przenieść ją na najwyższy poziom.",
         "withHidden": "{text} ({hidden})",
         "alreadyThere": "Grupa już tu jest",
         "makeTopLevel": "Przenieś grupę {name} na najwyższy poziom",
@@ -1780,8 +1797,8 @@
         "placeholder": "Szukaj lub utwórz grupę",
         "noMatch": "Żadna grupa nie pasuje do wyszukiwania.",
         "createOption": "Utwórz grupę „{name}”",
-        "createHintBulk": "Utworzenie grupy doda do niej też wybrane mody, w jednym zapisie.",
-        "createHintSingle": "Utworzenie grupy doda do niej też ten mod, w jednym zapisie.",
+        "createHintBulk": "Utworzenie grupy doda do niej też wybrane mody, a jedno i drugie zostanie zapisane jednocześnie.",
+        "createHintSingle": "Utworzenie grupy doda do niej też ten mod, a jedno i drugie zostanie zapisane jednocześnie.",
         "parentLabel": "Miejsce nowej grupy"
       },
       "toast": {
@@ -2292,8 +2309,8 @@
       "heading": "Zastosować mimo to?",
       "intro": "Kolejność {order} ma {count} problem do potwierdzenia przed zapisem: | Kolejność {order} ma {count} problemy do potwierdzenia przed zapisem: | Kolejność {order} ma {count} problemów do potwierdzenia przed zapisem:",
       "outsideHeading": "Lista aktywnych modów zmieniła się poza Rimmerge",
-      "outsideMembership": "Od ostatniego odczytu przez Rimmerge lista aktywnych modów została zmieniona gdzie indziej (+{added}, -{removed}). Po zastosowaniu kolejność {order} nadpisze te zmiany. Najpierw tworzona jest kopia zapasowa zmienionego pliku.",
-      "outsideReordered": "Od ostatniego odczytu przez Rimmerge kolejność aktywnych modów została zmieniona gdzie indziej. Po zastosowaniu kolejność {order} nadpisze tę zmianę. Najpierw tworzona jest kopia zapasowa zmienionego pliku.",
+      "outsideMembership": "Lista aktywnych modów została zmieniona gdzie indziej po ostatnim odczycie przez Rimmerge (+{added}, -{removed}). Po zastosowaniu kolejność {order} nadpisze te zmiany. Najpierw tworzona jest kopia zapasowa zmienionego pliku.",
+      "outsideReordered": "Kolejność aktywnych modów została zmieniona gdzie indziej po ostatnim odczycie przez Rimmerge. Po zastosowaniu kolejność {order} nadpisze tę zmianę. Najpierw tworzona jest kopia zapasowa zmienionego pliku.",
       "acknowledgedHeading": "Już rozstrzygnięte na stronie Ustalenia",
       "reviewInInbox": "Przejrzyj na stronie Ustalenia",
       "goBackButton": "Wróć",

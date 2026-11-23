@@ -566,7 +566,7 @@ describe("SetupPage", () => {
     await wrapper.vm.$nextTick();
 
     expect(wrapper.get('[data-testid="setup-path-warning"]').text()).toContain(
-      "saved workshop folder",
+      "Steam workshop folder in your saved defaults",
     );
   });
 

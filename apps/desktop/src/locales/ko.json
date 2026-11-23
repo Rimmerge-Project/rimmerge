@@ -621,11 +621,24 @@
       "organization_limit": {
         "title": "그룹 한도에 도달함",
         "detail": "그룹과 색상의 한도(그룹 수, 중첩 깊이, 그룹에 넣거나 색상을 지정한 모드 수, 그룹 파일(organization.json)의 크기)에 도달했습니다. 아무것도 변경되지 않았습니다. 더 이상 필요 없는 그룹, 그룹 안의 모드 또는 색상을 제거한 다음 다시 시도하세요."
+      },
+      "network_path_refused": {
+        "title": "네트워크 폴더는 지원되지 않음",
+        "detail": "Rimmerge는 C:\\ 또는 드라이브 문자를 지정해 연결한 네트워크 드라이브처럼, 드라이브 문자가 지정된 드라이브에 있는 파일과 폴더만 사용합니다. \\\\server\\share 같은 네트워크 경로는 거부되며, 아무 곳에도 접속하지 않았습니다. Windows의 '네트워크 드라이브 연결'로 공유 폴더에 드라이브 문자를 지정하거나 파일을 로컬 폴더로 복사한 다음 다시 시도하세요."
+      },
+      "project_changed": {
+        "title": "프로젝트 변경됨",
+        "detail": "Rimmerge가 파일을 읽는 동안 다른 프로젝트를 불러왔기 때문에 결과를 사용하지 않았으며, 아무것도 변경되지 않았습니다. 지금 열려 있는 프로젝트에서 이 파일을 사용하려면 다시 시도하세요."
       }
     }
   },
   "defaultPathsWarning": {
-    "notAnInstall": "{gameDir} 경로는 RimWorld 설치 폴더로 보이지 않습니다(Version.txt 또는 Data/Core/가 없음)."
+    "notAnInstall": "{gameDir} 경로는 RimWorld 설치 폴더로 보이지 않습니다(Version.txt 또는 Data/Core/가 없음).",
+    "typedNetworkShare": "입력한 게임 폴더는 네트워크 공유 폴더에 있으므로 Rimmerge가 사용하지 않았습니다. Rimmerge는 드라이브 문자가 지정된 드라이브에 있는 폴더만 사용합니다. Windows에서 공유 폴더에 드라이브 문자를 지정해 연결하거나 로컬 폴더를 선택하세요.",
+    "typedInvalid": "입력한 경로는 C:\\Games\\RimWorld처럼 드라이브 문자가 지정된 드라이브에 있는 폴더의 전체 경로가 아니므로 Rimmerge가 사용하지 않았습니다.",
+    "configuredGameDir": "저장된 기본값의 게임 폴더는 드라이브 문자가 지정된 드라이브에 있지 않으므로(네트워크 공유 폴더일 수 있음) Rimmerge가 무시했습니다. 드라이브 문자가 지정된 드라이브에 있는 폴더를 선택한 다음 '기본값으로 저장'을 다시 누르세요.",
+    "configuredWorkshopDir": "저장된 기본값의 스팀 창작마당 폴더는 드라이브 문자가 지정된 드라이브에 있지 않으므로(네트워크 공유 폴더일 수 있음) Rimmerge가 무시했습니다. 드라이브 문자가 지정된 드라이브에 있는 폴더를 선택한 다음 '기본값으로 저장'을 다시 누르세요.",
+    "configuredModsConfig": "저장된 기본값의 ModsConfig.xml 경로는 드라이브 문자가 지정된 드라이브에 있지 않으므로(네트워크 공유 폴더일 수 있음) Rimmerge가 무시했습니다. 드라이브 문자가 지정된 드라이브에 있는 파일을 선택한 다음 '기본값으로 저장'을 다시 누르세요."
   },
   "defaultPathsError": {
     "noProfileBase": "RIMMERGE_PROFILE_DIR과 LOCALAPPDATA가 모두 설정되어 있지 않아 Rimmerge가 자체 파일을 보관할 곳이 없습니다.",
@@ -1345,6 +1358,10 @@
       "reordered": "활성 모드 순서가 Rimmerge 외부에서 변경되었습니다. 대기 중인 변경 사항은 유지됩니다. 적용하면 그 순서를 덮어쓰게 됩니다.",
       "outsideNoPending": "활성 모드 목록이 Rimmerge 외부에서 변경되었습니다(+{added}, -{removed}). 적용하면 외부에서 변경된 내용을 덮어쓰게 됩니다.",
       "reorderedNoPending": "활성 모드 순서가 Rimmerge 외부에서 변경되었습니다. 적용하면 그 순서를 덮어쓰게 됩니다.",
+      "outsideMatches": "활성 모드 목록이 Rimmerge 외부에서 변경되었습니다(+{added}, -{removed}). 대기 중인 변경 사항은 유지됩니다. 변경된 목록은 선택한 순서와 이미 일치합니다.",
+      "reorderedMatches": "활성 모드 순서가 Rimmerge 외부에서 변경되었습니다. 대기 중인 변경 사항은 유지됩니다. 변경된 순서는 선택한 순서와 이미 일치합니다.",
+      "outsideMatchesNoPending": "활성 모드 목록이 Rimmerge 외부에서 변경되었습니다(+{added}, -{removed}). 변경된 목록은 선택한 순서와 이미 일치합니다.",
+      "reorderedMatchesNoPending": "활성 모드 순서가 Rimmerge 외부에서 변경되었습니다. 변경된 순서는 선택한 순서와 이미 일치합니다.",
       "useFile": "파일의 목록 사용",
       "useFileTitle": "먼저 미리 보기가 열립니다. 확인하기 전에는 아무것도 바뀌지 않습니다.",
       "stale": {
@@ -1583,7 +1600,7 @@
       "empty": "여기에 표시할 모드가 없습니다.",
       "emptyFiltered": "현재 검색, 태그, 출처 또는 그룹과 일치하는 모드가 없습니다.",
       "cutNote": "행 {hidden}개가 표시되지 않습니다. 보려면 일부 폴더를 접거나 검색 범위를 좁히세요.",
-      "ungroupedRefusesDrop": "'그룹에 속하지 않음'에는 모드를 추가할 수 없습니다. 모드를 그룹에서 빼려면 '그룹에서 제거'를 사용하세요."
+      "ungroupedRefusesDrop": "'그룹 없음'에는 모드를 추가할 수 없습니다. 모드를 그룹에서 빼려면 '그룹에서 제거…'를 사용하세요."
     },
     "groups": {
       "regionLabel": "그룹",
@@ -1681,7 +1698,7 @@
         "modeLegend": "복사 방법",
         "mode": {
           "merge": "내 그룹에 병합",
-          "mergeHelp": "이름 경로가 같은 그룹은 하나로 합쳐지고, 새 그룹은 추가됩니다. 두 프로필 모두 색상을 지정한 경우에는 내 색상이 유지됩니다.",
+          "mergeHelp": "같은 위치에 같은 이름으로 있는 그룹(예: 무기 / 근접)은 하나로 합쳐지고, 새 그룹은 추가됩니다. 두 프로필 모두 색상을 지정한 경우에는 내 색상이 유지됩니다.",
           "replace": "내 그룹 교체",
           "replaceHelp": "내 그룹과 색상이 모두 제거되고, 그 프로필의 그룹과 색상이 그 자리를 대신합니다."
         },
@@ -1689,12 +1706,12 @@
         "nothingChanges": "변경될 내용이 없습니다. 그 프로필의 모든 항목이 이미 여기에 있습니다.",
         "line": {
           "groupsAdded": "그룹 {count}개 추가됨",
-          "groupsMerged": "그룹 {count}개가 여기에 있는 이름 경로가 같은 그룹에 병합됨",
+          "groupsMerged": "그룹 {count}개가 여기의 같은 위치에 있는 같은 이름의 그룹에 병합됨",
           "membershipsAdded": "그룹 소속 {count}개 추가됨",
           "membershipsAlready": "그룹 소속 {count}개는 이미 여기에 있음",
           "modColorsAdded": "모드 색상 {count}개 추가됨",
           "modColorsKept": "모드 {count}개는 여기에 이미 다른 색상이 있어 내 색상이 유지됨",
-          "groupColorsAdopted": "색상이 없던 그룹 {count}개가 다른 프로필의 색상을 받음",
+          "groupColorsAdopted": "색상이 없는 그룹 {count}개가 다른 프로필의 색상을 받음",
           "notInstalled": "이 그룹들에 있는 모드 {count}개가 설치되어 있지 않습니다. 이 모드들은 그룹에 그대로 남으며, 설치하면 다시 나타납니다."
         },
         "clashesHeading": "그룹 {count}개는 여기에 다른 색상이 있어 내 색상이 유지됩니다:",
@@ -1735,9 +1752,9 @@
           "limit": {
             "tooDeep": "결과가 Rimmerge에서 허용하는 것보다 그룹을 더 깊게 중첩하게 됩니다. 아무것도 변경되지 않았습니다.",
             "tooManyGroups": "결과의 그룹 수가 Rimmerge에서 허용하는 수보다 많아집니다. 아무것도 변경되지 않았습니다.",
-            "tooManyMembers": "결과에서 그룹에 속한 모드 수가 한 그룹 또는 전체 기준으로 Rimmerge에서 허용하는 수보다 많아집니다. 아무것도 변경되지 않았습니다.",
+            "tooManyMembers": "결과에서 한 그룹에 속한 모드 수 또는 모든 그룹에 속한 모드의 총수가 Rimmerge에서 허용하는 수보다 많아집니다. 아무것도 변경되지 않았습니다.",
             "tooManyColors": "결과에서 색상이 지정된 모드 수가 Rimmerge에서 허용하는 수보다 많아집니다. 아무것도 변경되지 않았습니다.",
-            "other": "결과가 그룹에 대한 제한 중 하나를 어기게 됩니다. 아무것도 변경되지 않았습니다."
+            "other": "결과가 그룹 한도 중 하나를 넘게 됩니다. 아무것도 변경되지 않았습니다."
           }
         }
       },
@@ -1780,8 +1797,8 @@
         "placeholder": "그룹 검색 또는 만들기",
         "noMatch": "검색과 일치하는 그룹이 없습니다.",
         "createOption": "“{name}” 그룹 만들기",
-        "createHintBulk": "그룹을 만들면서 선택한 모드도 함께 추가하고, 한 번에 저장합니다.",
-        "createHintSingle": "그룹을 만들면서 이 모드도 함께 추가하고, 한 번에 저장합니다.",
+        "createHintBulk": "그룹을 만들면서 선택한 모드도 함께 추가하며, 둘 다 한 번에 저장됩니다.",
+        "createHintSingle": "그룹을 만들면서 이 모드도 함께 추가하며, 둘 다 한 번에 저장됩니다.",
         "parentLabel": "만들 위치"
       },
       "toast": {
@@ -2292,8 +2309,8 @@
       "heading": "그래도 적용할까요?",
       "intro": "{order} 순서에 기록 전에 확인할 문제가 {count}개 있습니다:",
       "outsideHeading": "활성 모드 목록이 Rimmerge 외부에서 변경됨",
-      "outsideMembership": "Rimmerge가 마지막으로 읽은 이후 활성 모드 목록이 다른 곳에서 편집되었습니다(+{added}, -{removed}). 적용하면 {order} 순서로 그 편집 내용을 덮어씁니다. 먼저 변경된 파일을 백업합니다.",
-      "outsideReordered": "Rimmerge가 마지막으로 읽은 이후 활성 모드 순서가 다른 곳에서 변경되었습니다. 적용하면 {order} 순서로 그 순서를 덮어씁니다. 먼저 변경된 파일을 백업합니다.",
+      "outsideMembership": "활성 모드 목록은 Rimmerge가 마지막으로 읽은 뒤 다른 곳에서 편집되었습니다(+{added}, -{removed}). 적용하면 {order} 순서로 그 편집 내용을 덮어씁니다. 먼저 변경된 파일을 백업합니다.",
+      "outsideReordered": "활성 모드 순서는 Rimmerge가 마지막으로 읽은 뒤 다른 곳에서 변경되었습니다. 적용하면 {order} 순서로 그 변경 내용을 덮어씁니다. 먼저 변경된 파일을 백업합니다.",
       "acknowledgedHeading": "'발견 사항'에서 이미 결정됨",
       "reviewInInbox": "'발견 사항'에서 검토",
       "goBackButton": "돌아가기",

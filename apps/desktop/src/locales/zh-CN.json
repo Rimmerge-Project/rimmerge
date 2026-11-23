@@ -621,11 +621,24 @@
       "organization_limit": {
         "title": "已达到分组的某项上限",
         "detail": "已达到分组和颜色的某项上限：分组数量、嵌套深度、分组中或带颜色的 Mod 数量，或分组文件（organization.json）的大小。未做任何更改。请移除不再需要的分组、分组中的 Mod 或颜色，然后重试。"
+      },
+      "network_path_refused": {
+        "title": "不支持网络文件夹",
+        "detail": "Rimmerge 只使用有驱动器号的磁盘上的文件和文件夹，例如 C:\\ 或你已映射到某个驱动器号的网络驱动器。像 \\\\server\\share 这样的网络路径会被拒绝，且未进行任何网络连接。请在 Windows 中将该共享映射为网络驱动器，或将文件复制到本地文件夹，然后重试。"
+      },
+      "project_changed": {
+        "title": "已切换项目",
+        "detail": "Rimmerge 读取文件期间载入了另一个项目，因此未使用读取结果，也未做任何更改。请重试，以便将该文件用于当前打开的项目。"
       }
     }
   },
   "defaultPathsWarning": {
-    "notAnInstall": "{gameDir} 看起来不像 RimWorld 安装目录（缺少 Version.txt 或 Data/Core/）。"
+    "notAnInstall": "{gameDir} 看起来不像 RimWorld 安装目录（缺少 Version.txt 或 Data/Core/）。",
+    "typedNetworkShare": "该游戏文件夹位于网络共享上，因此 Rimmerge 未使用它。Rimmerge 只使用有驱动器号的磁盘上的文件夹：请在 Windows 中将该共享映射为网络驱动器，或选择本地文件夹。",
+    "typedInvalid": "这不是有驱动器号的磁盘上某个文件夹的完整路径（例如 C:\\Games\\RimWorld），因此 Rimmerge 未使用它。",
+    "configuredGameDir": "你已保存的默认值中的游戏文件夹不在有驱动器号的磁盘上（可能是网络共享），因此 Rimmerge 忽略了它。请选择有驱动器号的磁盘上的文件夹，然后再次点击“保存为默认值”。",
+    "configuredWorkshopDir": "你已保存的默认值中的 Steam 创意工坊文件夹不在有驱动器号的磁盘上（可能是网络共享），因此 Rimmerge 忽略了它。请选择有驱动器号的磁盘上的文件夹，然后再次点击“保存为默认值”。",
+    "configuredModsConfig": "你已保存的默认值中的 ModsConfig.xml 路径不在有驱动器号的磁盘上（可能是网络共享），因此 Rimmerge 忽略了它。请选择有驱动器号的磁盘上的文件，然后再次点击“保存为默认值”。"
   },
   "defaultPathsError": {
     "noProfileBase": "RIMMERGE_PROFILE_DIR 和 LOCALAPPDATA 均未设置，因此 Rimmerge 没有地方保存它自己的文件。",
@@ -1345,6 +1358,10 @@
       "reordered": "你的已启用的加载顺序已在 Rimmerge 之外被更改。你的待定更改已保留。应用会覆盖该顺序。",
       "outsideNoPending": "你的已启用 Mod 列表已在 Rimmerge 之外被更改（+{added}，-{removed}）。应用会覆盖这些外部更改。",
       "reorderedNoPending": "你的已启用的加载顺序已在 Rimmerge 之外被更改。应用会覆盖该顺序。",
+      "outsideMatches": "你的已启用 Mod 列表已在 Rimmerge 之外被更改（+{added}，-{removed}）。你的待定更改已保留。该列表已与你所选的顺序一致。",
+      "reorderedMatches": "你的已启用的加载顺序已在 Rimmerge 之外被更改。你的待定更改已保留。该顺序已与你所选的顺序一致。",
+      "outsideMatchesNoPending": "你的已启用 Mod 列表已在 Rimmerge 之外被更改（+{added}，-{removed}）。该列表已与你所选的顺序一致。",
+      "reorderedMatchesNoPending": "你的已启用的加载顺序已在 Rimmerge 之外被更改。该顺序已与你所选的顺序一致。",
       "useFile": "使用文件中的列表",
       "useFileTitle": "会先打开预览。在你确认之前不会有任何更改。",
       "stale": {
@@ -1583,7 +1600,7 @@
       "empty": "这里没有可显示的 Mod。",
       "emptyFiltered": "没有与当前搜索、标签、来源或分组匹配的 Mod。",
       "cutNote": "有 {hidden} 行未显示。折叠一些文件夹或缩小搜索范围即可查看。",
-      "ungroupedRefusesDrop": "无法将 Mod 加入“不在任何分组中”。要将 Mod 从其分组中移出，请使用“移出分组”。"
+      "ungroupedRefusesDrop": "无法将 Mod 加入“未分组”。要将 Mod 从其分组中移出，请使用“移出分组…”。"
     },
     "groups": {
       "regionLabel": "分组",
@@ -1681,7 +1698,7 @@
         "modeLegend": "复制方式",
         "mode": {
           "merge": "合并到我的分组",
-          "mergeHelp": "名称路径相同的分组会被合并，新的分组会被添加。如果两个配置档案都为同一项设置了颜色，则保留你的颜色。",
+          "mergeHelp": "位于同一位置且名称相同的分组（例如“武器 / 近战”）会被合并，新的分组会被添加。如果两个配置档案都为同一项设置了颜色，则保留你的颜色。",
           "replace": "替换我的分组",
           "replaceHelp": "你的所有分组和颜色都会被移除，由该配置档案的分组和颜色取而代之。"
         },
@@ -1689,7 +1706,7 @@
         "nothingChanges": "不会有任何更改。该配置档案中的所有内容这里都已存在。",
         "line": {
           "groupsAdded": "添加 {count} 个分组",
-          "groupsMerged": "{count} 个分组并入此处名称路径相同的分组",
+          "groupsMerged": "{count} 个分组并入此处位于同一位置且名称相同的分组",
           "membershipsAdded": "添加 {count} 项分组归属",
           "membershipsAlready": "{count} 项分组归属此处已存在",
           "modColorsAdded": "添加 {count} 个 Mod 颜色",
@@ -1735,9 +1752,9 @@
           "limit": {
             "tooDeep": "结果中分组的嵌套层数将超出 Rimmerge 允许的上限。未做任何更改。",
             "tooManyGroups": "结果中的分组数量将超出 Rimmerge 允许的上限。未做任何更改。",
-            "tooManyMembers": "结果中加入分组的 Mod 数量将超出 Rimmerge 允许的上限（单个分组或总计）。未做任何更改。",
+            "tooManyMembers": "结果将使单个分组中或全部分组中的 Mod 数量超出 Rimmerge 允许的上限。未做任何更改。",
             "tooManyColors": "结果中带颜色的 Mod 数量将超出 Rimmerge 允许的上限。未做任何更改。",
-            "other": "结果将不符合分组的某项要求。未做任何更改。"
+            "other": "结果将超出分组的某项上限。未做任何更改。"
           }
         }
       },
@@ -1780,8 +1797,8 @@
         "placeholder": "搜索或新建分组",
         "noMatch": "没有与搜索匹配的分组。",
         "createOption": "新建分组“{name}”",
-        "createHintBulk": "新建时会同时加入你所选的 Mod，一次性保存。",
-        "createHintSingle": "新建时会同时加入此 Mod，一次性保存。",
+        "createHintBulk": "新建时会同时加入你所选的 Mod，两项更改会一并保存。",
+        "createHintSingle": "新建时会同时加入此 Mod，两项更改会一并保存。",
         "parentLabel": "新建于"
       },
       "toast": {
@@ -2292,8 +2309,8 @@
       "heading": "仍要应用？",
       "intro": "{order}顺序有 {count} 个问题需要在写入前确认：",
       "outsideHeading": "已启用 Mod 列表已在 Rimmerge 之外被更改",
-      "outsideMembership": "自 Rimmerge 上次读取以来，已启用 Mod 列表已在别处被编辑（+{added}，-{removed}）。应用会将{order}顺序写入并覆盖这些编辑。写入前会先备份被更改的文件。",
-      "outsideReordered": "自 Rimmerge 上次读取以来，已启用的加载顺序已在别处被更改。应用会将{order}顺序写入并覆盖该顺序。写入前会先备份被更改的文件。",
+      "outsideMembership": "已启用 Mod 列表在 Rimmerge 上次读取后已在别处被编辑（+{added}，-{removed}）。应用会将{order}顺序写入并覆盖这些编辑。写入前会先备份被更改的文件。",
+      "outsideReordered": "已启用的加载顺序在 Rimmerge 上次读取后已在别处被更改。应用会将{order}顺序写入并覆盖该更改。写入前会先备份被更改的文件。",
       "acknowledgedHeading": "已在检查结果页中决定",
       "reviewInInbox": "在检查结果页中查看",
       "goBackButton": "返回",
