@@ -1,9 +1,20 @@
 //! [`UserPath`]: the one parser for a file or folder path an interface
 //! receives from outside the process (a webview, a file picker, a form field).
 //!
-//! The rule is an allowlist on the parsed Windows prefix: only a drive-letter
-//! path (`C:\x`, `\\?\C:\x`) is accepted. A mapped network drive (`Z:\x`) is a
-//! drive letter the user configured themselves, so it passes. A raw network
+//! The rule is an allowlist: only a drive-letter path (`C:\x`, `C:/x`,
+//! `\\?\C:\x`) is accepted. Text that starts with two separators (`\\` or
+//! `//`, mixed included) is classified by this module's own rule before `std`
+//! is consulted, because how `std` reads the edge forms differs between
+//! toolchains: a third character `?` or `.` followed by a separator or the
+//! end of the text opens a device or verbatim namespace, and only the exact
+//! `\\?\<letter>:\` (all backslashes, a backslash after the colon, no `/` and
+//! no `.` or `..` component after it) is a drive path. Every other spelling there
+//! (`\\?\C:/x`, `//?/C:/x`, `\\?/C:\x`, `\\?\C:`) is a device path, except a
+//! `UNC` name (`\\?\UNC\s\x`, `//?/unc/s/x`), which is a share. Other
+//! double-separator text is a server name and `std` reads it (UNC, WebDAV);
+//! every other text is checked by its `std`-parsed prefix. A mapped network
+//! drive (`Z:\x`) is a drive letter the user configured themselves, so it
+//! passes. A raw network
 //! path (`\\server\share\x`, `\\?\UNC\server\share\x`, a WebDAV
 //! `\\server@SSL\x`) is refused, and so is every device path (`\\.\pipe\x`,
 //! `\\?\GLOBALROOT\x`, `\\?\CONIN$`, the bare volume `\\?\C:`) and any path
@@ -68,9 +79,13 @@ impl UserPath {
             return Err(UserPathError::ContainsNul);
         }
         let path = Path::new(raw);
-        let mut components = path.components();
-        if let Some(Component::Prefix(prefix)) = components.next() {
-            check_prefix(prefix.kind(), components.next())?;
+        match classify_double_separator(raw) {
+            Some(decision) => decision?,
+            None => {
+                if let Some(Component::Prefix(prefix)) = path.components().next() {
+                    check_prefix(prefix.kind())?;
+                }
+            }
         }
         if !path.is_absolute() {
             return Err(UserPathError::NotAbsolute);
@@ -94,24 +109,86 @@ impl UserPath {
     }
 }
 
-/// The allowlist on the parsed prefix. `after_prefix` is the component that
-/// follows it: `\\?\C:` with no root after it names the volume device, not a
-/// folder.
-fn check_prefix(
-    kind: Prefix<'_>,
-    after_prefix: Option<Component<'_>>,
-) -> Result<(), UserPathError> {
+fn is_separator(character: char) -> bool {
+    matches!(character, '\\' | '/')
+}
+
+/// Our own rule for text that starts with two separators (`\\` or `//`, mixed
+/// included), applied before `std` is consulted: how `std` reads these edge
+/// forms differs between toolchains (a verbatim drive followed by `/`, a
+/// `?` after a forward slash), and the decision must not. `None` means the
+/// text is not in a device or verbatim namespace, so it is an ordinary
+/// double-separator form (a server name: UNC, WebDAV) and `std`'s prefix
+/// decides.
+///
+/// A third character `?` or `.` followed by a separator or the end opens a
+/// namespace, in any spelling of the separators. Of those, only the exact
+/// `\\?\<letter>:\` is a drive path; a `UNC` name is a share, in any case;
+/// everything else (a bare volume, `\\?\C:/x`, `//?/C:/x`, `\\.\pipe\x`) is a
+/// device path.
+fn classify_double_separator(raw: &str) -> Option<Result<(), UserPathError>> {
+    let mut characters = raw.chars();
+    let (first, second, third) = (characters.next()?, characters.next()?, characters.next()?);
+    if !is_separator(first) || !is_separator(second) || !matches!(third, '?' | '.') {
+        return None;
+    }
+    let after_marker = &raw[first.len_utf8() + second.len_utf8() + third.len_utf8()..];
+    let mut tail = after_marker.chars();
+    match tail.next() {
+        None => return Some(Err(UserPathError::DevicePath)),
+        Some(separator) if !is_separator(separator) => return None,
+        Some(_) => {}
+    }
+    if is_canonical_verbatim_drive(raw) {
+        // NT rejects a `/` in a verbatim name, so it is refused anywhere in the text.
+        return Some(if raw.contains('/') || has_dot_component(&raw[7..]) {
+            Err(UserPathError::DevicePath)
+        } else {
+            Ok(())
+        });
+    }
+    let name = tail.as_str().split(is_separator).next().unwrap_or_default();
+    // The object manager matches `UNC` case-insensitively.
+    Some(Err(if name.eq_ignore_ascii_case("UNC") {
+        UserPathError::NetworkPath
+    } else {
+        UserPathError::DevicePath
+    }))
+}
+
+/// Exactly `\\?\<ASCII letter>:\`, all backslashes, then anything (the caller
+/// refuses a `/` later in the text).
+fn is_canonical_verbatim_drive(raw: &str) -> bool {
+    let bytes = raw.as_bytes();
+    bytes.starts_with(br"\\?\")
+        && bytes.get(4).is_some_and(u8::is_ascii_alphabetic)
+        && bytes.get(5) == Some(&b':')
+        && bytes.get(6) == Some(&b'\\')
+}
+
+/// Whether `rest`, the part of a verbatim drive path after `\\?\C:\`, has a
+/// `.` or `..` component (split on `\` only, as the verbatim form does). NT
+/// rejects them, but `GetFullPathNameW` would resolve them, so
+/// `\\?\C:\x\..\..\..\UNC\s\x` could climb out of the drive into a share.
+/// Refused as a device path: it is a namespace path that tries to leave its
+/// own root, and the path is not merely relative.
+fn has_dot_component(rest: &str) -> bool {
+    rest.split('\\')
+        .any(|component| component == "." || component == "..")
+}
+
+/// The allowlist on the `std`-parsed prefix of text that does not start in a
+/// device or verbatim namespace (those are decided by
+/// [`classify_double_separator`]). A prefix kind that cannot occur here is
+/// refused rather than accepted, so a toolchain that reads something new
+/// fails closed.
+fn check_prefix(kind: Prefix<'_>) -> Result<(), UserPathError> {
     match kind {
         Prefix::Disk(_) => Ok(()),
-        Prefix::VerbatimDisk(_) if matches!(after_prefix, Some(Component::RootDir)) => Ok(()),
-        Prefix::VerbatimDisk(_) | Prefix::DeviceNS(_) => Err(UserPathError::DevicePath),
         Prefix::UNC(..) | Prefix::VerbatimUNC(..) => Err(UserPathError::NetworkPath),
-        // `\\?\unc\s\x`: `std` knows only the exact `UNC` spelling, but the
-        // object manager matches the name case-insensitively, so it is a share.
-        Prefix::Verbatim(name) if name.eq_ignore_ascii_case("UNC") => {
-            Err(UserPathError::NetworkPath)
+        Prefix::Verbatim(_) | Prefix::VerbatimDisk(_) | Prefix::DeviceNS(_) => {
+            Err(UserPathError::DevicePath)
         }
-        Prefix::Verbatim(_) => Err(UserPathError::DevicePath),
     }
 }
 
@@ -287,18 +364,91 @@ mod tests {
         }
 
         #[test]
-        fn a_forward_slash_verbatim_marker_is_a_network_path_as_std_reads_it() {
-            // `std` takes the `?` for a server name when the marker is not `\\?\` exactly.
-            for raw in ["//?/C:/x", r"\\?/C:\x"] {
+        fn a_namespace_marker_with_a_forward_slash_is_a_device_path() {
+            for raw in [
+                "//?/C:/x",
+                r"\\?/C:\x",
+                r"//?\C:\x",
+                "//./pipe/x",
+                r"//.\pipe\x",
+            ] {
+                assert_eq!(refusal(raw), UserPathError::DevicePath, "{raw}");
+            }
+        }
+
+        #[test]
+        fn a_verbatim_drive_with_a_forward_slash_after_it_is_a_device_path() {
+            for raw in [r"\\?\C:/x", r"\\?\c:/", "\\\\?\\C:/x\\y"] {
+                assert_eq!(refusal(raw), UserPathError::DevicePath, "{raw}");
+            }
+        }
+
+        #[test]
+        fn a_namespace_marker_with_a_unc_name_is_a_network_path_in_any_spelling() {
+            for raw in [
+                r"\\?\UNC",
+                "//?/UNC/server/share/x",
+                r"\\?/unc\server\share",
+                "//./Unc/s/x",
+            ] {
                 assert_eq!(refusal(raw), UserPathError::NetworkPath, "{raw}");
             }
         }
 
         #[test]
-        fn a_verbatim_drive_with_a_forward_slash_after_it_is_a_drive_path_as_std_reads_it() {
-            let parsed = UserPath::parse(r"\\?\C:/x").expect("verbatim disk");
+        fn a_marker_without_a_following_separator_is_a_server_name_read_by_std() {
+            // `?server`, `..` and `??` are not namespace markers (no separator after
+            // the third character), so `std` reads a server and a share.
+            for raw in [r"\\?server\share\x", r"\\..\x", r"\\??\C:\x"] {
+                assert_eq!(refusal(raw), UserPathError::NetworkPath, "{raw}");
+            }
+        }
 
-            assert_eq!(parsed.into_path_buf(), PathBuf::from(r"\\?\C:/x"));
+        #[test]
+        fn a_drive_letter_without_a_root_or_a_device_drive_is_a_device_path() {
+            for raw in [r"\\?\C:x", r"\\.\C:"] {
+                assert_eq!(refusal(raw), UserPathError::DevicePath, "{raw}");
+            }
+        }
+
+        #[test]
+        fn an_extended_length_drive_accepts_any_letter_case_and_a_bare_root() {
+            for raw in [r"\\?\c:\x", r"\\?\C:\"] {
+                assert_eq!(UserPath::parse(raw).expect(raw).as_path(), Path::new(raw));
+            }
+        }
+
+        #[test]
+        fn an_extended_length_drive_refuses_a_dot_component() {
+            for raw in [
+                r"\\?\C:\x\..\..\..\UNC\attacker\share\x",
+                r"\\?\C:\.\x",
+                r"\\?\C:\x\.",
+                r"\\?\C:\..",
+            ] {
+                assert_eq!(refusal(raw), UserPathError::DevicePath, "{raw}");
+            }
+        }
+
+        #[test]
+        fn an_extended_length_drive_keeps_a_name_that_only_holds_dots() {
+            for raw in [r"\\?\C:\x\..y", r"\\?\C:\x\y..", r"\\?\C:\...\x"] {
+                assert!(UserPath::parse(raw).is_ok(), "{raw}");
+            }
+        }
+
+        #[test]
+        fn an_extended_length_drive_refuses_a_forward_slash_anywhere() {
+            for raw in [r"\\?\C:\x/NUL", r"\\?\C:\x/y", r"\\?\C:\x\y/"] {
+                assert_eq!(refusal(raw), UserPathError::DevicePath, "{raw}");
+            }
+        }
+
+        #[test]
+        fn a_bare_namespace_marker_is_a_device_path() {
+            for raw in [r"\\?", r"\\.", "//?", r"\\?\", "//./"] {
+                assert_eq!(refusal(raw), UserPathError::DevicePath, "{raw}");
+            }
         }
 
         #[test]

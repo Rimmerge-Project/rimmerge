@@ -25,6 +25,10 @@ before that point is not summarized here.
   They now read first and touch your session only for a moment afterwards. If
   you load another project while copying groups or importing RimSort's files,
   that result is discarded with a message and nothing is changed.
+- **Fix: Add to group opens with the cursor in its search box.** It used to
+  open on the Close button, and about a third of a second later the dialog
+  pulled the keyboard focus there even if you had already started typing, so a
+  quick Enter could close the dialog instead of creating the group.
 - **Fix: exporting to, or saving as a default, a folder on a mapped network
   drive keeps its drive letter.** The folder used to be turned into the
   relative path `UNC\server\share\...`, so an export landed under the working

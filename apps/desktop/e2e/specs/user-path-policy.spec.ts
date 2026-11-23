@@ -6,9 +6,10 @@ import { loadScenario } from "./support";
 /**
  * The mock's `parseUserPath` must agree with `rim_session::user_path::UserPath::parse` on every
  * spelling, so a spec that passes against the mock cannot pass a path the backend refuses. This
- * table mirrors that parser's own tests (`crates/rim-session/src/user_path.rs`) case for case; the
- * `std::path` readings it relies on (`\\?\C:/x` is a verbatim drive, `//?/C:/x` a UNC path with
- * the server `?`) were checked against `std` on Windows. It also pins that every path-taking
+ * table mirrors that parser's own tests (`crates/rim-session/src/user_path.rs`) case for case. The
+ * namespace spellings (`\\?\C:/x`, `//?/C:/x`, `\\?/C:\x`) follow the parser's own rule, which
+ * does not ask `std`: only the exact `\\?\<letter>:\` is a drive path, a `UNC` name is a share,
+ * every other `?`/`.` namespace is a device path. It also pins that every path-taking
  * command runs the parser before it does anything else.
  */
 
@@ -23,7 +24,10 @@ const CASES: ReadonlyArray<readonly [string, Outcome]> = [
   ["C:/forward/slash", "ok"],
   ["  C:\\x \t", "ok"],
   [String.raw`\\?\C:\x`, "ok"],
-  [String.raw`\\?\C:/x`, "ok"],
+  [String.raw`\\?\c:\x`, "ok"],
+  ["\\\\?\\C:\\", "ok"],
+  [String.raw`\\?\C:\x\..y`, "ok"],
+  [String.raw`\\?\C:\...\x`, "ok"],
   // Network paths, however they are spelled.
   [String.raw`\\server\share\x`, "network_path_refused"],
   ["//server/share/x", "network_path_refused"],
@@ -32,9 +36,36 @@ const CASES: ReadonlyArray<readonly [string, Outcome]> = [
   [String.raw`\\?\Unc\server\share\x`, "network_path_refused"],
   [String.raw`\\server@SSL\x`, "network_path_refused"],
   [String.raw`\\server@SSL\DavWWWRoot\x`, "network_path_refused"],
-  ["//?/C:/x", "network_path_refused"],
-  [String.raw`\\?/C:\x`, "network_path_refused"],
+  ["//?/UNC/server/share/x", "network_path_refused"],
+  [String.raw`\\?/unc\server\share`, "network_path_refused"],
+  [String.raw`\\?\UNC`, "network_path_refused"],
   // Device paths and the bare volume.
+  // Not a namespace marker (no separator after the third character): a server name, read by `std`.
+  [String.raw`\\?server\share\x`, "network_path_refused"],
+  [String.raw`\\..\x`, "network_path_refused"],
+  [String.raw`\\??\C:\x`, "network_path_refused"],
+  [String.raw`//.\pipe\x`, "invalid_input"],
+  ["//./Unc/s/x", "network_path_refused"],
+  ["//?", "invalid_input"],
+  ["\\\\?\\", "invalid_input"],
+  ["//./", "invalid_input"],
+  [String.raw`\\?\C:/x`, "invalid_input"],
+  [String.raw`\\?\c:/`, "invalid_input"],
+  ["\\\\?\\C:/x\\y", "invalid_input"],
+  // A `/` anywhere in a verbatim drive path is refused (NT rejects it in a verbatim name).
+  [String.raw`\\?\C:\x/NUL`, "invalid_input"],
+  [String.raw`\\?\C:\x/y`, "invalid_input"],
+  ["\\\\?\\C:\\x\\y/", "invalid_input"],
+  // A `.` or `..` component after a verbatim drive could climb out of it.
+  [String.raw`\\?\C:\x\..\..\..\UNC\attacker\share\x`, "invalid_input"],
+  [String.raw`\\?\C:\.\x`, "invalid_input"],
+  [String.raw`\\?\C:\x\.`, "invalid_input"],
+  [String.raw`\\?\C:\..`, "invalid_input"],
+  ["//?/C:/x", "invalid_input"],
+  [String.raw`\\?/C:\x`, "invalid_input"],
+  [String.raw`//?\C:\x`, "invalid_input"],
+  [String.raw`\\?`, "invalid_input"],
+  [String.raw`\\.`, "invalid_input"],
   [String.raw`\\.\pipe\x`, "invalid_input"],
   ["//./pipe/x", "invalid_input"],
   [String.raw`\\.\C:`, "invalid_input"],

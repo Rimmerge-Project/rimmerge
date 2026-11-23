@@ -5221,12 +5221,14 @@ export function installScenario(): void {
 
   /**
    * `parse_user_path` (`rim_session::user_path::UserPath::parse`, surrounding whitespace trimmed
-   * first): the one rule for every path the webview sends. It reads the text as `std` does on
-   * Windows (a prefix, then a root), so it agrees with the backend on every odd spelling. Only a
-   * drive-letter path is accepted (`C:\x`, `C:/x`, `\\?\C:\x`; a mapped drive is just a letter). A
-   * network share is `network_path_refused`: `\\server\share`, `//server/share`, `\\?\UNC\...` in
-   * any case, a WebDAV `\\server@SSL\x`, and `//?/C:/x` (`std` reads its `?` as a server). A
-   * device path (`\\.\pipe\x`, `\\?\GLOBALROOT\x`, the bare volume `\\?\C:`), a legacy device
+   * first): the one rule for every path the webview sends. Text starting with two separators is
+   * classified by the backend's own rule, not by `std`: a `?` or `.` after them, then a separator
+   * or the end, is a device or verbatim namespace in any spelling of the separators, and only the
+   * exact `\\?\<letter>:\` is a drive path. Only a drive-letter path is accepted (`C:\x`, `C:/x`,
+   * `\\?\C:\x`; a mapped drive is just a letter). A network share is `network_path_refused`:
+   * `\\server\share`, `//server/share`, a `UNC` namespace name in any case and spelling
+   * (`\\?\UNC\...`, `//?/unc/...`), and a WebDAV `\\server@SSL\x`. A device path (`\\.\pipe\x`,
+   * `\\?\GLOBALROOT\x`, the bare volume `\\?\C:`, `\\?\C:/x`, `//?/C:/x`), a legacy device
    * name as any component (`C:\x\NUL`, `C:\x\COM1.rml`), a relative or drive-relative path
    * (`\\server` with no share and `\\\server\share` have no prefix), an empty one and one holding
    * NUL are `invalid_input`. Works on the text alone, like the backend, and so never contacts a
@@ -5254,17 +5256,24 @@ export function installScenario(): void {
     };
     let afterPrefix: string;
     if (/^[\\/]{2}/.test(text)) {
-      const body = text.slice(2);
-      if (body.startsWith("?\\")) {
-        const verbatim = body.slice(2);
-        if ((verbatim.split("\\")[0] ?? "").toLowerCase() === "unc") return refuse("network");
-        // A verbatim drive needs a root after it: the bare `\\?\C:` names the volume device.
-        if (!/^[A-Za-z]:[\\/]/.test(verbatim)) return refuse("device");
-        afterPrefix = verbatim.slice(2);
-      } else if (/^\.[\\/]/.test(body)) {
-        return refuse("device");
+      if (/^[\\/]{2}[?.](?:[\\/]|$)/.test(text)) {
+        // A device or verbatim namespace, in any spelling of the separators. Only the exact
+        // `\\?\<letter>:\` is a drive path (and then no `/` and no `.` or `..` component, which
+        // could climb out of the drive); a `UNC` name is a share; the rest is a device.
+        if (/^\\\\\?\\[A-Za-z]:\\/.test(text)) {
+          afterPrefix = text.slice(6);
+          if (
+            text.includes("/") ||
+            afterPrefix.split("\\").some((part) => part === "." || part === "..")
+          ) {
+            return refuse("device");
+          }
+        } else {
+          const name = text.slice(4).split(/[\\/]/)[0] ?? "";
+          return refuse(name.toLowerCase() === "unc" ? "network" : "device");
+        }
       } else {
-        const [server = "", share = ""] = body.split(/[\\/]/);
+        const [server = "", share = ""] = text.slice(2).split(/[\\/]/);
         return refuse(server !== "" && share !== "" ? "network" : "relative");
       }
     } else if (/^[A-Za-z]:[\\/]/.test(text)) {

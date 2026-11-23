@@ -53,6 +53,7 @@ function onCreate(): void {
       v-model="query"
       :placeholder="t('mods.groups.search.placeholder')"
       autocomplete="off"
+      autofocus
       maxlength="64"
       data-testid="group-search-input"
     />

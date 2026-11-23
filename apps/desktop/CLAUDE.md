@@ -111,7 +111,9 @@ of that command surface — no direct filesystem or process access outside
   the new codes (every one needs wording in `utils/errors.ts`).
 - **Every path the webview sends goes through `parse_user_path` (`error/user_path.rs`), and a read
   of a user-chosen file does not hold the session lock (#60).** The one rule is
-  `rim_session::user_path::UserPath::parse`, on the parsed `std::path::Prefix` only (it never
+  `rim_session::user_path::UserPath::parse`, on the text alone (text with two leading separators is
+  classified by our own rule, never by `std`'s toolchain-dependent reading; only the exact
+  `\\?\<letter>:\` is a verbatim drive, so `\\?\C:/x` and `//?/C:/x` are `invalid_input`; it never
   touches the file system, so refusing a share contacts nothing); `parse_user_path` trims
   surrounding whitespace first, once, so every field answers to one rule. A drive-letter path
   (`C:\x`, `\\?\C:\x`, a mapped `Z:\x`) is accepted; a UNC or WebDAV share (`\\server\share\x`,

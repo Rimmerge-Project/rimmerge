@@ -30,12 +30,17 @@ the other way around.
   changes without persisting. `file_active_mods` stays what the file held (the live baseline, see
   "The file baseline is live" below).
 - **`user_path::UserPath` is the one parser for a path from outside the process** (pure: text in,
-  validated path out, no file-system call). Only a drive-letter prefix (`Disk`, or `VerbatimDisk`
-  followed by a root) is accepted; `UNC`/`VerbatimUNC` (and a `Verbatim` named `UNC` in any case)
-  is `UserPathError::NetworkPath`, and `DeviceNS`, the other `Verbatim` names, the bare `\\?\C:`
-  and a legacy DOS device name as any component (`is_reserved_device_name`: `CON`, `PRN`, `AUX`,
-  `NUL`, `COM1`-`COM9`, `LPT1`-`LPT9`, superscript digits, `CONIN$`/`CONOUT$`, any case, extension
-  or trailing spaces) are `DevicePath`, so refusing a share never contacts its host (see
+  validated path out, no file-system call). Text starting with two separators is classified by
+  our own rule before `std` is asked (`classify_double_separator`; `std` reads `\\?\C:/x` and
+  `//?/C:/x` differently per toolchain): a `?` or `.` then a separator or the end opens a namespace
+  in any separator spelling, only the exact `\\?\<letter>:\` is a drive path (a `/` anywhere
+  or a `.` or `..` component after it, split on `\`, is `DevicePath`), a `UNC` name (any case) is `NetworkPath`,
+  every other namespace form (`\\?\C:/x`, `//?/C:/x`, `\\?/C:\x`, bare `\\?\C:`, `\\.\pipe\x`,
+  `\\?\GLOBALROOT\x`) is `DevicePath`; other double-separator text is a server name and `std`
+  reads it (UNC and WebDAV are `NetworkPath`). Everything else is checked by its `std` prefix
+  (`Disk` only). A legacy DOS device name as any component (`is_reserved_device_name`: `CON`,
+  `PRN`, `AUX`, `NUL`, `COM1`-`COM9`, `LPT1`-`LPT9`, superscript digits, `CONIN$`/`CONOUT$`, any
+  case, extension or trailing spaces) is `DevicePath`, so refusing a share never contacts its host (see
   `docs/privacy-and-network.md`). It lives here, not in `rim-io`, because it is pure and every
   interface (and `rim-io`) may use it; the desktop applies it at every command boundary, the CLI
   deliberately does not (its paths come from the local user, there is no webview and no session

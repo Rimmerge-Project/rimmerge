@@ -281,7 +281,13 @@ test.describe("mods row polish", () => {
     await createGroup(page, "Weapons");
     await openRowMenu(page, "active", "mod.003");
     await page.getByTestId("mod-menu-groups").click();
+    // PrimeVue's Dialog focuses its [autofocus] stop again when its enter animation ends, in
+    // the same callback that drops `p-dialog-enter-active` (with no such stop it picked Close, and
+    // that late move stole the keys mid-sequence on a slow machine). Wait for the dialog to
+    // settle, then check the search field holds focus.
+    await expect(page.getByTestId("mod-groups-dialog")).not.toHaveClass(/p-dialog-enter-active/);
     const input = page.getByTestId("group-search-input");
+    await expect(input).toBeFocused();
     await input.fill("Melee");
     // The create option renders once the typed name is known to be new; tabbing
     // before it exists would move focus past it.
