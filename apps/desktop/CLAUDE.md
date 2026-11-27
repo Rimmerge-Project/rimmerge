@@ -90,7 +90,7 @@ of that command surface — no direct filesystem or process access outside
 - **A default-gate test must never call the real launcher's `launch`.**
   `AppState::game_launcher: Arc<dyn GameLauncher + Send + Sync>` defaults to
   `rim_io::SystemGameLauncher` (which opens `steam://run/294100` or spawns
-  `RimWorldWin64.exe`); every `get_game_launch_status`/`launch_game` test
+  the install's `RimWorldWin64.exe` or `RimWorld.exe`); every `get_game_launch_status`/`launch_game` test
   injects `test_support::RecordingGameLauncher` (scripted route, records
   launches, optional scripted failure) and a `FixedProbe`. Calling the real
   `route` against a temp dir is fine; the real `launch` never is.

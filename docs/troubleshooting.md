@@ -50,6 +50,13 @@ when it applies.
 **`verify` predicts a failure I never saw in-game.** A prediction is
 a static replay, not a guarantee. Import your actual `Player.log` or a console snapshot (`rimmerge log import`) to compare a
 prediction against what RimWorld really logged. See [concepts/verify.md](concepts/verify.md).
+On Windows, RimWorld 1.6 writes `Player.log` (and `Player-prev.log`, the
+run before) to
+`%USERPROFILE%\AppData\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios`.
+RimWorld 1.7 writes them to the `Logs` folder inside it
+(`...\RimWorld by Ludeon Studios\Logs\Player.log`), and starting 1.7
+deletes the old 1.6 `Player.log` and `Player-prev.log` from the folder
+above, so copy a 1.6 log you want to keep before you first start 1.7.
 
 **Something looks wrong and none of the above covers it.** Open an
 issue with your Rimmerge version, OS, and (if it doesn't involve a

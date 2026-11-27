@@ -175,8 +175,9 @@ works out both from the configured install.
   behaviour, outside Rimmerge and its settings.
 - **Any other copy** (GOG, a standalone folder, or a Steam copy whose
   library isn't listed in a known Steam folder's `libraryfolders.vdf`)
-  is started by running `RimWorldWin64.exe` from the install folder,
-  with no arguments and no shell. Rimmerge doesn't wait for the game or
+  is started by running the game's executable from the install folder
+  (`RimWorldWin64.exe`, or `RimWorld.exe` on RimWorld 1.7), with no
+  arguments and no shell. Rimmerge doesn't wait for the game or
   read its output.
 
 Launching reads the install folder, Steam's own records of it
@@ -280,7 +281,9 @@ patch-maker mod with `--install`, additionally write a generated mod
 folder into your RimWorld install's own `Mods/` folder and add its
 package id to `ModsConfig.xml`. These are the only writes this tool
 ever makes under the game install itself. None of these writes happen while
-RimWorld looks like it's still running unless you force it. Your
+RimWorld looks like it's still running (a program named
+`RimWorldWin64.exe` or `RimWorld.exe` is in the list of running
+programs) unless you force it. Your
 RimWorld install and Workshop content folder are otherwise read only;
 Rimmerge's own profile data lives under your local app-data directory.
 Rimmerge's own app-data folder also holds `app-settings.json` (these

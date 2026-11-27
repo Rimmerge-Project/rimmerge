@@ -41,7 +41,8 @@ composition roots with no business logic.
   its `<meta>` header.
 - IMPORTANT: agents and tests never start the real game — no call to
   the real `SystemGameLauncher::launch`, no `steam://` URL opened, no
-  `RimWorldWin64.exe` spawned. Tests inject a fake launcher
+  `RimWorldWin64.exe` (1.6) or `RimWorld.exe` (1.7) spawned. Tests
+  inject a fake launcher
   (`FakeGameLauncher`, `RecordingGameLauncher`); only a manual check a
   human asks for starts RimWorld.
 - IMPORTANT: the only network access this workspace may make goes to
@@ -140,9 +141,11 @@ several 2 s command budgets) into spurious failures. Check that no other
   `RIMMERGE_REAL_GAME_LOG_DIR` (a folder of real logs and console copies,
   searched recursively; same three-state rule: unset skips, not a directory
   or no `.log`/`.txt` file panics, otherwise every file is parsed under
-  both framings and its detected kind (checked against an independent
-  oracle), line conservation, sentinel leaks, logging-gap count and
-  console-copy entry count are checked — see `docs/testing.md`). The same
+  every framing (1.6 and 1.7, `Player.log` and console copy) and its
+  detected kind and engine (checked against an independent oracle), line
+  conservation, sentinel leaks, logging-gap count, console-copy entry
+  count and a 1.7 log's entry count are checked — see
+  `docs/testing.md`). The same
   command above runs it.
 
   `crates/rim-io/tests/real_network_release_feed.rs` is, likewise, run

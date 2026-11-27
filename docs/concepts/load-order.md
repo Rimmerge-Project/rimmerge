@@ -157,9 +157,14 @@ are often installed together":
   every loaded mod (last-loaded mod first, a `.dds` shadowing any
   same-key file across the whole mod regardless of folder), then Core's
   own built-in `Resources.Load` textures, then every running mod's own
-  compiled asset bundle (DLCs included), last-loaded mod first. A `.dds`
-  file with a valid magic and header size but a compressed pixel format
-  whose width or height isn't a multiple of 4 fails to decode. The
+  compiled asset bundle (DLCs included), last-loaded mod first. RimWorld
+  1.7 ships no asset bundles or Unity resources for the game's own
+  content: Rimmerge reads Core's built-in texture names from the
+  install's `Assets.zip` and each active DLC's from its own
+  `Data/<DLC>/Assets.zip`, and treats them as Core's resources and that
+  DLC's bundle respectively. A `.dds` file with a valid magic and
+  header size but a compressed pixel format whose width or height isn't
+  a multiple of 4 fails to decode. The
   engine shows the bad-texture placeholder for it, the same outcome as a
   missing path.
 

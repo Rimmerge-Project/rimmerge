@@ -88,8 +88,14 @@ interface apps.
   effective tree and `SourceIndex::textures`.
 - A new way to read or write something real (a file format, a network
   call) → a port `trait` in `rim-session`, implemented in `rim-io`.
+- A fact that differs between the RimWorld 1.6 (Unity) and 1.7 install
+  layouts (an executable name, where the vanilla assemblies live) → a
+  method on `rim-analyzer::domain::GameLayout`, which
+  `rim-analyzer::infra::paths::detect_game_layout` decides from the
+  install folder.
 - A new game-log message the engine writes → a class pattern in
-  `rim-io`'s `game_log` (the exact decompiled wording). A log line format
+  `rim-io`'s `game_log` (the exact decompiled wording); what only the
+  1.7 log format needs lives in `game_log/waylith.rs`. A log line format
   a *mod* prints → a `log-shapes` row in the
   [rules data](concepts/rules-databases.md), never code.
 - A new user-facing action that orchestrates existing pieces → a use

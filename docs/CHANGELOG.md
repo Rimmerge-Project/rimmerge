@@ -3,6 +3,52 @@
 This changelog starts at the first public release. Development history
 before that point is not summarized here.
 
+## [Unreleased]
+
+- **New: RimWorld 1.7 support.** RimWorld 1.7 runs on Ludeon's own engine
+  instead of Unity, and its install folder looks different: `RimWorld.exe`
+  at the top of the folder instead of `RimWorldWin64.exe`, and the game's
+  own files no longer in `RimWorldWin64_Data/`. Rimmerge now works out
+  which kind of install it has from the folder (1.7 when `RimWorld.exe` is
+  there and `RimWorldWin64.exe` is not), and everything keeps working on
+  1.6 exactly as before. Your `ModsConfig.xml`, saves and mod lists stay in
+  the same place on both versions.
+- **Fix: Rimmerge refuses to write while RimWorld 1.7 is running.**
+  The check looked only for `RimWorldWin64.exe`, so with 1.7 running
+  `apply`, `mods activate`/`deactivate`, `order import` and
+  `patch`/`assign export --install` wrote `ModsConfig.xml` without asking.
+  It now looks for `RimWorld.exe` too, by program name, so another copy of
+  the game started from elsewhere also counts. `--force` (and "Write
+  anyway" in the app) still overrides it.
+- **Fix: Launch RimWorld starts a 1.7 install that is not started through
+  Steam.** A 1.7 folder Steam doesn't manage (a copy) is started through its
+  `RimWorld.exe`; before, the button said the executable was missing.
+- **Fix: the scan reads the game's own assemblies and textures on 1.7.**
+  On a 1.7 install the scan found no vanilla assemblies and no Core
+  textures, so a mod's reference to one of the game's own assemblies was
+  not recognized, the parent-type check lost its proof, and the missing
+  texture check switched itself off. The scan now reads the assemblies
+  from the install folder, the names the engine provides itself from
+  `RimWorld.runtimeconfig.json`, and Core's and each DLC's texture names
+  from their `Assets.zip` archives (only the archive's list of names, never
+  the textures themselves).
+- **New: `log import` and the app's Import game log read RimWorld 1.7
+  logs.** A 1.7 `Player.log` (in the `Logs` folder of RimWorld's user
+  data folder) is detected from its content beside 1.6 logs, with its
+  clean exit (`Log closed.`) and crash entry read as the end state. 1.7
+  console copies are read too, from a real 1.7 console copy's shape: each
+  entry is its message, then `    at ... [0x..]` frames, then a blank line. In
+  a vanilla run the first frame is the `Verse.Log.Message`, `Warning` or
+  `Error` call, which also gives the entry's level; in a modded game that
+  frame can be absent (none of 1,000 entries in a 1,021-mod copy had it), so
+  a console copy is recognised by the frame shape and an entry without the
+  call takes its level from the message. No real 1.7 crash
+  has been seen yet, so the crash entry comes from the game's code. The text output now says
+  `clean exit (the game's exit footer)` and
+  `crashed (the game's crash handler; ...)` instead of naming Unity.
+  `--kind` still works on a file that cannot be re-read, such as a pipe.
+  See [cli.md](cli.md#kind-playerlog-or-console-snapshot).
+
 ## [1.2.7] - 2026-11-23
 
 - **Change: the desktop app refuses folders and files on a network share.** A

@@ -154,8 +154,10 @@ Rimmerge stays open.
 
 **How the game is started.** A Steam copy is started through Steam
 (`steam://run/294100`), so Steam's own launch settings apply. Any other copy
-(GOG, a standalone folder) starts `RimWorldWin64.exe` directly from the
-install folder, with no arguments. A copy counts as a Steam copy only when
+(GOG, a standalone folder) starts the game's executable directly from
+the install folder, with no arguments: `RimWorldWin64.exe`, or
+`RimWorld.exe` on RimWorld 1.7 (an install with `RimWorld.exe` and no
+`RimWorldWin64.exe`). A copy counts as a Steam copy only when
 Steam's own record names that folder: the folder sits in a library's
 `steamapps/common`, the library's `appmanifest_294100.acf` names it, and the
 library is listed in a Steam folder's `libraryfolders.vdf` (the Steam
@@ -164,7 +166,7 @@ defaults). A folder
 copied out of Steam, or a backed-up library, is not mistaken for the real one
 (Steam would start a different folder). A Steam copy whose Steam folder neither the
 registry nor the Program Files defaults name is started directly through
-`RimWorldWin64.exe`, since its library cannot be found.
+its executable, since its library cannot be found.
 
 **What the button says.** It reads from the **selected** order and the last
 scan or apply, the same caveat as the strip: an edit made to `ModsConfig.xml`
@@ -183,8 +185,10 @@ every five seconds while the window is visible, and when you come back to it.
   confirmations and, once it has written `ModsConfig.xml`, launches. If you
   uncheck "Write your active mod list" there, or close the dialog, nothing
   is launched.
-- **RimWorld is running** (disabled): the game is already up.
-- **Disabled with a note**: the install has no `RimWorldWin64.exe`, or the
+- **RimWorld is running** (disabled): the game is already up (a program
+  named `RimWorldWin64.exe` or `RimWorld.exe` is running).
+- **Disabled with a note**: the install has no executable to start
+  (`RimWorldWin64.exe`, or `RimWorld.exe` on 1.7), or the
   status check failed (a short line says so). Until the first answer arrives
   the button is disabled with no note. After that it shows the last answer,
   and a click first waits for a fresh one, which can wait behind a long
@@ -925,15 +929,16 @@ xpaths, texture/DLL counts and bytes), plus, once you've imported a
 The **Import game log** button (here and on the dashboard) reads a
 `Player.log` or an in-game console snapshot (a copy of the debug
 console, saved under any name; the picker lists `.log` and `.txt` files
-first and offers all files). The kind comes from the file's content,
-never its name, and the result is never cached or written anywhere. The
+first and offers all files), from RimWorld 1.6 or 1.7. The kind and the
+game version's log format come from the file's content, never its name, and the result is never cached or written anywhere. The
 summary under the button says what the file is and what it covers, in
 the same terms as the CLI's `log import` ([cli.md](cli.md)):
 
 - **Kind**: `Player.log` or console snapshot.
 - **Coverage**, one line. A `Player.log` gives its startup passes and
-  how it ends: a clean exit, a crash (with the crash report location the
-  log prints), or cut off with no exit footer (a freeze, a force-close,
+  how it ends: a clean exit (the game's exit footer: Unity's memory
+  statistics on 1.6, the `Log closed.` line on 1.7), a crash (with the
+  crash report location the log prints), or cut off with no exit footer (a freeze, a force-close,
   or a copy taken while the game ran). A snapshot says it holds only the
   entries the console held; when it is at the console's cap the game
   dropped the older entries, and when it is over the cap it is several

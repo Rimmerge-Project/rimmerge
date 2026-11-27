@@ -61,8 +61,10 @@ conservatism declined to turn into a prediction) is reported as
 
 Because `verify` is a prediction, not an observation, you can check it
 against what RimWorld itself logged. `log import` reads a
-`Player.log` or an in-game console snapshot and attributes every
-failure/warning/timing line to the active mods responsible. A predicted
+`Player.log` or an in-game console snapshot, from RimWorld 1.6 (Unity)
+or 1.7 (whose log format is different, detected from the content), and
+attributes every failure/warning/timing line to the active mods
+responsible. A predicted
 failure can then be lined up against a real one from a session you
 played.
 

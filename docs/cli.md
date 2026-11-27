@@ -100,7 +100,8 @@ file with no live install or profile involved at all.
   refused with that reason and nothing is written. If the import deactivates any active mod, or
   names a mod you do not have installed, it refuses until you pass
   `--yes`. `--dry-run` prints the plan and writes nothing; `--force`
-  writes even if `RimWorldWin64.exe` looks like it is running. It does
+  writes even if RimWorld (`RimWorldWin64.exe`, or `RimWorld.exe` on
+  RimWorld 1.7) looks like it is running. It does
   not scan, so it does not list hard problems: afterwards run
   `rimmerge apply --dry-run --source current` to check the order. When the
   list already matches the file's order, nothing is written. Exit code 0
@@ -216,20 +217,53 @@ rimmerge log import Player.log midgame1.txt --json
 
 #### Kind: `Player.log` or console snapshot
 
+Logs from RimWorld 1.6 and earlier (the Unity engine) and from RimWorld
+1.7 (Ludeon's own engine) are both read. The two engines write their
+logs and console copies differently, so each file's engine is detected
+along with its kind, and the rest of this section applies to both.
+
 With `--kind auto` (the default), each file's kind comes from its
 content. The file name is never consulted: real names such as
 `Player.log` and `midgame1.txt` carry no kind. Detection peeks at the
 first 200 lines (at most 1 MiB) and decides:
 
-1. A console-copy trace start anywhere in the peek means a console
+1. A 1.7 `Player.log` opens with its `=== <product> log ===` header
+   block. That first line decides at once.
+2. A 1.6 console-copy trace start anywhere in the peek means a console
    snapshot. That is the line
-   `UnityEngine.StackTraceUtility:ExtractStackTrace ()` or the exact line
-   `No stack trace.`, one of which every entry of a console copy carries.
-2. Otherwise, the exact `RimWorld <version> rev<n>` banner means a
-   `Player.log`. A real `Player.log` starts with Unity's `Mono path[0] = `
-   line and holds no copy trace start.
-3. Neither means a console snapshot, the reading that can only
+   `UnityEngine.StackTraceUtility:ExtractStackTrace ()`, which opens the
+   trace of every entry of a 1.6 console copy that has one.
+3. A first line that is a timestamped 1.7 entry
+   (`yyyy-MM-dd HH:mm:ss.fff LEVEL ...`, as in an excerpt cut from a 1.7
+   log) means a 1.7 `Player.log`.
+4. A four-space `    at Ns.Type.Method(Args) [0x..]` frame anywhere in
+   the peek (optionally followed by ` in <file>:<line>`), with no
+   timestamped 1.7 entry line anywhere in it, means a 1.7 console
+   snapshot. The frame's shape is the signal, not a particular method: in
+   a vanilla run every entry's trace opens with
+   `    at Verse.Log.Message(String text) [0x..]` (or `Warning`, or
+   `Error`), but in a modded game that frame can be absent (none of the
+   1,000 entries of a 1,021-mod copy had it; the traces open at the
+   caller). A 1.7 `Player.log` carries the same frames, so a timestamped
+   entry line always wins over them, even where the banner is also in the
+   peek.
+5. The exact line `No stack trace.` alone (no 1.7 frame, no 1.6 trace
+   start) means a 1.6 console snapshot. Both engines' console copies can
+   hold it (the game prints it for a message with no stack), so it names
+   no engine by itself; the 1.6 reading can only under-claim.
+6. Otherwise, the exact `RimWorld <version> rev<n>` banner means a
+   `Player.log`. A real 1.6 `Player.log` starts with Unity's
+   `Mono path[0] = ` line and holds no copy trace start.
+7. Otherwise, a timestamped 1.7 entry line anywhere in the peek means a
+   1.7 `Player.log` (an excerpt that starts partway through an entry).
+8. Nothing at all means a console snapshot, the reading that can only
    under-claim.
+
+For a 1.7 console copy, the logging call as the first frame is confirmed
+for the game's own entries in a vanilla run only. In a modded game it can
+be absent (observed: 0 of 1,000 entries in a 1,021-mod copy): entries are
+still split the same way, and the level falls back to the one read from the
+message.
 
 The banner alone cannot decide, because the game also logs it into the
 console. An uncleared console copy holds it near its top, and as its very
@@ -248,8 +282,11 @@ every path, and the text `coverage:` line then ends with `[kind forced by
 --kind]`. Forcing the wrong kind still accounts for every line, but the
 foreign framing reads the entries differently (a whole `Player.log` read
 as a snapshot is one giant message), so its classes are not meaningful.
-Detection re-reads the start of the file, so on a path that cannot be
-re-read (not seekable) it fails; pass `--kind` to skip it.
+With `--kind`, the engine is still read from the start of the file (the
+same window detection peeks at: up to 200 lines or 1 MiB), but without
+re-reading it. Automatic detection re-reads the start of the
+file, so on a path that cannot be re-read (not seekable) it fails; pass
+`--kind` to skip it.
 
 #### Several files
 
@@ -272,13 +309,20 @@ Every result carries `kind` (`player_log` or `console_snapshot`) and a
   - `patch_phase`: `patch_failure_logged` when an engine `Patch
     operation ... failed` entry exists, else `none_logged`, which is not
     proof the phase did not run.
-  - `end_state`, an object tagged by `state`: `clean_exit` (Unity's
-    `Memory Statistics:` footer), `crashed` (Unity's crash handler
-    message, with the `report_path` it prints on the next line, or
-    `null`; a crash outranks a footer), or `truncated` (neither: the log
-    stops where the game stopped writing, as after a freeze, a
-    force-close, or a copy taken while the game ran). RimWorld itself
-    logs nothing on a normal quit, so both markers are Unity's.
+  - `end_state`, an object tagged by `state`: `clean_exit` (the game's
+    exit footer), `crashed` (the game's crash handler message, with the
+    `report_path` it prints on the next line, or `null`; a crash
+    outranks a footer), or `truncated` (neither: the log stops where the
+    game stopped writing, as after a freeze, a force-close, or a copy
+    taken while the game ran). RimWorld's own code logs nothing on a
+    normal quit, so both markers come from the engine. On 1.6 the footer
+    is Unity's `Memory Statistics:` block and the crash is Unity's crash
+    handler message. On 1.7 the footer is the `Log closed.` entry and the
+    crash is a `CRIT [Crash]` entry that starts `=== CRASH ===`, followed
+    by `Crash report written to: <path>` (taken from the game's code; no
+    real 1.7 crash log has been seen yet). The text output says
+    `clean exit (the game's exit footer)` and
+    `crashed (the game's crash handler; ...)` for both engines.
 
   There is no claim about a config check: the game logs no marker for
   one.
@@ -294,8 +338,9 @@ Every result carries `kind` (`player_log` or `console_snapshot`) and a
     game dropped cannot be said.
 
   `head_truncated` is true when the copy's first non-blank line is a
-  Unity frame or `No stack trace.`, which only ever follows an entry's
-  text: the copy was cut by hand and its first entry's text is missing.
+  stack frame (a Unity frame on 1.6, a `    at ... [0x..]` frame on 1.7) or
+  `No stack trace.`, which only ever follows an entry's text: the copy
+  was cut by hand and its first entry's text is missing.
 
   A snapshot proves nothing about stages it does not show, and the
   console merges repeats of one message into a single entry, so its
@@ -313,8 +358,12 @@ recovered. `logging_gaps` lists each gap as a `stop_line` and an `end`
 tagged by `kind`: `resumed` (with its `line`) or `never_resumed` (no
 resume follows, so everything after the stop line is unreliable). A
 second stop while a gap is still open leaves the first gap
-`never_resumed`, and a resume with no stop before it is not a gap. At
-most 1,000 gaps are listed; `read_stats.logging_gaps_dropped` counts the
+`never_resumed`, and a resume with no stop before it is not a gap. A
+1.7 `Player.log` has one more kind of gap: when the log writer drops
+lines from before the game was ready to write them, it logs `N earlier
+log line(s) were dropped (pre-init backlog overflow).`, and that line is
+a gap that starts and resumes on the same line (taken from the game's
+code; no real log has shown it yet). At most 1,000 gaps are listed; `read_stats.logging_gaps_dropped` counts the
 rest.
 
 A gap is only a few file lines wide, so the one signal left in the file
@@ -335,10 +384,12 @@ even with no gap.
 
 #### Startup passes and the typed lists
 
-A real `Player.log` holds two startup passes: a pre-patching loader
-restarts the game in-process, so the log has two `RimWorld <version>`
-banners, and the game prints its startup warnings again in each pass.
-The typed lists handle that as follows:
+A real 1.6 `Player.log` with a pre-patching loader holds two startup
+passes: the loader restarts the game in-process, so the log has two
+`RimWorld <version>` banners, and the game prints its startup warnings
+again in each pass. Passes are counted by banner, so a 1.7 log is
+counted the same way (the first real 1.7 log holds one banner). The
+typed lists handle that as follows:
 
 - **`patch_failures`**: each terse `Patch operation ... failed` line with
   its `operation`, its `source_file` (the `file:` line after it) and,
