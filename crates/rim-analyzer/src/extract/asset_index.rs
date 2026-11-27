@@ -3,7 +3,8 @@
 //! non-loose texture index (`analysis::indices::Indices
 //! ::non_loose_textures`): a Unity `.manifest` sidecar's own `Assets:`
 //! list, and a bounded scan of `RimWorldWin64_Data/globalgamemanagers` for
-//! `textures/...` container-path strings. Ground-truthed against
+//! `textures/...` container-path strings. On a Waylith install the keys come
+//! from `Assets.zip` entry names instead ([`archive_texture_key`]). Ground-truthed against
 //! `Verse.ContentFinder<T>.TryFindAssetInModBundles`/
 //! `ModAssetBundlesHandler`.
 
@@ -100,6 +101,42 @@ pub fn bundle_asset_key(
     }
     let key = normalize_key(rest);
     if key.is_empty() { None } else { Some(key) }
+}
+
+/// The normalized texture key a Waylith `Assets.zip` entry name resolves
+/// to, or `None` when the entry is not a texture under `prefix`
+/// (`Resources/Textures/` in the root archive, `Textures/` in a DLC's).
+///
+/// The archive stores each texture as `<path>.<original ext>.dds` and, for
+/// large ones, `<path>.<original ext>.dds.split`. The key is what a loose
+/// file's [`normalize_key`] gives the same texture: the `.split` suffix is
+/// stripped, then `.dds`, then the original extension (`.png`, `.psd`,
+/// `.jpg`), lowercased and `/`-separated. The prefix match is
+/// case-insensitive; directory entries and entries naming no file give
+/// `None`.
+#[must_use]
+pub fn archive_texture_key(entry: &str, prefix: &str) -> Option<String> {
+    let rest = entry
+        .get(..prefix.len())
+        .filter(|head| head.eq_ignore_ascii_case(prefix))
+        .and_then(|_| entry.get(prefix.len()..))?;
+    if rest.ends_with('/') || rest.ends_with('\\') {
+        return None;
+    }
+    let without_split = strip_suffix_ignore_case(rest, ".split");
+    let without_dds = strip_suffix_ignore_case(without_split, ".dds");
+    let key = normalize_key(without_dds);
+    if key.is_empty() { None } else { Some(key) }
+}
+
+fn strip_suffix_ignore_case<'a>(text: &'a str, suffix: &str) -> &'a str {
+    text.len()
+        .checked_sub(suffix.len())
+        .filter(|&cut| text.is_char_boundary(cut))
+        .and_then(|cut| text.get(cut..).map(|tail| (cut, tail)))
+        .filter(|(_, tail)| tail.eq_ignore_ascii_case(suffix))
+        .and_then(|(cut, _)| text.get(..cut))
+        .unwrap_or(text)
 }
 
 /// The character set a `globalgamemanagers` container-path run may
@@ -233,6 +270,35 @@ mod tests {
             bundle_asset_key("Assets/Data/Core/Textures/", "Core", None),
             None
         );
+    }
+
+    #[test]
+    fn archive_key_strips_split_then_dds_then_the_original_extension() {
+        let prefix = "Resources/Textures/";
+        let key = |entry: &str| archive_texture_key(entry, prefix);
+
+        assert_eq!(
+            key("Resources/Textures/Damage/FleshScratch1.png.dds.split"),
+            Some("damage/fleshscratch1".to_string())
+        );
+        assert_eq!(
+            key("Resources/Textures/UI/Icons/Wall.psd.dds"),
+            Some("ui/icons/wall".to_string())
+        );
+        assert_eq!(
+            key("resources/textures/Things/A.b.png.dds.split"),
+            Some("things/a.b".to_string())
+        );
+    }
+
+    #[test]
+    fn archive_key_rejects_other_prefixes_directories_and_empty_names() {
+        let prefix = "Textures/";
+
+        assert_eq!(archive_texture_key("Sounds/A.ogg", prefix), None);
+        assert_eq!(archive_texture_key("Textures/Things/", prefix), None);
+        assert_eq!(archive_texture_key("Textures/", prefix), None);
+        assert_eq!(archive_texture_key("Tex", prefix), None);
     }
 
     #[test]

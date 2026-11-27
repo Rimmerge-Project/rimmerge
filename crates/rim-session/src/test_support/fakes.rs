@@ -1668,7 +1668,10 @@ impl FakeGameLauncher {
     /// as the game dir, so a launch built from the wrong source shows up.
     #[must_use]
     pub fn executable() -> Self {
-        let executable = GameExecutable::of_install(Path::new(FAKE_LAUNCHER_INSTALL));
+        let executable = GameExecutable::of_install(
+            Path::new(FAKE_LAUNCHER_INSTALL),
+            rim_analyzer::domain::GameLayout::Unity,
+        );
         Self::with_route(Ok(LaunchRoute::Executable(executable)))
     }
 

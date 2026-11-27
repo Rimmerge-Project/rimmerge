@@ -907,6 +907,7 @@ mod tests {
             load_order,
             missing_mods: Vec::new(),
             vanilla_assembly_names: HashSet::new(),
+            engine_assembly_prefixes: crate::domain::EngineAssemblyPrefixes::default(),
             vanilla_type_hierarchy: Vec::new(),
             warnings: Vec::new(),
             child_value_hashes_by_mod: BTreeMap::new(),

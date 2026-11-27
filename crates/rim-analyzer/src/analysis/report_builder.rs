@@ -57,7 +57,8 @@ pub fn build_ref(scan: &ScanOutput, context: &RunContext) -> Report {
         &scan.vanilla_assembly_names,
         &active,
         &scan.core_resource_textures,
-    );
+    )
+    .with_engine_assembly_prefixes(scan.engine_assembly_prefixes.clone());
     let (name_map, mut warnings) = edges::build_name_map(scanned);
     warnings.extend(scan.warnings.iter().cloned());
     warnings.extend(checks::core_resource_index_warning(
@@ -924,6 +925,7 @@ mod tests {
             load_order: LoadOrder::new(order),
             missing_mods: Vec::new(),
             vanilla_assembly_names: HashSet::new(),
+            engine_assembly_prefixes: crate::domain::EngineAssemblyPrefixes::default(),
             vanilla_type_hierarchy: Vec::new(),
             warnings: Vec::new(),
             child_value_hashes_by_mod: BTreeMap::new(),
@@ -1064,6 +1066,51 @@ mod tests {
             "{kinds:?}"
         );
         assert!(ranks.is_sorted(), "out of producer order: {kinds:?}");
+    }
+
+    /// Mod `mod.b` references `unity.burst`, which mod `mod.a` also ships.
+    /// Only the scan's engine prefixes (`unity.`) say the engine provides
+    /// it, so the prefixes must reach `Indices` through `build_ref`: without
+    /// `with_engine_assembly_prefixes` the same scan yields the assembly
+    /// edge (asserted below, so this test cannot pass vacuously).
+    #[test]
+    fn engine_prefixes_stop_a_shipped_engine_assembly_from_ordering_mods() {
+        let mut scan = hand_made_scan();
+        let mention_burst = |scan: &mut ScanOutput, id: &str, assembly: AssemblyInfo| {
+            scan.scanned_mods
+                .iter_mut()
+                .find(|scanned| scanned.info.id == ModId::new(id))
+                .expect("fixture mod")
+                .assemblies
+                .push(assembly);
+        };
+        mention_burst(&mut scan, "mod.a", assembly("unity.burst", vec![]));
+        mention_burst(
+            &mut scan,
+            "mod.b",
+            assembly("libusesburst", vec!["unity.burst"]),
+        );
+        let mentions_burst = |report: &Report| {
+            let edges = report
+                .edges
+                .iter()
+                .filter(|edge| edge.edge.detail.contains("unity.burst"))
+                .count();
+            let constraints = report
+                .constraints
+                .iter()
+                .filter(|constraint| format!("{constraint:?}").contains("unity.burst"))
+                .count();
+            edges + constraints
+        };
+
+        let without_prefixes = build_ref(&scan, &context());
+        scan.engine_assembly_prefixes =
+            crate::domain::EngineAssemblyPrefixes::new(["unity.".to_string()]);
+        let with_prefixes = build_ref(&scan, &context());
+
+        assert_eq!(mentions_burst(&without_prefixes), 1);
+        assert_eq!(mentions_burst(&with_prefixes), 0);
     }
 
     /// `Report` (and every type reachable from it) now derives

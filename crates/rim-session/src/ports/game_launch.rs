@@ -8,12 +8,13 @@
 
 use std::path::{Path, PathBuf};
 
+use rim_analyzer::domain::GameLayout;
+
 use crate::game_launch::{LaunchRouteKind, LaunchUnavailable};
 
-/// RimWorld's 64-bit Windows executable, in the install's root folder.
-pub const RIMWORLD_EXECUTABLE: &str = "RimWorldWin64.exe";
-
-/// The one executable a launch may start: `<game_dir>/RimWorldWin64.exe`.
+/// The one executable a launch may start: the install's own
+/// `RimWorldWin64.exe` (Unity layout) or `RimWorld.exe` (Waylith layout), in
+/// the root folder.
 ///
 /// The field is private and [`Self::of_install`] is the only constructor,
 /// so a launch route can never name any other program.
@@ -23,12 +24,12 @@ pub struct GameExecutable {
 }
 
 impl GameExecutable {
-    /// `<game_dir>/RimWorldWin64.exe`. Pure; whether it exists is the
-    /// adapter's check.
+    /// `<game_dir>/<the layout's executable name>`. Pure; which layout the
+    /// install has and whether the file exists are the adapter's checks.
     #[must_use]
-    pub fn of_install(game_dir: &Path) -> Self {
+    pub fn of_install(game_dir: &Path, layout: GameLayout) -> Self {
         Self {
-            path: game_dir.join(RIMWORLD_EXECUTABLE),
+            path: game_dir.join(layout.executable_name()),
         }
     }
 
@@ -86,8 +87,8 @@ pub enum LaunchFailure {
     /// registered).
     #[error("Steam did not accept the launch request: {0}")]
     SteamRefused(String),
-    /// Spawning `RimWorldWin64.exe` failed (access denied, bad image, ...).
-    #[error("could not start RimWorldWin64.exe: {0}")]
+    /// Spawning the game's executable failed (access denied, bad image, ...).
+    #[error("could not start the RimWorld executable: {0}")]
     SpawnFailed(String),
 }
 
@@ -96,17 +97,22 @@ mod tests {
     use super::*;
 
     #[test]
-    fn game_executable_is_always_the_installs_rimworldwin64_exe() {
+    fn game_executable_is_the_install_executable_of_its_layout() {
         let game_dir = Path::new("some").join("install");
 
-        let executable = GameExecutable::of_install(&game_dir);
+        let unity = GameExecutable::of_install(&game_dir, GameLayout::Unity);
+        let waylith = GameExecutable::of_install(&game_dir, GameLayout::Waylith);
 
-        assert_eq!(executable.path(), game_dir.join("RimWorldWin64.exe"));
+        assert_eq!(unity.path(), game_dir.join("RimWorldWin64.exe"));
+        assert_eq!(waylith.path(), game_dir.join("RimWorld.exe"));
     }
 
     #[test]
     fn a_route_reports_its_kind() {
-        let executable = LaunchRoute::Executable(GameExecutable::of_install(Path::new("x")));
+        let executable = LaunchRoute::Executable(GameExecutable::of_install(
+            Path::new("x"),
+            GameLayout::Unity,
+        ));
 
         assert_eq!(LaunchRoute::Steam.kind(), LaunchRouteKind::Steam);
         assert_eq!(executable.kind(), LaunchRouteKind::Executable);

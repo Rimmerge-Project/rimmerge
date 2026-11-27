@@ -39,7 +39,7 @@ pub struct ApplyArgs {
     /// Which order to apply.
     #[arg(long, value_enum, default_value_t = SourceArg::Suggested)]
     source: SourceArg,
-    /// Write `ModsConfig.xml` even if `RimWorldWin64.exe` looks like it's
+    /// Write `ModsConfig.xml` even if RimWorld looks like it's
     /// running.
     #[arg(long)]
     force: bool,
@@ -58,7 +58,7 @@ pub fn run(args: &ApplyArgs) -> anyhow::Result<()> {
 /// write against ([`rim_io::GameProcessProbe`]), so "is the game running"
 /// means one thing across every interface, and so this can be exercised
 /// with a fake probe in a unit test rather than needing a real
-/// `RimWorldWin64.exe` process on the test machine.
+/// RimWorld process on the test machine.
 fn run_with_probe(args: &ApplyArgs, probe: &dyn GameProcessProbe) -> anyhow::Result<()> {
     let project_paths = resolve_paths(&args.paths)?;
     let mods_config_path = project_paths.mods_config.clone();
@@ -73,7 +73,7 @@ fn run_with_probe(args: &ApplyArgs, probe: &dyn GameProcessProbe) -> anyhow::Res
 
     if !args.force && probe.is_running() {
         bail!(
-            "RimWorldWin64.exe is running; close the game or retry with --force (RimWorld overwrites ModsConfig.xml on exit, so a concurrent write is likely to be lost or corrupt the running game's own copy)"
+            "RimWorld is running; close the game or retry with --force (RimWorld overwrites ModsConfig.xml on exit, so a concurrent write is likely to be lost or corrupt the running game's own copy)"
         );
     }
 

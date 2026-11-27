@@ -8,6 +8,7 @@ use super::patches::{
 use super::*;
 use crate::analysis::indices::{ActiveMods, DefKey, Indices};
 use crate::analysis::inheritance::TemplateRegistrations;
+use crate::domain::EngineAssemblyPrefixes;
 use crate::domain::{
     ConditionalBranch, Conflict, DeclaredOrder, DefTarget, FindModGate, Mod, ModDependency,
     PatchOp, Source, ValueDigest, XmlLocator,
@@ -346,9 +347,52 @@ fn a_two_mod_provider_consumer_pair_still_yields_its_edge() {
 #[test]
 fn system_dot_prefixed_assemblies_are_ignored_but_systemx_is_not() {
     let owners = BTreeMap::new();
-    assert!(is_ignored_assembly("system", &HashSet::new(), &owners));
-    assert!(is_ignored_assembly("system.core", &HashSet::new(), &owners));
-    assert!(!is_ignored_assembly("systemx", &HashSet::new(), &owners));
+    let none = EngineAssemblyPrefixes::default();
+    assert!(is_ignored_assembly(
+        "system",
+        &HashSet::new(),
+        &none,
+        &owners
+    ));
+    assert!(is_ignored_assembly(
+        "system.core",
+        &HashSet::new(),
+        &none,
+        &owners
+    ));
+    assert!(!is_ignored_assembly(
+        "systemx",
+        &HashSet::new(),
+        &none,
+        &owners
+    ));
+}
+
+#[test]
+fn engine_redirect_prefixes_and_exact_names_are_ignored_assemblies() {
+    let owners = BTreeMap::new();
+    let prefixes = EngineAssemblyPrefixes::new(["Unity.".to_string()]);
+    let exact = HashSet::from(["0prepatcherapi".to_string()]);
+
+    assert!(is_ignored_assembly(
+        "unity.burst",
+        &HashSet::new(),
+        &prefixes,
+        &owners
+    ));
+    assert!(is_ignored_assembly(
+        "0prepatcherapi",
+        &exact,
+        &prefixes,
+        &owners
+    ));
+    assert!(!is_ignored_assembly("unityx", &exact, &prefixes, &owners));
+    assert!(!is_ignored_assembly(
+        "unity.burst",
+        &HashSet::new(),
+        &EngineAssemblyPrefixes::default(),
+        &owners
+    ));
 }
 
 #[test]

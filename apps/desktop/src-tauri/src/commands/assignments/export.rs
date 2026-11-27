@@ -10,7 +10,7 @@ use crate::state::{AppState, with_session};
 
 /// Renders, writes, and (when asked) installs `request.assignment_id`'s
 /// assignment project. Refuses to write to the game's `Mods` folder
-/// while `RimWorldWin64.exe` looks like it's running unless
+/// while RimWorld looks like it's running unless
 /// `request.force` is set — the same gate
 /// [`crate::commands::patch::export_patch`] uses.
 ///

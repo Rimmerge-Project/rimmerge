@@ -11,26 +11,52 @@
 //! macOS or Linux user gets a sane "looked in these places" error instead of
 //! a Windows path they could never have. That is *not* a claim of non-Windows
 //! support: this workspace is Windows-only today (`deny.toml` pins
-//! `x86_64-pc-windows-msvc`, [`managed_assemblies_dir`] knows only the
-//! `RimWorldWin64_Data` layout, and CI is `windows-latest`). Real macOS/Linux
+//! `x86_64-pc-windows-msvc`, `GameLayout` knows only the two Windows
+//! layouts, and CI is `windows-latest`). Real macOS/Linux
 //! support is separate, unimplemented work.
 
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 
-use crate::domain::GameVersion;
+use crate::domain::{GameLayout, GameVersion, UNITY_DATA_DIR};
 
 /// The Steam app id for RimWorld — the `workshop/content/<id>` folder
 /// name, and the `steamapps` subfolder every Steam library shares.
 pub const RIMWORLD_STEAM_APP_ID: &str = "294100";
 
-/// `<game_dir>/RimWorldWin64_Data/Managed`: the game's own managed
-/// assembly folder. Core/DLC ship no `Assemblies/` folder of their own —
-/// their assembly names have to be seeded from here.
+/// Which [`GameLayout`] `game_dir` is: Waylith when `RimWorld.exe` is a
+/// file at the root and `RimWorldWin64.exe` is absent; Unity otherwise.
+///
+/// The Unity executable decides, not a leftover `RimWorldWin64_Data/` folder
+/// (a branch switch can leave one behind). `Assembly-CSharp.dll` is not
+/// required: a Waylith root missing it is a broken install that should
+/// warn when read, not silently fall back to Unity paths. Unity is the
+/// fallback on purpose: a folder with neither executable (a scratch
+/// fixture, a half-deleted install) keeps every 1.6 path and message it
+/// always had. Reads the filesystem; never writes.
 #[must_use]
-pub fn managed_assemblies_dir(game_dir: &Path) -> PathBuf {
-    game_dir.join("RimWorldWin64_Data").join("Managed")
+pub fn detect_game_layout(game_dir: &Path) -> GameLayout {
+    let has_waylith_executable = game_dir
+        .join(GameLayout::Waylith.executable_name())
+        .is_file();
+    let has_unity_executable = game_dir.join(GameLayout::Unity.executable_name()).exists();
+    if has_waylith_executable && !has_unity_executable {
+        GameLayout::Waylith
+    } else {
+        GameLayout::Unity
+    }
+}
+
+/// The file name of a Waylith art archive: `<game_dir>/Assets.zip` for
+/// Core's built-in textures, `<game_dir>/Data/<DLC>/Assets.zip` per DLC.
+pub const ASSETS_ZIP_FILE_NAME: &str = "Assets.zip";
+
+/// `<game_dir>/RimWorld.runtimeconfig.json`: the Waylith engine's own
+/// configuration, which names the assembly redirects it applies.
+#[must_use]
+pub fn runtime_config_path(game_dir: &Path) -> PathBuf {
+    game_dir.join("RimWorld.runtimeconfig.json")
 }
 
 /// `<game_dir>/RimWorldWin64_Data/globalgamemanagers`: Unity's own
@@ -39,9 +65,7 @@ pub fn managed_assemblies_dir(game_dir: &Path) -> PathBuf {
 /// `extract::asset_index::resource_container_paths`.
 #[must_use]
 pub fn global_game_managers_path(game_dir: &Path) -> PathBuf {
-    game_dir
-        .join("RimWorldWin64_Data")
-        .join("globalgamemanagers")
+    game_dir.join(UNITY_DATA_DIR).join("globalgamemanagers")
 }
 
 /// `<game_dir>/Data/Core/Defs/Misc/ExpansionDefs/ExpansionDefs.xml`: the
@@ -592,6 +616,63 @@ mod tests {
         std::fs::read_to_string(&path).unwrap_or_else(|error| {
             panic!("reading {}: {error}", path.display());
         })
+    }
+
+    fn layout_dir(files: &[&str], folders: &[&str]) -> tempfile::TempDir {
+        let dir = tempfile::tempdir().expect("temp dir");
+        for name in files {
+            std::fs::write(dir.path().join(name), b"x").expect("file");
+        }
+        for name in folders {
+            std::fs::create_dir(dir.path().join(name)).expect("folder");
+        }
+        dir
+    }
+
+    #[test]
+    fn a_root_with_only_rimworld_exe_is_waylith() {
+        let dir = layout_dir(&["RimWorld.exe"], &[]);
+        let with_dll = layout_dir(&["RimWorld.exe", "Assembly-CSharp.dll"], &[]);
+
+        assert_eq!(detect_game_layout(dir.path()), GameLayout::Waylith);
+        assert_eq!(detect_game_layout(with_dll.path()), GameLayout::Waylith);
+    }
+
+    #[test]
+    fn a_stray_unity_data_folder_does_not_hide_a_waylith_install() {
+        let dir = layout_dir(
+            &["RimWorld.exe", "Assembly-CSharp.dll"],
+            &["RimWorldWin64_Data"],
+        );
+
+        assert_eq!(detect_game_layout(dir.path()), GameLayout::Waylith);
+    }
+
+    #[test]
+    fn the_unity_executable_beside_rimworld_exe_keeps_the_unity_layout() {
+        let dir = layout_dir(
+            &["RimWorld.exe", "RimWorldWin64.exe", "Assembly-CSharp.dll"],
+            &[],
+        );
+
+        assert_eq!(detect_game_layout(dir.path()), GameLayout::Unity);
+    }
+
+    #[test]
+    fn an_install_without_a_file_named_rimworld_exe_falls_back_to_unity() {
+        let empty = layout_dir(&[], &[]);
+        let only_unity_data = layout_dir(&[], &["RimWorldWin64_Data"]);
+        let folder_named_exe = layout_dir(&[], &["RimWorld.exe"]);
+
+        assert_eq!(detect_game_layout(empty.path()), GameLayout::Unity);
+        assert_eq!(
+            detect_game_layout(only_unity_data.path()),
+            GameLayout::Unity
+        );
+        assert_eq!(
+            detect_game_layout(folder_named_exe.path()),
+            GameLayout::Unity
+        );
     }
 
     #[test]

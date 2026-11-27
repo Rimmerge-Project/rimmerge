@@ -3,7 +3,7 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
-use crate::domain::{FindModGate, ModId, PatchOp, ScannedMod, Source};
+use crate::domain::{EngineAssemblyPrefixes, FindModGate, ModId, PatchOp, ScannedMod, Source};
 
 /// A `(def_type, def_name)` key, as owned by one or more mods.
 pub type DefKey = (String, String);
@@ -93,10 +93,14 @@ pub struct Indices {
     /// for the same determinism reason as `def_owners`.
     pub texture_owners: BTreeMap<String, Vec<ModId>>,
     /// Assembly names shipped by at least one Core/Dlc mod, or by the
-    /// game's own `RimWorldWin64_Data/Managed/` folder. Only ever
+    /// game's own assembly folder (`RimWorldWin64_Data/Managed/`, or the
+    /// install root on a Waylith layout). Only ever
     /// membership-tested, never iterated into report output, so a
     /// `HashSet` is fine here.
     pub vanilla_assembly_names: HashSet<String>,
+    /// Engine-provided assembly-name prefixes (a Waylith install's `*`
+    /// redirect patterns); empty until [`Indices::with_engine_assembly_prefixes`].
+    pub engine_assembly_prefixes: EngineAssemblyPrefixes,
     pub mod_source: HashMap<ModId, Source>,
     pub mod_authors: HashMap<ModId, Vec<String>>,
     /// Each mod's own `About.xml` declarations (`loadAfter`/`modDependencies`/
@@ -206,6 +210,16 @@ pub struct Indices {
 pub const MIN_CORE_RESOURCE_TEXTURES: usize = 1_000;
 
 impl Indices {
+    /// These indices with `prefixes` as the engine-provided assembly-name
+    /// prefixes — [`ScanOutput::engine_assembly_prefixes`](crate::domain::ScanOutput::engine_assembly_prefixes).
+    /// A separate step so [`Indices::build`]'s many callers, none of which
+    /// has a Waylith install, keep their signature.
+    #[must_use]
+    pub fn with_engine_assembly_prefixes(mut self, prefixes: EngineAssemblyPrefixes) -> Self {
+        self.engine_assembly_prefixes = prefixes;
+        self
+    }
+
     /// `vanilla_assembly_names_seed` supplies names that can never be
     /// discovered by scanning mod folders (Core/DLC ship no `Assemblies/`
     /// folder of their own) — see
@@ -358,6 +372,7 @@ impl Indices {
             assembly_owners,
             texture_owners,
             vanilla_assembly_names,
+            engine_assembly_prefixes: EngineAssemblyPrefixes::default(),
             mod_source,
             mod_authors,
             mod_declared,

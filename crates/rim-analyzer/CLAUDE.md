@@ -140,6 +140,21 @@ untested. Per-OS candidates are emitted so a non-Windows user gets a sane
 error, but that is not a claim of non-Windows support: `deny.toml` pins
 `x86_64-pc-windows-msvc` and CI is `windows-latest`.
 
+`domain::GameLayout { Unity, Waylith }` (pure, so `rim-session`'s launch port can
+name it without importing `infra`) is *detected* by
+`infra::paths::detect_game_layout`: Waylith (RimWorld 1.7, Ludeon's own CoreCLR
+engine) when `RimWorld.exe` is a file at the root and `RimWorldWin64.exe` is
+absent; Unity (1.6 and earlier) otherwise. The Unity executable decides, never a
+`RimWorldWin64_Data/` folder (a branch switch can leave one behind), and
+`Assembly-CSharp.dll` is not required (a Waylith root without it warns when read,
+it does not fall back to Unity paths). An install with neither executable (the
+synthetic golden fixture) is Unity, so it keeps every 1.6 path and warning
+byte-identical. `is_game_dir` is layout-independent. The layout owns the
+executable name (`RimWorldWin64.exe` / `RimWorld.exe`, used by the launch route),
+`vanilla_assemblies_dir` (`RimWorldWin64_Data/Managed` / the install root) and
+`assembly_csharp_path`; the remaining Waylith paths (`runtime_config_path`,
+`ASSETS_ZIP_FILE_NAME`) are free items in `paths`.
+
 `is_steam_managed_install(game_dir)` decides the Launch RimWorld route
 (Steam or the executable): the folder is in `<library>/steamapps/common/`,
 `appmanifest_294100.acf` names it as `installdir`, **and** `<library>` is a
@@ -231,7 +246,24 @@ never this machine's real Steam.
   read_owner_def_raw}` are the two callers that do.
 - Core and DLC `About.xml` files have no `<name>`; display names come
   from `ExpansionDefs`. Vanilla assemblies come from
-  `RimWorldWin64_Data/Managed`.
+  `RimWorldWin64_Data/Managed` on a Unity install and from the install root
+  on a Waylith one (`*.dll` stems, lowercased; `Assembly-CSharp.dll` is
+  there too). Waylith also lists engine-provided names that exist as no
+  file, in `RimWorld.runtimeconfig.json`'s
+  `runtimeOptions.configProperties."WaylithClr.AssemblyNameRedirects"`
+  (`pattern=target;...`, `*` only as a trailing wildcard). Exact patterns
+  (`0PrepatcherAPI`) join `vanilla_assembly_names`; trailing-`*` patterns
+  (`UnityEngine*`, `Unity.*`) become `ScanOutput::engine_assembly_prefixes`
+  (`domain::EngineAssemblyPrefixes`), copied onto `Indices` with
+  `with_engine_assembly_prefixes` and checked by `is_ignored_assembly`. An
+  entry with an **empty target** (`Unity.Newtonsoft.Json=`) is an exclusion:
+  the engine does not redirect it, so a mod must ship it. It is recorded on
+  `EngineAssemblyPrefixes` (`excluding`), wins over every prefix wherever it sits
+  in the list, and never joins `vanilla_assembly_names`.
+  `extract::runtime_config` parses it; a pattern it cannot model is
+  reported in a scan warning, never applied, and an unreadable or invalid
+  file is a warning with an empty result. A Unity install does not read the
+  file at all.
 - `analysis::source_index::SourceIndex`'s inverse maps have two dedup
   rules that are easy to get wrong: `ops_by_mod` must **not** filter to
   `is_top_level() == true` entries (that predicate is the top-level
@@ -395,8 +427,24 @@ never this machine's real Steam.
   `Patches/`/`Assemblies/` already use. `extract::asset_index::resource_container_paths`
   bounded-scans `RimWorldWin64_Data/globalgamemanagers` for Core's own
   `textures/...` container-path strings — a heuristic byte scan, not a
-  real asset-bundle parse, pinned by a real-install count floor
-  (`MIN_CORE_RESOURCE_TEXTURES`, 1,000, well under the ~3,455 measured):
+  real asset-bundle parse. **On a Waylith install** there is no
+  `globalgamemanagers` and no `AssetBundles/`: Core's keys come from the
+  entry names of `<game>/Assets.zip` under `Resources/Textures/`, and each
+  vanilla DLC's from `<game>/Data/<DLC>/Assets.zip` under `Textures/`
+  (added to that DLC's `ScannedMod::bundle_textures`, the slot the 1.6
+  bundle walk fills, only when the DLC is active). An entry stores
+  `<path>.<orig ext>.dds` or `<path>.<orig ext>.dds.split`;
+  `asset_index::archive_texture_key` strips `.split`, then `.dds`, then the
+  original extension, lowercased, the same key a loose file gets. The
+  listing is `infra::zip_listing` over the pure `extract::zip_directory`:
+  it reads the last 65,557 bytes for the end-of-central-directory record,
+  then only the central directory (at most 16 MiB, 65,534 entries); ZIP64,
+  multi-disk, an out-of-bounds or malformed directory is a typed error that
+  becomes a scan warning and an empty set, so the check disables itself
+  through the floor below. Entry bodies are never read (Core's archive is
+  about 355 MB). Names decode as lossy UTF-8. The Unity-side count was
+  ~3,455; the Waylith archive lists 3,418. Either index is pinned by a real-install
+  count floor (`MIN_CORE_RESOURCE_TEXTURES`, 1,000, well under the ~3,455 measured):
   below that floor `conflicts::textures::missing_texture_paths` disables
   itself for the whole scan rather than run against a near-empty or
   wrong-file index, and

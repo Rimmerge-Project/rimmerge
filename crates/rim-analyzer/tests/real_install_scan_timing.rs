@@ -124,3 +124,33 @@ fn scan_of_the_real_install_is_fast_and_deterministic() {
         "two scans of the same install found different content"
     );
 }
+
+/// Whichever layout the install has (Unity or Waylith), the scan must
+/// find the vanilla assemblies, the game's type hierarchy and Core's
+/// built-in textures: a layout the scan cannot read leaves these empty and
+/// silently disables the checks that depend on them. Shape only; no mod id.
+#[test]
+#[ignore = "needs the real install and RIMMERGE_PERF_PROFILE_DIR — see this file's own doc comment"]
+fn the_real_install_yields_vanilla_assemblies_types_and_core_textures() {
+    let Some((config, _)) = common::real_scan_config(RERUN_COMMAND) else {
+        return;
+    };
+
+    let scan =
+        infra::scan(&config).unwrap_or_else(|error| panic!("scanning the real install: {error}"));
+
+    assert!(
+        scan.vanilla_assembly_names.contains("assembly-csharp"),
+        "the game's own assemblies were not found"
+    );
+    assert!(
+        !scan.vanilla_type_hierarchy.is_empty(),
+        "Assembly-CSharp.dll's type hierarchy was not read"
+    );
+    assert!(
+        scan.core_resource_textures.len()
+            >= rim_analyzer::analysis::indices::MIN_CORE_RESOURCE_TEXTURES,
+        "Core's built-in textures were not found ({} keys)",
+        scan.core_resource_textures.len()
+    );
+}
