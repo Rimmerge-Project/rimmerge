@@ -3,7 +3,7 @@
 This changelog starts at the first public release. Development history
 before that point is not summarized here.
 
-## [Unreleased]
+## [1.2.8] - 2026-11-27
 
 - **New: RimWorld 1.7 support.** RimWorld 1.7 runs on Ludeon's own engine
   instead of Unity, and its install folder looks different: `RimWorld.exe`
