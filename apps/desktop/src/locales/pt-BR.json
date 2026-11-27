@@ -568,7 +568,7 @@
       },
       "game_executable_missing": {
         "title": "Não é possível iniciar o RimWorld por aqui",
-        "detail": "O RimWorldWin64.exe não está na pasta de instalação."
+        "detail": "O executável do RimWorld não está na pasta de instalação."
       },
       "steam_launch_failed": {
         "title": "A Steam não iniciou o RimWorld",
@@ -576,7 +576,7 @@
       },
       "game_start_failed": {
         "title": "O RimWorld não iniciou",
-        "detail": "O Windows não conseguiu iniciar o RimWorldWin64.exe."
+        "detail": "O Windows não conseguiu iniciar o executável do RimWorld."
       },
       "saves_folder_unreadable": {
         "title": "Não foi possível ler a pasta Saves",
@@ -1241,7 +1241,7 @@
       "staleActiveSetNote": "Alterações de ativação pendentes não estão incluídas. Escaneie novamente antes, se quiser incluí-las nesta instalação.",
       "unappliedOrderNote": "Instalar escreve sua ordem atual, que ainda não foi aplicada.",
       "outsideChangeNote": "Sua lista de mods ativos foi alterada fora do Rimmerge. Instalar escreve sua ordem atual por cima dessas alterações.",
-      "forceWarning": "O RimWorldWin64.exe parece estar em execução. Instalar agora escreve sua lista de mods ativos, que o jogo sobrescreve ao fechar, então a alteração pode se perder. Exportar mesmo assim?",
+      "forceWarning": "O RimWorld parece estar em execução. Instalar agora escreve sua lista de mods ativos, que o jogo sobrescreve ao fechar, então a alteração pode se perder. Exportar mesmo assim?",
       "exportAnyway": "Exportar mesmo assim",
       "export": "Exportar",
       "exportedTo": "Exportado para: {path}",
@@ -2292,7 +2292,7 @@
       "ruleExists": "A regra já existe."
     },
     "result": {
-      "forceWarning": "O RimWorldWin64.exe parece estar em execução. O jogo sobrescreve sua lista de mods ativos ao fechar, então o que você escrever agora pode se perder. Escrever mesmo assim?",
+      "forceWarning": "O RimWorld parece estar em execução. O jogo sobrescreve sua lista de mods ativos ao fechar, então o que você escrever agora pode se perder. Escrever mesmo assim?",
       "mergeModPath": "Mod de mesclagem: {path}",
       "mergeModRemoved": "Mod de mesclagem: removido (não resta nenhuma decisão de mesclagem ou de recurso)",
       "mergeModBackupPath": "Cópia de segurança do mod de mesclagem: {path}",
@@ -2333,7 +2333,7 @@
     "alreadyRunning": "O RimWorld já está em execução.",
     "statusFailed": "Não foi possível verificar se o RimWorld pode ser iniciado.",
     "unavailable": {
-      "executableMissing": "O RimWorldWin64.exe não está na pasta de instalação."
+      "executableMissing": "O executável do RimWorld não está na pasta de instalação."
     },
     "launchedSteam": "Pedido enviado à Steam para iniciar o RimWorld.",
     "launchedExecutable": "Iniciando o RimWorld.",
@@ -2484,7 +2484,7 @@
       "staleActiveSetNote": "Alterações de ativação pendentes não estão incluídas. Escaneie novamente antes, se quiser incluí-las nesta instalação.",
       "unappliedOrderNote": "Instalar escreve sua ordem atual, que ainda não foi aplicada.",
       "outsideChangeNote": "Sua lista de mods ativos foi alterada fora do Rimmerge. Instalar escreve sua ordem atual por cima dessas alterações.",
-      "forceWarning": "O RimWorldWin64.exe parece estar em execução. Instalar agora escreve sua lista de mods ativos, que o jogo sobrescreve ao fechar, então a alteração pode se perder. Exportar mesmo assim?",
+      "forceWarning": "O RimWorld parece estar em execução. Instalar agora escreve sua lista de mods ativos, que o jogo sobrescreve ao fechar, então a alteração pode se perder. Exportar mesmo assim?",
       "exportAnyway": "Exportar mesmo assim",
       "export": "Exportar",
       "exportedTo": "Exportado para: {path}",

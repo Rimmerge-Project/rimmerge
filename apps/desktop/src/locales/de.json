@@ -568,7 +568,7 @@
       },
       "game_executable_missing": {
         "title": "RimWorld kann von hier aus nicht gestartet werden",
-        "detail": "RimWorldWin64.exe ist nicht im Installationsverzeichnis."
+        "detail": "Die ausführbare Datei von RimWorld ist nicht im Installationsverzeichnis."
       },
       "steam_launch_failed": {
         "title": "Steam hat RimWorld nicht gestartet",
@@ -576,7 +576,7 @@
       },
       "game_start_failed": {
         "title": "RimWorld ist nicht gestartet",
-        "detail": "Windows konnte RimWorldWin64.exe nicht starten."
+        "detail": "Windows konnte die ausführbare Datei von RimWorld nicht starten."
       },
       "saves_folder_unreadable": {
         "title": "Der Ordner „Saves“ konnte nicht gelesen werden",
@@ -1241,7 +1241,7 @@
       "staleActiveSetNote": "Ausstehende Aktivierungsänderungen sind nicht enthalten. Scanne zuerst erneut, wenn sie in diese Installation sollen.",
       "unappliedOrderNote": "Die Installation schreibt deine aktuelle Reihenfolge, die noch nicht angewendet ist.",
       "outsideChangeNote": "Deine aktive Mod-Liste wurde außerhalb von Rimmerge geändert. Die Installation schreibt deine aktuelle Reihenfolge über diese Änderungen.",
-      "forceWarning": "RimWorldWin64.exe scheint zu laufen. Eine Installation schreibt jetzt deine aktive Mod-Liste, und das Spiel überschreibt sie beim Beenden, daher kann die Änderung verloren gehen. Trotzdem exportieren?",
+      "forceWarning": "RimWorld scheint zu laufen. Eine Installation schreibt jetzt deine aktive Mod-Liste, und das Spiel überschreibt sie beim Beenden, daher kann die Änderung verloren gehen. Trotzdem exportieren?",
       "exportAnyway": "Trotzdem exportieren",
       "export": "Exportieren",
       "exportedTo": "Exportiert nach: {path}",
@@ -2292,7 +2292,7 @@
       "ruleExists": "Regel existiert bereits."
     },
     "result": {
-      "forceWarning": "RimWorldWin64.exe scheint zu laufen. Das Spiel überschreibt deine aktive Mod-Liste beim Beenden, daher kann verloren gehen, was du jetzt schreibst. Trotzdem schreiben?",
+      "forceWarning": "RimWorld scheint zu laufen. Das Spiel überschreibt deine aktive Mod-Liste beim Beenden, daher kann verloren gehen, was du jetzt schreibst. Trotzdem schreiben?",
       "mergeModPath": "Merge-Mod: {path}",
       "mergeModRemoved": "Merge-Mod: entfernt (keine Merge- oder Asset-Entscheidung mehr übrig)",
       "mergeModBackupPath": "Sicherung der Merge-Mod: {path}",
@@ -2333,7 +2333,7 @@
     "alreadyRunning": "RimWorld läuft bereits.",
     "statusFailed": "Es konnte nicht geprüft werden, ob RimWorld gestartet werden kann.",
     "unavailable": {
-      "executableMissing": "RimWorldWin64.exe ist nicht im Installationsverzeichnis."
+      "executableMissing": "Die ausführbare Datei von RimWorld ist nicht im Installationsverzeichnis."
     },
     "launchedSteam": "Steam wurde gebeten, RimWorld zu starten.",
     "launchedExecutable": "RimWorld startet.",
@@ -2484,7 +2484,7 @@
       "staleActiveSetNote": "Ausstehende Aktivierungsänderungen sind nicht enthalten. Scanne zuerst erneut, wenn sie in diese Installation sollen.",
       "unappliedOrderNote": "Die Installation schreibt deine aktuelle Reihenfolge, die noch nicht angewendet ist.",
       "outsideChangeNote": "Deine aktive Mod-Liste wurde außerhalb von Rimmerge geändert. Die Installation schreibt deine aktuelle Reihenfolge und überschreibt damit diese Änderungen.",
-      "forceWarning": "RimWorldWin64.exe scheint zu laufen. Eine Installation schreibt jetzt deine aktive Mod-Liste, und das Spiel überschreibt sie beim Beenden, daher kann die Änderung verloren gehen. Trotzdem exportieren?",
+      "forceWarning": "RimWorld scheint zu laufen. Eine Installation schreibt jetzt deine aktive Mod-Liste, und das Spiel überschreibt sie beim Beenden, daher kann die Änderung verloren gehen. Trotzdem exportieren?",
       "exportAnyway": "Trotzdem exportieren",
       "export": "Exportieren",
       "exportedTo": "Exportiert nach: {path}",

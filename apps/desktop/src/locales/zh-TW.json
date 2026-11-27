@@ -568,7 +568,7 @@
       },
       "game_executable_missing": {
         "title": "無法從這裡啟動 RimWorld",
-        "detail": "安裝資料夾中沒有 RimWorldWin64.exe。"
+        "detail": "安裝資料夾中沒有 RimWorld 執行檔。"
       },
       "steam_launch_failed": {
         "title": "Steam 未能啟動 RimWorld",
@@ -576,7 +576,7 @@
       },
       "game_start_failed": {
         "title": "RimWorld 未能啟動",
-        "detail": "Windows 無法啟動 RimWorldWin64.exe。"
+        "detail": "Windows 無法啟動 RimWorld 執行檔。"
       },
       "saves_folder_unreadable": {
         "title": "無法讀取存檔資料夾",
@@ -1241,7 +1241,7 @@
       "staleActiveSetNote": "尚未掃描的啟用變更不會包含在內。如果要將它們納入此次安裝，請先重新掃描。",
       "unappliedOrderNote": "安裝會寫入你目前的順序，而該順序尚未套用。",
       "outsideChangeNote": "你的已啟用模組清單已在 Rimmerge 之外被變更。安裝會以你的「目前」順序覆蓋這些變更。",
-      "forceWarning": "RimWorldWin64.exe 似乎正在執行。現在安裝會寫入已啟用模組清單，而遊戲結束時會覆蓋它，因此這項變更可能會遺失。仍要匯出嗎？",
+      "forceWarning": "RimWorld 似乎正在執行。現在安裝會寫入已啟用模組清單，而遊戲結束時會覆蓋它，因此這項變更可能會遺失。仍要匯出嗎？",
       "exportAnyway": "仍要匯出",
       "export": "匯出",
       "exportedTo": "已匯出到：{path}",
@@ -2292,7 +2292,7 @@
       "ruleExists": "規則已存在。"
     },
     "result": {
-      "forceWarning": "RimWorldWin64.exe 似乎正在執行。遊戲結束時會覆蓋已啟用模組清單，因此你現在寫入的內容可能會遺失。仍要寫入嗎？",
+      "forceWarning": "RimWorld 似乎正在執行。遊戲結束時會覆蓋已啟用模組清單，因此你現在寫入的內容可能會遺失。仍要寫入嗎？",
       "mergeModPath": "合併模組：{path}",
       "mergeModRemoved": "合併模組：已移除（已不剩任何合併或資源決定）",
       "mergeModBackupPath": "合併模組備份：{path}",
@@ -2333,7 +2333,7 @@
     "alreadyRunning": "RimWorld 已在執行中。",
     "statusFailed": "無法確認 RimWorld 是否可以啟動。",
     "unavailable": {
-      "executableMissing": "安裝資料夾中沒有 RimWorldWin64.exe。"
+      "executableMissing": "安裝資料夾中沒有 RimWorld 執行檔。"
     },
     "launchedSteam": "已要求 Steam 啟動 RimWorld。",
     "launchedExecutable": "正在啟動 RimWorld。",
@@ -2484,7 +2484,7 @@
       "staleActiveSetNote": "尚未掃描的啟用變更不會包含在內。如果要將它們納入此次安裝，請先重新掃描。",
       "unappliedOrderNote": "安裝會寫入你目前的順序，而該順序尚未套用。",
       "outsideChangeNote": "你的已啟用模組清單已在 Rimmerge 之外被變更。安裝會以你的「目前」順序覆蓋這些變更。",
-      "forceWarning": "RimWorldWin64.exe 似乎正在執行。現在安裝會寫入已啟用模組清單，而遊戲結束時會覆蓋它，因此這項變更可能會遺失。仍要匯出嗎？",
+      "forceWarning": "RimWorld 似乎正在執行。現在安裝會寫入已啟用模組清單，而遊戲結束時會覆蓋它，因此這項變更可能會遺失。仍要匯出嗎？",
       "exportAnyway": "仍要匯出",
       "export": "匯出",
       "exportedTo": "已匯出到：{path}",

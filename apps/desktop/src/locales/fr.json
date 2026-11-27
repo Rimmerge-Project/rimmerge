@@ -568,7 +568,7 @@
       },
       "game_executable_missing": {
         "title": "RimWorld ne peut pas être démarré d’ici",
-        "detail": "RimWorldWin64.exe ne se trouve pas dans le dossier d’installation."
+        "detail": "L’exécutable de RimWorld ne se trouve pas dans le dossier d’installation."
       },
       "steam_launch_failed": {
         "title": "Steam n’a pas démarré RimWorld",
@@ -576,7 +576,7 @@
       },
       "game_start_failed": {
         "title": "RimWorld n’a pas démarré",
-        "detail": "Windows n’a pas pu démarrer RimWorldWin64.exe."
+        "detail": "Windows n’a pas pu démarrer l’exécutable de RimWorld."
       },
       "saves_folder_unreadable": {
         "title": "Impossible de lire le dossier Saves",
@@ -1241,7 +1241,7 @@
       "staleActiveSetNote": "Les modifications d’activation en attente ne sont pas incluses. Réanalysez d’abord si vous voulez qu’elles figurent dans cette installation.",
       "unappliedOrderNote": "L’installation écrit votre ordre actuel, qui n’est pas encore appliqué.",
       "outsideChangeNote": "Votre liste des mods actifs a été modifiée hors de Rimmerge. L’installation écrit votre ordre « Actuel » par-dessus ces modifications.",
-      "forceWarning": "RimWorldWin64.exe semble être en cours d’exécution. Si vous installez maintenant, la liste des mods actifs sera écrite, or le jeu l’écrase en quittant : la modification risque donc d’être perdue. Exporter malgré tout ?",
+      "forceWarning": "RimWorld semble être en cours d’exécution. Si vous installez maintenant, la liste des mods actifs sera écrite, or le jeu l’écrase en quittant : la modification risque donc d’être perdue. Exporter malgré tout ?",
       "exportAnyway": "Exporter malgré tout",
       "export": "Exporter",
       "exportedTo": "Exporté vers : {path}",
@@ -2292,7 +2292,7 @@
       "ruleExists": "La règle existe déjà."
     },
     "result": {
-      "forceWarning": "RimWorldWin64.exe semble être en cours d’exécution. Le jeu écrase la liste des mods actifs en quittant : ce que vous écrivez maintenant risque donc d’être perdu. Écrire malgré tout ?",
+      "forceWarning": "RimWorld semble être en cours d’exécution. Le jeu écrase la liste des mods actifs en quittant : ce que vous écrivez maintenant risque donc d’être perdu. Écrire malgré tout ?",
       "mergeModPath": "Mod de fusion : {path}",
       "mergeModRemoved": "Mod de fusion : supprimé (il ne reste aucune décision de fusion ou de ressource)",
       "mergeModBackupPath": "Copie de sauvegarde du mod de fusion : {path}",
@@ -2333,7 +2333,7 @@
     "alreadyRunning": "RimWorld est déjà en cours d’exécution.",
     "statusFailed": "Impossible de vérifier si RimWorld peut être lancé.",
     "unavailable": {
-      "executableMissing": "RimWorldWin64.exe ne se trouve pas dans le dossier d’installation."
+      "executableMissing": "L’exécutable de RimWorld ne se trouve pas dans le dossier d’installation."
     },
     "launchedSteam": "Démarrage de RimWorld demandé à Steam.",
     "launchedExecutable": "Démarrage de RimWorld.",
@@ -2484,7 +2484,7 @@
       "staleActiveSetNote": "Les modifications d’activation en attente ne sont pas incluses. Réanalysez d’abord si vous voulez qu’elles figurent dans cette installation.",
       "unappliedOrderNote": "L’installation écrit votre ordre actuel, qui n’est pas encore appliqué.",
       "outsideChangeNote": "Votre liste des mods actifs a été modifiée hors de Rimmerge. L’installation écrit votre ordre « Actuel » par-dessus ces modifications.",
-      "forceWarning": "RimWorldWin64.exe semble être en cours d’exécution. Si vous installez maintenant, la liste des mods actifs sera écrite, or le jeu l’écrase en quittant : la modification risque donc d’être perdue. Exporter malgré tout ?",
+      "forceWarning": "RimWorld semble être en cours d’exécution. Si vous installez maintenant, la liste des mods actifs sera écrite, or le jeu l’écrase en quittant : la modification risque donc d’être perdue. Exporter malgré tout ?",
       "exportAnyway": "Exporter malgré tout",
       "export": "Exporter",
       "exportedTo": "Exporté vers : {path}",

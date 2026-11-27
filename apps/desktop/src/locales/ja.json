@@ -568,7 +568,7 @@
       },
       "game_executable_missing": {
         "title": "ここからRimWorldを起動できません",
-        "detail": "インストールフォルダーにRimWorldWin64.exeがありません。"
+        "detail": "インストールフォルダーにRimWorldの実行ファイルがありません。"
       },
       "steam_launch_failed": {
         "title": "SteamがRimWorldを起動しませんでした",
@@ -576,7 +576,7 @@
       },
       "game_start_failed": {
         "title": "RimWorldが起動しませんでした",
-        "detail": "WindowsがRimWorldWin64.exeを起動できませんでした。"
+        "detail": "WindowsがRimWorldの実行ファイルを起動できませんでした。"
       },
       "saves_folder_unreadable": {
         "title": "Savesフォルダーを読み取れませんでした",
@@ -1241,7 +1241,7 @@
       "staleActiveSetNote": "保留中の有効化／無効化の変更は含まれません。このインストールに反映したい場合は、先に再スキャンしてください。",
       "unappliedOrderNote": "インストールすると現在の順序が書き込まれますが、この順序はまだ適用されていません。",
       "outsideChangeNote": "有効なMODリストがRimmerge以外で変更されました。インストールすると「現在」の順序が書き込まれ、その変更は上書きされます。",
-      "forceWarning": "RimWorldWin64.exeが実行中のようです。今インストールすると有効なMODリストに書き込みますが、ゲームは終了時にこのリストを上書きするため、変更が失われるおそれがあります。それでもエクスポートしますか？",
+      "forceWarning": "RimWorldが実行中のようです。今インストールすると有効なMODリストに書き込みますが、ゲームは終了時にこのリストを上書きするため、変更が失われるおそれがあります。それでもエクスポートしますか？",
       "exportAnyway": "それでもエクスポート",
       "export": "エクスポート",
       "exportedTo": "エクスポート先：{path}",
@@ -2292,7 +2292,7 @@
       "ruleExists": "ルールはすでに存在します。"
     },
     "result": {
-      "forceWarning": "RimWorldWin64.exeが実行中のようです。ゲームは終了時に有効なMODリストを上書きするため、今書き込んだ内容が失われるおそれがあります。それでも書き込みますか？",
+      "forceWarning": "RimWorldが実行中のようです。ゲームは終了時に有効なMODリストを上書きするため、今書き込んだ内容が失われるおそれがあります。それでも書き込みますか？",
       "mergeModPath": "マージMOD：{path}",
       "mergeModRemoved": "マージMOD：削除済み（マージ／アセットの決定が残っていません）",
       "mergeModBackupPath": "マージMODのバックアップ：{path}",
@@ -2333,7 +2333,7 @@
     "alreadyRunning": "RimWorldはすでに実行中です。",
     "statusFailed": "RimWorldを起動できるかどうか確認できませんでした。",
     "unavailable": {
-      "executableMissing": "インストールフォルダーにRimWorldWin64.exeがありません。"
+      "executableMissing": "インストールフォルダーにRimWorldの実行ファイルがありません。"
     },
     "launchedSteam": "SteamにRimWorldの起動を依頼しました。",
     "launchedExecutable": "RimWorldを起動しています。",
@@ -2484,7 +2484,7 @@
       "staleActiveSetNote": "保留中の有効化／無効化の変更は含まれません。このインストールに反映したい場合は、先に再スキャンしてください。",
       "unappliedOrderNote": "インストールすると現在の順序が書き込まれますが、この順序はまだ適用されていません。",
       "outsideChangeNote": "有効なMODリストがRimmerge以外で変更されました。インストールすると「現在」の順序が書き込まれ、その変更は上書きされます。",
-      "forceWarning": "RimWorldWin64.exeが実行中のようです。今インストールすると有効なMODリストに書き込みますが、ゲームは終了時にこのリストを上書きするため、変更が失われるおそれがあります。それでもエクスポートしますか？",
+      "forceWarning": "RimWorldが実行中のようです。今インストールすると有効なMODリストに書き込みますが、ゲームは終了時にこのリストを上書きするため、変更が失われるおそれがあります。それでもエクスポートしますか？",
       "exportAnyway": "それでもエクスポート",
       "export": "エクスポート",
       "exportedTo": "エクスポート先：{path}",
