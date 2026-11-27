@@ -5,6 +5,7 @@ use rim_session::ports::{KindChoice, LogFormats, LogKind};
 use tempfile::tempdir;
 
 use super::detect::{PEEK_BYTES, PEEK_LINES};
+use super::segment::Framing;
 use super::*;
 
 const BANNER: &str = "RimWorld 1.6.4104 rev1234";
@@ -149,4 +150,62 @@ fn the_peek_stops_after_its_byte_budget_however_few_lines_that_is() {
 
     assert_eq!(detect_kind(&within), LogKind::PlayerLog);
     assert_eq!(detect_kind(&beyond), LogKind::ConsoleSnapshot);
+}
+
+// -- a Unity first line vetoes the Waylith console reading -------------------
+
+/// A four-space frame in Waylith's shape, with Mono's own `:0 ` tail kept
+/// (trailing space) or stripped.
+fn four_space_mono_frame(has_trailing_space: bool) -> String {
+    let tail = if has_trailing_space { " " } else { "" };
+    format!("    at Example.Type.Run () [0x00000] in <filename unknown>:0{tail}\n")
+}
+
+fn unity_banner_file_with(frame: &str) -> String {
+    format!("Mono path[0] = 'C:/Example/Data/Managed'\n{BANNER}\nSystem.Exception: boom\n{frame}")
+}
+
+#[test]
+fn a_unity_player_log_with_a_four_space_mono_frame_and_its_trailing_space_is_a_player_log() {
+    let text = unity_banner_file_with(&four_space_mono_frame(true));
+
+    assert_eq!(detect_kind(&text), LogKind::PlayerLog);
+}
+
+#[test]
+fn a_unity_player_log_with_a_four_space_frame_that_matches_the_waylith_shape_is_a_player_log() {
+    let frame = four_space_mono_frame(false);
+    assert!(
+        super::waylith::is_frame(frame.trim_end_matches('\n')),
+        "the frame must be the exact shape the Waylith rule accepts"
+    );
+
+    let text = unity_banner_file_with(&frame);
+
+    assert_eq!(detect_kind(&text), LogKind::PlayerLog);
+    assert_eq!(detect_framing(&text), Framing::PlayerLog);
+}
+
+#[test]
+fn the_unity_first_line_veto_ignores_a_leading_byte_order_mark() {
+    let text = format!(
+        "\u{feff}{}",
+        unity_banner_file_with(&four_space_mono_frame(false))
+    );
+
+    assert_eq!(detect_framing(&text), Framing::PlayerLog);
+}
+
+#[test]
+fn without_the_mono_path_line_the_same_frame_reads_as_a_waylith_console_copy() {
+    // Documents the remaining dependency: with no Unity first line, a
+    // four-space frame in the Waylith shape and no timestamped header is the
+    // 1.7 console signal even beside the banner, because only the indentation
+    // and the stripped trailing space differ from a real Mono frame.
+    let text = format!(
+        "{BANNER}\nSystem.Exception: boom\n{}",
+        four_space_mono_frame(false)
+    );
+
+    assert_eq!(detect_framing(&text), Framing::WaylithConsole);
 }

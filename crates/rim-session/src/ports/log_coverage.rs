@@ -47,8 +47,10 @@ impl fmt::Display for LogKind {
 /// How a read decides a file's [`LogKind`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum KindChoice {
-    /// By content, from the first lines: a console-copy trace start
-    /// anywhere there means a console snapshot; otherwise the exact
+    /// By content, from the first lines: a 1.7 (Waylith) `Player.log` opens
+    /// with its header block or a timestamped entry; otherwise a Unity
+    /// console-copy trace start anywhere there means a console snapshot (as
+    /// does a 1.7 console copy's stack capture); otherwise the exact
     /// `RimWorld <version> rev<n>` banner means a `Player.log`; neither
     /// means a console snapshot, the reading that can only under-claim. A
     /// file name is never consulted.
@@ -70,19 +72,23 @@ pub enum PatchPhaseEvidence {
     PatchFailureLogged,
 }
 
-/// How a `Player.log` ends. Only Unity writes either end marker: RimWorld
-/// logs nothing when the game quits normally.
+/// How a `Player.log` ends. RimWorld itself logs nothing when the game quits
+/// normally; the engine writes the marker: Unity its memory footer and crash
+/// handler lines, the 1.7 (Waylith) engine a `Log closed.` line and a
+/// `=== CRASH ===` entry.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum EndState {
-    /// Unity's `Memory Statistics:` footer is present and no crash was
-    /// logged.
+    /// Unity's `Memory Statistics:` footer (or the 1.7 engine's `Log
+    /// closed.` line) is present and no crash was logged.
     CleanExit,
     /// Unity's crash handler logged that it intercepted a crash (or wrote
-    /// its `Crash!!!` report header). A crash outranks a footer.
+    /// its `Crash!!!` report header), or the 1.7 engine logged its
+    /// `=== CRASH ===` entry. A crash outranks a footer.
     Crashed {
         /// The location the crash handler printed on the line after its
-        /// message (at most [`MAX_REPORT_PATH_BYTES`] bytes), when the log
-        /// holds that line.
+        /// message (the 1.7 engine's `Crash report written to:` line), at
+        /// most [`MAX_REPORT_PATH_BYTES`] bytes, when the log holds that
+        /// line.
         report_path: Option<String>,
     },
     /// Neither marker: the log stops where the game stopped writing (a

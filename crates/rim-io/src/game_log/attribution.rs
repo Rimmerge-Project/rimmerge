@@ -2,7 +2,8 @@
 //! `rim-session` later resolves against the active mods (per family, once).
 //!
 //! Which evidence a class carries is decided here, one arm per class: a
-//! failure or block names its tag and file, a texture fallback its path, a
+//! failure or block names its tag and file, a texture fallback or a decoder
+//! texture failure its path, a
 //! `[Tag]` line or an About.xml warning its display name, an exception its
 //! stack's innermost non-engine frame type (the type its family key already
 //! names), and a type-load error the type or assembly its head names. A
@@ -19,13 +20,16 @@ use rim_session::ports::{
 use super::classify::strip_color;
 use super::entry::outer_type;
 use super::patterns::{
-    MOD_METADATA_NAME_PATTERN, TYPE_LOAD_ASSEMBLY_PATTERN, TYPE_LOAD_TYPE_PATTERN, fixed_regex,
+    MOD_METADATA_NAME_PATTERN, TEXTURE_LOAD_PATH_PATTERN, TYPE_LOAD_ASSEMBLY_PATTERN,
+    TYPE_LOAD_TYPE_PATTERN, fixed_regex,
 };
 use super::records::RecordCollector;
 use super::shapes::CompiledShapes;
 
 static MOD_METADATA_NAME_RE: LazyLock<Regex> =
     LazyLock::new(|| fixed_regex(MOD_METADATA_NAME_PATTERN));
+static TEXTURE_LOAD_PATH_RE: LazyLock<Regex> =
+    LazyLock::new(|| fixed_regex(TEXTURE_LOAD_PATH_PATTERN));
 static TYPE_LOAD_TYPE_RE: LazyLock<Regex> = LazyLock::new(|| fixed_regex(TYPE_LOAD_TYPE_PATTERN));
 static TYPE_LOAD_ASSEMBLY_RE: LazyLock<Regex> =
     LazyLock::new(|| fixed_regex(TYPE_LOAD_ASSEMBLY_PATTERN));
@@ -63,6 +67,7 @@ pub(super) fn attribution_input(source: &EvidenceSource<'_>) -> Option<Attributi
         }
         EntryClass::RuntimeException => source.key_frame.and_then(AttributionInput::type_name),
         EntryClass::TypeLoadError => type_load_subject(head),
+        EntryClass::TextureLoadFailure => texture_load_path(&strip_color(head)),
         EntryClass::LoadEvent
         | EntryClass::EngineInfo(
             EngineInfoKind::Banner
@@ -77,13 +82,22 @@ pub(super) fn attribution_input(source: &EvidenceSource<'_>) -> Option<Attributi
         | EntryClass::MissingParent
         | EntryClass::XmlError
         | EntryClass::DuplicateDef
-        | EntryClass::TextureLoadFailure
         | EntryClass::SaveLoadReference(SaveLoadPhase::Save | SaveLoadPhase::Load)
         | EntryClass::BaseGenRuleMissing
         | EntryClass::UnityRuntimeError
         | EntryClass::DefCacheLine
         | EntryClass::Unclassified => None,
     }
+}
+
+/// The file a Waylith texture-decoder failure names; `None` for the 1.6
+/// wordings, which name a resource path rather than a file.
+fn texture_load_path(head: &str) -> Option<AttributionInput> {
+    let captures = TEXTURE_LOAD_PATH_RE.captures(head)?;
+    let path = captures
+        .name("psd_path")
+        .or_else(|| captures.name("content_path"))?;
+    Some(AttributionInput::path(path.as_str()))
 }
 
 /// What a type-load error's head names: the type of an `Error in static

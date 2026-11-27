@@ -1,0 +1,30 @@
+RimWorld 1.7.5014 rev1195
+    at RimWorld.VersionControl.LogVersionNumber() [0x0]
+    at Verse.Root.Start() [0xF]
+    at .InvokeMessageMethod_Verse.Root_Entry.Start(Closure , Object ) [0xFFFFFFFF]
+    at Waylith.Windowing.Core.PlatformBase.DeliverUpdate() [0x6] in C:\src\Engine\Loop.cs:143
+
+Error in static constructor of ExampleFixture.Startup: System.TypeInitializationException: The type initializer for 'ExampleFixture.Startup' threw an exception.
+    at ExampleFixture.HarmonyPatches..cctor() [0x19]
+    at System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(QCallTypeHandle type) [0x0]
+    at System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(RuntimeTypeHandle type) [0xA]
+    at Verse.StaticConstructorOnStartupUtility.CallAll() [0x2C]
+    at Waylith.Windowing.Core.PlatformBase.DeliverUpdate() [0x6] in C:\src\Engine\Loop.cs:143
+
+[Example Mod] a message whose trace opens at the caller
+second line of the message
+    at ExampleFixture.Widget.Report() [0x1F]
+    at Verse.Root.Start() [0xF]
+    at Waylith.Windowing.Core.PlatformBase.DeliverUpdate() [0x6] in C:\src\Engine\Loop.cs:143
+
+Mod Example Fixture Addon dependency (example.framework) needs to have <downloadUrl> and/or <steamWorkshopUrl> specified.
+    at Verse.ModMetaData+ModMetaDataInternal.ValidateDependencies(Boolean logIssues) [0x107]
+    at Waylith.Windowing.Core.PlatformBase.DeliverUpdate() [0x6] in C:\src\Engine\Loop.cs:143
+
+[Example Mod] a stackless line
+No stack trace.
+
+[Example Mod] last entry
+    at System.Threading.Tasks.TaskReplicator+Replica.Execute() [0x7]
+    at System.Threading.ThreadPoolWorkQueue.Dispatch() [0x3C]
+

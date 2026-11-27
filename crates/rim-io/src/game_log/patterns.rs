@@ -84,7 +84,19 @@ pub(super) const XML_ERROR_PATTERN: &str = r"^(?:XML error: |XML format error: |
 pub(super) const DUPLICATE_DEF_PATTERN: &str =
     r"^Adding duplicate (?P<def_type>\S+) name: (?P<def_name>\S+)";
 
-pub(super) const TEXTURE_LOAD_FAILURE_PATTERN: &str = r"^(?:Could not load \S+ at '.*' (?:for def '.*' )?in any active mod or in base resources\.|Failed to find any textures at .+ while constructing |Exception loading \S+ from file\.)";
+/// A texture the engine could not load: the 1.6 wordings (`Could not load`,
+/// `Failed to find any textures`, `Exception loading ... from file.`) and the
+/// two Waylith decoder failures (`GpuTextureService`, `[Vulkan]` at ERROR):
+/// `Unable to load PSD <path> due to an exception in PsdSharp: ...` and
+/// `<path>: the file's contents are not the format its extension names; ...`.
+pub(super) const TEXTURE_LOAD_FAILURE_PATTERN: &str = r"^(?:Unable to load PSD .+ due to an exception in PsdSharp: |.+: the file's contents are not the format its extension names; rename it so the decoder meant for it reads it$|Could not load \S+ at '.*' (?:for def '.*' )?in any active mod or in base resources\.|Failed to find any textures at .+ while constructing |Exception loading \S+ from file\.)";
+
+/// The file a Waylith texture-decoder failure names (the capture `psd_path`
+/// for the PsdSharp wording, `content_path` for the format-mismatch one); the
+/// 1.6 wordings name a resource path, not a file, and give none here. The
+/// decoder's other PSD wording (`Unable to load PSD file <name> ...`) holds a
+/// bare file name, so its capture reads `file <name>` and resolves to no mod.
+pub(super) const TEXTURE_LOAD_PATH_PATTERN: &str = r"^(?:Unable to load PSD (?P<psd_path>.+) due to an exception in PsdSharp: |(?P<content_path>.+): the file's contents are not the format its extension names; rename it so the decoder meant for it reads it$)";
 
 /// The type a type-load error's head names.
 pub(super) const TYPE_LOAD_TYPE_PATTERN: &str = r"^(?:Error in static constructor of|Error while instantiating a mod of type) (?P<type>[^\s:]+)";
@@ -116,7 +128,34 @@ pub(super) const MOD_METADATA_NAME_PATTERN: &str = r"^Mod (?:(?P<name>.+) (?:dep
 pub(super) const BASEGEN_RULE_MISSING_PATTERN: &str =
     r#"^Could not find any RuleDef for symbol "(?P<symbol>[^"]*)"#;
 
-pub(super) const RUNTIME_EXCEPTION_PATTERN: &str = r"^(?:Exception ticking |Exception filling window for |Exception in \S+ TryIssueJobPackage: |Root level exception in OnGUI\(\): |Critical error in root Start\(\): |Exception in \S+|(?:[\w`]+\.)*\w*Exception(?:: |$))";
+/// The wording of the engine's pawn-job exception wrappers, after the pawn's
+/// name (which varies and never enters a key): `<pawn> threw exception in
+/// WorkGiver <defName>: <ex>` (`JobGiver_Work.TryIssueJobPackage`), `... in
+/// GiverTryGiveJobTargeted on WorkGiver <defName>: <ex>`, `... while
+/// determining job (main|constant)` (`Pawn_JobTracker`, the exception on a
+/// later line), `Pawn <pawn> threw exception while executing a global finish
+/// action (<n>), jobDriver=..., job=...: <ex>` (`JobDriver`) and `Pawn <pawn>
+/// threw exception while executing toil <toil>'s finish action (<n>), ...:
+/// <ex>` (`Toil`), all confirmed in the decompiled 1.7 `Assembly-CSharp`.
+macro_rules! pawn_exception_wrapper {
+    () => {
+        r"threw exception (?:in WorkGiver [^\s:]+|in GiverTryGiveJobTargeted on WorkGiver [^\s:]+|while determining job \((?:main|constant)\)|while executing a global finish action|while executing toil)"
+    };
+}
+
+pub(super) const RUNTIME_EXCEPTION_PATTERN: &str = concat!(
+    r"^(?:Exception ticking |Exception filling window for |Exception in \S+ TryIssueJobPackage: |Root level exception in OnGUI\(\): |Critical error in root Start\(\): |Exception in \S+|Exception getting \S* at |Could not execute post-long-event action\. Exception: |(?:[^\[\s:][^:]*? )?",
+    pawn_exception_wrapper!(),
+    r"|(?:[\w`]+\.)*\w*Exception(?:: |$))"
+);
+
+/// A pawn-job wrapper: the optional pawn name, then the capture `wrapper`,
+/// the stable words that name the wrapper and its WorkGiver (the key's wrapper).
+pub(super) const RUNTIME_PAWN_WRAPPER_PATTERN: &str = concat!(
+    r"^(?:[^\[\s:][^:]*? )?(?P<wrapper>",
+    pawn_exception_wrapper!(),
+    r")"
+);
 
 // -- Unity heads ---------------------------------------------------------------
 
@@ -165,15 +204,62 @@ pub(super) const UNITY_FRAME_PATTERN: &str =
 pub(super) const KEY_VOLATILE_PATTERN: &str = r"\b[0-9A-Fa-f]{8,}\b|\d+";
 
 /// A runtime exception's wrapper prefix.
-pub(super) const RUNTIME_WRAPPER_PATTERN: &str = r"^(Exception ticking|Exception filling window for \S+|Exception in \S+ TryIssueJobPackage|Root level exception in OnGUI\(\)|Critical error in root Start\(\))";
+pub(super) const RUNTIME_WRAPPER_PATTERN: &str = r"^(Exception ticking|Exception filling window for \S+|Exception in \S+ TryIssueJobPackage|Root level exception in OnGUI\(\)|Critical error in root Start\(\)|Exception getting \S*|Could not execute post-long-event action\. Exception:)";
 
 /// The exception type named anywhere in a runtime exception's head.
 pub(super) const EXCEPTION_TYPE_PATTERN: &str = r"((?:[\w`]+\.)*\w*Exception)\b";
+
+/// The exception type of a pawn-job wrapper: the type that follows a `: ` and
+/// is itself followed by `: ` or the end of the head. The job text between the
+/// wrapper's words and that `: ` (`jobDriver=<Ns.Type>, job=<defName> ...
+/// [workGiverDef: <defName>], toilIndex=<n>`) names defs and drivers that can
+/// end in `Exception`; none of them is followed by `: `.
+pub(super) const PAWN_EXCEPTION_TYPE_PATTERN: &str = r"(?:: )((?:[\w`]+\.)*\w*Exception)(?:: |$)";
 
 /// The dotted name a stack frame line starts with, generic argument lists
 /// (`BFS`1[T].Run`) and nested-type markers (`Outer+Inner`) included, so the
 /// constructor form `Type..ctor` reads whole.
 pub(super) const FRAME_NAME_PATTERN: &str = r"^\s*(?:at\s+)?([\w`<>+.\[\],]+)";
+
+// -- the Waylith dialect (RimWorld 1.7) -----------------------------------------
+
+/// The header block's first line: `=== <product> log ===`. The product name
+/// is whatever the engine's app state holds (the decompiled writer falls back
+/// to `Waylith`, and a real 1.7.5014 log says `Waylith`), so no name is fixed.
+pub(super) const WAYLITH_LOG_HEADER_PATTERN: &str = r"^=== \S.* log ===$";
+
+/// A Waylith entry's first line: `yyyy-MM-dd HH:mm:ss.fff LEVEL[ [category]]
+/// message`. LEVEL is the writer's 5-wide field (`TRACE`, `DEBUG`, ` INFO`,
+/// ` WARN`, `ERROR`, ` CRIT`, or five spaces); the category is absent for
+/// the writer's own plain lines (`Log closed.`). The message may be empty.
+pub(super) const WAYLITH_ENTRY_HEADER_PATTERN: &str = r"^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3} (?P<level>TRACE|DEBUG| INFO| WARN|ERROR| CRIT|     )(?: \[(?P<category>[^\]]*)\])? (?P<message>.*)$";
+
+/// A Waylith stack frame, the writer's `    at <method> [0x<IL offset>]` with
+/// an optional ` in <file>:<line>`. Four spaces, `at`, and the bracketed IL
+/// offset together: indentation alone never makes a line a frame (a message
+/// body holds indented lines such as `    [0] VkInstance 0x...`, and an
+/// exception's own text holds .NET frames of three spaces and no offset).
+pub(super) const WAYLITH_FRAME_PATTERN: &str =
+    r"^    at \S.*? \[0x[0-9A-Fa-f]+\](?: in .+:[0-9]+)?$";
+
+/// The writer's own message on a clean exit (no category).
+pub(super) const WAYLITH_LOG_CLOSED_MESSAGE: &str = "Log closed.";
+/// The head of the crash entry (`CRIT [Crash]`), followed by a
+/// `Crash report written to: <path>` line when a report exists.
+pub(super) const WAYLITH_CRASH_HEAD: &str = "=== CRASH ===";
+/// The crash report's location line, after the crash head.
+pub(super) const WAYLITH_CRASH_LOCATION_PREFIX: &str = "Crash report written to: ";
+/// The writer's warning that the pre-initialization backlog overflowed and
+/// earlier lines were lost (no category).
+pub(super) const WAYLITH_BACKLOG_OVERFLOW_PATTERN: &str =
+    r"^[0-9]+ earlier log line\(s\) were dropped \(pre-init backlog overflow\)\.$";
+
+/// The start of the frame every entry of a 1.7 console copy opens its trace
+/// with: the logging call itself, in the `Player.log` writer's frame shape.
+pub(super) const WAYLITH_LOG_CALL_FRAME_PREFIX: &str = "    at Verse.Log.";
+/// What follows the method name of that frame: the one-string overload and the
+/// bracketed IL offset (`Message`, `Warning` and `Error` all take `text`).
+pub(super) const WAYLITH_LOG_CALL_ARGUMENTS_PREFIX: &str = "String text) [0x";
 
 /// The first `.`-separated segment of a type in one of these is the engine's
 /// or a runtime library's, not a mod's: compared exactly, so a mod whose
@@ -190,4 +276,9 @@ pub(super) const ENGINE_NAMESPACE_ROOTS: &[&str] = &[
     "LudeonTK",
     "HarmonyLib",
     "MonoMod",
+    "Waylith",
+    "Brutal",
+    "RimWorldWaylith",
+    "Microsoft",
+    "UnityStubs",
 ];

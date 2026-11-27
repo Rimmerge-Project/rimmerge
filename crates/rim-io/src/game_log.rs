@@ -12,6 +12,14 @@
 //! core as [`parse`] under that kind's [`Framing`]. A console snapshot is read,
 //! not refused; its coverage says what it can and cannot tell.
 //!
+//! **Two engines.** RimWorld 1.6 (Unity) and 1.7 (the Waylith engine) write
+//! different `Player.log` and console-copy framings; a [`Framing`] names the
+//! kind and the engine ([`Dialect`]), detection decides both by content, and
+//! only the entry framing, the severity (the 1.7 writer states its level) and
+//! the end markers differ: RimWorld's own message bodies are the same text
+//! under both, so every body-level recognizer serves both. The 1.7 specifics
+//! live in `waylith`.
+//!
 //! **One pass, bounded memory.** Lines are read one at a time into a reused
 //! buffer ([`lines::BoundedLines`]) and fed to [`LogParser`]. Each line goes
 //! to the entry pipeline ([`pipeline`]): a segmenter splits the lines into
@@ -83,9 +91,10 @@ mod records;
 mod segment;
 mod sentinels;
 mod shapes;
+mod waylith;
 
 use std::fs::File;
-use std::io::{self, BufRead, BufReader, Seek};
+use std::io::{self, BufRead, BufReader, Cursor, Read, Seek};
 use std::path::Path;
 
 use rim_session::ports::{
@@ -93,13 +102,13 @@ use rim_session::ports::{
     ParsedGameLog, RawTimer,
 };
 
-pub use self::detect::detect_kind;
-use self::detect::detect_kind_in;
+use self::detect::{PEEK_BYTES, PEEK_LINES, detect_framing_in};
+pub use self::detect::{detect_framing, detect_kind};
 use self::extract::parse_timer_line;
 pub use self::lines::MAX_LINE_BYTES;
 use self::lines::{BoundedLines, ReadLine};
 use self::pipeline::EntryPipeline;
-pub use self::segment::Framing;
+pub use self::segment::{Dialect, Framing};
 use self::shapes::CompiledShapes;
 pub(crate) use self::shapes::{
     ShapeCompileError, check_back_reference, check_stack_block, check_texture_fallback,
@@ -118,7 +127,8 @@ pub fn parse(content: &str, formats: &LogFormats<'_>) -> ParsedGameLog {
 
 /// [`parse`] with an explicit [`Framing`]: `Framing::ConsoleCopy` parses an
 /// in-game console copy (text, stack trace, blank line per entry) instead of
-/// a `Player.log`, and the result's coverage is the matching kind's.
+/// a `Player.log`, the Waylith framings read RimWorld 1.7's files, and the
+/// result's coverage is the matching kind's.
 #[must_use]
 pub fn parse_as(content: &str, formats: &LogFormats<'_>, framing: Framing) -> ParsedGameLog {
     #[allow(clippy::expect_used)]
@@ -126,12 +136,11 @@ pub fn parse_as(content: &str, formats: &LogFormats<'_>, framing: Framing) -> Pa
         .expect("invariant: reading an in-memory byte slice cannot fail")
 }
 
+/// The Unity framing of `kind`; a caller that has detected the engine uses
+/// [`Framing::of`] instead.
 impl From<LogKind> for Framing {
     fn from(kind: LogKind) -> Self {
-        match kind {
-            LogKind::PlayerLog => Self::PlayerLog,
-            LogKind::ConsoleSnapshot => Self::ConsoleCopy,
-        }
+        Self::of(kind, Dialect::Unity)
     }
 }
 
@@ -155,6 +164,7 @@ fn parse_stream<Reader: BufRead>(
 /// yields the typed records) plus the two measurements taken on every line
 /// whatever entry it belongs to, timers and def-cache lines.
 struct LogParser<'formats> {
+    framing: Framing,
     carriers: &'formats [DefCacheCarrier],
     /// Segments every line into entries, classifies and aggregates them, and
     /// collects the typed records of the classes that have one.
@@ -171,6 +181,7 @@ impl<'formats> LogParser<'formats> {
         framing: Framing,
     ) -> Self {
         Self {
+            framing,
             carriers,
             entries: EntryPipeline::new(carriers, shapes, framing),
             stats: LogReadStats::default(),
@@ -184,8 +195,28 @@ impl<'formats> LogParser<'formats> {
         self.stats.lines_read += 1;
         self.stats.lines_truncated += u64::from(line.was_truncated);
         self.stats.lines_with_invalid_utf8 += u64::from(line.had_invalid_utf8);
-        self.entries.feed(&line.text, &mut self.stats);
-        self.tap_line(line.text.trim());
+        let text = self.without_byte_order_mark(&line.text);
+        self.entries.feed(text, &mut self.stats);
+        // A Waylith entry's first line carries a timestamp, level and
+        // category before the message the measurements read.
+        let measured = if self.framing == Framing::WaylithLog {
+            waylith::measured_text(text)
+        } else {
+            text
+        };
+        self.tap_line(measured.trim());
+    }
+
+    /// `text` without the one U+FEFF a file's first line may start with: the
+    /// 1.7 writer's file can carry a byte-order mark, and an entry header
+    /// that starts with one is no header. Only the Waylith framings strip it
+    /// (a Unity file keeps its exact old path).
+    fn without_byte_order_mark<'text>(&self, text: &'text str) -> &'text str {
+        let is_first_line = self.stats.lines_read == 1;
+        if is_first_line && self.framing.dialect() == Dialect::Waylith {
+            return text.strip_prefix('\u{feff}').unwrap_or(text);
+        }
+        text
     }
 
     /// The two measurements that read every line, not every entry: a timer
@@ -262,26 +293,69 @@ impl GameLogReader for FileGameLogReader {
         formats: &LogFormats<'_>,
         kind: KindChoice,
     ) -> Result<ParsedGameLog, GameLogError> {
-        let fail = |error: io::Error| GameLogError(format!("{}: {error}", path.display()));
-        let file = File::open(path).map_err(fail)?;
-        let mut reader = BufReader::with_capacity(READ_BUFFER_BYTES, file);
-        let kind = match kind {
-            KindChoice::Force(kind) => kind,
-            KindChoice::Detect => {
-                let detected = detect_kind_in(&mut reader).map_err(fail)?;
-                reader.rewind().map_err(|error| {
-                    GameLogError(format!(
-                        "{}: {error} (kind detection re-reads the file, which this path \
-                         does not allow; force the kind, `--kind` on the command line, \
-                         to skip detection)",
-                        path.display()
-                    ))
-                })?;
-                detected
-            }
-        };
-        parse_stream(reader, formats, kind.into()).map_err(fail)
+        let file = File::open(path)
+            .map_err(|error| GameLogError(format!("{}: {error}", path.display())))?;
+        let reader = BufReader::with_capacity(READ_BUFFER_BYTES, file);
+        match kind {
+            KindChoice::Detect => parse_detected(reader, formats, path),
+            KindChoice::Force(kind) => parse_forced(reader, formats, kind)
+                .map_err(|error| GameLogError(format!("{}: {error}", path.display()))),
+        }
     }
+}
+
+/// Detects the framing by peeking `reader`, rewinds it, then parses it. A
+/// rewind failure names the way out (`--kind`), since only this path needs one.
+fn parse_detected<Reader: BufRead + Seek>(
+    mut reader: Reader,
+    formats: &LogFormats<'_>,
+    path: &Path,
+) -> Result<ParsedGameLog, GameLogError> {
+    let fail = |error: io::Error| GameLogError(format!("{}: {error}", path.display()));
+    let framing = detect_framing_in(&mut reader).map_err(fail)?;
+    reader.rewind().map_err(|error| {
+        GameLogError(format!(
+            "{}: {error} (kind detection re-reads the file, which this path \
+             does not allow; force the kind, `--kind` on the command line, \
+             to skip detection)",
+            path.display()
+        ))
+    })?;
+    parse_stream(reader, formats, framing).map_err(fail)
+}
+
+/// Parses `reader` as the forced `kind` of log. The engine still has to be
+/// known (a 1.7 file and a 1.6 file frame their entries differently, and a 1.7
+/// console copy is recognised by a frame on its second line or later), but a
+/// forced kind must not need a rewind: a path that cannot seek (a pipe, a
+/// device) read fine on 1.6 with `--kind`. So the detection window (up to
+/// [`PEEK_BYTES`] bytes, [`PEEK_LINES`] line breaks, or the end, whichever
+/// comes first) is read and decided on, then chained back in front of the
+/// rest; the reader is never repositioned. A source that returns a few bytes
+/// per read is still framed by the whole window.
+fn parse_forced<Reader: BufRead>(
+    mut reader: Reader,
+    formats: &LogFormats<'_>,
+    kind: LogKind,
+) -> io::Result<ParsedGameLog> {
+    let mut prefix = Vec::new();
+    let mut line_breaks = 0usize;
+    while prefix.len() < PEEK_BYTES && line_breaks < PEEK_LINES {
+        let chunk = reader.fill_buf()?;
+        if chunk.is_empty() {
+            break;
+        }
+        line_breaks += chunk.iter().filter(|byte| **byte == b'\n').count();
+        prefix.extend_from_slice(chunk);
+        let taken = chunk.len();
+        reader.consume(taken);
+    }
+    let dialect = detect_framing_in(prefix.as_slice())?.dialect();
+    parse_stream(
+        Cursor::new(prefix).chain(reader),
+        formats,
+        Framing::of(kind, dialect),
+    )
 }
 
 // Sibling-file tests; `#[path]` keeps each module named as declared.
@@ -300,3 +374,7 @@ mod coverage_tests;
 #[cfg(test)]
 #[path = "game_log/detect_tests.rs"]
 mod detect_tests;
+
+#[cfg(test)]
+#[path = "game_log/waylith_tests.rs"]
+mod waylith_tests;

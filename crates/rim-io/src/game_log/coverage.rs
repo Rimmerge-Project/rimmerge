@@ -1,6 +1,6 @@
 //! What a parse covers: the facts only a few entries carry (the engine's
-//! logging-gap messages, Unity's exit footer and crash handler, the banner
-//! lines), collected while the pipeline runs and combined, at the end, with
+//! logging-gap messages, Unity's exit footer and crash handler or the 1.7
+//! engine's `Log closed.` line and crash entry, the banner lines), collected while the pipeline runs and combined, at the end, with
 //! the class tallies into the port's [`LogCoverage`].
 //!
 //! **Positive evidence only.** A fact is recorded when a line says it. A log
@@ -18,8 +18,10 @@ use rim_session::ports::{
 
 use super::patterns::{
     CRASH_HANDLER_LOCATION_PREFIX, CRASH_HANDLER_PREFIX, CRASH_REPORT_HEAD, MEMORY_FOOTER_HEAD,
+    WAYLITH_CRASH_HEAD, WAYLITH_CRASH_LOCATION_PREFIX, WAYLITH_LOG_CLOSED_MESSAGE,
 };
-use super::segment::{Framing, is_trace_start};
+use super::segment::Framing;
+use super::waylith::is_backlog_overflow;
 
 /// Which marker the open entry is, so its continuation lines are read in
 /// that light.
@@ -27,7 +29,8 @@ use super::segment::{Framing, is_trace_start};
 enum OpenMarker {
     /// Nothing the collector reads continuation lines of.
     Other,
-    /// Unity's crash-handler message, whose next line names a location.
+    /// A crash message (Unity's crash handler, or the 1.7 engine's
+    /// `=== CRASH ===` entry), whose next line names a location.
     CrashHandler,
 }
 
@@ -57,7 +60,8 @@ pub(super) struct CoverageCollector {
     gaps_dropped: u64,
     /// The stop line of the gap still waiting for its resume message.
     open_stop_line: Option<u64>,
-    has_memory_footer: bool,
+    /// Unity's memory footer or the 1.7 engine's `Log closed.` line.
+    has_clean_exit_marker: bool,
     crash: Option<CrashFact>,
     open_marker: OpenMarker,
     crash_report_paths_truncated: u64,
@@ -73,7 +77,7 @@ impl CoverageCollector {
             gaps: Vec::new(),
             gaps_dropped: 0,
             open_stop_line: None,
-            has_memory_footer: false,
+            has_clean_exit_marker: false,
             crash: None,
             open_marker: OpenMarker::Other,
             crash_report_paths_truncated: 0,
@@ -81,11 +85,18 @@ impl CoverageCollector {
         }
     }
 
-    /// An entry of `class` opens at `line` (1-based) with head `trimmed`.
-    pub(super) fn begin(&mut self, class: EntryClass, line: u64, trimmed: &str) {
+    /// An entry of `class` opens at `line` (1-based) with head `trimmed`;
+    /// `is_trace_start` says whether that head would start a console copy's
+    /// trace (decided by the segmenter, which knows the engine's shape).
+    pub(super) fn begin(
+        &mut self,
+        class: EntryClass,
+        line: u64,
+        trimmed: &str,
+        is_trace_start: bool,
+    ) {
         self.open_marker = OpenMarker::Other;
-        self.first_head_is_trace_start
-            .get_or_insert_with(|| is_trace_start(trimmed));
+        self.first_head_is_trace_start.get_or_insert(is_trace_start);
         let EntryClass::EngineInfo(kind) = class else {
             return;
         };
@@ -93,7 +104,7 @@ impl CoverageCollector {
             EngineInfoKind::Banner => self.note_banner(line),
             EngineInfoKind::LoggingStopped => self.note_stop(line),
             EngineInfoKind::LoggingResumed => self.note_resume(line),
-            EngineInfoKind::SessionMarker => self.note_session_marker(trimmed),
+            EngineInfoKind::SessionMarker => self.note_session_marker(line, trimmed),
             EngineInfoKind::UnityRuntime => {}
         }
     }
@@ -109,7 +120,10 @@ impl CoverageCollector {
         if crash.report_path.is_some() {
             return;
         }
-        if let Some(path) = trimmed.strip_prefix(CRASH_HANDLER_LOCATION_PREFIX) {
+        let location = trimmed
+            .strip_prefix(CRASH_HANDLER_LOCATION_PREFIX)
+            .or_else(|| trimmed.strip_prefix(WAYLITH_CRASH_LOCATION_PREFIX));
+        if let Some(path) = location {
             let path = path.trim();
             self.crash_report_paths_truncated += u64::from(path.len() > MAX_REPORT_PATH_BYTES);
             crash.report_path = Some(cut_at_char_boundary(path, MAX_REPORT_PATH_BYTES));
@@ -152,14 +166,23 @@ impl CoverageCollector {
         }
     }
 
-    fn note_session_marker(&mut self, trimmed: &str) {
-        if trimmed == MEMORY_FOOTER_HEAD {
-            self.has_memory_footer = true;
+    fn note_session_marker(&mut self, line: u64, trimmed: &str) {
+        if trimmed == MEMORY_FOOTER_HEAD || trimmed == WAYLITH_LOG_CLOSED_MESSAGE {
+            self.has_clean_exit_marker = true;
         } else if trimmed == CRASH_REPORT_HEAD {
             self.crash.get_or_insert(CrashFact { report_path: None });
-        } else if trimmed.starts_with(CRASH_HANDLER_PREFIX) {
+        } else if trimmed.starts_with(CRASH_HANDLER_PREFIX) || trimmed == WAYLITH_CRASH_HEAD {
             self.crash.get_or_insert(CrashFact { report_path: None });
             self.open_marker = OpenMarker::CrashHandler;
+        } else if is_backlog_overflow(trimmed) {
+            // The writer dropped entries that came after its pre-start
+            // backlog filled, and wrote them just before this line: a gap
+            // that opens and closes here. Inferred from the decompiled
+            // writer; no real log has shown it yet.
+            self.push_gap(LoggingGap {
+                stop_line: line,
+                resume: GapEnd::Resumed { line },
+            });
         }
     }
 
@@ -180,11 +203,15 @@ impl CoverageCollector {
         let logging_gaps_dropped = self.gaps_dropped;
         let crash_report_paths_truncated = self.crash_report_paths_truncated;
         let coverage = match framing {
-            Framing::PlayerLog => LogCoverage::PlayerLog(self.player_log_coverage(classes)),
-            Framing::ConsoleCopy => LogCoverage::ConsoleSnapshot(SnapshotCoverage {
-                entries: totals_of(classes, 0, 0).entries,
-                head_truncated: self.first_head_is_trace_start == Some(true),
-            }),
+            Framing::PlayerLog | Framing::WaylithLog => {
+                LogCoverage::PlayerLog(self.player_log_coverage(classes))
+            }
+            Framing::ConsoleCopy | Framing::WaylithConsole => {
+                LogCoverage::ConsoleSnapshot(SnapshotCoverage {
+                    entries: totals_of(classes, 0, 0).entries,
+                    head_truncated: self.first_head_is_trace_start == Some(true),
+                })
+            }
         };
         CollectedCoverage {
             coverage,
@@ -196,7 +223,7 @@ impl CoverageCollector {
 
     fn player_log_coverage(self, classes: &BTreeMap<EntryClass, ClassTally>) -> PlayerLogCoverage {
         let entries_of = |class| classes.get(&class).map_or(0, ClassTally::entries);
-        let end_state = match (self.crash, self.has_memory_footer) {
+        let end_state = match (self.crash, self.has_clean_exit_marker) {
             (Some(crash), _) => EndState::Crashed {
                 report_path: crash.report_path,
             },

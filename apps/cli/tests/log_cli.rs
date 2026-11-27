@@ -56,6 +56,47 @@ fn player_log_fixture() -> PathBuf {
         .join("player_log_excerpt.log")
 }
 
+/// The RimWorld 1.7 (Waylith) `Player.log` excerpt beside it.
+fn waylith_log_fixture() -> PathBuf {
+    player_log_fixture().with_file_name("player_log_waylith_excerpt.log")
+}
+
+#[test]
+fn log_import_reads_a_waylith_player_log_by_content() {
+    let dir = tempdir().expect("tempdir");
+    let game = scratch_game(dir.path());
+
+    let json = import_json(&game, &[&waylith_log_fixture()], &[]);
+
+    assert_eq!(json["kind"], "player_log");
+    assert_eq!(json["coverage"]["kind"], "player_log");
+    assert_eq!(json["coverage"]["passes"], 1);
+    assert_eq!(json["coverage"]["patch_phase"], "patch_failure_logged");
+    assert_eq!(json["coverage"]["end_state"]["state"], "clean_exit");
+    assert_eq!(json["patch_failures"].as_array().expect("array").len(), 2);
+    assert_eq!(json["load_events"].as_array().expect("array").len(), 2);
+    assert_eq!(json["totals"]["conserved"], true);
+    assert_eq!(json["logging_gaps"], Value::Array(Vec::new()));
+    // None of `merge_game`'s mods match the invented names: every failure
+    // stays unattributed rather than being dropped.
+    assert!(json["patch_failures"][0]["attribution"]["mod_id"].is_null());
+}
+
+#[test]
+fn log_import_prints_a_waylith_log_in_text_with_its_end_state() {
+    let dir = tempdir().expect("tempdir");
+    let game = scratch_game(dir.path());
+
+    let mut cmd = common::rimmerge();
+    cmd.arg("log").arg("import").arg(waylith_log_fixture());
+    path_args(&mut cmd, &game);
+    cmd.assert()
+        .success()
+        .stdout(predicates::str::contains("2 patch failures"))
+        .stdout(predicates::str::contains("ended: clean exit"))
+        .stdout(predicates::str::contains("(unattributed:"));
+}
+
 #[test]
 fn log_import_prints_counts_and_unattributed_failures_as_text() {
     let dir = tempdir().expect("tempdir");
