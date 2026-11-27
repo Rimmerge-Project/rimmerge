@@ -566,6 +566,12 @@ data. `rim_resolve::domain::normalize_log_text` (whitespace-collapse)
 lives in `rim-resolve`, not here or in `rim-io`, specifically so it's
 reachable from both without either depending on the other.
 
+The log may be Unity's (1.6) or the 1.7 engine's: the reader decides that by
+content and this use case never sees which (the port types are the same; a 1.7
+`Player.log` ends `CleanExit` on its `Log closed.` line, and a family's
+severity is the log's own level). Frame attribution is unchanged, since a 1.7
+frame names `Ns.Type.Method` and goes through the same `namespace_ownership`.
+
 The parser hands this use case already pass-resolved lists (see
 `crates/rim-io/CLAUDE.md`): `dependency_warnings` is the last startup
 pass's only (the game repeats them in every pass), and each `RawTimer`
@@ -714,7 +720,10 @@ on every call (the button's status may be seconds old) and refuses
 `GameRunning`/`Unavailable` always, `NotApplied` unless `IfNotApplied::
 LaunchAnyway`. Whether the game is running is an input (`GameProcess`): the
 probe trait stays in `rim-io`. `GameExecutable` has a private path and one
-constructor, so a route can only name `<game_dir>/RimWorldWin64.exe`. Tests
+constructor (`of_install(game_dir, GameLayout)`), so a route can only name
+`<game_dir>/RimWorldWin64.exe` (Unity layout) or `<game_dir>/RimWorld.exe`
+(Waylith, 1.7). `GameLayout` is a `rim_analyzer::domain` type (pure); `rim-io`
+detects the layout from the folder. Tests
 use `test_support::FakeGameLauncher`; nothing here starts a process.
 
 ## The file baseline is live (`RefreshFileBaseline`)

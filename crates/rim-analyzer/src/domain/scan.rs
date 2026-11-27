@@ -211,6 +211,59 @@ pub struct ScanProgress {
     pub total: usize,
 }
 
+/// Lowercased assembly-name prefixes the engine itself provides, from a
+/// Waylith install's `AssemblyNameRedirects` patterns that end in `*`
+/// (`UnityEngine*`, `Unity.*`): a mod referencing any assembly starting
+/// with one needs no other mod to ship it. The exact-name patterns go
+/// into [`ScanOutput::vanilla_assembly_names`] instead. Empty on a Unity
+/// install, which has no such list.
+///
+/// An entry with an empty target (`Unity.Newtonsoft.Json=`) is an
+/// *exclusion*: the engine does not redirect that exact name, so it binds
+/// normally and a mod must ship it. Exclusions are checked first and win
+/// over every prefix, wherever they sit in the list (the real list puts
+/// them ahead of the prefix they carve out of).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct EngineAssemblyPrefixes {
+    prefixes: BTreeSet<String>,
+    excluded: BTreeSet<String>,
+}
+
+impl EngineAssemblyPrefixes {
+    /// The prefixes, lowercased; an empty prefix is dropped, since it
+    /// would match every name. No exclusions; see [`Self::excluding`].
+    #[must_use]
+    pub fn new(prefixes: impl IntoIterator<Item = String>) -> Self {
+        Self {
+            prefixes: prefixes
+                .into_iter()
+                .map(|prefix| prefix.to_lowercase())
+                .filter(|prefix| !prefix.is_empty())
+                .collect(),
+            excluded: BTreeSet::new(),
+        }
+    }
+
+    /// Adds exact assembly names (lowercased) the prefixes must never match.
+    #[must_use]
+    pub fn excluding(mut self, names: impl IntoIterator<Item = String>) -> Self {
+        self.excluded
+            .extend(names.into_iter().map(|name| name.to_lowercase()));
+        self
+    }
+
+    /// Whether the (already lowercased) assembly `name` is not excluded and
+    /// starts with any prefix.
+    #[must_use]
+    pub fn matches(&self, name: &str) -> bool {
+        !self.excluded.contains(name)
+            && self
+                .prefixes
+                .iter()
+                .any(|prefix| name.starts_with(prefix.as_str()))
+    }
+}
+
 /// Everything scanning produced, ready for the analysis layer.
 pub struct ScanOutput {
     pub scanned_mods: Vec<ScannedMod>,
@@ -218,11 +271,15 @@ pub struct ScanOutput {
     /// Active mods (per `ModsConfig.xml`) that have no directory on disk.
     pub missing_mods: Vec<ModId>,
     /// Lowercased assembly-name stems shipped in the game's own
-    /// `RimWorldWin64_Data/Managed/` folder. Core/DLC ship no
+    /// `RimWorldWin64_Data/Managed/` folder (the install root on a Waylith
+    /// layout, plus the exact names of its engine assembly redirects). Core/DLC ship no
     /// `Assemblies/` folder of their own, so their assembly names have to
     /// be seeded from the game install directly rather than discovered by
     /// scanning mod folders.
     pub vanilla_assembly_names: HashSet<String>,
+    /// Engine-provided assembly-name prefixes beyond the exact names in
+    /// [`Self::vanilla_assembly_names`]; see [`EngineAssemblyPrefixes`].
+    pub engine_assembly_prefixes: EngineAssemblyPrefixes,
     /// `Assembly-CSharp.dll`'s own type hierarchy (every `Verse`/
     /// `RimWorld`-namespaced class and its base type, where resolvable) —
     /// `analysis::inheritance`'s own source for the *vanilla* half of a
@@ -278,7 +335,8 @@ pub struct ScanOutput {
     pub discovered_mod_count: usize,
     /// Every `textures/...` container-path string found in the game's own
     /// `RimWorldWin64_Data/globalgamemanagers` (see
-    /// `extract::asset_index::resource_container_paths`), with the
+    /// `extract::asset_index::resource_container_paths`; on a Waylith layout
+    /// the entries of `<game>/Assets.zip` instead), with the
     /// `textures/` prefix stripped and lowercased — Core's own built-in
     /// resource textures, which ship no loose file at all and so are
     /// otherwise invisible to this analyzer.

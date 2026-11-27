@@ -17,10 +17,12 @@ pub mod pe_metadata;
 pub(crate) mod ref_sites;
 pub mod rich_text;
 pub mod rimmerge_marker;
+pub mod runtime_config;
 pub mod side_loaded_assemblies;
 pub mod sounds;
 pub mod textures;
 pub(crate) mod xml_util;
+pub mod zip_directory;
 
 /// The raw-nesting guard every XML reader runs before `roxmltree` parses,
 /// shared with `rim-io`'s own `roxmltree` call.

@@ -244,7 +244,7 @@ pub(crate) fn save_late_rule_and_decision(
 /// failing instead when a failure was scripted. The seam every
 /// `get_game_launch_status`/`launch_game` test swaps
 /// [`crate::state::AppState::game_launcher`] for, so a default-gate test
-/// never opens `steam://` or spawns `RimWorldWin64.exe`.
+/// never opens `steam://` or spawns the game executable.
 #[derive(Debug)]
 pub(crate) struct RecordingGameLauncher {
     route: Result<LaunchRoute, LaunchUnavailable>,
@@ -273,6 +273,7 @@ impl RecordingGameLauncher {
         let install = std::path::Path::new("recording-launcher-install");
         Self::with_route(Ok(LaunchRoute::Executable(GameExecutable::of_install(
             install,
+            rim_analyzer::domain::GameLayout::Unity,
         ))))
     }
 

@@ -1,0 +1,85 @@
+=== Waylith log ===
+Started:   2026-01-02 10:00:00.000 +00:00
+Version:   1.7.0.1
+OS:        Example OS 1.0 (X64)
+Runtime:   .NET 10.0.0-example
+Process:   pid 1234
+Log file:  C:\ExampleData\Example Game\Logs\Player.log
+Command:   C:\Game\RimWorld\RimWorld.dll -popupwindow
+
+2026-01-02 10:00:00.100  INFO [GraphicsExample] Selected device 'Example GPU 9000' (driver 1.2.3).
+    at Waylith.Graphics.GraphicsDevice.SelectQueueFamilies(Instance instance, Int32 index) [0x311]
+    at Waylith.EngineApplication.OnMainSurfaceCreated(IWindow window, SurfaceHandle surfaceHandle) [0xA8]
+    at RimWorldWaylith.Program.Main(String[] args) [0x265]
+2026-01-02 10:00:00.200  WARN [GraphicsExample] [General] [Loader Message] Removing duplicate layer EXAMPLE_LAYER
+Objects: 1
+    [0] ExampleInstance 0x2918e53d160
+    at Waylith.Graphics.GraphicsDevice+<>c.<.cctor>b__131_1(String s) [0x0]
+    at Brutal.VulkanApi.Instance..ctor(CreateInfo createInfo) [0x2DA]
+    at RimWorldWaylith.Program.Main(String[] args) [0x265]
+2026-01-02 10:00:01.000  INFO [Verse] Command line arguments: -popupwindow
+    at Verse.Log.Message(String text) [0x19]
+    at Verse.Root.CheckGlobalInit() [0x17]
+    at .InvokeMessageMethod_Verse.Root_Entry.Start(Closure , Object ) [0xFFFFFFFF]
+    at Waylith.UnityCompat.UnityWorld.InvokeMessage(UnityComponentState component, UnityMessageType messageType) [0x2A]
+    at Waylith.Windowing.Core.PlatformBase.Iterate() [0x58] in C:\src\Engine\PlatformBase.Loop.cs:194
+    at RimWorldWaylith.Program.Main(String[] args) [0x265]
+2026-01-02 10:00:01.010  INFO [Verse] RimWorld 1.7.5014 rev1195
+    at Verse.Log.Message(String text) [0x19]
+    at RimWorld.VersionControl.LogVersionNumber() [0x0]
+    at RimWorldWaylith.Program.Main(String[] args) [0x265]
+2026-01-02 10:00:02.000  WARN [Verse] Mod Fixture Addon dependency (example.framework) needs to have <downloadUrl> and/or <steamWorkshopUrl> specified.
+    at Verse.Log.Warning(String text) [0x19]
+    at Verse.ModMetaData.Init() [0x116]
+    at System.Threading.Thread+StartHelper.Callback(Object state) [0x0]
+2026-01-02 10:00:02.010  WARN [Verse] Mod Example Retexture Two dependency (example.framework) needs to have <downloadUrl> and/or <steamWorkshopUrl> specified.
+    at Verse.Log.Warning(String text) [0x19]
+    at Verse.ModMetaData.Init() [0x116]
+2026-01-02 10:00:03.000 ERROR [Verse] Tried loading mod with the same packageId multiple times: example.duplicate. Ignoring the duplicates.
+C:\Game\RimWorld\Mods\example-duplicate-a
+C:\Game\RimWorld\Mods\example-duplicate-b
+    at Verse.Log.Error(String text) [0x1C]
+    at Verse.ModLister.TryAddMod(ModMetaData mod) [0xBC]
+2026-01-02 10:00:04.000  INFO [Verse] Initializing new game with mods:
+  - ludeon.rimworld
+  - example.framework
+  - example.biomes
+    at Verse.Log.Message(String text) [0x19]
+    at Verse.PlayDataLoader.DoPlayLoad() [0x2B]
+2026-01-02 10:00:05.000  INFO [Verse] EarlyLoader: Game processing took 2252.5076ms
+    at Verse.Log.Message(String text) [0x19]
+2026-01-02 10:00:05.500  INFO [UnityDebug] [Example Climate Tuning] debug note from a Debug.Log call
+    at Waylith.Logging.UnityDebug.Log(Object message) [0x10]
+    at ExampleClimate.Mod..ctor(ModContentPack content) [0x22]
+2026-01-02 10:00:06.000 ERROR [Verse] [Example Biomes] Patch operation Verse.PatchOperationAdd(Defs/ThingDef[defName="EX_MarshFern"]/plant/sowTags) failed
+file: C:\Game\Workshop\294100\3000000001\1.6\Mods\ExampleBiomesPlants\Patches\Biomes_ExamplePlants.xml
+    at Verse.Log.Error(String text) [0x1C]
+    at Verse.PatchOperation.Apply(XmlDocument xml) [0x4A]
+    at Verse.ModContentPack.LoadPatches() [0x1F]
+2026-01-02 10:00:06.010 ERROR [Verse] [Example Climate Tuning] Patch operation Verse.PatchOperationFindMod(Example Temperature Expanded) failed
+file: C:\Game\Workshop\294100\3000000002\Extra Mods\Example Hygiene\Patches\example hygiene patch.xml
+    at Verse.Log.Error(String text) [0x1C]
+    at Verse.PatchOperation.Apply(XmlDocument xml) [0x4A]
+2026-01-02 10:00:06.020  WARN [Verse] [Example Climate Tuning - Start of stack trace]
+Verse.PatchOperationRemove(xpath="Defs/ResearchProjectDef[defName="ExampleSplitCooler"]"): Failed to find a node with the given xpath
+Verse.PatchOperationSequence: Error in the operation at position=1
+Verse.PatchOperationFindMod(Example Temperature Expanded): Error in <match>
+[End of stack trace]
+Source file: C:\Game\Workshop\294100\3000000002\Extra Mods\Example Hygiene\Patches\example hygiene patch.xml
+    at Verse.Log.Warning(String text) [0x19]
+    at ExampleClimate.PatchReporter.Report(PatchOperation operation) [0x5C]
+2026-01-02 10:00:07.000 ERROR [Verse] Could not resolve cross-reference to Verse.ThingDef named ExampleMissingThing (wanter=ExampleDef.ingredient)
+    at Verse.Log.Error(String text) [0x1C]
+    at Verse.CrossRefLoader.ResolveAllWantedCrossReferences(FailMode failReason) [0x2F]
+2026-01-02 10:00:08.000 ERROR [Verse] Exception ticking Example_Pawn1: System.NullReferenceException: Object reference not set to an instance of an object.
+   at ExampleBiomes.CompGrow.CompTick() in C:\src\ExampleBiomes\CompGrow.cs:line 18
+   at Verse.ThingWithComps.Tick()
+   at Verse.TickList.Tick()
+    at Verse.Log.Error(String text) [0x1C]
+    at Verse.TickList.Tick() [0x88]
+    at Verse.TickManager.DoSingleTick() [0xA1]
+2026-01-02 10:00:08.500  INFO [Verse] Loading game from file Example Save with mods:
+  - ludeon.rimworld
+  - example.biomes
+    at Verse.Log.Message(String text) [0x19]
+2026-01-02 10:00:20.000  INFO Log closed.

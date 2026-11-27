@@ -25,7 +25,7 @@ pub struct ExportArgs {
     /// Also copy the rendered folder into `<game>/Mods` and activate it.
     #[arg(long)]
     install: bool,
-    /// Install even if `RimWorldWin64.exe` looks like it's running.
+    /// Install even if RimWorld looks like it's running.
     #[arg(long)]
     force: bool,
 }
@@ -44,7 +44,7 @@ fn run_export_with_probe(args: &ExportArgs, probe: &dyn GameProcessProbe) -> any
 
     if args.install && !args.force && probe.is_running() {
         bail!(
-            "RimWorldWin64.exe is running; close the game or retry with --force (installing an assignment writes ModsConfig.xml, and RimWorld overwrites it on exit)"
+            "RimWorld is running; close the game or retry with --force (installing an assignment writes ModsConfig.xml, and RimWorld overwrites it on exit)"
         );
     }
 

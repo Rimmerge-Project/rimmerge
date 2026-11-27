@@ -3,7 +3,10 @@
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 
-use crate::domain::{Constraint, ConstraintStatus, Edge, EdgeKind, LoadOrder, ModId, ScannedMod};
+use crate::domain::{
+    Constraint, ConstraintStatus, Edge, EdgeKind, EngineAssemblyPrefixes, LoadOrder, ModId,
+    ScannedMod,
+};
 
 use crate::analysis::indices::Indices;
 
@@ -146,9 +149,16 @@ fn designated_provider<'a>(
     }
 }
 
+/// Whether a referenced assembly `name` (lowercased) is the engine's, the
+/// game's own, or a widely shared library, so it is never cross-mod
+/// ordering evidence. `engine_prefixes` are a Waylith install's `*`
+/// redirect patterns (`Unity.*`) minus its empty-target exclusions
+/// (`Unity.Newtonsoft.Json`, which binds normally and must be shipped); its
+/// exact redirect names arrive inside `vanilla_names`.
 pub(super) fn is_ignored_assembly(
     name: &str,
     vanilla_names: &HashSet<String>,
+    engine_prefixes: &EngineAssemblyPrefixes,
     assembly_owners: &BTreeMap<String, Vec<ModId>>,
 ) -> bool {
     ENGINE_ASSEMBLY_NAMES.contains(&name)
@@ -156,6 +166,7 @@ pub(super) fn is_ignored_assembly(
         || name == "system"
         || name.starts_with("system.")
         || vanilla_names.contains(name)
+        || engine_prefixes.matches(name)
         || is_shared_library(name, assembly_owners)
 }
 
@@ -197,6 +208,7 @@ pub fn assembly_ref_edges(scanned: &[ScannedMod], indices: &Indices) -> Vec<Edge
                 || is_ignored_assembly(
                     reference,
                     &indices.vanilla_assembly_names,
+                    &indices.engine_assembly_prefixes,
                     &indices.assembly_owners,
                 )
             {
@@ -251,6 +263,7 @@ pub fn assembly_ref_constraints(
                 || is_ignored_assembly(
                     reference,
                     &indices.vanilla_assembly_names,
+                    &indices.engine_assembly_prefixes,
                     &indices.assembly_owners,
                 )
             {
@@ -321,7 +334,21 @@ pub fn assembly_ref_constraints(
 /// — a name shipped by many mods simply never matches that pattern in
 /// the first place, with nothing extra needed to catch it — so no
 /// mod-specific name belongs here.
-pub const ENGINE_NAMESPACE_ROOTS: &[&str] = &["verse", "rimworld", "unityengine", "system"];
+///
+/// RimWorld 1.7's own engine adds `waylith`, `rimworldwaylith` and `brutal`
+/// (its windowing, bootstrap and Vulkan layers): a log's stack frame names
+/// them, and no mod's assembly owns them. `unitystubs` is the 1.7 engine's
+/// stand-in for the Unity assemblies (`UnityStubs.*` frames).
+pub const ENGINE_NAMESPACE_ROOTS: &[&str] = &[
+    "verse",
+    "rimworld",
+    "unityengine",
+    "system",
+    "waylith",
+    "rimworldwaylith",
+    "brutal",
+    "unitystubs",
+];
 
 /// The active mod owning `type_name`'s namespace, by shipped DLL name: the
 /// longest dot-separated prefix of `type_name` that exactly matches
@@ -482,6 +509,7 @@ pub fn assembly_version_precedence_edges(indices: &Indices) -> Vec<Edge> {
         if is_ignored_assembly(
             name,
             &indices.vanilla_assembly_names,
+            &indices.engine_assembly_prefixes,
             &indices.assembly_owners,
         ) {
             continue;

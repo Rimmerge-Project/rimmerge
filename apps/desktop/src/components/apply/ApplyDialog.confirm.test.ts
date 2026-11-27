@@ -46,7 +46,7 @@ function install(
       const request = (payload as { request: ApplyRequestDto }).request;
       calls.push(request);
       if (runningUntilForced && !request.force) {
-        throw { code: "rimworld_running", message: "RimWorldWin64.exe is running" };
+        throw { code: "rimworld_running", message: "RimWorld is running" };
       }
       return REPORT;
     },

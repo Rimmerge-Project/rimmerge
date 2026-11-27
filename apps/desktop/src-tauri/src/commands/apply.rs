@@ -19,7 +19,7 @@ use crate::state::{AppState, with_session};
 /// Persists decisions and rules, and — when `request.write_mods_config`
 /// is true — writes the selected order to `ModsConfig.xml` with a
 /// timestamped backup. Refuses to write `ModsConfig.xml` while
-/// `RimWorldWin64.exe` looks like it's running (per
+/// RimWorld looks like it's running (per
 /// [`crate::state::AppState::game_process_probe`]), unless
 /// `request.force` is set (RimWorld overwrites the file on exit, so a
 /// concurrent write is likely to be lost or to corrupt the running game's

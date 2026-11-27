@@ -335,6 +335,48 @@ mod tests {
         );
     }
 
+    /// A RimWorld 1.7 `Player.log` (timestamped entries, an explicit level,
+    /// frames after each message, `Log closed.` at the end) reads through
+    /// the real reader as a `Player.log` that exited cleanly.
+    #[tokio::test]
+    async fn a_waylith_player_log_is_labelled_a_player_log_with_its_end_state() {
+        let (temp_dir, state) = state_with_session();
+        let log = concat!(
+            "=== Waylith log ===\n",
+            "Started:   2026-01-02 10:00:00.000 +00:00\n",
+            "\n",
+            "2026-01-02 10:00:01.000  INFO [Verse] RimWorld 1.7.5014 rev1195\n",
+            "    at Verse.Log.Message(String text) [0x19]\n",
+            "2026-01-02 10:00:02.000  WARN [Verse] Mod Example dependency (example.framework) needs to have <downloadUrl> and/or <steamWorkshopUrl> specified.\n",
+            "    at Verse.Log.Warning(String text) [0x19]\n",
+            "2026-01-02 10:00:20.000  INFO Log closed.\n",
+        );
+        let path = temp_dir.path().join("Player.log");
+        std::fs::write(&path, log).expect("write the log");
+
+        let dto = import_game_log_with_reader(
+            &state,
+            UserPath::parse(&path.to_string_lossy()).expect("drive path"),
+            FileGameLogReader::new(),
+        )
+        .await
+        .expect("the log is accepted");
+
+        assert!(
+            matches!(
+                dto.coverage,
+                LogCoverageDto::PlayerLog {
+                    passes: 1,
+                    end_state: EndStateDto::CleanExit,
+                    ..
+                }
+            ),
+            "{:?}",
+            dto.coverage
+        );
+        assert!(dto.logging_gaps.is_empty());
+    }
+
     #[tokio::test]
     async fn a_player_log_with_logging_gaps_reports_them_and_the_lower_bound() {
         let (temp_dir, state) = state_with_session();

@@ -1,0 +1,63 @@
+Command line arguments: -popupwindow
+    at Verse.Log.Message(String text) [0x19]
+    at Verse.Root.Start() [0xF]
+    at Verse.Root_Entry.Start() [0x0]
+    at .InvokeMessageMethod_Verse.Root_Entry.Start(Closure , Object ) [0xFFFFFFFF]
+    at Waylith.UnityCompat.UnityWorld.InvokeMessage(UnityComponentState component, UnityMessageType messageType) [0x2A]
+    at Waylith.Windowing.Core.PlatformBase.DeliverUpdate() [0x6] in C:\src\Engine\Loop.cs:143
+    at RimWorldWaylith.Program.Main(String[] args) [0x265]
+
+RimWorld 1.7.5014 rev1195
+    at Verse.Log.Message(String text) [0x19]
+    at RimWorld.VersionControl.LogVersionNumber() [0x0]
+    at Verse.Root.Start() [0xF]
+    at Verse.Root_Entry.Start() [0x0]
+    at .InvokeMessageMethod_Verse.Root_Entry.Start(Closure , Object ) [0xFFFFFFFF]
+    at Waylith.UnityCompat.UnityWorld.InvokeMessage(UnityComponentState component, UnityMessageType messageType) [0x2A]
+    at Waylith.Windowing.Core.PlatformBase.DeliverUpdate() [0x6] in C:\src\Engine\Loop.cs:143
+    at RimWorldWaylith.Program.Main(String[] args) [0x265]
+
+Mod Example Fixture Addon dependency (example.framework) needs to have <downloadUrl> and/or <steamWorkshopUrl> specified.
+    at Verse.Log.Warning(String text) [0x19]
+    at Verse.ModMetaData+ModMetaDataInternal.ValidateDependencies(Boolean logIssues) [0x107]
+    at Verse.Root.Start() [0xF]
+    at Verse.Root_Entry.Start() [0x0]
+    at .InvokeMessageMethod_Verse.Root_Entry.Start(Closure , Object ) [0xFFFFFFFF]
+    at Waylith.UnityCompat.UnityWorld.InvokeMessage(UnityComponentState component, UnityMessageType messageType) [0x2A]
+    at Waylith.Windowing.Core.PlatformBase.DeliverUpdate() [0x6] in C:\src\Engine\Loop.cs:143
+    at RimWorldWaylith.Program.Main(String[] args) [0x265]
+
+Tried loading mod with the same packageId multiple times: example.duplicate. Ignoring the duplicates.
+C:\Game\Mods\example-duplicate-main
+C:\Game\Mods\example-duplicate-copy
+    at Verse.Log.Error(String text) [0x19]
+    at Verse.ModLister.RebuildModList() [0x131]
+    at Verse.Root.Start() [0xF]
+    at Verse.Root_Entry.Start() [0x0]
+    at .InvokeMessageMethod_Verse.Root_Entry.Start(Closure , Object ) [0xFFFFFFFF]
+    at Waylith.UnityCompat.UnityWorld.InvokeMessage(UnityComponentState component, UnityMessageType messageType) [0x2A]
+    at Waylith.Windowing.Core.PlatformBase.DeliverUpdate() [0x6] in C:\src\Engine\Loop.cs:143
+    at RimWorldWaylith.Program.Main(String[] args) [0x265]
+
+Exception ticking Example_Pawn1: System.NullReferenceException: Object reference not set to an instance of an object.
+   at ExampleBiomes.CompGrow.CompTick() in C:\src\ExampleBiomes\CompGrow.cs:line 18
+   at Verse.TickList.Tick()
+    at Verse.Log.Error(String text) [0x19]
+    at Verse.TickList.Tick() [0x88]
+    at Verse.Root.Start() [0xF]
+    at Verse.Root_Entry.Start() [0x0]
+    at .InvokeMessageMethod_Verse.Root_Entry.Start(Closure , Object ) [0xFFFFFFFF]
+    at Waylith.UnityCompat.UnityWorld.InvokeMessage(UnityComponentState component, UnityMessageType messageType) [0x2A]
+    at Waylith.Windowing.Core.PlatformBase.DeliverUpdate() [0x6] in C:\src\Engine\Loop.cs:143
+    at RimWorldWaylith.Program.Main(String[] args) [0x265]
+
+[Example Climate Tuning] loaded 12 patches
+    at Verse.Log.Message(String text) [0x19]
+    at ExampleClimate.Patches.Report() [0x5C] in C:\src\Patches.cs:30
+    at Verse.Root.Start() [0xF]
+    at Verse.Root_Entry.Start() [0x0]
+    at .InvokeMessageMethod_Verse.Root_Entry.Start(Closure , Object ) [0xFFFFFFFF]
+    at Waylith.UnityCompat.UnityWorld.InvokeMessage(UnityComponentState component, UnityMessageType messageType) [0x2A]
+    at Waylith.Windowing.Core.PlatformBase.DeliverUpdate() [0x6] in C:\src\Engine\Loop.cs:143
+    at RimWorldWaylith.Program.Main(String[] args) [0x265]
+

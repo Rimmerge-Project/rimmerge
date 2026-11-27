@@ -17,9 +17,11 @@
 //! (searched recursively; the same command runs its test). Unset prints a
 //! `skipping:` line; set to something that is not a directory (or a directory
 //! with no `.log`/`.txt` file) panics; set to a directory, every file under it
-//! is parsed under both framings and must conserve its lines and leak nothing,
-//! and every console copy must hold at most 1,000 entries, equal to its
-//! trace-start count.
+//! is parsed under every framing and must conserve its lines and leak nothing,
+//! and every Unity console copy must hold at most 1,000 entries, equal to its
+//! trace-start count. A RimWorld 1.7 (Waylith) `Player.log` among them is
+//! checked against its own oracle: its entry count is the count of its
+//! timestamped lines, plus its header block.
 //!
 //! No other documented tier command covers this file:
 //! `crates/rim-io/tests/real_network_databases.rs` is also `#[ignore]`d and
@@ -29,7 +31,7 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use rim_io::game_log::{FileGameLogReader, Framing, parse_as};
+use rim_io::game_log::{Dialect, FileGameLogReader, Framing, detect_framing, parse_as};
 use rim_session::ports::{
     ClassTally, ConsoleFill, EntryClass, GameLogReader, KindChoice, LogCoverage, LogKind,
     ParsedGameLog,
@@ -148,6 +150,18 @@ fn real_player_log_parses_and_matches_its_pinned_counts() {
         "parsed {} lines in {:.2?}",
         log.read_stats.lines_read,
         started.elapsed()
+    );
+
+    // The engine is detected by content and agrees with the independent
+    // oracle (the single-file test names one real log, so it can say which).
+    let content = String::from_utf8_lossy(
+        &std::fs::read(&path).unwrap_or_else(|error| panic!("real log must be readable: {error}")),
+    )
+    .into_owned();
+    assert_eq!(
+        detect_framing(&content).dialect(),
+        oracle_dialect(&content),
+        "detected dialect"
     );
 
     // Parsing is pure and must be deterministic on the same input — this is
@@ -300,15 +314,110 @@ fn count_copy_trace_starts(content: &str) -> u64 {
 /// Unity prints this as the very first line of every `Player.log`.
 const PLAYER_LOG_FIRST_LINE_PREFIX: &str = "Mono path[0] = ";
 
+/// The 1.7 engine's `Player.log` starts with `=== <product> log ===`.
+fn is_waylith_first_line(first_line: &str) -> bool {
+    let line = first_line.trim_start_matches('\u{feff}').trim();
+    line.starts_with("=== ") && line.ends_with(" log ===")
+}
+
+/// A line of the 1.7 `Player.log` that opens an entry: `yyyy-MM-dd HH:mm:ss.fff `
+/// at the start, checked by position and digits alone.
+fn is_waylith_entry_line(line: &str) -> bool {
+    let bytes = line.as_bytes();
+    bytes.len() >= 24
+        && bytes[..23]
+            .iter()
+            .enumerate()
+            .all(|(index, &byte)| match index {
+                4 | 7 => byte == b'-',
+                10 => byte == b' ',
+                13 | 16 => byte == b':',
+                19 => byte == b'.',
+                _ => byte.is_ascii_digit(),
+            })
+        && bytes[23] == b' '
+}
+
+fn count_waylith_entry_lines(content: &str) -> u64 {
+    content
+        .lines()
+        .filter(|line| is_waylith_entry_line(line))
+        .count() as u64
+}
+
+/// A real 1.7 console copy has no timestamp and no header block; each of its
+/// entries is a message followed by `Player.log`-shaped frames, then one blank
+/// line. In a vanilla run the first frame is the logging call
+/// (`    at Verse.Log.Warning(String text) [0x19]`), but in a modded game it can
+/// be absent (0 of 1,000 entries in a 1,021-mod copy), so the oracle decides by
+/// the frame shape alone: a file is a console copy when it has a four-space
+/// `at ... [0x` line and no timestamped line, no header block and no Unity copy
+/// trace start (a Unity file never has the frame; a 1.7 `Player.log` holds the
+/// frames but always has timestamps). A Unity `Player.log` first line
+/// (`Mono path[0] = `, the certain Unity signal: no 1.7 file starts with it)
+/// vetoes the answer, whatever frame-shaped lines the file holds. Written here
+/// on purpose, not shared with the product's detector.
+fn is_waylith_console_copy(content: &str) -> bool {
+    let first_line = content.lines().next().unwrap_or_default();
+    if first_line
+        .trim_start_matches('\u{feff}')
+        .starts_with(PLAYER_LOG_FIRST_LINE_PREFIX)
+    {
+        return false;
+    }
+    let has_four_space_frame = content
+        .lines()
+        .any(|line| line.starts_with("    at ") && line.contains(" [0x"));
+    has_four_space_frame
+        && count_waylith_entry_lines(content) == 0
+        && !is_waylith_first_line(content.lines().next().unwrap_or_default())
+        && count_copy_trace_starts(content) == 0
+}
+
+/// The entries of a 1.7 console copy: its trace starts. Every entry has
+/// exactly one trace, so the entries are the runs of consecutive
+/// `    at ... [0x..]` frame lines (a run starts where the previous line is not
+/// one) plus the `No stack trace.` lines (a stackless entry). Blank lines are
+/// not counted: a real message can contain one.
+fn count_waylith_console_trace_starts(content: &str) -> u64 {
+    let is_frame = |line: &str| line.starts_with("    at ") && line.contains(" [0x");
+    let mut starts = 0;
+    let mut previous_was_frame = false;
+    for line in content.lines() {
+        let line_is_frame = is_frame(line);
+        if line_is_frame && !previous_was_frame {
+            starts += 1;
+        }
+        if line.trim() == "No stack trace." {
+            starts += 1;
+        }
+        previous_was_frame = line_is_frame;
+    }
+    starts
+}
+
 /// The kind a file must be detected as, from evidence that does not go
 /// through the product's detection rule: a copy trace-start line anywhere
 /// in the file (0 of 29 real `Player.log`s hold one, all 137 real snapshots
 /// do) means a console snapshot, and a first line starting with Unity's
-/// `Mono path[0] = ` means a `Player.log`. `None` for a file with neither
-/// (a hand-written note): nothing independent says what it is.
+/// `Mono path[0] = ` means a `Player.log`; a first line `=== <product> log ===`
+/// means a 1.7 `Player.log`, and a four-space `[0x` frame with no timestamp anywhere
+/// a 1.7 console copy (see [`is_waylith_console_copy`]). `None` for a file with none of these (a hand-written
+/// note): nothing independent says what it is.
 fn oracle_kind(content: &str) -> Option<LogKind> {
-    let is_snapshot = count_copy_trace_starts(content) > 0;
     let first_line = content.lines().next().unwrap_or_default();
+    if is_waylith_first_line(first_line) {
+        assert_eq!(
+            count_copy_trace_starts(content),
+            0,
+            "a 1.7 Player.log holds no Unity copy trace start"
+        );
+        return Some(LogKind::PlayerLog);
+    }
+    if is_waylith_console_copy(content) {
+        return Some(LogKind::ConsoleSnapshot);
+    }
+    let is_snapshot = count_copy_trace_starts(content) > 0;
     let is_player_log = first_line
         .trim_start_matches('\u{feff}')
         .starts_with(PLAYER_LOG_FIRST_LINE_PREFIX);
@@ -320,6 +429,24 @@ fn oracle_kind(content: &str) -> Option<LogKind> {
     }
 }
 
+/// The engine a file must be detected as, from the same product-independent
+/// evidence as [`oracle_kind`]: a first non-blank line that is the 1.7 header
+/// block or a timestamped entry line, or a 1.7 console copy (see
+/// [`is_waylith_console_copy`]), means Waylith; everything else is Unity.
+fn oracle_dialect(content: &str) -> Dialect {
+    let first_line = content
+        .lines()
+        .find(|line| !line.trim_start_matches('\u{feff}').trim().is_empty())
+        .unwrap_or_default();
+    let is_waylith_start = is_waylith_first_line(first_line)
+        || is_waylith_entry_line(first_line.trim_start_matches('\u{feff}'));
+    if is_waylith_start || is_waylith_console_copy(content) {
+        Dialect::Waylith
+    } else {
+        Dialect::Unity
+    }
+}
+
 /// The console cap: the engine's `LogMessageQueue.maxMessages`.
 const CONSOLE_CAP: u64 = 1_000;
 
@@ -327,10 +454,22 @@ const CONSOLE_CAP: u64 = 1_000;
 /// ReceivedThreadedInternal`): one per logging gap.
 const LOGGING_STOPPED_LINE: &str = "Reached max messages limit. Stopping logging to avoid spam.";
 
+/// The 1.7 writer's own warning when its pre-start backlog overflowed.
+const BACKLOG_OVERFLOW_TAIL: &str = "earlier log line(s) were dropped (pre-init backlog overflow).";
+
+/// One gap per stop message (the 1.7 `Player.log` prefixes it with a
+/// timestamp, level and category, so the line only has to end with it), plus
+/// one per backlog-overflow warning of the 1.7 writer.
 fn count_stop_lines(content: &str) -> u64 {
     content
         .lines()
-        .filter(|line| line.trim() == LOGGING_STOPPED_LINE)
+        .filter(|line| {
+            let trimmed = line.trim();
+            trimmed == LOGGING_STOPPED_LINE
+                || (is_waylith_entry_line(line)
+                    && (trimmed.ends_with(LOGGING_STOPPED_LINE)
+                        || trimmed.ends_with(BACKLOG_OVERFLOW_TAIL)))
+        })
         .count() as u64
 }
 
@@ -409,6 +548,7 @@ fn every_real_log_under_the_directory_conserves_its_lines_and_leaks_nothing() {
     let mut head_truncated = 0usize;
     let mut max_snapshot_entries = 0u64;
     let mut checked = 0usize;
+    let mut waylith_files = 0usize;
     let mut leaks: Vec<String> = Vec::new();
     for path in files {
         let bytes = std::fs::read(&path)
@@ -430,11 +570,43 @@ fn every_real_log_under_the_directory_conserves_its_lines_and_leaks_nothing() {
             // says what kind it is.
             None => undecided.push(label.clone()),
         }
-        let native = Framing::from(detected);
-        let foreign = match native {
-            Framing::PlayerLog => Framing::ConsoleCopy,
-            Framing::ConsoleCopy => Framing::PlayerLog,
-        };
+        let native = detect_framing(&content);
+        assert_eq!(
+            native.kind(),
+            detected,
+            "{label}: the detected framing's kind"
+        );
+        assert_eq!(
+            native.dialect(),
+            oracle_dialect(&content),
+            "{label}: detected dialect"
+        );
+        waylith_files += usize::from(native.dialect() == Dialect::Waylith);
+        if native == Framing::WaylithLog {
+            let header_blocks = u64::from(is_waylith_first_line(
+                content.lines().next().unwrap_or_default(),
+            ));
+            assert_eq!(
+                log.totals().entries,
+                header_blocks + count_waylith_entry_lines(&content),
+                "{label}: a 1.7 Player.log's entries are its header block and its timestamped lines"
+            );
+        }
+        if native == Framing::WaylithConsole {
+            assert_eq!(
+                log.totals().entries,
+                count_waylith_console_trace_starts(&content),
+                "{label}: a 1.7 console copy's entries are its trace starts"
+            );
+        }
+        let foreign = [
+            Framing::PlayerLog,
+            Framing::ConsoleCopy,
+            Framing::WaylithLog,
+            Framing::WaylithConsole,
+        ]
+        .into_iter()
+        .filter(|framing| *framing != native);
         assert_eq!(
             log,
             parse_as(&content, &formats, native),
@@ -453,10 +625,12 @@ fn every_real_log_under_the_directory_conserves_its_lines_and_leaks_nothing() {
             parse_as(&content, &formats, native),
             "{label}: parsing twice must give an identical result"
         );
-        // The other framing reads the same lines as different entries (a whole
+        // The other framings read the same lines as different entries (a whole
         // Player.log becomes one giant console message), so only the line
         // accounting is framing-independent.
-        assert_conserved(&parse_as(&content, &formats, foreign), &label);
+        for other in foreign {
+            assert_conserved(&parse_as(&content, &formats, other), &label);
+        }
         print_file_summary(&label, &log);
         if let LogCoverage::ConsoleSnapshot(coverage) = &log.coverage {
             snapshots += 1;
@@ -493,8 +667,8 @@ fn every_real_log_under_the_directory_conserves_its_lines_and_leaks_nothing() {
     eprintln!(
         "checked {checked} files: {player_logs} Player.logs, {snapshots} console snapshots \
          (max {max_snapshot_entries} entries, {at_cap} at the cap, {head_truncated} head \
-         truncated); the independent oracle decided {oracle_decided}, {} undecided: \
-         {undecided:?}",
+         truncated), {waylith_files} of them 1.7 (Waylith); the independent oracle decided \
+         {oracle_decided}, {} undecided: {undecided:?}",
         undecided.len()
     );
     assert!(

@@ -153,6 +153,160 @@ gate block in the root `CLAUDE.md`.
   failures with stack-trace blocks.
   `parse(&str, &LogFormats) -> ParsedGameLog` is the pure
   `Player.log` parser — no filesystem, no `ModId`, no attribution.
+  **Two engines, one pipeline.** RimWorld 1.6 (Unity) and 1.7 (the Waylith
+  engine) write different `Player.log` and console-copy framings. `Framing`
+  has four variants (`PlayerLog`, `ConsoleCopy`, `WaylithLog`,
+  `WaylithConsole`; `kind()`, `dialect()`, `Framing::of(kind, Dialect)`) and
+  `detect_framing` decides it by content; **Unity files take exactly the old
+  paths** (the Waylith checks need evidence a Unity log never has, below).
+  `waylith.rs` holds everything 1.7-specific, `waylith_tests.rs` its tests and
+  `tests/fixtures/player_log_waylith_excerpt.log` and `console_waylith_excerpt.txt` hand-written excerpts (every
+  name invented). **Confirmed by a real 1.7.5014 log and the decompiled
+  writer** (`Waylith.Logging.FileLog`): the header block `=== <product> log ===`
+  (the product name is data, never matched) + `Key: value` lines + a blank line;
+  one entry per `yyyy-MM-dd HH:mm:ss.fff LEVEL[ [category]] message` line (LEVEL
+  is a 5-wide field: `TRACE`/`DEBUG`/` INFO`/` WARN`/`ERROR`/` CRIT`/5 spaces);
+  RimWorld's own `Log.*` entries carry `[Verse]` (a mod's `Debug.Log*` carries
+  `[UnityDebug]`, from the decompiled stub); a message may span lines (column 0
+  or indented); the stack the writer captured follows as `    at <method>
+  [0x<IL>]` lines (optionally ` in <file>:<line>`), for every level unless
+  `-DisableLogStackTraces`; the clean end is `<ts>  INFO Log closed.` with no
+  category. **Decompiled, not yet in a real log:** a crash is a `CRIT [Crash]`
+  entry whose message starts `=== CRASH ===` / `Crash report written to:
+  <path>`; the pre-start backlog overflow is an uncategorized warning `N
+  earlier log line(s) were dropped (pre-init backlog overflow).`.
+  **Confirmed by a real 1.7.5014 console copy**
+  (a maintainer's `.journal/logs/2026-11-26/console-1.7-nomods.txt`): each entry is its message
+  (continuation lines at column 0), then frames in the `Player.log` writer's own
+  shape (`    at Ns.Type.Method(args) [0xNN]`, optionally ` in <file>:<line>`, the
+  synthesized `.InvokeMessageMethod_...` and `[0xFFFFFFFF]` frames included), then
+  one blank line; no timestamp and no level field. In a vanilla run the first frame is the
+  logging call, `Verse.Log.Message|Warning|Error(String text)`, and that method is the
+  entry's level (`waylith::console_log_severity`, applied to the entry when its
+  first frame arrives, or when a head-truncated copy opens on it). That the first
+  frame is `Verse.Log.*` is **confirmed for RimWorld's own entries in a vanilla
+  run only**: in a modded game the log-call frame can be absent (**observed:
+  0 of 1,000 entries in a 1,021-mod copy**, whose traces open at the caller, e.g.
+  a mod's `..cctor()` or `RuntimeHelpers.RunClassConstructor`; a patch on
+  `Verse.Log` is the presumed cause), in which case segmentation is unaffected
+  (any four-space frame starts the trace) and the severity falls back to the
+  classifier's (no level is assumed). A stackless
+  message prints `No stack trace.` instead (`Verse.LogMessage.StackTrace`'s
+  answer for a null stack, confirmed by decompiling 1.7; e.g. under
+  `-DisableLogStackTraces`): in `WaylithConsole` it is a trace start (the
+  entry's trace) and gives no severity. Its detector is
+  the frame **shape**, never the log call: any four-space Waylith frame
+  (`is_frame`; `No stack trace.` beside one counts the same), and only
+  when **no timestamped entry header is anywhere in the peek window** (a 1.7
+  `Player.log` carries the same frames, and a console copy never has a
+  timestamp; frame plus header answers `WaylithLog` even with the banner in the
+  window), checked after Unity's trace start and the timestamped first
+  line and before the banner rule. A 1.6 `Player.log`'s certain first line,
+  `Mono path[0] = ` (BOM-tolerant), vetoes this console answer, so a 1.6 log
+  holding a four-space frame still falls to the banner rule; without that
+  first line, 1.6 immunity rests on Unity's two-space frame indent and the
+  trailing space after `:0 ` (pinned in `detect_tests`). A bare `No stack trace.` (no Waylith frame, no
+  Unity trace start) stays a Unity console snapshot, the reading that
+  under-claims. Segmentation (`Framing::WaylithConsole`, the
+  Unity copy's text, trace, blank-line machine): a Waylith frame starts the
+  trace (`Rule::ConsoleTraceStart`, then `ConsoleTrace`), a blank line before
+  the trace stays message text, a blank line after it ends the entry; the head
+  is classified like Unity's (the whole line), and attribution reads the frames
+  as in a Waylith `Player.log`. A three-space frame in an exception's text is
+  message text. A 1.7 `Player.log` is decided by its **first non-blank
+  line**: the header block decides at once, a timestamped entry line decides
+  unless a Unity snapshot signal (which a 1.7 log never holds) appears
+  anywhere in the peek window. An excerpt that starts mid-entry (on a frame or
+  a body line) is found by a last-resort rule: a timestamped entry header
+  anywhere in the window, tried only after the Unity snapshot signal, the
+  console signal and the banner all failed, so a Unity file reaches it only if
+  it holds none of them (the real-log directory tier, with its independent
+  dialect oracle, is the evidence it never fires on a real Unity file). A
+  leading U+FEFF on the first line is ignored by detection and stripped once
+  by the Waylith parse path. Segmentation (`Segmenter::push_waylith`): a timestamped line
+  always opens an entry; every other line continues it (a blank line too,
+  except the header block's, which separates); a line is a frame only by its
+  shape (`WAYLITH_FRAME_PATTERN`: four spaces, `at`, the bracketed IL offset),
+  never by indentation, so `    [0] ...` body lines stay body. An exception
+  text's own three-space `   at Ns.Type.Method(...)` frames are **Mono-shaped
+  frames** (`Rule::MonoFrame`, read by the shared frame rules and attributed
+  like a Unity log's), never Waylith frames. The frame shape is tested **before** the block
+  contexts, so an unterminated mod block cannot swallow the frames. The
+  head the classifier sees is the **message** (after timestamp, level and
+  category), so every body-level recognizer, record extractor, timer tap and
+  def-cache tap works unchanged; the explicit level replaces the arm's
+  severity; a message in an engine category (a denylist: anything but
+  `Verse`/`UnityDebug`, so a future engine category is never mod evidence)
+  that no arm recognizes, or that only matches a mod convention (`[Tag] ...`
+  ModMessage, a duration Timer, a def-cache prefix: `[Vulkan] [General] ...`,
+  `GpuProbe: completed in 84 ms`), is `EngineInfo(UnityRuntime)` (engine
+  chatter), and the
+  writer's own markers are `SessionMarker`s read by `coverage.rs`
+  (`Log closed.` = clean exit, `=== CRASH ===` = crash with its report path,
+  the backlog warning = a gap that opens and closes on its own line).
+  Frames attribute through the same outer-type rules: `ENGINE_NAMESPACE_ROOTS`
+  gained `Waylith`, `Brutal` and `RimWorldWaylith` (and the analyzer's own list
+  the lowercase three), then `Microsoft` and `UnityStubs` (`unitystubs` in the
+  analyzer; the analyzer's list lacks `microsoft` on purpose: a mod that ships
+  `Microsoft.*.dll` really owns that namespace for ownership, while a frame
+  of that root is never worth blaming here, so rim-io's list is a superset,
+  enforced by `every_analyzer_engine_root_is_an_engine_root_here_too`), and a
+  type with an empty first segment (the engine's synthesized
+  `.InvokeMessageMethod_...` frames) is the engine's. **Harmony's replacement
+  frames on 1.7** print as `MonoMod.Utils.DynamicMethodDefinition.Ns.Type.Method_PatchN`
+  (confirmed in a real log, in the three-space exception trace and in the four-space
+  log-call frames alike); only the `.InvokeMessageMethod_...` shape has an empty
+  first segment. Both are engine, the first through the `MonoMod` root, so a mod
+  frame after them is the one blamed (pinned by a test), like Unity's
+  `(wrapper dynamic-method)` frames.
+  **Engine exception wrappers with no leading exception type** are
+  `RuntimeException` arms and key wrappers (`patterns.rs`):
+  `Exception getting <type, possibly empty> at <path>: <ex>`
+  (`GraphicDatabase.GetInner`, the path never enters the key) and `Could not
+  execute post-long-event action. Exception: <ex>` (`LongEventHandler`, also in
+  1.6 logs), both confirmed in the decompiled 1.7 `Assembly-CSharp`;
+  `Exception getting types in assembly` stays a `TypeLoadError`: the graphic
+  wrapper's regex (`Exception getting \S* at `) cannot match it, the
+  arm order does not decide it. A head where a mod imitates the graphic
+  wording (`... at <path>. Exception="System.X: ...`) keys on the last
+  exception type between ` at ` and the first `: `, but only when that text
+  holds `Exception="` or `. Exception` (otherwise a path word such as
+  `Things/Example/Exception` would become the type and the type stays empty).
+  **Pawn-job wrappers** (`<pawn> threw exception in WorkGiver <def>: <ex>`,
+  `... in GiverTryGiveJobTargeted on WorkGiver <def>: <ex>`, `... while
+  determining job (main|constant)`, `Pawn <pawn> threw exception while
+  executing a global finish action (<n>), ...: <ex>` and `... while executing
+  toil <toil>'s finish action (<n>), ...: <ex>`) are `RuntimeException` too,
+  all confirmed by decompiling 1.7 (`JobGiver_Work`, `Pawn_JobTracker`,
+  `JobDriver`, `Toil`; the 1.6 `Player.log` wording is the same). Their key
+  starts at `threw exception ...` (the WorkGiver def included), so the pawn's
+  name never enters it: one family per WorkGiver, exception type and key
+  frame. The pawn's name is a prefix with no `:` (`[^\[\s:][^:]*? `): the game's
+  name validation (`CharacterCardUtility.ValidNameRegex`, decompiled 1.7:
+  letters, digits, space, `'`, `-`, `.` and the two katakana middle dots) allows no colon, and the bar keeps the
+  prefix from reaching past another wrapper (`Exception ticking X: ...: Rat threw
+  exception ...`) or a mod's `Name: ` prefix. In this branch the type is only one
+  that follows a `: ` and is itself followed by `: ` or the end of the head, so a
+  driver, job or def name in the job text (`jobDriver=...`, `[workGiverDef: ...]`)
+  that ends in `Exception` is never the type. The `determining job` wrappers carry
+  their exception on a later line
+  (`TryStartErrorRecoverJob`), so its type is not in the key. On a Unity log that
+  line is its own `RuntimeException` entry (a column-0 line starts one), carrying
+  the frames and the blame, so the head's family is never attributed; on Waylith
+  the exception and its frames continue the head's entry and the key frame is
+  present. The Harmony
+  annotation lines inside such an entry (`    - PREFIX ...TryIssueJobPackage...`)
+  are continuation lines of the entry; they used to leak against the
+  `runtime-exception` sentinel only because the entry was `Unclassified`.
+  The two Waylith decoder failures (`Unable to load PSD <path> due to an
+  exception in PsdSharp: ...`, `<path>: the file's contents are not the format its
+  extension names; ...`, `[Vulkan]` at ERROR) are `TextureLoadFailure`, so they
+  survive the engine-category chatter override, and carry the file as a
+  `AttributionInput::Path` (read from the color-stripped head). The other PSD wording
+  (`Unable to load PSD file <name> ...`, a bare file name) captures `file <name>`
+  and resolves to no mod. Both wordings are confirmed by decompiling `Waylith.dll`
+  (`GpuTextureService.DecodeTextureFile` / `TryLoadTextureWithPsdSharp`), whose
+  log calls hold exactly these literal pieces around the formatted values.
   `FileGameLogReader` (implements `rim_session::ports::GameLogReader`)
   streams the file through the same single-pass core as `parse` (a
   `LogParser` state machine fed by `game_log/lines.rs`'s `BoundedLines`,
@@ -163,22 +317,35 @@ gate block in the root `CLAUDE.md`.
   most `MAX_BLOCK_LINES` lines, a multi-line join is abandoned past
   `MAX_LINE_BYTES` bytes or `MAX_JOIN_LINES` lines, and invalid UTF-8 is
   decoded lossily per line. Working memory does not grow with the file;
-  only the per-occurrence result lists do. It **no longer refuses** an
+  only the per-occurrence result lists do. Without a forced kind it peeks the
+  file, rewinds, then streams; **a forced kind never seeks** (`parse_forced`:
+  the engine is learned from a bounded prefix read without seeking (whole
+  `fill_buf` chunks until `PEEK_BYTES`, `PEEK_LINES` newlines or EOF: the very
+  window detection reads, since a 1.7 console copy is recognised by a frame on
+  line 2 or later), then
+  parsed as `Cursor::new(prefix).chain(reader)`, so a pipe or device path
+  that read fine on 1.6 with `--kind` still reads). It **no longer refuses** an
   in-game console snapshot: `read(path, formats, KindChoice)` decides the
-  kind by content (`detect.rs`'s `detect_kind`: within a peek window of 200
+  kind by content (`detect.rs`'s `detect_kind`; the full order across both
+  engines is the numbered list in `detect.rs`'s module docs, and the 1.6
+  rules within it are: within a peek window of 200
   lines and 1 MiB, any console-copy trace start, the exact line
-  `UnityEngine.StackTraceUtility:ExtractStackTrace ()` or
-  `No stack trace.`, means `ConsoleSnapshot` wherever the banner is;
+  `UnityEngine.StackTraceUtility:ExtractStackTrace ()`, means `ConsoleSnapshot`
+  wherever the banner is; a bare `No stack trace.` (both engines' copies hold
+  it) means a Unity `ConsoleSnapshot` unless a four-space Waylith frame is in the
+  window too;
   otherwise the exact `patterns::BANNER_PATTERN` banner, the same pattern
   the pass counter uses, means `PlayerLog`; neither means
   `ConsoleSnapshot`, the reading that only under-claims. The banner alone
   cannot decide, because the game logs it into the console queue: an
   uncleared console copy holds it near its top, and first of all after a
-  launch without options. The peeked lines are then rewound, and a path that cannot
-  rewind errors saying `--kind` skips detection), or takes the caller's
+  launch without options. The peeked lines are then rewound, so a path that cannot
+  rewind needs `--kind`), or takes the caller's
   `KindChoice::Force`; a file name is never consulted. The kind picks the `Framing` and the result's `coverage`
   (`coverage.rs`: `CoverageCollector` gathers the banner lines, the
-  logging-gap stop/resume lines, Unity's memory footer and crash handler
+  logging-gap stop/resume lines, the exit footer (Unity's memory footer or
+  1.7's `Log closed.`) and the crash marker (Unity's crash handler or 1.7's
+  `=== CRASH ===` entry)
   while entries open, then `finish` builds `LogCoverage` from those and the
   class tallies; a patch failure class is the patch-phase evidence, there
   is no config-check claim; a snapshot's `head_truncated` is observed from
@@ -310,8 +477,17 @@ gate block in the root `CLAUDE.md`.
     the real-log directory tier goes through `FileGameLogReader` (detection
     by content, asserted against an oracle independent of the product's
     rule: a copy trace-start line means snapshot, a `Mono path[0] = ` first
-    line means Player.log; and equal to `parse_as` under the detected
-    framing) and
+    line means Player.log, a `=== <product> log ===` first line means a 1.7
+    Player.log whose entry count must equal its header block plus its
+    timestamped lines; the detected dialect equals an independent oracle's
+    (`oracle_dialect`: a 1.7 header block or timestamped first line, or a 1.7
+    console copy, a four-space `at ... [0x` frame (any method) with no timestamped line,
+    header block or Unity trace start, and a first line that is not 1.6's
+    `Mono path[0] = `; else Unity; a 1.7 console copy's entry
+    count must equal its trace starts, counted independently: a four-space
+    `at ... [0x` line whose previous line is not one, plus `No stack trace.`
+    lines); and equal to
+    `parse_as` under the detected framing) and
     uses `parse_as` for the foreign framing, with the formats of the
     embedded bundle (`vendored_knowledge()`), the way the product gets them
     without a fetched cache.
@@ -579,7 +755,8 @@ gate block in the root `CLAUDE.md`.
   `rim_session::ports::GameLauncher`. `route` is `Steam` when
   `rim_analyzer::infra::paths::is_steam_managed_install` says so (the rule
   lives there, not here), else `Executable` when `is_game_dir` holds and
-  `RimWorldWin64.exe`'s `symlink_metadata` is a regular file (a symlink or a
+  the layout's executable (`rim_analyzer::infra::paths::detect_game_layout`: `RimWorldWin64.exe`, or
+  `RimWorld.exe` on a Waylith install) has a `symlink_metadata` that is a regular file (a symlink or a
   folder of that name is refused), else `ExecutableMissing`. `launch(Steam)`
   hands the constant `steam://run/294100` to `open::that_detached`
   (`open` is a direct dependency, `shellexecute-on-windows`, already in the
@@ -592,6 +769,13 @@ gate block in the root `CLAUDE.md`.
   (`new()` uses the real one) so route tests never read this machine's
   Steam; **no test calls `launch`**: the `open::that_detached` and `.spawn()`
   lines are covered only by the manual check.
+- **`process.rs`**: `SysinfoGameProcessProbe` is true when a process named
+  `rimworldwin64.exe` (Unity build) or `rimworld.exe` (Waylith, 1.7) runs,
+  case-insensitive, by name and not path, so it does not need to know which
+  layout the configured install has and a copy started from elsewhere also
+  counts (refusing is the safe side). `RIMWORLD_PROCESS_NAMES` is the one
+  list; a test pins that every `GameLayout` executable name is in it. Tests
+  never read the real process list beyond the does-not-panic smoke test.
 - **`mod_list_file.rs` + `mod_list_file/{read,write,stream,sniff,save_header}.rs`**: `RmlFileStore`
   implements `rim_session::ports::ModListFileStore`. The input is
   untrusted and every bound is a `rim_session::mod_list::ModListLimits`

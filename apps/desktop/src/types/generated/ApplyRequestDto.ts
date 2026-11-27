@@ -22,6 +22,6 @@ writeModsConfig: boolean,
  */
 writeMergeMod: boolean, 
 /**
- * Write anyway even if `RimWorldWin64.exe` looks like it's running.
+ * Write anyway even if RimWorld looks like it's running.
  */
 force: boolean, };

@@ -103,7 +103,7 @@ const ENGINE_SENTINELS: &[SentinelDef] = &[
     ),
     sentinel(
         "texture-load-failure",
-        r"Failed to find any textures| in any active mod or in base resources",
+        r"Failed to find any textures| in any active mod or in base resources|due to an exception in PsdSharp|the file's contents are not the format its extension names",
         &[EntryClass::TextureLoadFailure],
     ),
     sentinel(
@@ -121,7 +121,7 @@ const ENGINE_SENTINELS: &[SentinelDef] = &[
     ),
     sentinel(
         "runtime-exception",
-        r"Exception ticking|Exception filling window|TryIssueJobPackage",
+        r"Exception ticking|Exception filling window|TryIssueJobPackage|Could not execute post-long-event action|Exception getting \S* at |threw exception (?:in WorkGiver|in GiverTryGiveJobTargeted|while determining job|while executing)",
         &[EntryClass::RuntimeException],
     ),
     sentinel(

@@ -147,13 +147,13 @@ fn counted(count: usize, singular: &str, plural: &str) -> String {
 
 fn describe_end_state(state: &EndState) -> String {
     match state {
-        EndState::CleanExit => "clean exit (Unity's memory-statistics footer)".to_string(),
+        EndState::CleanExit => "clean exit (the game's exit footer)".to_string(),
         EndState::Crashed { report_path: None } => {
-            "crashed (Unity's crash handler; no report location follows it)".to_string()
+            "crashed (the game's crash handler; no report location follows it)".to_string()
         }
         EndState::Crashed {
             report_path: Some(path),
-        } => format!("crashed (Unity's crash handler; report location {path})"),
+        } => format!("crashed (the game's crash handler; report location {path})"),
         EndState::Truncated => "truncated (no exit footer)".to_string(),
     }
 }

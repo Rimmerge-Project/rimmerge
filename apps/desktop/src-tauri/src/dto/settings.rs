@@ -299,7 +299,7 @@ pub struct ApplyRequestDto {
     /// Render the generated merge mod into the game's `Mods/` folder (or
     /// remove it when no `Merge`/`ShipAsset` decision remains), atomically.
     pub write_merge_mod: bool,
-    /// Write anyway even if `RimWorldWin64.exe` looks like it's running.
+    /// Write anyway even if RimWorld looks like it's running.
     pub force: bool,
 }
 

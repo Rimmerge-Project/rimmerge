@@ -8,7 +8,7 @@
 use std::path::Path;
 use std::process::{Command, Stdio};
 
-use rim_analyzer::infra::paths::{is_game_dir, is_steam_managed_install};
+use rim_analyzer::infra::paths::{detect_game_layout, is_game_dir, is_steam_managed_install};
 use rim_session::LaunchUnavailable;
 use rim_session::ports::{GameExecutable, GameLauncher, LaunchFailure, LaunchRoute};
 
@@ -63,7 +63,7 @@ impl GameLauncher for SystemGameLauncher {
         if !is_game_dir(game_dir) {
             return Err(LaunchUnavailable::ExecutableMissing);
         }
-        let executable = GameExecutable::of_install(game_dir);
+        let executable = GameExecutable::of_install(game_dir, detect_game_layout(game_dir));
         // `symlink_metadata`, not `metadata`: a link could point anywhere,
         // and the only program a launch may start is the install's own file.
         let is_regular_file = std::fs::symlink_metadata(executable.path())
@@ -110,8 +110,8 @@ fn executable_command(executable: &GameExecutable) -> Command {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rim_analyzer::domain::GameLayout;
     use rim_analyzer::infra::paths::RIMWORLD_STEAM_APP_ID;
-    use rim_session::ports::RIMWORLD_EXECUTABLE;
     use std::fs;
     use tempfile::TempDir;
 
@@ -122,6 +122,9 @@ mod tests {
     fn always_steam(_: &Path) -> bool {
         true
     }
+
+    /// The executable name of the (Unity) layout a bare scratch install has.
+    const RIMWORLD_EXECUTABLE: &str = "RimWorldWin64.exe";
 
     /// A folder that passes `is_game_dir`, without an executable.
     fn install_without_executable() -> TempDir {
@@ -158,7 +161,8 @@ mod tests {
         assert_eq!(
             route,
             Ok(LaunchRoute::Executable(GameExecutable::of_install(
-                install.path()
+                install.path(),
+                GameLayout::Unity
             )))
         );
     }
@@ -250,7 +254,7 @@ mod tests {
         // std exposes no getters for stdio or creation flags, so those are
         // pinned by review (DETACHED_PROCESS = 8, CREATE_NEW_PROCESS_GROUP = 512).
         let install_dir = Path::new("some").join("install");
-        let executable = GameExecutable::of_install(&install_dir);
+        let executable = GameExecutable::of_install(&install_dir, GameLayout::Unity);
 
         let command = executable_command(&executable);
 
@@ -260,7 +264,47 @@ mod tests {
     }
 
     #[test]
-    fn the_executable_name_matches_the_probed_process_name() {
-        assert!(RIMWORLD_EXECUTABLE.eq_ignore_ascii_case(crate::process::RIMWORLD_PROCESS_NAME));
+    fn route_is_the_waylith_executable_for_a_waylith_install() {
+        let install = install_without_executable();
+        fs::write(install.path().join("RimWorld.exe"), b"MZ").expect("exe");
+        let launcher = SystemGameLauncher::with_steam_check(never_steam);
+
+        let route = launcher.route(install.path());
+
+        assert_eq!(
+            route,
+            Ok(LaunchRoute::Executable(GameExecutable::of_install(
+                install.path(),
+                GameLayout::Waylith
+            )))
+        );
+        let Ok(LaunchRoute::Executable(executable)) = route else {
+            panic!("expected an executable route");
+        };
+        assert_eq!(executable.path(), install.path().join("RimWorld.exe"));
+    }
+
+    #[test]
+    fn a_folder_named_rimworld_exe_is_not_a_waylith_install() {
+        let install = install_without_executable();
+        fs::create_dir(install.path().join("RimWorld.exe")).expect("dir");
+        let launcher = SystemGameLauncher::with_steam_check(never_steam);
+
+        let route = launcher.route(install.path());
+
+        assert_eq!(detect_game_layout(install.path()), GameLayout::Unity);
+        assert_eq!(route, Err(LaunchUnavailable::ExecutableMissing));
+    }
+
+    #[test]
+    fn every_layouts_executable_name_is_a_probed_process_name() {
+        for layout in [GameLayout::Unity, GameLayout::Waylith] {
+            assert!(
+                crate::process::RIMWORLD_PROCESS_NAMES
+                    .iter()
+                    .any(|name| layout.executable_name().eq_ignore_ascii_case(name)),
+                "{layout:?}"
+            );
+        }
     }
 }

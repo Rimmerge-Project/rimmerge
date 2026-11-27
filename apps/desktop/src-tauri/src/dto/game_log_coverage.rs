@@ -37,9 +37,11 @@ impl From<PatchPhaseEvidence> for PatchPhaseEvidenceDto {
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[ts(export, export_to = "../../src/types/generated/")]
 pub enum EndStateDto {
-    /// Unity's memory-statistics footer is present and no crash was logged.
+    /// The game's exit footer (Unity's `Memory Statistics:` block on 1.6,
+    /// the `Log closed.` line on 1.7) is present and no crash was logged.
     CleanExit,
-    /// Unity's crash handler logged a crash.
+    /// The game's crash handler logged a crash (Unity's on 1.6, the
+    /// `=== CRASH ===` entry on 1.7).
     #[serde(rename_all = "camelCase")]
     Crashed {
         /// The crash-report location the log printed, when it holds it.

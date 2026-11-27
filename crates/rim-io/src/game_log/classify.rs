@@ -26,12 +26,13 @@ use super::patterns::{
     LOAD_SAVE_HEADER_PATTERN, LOGGING_RESUMED_PATTERN, LOGGING_STOPPED_PATTERN,
     MISSING_PARENT_PATTERN, MOD_MESSAGE_PATTERN, MOD_METADATA_ERROR_PATTERN,
     MOD_METADATA_WARNING_PATTERN, PATCH_ERROR_PATTERN, PATCH_FAILED_PATTERN,
-    RUNTIME_EXCEPTION_PATTERN, RUNTIME_WRAPPER_PATTERN, SAVE_REFERENCE_PATTERN,
-    SESSION_MARKER_PATTERN, TEXTURE_LOAD_FAILURE_PATTERN, TYPE_LOAD_ERROR_PATTERN,
-    UNITY_RUNTIME_ERROR_PATTERN, UNITY_RUNTIME_PATTERN, XML_ERROR_PATTERN, XML_WARNING_PATTERN,
-    fixed_regex,
+    PAWN_EXCEPTION_TYPE_PATTERN, RUNTIME_EXCEPTION_PATTERN, RUNTIME_PAWN_WRAPPER_PATTERN,
+    RUNTIME_WRAPPER_PATTERN, SAVE_REFERENCE_PATTERN, SESSION_MARKER_PATTERN,
+    TEXTURE_LOAD_FAILURE_PATTERN, TYPE_LOAD_ERROR_PATTERN, UNITY_RUNTIME_ERROR_PATTERN,
+    UNITY_RUNTIME_PATTERN, XML_ERROR_PATTERN, XML_WARNING_PATTERN, fixed_regex,
 };
 use super::shapes::CompiledShapes;
+use super::waylith::EntryHeader;
 
 /// What the classifier decided about a head.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -89,7 +90,18 @@ const fn engine_info(
 /// - `DefCacheLine` comes before `Timer` (the carrier's own timer line is a
 ///   def-cache line, and the per-line timer scan still sees it);
 /// - `RuntimeException`'s generic `...Exception: ` arm comes after every
-///   engine class whose text holds an exception.
+///   engine class whose text holds an exception; its own wrappers include
+///   `Exception getting <type> at <path>: <ex>` (`GraphicDatabase.GetInner`),
+///   `Could not execute post-long-event action. Exception: <ex>`
+///   (`LongEventHandler`) and the pawn-job wrappers `<pawn> threw exception
+///   in WorkGiver <def>: <ex>` and its relatives (`pawn_exception_wrapper!`).
+///   `TypeLoadError`'s `Exception getting types in assembly` comes first, but
+///   the order is not what keeps it there: the graphic wrapper's `Exception
+///   getting \S* at ` cannot match `Exception getting types in assembly`
+///   (no ` at ` follows its first word);
+/// - `TextureLoadFailure` also holds the two Waylith decoder failures, so a
+///   `[Vulkan]` ERROR naming a texture file survives the engine-category
+///   chatter override (`is_chatter_class`).
 const ARMS: &[Arm] = &[
     patterns(
         EntryClass::LoadEvent,
@@ -283,6 +295,39 @@ impl ClassifierSet {
         }
     }
 
+    /// The class of a Waylith entry. The writer's own markers (the clean-exit
+    /// line, the crash head, the backlog warning) are session markers; any
+    /// other message goes through the same arms as a Unity head, since
+    /// RimWorld's message bodies are the same text; a message in one of the
+    /// engine's own categories that no arm knows, or that only matches a mod
+    /// convention (`[Tag] ...`, a `... in 84 ms` timer, a def-cache prefix),
+    /// is engine chatter, not RimWorld or mod evidence. The explicit level replaces the arm's
+    /// inferred severity.
+    pub(super) fn classify_waylith(
+        &self,
+        header: &EntryHeader<'_>,
+        carriers: &[DefCacheCarrier],
+        shapes: &CompiledShapes,
+    ) -> Classification {
+        let found = if header.is_session_marker() {
+            Classification {
+                class: EntryClass::EngineInfo(EngineInfoKind::SessionMarker),
+                severity: MESSAGE,
+            }
+        } else {
+            self.classify(header.message, carriers, shapes)
+        };
+        let is_engine_chatter = header.is_engine_category() && is_chatter_class(found.class);
+        Classification {
+            class: if is_engine_chatter {
+                EntryClass::EngineInfo(EngineInfoKind::UnityRuntime)
+            } else {
+                found.class
+            },
+            severity: header.level.severity().or(found.severity),
+        }
+    }
+
     /// The class of an entry headed by `head`.
     pub(super) fn classify(
         &self,
@@ -342,6 +387,20 @@ impl ClassifierSet {
     }
 }
 
+/// Whether the class an arm gave an engine-category message is only that
+/// arm matching a mod convention by accident: the engine's own
+/// `[Vulkan] [General] ...` is not a mod tagging itself, and its
+/// `GpuProbe: completed in 84 ms` is not a mod's startup timer.
+fn is_chatter_class(class: EntryClass) -> bool {
+    matches!(
+        class,
+        EntryClass::Unclassified
+            | EntryClass::ModMessage
+            | EntryClass::Timer
+            | EntryClass::DefCacheLine
+    )
+}
+
 /// Every timer rendering holds `took` or an `ms` unit, so a head with
 /// neither cannot be a timer and skips the timer regexes.
 fn might_hold_timer(text: &str) -> bool {
@@ -362,9 +421,16 @@ pub(super) fn strip_color(text: &str) -> Cow<'_, str> {
 static DUPLICATE_DEF_RE: LazyLock<Regex> = LazyLock::new(|| fixed_regex(DUPLICATE_DEF_PATTERN));
 static BASEGEN_RULE_RE: LazyLock<Regex> =
     LazyLock::new(|| fixed_regex(BASEGEN_RULE_MISSING_PATTERN));
+static RUNTIME_PAWN_WRAPPER_RE: LazyLock<Regex> =
+    LazyLock::new(|| fixed_regex(RUNTIME_PAWN_WRAPPER_PATTERN));
 static RUNTIME_WRAPPER_RE: LazyLock<Regex> = LazyLock::new(|| fixed_regex(RUNTIME_WRAPPER_PATTERN));
 static EXCEPTION_TYPE_RE: LazyLock<Regex> = LazyLock::new(|| fixed_regex(EXCEPTION_TYPE_PATTERN));
+static PAWN_EXCEPTION_TYPE_RE: LazyLock<Regex> =
+    LazyLock::new(|| fixed_regex(PAWN_EXCEPTION_TYPE_PATTERN));
 static KEY_VOLATILE_RE: LazyLock<Regex> = LazyLock::new(|| fixed_regex(KEY_VOLATILE_PATTERN));
+
+/// The head of `GraphicDatabase.GetInner`'s failure wrapper.
+const GRAPHIC_WRAPPER_PREFIX: &str = "Exception getting ";
 
 /// How a class turns a head into a family key.
 enum KeyStyle {
@@ -443,27 +509,91 @@ fn basegen_symbol_key(head: &str) -> String {
 }
 
 fn runtime_exception_key(head: &str, frame: Option<&str>) -> String {
+    if let Some(captures) = RUNTIME_PAWN_WRAPPER_RE.captures(head) {
+        // The pawn's name before the wrapper is left out: one family per
+        // WorkGiver, exception type and frame, not per pawn.
+        let wrapper = &captures["wrapper"];
+        let wrapper_end = captures.name("wrapper").map_or(0, |found| found.end());
+        let exception = PAWN_EXCEPTION_TYPE_RE
+            .captures_at(head, wrapper_end)
+            .and_then(|found| found.get(1))
+            .map_or("", |found| found.as_str());
+        return format!("{wrapper}|{exception}|{}", frame.unwrap_or(""));
+    }
     let wrapper_end = RUNTIME_WRAPPER_RE
         .find(head)
         .map_or(0, |wrapper| wrapper.end());
     let wrapper = &head[..wrapper_end];
-    let exception = EXCEPTION_TYPE_RE
-        .captures_at(head, exception_search_start(head, wrapper_end))
-        .and_then(|captures| captures.get(1))
-        .map_or("", |found| found.as_str());
+    let exception = match graphic_wrapper_split(head) {
+        Some(split) => graphic_exception_type(head, split),
+        None => exception_type_from(head, plain_search_start(head, wrapper_end)),
+    };
     format!("{wrapper}|{exception}|{}", frame.unwrap_or(""))
 }
 
-/// Where the exception type is looked for: after the wrapper's own words, so
-/// the wrapper's `Exception` is never read as the type. A head with no
-/// wrapper pattern match that still starts with the word `Exception` (`Exception
-/// in <name>: ...`) skips that word too.
-fn exception_search_start(head: &str, wrapper_end: usize) -> usize {
+/// The first exception type named in `head` from `start` on, or empty.
+fn exception_type_from(head: &str, start: usize) -> &str {
+    EXCEPTION_TYPE_RE
+        .captures_at(head, start)
+        .and_then(|captures| captures.get(1))
+        .map_or("", |found| found.as_str())
+}
+
+/// Where the exception type is looked for in a head that is not a graphic
+/// wrapper: after the wrapper's own words, so the wrapper's `Exception` is
+/// never read as the type. A head with no wrapper pattern match that still
+/// starts with the word `Exception` (`Exception in <name>: ...`) skips that
+/// word too.
+fn plain_search_start(head: &str, wrapper_end: usize) -> usize {
     if wrapper_end > 0 {
         return wrapper_end;
     }
     head.strip_prefix("Exception ")
         .map_or(0, |_| "Exception ".len())
+}
+
+/// Where the parts of `Exception getting <type> at <path>: <ex>` sit.
+struct GraphicWrapperSplit {
+    /// Where the path starts (after ` at `).
+    path_start: usize,
+    /// Where the exception starts: after the `: ` that ends the path.
+    exception_start: usize,
+}
+
+/// The exception type of a graphic wrapper. It is looked for after the `: `
+/// that ends the path, so a path segment named `...Exception` is never read as
+/// the type (and the path never enters the key). A head that has no type there
+/// (a mod imitating the wording, `... at <path>. Exception="System.X: ...`,
+/// puts it before the first `: `) falls back to the last type named between
+/// ` at ` and that separator, but only when that text looks like the
+/// imitation (`Exception="` or `. Exception`); otherwise a path word such as
+/// `Things/Example/Exception` would become the type.
+fn graphic_exception_type(head: &str, split: GraphicWrapperSplit) -> &str {
+    let after = exception_type_from(head, split.exception_start);
+    if !after.is_empty() {
+        return after;
+    }
+    let before_separator = &head[split.path_start..split.exception_start];
+    if !(before_separator.contains("Exception=\"") || before_separator.contains(". Exception")) {
+        return "";
+    }
+    EXCEPTION_TYPE_RE
+        .captures_iter(before_separator)
+        .last()
+        .and_then(|captures| captures.get(1))
+        .map_or("", |found| found.as_str())
+}
+
+/// Where `Exception getting <type> at <path>: <ex>` splits; `None` for any
+/// other head.
+fn graphic_wrapper_split(head: &str) -> Option<GraphicWrapperSplit> {
+    let rest = head.strip_prefix(GRAPHIC_WRAPPER_PREFIX)?;
+    let path_start = GRAPHIC_WRAPPER_PREFIX.len() + rest.find(" at ")? + " at ".len();
+    let separator = head[path_start..].find(": ")?;
+    Some(GraphicWrapperSplit {
+        path_start,
+        exception_start: path_start + separator + ": ".len(),
+    })
 }
 
 fn generic_key(head: &str) -> String {

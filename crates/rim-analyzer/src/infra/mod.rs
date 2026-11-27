@@ -7,6 +7,7 @@ mod discovery;
 mod explain_dangling;
 mod mod_scan;
 pub mod paths;
+pub mod zip_listing;
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
@@ -16,10 +17,12 @@ use anyhow::Context;
 use rayon::prelude::*;
 
 use crate::domain::{
-    FolderPolicy, GameVersion, InactiveMod, LoadOrder, ModId, RefSite, ScannedMod, Warning,
+    FolderPolicy, GameLayout, GameVersion, InactiveMod, LoadOrder, ModId, RefSite, ScannedMod,
+    Warning,
 };
 use crate::extract::about_xml::{self, AboutDetails, AboutXmlError};
 use crate::extract::mods_config;
+use crate::extract::runtime_config::{self, AssemblyRedirects};
 
 use discovery::{Discovered, DiscoveredMod};
 use mod_scan::ModScan;
@@ -126,8 +129,9 @@ pub fn scan_with_progress(
     // list is unsound.
     let discovered_mod_count = discovered.len();
     let inactive_mods = discovered.inactive_excluding(&to_scan);
+    let layout = paths::detect_game_layout(&config.game_dir);
     let ModScans {
-        scanned_mods,
+        mut scanned_mods,
         child_value_hashes_by_mod,
         ref_sites_by_mod,
         unloaded_defs_dirs_by_mod,
@@ -140,15 +144,21 @@ pub fn scan_with_progress(
         on_progress,
     );
     warnings.extend(scan_warnings);
+    if layout == GameLayout::Waylith {
+        add_archive_textures_to_vanilla_mods(&to_scan, &mut scanned_mods, &mut warnings);
+    }
 
     on_progress(ScanProgress {
         stage: ScanStage::Analyzing,
         done: 0,
         total: 1,
     });
-    let vanilla_assembly_names = managed_assembly_names(&config.game_dir, &mut warnings);
-    let vanilla_type_hierarchy = vanilla_type_hierarchy(&config.game_dir, &mut warnings);
-    let core_resource_textures = core_resource_textures(&config.game_dir, &mut warnings);
+    let mut vanilla_assembly_names =
+        managed_assembly_names(layout, &config.game_dir, &mut warnings);
+    let vanilla_type_hierarchy = vanilla_type_hierarchy(layout, &config.game_dir, &mut warnings);
+    let engine_redirects = engine_assembly_redirects(layout, &config.game_dir, &mut warnings);
+    vanilla_assembly_names.extend(engine_redirects.exact);
+    let core_resource_textures = core_resource_textures(layout, &config.game_dir, &mut warnings);
     on_progress(ScanProgress {
         stage: ScanStage::Analyzing,
         done: 1,
@@ -161,6 +171,7 @@ pub fn scan_with_progress(
         load_order,
         missing_mods,
         vanilla_assembly_names,
+        engine_assembly_prefixes: engine_redirects.prefixes,
         vanilla_type_hierarchy,
         warnings,
         child_value_hashes_by_mod,
@@ -395,10 +406,11 @@ struct ModScans {
 /// [`super::analysis::inheritance::is_subclass`]'s own "can't resolve,
 /// don't flag" rule already treats safely.
 fn vanilla_type_hierarchy(
+    layout: GameLayout,
     game_dir: &Path,
     warnings: &mut Vec<Warning>,
 ) -> Vec<(String, Option<String>)> {
-    let path = paths::managed_assemblies_dir(game_dir).join("Assembly-CSharp.dll");
+    let path = layout.assembly_csharp_path(game_dir);
     let bytes = match mod_scan::read_bounded(&path) {
         Ok(bytes) => bytes,
         Err(e) => {
@@ -421,18 +433,27 @@ fn vanilla_type_hierarchy(
     }
 }
 
-/// Lowercased `.dll` file stems under `<game_dir>/RimWorldWin64_Data/Managed`
-/// — Core/DLC ship no `Assemblies/` folder, so their assembly names have
-/// to be seeded from the game install directly. Unreadable is non-fatal:
-/// a [`Warning`] is recorded and the ignore set is just empty.
-fn managed_assembly_names(game_dir: &Path, warnings: &mut Vec<Warning>) -> HashSet<String> {
-    let dir = paths::managed_assemblies_dir(game_dir);
+/// Lowercased `.dll` file stems under the layout's vanilla-assemblies folder
+/// (`<game_dir>/RimWorldWin64_Data/Managed` on Unity, the install root on
+/// Waylith, where the DLLs are not "managed" in Unity's sense) — Core/DLC ship no `Assemblies/` folder, so their assembly
+/// names have to be seeded from the game install directly. Unreadable is
+/// non-fatal: a [`Warning`] is recorded and the ignore set is just empty.
+fn managed_assembly_names(
+    layout: GameLayout,
+    game_dir: &Path,
+    warnings: &mut Vec<Warning>,
+) -> HashSet<String> {
+    let dir = layout.vanilla_assemblies_dir(game_dir);
     let entries = match std::fs::read_dir(&dir) {
         Ok(entries) => entries,
         Err(e) => {
+            let what = match layout {
+                GameLayout::Unity => "Managed assemblies",
+                GameLayout::Waylith => "the game's assemblies",
+            };
             warnings.push(Warning::new(
                 None,
-                format!("{}: cannot read Managed assemblies: {e}", dir.display()),
+                format!("{}: cannot read {what}: {e}", dir.display()),
             ));
             return HashSet::new();
         }
@@ -459,14 +480,42 @@ fn managed_assembly_names(game_dir: &Path, warnings: &mut Vec<Warning>) -> HashS
 /// measured real-install size.
 const MAX_GLOBAL_GAME_MANAGERS_BYTES: u64 = 64 * 1024 * 1024;
 
-/// Every Core built-in resource texture key, scanned out of
-/// `RimWorldWin64_Data/globalgamemanagers` — see
+/// The largest `RimWorld.runtimeconfig.json` read: the real one is under
+/// 2 KiB, so this is a defensive bound.
+const MAX_RUNTIME_CONFIG_BYTES: u64 = 1024 * 1024;
+
+/// Entry-name prefix of Core's built-in textures inside the root
+/// `Assets.zip` (Waylith).
+const CORE_ARCHIVE_TEXTURE_PREFIX: &str = "Resources/Textures/";
+
+/// Entry-name prefix of a DLC's textures inside its own `Assets.zip`.
+const DLC_ARCHIVE_TEXTURE_PREFIX: &str = "Textures/";
+
+/// Every Core built-in resource texture key — scanned out of
+/// `RimWorldWin64_Data/globalgamemanagers` on Unity, listed from
+/// `<game_dir>/Assets.zip` on Waylith — see
 /// [`ScanOutput::core_resource_textures`]'s own doc comment for what this
 /// is and how a caller building `Indices` treats too few of them.
 /// Unreadable is non-fatal: a [`Warning`] is recorded and the result is
 /// just empty, which `analysis::indices::MIN_CORE_RESOURCE_TEXTURES` then
 /// reads as "the check disables itself".
-fn core_resource_textures(game_dir: &Path, warnings: &mut Vec<Warning>) -> BTreeSet<String> {
+fn core_resource_textures(
+    layout: GameLayout,
+    game_dir: &Path,
+    warnings: &mut Vec<Warning>,
+) -> BTreeSet<String> {
+    match layout {
+        GameLayout::Unity => unity_core_resource_textures(game_dir, warnings),
+        GameLayout::Waylith => archive_texture_keys(
+            &game_dir.join(paths::ASSETS_ZIP_FILE_NAME),
+            CORE_ARCHIVE_TEXTURE_PREFIX,
+            "Core's resource index",
+            warnings,
+        ),
+    }
+}
+
+fn unity_core_resource_textures(game_dir: &Path, warnings: &mut Vec<Warning>) -> BTreeSet<String> {
     const PREFIX: &str = "textures/";
     let path = paths::global_game_managers_path(game_dir);
     let bytes = match mod_scan::read_bounded_with_limit(&path, MAX_GLOBAL_GAME_MANAGERS_BYTES) {
@@ -483,6 +532,128 @@ fn core_resource_textures(game_dir: &Path, warnings: &mut Vec<Warning>) -> BTree
         .into_iter()
         .map(|entry| entry[PREFIX.len()..].to_string())
         .collect()
+}
+
+/// The normalized texture keys of the entries of `archive` under `prefix`.
+/// An unreadable or unsupported archive is a [`Warning`] naming `what` and
+/// an empty set.
+fn archive_texture_keys(
+    archive: &Path,
+    prefix: &str,
+    what: &str,
+    warnings: &mut Vec<Warning>,
+) -> BTreeSet<String> {
+    match zip_listing::zip_entry_names(archive) {
+        Ok(names) => names
+            .iter()
+            .filter_map(|name| crate::extract::asset_index::archive_texture_key(name, prefix))
+            .collect(),
+        Err(e) => {
+            warnings.push(Warning::new(
+                None,
+                format!("{}: cannot read {what}: {e}", archive.display()),
+            ));
+            BTreeSet::new()
+        }
+    }
+}
+
+/// Waylith ships a DLC's art in `<DLC folder>/Assets.zip` instead of the
+/// Unity `AssetBundles/` the per-mod scan reads, so its texture keys are
+/// added to that DLC's [`ScannedMod::bundle_textures`] — the same slot, and
+/// therefore the same non-loose index, the 1.6 bundle walk fills. Only
+/// vanilla mods are looked at (Core ships no archive of its own: its art is
+/// the root `Assets.zip`, see [`core_resource_textures`]); a DLC folder
+/// with no `Assets.zip` contributes nothing and is not an error.
+///
+/// Each DLC is paired with its scanned mod by id, not by position.
+fn add_archive_textures_to_vanilla_mods(
+    to_scan: &[(&ModId, &DiscoveredMod)],
+    scanned_mods: &mut [ScannedMod],
+    warnings: &mut Vec<Warning>,
+) {
+    for (id, discovered) in to_scan {
+        let archive = discovered.path.join(paths::ASSETS_ZIP_FILE_NAME);
+        if !discovered.source.is_vanilla() || !archive.is_file() {
+            continue;
+        }
+        let Some(scanned) = scanned_mods.iter_mut().find(|m| m.info.id == **id) else {
+            warnings.push(Warning::new(
+                Some((*id).clone()),
+                format!(
+                    "{}: no scanned mod to add the DLC's textures to",
+                    archive.display()
+                ),
+            ));
+            continue;
+        };
+        let mut archive_warnings = Vec::new();
+        let keys = archive_texture_keys(
+            &archive,
+            DLC_ARCHIVE_TEXTURE_PREFIX,
+            "the DLC's textures",
+            &mut archive_warnings,
+        );
+        scanned.bundle_textures.extend(keys);
+        warnings.extend(
+            archive_warnings
+                .into_iter()
+                .map(|warning| Warning::new(Some((*id).clone()), warning.message)),
+        );
+    }
+}
+
+/// The engine-provided assembly names of a Waylith install, from
+/// `RimWorld.runtimeconfig.json`. A Unity install has none and is not
+/// read. Unreadable or unparseable is non-fatal: a [`Warning`] and an
+/// empty result, like the vanilla-assembly lookups beside it.
+fn engine_assembly_redirects(
+    layout: GameLayout,
+    game_dir: &Path,
+    warnings: &mut Vec<Warning>,
+) -> AssemblyRedirects {
+    if layout == GameLayout::Unity {
+        return AssemblyRedirects::default();
+    }
+    let path = paths::runtime_config_path(game_dir);
+    let bytes = match mod_scan::read_bounded_with_limit(&path, MAX_RUNTIME_CONFIG_BYTES) {
+        Ok(bytes) => bytes,
+        Err(e) => {
+            warnings.push(Warning::new(
+                None,
+                format!(
+                    "{}: cannot read the engine's assembly redirects: {e}",
+                    path.display()
+                ),
+            ));
+            return AssemblyRedirects::default();
+        }
+    };
+    match runtime_config::parse_assembly_redirects(&bytes) {
+        Ok(redirects) => {
+            if !redirects.unsupported.is_empty() {
+                warnings.push(Warning::new(
+                    None,
+                    format!(
+                        "{}: ignored assembly redirect patterns this reader does not model: {}",
+                        path.display(),
+                        redirects.unsupported.join("; ")
+                    ),
+                ));
+            }
+            redirects
+        }
+        Err(e) => {
+            warnings.push(Warning::new(
+                None,
+                format!(
+                    "{}: cannot parse the engine's assembly redirects: {e}",
+                    path.display()
+                ),
+            ));
+            AssemblyRedirects::default()
+        }
+    }
 }
 
 /// [`read_about_details`]'s own failure modes — kept distinct from the

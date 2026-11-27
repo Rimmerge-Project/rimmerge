@@ -9,6 +9,7 @@ mod declared_order;
 mod def_reference;
 mod edge;
 mod folder_policy;
+mod game_layout;
 mod inactive_mod;
 mod load_order;
 mod locator;
@@ -42,6 +43,7 @@ pub use declared_order::{DeclaredOrder, ModDependency};
 pub use def_reference::TexturePathCandidate;
 pub use edge::{Edge, EdgeKind, EdgeReport, EdgeStatus, EdgeStrength};
 pub use folder_policy::FolderPolicy;
+pub use game_layout::{GameLayout, UNITY_DATA_DIR};
 pub use inactive_mod::InactiveMod;
 pub use load_order::LoadOrder;
 pub use locator::XmlLocator;
@@ -61,7 +63,8 @@ pub use report::{
     UnresolvedFindMod,
 };
 pub use scan::{
-    DefEntry, ScanCost, ScanOutput, ScanProgress, ScanStage, ScannedMod, TemplateEntry,
+    DefEntry, EngineAssemblyPrefixes, ScanCost, ScanOutput, ScanProgress, ScanStage, ScannedMod,
+    TemplateEntry,
 };
 pub use source::Source;
 pub use version::{GameVersion, GameVersionParseError, parse_tag_name};

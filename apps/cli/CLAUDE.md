@@ -101,7 +101,8 @@ output, so it doubles as this generator's own regression test.
   them only on an explicit, non-`--dry-run` invocation. For a manual run
   against the real install, always pass a scratch `--profile-dir` and,
   for any of these, `--dry-run` or a temp copy of the install/config.
-  Every one of them refuses to write while `RimWorldWin64.exe` is
+  Every one of them refuses to write while RimWorld
+  (`RimWorldWin64.exe` or `RimWorld.exe`, by process name) is
   running unless `--force` is passed; the probe
   (`rim_io::GameProcessProbe`) is shared with the desktop app. Agents
   and tests use these only against temp copies; against a real install,

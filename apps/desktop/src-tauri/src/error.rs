@@ -56,7 +56,7 @@ pub enum CommandErrorCode {
     ProfileIoFailed,
     /// Importing a RimSort database file failed.
     RimsortImportFailed,
-    /// `RimWorldWin64.exe` is running and the caller didn't force the
+    /// RimWorld is running and the caller didn't force the
     /// write.
     RimworldRunning,
     /// The requested mod isn't in the active mod list.
@@ -122,12 +122,12 @@ pub enum CommandErrorCode {
     /// button reacts by asking "Apply first?", the same way
     /// `StaleActiveSet` gets special handling.
     OrderNotApplied,
-    /// The install has no `RimWorldWin64.exe` to start (or isn't an
+    /// The install has no game executable to start (or isn't an
     /// install at all).
     GameExecutableMissing,
     /// Windows refused the `steam://` request that starts RimWorld.
     SteamLaunchFailed,
-    /// Windows couldn't start `RimWorldWin64.exe` directly.
+    /// Windows couldn't start the game executable directly.
     GameStartFailed,
     /// A shared mod-list file could not be read or written (an I/O failure:
     /// the file is missing, locked, or the folder is read-only). A file
@@ -352,13 +352,13 @@ impl CommandError {
         )
     }
 
-    /// `RimWorldWin64.exe` is running and the caller didn't force the
+    /// RimWorld is running and the caller didn't force the
     /// write.
     #[must_use]
     pub fn rimworld_running() -> Self {
         Self::new(
             CommandErrorCode::RimworldRunning,
-            "RimWorldWin64.exe is running; close the game or retry with force",
+            "RimWorld is running; close the game or retry with force",
         )
     }
 

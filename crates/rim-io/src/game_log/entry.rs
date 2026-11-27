@@ -173,12 +173,19 @@ pub(super) fn outer_type(name: &str) -> &str {
 }
 
 /// The type is in an engine or runtime-library namespace: its first
-/// `.`-separated segment is exactly one of [`ENGINE_NAMESPACE_ROOTS`].
+/// `.`-separated segment is exactly one of [`ENGINE_NAMESPACE_ROOTS`], or
+/// empty. An empty first segment is how 1.7 prints the engine's synthesized
+/// `.InvokeMessageMethod_...` frames (a DynamicMethod with no declaring type).
+/// Harmony's replacement methods are not empty-rooted there: they print as
+/// `MonoMod.Utils.DynamicMethodDefinition.Ns.Type.Method_PatchN`, in the
+/// exception trace and the log-call frames alike, and are the engine's through
+/// the `MonoMod` root. Neither is ever a mod's, exactly like Unity's
+/// `(wrapper dynamic-method)` frames.
 fn is_engine_type(type_name: &str) -> bool {
     type_name
         .split('.')
         .next()
-        .is_some_and(|root| ENGINE_NAMESPACE_ROOTS.contains(&root))
+        .is_some_and(|root| root.is_empty() || ENGINE_NAMESPACE_ROOTS.contains(&root))
 }
 
 /// The entry being read. One instance is reused for every entry of a parse.
@@ -266,6 +273,12 @@ impl OpenEntry {
         self.is_sample_truncated |= cut < line.len();
         self.sample.push_str(&line[..cut]);
         self.sample_lines += 1;
+    }
+
+    /// Replaces the severity the head gave (a 1.7 console copy learns its
+    /// level from the first frame, which arrives after the head).
+    pub(super) fn set_severity(&mut self, severity: Severity) {
+        self.severity = Some(severity);
     }
 
     pub(super) fn class(&self) -> EntryClass {

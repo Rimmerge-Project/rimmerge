@@ -568,7 +568,7 @@
       },
       "game_executable_missing": {
         "title": "无法从此处启动 RimWorld",
-        "detail": "安装目录中没有 RimWorldWin64.exe。"
+        "detail": "安装目录中没有 RimWorld 可执行文件。"
       },
       "steam_launch_failed": {
         "title": "Steam 未能启动 RimWorld",
@@ -576,7 +576,7 @@
       },
       "game_start_failed": {
         "title": "RimWorld 未能启动",
-        "detail": "Windows 无法启动 RimWorldWin64.exe。"
+        "detail": "Windows 无法启动 RimWorld 可执行文件。"
       },
       "saves_folder_unreadable": {
         "title": "无法读取 Saves 文件夹",
@@ -1241,7 +1241,7 @@
       "staleActiveSetNote": "未包含待定的启用状态更改。如果希望本次安装包含它们，请先重新扫描。",
       "unappliedOrderNote": "安装会写入你的当前顺序，而该顺序尚未应用。",
       "outsideChangeNote": "你的已启用 Mod 列表已在 Rimmerge 之外被更改。安装会用你的当前顺序覆盖这些更改。",
-      "forceWarning": "RimWorldWin64.exe 似乎正在运行。现在安装会写入已启用 Mod 列表，而游戏退出时会覆盖它，因此这次更改可能会丢失。仍然导出？",
+      "forceWarning": "RimWorld 似乎正在运行。现在安装会写入已启用 Mod 列表，而游戏退出时会覆盖它，因此这次更改可能会丢失。仍然导出？",
       "exportAnyway": "仍然导出",
       "export": "导出",
       "exportedTo": "已导出到：{path}",
@@ -2292,7 +2292,7 @@
       "ruleExists": "规则已存在。"
     },
     "result": {
-      "forceWarning": "RimWorldWin64.exe 似乎正在运行。游戏退出时会覆盖已启用 Mod 列表，因此现在写入的内容可能会丢失。仍然写入？",
+      "forceWarning": "RimWorld 似乎正在运行。游戏退出时会覆盖已启用 Mod 列表，因此现在写入的内容可能会丢失。仍然写入？",
       "mergeModPath": "合并 Mod：{path}",
       "mergeModRemoved": "合并 Mod：已删除（已没有任何合并或资源决定）",
       "mergeModBackupPath": "合并 Mod 备份：{path}",
@@ -2333,7 +2333,7 @@
     "alreadyRunning": "RimWorld 已在运行。",
     "statusFailed": "无法检查 RimWorld 是否可以启动。",
     "unavailable": {
-      "executableMissing": "安装目录中没有 RimWorldWin64.exe。"
+      "executableMissing": "安装目录中没有 RimWorld 可执行文件。"
     },
     "launchedSteam": "已请求 Steam 启动 RimWorld。",
     "launchedExecutable": "正在启动 RimWorld。",
@@ -2484,7 +2484,7 @@
       "staleActiveSetNote": "未包含待定的启用状态更改。如果希望本次安装包含它们，请先重新扫描。",
       "unappliedOrderNote": "安装会写入你的当前顺序，而该顺序尚未应用。",
       "outsideChangeNote": "你的已启用 Mod 列表已在 Rimmerge 之外被更改。安装会用你的当前顺序覆盖这些更改。",
-      "forceWarning": "RimWorldWin64.exe 似乎正在运行。现在安装会写入已启用 Mod 列表，而游戏退出时会覆盖它，因此这次更改可能会丢失。仍然导出？",
+      "forceWarning": "RimWorld 似乎正在运行。现在安装会写入已启用 Mod 列表，而游戏退出时会覆盖它，因此这次更改可能会丢失。仍然导出？",
       "exportAnyway": "仍然导出",
       "export": "导出",
       "exportedTo": "已导出到：{path}",

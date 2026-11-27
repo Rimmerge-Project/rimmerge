@@ -707,7 +707,7 @@ pub(crate) async fn resolve_export_dir(raw: &str) -> Result<PathBuf, CommandErro
 
 /// Renders, writes, and (when asked) installs `request.patch_id`'s
 /// patch. Refuses to write to the game's `Mods` folder while
-/// `RimWorldWin64.exe` looks like it's running (per
+/// RimWorld looks like it's running (per
 /// [`crate::state::AppState::game_process_probe`]) unless `request.force`
 /// is set — the same gate [`crate::commands::apply::apply`] uses; this
 /// use case has no process access of its own.

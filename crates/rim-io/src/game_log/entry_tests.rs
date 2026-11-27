@@ -1739,3 +1739,428 @@ fn a_stub_family_carries_the_frame_its_original_showed() {
         "the unknown stub has no frame to attribute, the known one shares its original's family"
     );
 }
+
+// -- engine exception wrappers with no leading exception type ------------------
+
+const GRAPHIC_FAILURE: &str = "Exception getting Example.Graphic_Widget at Things/Example/";
+
+fn graphic_failure(path: &str) -> String {
+    format!(
+        "{GRAPHIC_FAILURE}{path}: System.MissingMethodException: Method not found: Example.Foo\n  at ExampleMod.Patches.WidgetPatch.Prefix () in <b>:0\n  at Verse.GraphicDatabase.GetInner () in <b>:0\n"
+    )
+}
+
+#[test]
+fn a_graphic_database_failure_is_one_runtime_exception_family_whatever_the_path() {
+    let log = player(&format!(
+        "{}{}",
+        graphic_failure("WidgetA"),
+        graphic_failure("WidgetB")
+    ));
+
+    assert_eq!(entries_of(&log, EntryClass::RuntimeException), 2);
+    assert_eq!(entries_of(&log, EntryClass::Unclassified), 0);
+    assert_eq!(
+        keys_of(&log, EntryClass::RuntimeException),
+        [
+            "Exception getting Example.Graphic_Widget|System.MissingMethodException|ExampleMod.Patches.WidgetPatch"
+        ]
+    );
+    assert_eq!(
+        only_input(&log, EntryClass::RuntimeException),
+        blamed_type("ExampleMod.Patches.WidgetPatch")
+    );
+    assert_p1_and_p2(&log);
+}
+
+#[test]
+fn a_graphic_database_failure_with_no_graphic_class_still_classifies() {
+    let log = player(
+        "Exception getting  at Things/Example/WidgetA: System.MissingMethodException: nope\n  at ExampleMod.Patches.WidgetPatch.Prefix () in <b>:0\n",
+    );
+
+    assert_eq!(entries_of(&log, EntryClass::RuntimeException), 1);
+    assert_eq!(
+        keys_of(&log, EntryClass::RuntimeException),
+        ["Exception getting |System.MissingMethodException|ExampleMod.Patches.WidgetPatch"]
+    );
+}
+
+#[test]
+fn a_path_segment_named_like_an_exception_never_becomes_the_type() {
+    let log = player(
+        "Exception getting Example.Graphic_Widget at Things/Example/Exception: System.MissingMethodException: nope\n",
+    );
+
+    assert_eq!(
+        keys_of(&log, EntryClass::RuntimeException),
+        ["Exception getting Example.Graphic_Widget|System.MissingMethodException|"]
+    );
+}
+
+#[test]
+fn the_graphic_wrapper_regex_cannot_match_getting_types_in_an_assembly_so_it_stays_a_type_load_error()
+ {
+    let log = player("Exception getting types in assembly Example.Lib: boom\n");
+
+    assert_eq!(entries_of(&log, EntryClass::TypeLoadError), 1);
+    assert_eq!(entries_of(&log, EntryClass::RuntimeException), 0);
+}
+
+#[test]
+fn a_post_long_event_failure_is_keyed_on_its_exception_type_not_the_word_exception() {
+    let log = player(
+        "Could not execute post-long-event action. Exception: System.NullReferenceException: Object reference not set\n  at ExampleMod.Boot.Run () in <b>:0\n",
+    );
+
+    assert_eq!(entries_of(&log, EntryClass::Unclassified), 0);
+    assert_eq!(
+        keys_of(&log, EntryClass::RuntimeException),
+        [
+            "Could not execute post-long-event action. Exception:|System.NullReferenceException|ExampleMod.Boot"
+        ]
+    );
+}
+
+#[test]
+fn harmony_replacement_frames_are_engine_and_the_mod_frame_after_them_is_blamed() {
+    let log = player(
+        "System.InvalidOperationException: nope\n   at MonoMod.Utils.DynamicMethodDefinition.Example.Shaders.Widget.Supports_Patch1(Shader shader)\n  at ExampleMod.Patches.Widget.Run () in <b>:0\n",
+    );
+
+    assert_eq!(
+        only_input(&log, EntryClass::RuntimeException),
+        blamed_type("ExampleMod.Patches.Widget")
+    );
+}
+
+#[test]
+fn frames_of_microsoft_and_unity_stubs_are_engine_frames() {
+    let log = player(
+        "System.InvalidOperationException: nope\n   at MonoMod.Utils.DynamicMethodDefinition.Example.Shaders.Hook.Init_Patch2(Hook this)\n   at UnityStubs.ExampleHook.Run(Object x) [0x10]\n   at Microsoft.Example.Thing.Go() [0x2]\n",
+    );
+
+    assert_eq!(
+        only_input(&log, EntryClass::RuntimeException),
+        None,
+        "no mod frame, no key frame"
+    );
+    assert_eq!(
+        keys_of(&log, EntryClass::RuntimeException),
+        ["|System.InvalidOperationException|"]
+    );
+}
+
+#[test]
+fn a_decoder_texture_failure_names_its_file_and_is_a_texture_load_failure() {
+    let log = player(
+        "Unable to load PSD C:/Mods/Example Mod/Textures/Things/Widget.psd due to an exception in PsdSharp: PSD file is corrupt.)\nC:/Mods/Example Mod/Textures/Menu.png: the file's contents are not the format its extension names; rename it so the decoder meant for it reads it\n",
+    );
+
+    let inputs = inputs_of(&log, EntryClass::TextureLoadFailure);
+
+    assert_eq!(entries_of(&log, EntryClass::TextureLoadFailure), 2);
+    assert!(inputs.contains(
+        &AttributionInput::path("C:/Mods/Example Mod/Textures/Things/Widget.psd").into()
+    ));
+    assert!(
+        inputs.contains(&AttributionInput::path("C:/Mods/Example Mod/Textures/Menu.png").into())
+    );
+    assert_p1_and_p2(&log);
+}
+
+#[test]
+fn a_mod_imitating_the_graphic_wrapper_keys_on_the_type_it_names_before_its_separator() {
+    let log = player(
+        "Exception getting Example.Graphic_Widget at Things/Example/WidgetA. Exception=\"System.MissingMethodException: Method not found\n  at ExampleMod.Patches.WidgetPatch.Prefix () in <b>:0\nException getting Example.Graphic_Widget at Things/Example/WidgetB. Exception=\"System.InvalidCastException: bad cast\n  at ExampleMod.Patches.WidgetPatch.Prefix () in <b>:0\n",
+    );
+
+    assert_eq!(
+        keys_of(&log, EntryClass::RuntimeException),
+        [
+            "Exception getting Example.Graphic_Widget|System.InvalidCastException|ExampleMod.Patches.WidgetPatch",
+            "Exception getting Example.Graphic_Widget|System.MissingMethodException|ExampleMod.Patches.WidgetPatch",
+        ],
+        "two exception types are two families"
+    );
+}
+
+#[test]
+fn a_decoder_texture_failure_on_a_backslash_path_with_spaces_and_an_apostrophe_keeps_the_whole_path()
+ {
+    let path = r"C:\Game\Mods\Example Mod\1.6\Textures\Things\Widget's A.psd";
+    let log = player(&format!(
+        "Unable to load PSD {path} due to an exception in PsdSharp: PSD file is corrupt.)\n"
+    ));
+
+    assert_eq!(
+        only_input(&log, EntryClass::TextureLoadFailure),
+        Some(AttributionInput::path(path))
+    );
+}
+
+#[test]
+fn the_decoders_file_name_wording_keeps_its_file_word_and_names_no_real_path() {
+    let log = player(
+        "Unable to load PSD file Widget.psd due to an exception in PsdSharp: PSD file is corrupt.)\n",
+    );
+
+    assert_eq!(entries_of(&log, EntryClass::TextureLoadFailure), 1);
+    // The capture is `file Widget.psd`: a bare name with a word before it,
+    // which resolves to no mod.
+    assert_eq!(
+        only_input(&log, EntryClass::TextureLoadFailure),
+        Some(AttributionInput::path("file Widget.psd"))
+    );
+}
+
+#[test]
+fn a_decoder_failure_head_wrapped_in_color_tags_still_names_its_file() {
+    let log = player(
+        "<color=red>Unable to load PSD C:/Mods/Example Mod/Textures/Widget.psd due to an exception in PsdSharp: boom</color>\n",
+    );
+
+    assert_eq!(
+        only_input(&log, EntryClass::TextureLoadFailure),
+        Some(AttributionInput::path(
+            "C:/Mods/Example Mod/Textures/Widget.psd"
+        ))
+    );
+}
+
+// -- the pawn-job exception wrappers ---------------------------------------------
+
+fn work_giver_failure(pawn: &str, def_name: &str) -> String {
+    format!(
+        "{pawn} threw exception in WorkGiver {def_name}: System.NullReferenceException: Object reference not set\n[Ref 1A2B3C4D]\n  at ExampleMod.Work.Cleaner.Scan () in <b>:0\n  at RimWorld.JobGiver_Work.TryIssueJobPackage () in <b>:0\n    - PREFIX example.patch: Void ExampleMod.Work.Patch:Prefix(Pawn pawn) [RimWorld.JobGiver_Work:TryIssueJobPackage]\n"
+    )
+}
+
+#[test]
+fn a_work_giver_failure_is_one_runtime_exception_family_whatever_the_pawn() {
+    let log = player(&format!(
+        "{}{}",
+        work_giver_failure("Example Pawn", "ExampleClean"),
+        work_giver_failure("Rat", "ExampleClean")
+    ));
+
+    assert_eq!(entries_of(&log, EntryClass::RuntimeException), 2);
+    assert_eq!(entries_of(&log, EntryClass::Unclassified), 0);
+    assert_eq!(
+        keys_of(&log, EntryClass::RuntimeException),
+        [
+            "threw exception in WorkGiver ExampleClean|System.NullReferenceException|ExampleMod.Work.Cleaner"
+        ]
+    );
+    assert_eq!(
+        only_input(&log, EntryClass::RuntimeException),
+        blamed_type("ExampleMod.Work.Cleaner")
+    );
+    assert_p1_and_p2(&log);
+}
+
+#[test]
+fn two_work_givers_failing_are_two_families() {
+    let log = player(&format!(
+        "{}{}",
+        work_giver_failure("Rat", "ExampleClean"),
+        work_giver_failure("Rat", "ExampleHaul")
+    ));
+
+    assert_eq!(families_of(&log, EntryClass::RuntimeException), 2);
+}
+
+#[test]
+fn a_pawnless_work_giver_failure_classifies() {
+    let log =
+        player("threw exception in WorkGiver ExampleClean: System.NullReferenceException: nope\n");
+
+    assert_eq!(
+        keys_of(&log, EntryClass::RuntimeException),
+        ["threw exception in WorkGiver ExampleClean|System.NullReferenceException|"]
+    );
+}
+
+#[test]
+fn every_pawn_job_wrapper_wording_is_a_runtime_exception_keyed_without_the_pawn() {
+    // The `determining job` wrappers carry their exception on the next line,
+    // which the segmenter makes its own entry, so only the head is checked.
+    let cases = [
+        (
+            "Rat threw exception in GiverTryGiveJobTargeted on WorkGiver ExampleRoof: System.InvalidOperationException: x",
+            "threw exception in GiverTryGiveJobTargeted on WorkGiver ExampleRoof|System.InvalidOperationException|",
+        ),
+        (
+            "Example Pawn threw exception while determining job (main) curDriver=JobDriver_Example (toilIndex=2)",
+            "threw exception while determining job (main)||",
+        ),
+        (
+            "Rat threw exception while determining job (constant)",
+            "threw exception while determining job (constant)||",
+        ),
+        (
+            "Pawn Rat threw exception while executing a global finish action (2), jobDriver=JobDriver_Example, job=Example (Job_1) A = Thing_X: System.NullReferenceException: x",
+            "threw exception while executing a global finish action|System.NullReferenceException|",
+        ),
+        (
+            "Pawn Example Pawn threw exception while executing toil ExampleToil's finish action (0), jobDriver=JobDriver_Example, job=Example (Job_1), toilIndex=1: System.InvalidCastException: x",
+            "threw exception while executing toil|System.InvalidCastException|",
+        ),
+    ];
+    for (text, expected_key) in cases {
+        let log = player(&format!("{text}\n"));
+
+        assert_eq!(entries_of(&log, EntryClass::RuntimeException), 1, "{text}");
+        assert_eq!(
+            keys_of(&log, EntryClass::RuntimeException),
+            [expected_key],
+            "{text}"
+        );
+        assert_p1_and_p2(&log);
+    }
+}
+
+#[test]
+fn a_bracketed_mod_line_quoting_the_wording_stays_a_mod_message() {
+    let class = class_of("[Example Mod] Rat threw exception in WorkGiver ExampleClean: x");
+
+    assert_eq!(class, EntryClass::ModMessage);
+}
+
+// -- the pawn-job wrappers: review fixes -------------------------------------------
+
+#[test]
+fn a_bracketed_mod_line_quoting_a_runtime_exception_fragment_is_a_leak() {
+    // One line per alternative of the `runtime-exception` sentinel that the
+    // pawn-job and engine-wrapper arms added: removing any one of them makes
+    // its case report no leak.
+    let quoted = [
+        "Rat threw exception in WorkGiver ExampleClean: x",
+        "Rat threw exception in GiverTryGiveJobTargeted on WorkGiver ExampleRoof: x",
+        "Rat threw exception while determining job (main) curDriver=JobDriver_Example",
+        "Pawn Rat threw exception while executing a global finish action (0), jobDriver=JobDriver_Example: x",
+        "Pawn Rat threw exception while executing toil ExampleToil's finish action (0): x",
+        "Could not execute post-long-event action. Exception: x",
+        "Exception getting Example.Graphic_Widget at Things/Example/WidgetA: x",
+    ];
+    for text in quoted {
+        let log = player(&format!("[Example Mod] {text}\n"));
+
+        assert_eq!(entries_of(&log, EntryClass::ModMessage), 1, "{text}");
+        assert_eq!(log.sentinels.total, 1, "{text}: {:?}", log.sentinels.leaks);
+        let leak = &log.sentinels.leaks[0];
+        assert_eq!(leak.sentinel, "runtime-exception", "{text}");
+        assert_eq!(leak.found, EntryClass::ModMessage, "{text}");
+    }
+}
+
+#[test]
+fn a_bracketed_mod_line_quoting_a_decoder_failure_fragment_is_a_leak() {
+    let quoted = [
+        "Unable to load PSD C:/Mods/Example/Textures/Widget.psd due to an exception in PsdSharp: corrupt",
+        "C:/Mods/Example/Textures/Menu.png: the file's contents are not the format its extension names; rename it",
+    ];
+    for text in quoted {
+        let log = player(&format!("[Example Mod] {text}\n"));
+
+        assert_eq!(entries_of(&log, EntryClass::ModMessage), 1, "{text}");
+        assert_eq!(log.sentinels.total, 1, "{text}: {:?}", log.sentinels.leaks);
+        let leak = &log.sentinels.leaks[0];
+        assert_eq!(leak.sentinel, "texture-load-failure", "{text}");
+        assert_eq!(leak.found, EntryClass::ModMessage, "{text}");
+    }
+}
+
+#[test]
+fn a_pawn_prefix_never_reaches_past_another_wrapper() {
+    let log = player(
+        "Exception ticking Rat: System.InvalidOperationException: Rat threw exception in WorkGiver Haul: boom\n",
+    );
+
+    assert_eq!(
+        keys_of(&log, EntryClass::RuntimeException),
+        ["Exception ticking|System.InvalidOperationException|"]
+    );
+}
+
+#[test]
+fn a_prefix_with_a_colon_is_no_pawn_name() {
+    let class = class_of("MyMod: Rat threw exception in WorkGiver ExampleClean: System.Exception");
+
+    assert_ne!(class, EntryClass::RuntimeException);
+}
+
+#[test]
+fn a_pawn_name_with_spaces_apostrophes_and_dots_still_keys_without_the_pawn() {
+    let log = player(
+        "Dr. Mary-Anne O'Neil threw exception in WorkGiver ExampleClean: System.NullReferenceException: x\n",
+    );
+
+    assert_eq!(
+        keys_of(&log, EntryClass::RuntimeException),
+        ["threw exception in WorkGiver ExampleClean|System.NullReferenceException|"]
+    );
+}
+
+#[test]
+fn job_text_naming_a_def_ending_in_exception_never_becomes_the_type() {
+    let cases = [
+        (
+            "Pawn Rat threw exception while executing toil unnamed's finish action (1), jobDriver=ExampleMod.JobDriver_Example, job=Example (Job_380315) A = Thing_Rock45498 Giver = JobGiver_Example [workGiverDef: null], toilIndex=3: System.NullReferenceException: Object reference not set",
+            "threw exception while executing toil|System.NullReferenceException|",
+        ),
+        (
+            "Pawn Rat threw exception while executing toil unnamed's finish action (1), jobDriver=ExampleMod.JobDriver_ClearException, job=ClearException (Job_1) A = Thing_X Giver = JobGiver_ClearException [workGiverDef: ClearException], toilIndex=3: System.InvalidCastException: x",
+            "threw exception while executing toil|System.InvalidCastException|",
+        ),
+        (
+            "Pawn Rat threw exception while executing a global finish action (2), jobDriver=ExampleMod.ClearException, job=ClearException (Job_1) A = Thing_X Giver = JobGiver_X [workGiverDef: ClearException]: System.InvalidCastException: x",
+            "threw exception while executing a global finish action|System.InvalidCastException|",
+        ),
+    ];
+    for (text, expected_key) in cases {
+        let log = player(&format!("{text}\n"));
+
+        assert_eq!(
+            keys_of(&log, EntryClass::RuntimeException),
+            [expected_key],
+            "{text}"
+        );
+    }
+}
+
+#[test]
+fn a_job_text_with_no_typed_exception_after_a_colon_has_an_empty_type() {
+    let log = player(
+        "Pawn Rat threw exception while executing toil unnamed's finish action (1), jobDriver=ExampleMod.JobDriver_ClearException, job=ClearException (Job_1), toilIndex=3: no type here\n",
+    );
+
+    assert_eq!(
+        keys_of(&log, EntryClass::RuntimeException),
+        ["threw exception while executing toil||"]
+    );
+}
+
+#[test]
+fn a_path_word_before_the_graphic_separator_never_becomes_the_type() {
+    let log = player(
+        "Exception getting Example.Graphic_Widget at Things/Example/Exception: FooError: x\n",
+    );
+
+    assert_eq!(
+        keys_of(&log, EntryClass::RuntimeException),
+        ["Exception getting Example.Graphic_Widget||"]
+    );
+}
+
+#[test]
+fn a_mod_imitating_the_graphic_wrapper_with_an_exception_attribute_keys_on_its_type() {
+    let log = player(
+        "Exception getting Example.Graphic_Widget at Things/Example/WidgetA. Exception=\"System.ArgumentNullException: Value cannot be null.\n",
+    );
+
+    assert_eq!(
+        keys_of(&log, EntryClass::RuntimeException),
+        ["Exception getting Example.Graphic_Widget|System.ArgumentNullException|"]
+    );
+}

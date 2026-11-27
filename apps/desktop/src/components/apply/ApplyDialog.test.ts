@@ -269,7 +269,7 @@ describe("ApplyDialog", () => {
         if (!request.force) {
           throw {
             code: "rimworld_running",
-            message: "RimWorldWin64.exe is running; close the game or retry with force",
+            message: "RimWorld is running; close the game or retry with force",
           };
         }
         return {

@@ -568,7 +568,7 @@
       },
       "game_executable_missing": {
         "title": "RimWorld can't be started from here",
-        "detail": "RimWorldWin64.exe isn't in the install folder."
+        "detail": "The RimWorld executable isn't in the install folder."
       },
       "steam_launch_failed": {
         "title": "Steam didn't start RimWorld",
@@ -576,7 +576,7 @@
       },
       "game_start_failed": {
         "title": "RimWorld didn't start",
-        "detail": "Windows couldn't start RimWorldWin64.exe."
+        "detail": "Windows couldn't start the RimWorld executable."
       },
       "saves_folder_unreadable": {
         "title": "Couldn't read the Saves folder",
@@ -1241,7 +1241,7 @@
       "staleActiveSetNote": "Pending activation changes are not included. Rescan first if you want them in this install.",
       "unappliedOrderNote": "Install writes your current order, which is not applied yet.",
       "outsideChangeNote": "Your active mod list was changed outside Rimmerge. Installing writes your Current order over those changes.",
-      "forceWarning": "RimWorldWin64.exe looks like it's running. Installing now writes your active mod list, which the game overwrites when it exits, so the change may be lost. Export anyway?",
+      "forceWarning": "RimWorld looks like it's running. Installing now writes your active mod list, which the game overwrites when it exits, so the change may be lost. Export anyway?",
       "exportAnyway": "Export anyway",
       "export": "Export",
       "exportedTo": "Exported to: {path}",
@@ -2292,7 +2292,7 @@
       "ruleExists": "Rule already exists."
     },
     "result": {
-      "forceWarning": "RimWorldWin64.exe looks like it's running. The game overwrites your active mod list when it exits, so what you write now may be lost. Write anyway?",
+      "forceWarning": "RimWorld looks like it's running. The game overwrites your active mod list when it exits, so what you write now may be lost. Write anyway?",
       "mergeModPath": "Merge mod: {path}",
       "mergeModRemoved": "Merge mod: removed (no merge or asset decision remains)",
       "mergeModBackupPath": "Merge mod backup: {path}",
@@ -2333,7 +2333,7 @@
     "alreadyRunning": "RimWorld is already running.",
     "statusFailed": "Couldn't check whether RimWorld can be launched.",
     "unavailable": {
-      "executableMissing": "RimWorldWin64.exe isn't in the install folder."
+      "executableMissing": "The RimWorld executable isn't in the install folder."
     },
     "launchedSteam": "Asked Steam to start RimWorld.",
     "launchedExecutable": "Starting RimWorld.",
@@ -2484,7 +2484,7 @@
       "staleActiveSetNote": "Pending activation changes are not included. Rescan first if you want them in this install.",
       "unappliedOrderNote": "Install writes your current order, which is not applied yet.",
       "outsideChangeNote": "Your active mod list was changed outside Rimmerge. Installing writes your Current order over those changes.",
-      "forceWarning": "RimWorldWin64.exe looks like it's running. Installing now writes your active mod list, which the game overwrites when it exits, so the change may be lost. Export anyway?",
+      "forceWarning": "RimWorld looks like it's running. Installing now writes your active mod list, which the game overwrites when it exits, so the change may be lost. Export anyway?",
       "exportAnyway": "Export anyway",
       "export": "Export",
       "exportedTo": "Exported to: {path}",

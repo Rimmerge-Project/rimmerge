@@ -29,19 +29,74 @@
 use std::sync::LazyLock;
 
 use regex::Regex;
-use rim_session::ports::{EngineInfoKind, EntryClass};
+use rim_session::ports::{EngineInfoKind, EntryClass, LogKind};
 
 use super::extract::{LOAD_ORDER_ITEM_RE, is_load_header};
 use super::patterns::{CRASH_REPORT_HEAD, MEMORY_FOOTER_HEAD, UNITY_FRAME_PATTERN, fixed_regex};
 use super::shapes::{CompiledShapes, IdSpan, RefLocations, StackRefKind, StackRefMatch};
+use super::waylith;
 
 /// How a file's entries are delimited.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Framing {
-    /// `Player.log`: continuation lines are recognised by their shape.
+    /// Unity's `Player.log` (RimWorld 1.6): continuation lines are
+    /// recognised by their shape.
     PlayerLog,
-    /// An in-game console copy: text, then a stack trace, then a blank line.
+    /// Unity's in-game console copy: text, then a stack trace, then a blank
+    /// line.
     ConsoleCopy,
+    /// The 1.7 (Waylith) engine's `Player.log`: one entry per timestamped
+    /// header line, everything up to the next one is its message and frames.
+    WaylithLog,
+    /// The 1.7 engine's in-game console copy: the same text, trace, blank
+    /// line shape as Unity's, with `Player.log`-shaped Waylith frames as the
+    /// trace.
+    WaylithConsole,
+}
+
+/// Which engine wrote a log.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Dialect {
+    /// Unity (RimWorld 1.6 and earlier).
+    Unity,
+    /// Waylith (RimWorld 1.7).
+    Waylith,
+}
+
+impl Framing {
+    /// The kind of log this framing reads.
+    #[must_use]
+    pub fn kind(self) -> LogKind {
+        match self {
+            Self::PlayerLog | Self::WaylithLog => LogKind::PlayerLog,
+            Self::ConsoleCopy | Self::WaylithConsole => LogKind::ConsoleSnapshot,
+        }
+    }
+
+    /// The engine that writes this framing.
+    #[must_use]
+    pub fn dialect(self) -> Dialect {
+        match self {
+            Self::PlayerLog | Self::ConsoleCopy => Dialect::Unity,
+            Self::WaylithLog | Self::WaylithConsole => Dialect::Waylith,
+        }
+    }
+
+    /// The framing of `kind` as `dialect` writes it.
+    #[must_use]
+    pub fn of(kind: LogKind, dialect: Dialect) -> Self {
+        match (kind, dialect) {
+            (LogKind::PlayerLog, Dialect::Unity) => Self::PlayerLog,
+            (LogKind::ConsoleSnapshot, Dialect::Unity) => Self::ConsoleCopy,
+            (LogKind::PlayerLog, Dialect::Waylith) => Self::WaylithLog,
+            (LogKind::ConsoleSnapshot, Dialect::Waylith) => Self::WaylithConsole,
+        }
+    }
+
+    /// Whether entries are text, trace, blank line (either engine).
+    fn is_console(self) -> bool {
+        self.kind() == LogKind::ConsoleSnapshot
+    }
 }
 
 /// One line, trimmed once for every check that needs it.
@@ -119,6 +174,11 @@ pub(super) enum Rule {
     Indented,
     /// `Namespace.Type:Method (args)`.
     UnityFrame,
+    /// A Waylith stack frame: `    at <method> [0x<IL>]`.
+    WaylithFrame,
+    /// Any other line of a Waylith entry's message (or of the header
+    /// block, or a blank line inside a message).
+    WaylithBody,
 }
 
 impl Rule {
@@ -131,6 +191,7 @@ impl Rule {
             Self::MonoFrame
                 | Self::WrapperFrame
                 | Self::UnityFrame
+                | Self::WaylithFrame
                 | Self::ConsoleTraceStart
                 | Self::ConsoleTrace
         )
@@ -149,6 +210,8 @@ pub(super) enum BlockContext {
     LoadBlock,
     XmlNodeDump,
     PatchFileLine,
+    /// A Waylith log's header block, up to its blank line.
+    LogHeader,
 }
 
 /// The block context a head of `class` opens.
@@ -168,6 +231,7 @@ fn session_marker_context(trimmed: &str) -> BlockContext {
     match trimmed {
         MEMORY_FOOTER_HEAD => BlockContext::MemoryFooter,
         CRASH_REPORT_HEAD => BlockContext::CrashReport,
+        _ if waylith::is_log_header_line(trimmed) => BlockContext::LogHeader,
         _ => BlockContext::None,
     }
 }
@@ -237,7 +301,7 @@ impl<'shapes> Segmenter<'shapes> {
             context,
             BlockContext::StackBlock | BlockContext::CrashReport
         );
-        self.context = if self.framing == Framing::ConsoleCopy && overrides_console_structure {
+        self.context = if self.framing.is_console() && overrides_console_structure {
             BlockContext::None
         } else {
             context
@@ -246,6 +310,9 @@ impl<'shapes> Segmenter<'shapes> {
 
     /// Decides what `line` is.
     pub(super) fn push(&mut self, line: &LineView<'_>) -> Segment {
+        if self.framing == Framing::WaylithLog {
+            return self.push_waylith(line);
+        }
         if line.trimmed.is_empty() {
             return self.blank_line();
         }
@@ -261,14 +328,64 @@ impl<'shapes> Segmenter<'shapes> {
     fn open_head(&mut self, line: &LineView<'_>) -> Segment {
         self.is_entry_open = true;
         self.context = BlockContext::None;
-        self.is_trace_started =
-            self.framing == Framing::ConsoleCopy && is_trace_start(line.trimmed);
+        self.is_trace_started = self.framing.is_console() && self.is_trace_start_line(line);
         Segment::Head
+    }
+
+    /// Whether `line` starts a console copy's stack trace under this
+    /// segmenter's engine (always `false` for a `Player.log` framing, which
+    /// has no such structure).
+    pub(super) fn is_trace_start_line(&self, line: &LineView<'_>) -> bool {
+        match self.framing {
+            Framing::PlayerLog | Framing::WaylithLog => false,
+            Framing::ConsoleCopy => is_trace_start(line.trimmed),
+            Framing::WaylithConsole => {
+                waylith::is_frame(line.text) || line.trimmed == NO_STACK_TRACE_LINE
+            }
+        }
+    }
+
+    /// Waylith `Player.log`: a blank line closes only the header block (it
+    /// is otherwise part of the open message), a timestamped line always
+    /// opens an entry, every other line joins the open one.
+    fn push_waylith(&mut self, line: &LineView<'_>) -> Segment {
+        if line.trimmed.is_empty() {
+            return self.waylith_blank();
+        }
+        if !self.is_entry_open || waylith::parse_entry_header(line.text).is_some() {
+            return self.open_head(line);
+        }
+        Segment::Continuation(self.waylith_rule(line))
+    }
+
+    fn waylith_blank(&mut self) -> Segment {
+        let is_inside_message = self.is_entry_open && self.context != BlockContext::LogHeader;
+        if is_inside_message {
+            return Segment::Continuation(Rule::WaylithBody);
+        }
+        self.is_entry_open = false;
+        self.context = BlockContext::None;
+        Segment::Separator
+    }
+
+    /// The rule of a line that continues a Waylith entry. The frame shape
+    /// goes first, so an unterminated block context can never swallow the
+    /// frames; then the block contexts of the message; then the shapes a
+    /// message body shares with Unity's (.NET frames of an exception's text,
+    /// back-reference stubs, indented lines).
+    fn waylith_rule(&mut self, line: &LineView<'_>) -> Rule {
+        if waylith::is_frame(line.text) {
+            return Rule::WaylithFrame;
+        }
+        if let Some(rule) = self.context_rule(line) {
+            return rule;
+        }
+        self.line_shape_rule(line).unwrap_or(Rule::WaylithBody)
     }
 
     fn blank_line(&mut self) -> Segment {
         if self.is_entry_open {
-            if self.framing == Framing::ConsoleCopy && !self.is_trace_started {
+            if self.framing.is_console() && !self.is_trace_started {
                 return Segment::Continuation(Rule::ConsoleBlankInText);
             }
             if self.context == BlockContext::MemoryFooter {
@@ -285,8 +402,8 @@ impl<'shapes> Segmenter<'shapes> {
             return Some(rule);
         }
         match self.framing {
-            Framing::ConsoleCopy => Some(self.console_rule(line.trimmed)),
-            Framing::PlayerLog => self.line_shape_rule(line),
+            Framing::ConsoleCopy | Framing::WaylithConsole => Some(self.console_rule(line)),
+            Framing::PlayerLog | Framing::WaylithLog => self.line_shape_rule(line),
         }
     }
 
@@ -341,6 +458,7 @@ impl<'shapes> Segmenter<'shapes> {
                 text.starts_with("file: ")
                     .then_some(Rule::PatchFailureFileLine)
             }
+            BlockContext::LogHeader => None,
         }
     }
 
@@ -353,11 +471,11 @@ impl<'shapes> Segmenter<'shapes> {
     }
 
     /// Console framing: text lines up to the trace, then trace lines.
-    fn console_rule(&mut self, trimmed: &str) -> Rule {
+    fn console_rule(&mut self, line: &LineView<'_>) -> Rule {
         if self.is_trace_started {
             return Rule::ConsoleTrace;
         }
-        if is_trace_start(trimmed) {
+        if self.is_trace_start_line(line) {
             self.is_trace_started = true;
             return Rule::ConsoleTraceStart;
         }

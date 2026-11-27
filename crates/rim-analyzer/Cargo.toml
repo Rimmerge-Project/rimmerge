@@ -1,6 +1,6 @@
 [package]
 name = "rim-analyzer"
-version = "1.2.7"
+version = "1.2.8"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
@@ -51,6 +51,9 @@ pretty_assertions = "1.4.1"
 # `extract::rich_text`'s own round-trip/no-markup-survives properties —
 # same workspace pin `rim-resolve`/`rim-merge` already use.
 proptest = { workspace = true }
+# Scratch install layouts for `infra::paths::GameLayout` and the `Assets.zip`
+# reader tests; same workspace pin the sibling crates use.
+tempfile = { workspace = true }
 
 # Deliberately NOT `[lints] workspace = true`: the workspace's
 # `missing_docs = "warn"` becomes `-D warnings`-fatal once enabled, and

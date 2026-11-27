@@ -5,15 +5,28 @@
 
 use sysinfo::{ProcessRefreshKind, ProcessesToUpdate, System};
 
-/// The process name RimWorld's 64-bit Windows build runs under.
-pub(crate) const RIMWORLD_PROCESS_NAME: &str = "rimworldwin64.exe";
+/// The process names RimWorld runs under, lowercase: the Unity build's
+/// `RimWorldWin64.exe` and the Waylith (1.7) build's `RimWorld.exe`. The
+/// guard matches by name, not path, and does not know which layout the
+/// configured install has: a copy of the game started from anywhere else
+/// (a test harness, a second install) is still "RimWorld is running", and
+/// refusing is the safe side.
+pub(crate) const RIMWORLD_PROCESS_NAMES: [&str; 2] = ["rimworldwin64.exe", "rimworld.exe"];
+
+/// Whether `process_name` is one of [`RIMWORLD_PROCESS_NAMES`],
+/// case-insensitively.
+fn is_rimworld_process_name(process_name: &str) -> bool {
+    RIMWORLD_PROCESS_NAMES
+        .iter()
+        .any(|name| process_name.eq_ignore_ascii_case(name))
+}
 
 /// Probes whether RimWorld's own process is currently running. A trait
 /// (not a bare function) so `apply`'s refusal path is testable with a
 /// fake that returns a fixed answer, without touching the real process
 /// list.
 pub trait GameProcessProbe: Send + Sync {
-    /// Whether a process named [`RIMWORLD_PROCESS_NAME`]
+    /// Whether a process named in [`RIMWORLD_PROCESS_NAMES`]
     /// (case-insensitive) currently exists.
     fn is_running(&self) -> bool;
 }
@@ -42,12 +55,10 @@ impl GameProcessProbe for SysinfoGameProcessProbe {
             true,
             ProcessRefreshKind::nothing(),
         );
-        system.processes().values().any(|process| {
-            process
-                .name()
-                .to_string_lossy()
-                .eq_ignore_ascii_case(RIMWORLD_PROCESS_NAME)
-        })
+        system
+            .processes()
+            .values()
+            .any(|process| is_rimworld_process_name(&process.name().to_string_lossy()))
     }
 }
 
@@ -67,6 +78,31 @@ mod tests {
     fn fixed_probe_reports_the_configured_value() {
         assert!(FixedProbe(true).is_running());
         assert!(!FixedProbe(false).is_running());
+    }
+
+    #[test]
+    fn both_engine_builds_executable_names_count_as_the_game_in_any_case() {
+        for name in [
+            "RimWorldWin64.exe",
+            "rimworldwin64.exe",
+            "RimWorld.exe",
+            "RIMWORLD.EXE",
+        ] {
+            assert!(is_rimworld_process_name(name), "{name}");
+        }
+    }
+
+    #[test]
+    fn other_process_names_do_not_count_as_the_game() {
+        for name in [
+            "RimWorldLauncher.exe",
+            "rimworld",
+            "explorer.exe",
+            "rimworld.exe.bak",
+            "",
+        ] {
+            assert!(!is_rimworld_process_name(name), "{name}");
+        }
     }
 
     #[test]

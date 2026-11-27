@@ -79,6 +79,19 @@ two release-profile test binaries competing for the same CPU pushes
 those budgets into spurious failures that have nothing to do with a
 real regression. Run one tier to completion before starting the other.
 
+The same `real_install_scan_timing.rs` holds
+`the_real_install_yields_vanilla_assemblies_types_and_core_textures`
+(inside the first command's `-p rim-analyzer`), a shape check that holds
+on either install layout, RimWorld 1.6 (Unity) or 1.7: the scan finds
+the game's own `Assembly-CSharp` among the vanilla assemblies, reads a
+non-empty vanilla type hierarchy from it, and finds at least
+`MIN_CORE_RESOURCE_TEXTURES` of Core's built-in texture names. A layout
+the scan cannot read leaves these empty with only a scan warning: a
+mod's reference to one of the game's own assemblies is no longer known
+to be the game's, the parent-type check loses its subclass proof, and
+the missing-texture check switches itself off. Nothing else fails, so
+only this test catches it.
+
 `apps/cli/tests/real_install_save_import.rs` (inside the first command's
 `-p rimmerge-cli`, behind the same guard) reads one real RimWorld save
 read-only: `RIMMERGE_REAL_SAVE` names it, else the newest `.rws` in the
@@ -100,8 +113,9 @@ own `RIMMERGE_REAL_GAME_LOG` env var (a log file path, unrelated to
 `RIMMERGE_GAME_DIR`) and follows the same three-state rule on its own.
 It reads the file through the product's `FileGameLogReader` (kind
 detected by content, formats from the embedded rules bundle) and always
-asserts what holds on any real log: parsing twice gives an identical
-result, every stack-trace block pairs with a terse failure (no
+asserts what holds on any real log, a RimWorld 1.6 or 1.7 one: the
+detected engine equals the independent oracle's (`oracle_dialect`,
+below), parsing twice gives an identical result, every stack-trace block pairs with a terse failure (no
 `extra_stack_traces`), every terse failure has its `file:` line, and no
 stack trace's leaf is an enclosing wrapper's `Error in ...` line. Its
 exact counts are pins (see the list below). Run it with:
@@ -120,15 +134,34 @@ parses every file under it twice: through `FileGameLogReader` (the
 product's path, which detects the kind by content and must agree with an
 independent oracle and with `parse_as` under the detected framing), and,
 for the other framing, through `parse_as` on the file read as bytes and
-decoded lossily. The oracle never uses the product's detection rule: a
-file holding a copy trace-start line anywhere must be detected as a
-console snapshot, and a file whose first line starts with Unity's
-`Mono path[0] = ` as a `Player.log` (a file with neither, a hand-written
-note, is only parsed and conserved, and listed as undecided). The snapshot
+decoded lossily (every framing other than the detected one: the 1.6
+and 1.7 `Player.log` and console-copy framings). The oracle never uses
+the product's detection rule. For the kind: a file whose first line is a
+1.7 `=== <product> log ===` header must be detected as a `Player.log`
+(and must hold no 1.6 copy trace start); a file holding a four-space
+`    at ... [0x..]` frame (any method: in a modded game the
+`Verse.Log.*` call frame can be absent, 0 of 1,000 entries in a 1,021-mod
+copy) and no timestamped 1.7 line, no header block, no 1.6 copy trace start and a first
+line other than 1.6's `Mono path[0] = ` as a
+console snapshot (a 1.7 stackless entry, the line `No stack trace.`, is not
+looked for, so a copy of only those is undecided); a file holding a 1.6 copy trace-start
+line anywhere as a console snapshot; and a file whose first line starts
+with Unity's `Mono path[0] = ` as a `Player.log` (a file with none of
+these, a hand-written note, is only parsed and conserved, and listed as
+undecided). For the engine, `oracle_dialect`: a first non-blank line
+that is the 1.7 header or a timestamped 1.7 entry line, or a 1.7 console
+copy as just described, means 1.7; anything else means 1.6. Every file's detected engine must equal it. A file detected
+as a 1.7 `Player.log` must also have as many entries as its timestamped
+entry lines, plus one for its header block when it starts with one; a file
+detected as a 1.7 console copy must have as many entries as it has
+trace starts: a line of four spaces, `at ` and a ` [0x` offset whose
+previous line is not such a frame, plus every `No stack trace.` line (a
+message may itself contain blank lines, so blocks are not counted). The snapshot
 checks below run for every file the reader detected as a snapshot, not for
 those the tier itself guessed to be one. Per file it asserts that the
 number of logging gaps equals the number of `Reached max messages limit`
-lines, P1 conservation (every line is either in exactly one entry or a
+lines (on a 1.7 log, the timestamped lines that end with that message or
+with the writer's `pre-init backlog overflow` warning), P1 conservation (every line is either in exactly one entry or a
 blank separator) and P2 (no loose-sentinel leak in the file's own
 framing; every file's leaks are collected and reported together), that
 parsing twice gives an equal result, and that the other framing still
@@ -136,10 +169,11 @@ conserves its lines. For every snapshot it asserts that the coverage
 entry count equals the entries parsed and that `console_fill` matches
 that count against 1,000; for one holding any
 `UnityEngine.StackTraceUtility:ExtractStackTrace ()` trace-start line
-(a real console copy), also at most 1,000 entries (the engine's console
+(a real 1.6 console copy), also at most 1,000 entries (the engine's console
 cap), equal to its count of those lines. It prints
 the totals (Player.logs, snapshots, the most entries, how many are at the
-cap, how many are `head_truncated`, how many the oracle left undecided),
+cap, how many are `head_truncated`, how many are 1.7 files, how many the
+oracle left undecided),
 each file's line, entry and family counts, its coverage line (kind, passes,
 end state, gap count) and its top ten `Unclassified`
 families, so new shapes stay visible (`--no-capture` shows them):
@@ -291,7 +325,8 @@ is:
 - `RIMMERGE_EXPECTED_GAME_LOG_COUNTS=patch_failures:<n>,cross_references:<n>,
   dds_failures:<n>,dependency_warnings:<n>,load_events:<n>,load_order:<n>,timers:<n>,
   failures_with_stack_trace:<n>` (`real_game_log.rs`): one real
-  `Player.log`'s own measured counts (`load_events` is the number of
+  `Player.log`'s own measured counts (a 1.6 or a 1.7 log; pin the counts
+  of the file `RIMMERGE_REAL_GAME_LOG` names) (`load_events` is the number of
   load blocks; `load_order` is the mod count of the last one, and
   `load_events` keeps a log with no block from passing as
   `load_order:0`; `failures_with_stack_trace` is how many terse failures

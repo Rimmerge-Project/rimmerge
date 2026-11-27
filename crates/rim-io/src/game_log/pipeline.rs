@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 
 use rim_session::ports::{
     ClassTally, DefCacheCarrier, EngineInfoKind, EntryClass, LogCoverage, LogReadStats, LoggingGap,
-    SentinelReport,
+    SentinelReport, Severity,
 };
 
 use rim_session::ports::FamilyKey;
@@ -19,9 +19,10 @@ use super::classify::{Classification, ClassifierSet, family_key};
 use super::coverage::CoverageCollector;
 use super::entry::OpenEntry;
 use super::records::{ExtractedRecords, RecordCollector};
-use super::segment::{Framing, LineView, Segment, Segmenter, context_for_head};
+use super::segment::{Framing, LineView, Rule, Segment, Segmenter, context_for_head};
 use super::sentinels::{PlacedLine, SentinelChecker, SentinelSet};
 use super::shapes::CompiledShapes;
+use super::waylith;
 
 /// The most back-reference originals the index holds.
 const MAX_INDEXED_REFS: usize = 10_000;
@@ -156,6 +157,9 @@ impl<'formats> EntryPipeline<'formats> {
             }
             Segment::Continuation(rule) => {
                 self.entry.absorb(&line, rule);
+                if rule == Rule::ConsoleTraceStart {
+                    self.apply_console_level(&line);
+                }
                 self.records.absorb(rule, line.trimmed, stats);
                 self.coverage.absorb(line.trimmed);
                 if rule.is_stack_frame() {
@@ -182,8 +186,14 @@ impl<'formats> EntryPipeline<'formats> {
         });
     }
 
-    fn open_entry(&mut self, line: &LineView<'_>) {
-        // The previous entry's head is still in `entry` until `begin` below.
+    /// The head of the entry `line` opens (the whole line, except in a
+    /// Waylith `Player.log`, where it is the message after the timestamp,
+    /// level and category) and its classification.
+    fn head_of<'line>(&self, line: &'line LineView<'_>) -> (&'line str, Classification) {
+        if self.framing == Framing::WaylithLog {
+            return self.waylith_head_of(line.text);
+        }
+        // The previous entry's head is still in `entry` until `begin`.
         let classification = if self.entry.head() == line.text {
             Classification {
                 class: self.entry.class(),
@@ -193,21 +203,59 @@ impl<'formats> EntryPipeline<'formats> {
             self.classifier
                 .classify(line.text, self.carriers, self.shapes)
         };
+        (line.text, classification)
+    }
+
+    fn waylith_head_of<'line>(&self, text: &'line str) -> (&'line str, Classification) {
+        if let Some(header) = waylith::parse_entry_header(text) {
+            let classification =
+                self.classifier
+                    .classify_waylith(&header, self.carriers, self.shapes);
+            return (header.message, classification);
+        }
+        // The header block's first line, else a stray line before any entry.
+        let classification = if waylith::is_log_header_line(text.trim()) {
+            Classification {
+                class: EntryClass::EngineInfo(EngineInfoKind::SessionMarker),
+                severity: Some(Severity::Message),
+            }
+        } else {
+            self.classifier.classify(text, self.carriers, self.shapes)
+        };
+        (text, classification)
+    }
+
+    /// A 1.7 console copy has no level field: the logging call that opens the
+    /// trace is the level, and it replaces the head's own severity.
+    fn apply_console_level(&mut self, line: &LineView<'_>) {
+        if self.framing != Framing::WaylithConsole {
+            return;
+        }
+        if let Some(severity) = waylith::console_log_severity(line.text) {
+            self.entry.set_severity(severity);
+        }
+    }
+
+    fn open_entry(&mut self, line: &LineView<'_>) {
+        let (head, classification) = self.head_of(line);
+        let trimmed = head.trim();
         if classification.class == EntryClass::EngineInfo(EngineInfoKind::Banner) {
             self.pass = self.pass.saturating_add(1);
         }
         self.entry
-            .begin(self.line_number, line.text, classification, self.pass);
-        self.records.begin(
+            .begin(self.line_number, head, classification, self.pass);
+        // A head-truncated copy opens on the trace start itself.
+        self.apply_console_level(line);
+        self.records
+            .begin(classification.class, self.line_number, trimmed, self.pass);
+        self.coverage.begin(
             classification.class,
             self.line_number,
-            line.trimmed,
-            self.pass,
+            trimmed,
+            self.segmenter.is_trace_start_line(line),
         );
-        self.coverage
-            .begin(classification.class, self.line_number, line.trimmed);
         self.segmenter
-            .enter_context(context_for_head(classification.class, line.trimmed));
+            .enter_context(context_for_head(classification.class, trimmed));
         self.is_entry_open = true;
     }
 

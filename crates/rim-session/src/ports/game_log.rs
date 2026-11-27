@@ -294,9 +294,12 @@ pub enum EngineInfoKind {
     /// The engine resumed logging.
     LoggingResumed,
     /// A session marker: command line, Unity's memory footer, a crash
-    /// report.
+    /// report, or the 1.7 engine's header block, `Log closed.` line, crash
+    /// entry and backlog-overflow warning.
     SessionMarker,
-    /// Unity's own start-up and asset-loading chatter.
+    /// The engine's own start-up and asset-loading chatter: Unity's, or on
+    /// 1.7 any message in one of the Waylith engine's own log categories
+    /// that no RimWorld arm recognizes. (The name predates 1.7.)
     UnityRuntime,
 }
 
@@ -363,8 +366,9 @@ pub enum EntryClass {
 }
 
 /// How serious the matched format string is, per the engine's own
-/// `Log.Message` / `Log.Warning` / `Log.Error` call. A `Player.log` line
-/// never shows its severity, so this is the static severity of the arm.
+/// `Log.Message` / `Log.Warning` / `Log.Error` call. A Unity `Player.log`
+/// line never shows its severity, so there this is the static severity of
+/// the arm; a 1.7 log states the level on every entry, and that replaces it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Severity {
     /// `Log.Message`.

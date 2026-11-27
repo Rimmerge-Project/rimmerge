@@ -47,7 +47,7 @@ pub enum LaunchGameError {
     #[error("ModsConfig.xml does not hold the selected order")]
     NotApplied(UnappliedReason),
     /// This install can't be started from here.
-    #[error("this install has no RimWorldWin64.exe")]
+    #[error("this install has no RimWorld executable")]
     Unavailable(LaunchUnavailable),
     /// The OS refused the launch request.
     #[error(transparent)]
@@ -184,6 +184,7 @@ mod tests {
         assert_eq!(launched, Ok(LaunchRouteKind::Executable));
         let launchers_own_route = LaunchRoute::Executable(GameExecutable::of_install(
             std::path::Path::new(FAKE_LAUNCHER_INSTALL),
+            rim_analyzer::domain::GameLayout::Unity,
         ));
         assert_eq!(use_case.launcher.launched(), vec![launchers_own_route]);
     }
